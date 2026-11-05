@@ -8,19 +8,16 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import kotlinx.coroutines.Job
+import eu.kanade.tachiyomi.ui.reader.viewer.gesture.WheelTurns
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.pow
 
 /**
  * Scrolling over the paged viewer, by a wheel or a touchpad's two fingers, seen ahead of the pager, which would move
  * by the scrolled distance. A page that doesn't fit its slot, zoomed or wider than it, scrolls until its edge; then
- * scrolling down turns to the next page and up to the previous one, and sideways to the page on that side. A wheel
- * turns a page for each notch. A touchpad scrolls in fractions of a notch, many to a swipe, so a swipe turns one page
- * and the next turn waits until scrolling has stopped. With Ctrl held the wheel zooms the page under the pointer.
+ * scrolling down turns to the next page and up to the previous one, and sideways to the page on that side, counted as
+ * [WheelTurns] counts them. With Ctrl held the wheel zooms the page under the pointer.
  * [pageAt] finds the page at a point of the viewer and where it lies there.
  */
 internal fun Modifier.pagerWheel(
@@ -28,9 +25,7 @@ internal fun Modifier.pagerWheel(
     pageAt: (Offset) -> Pair<ReaderPage, Rect>?,
 ): Modifier = pointerInput(viewer) {
     coroutineScope {
-        var notches = Offset.Zero
-        var swipeTurned = false
-        var swipeEnd: Job? = null
+        val turns = WheelTurns(this)
         awaitPointerEventScope {
             while (true) {
                 val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -40,40 +35,35 @@ internal fun Modifier.pagerWheel(
                 change.consume()
                 val target = pageAt(change.position)
                 val zoom = target?.let { viewer.zoomOf(it.first) }
-                if (event.keyboardModifiers.isCtrlPressed) {
-                    if (zoom == null || delta.y == 0f) continue
-                    zoom.zoomBy(ZOOM_STEP.pow(-delta.y), change.position - target.second.topLeft)
-                    viewer.onPageZoomed()
+                val ctrl = event.keyboardModifiers.isCtrlPressed
+                val focus = change.position - (target?.second?.topLeft ?: Offset.Zero)
+                if (zoom != null && zoom.takeWheel(delta, focus, ctrl, viewer::onPageZoomed)) {
+                    turns.reset()
                     continue
                 }
-                if (zoom != null) {
-                    val step = minOf(zoom.slotSize.width, zoom.slotSize.height) * PAN_SHARE
-                    val pan = Offset(-delta.x * step, -delta.y * step)
-                    if (zoom.canPan(pan)) {
-                        zoom.panBy(pan)
-                        notches = Offset.Zero
-                        continue
-                    }
-                }
-                val fromTouchpad = delta.x % 1f != 0f || delta.y % 1f != 0f
-                if (fromTouchpad) {
-                    swipeEnd?.cancel()
-                    swipeEnd = launch {
-                        delay(SWIPE_END_MS)
-                        swipeTurned = false
-                        notches = Offset.Zero
-                    }
-                    if (swipeTurned) continue
-                }
-                notches += delta
-                val turned = viewer.turnBy(notches)
-                if (turned != Offset.Zero) {
-                    notches -= turned
-                    if (fromTouchpad) swipeTurned = true
-                }
+                if (!ctrl) turns.onScroll(delta, viewer::turnBy)
             }
         }
     }
+}
+
+/**
+ * Uses a scroll of [delta] notches over this page, at [focus] in its slot: with [ctrl] held it zooms about [focus],
+ * telling [onZoomed]; otherwise it scrolls the page while it doesn't fit its slot and can move that way. Returns whether
+ * the page took the scroll, which then turns no page.
+ */
+internal fun PagerPageZoom.takeWheel(delta: Offset, focus: Offset, ctrl: Boolean, onZoomed: () -> Unit): Boolean {
+    if (ctrl) {
+        if (delta.y == 0f) return true
+        zoomBy(ZOOM_STEP.pow(-delta.y), focus)
+        onZoomed()
+        return true
+    }
+    val step = minOf(slotSize.width, slotSize.height) * PAN_SHARE
+    val pan = Offset(-delta.x * step, -delta.y * step)
+    if (!canPan(pan)) return false
+    panBy(pan)
+    return true
 }
 
 /**
@@ -99,6 +89,3 @@ private fun PagedViewer.turnBy(notches: Offset): Offset {
 // The share of the slot's shorter side a notch scrolls a page that doesn't fit
 private const val PAN_SHARE = 0.15f
 private const val ZOOM_STEP = 1.1f
-
-// How long after the last scroll a touchpad swipe counts as over, as the desktop player waits
-private const val SWIPE_END_MS = 500L

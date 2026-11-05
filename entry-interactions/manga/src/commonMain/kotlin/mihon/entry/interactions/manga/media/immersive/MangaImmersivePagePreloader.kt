@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.media
+package mihon.entry.interactions.manga.media.immersive
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

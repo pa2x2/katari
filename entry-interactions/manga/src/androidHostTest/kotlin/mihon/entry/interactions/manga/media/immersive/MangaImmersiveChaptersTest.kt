@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.media
+package mihon.entry.interactions.manga.media.immersive
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
@@ -18,7 +18,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
-class MangaImmersiveProcessorTest {
+class MangaImmersiveChaptersTest {
 
     @Test
     fun `load failure after session creation recycles the session`() = runTest {
@@ -33,15 +33,16 @@ class MangaImmersiveProcessorTest {
         val progressRepository = mockk<EntryProgressRepository> {
             coEvery { get(any(), any(), any()) } throws IllegalStateException("progress unavailable")
         }
-        val processor = MangaImmersiveProcessor(
+        val chapters = MangaImmersiveChapters(
             entryProgressRepository = progressRepository,
             mediaSession = MangaMediaSessionProcessor(EntryMediaSessionEventSink { EntryMediaSessionResult.Handled }),
             loadPageSession = { _, _, _ -> readerChapter },
             bindKeepScreenOn = { error("Rendering is not part of loading") },
+            platform = AndroidMangaImmersivePlatform,
         )
 
         shouldThrow<IllegalStateException> {
-            processor.load(mockk(relaxed = true), entry, chapter, mockk(relaxed = true))
+            chapters.load(mockk(relaxed = true), entry, chapter, mockk(relaxed = true))
         }
 
         verify(exactly = 1) { pageLoader.recycle() }

@@ -88,10 +88,8 @@ kotlin {
                 implementation(libs.androidx.core)
                 implementation(libs.androidx.interpolator)
                 implementation(libs.bundles.androidx.lifecycle)
-                implementation(libs.androidx.recyclerView)
                 implementation(libs.bundles.coil)
                 implementation(libs.material)
-                implementation(libs.photoView)
             }
         }
         getByName("desktopMain") {
@@ -110,12 +108,9 @@ kotlin {
     }
 }
 
-// A source set's dependency block cannot configure a catalog dependency, so these take their exclusions and artifact
-// type (the decoder is an AAR, which Gradle can't tell without metadata) here.
+// A source set's dependency block cannot configure a catalog dependency, so the decoder takes its artifact type here:
+// it is an AAR, which Gradle can't tell without metadata.
 dependencies {
-    "androidMainImplementation"(libs.subsamplingScaleImageView) {
-        exclude(module = "image-decoder")
-    }
     "androidMainImplementation"(libs.image.decoder) {
         artifact { type = "aar" }
     }

@@ -1,11 +1,11 @@
-package mihon.entry.interactions.manga.media
+package mihon.entry.interactions.manga.media.immersive
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.media.EntryImmersiveHandle
@@ -14,26 +14,31 @@ import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
-import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
-internal class MangaImmersiveProcessor(
+/**
+ * Manga's chapters in the immersive feed, alike on every platform: the chapter to read, loaded as the reader loads
+ * it, from the page it was left at, with its progress saved as the reader saves it. The feed's immersive processor is
+ * a platform facility, so each platform answers it with its own `MangaImmersiveProcessor` over these.
+ */
+internal class MangaImmersiveChapters(
     private val entryProgressRepository: EntryProgressRepository? = null,
     private val mediaSession: EntryMediaSessionProcessor,
-    private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter,
+    private val loadPageSession: suspend (PlatformContext, Entry, EntryChapter) -> ReaderChapter,
     private val bindKeepScreenOn: (entryId: Long) -> ViewerSettingBinding<Boolean>,
+    private val platform: MangaImmersivePlatform,
     private val now: () -> Long = System::currentTimeMillis,
-) : EntryImmersiveProcessor {
-    override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
-    override val preloadRadius: Int = 1
+) {
+    val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
+    val preloadRadius: Int = 1
     private val persistMutex = Mutex()
 
-    override suspend fun load(
-        context: Context,
+    suspend fun load(
+        context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter?,
         source: UnifiedSource,
@@ -59,15 +64,15 @@ internal class MangaImmersiveProcessor(
         }
     }
 
-    override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
+    fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
         val pages = handle as? EntryImmersiveHandle.ImagePages
             ?: error("Manga immersive feed received non-image media")
         val media = pages.delegate as? MangaImmersiveMedia
             ?: error("Manga immersive feed image media is unavailable")
-        return MangaImmersiveRenderer(media, keepScreenOn = bindKeepScreenOn(media.entry.id))
+        return MangaImmersiveRenderer(media, keepScreenOn = bindKeepScreenOn(media.entry.id), platform = platform)
     }
 
-    override suspend fun persistProgress(
+    suspend fun persistProgress(
         handle: EntryImmersiveHandle,
         progress: EntryImmersiveProgress,
     ) {
@@ -107,7 +112,7 @@ internal class MangaImmersiveProcessor(
         }
     }
 
-    override fun release(handle: EntryImmersiveHandle) {
+    fun release(handle: EntryImmersiveHandle) {
         val pages = handle as? EntryImmersiveHandle.ImagePages ?: return
         (pages.delegate as? MangaImmersiveMedia)?.readerChapter?.unref()
     }

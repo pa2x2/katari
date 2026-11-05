@@ -371,9 +371,6 @@ dependencies {
 
     // Image loading
     implementation(libs.bundles.coil)
-    implementation(libs.subsamplingScaleImageView) {
-        exclude(module = "image-decoder")
-    }
     // Named as an AAR, which Gradle can't tell without metadata
     implementation(libs.image.decoder) {
         artifact { type = "aar" }
@@ -381,7 +378,6 @@ dependencies {
 
     // UI libraries
     implementation(libs.material)
-    implementation(libs.photoView)
     implementation(libs.composeRichEditor)
     implementation(libs.aboutLibraries.core)
     // Its GitHub release has no metadata naming the artifact's type.

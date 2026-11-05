@@ -5,9 +5,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.os.Build
-import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
@@ -67,15 +65,6 @@ fun Activity.hasDisplayCutout(): Boolean {
 
 private fun View.hasDisplayCutout(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && rootWindowInsets?.displayCutout != null
-}
-
-val Context.animatorDurationScale: Float
-    get() = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
-
-/** Whether any part of the view shows in its window. */
-fun View?.isVisibleOnScreen(): Boolean {
-    if (this == null || !isShown) return false
-    return getGlobalVisibleRect(Rect())
 }
 
 /**

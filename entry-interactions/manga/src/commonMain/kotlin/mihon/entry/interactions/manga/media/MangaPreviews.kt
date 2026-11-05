@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.media
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -14,32 +13,37 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.manga.runtime.requireManga
 import mihon.entry.interactions.media.EntryPreviewConfig
 import mihon.entry.interactions.media.EntryPreviewHandle
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
 import mihon.entry.interactions.media.EntryPreviewSettings
-import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewLoadMode
-import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
-internal class MangaPreviewInteraction(
+/**
+ * Previews of a manga chapter's first pages, alike on every platform: the chapter to read, loaded as the reader loads
+ * it, its first pages shown as they load, and whether previews are on and how many pages they show. The preview
+ * processor and its configuration are platform facilities, so each platform answers them with its own
+ * `MangaPreviewProcessor` over these.
+ */
+internal class MangaPreviews(
     private val entryInteractionPreferences: EntryInteractionPreferences,
     private val pageSessionLoader: Lazy<ReaderPageSessionLoader>,
-) : EntryPreviewProcessor, EntryPreviewConfigurationProvider {
-    override val loadMode = EntryPreviewLoadMode.FIRST_READING_CHILD
-    override val settings = EntryPreviewSettings(
+) {
+    val loadMode = EntryPreviewLoadMode.FIRST_READING_CHILD
+    val settings = EntryPreviewSettings(
         type = EntryType.MANGA,
         enabled = entryInteractionPreferences.enableMangaPreview,
         pageCount = entryInteractionPreferences.mangaPreviewPageCount,
         size = entryInteractionPreferences.mangaPreviewSize,
     )
 
-    override fun config(): EntryPreviewConfig {
+    fun config(): EntryPreviewConfig {
         return EntryPreviewConfig(
             enabled = entryInteractionPreferences.enableMangaPreview.get(),
             pageCount = entryInteractionPreferences.mangaPreviewPageCount.get(),
@@ -47,7 +51,7 @@ internal class MangaPreviewInteraction(
         )
     }
 
-    override fun configChanges(): Flow<EntryPreviewConfig> {
+    fun configChanges(): Flow<EntryPreviewConfig> {
         return combine(
             entryInteractionPreferences.enableMangaPreview.changes(),
             entryInteractionPreferences.mangaPreviewPageCount.changes(),
@@ -62,8 +66,8 @@ internal class MangaPreviewInteraction(
             .distinctUntilChanged()
     }
 
-    override suspend fun loadPreview(
-        context: Context,
+    suspend fun loadPreview(
+        context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter?,
         source: UnifiedSource,
@@ -93,7 +97,7 @@ internal class MangaPreviewInteraction(
         )
     }
 
-    override suspend fun loadPage(handle: EntryPreviewHandle, pageIndex: Int) {
+    suspend fun loadPage(handle: EntryPreviewHandle, pageIndex: Int) {
         val chapter = handle.delegate as? ReaderChapter ?: return
         val page = chapter.pages?.getOrNull(pageIndex) ?: return
         chapter.pageLoader?.run {
@@ -102,7 +106,7 @@ internal class MangaPreviewInteraction(
         }
     }
 
-    override fun release(handle: EntryPreviewHandle) {
+    fun release(handle: EntryPreviewHandle) {
         (handle.delegate as? ReaderChapter)?.unref()
     }
 }

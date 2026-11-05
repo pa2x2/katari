@@ -1,27 +1,19 @@
 package mihon.entry.interactions.manga.media
 
 import mihon.entry.interactions.media.EntryMediaCacheArtifact
-import mihon.entry.interactions.media.EntryMediaCacheAutoClearPreference
-import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.entry.interactions.media.EntryMediaCacheProvider
-import mihon.entry.interactions.runtime.EntryPageImageCache
-import tachiyomi.i18n.*
 
-internal class MangaMediaCacheProvider(
-    pageImageCache: () -> EntryPageImageCache,
-) : EntryMediaCacheProvider {
-    override val artifacts: List<EntryMediaCacheArtifact> = listOf(MangaPageImageCacheArtifact(pageImageCache))
+/** Android's manga media caches: the shared [MangaPageImageCache]. */
+internal class MangaMediaCacheProvider(cache: MangaPageImageCache) : EntryMediaCacheProvider {
+    override val artifacts: List<EntryMediaCacheArtifact> = listOf(MangaPageImageCacheArtifact(cache))
 }
 
-private class MangaPageImageCacheArtifact(
-    cache: () -> EntryPageImageCache,
-) : EntryMediaCacheArtifact {
-    private val delegate by lazy(cache)
+private class MangaPageImageCacheArtifact(private val cache: MangaPageImageCache) : EntryMediaCacheArtifact {
+    override val id get() = cache.id
+    override val clearLabel get() = cache.clearLabel
+    override val autoClearLabel get() = cache.autoClearLabel
+    override val autoClearPreference get() = cache.autoClearPreference
+    override val sizeBytes get() = cache.sizeBytes
 
-    override val id = EntryMediaCacheId("manga.page-images")
-    override val clearLabel = MR.strings.pref_clear_chapter_cache
-    override val autoClearLabel = MR.strings.pref_auto_clear_chapter_cache
-    override val autoClearPreference = EntryMediaCacheAutoClearPreference("auto_clear_chapter_cache")
-    override val sizeBytes: Long get() = delegate.sizeBytes
-    override fun clear(): Int = delegate.clear()
+    override fun clear() = cache.clear()
 }

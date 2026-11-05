@@ -11,7 +11,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,7 +31,6 @@ import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
-import eu.kanade.tachiyomi.ui.reader.viewer.gesture.mouseDrags
 import eu.kanade.tachiyomi.ui.reader.viewer.key
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.FollowTapZoneSettings
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
@@ -75,7 +73,6 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
     FollowTapZoneSettings(tapZones, tapMode, tapInversion)
 
     val placements = remember(viewer) { PagerPlacements() }
-    var mouseDragFrom by remember(viewer) { mutableIntStateOf(0) }
     val haptics = LocalHapticFeedback.current
 
     fun pageAt(position: Offset): Pair<ReaderPage, Rect>? {
@@ -99,15 +96,7 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
             }
             .hidesTapZones(tapZones)
             .pagerWheel(viewer) { pageAt(it) }
-            .mouseDrags(
-                key = viewer,
-                onStart = { mouseDragFrom = pagerState.currentPage },
-                onDrag = { move -> pagerState.dispatchRawDelta(-(if (vertical) move.y else move.x)) },
-                onEnd = { velocity ->
-                    val target = mouseDragTarget(mouseDragFrom, if (vertical) velocity.y else velocity.x)
-                    scope.launch { pagerState.animateScrollToPage(target) }
-                },
-            )
+            .pagerMouseDrags(pagerState, vertical, scope)
             .pointerInput(viewer) {
                 detectReaderTaps(
                     onTap = { position -> onTap(position, size, placements.root) },
@@ -152,23 +141,6 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
         ReaderTapZonesOverlay(tapZones, tapMode, vertical, tapInversion, tapZonesHeld, Modifier.fillMaxSize())
     }
 }
-
-/**
- * The slot a mouse drag that began on slot [from] settles on, let go at [velocity] pixels a second along the pager:
- * the next or previous one when thrown, as a fling turns the page, and otherwise the one showing most.
- */
-private fun PagedViewer.mouseDragTarget(from: Int, velocity: Float): Int {
-    val threshold = pagerState.layoutInfo.pageSize * THROW_PAGES_PER_SECOND
-    val target = when {
-        velocity <= -threshold -> from + 1
-        velocity >= threshold -> from - 1
-        else -> pagerState.currentPage
-    }
-    return target.coerceIn(0, (pagerState.pageCount - 1).coerceAtLeast(0))
-}
-
-// A mouse let go faster than this many slots a second throws the page on to the next one
-private const val THROW_PAGES_PER_SECOND = 0.5f
 
 /** Uses a tap at [position] in the pager, [size] large: for the text features if they take it, else its tap zone. */
 private fun PagedViewer.onTap(position: Offset, size: IntSize, root: LayoutCoordinates?) {

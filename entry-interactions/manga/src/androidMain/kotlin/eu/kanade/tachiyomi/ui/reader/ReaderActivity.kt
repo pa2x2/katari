@@ -36,7 +36,6 @@ import androidx.core.transition.doOnEnd
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.reader.DisplayRefreshHost
@@ -544,7 +543,6 @@ class ReaderActivity : EntryInteractionActivity() {
                     }
                 }
                 val data = outputStream.toByteArray()
-                SubsamplingScaleImageView.setDisplayProfile(data)
                 TachiyomiImageDecoder.displayProfile = data
             }
         }

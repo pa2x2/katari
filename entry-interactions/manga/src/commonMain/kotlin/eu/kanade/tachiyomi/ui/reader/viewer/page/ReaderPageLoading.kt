@@ -48,16 +48,18 @@ internal class PageRequest(
 /**
  * Loads [page] through its chapter's loader and reports what to show through [onContent] until cancelled. The
  * opened image is handed over with [PageContent.Shown]; the receiver closes it once it no longer shows it.
- * [request] is read again each time the page becomes ready, so a retry follows settings changed since.
+ * [request] is read again each time the page becomes ready, so a retry follows settings changed since. The loader
+ * also loads [preloadCount] pages after it, or as many as it chooses when that is null.
  */
 internal suspend fun loadReaderPage(
     page: ReaderPage,
     request: () -> PageRequest,
     onContent: (PageContent) -> Unit,
+    preloadCount: Int? = null,
 ) {
     val loader = page.chapter.pageLoader ?: return
     supervisorScope {
-        launchIO { loader.loadPage(page) }
+        launchIO { if (preloadCount == null) loader.loadPage(page) else loader.loadPage(page, preloadCount) }
         page.statusFlow.collectLatest { state ->
             when (state) {
                 Page.State.Queue, Page.State.LoadPage -> onContent(PageContent.Loading(null))

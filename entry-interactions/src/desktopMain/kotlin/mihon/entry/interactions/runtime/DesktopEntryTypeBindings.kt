@@ -17,9 +17,10 @@ import mihon.entry.interactions.translate.EntryTranslateProcessor
  * contribute on both platforms, so those stay undeclared and a type that stops contributing them fails to build on both.
  *
  * - Opening, previews, the immersive view and the media caches they fill need the readers and the player. Desktop has
- *   the anime player and the manga reader, which anime's and manga's desktop parts bind as their open processors, and
- *   anime's clips in the immersive view; the book reader's type binds an `EntryViewerStandIn` in its place, so chapters
- *   stay openable and opening one says the reader isn't here yet (D072).
+ *   the anime player and the manga reader, which anime's and manga's desktop parts bind as their open processors,
+ *   anime's clips and manga's chapters in the immersive view, and manga's previews and page cache; the book reader's
+ *   type binds an `EntryViewerStandIn` in its place, so chapters stay openable and opening one says the reader isn't
+ *   here yet (D072).
  * - Translating downloaded chapters goes through the manga reader's page store, so it applies to no type yet either.
  */
 @ContributesTo(AppScope::class)

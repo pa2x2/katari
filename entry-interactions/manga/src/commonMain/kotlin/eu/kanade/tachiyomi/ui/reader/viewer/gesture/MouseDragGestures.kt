@@ -14,17 +14,21 @@ import androidx.compose.ui.unit.Velocity
 /**
  * Drags with a mouse's left button, which move the pages as a finger does: the foundation's pagers and lists scroll
  * only for touch. [onDrag] gets each move once the pointer has gone past the touch slop, as long as nothing under it
- * took the move, such as a zoomed page panning, and [onEnd] the velocity the button was let go at.
+ * took the move, such as a zoomed page panning, and [onEnd] the velocity the button was let go at. A drag begun while
+ * [enabled] answers false is left alone.
  */
 internal fun Modifier.mouseDrags(
     key: Any?,
     onStart: () -> Unit,
     onDrag: (Offset) -> Unit,
     onEnd: (Velocity) -> Unit,
+    enabled: () -> Boolean = { true },
 ): Modifier = pointerInput(key) {
     awaitEachGesture {
         val down = awaitFirstDown(requireUnconsumed = false)
-        if (down.type != PointerType.Mouse || !currentEvent.buttons.isPrimaryPressed) return@awaitEachGesture
+        if (down.type != PointerType.Mouse || !currentEvent.buttons.isPrimaryPressed || !enabled()) {
+            return@awaitEachGesture
+        }
         val velocity = VelocityTracker()
         velocity.addPosition(down.uptimeMillis, down.position)
         var dragging = false

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.media
+package mihon.entry.interactions.manga.media.immersive
 
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
