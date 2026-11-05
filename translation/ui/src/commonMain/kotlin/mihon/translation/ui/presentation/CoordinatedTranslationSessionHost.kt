@@ -9,8 +9,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.platform.LocalContext
+import mihon.core.platform.clipboard.TextClipboard
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.ui.presentation.language.TranslationKeptTargetSnackbar
@@ -21,7 +22,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The translation popup and its pickers for a reader.
  *
- * [openLink] opens the documentation links the popup offers, through the app's link opener.
+ * [openLink] opens the documentation links the popup offers, through the app's link opener; [clipboard] takes the
+ * translation the popup copies.
  * [snackbarHostState] announces languages the content starts keeping; without it they are kept silently.
  * [onChooseSourceLanguage] replaces the source picker, for readers that own the language their text was read in.
  */
@@ -29,6 +31,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun CoordinatedTranslationSessionHost(
     coordinator: TranslationSessionHostCoordinator,
     openLink: (String) -> Unit,
+    clipboard: TextClipboard,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = coordinator.controller::dismiss,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
@@ -38,13 +41,14 @@ fun CoordinatedTranslationSessionHost(
     snackbarHostState: SnackbarHostState? = null,
     onChooseSourceLanguage: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
+    val messages = rememberScreenMessages()
     val picker by coordinator.picker.collectAsState()
     val languageSuggestions by coordinator.languageSuggestions.collectAsState()
     var latestResult by remember(coordinator) { mutableStateOf<TranslationHostActionResult?>(null) }
 
     TranslationSessionHost(
         controller = coordinator.controller,
+        clipboard = clipboard,
         onExternalAction = { action ->
             if (action == TranslationSessionExternalAction.ChooseSourceLanguage && onChooseSourceLanguage != null) {
                 onChooseSourceLanguage()
@@ -91,7 +95,7 @@ fun CoordinatedTranslationSessionHost(
         is TranslationHostActionResult.Failed -> result.reason
     }
     LaunchedEffect(resultMessage) {
-        resultMessage?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
+        resultMessage?.let { messages.show(it, long = true) }
     }
     picker?.let { selectedPicker ->
         TranslationSessionPickerSheet(

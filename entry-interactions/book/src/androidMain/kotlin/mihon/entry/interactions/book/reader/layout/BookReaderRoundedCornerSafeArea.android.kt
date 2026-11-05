@@ -20,10 +20,9 @@ import mihon.entry.interactions.book.reader.BookReaderProgressInsets
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/** Keeps edge-bound reader overlays within the rectangular safe area of physical rounded corners. */
 @Composable
-internal fun BookReaderRoundedCornerSafeArea(
-    modifier: Modifier = Modifier,
+internal actual fun BookReaderRoundedCornerSafeArea(
+    modifier: Modifier,
     content: @Composable BoxScope.(BookReaderProgressInsets) -> Unit,
 ) {
     val view = LocalView.current

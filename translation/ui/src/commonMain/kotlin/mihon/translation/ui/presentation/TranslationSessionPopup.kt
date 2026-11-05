@@ -1,6 +1,5 @@
 package mihon.translation.ui.presentation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -9,6 +8,9 @@ import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.PopupPositionProvider
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.surface.FloatingPanel
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -46,7 +48,10 @@ internal fun TranslationSessionPopup(
             .width(width)
             .then(if (visible) Modifier else Modifier.semantics { hideFromAccessibility() }),
     ) {
-        BackHandler(onBack = onDismiss)
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            onBackCompleted = onDismiss,
+        )
         TranslationSessionContent(
             state = state,
             expanded = false,

@@ -1,6 +1,5 @@
 package mihon.translation.ui.presentation
 
-import android.content.ClipData
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,18 +11,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.roundToIntRect
-import kotlinx.coroutines.launch
+import mihon.core.platform.clipboard.TextClipboard
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.engine.TranslationEngineSelection
@@ -44,6 +40,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun TranslationSessionHost(
     controller: TranslationSessionController,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
+    clipboard: TextClipboard,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = controller::dismiss,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
@@ -59,8 +56,6 @@ fun TranslationSessionHost(
     val active = state as? TranslationSessionState.Active
     // Picking a language or engine replaces the request, so fullscreen follows the selected text to survive it.
     var expanded by remember(active?.input?.request?.text) { mutableStateOf(false) }
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
     val clipboardLabel = stringResource(MR.strings.translation_title)
 
     DisposableEffect(controller) {
@@ -73,13 +68,7 @@ fun TranslationSessionHost(
         onDismiss = onDismiss,
         onExecute = controller::execute,
         onRetry = controller::retry,
-        onCopy = { text ->
-            scope.launch {
-                clipboard.setClipEntry(
-                    ClipData.newPlainText(clipboardLabel, text).toClipEntry(),
-                )
-            }
-        },
+        onCopy = { text -> clipboard.copy(clipboardLabel, text) },
         onExpand = { expanded = true },
         onCollapse = { expanded = false },
         onSelectSource = onSelectSource,

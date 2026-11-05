@@ -3,194 +3,57 @@ package mihon.entry.interactions.book.reader
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.processor.BookReaderRequest
-import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
-import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
-import tachiyomi.presentation.core.i18n.stringResource
 
-/** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
+/** Android's host of opening a book ([BookReaderHostController]), which starts the chosen reader's activity. */
 internal class BookReaderHostActivity : EntryInteractionActivity() {
-    private var hostState by mutableStateOf<BookReaderHostState?>(null)
-    private var launchJob: Job? = null
-    private var retrySelection: BookReaderHostState.ReaderSelected? = null
-    private val dependencies by lazy { metroGraph<BookReaderGraph>().bookReaderDependencies }
-    private val request by lazy {
-        BookReaderRequest(
-            entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
-            chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
-        )
-    }
+    private lateinit var controller: BookReaderHostController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         title = stringResource(MR.strings.book_reader_host_title)
+        controller = BookReaderHostController(
+            request = BookReaderRequest(
+                entryId = intent.getLongExtra(EXTRA_ENTRY_ID, -1L),
+                chapterId = intent.getLongExtra(EXTRA_CHAPTER_ID, -1L),
+            ),
+            dependencies = metroGraph<BookReaderGraph>().bookReaderDependencies,
+            context = this,
+            scope = lifecycleScope,
+            onOpened = { processor, request, sessionToken ->
+                startActivity(processor.createReaderIntent(this, request, sessionToken))
+                finish()
+            },
+        )
         setEntryInteractionContent {
             BookReaderHostContent(
-                state = hostState,
-                onChoose = ::chooseProcessor,
-                onRetry = ::retry,
+                controller = controller,
                 onClose = ::finish,
-                resolveWebView = ::resolveWebView,
-                onOpenWebView = ::openWebView,
-                loadHeading = { dependencies.chapterHeadingLoader.load(request) },
+                onOpenWebView = { sourceChapter, webView ->
+                    launchEntryChildWebViewAction(
+                        EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                        webView,
+                        sourceChapter.owner.displayTitle,
+                    ).onFailure { error ->
+                        logcat(LogPriority.ERROR, error) { "Failed to open the BOOK chapter in WebView" }
+                    }
+                },
             )
         }
-        resolve()
-    }
-
-    private fun resolveWebView(sourceChapter: SourceChapter): EntryChildWebViewResolution.Available? =
-        dependencies.webViewFeature.resolveChild(sourceChapter.owner, sourceChapter.chapter)
-            as? EntryChildWebViewResolution.Available
-
-    private fun openWebView(sourceChapter: SourceChapter, webView: EntryChildWebViewResolution.Available) {
-        launchEntryChildWebViewAction(
-            EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
-            webView,
-            sourceChapter.owner.displayTitle,
-        )
-            .onFailure { error -> logcat(LogPriority.ERROR, error) { "Failed to open the BOOK chapter in WebView" } }
-    }
-
-    private fun chooseProcessor(
-        state: BookReaderHostState.ChoiceRequired,
-        processorId: String,
-        remember: Boolean,
-    ) {
-        open(
-            state = dependencies.hostResolver.choose(
-                state,
-                processorId,
-                remember,
-            ),
-        )
-    }
-
-    private fun retry() {
-        val unavailable = hostState as? BookReaderHostState.Unavailable ?: return
-        if (!unavailable.canRetry) return
-        retrySelection?.let(::open) ?: resolve()
-    }
-
-    private fun resolve() {
-        retrySelection = null
-        if (request.entryId < 0L || request.chapterId < 0L) {
-            hostState = BookReaderHostState.Unavailable(
-                failure = BookFailure(
-                    reason = BookFailureReason.CONTENT_UNAVAILABLE,
-                    message = stringResource(MR.strings.book_reader_invalid_request),
-                ),
-            )
-            return
-        }
-        runStartup(retrySelection = null) {
-            when (
-                val state = dependencies.hostResolver.resolve(
-                    request.entryId,
-                    request.chapterId,
-                )
-            ) {
-                is BookReaderHostState.ReaderSelected -> openSelected(state)
-                else -> hostState = state
-            }
-        }
-    }
-
-    private fun open(state: BookReaderHostState.ReaderSelected) {
-        retrySelection = null
-        runStartup(retrySelection = state) { openSelected(state) }
-    }
-
-    private suspend fun openSelected(state: BookReaderHostState.ReaderSelected) {
-        val result = dependencies.sessionFactory.openPrepared(
-            context = this@BookReaderHostActivity,
-            prepared = state.prepared,
-            processorId = state.processor.id,
-        )
-        when (result) {
-            is BookReaderOpenResult.Failure -> {
-                retrySelection = state.takeIf { result.canRetry }
-                hostState = BookReaderHostState.Unavailable(
-                    failure = result.failure,
-                    descriptor = state.descriptor,
-                    canRetry = result.canRetry,
-                )
-            }
-            is BookReaderOpenResult.Success -> {
-                val registry = dependencies.sessionRegistry
-                val token = registry.register(result.session)
-                try {
-                    startActivity(
-                        state.processor.createReaderIntent(
-                            context = this@BookReaderHostActivity,
-                            request = state.prepared.request,
-                            sessionToken = token,
-                        ),
-                    )
-                    finish()
-                } catch (error: Exception) {
-                    registry.discard(token)
-                    retrySelection = null
-                    hostState = BookReaderHostState.Unavailable(
-                        failure = BookFailure(
-                            reason = BookFailureReason.PROCESSOR_UNAVAILABLE,
-                            message = error.message ?: "The selected book reader could not be started.",
-                        ),
-                        descriptor = state.descriptor,
-                    )
-                }
-            }
-        }
-    }
-
-    private fun runStartup(
-        retrySelection: BookReaderHostState.ReaderSelected?,
-        block: suspend () -> Unit,
-    ) {
-        launchJob?.cancel()
-        hostState = null
-        launchJob = lifecycleScope.launch {
-            try {
-                block()
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                logcat(LogPriority.ERROR, error) { "Unexpected BOOK reader startup failure" }
-                this@BookReaderHostActivity.retrySelection = retrySelection
-                hostState = BookReaderHostState.Unavailable(
-                    failure = BookFailure(
-                        reason = BookFailureReason.CONTENT_UNAVAILABLE,
-                        message = error.message ?: "The book reader could not be opened.",
-                    ),
-                    descriptor = retrySelection?.descriptor,
-                    canRetry = true,
-                )
-            }
-        }
+        controller.start()
     }
 
     companion object {
@@ -204,46 +67,5 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
                 putExtra(EXTRA_CHAPTER_ID, chapter.id)
             }
         }
-    }
-}
-
-@Composable
-private fun BookReaderHostContent(
-    state: BookReaderHostState?,
-    onChoose: (BookReaderHostState.ChoiceRequired, String, Boolean) -> Unit,
-    onRetry: () -> Unit,
-    onClose: () -> Unit,
-    resolveWebView: (SourceChapter) -> EntryChildWebViewResolution.Available?,
-    onOpenWebView: (SourceChapter, EntryChildWebViewResolution.Available) -> Unit,
-    loadHeading: suspend () -> BookReaderChapterHeading?,
-) {
-    when (state) {
-        null -> BookReaderLoadingScreen(
-            contentDescription = stringResource(MR.strings.book_reader_loading),
-        )
-        is BookReaderHostState.Unavailable -> {
-            val sourceChapter = state.sourceChapter
-            val webView = remember(sourceChapter) { sourceChapter?.let(resolveWebView) }
-            val heading by produceState<BookReaderChapterHeading?>(null) { value = loadHeading() }
-            BookReaderFailureScreen(
-                reason = state.failure.reason,
-                message = state.failure.message,
-                heading = heading,
-                onClose = onClose,
-                onRetry = onRetry.takeIf { state.canRetry },
-                sourceName = sourceChapter?.sourceName,
-                onOpenWebView = if (sourceChapter != null && webView != null) {
-                    { onOpenWebView(sourceChapter, webView) }
-                } else {
-                    null
-                },
-            )
-        }
-        is BookReaderHostState.ChoiceRequired -> BookProcessorChooserDialog(
-            state = state,
-            onChoose = onChoose,
-            onClose = onClose,
-        )
-        is BookReaderHostState.ReaderSelected -> Unit
     }
 }

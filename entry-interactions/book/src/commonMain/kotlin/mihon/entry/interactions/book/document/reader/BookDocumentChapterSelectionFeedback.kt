@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +10,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
@@ -42,7 +44,10 @@ internal fun BookDocumentChapterSelectionFeedback(
             LoadingScreen(modifier = background.semantics { contentDescription = description })
         }
         is BookDocumentChapterLoadState.Failed -> {
-            BackHandler(onBack = onDismiss)
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                onBackCompleted = onDismiss,
+            )
             Box(modifier = background, contentAlignment = Alignment.Center) {
                 ProblemCard(
                     icon = MaterialSymbols.Rounded.Error,

@@ -25,6 +25,7 @@ internal fun BookDocumentReaderTopBar(
     onSearchAllChapters: () -> Unit,
     onCloseSearch: () -> Unit,
     onToggleBookmark: () -> Unit,
+    webViewActions: List<EntryChildWebViewAction>,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -58,6 +59,7 @@ internal fun BookDocumentReaderTopBar(
             EntryChildWebViewActionsMenu(
                 resolution = state.childWebView,
                 onAction = onChildWebViewAction,
+                actions = webViewActions,
             )
         },
     )

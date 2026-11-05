@@ -21,23 +21,20 @@ internal class BookDocumentReaderSystemBars(window: Window) {
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
-    fun apply(
-        chromeVisible: Boolean,
-        keepStatusBarVisible: Boolean,
-        keepNavigationBarVisible: Boolean,
-        readerTheme: BookDocumentReaderTheme,
-    ) {
-        if (chromeVisible || keepStatusBarVisible) {
+    /** A null [request] gives the app's own bars back, as while the reader shows no book. */
+    fun apply(request: BookDocumentReaderSystemBarsRequest?) {
+        if (request == null) return showAppBars()
+        if (request.chromeVisible || request.keepStatusBarVisible) {
             controller.show(WindowInsetsCompat.Type.statusBars())
         } else {
             controller.hide(WindowInsetsCompat.Type.statusBars())
         }
-        if (chromeVisible || keepNavigationBarVisible) {
+        if (request.chromeVisible || request.keepNavigationBarVisible) {
             controller.show(WindowInsetsCompat.Type.navigationBars())
         } else {
             controller.hide(WindowInsetsCompat.Type.navigationBars())
         }
-        applySystemBarIconAppearance(readerTheme)
+        applySystemBarIconAppearance(request.readerTheme)
     }
 
     private fun applySystemBarIconAppearance(
@@ -49,7 +46,7 @@ internal class BookDocumentReaderSystemBars(window: Window) {
             readerHasDarkBackground?.not() ?: appUsesDarkNavigationBarIcons
     }
 
-    fun showAppBars() {
+    private fun showAppBars() {
         controller.show(WindowInsetsCompat.Type.systemBars())
         controller.isAppearanceLightStatusBars = appUsesDarkStatusBarIcons
         controller.isAppearanceLightNavigationBars = appUsesDarkNavigationBarIcons

@@ -4,6 +4,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
 import mihon.core.platform.clipboard.TextClipboard
+import mihon.core.platform.link.LinkOpener
+import mihon.core.platform.power.PowerSource
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookDocumentResourceDecoding
@@ -16,6 +18,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
@@ -24,9 +27,9 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 
 /**
- * Graph entry point of the book reader activities, which Android constructs. The activities and most services they use
- * are internal to this module, which a contributed graph interface can't expose, so the graph hands out
- * [BookReaderDependencies] instead.
+ * Graph entry point of the book reader for hosts the graph doesn't construct, such as Android's activities. The
+ * reader's services are internal to this module, which a contributed graph interface can't expose, so the graph hands
+ * out [BookReaderDependencies] instead.
  */
 @ContributesTo(AppScope::class)
 interface BookReaderGraph {
@@ -61,6 +64,9 @@ class BookReaderDependencies internal constructor(
     resourceDecoding: Lazy<BookDocumentResourceDecoding>,
     imageExport: Lazy<ReaderImageExport>,
     storageFiles: Lazy<StorageFileResolver>,
+    powerSource: Lazy<PowerSource>,
+    linkOpener: Lazy<LinkOpener>,
+    sharedSettingsRegistry: Lazy<ReaderSharedSettingsRegistry>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -84,4 +90,7 @@ class BookReaderDependencies internal constructor(
     internal val resourceDecoding by resourceDecoding
     internal val imageExport by imageExport
     internal val storageFiles by storageFiles
+    internal val powerSource by powerSource
+    internal val linkOpener by linkOpener
+    internal val sharedSettingsRegistry by sharedSettingsRegistry
 }

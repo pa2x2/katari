@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,13 +26,12 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import mihon.core.metro.metroGraph
-import mihon.core.platform.clipboard.TextClipboard
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -56,6 +54,7 @@ import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentRead
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterGroupTitles
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
+import mihon.entry.interactions.book.reader.BookReaderDependencies
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
 import mihon.entry.interactions.book.reader.layout.bookReaderPageInsets
@@ -68,7 +67,6 @@ import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.chrome.ui.bars.ReaderChrome
@@ -100,7 +98,8 @@ internal fun BookDocumentReaderScreen(
     fonts: BookDocumentReaderFonts,
     bookSearch: BookDocumentBookSearch,
     selectionCoordinator: BookSelectionActionCoordinator?,
-    textClipboard: TextClipboard,
+    host: BookDocumentReaderHost,
+    dependencies: BookReaderDependencies,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     jumpHistory: BookDocumentJumpHistory,
@@ -116,7 +115,6 @@ internal fun BookDocumentReaderScreen(
     onUserScrollStarted: () -> Unit,
     onNavigationVisibilityChange: (Boolean) -> Unit,
     onSettingsVisibilityChange: (Boolean) -> Unit,
-    onOpenDefaultSettings: () -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onToggleBookmark: () -> Unit,
     onHideText: (String) -> Unit,
@@ -127,8 +125,6 @@ internal fun BookDocumentReaderScreen(
     onAuxiliaryDismiss: () -> Unit,
     onChapterSelectionRetry: () -> Unit,
     onChapterSelectionDismiss: () -> Unit,
-    onTranslationPopupBoundsChanged: (Rect?) -> Unit,
-    onClose: () -> Unit,
 ) {
     val seekState = remember { BookDocumentSeekState() }
     SideEffect { seekState.setVisible(state.chromeVisible) }
@@ -168,10 +164,6 @@ internal fun BookDocumentReaderScreen(
 
     // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
     val settingsSnackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
-    val sharedSettingsRegistry = remember {
-        context.metroGraph<EntryInteractionActivityGraph>().readerSharedSettingsRegistry
-    }
     val translationSnackbarHostState = if (state.settingsVisible) settingsSnackbarHostState else snackbarHostState
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
@@ -201,7 +193,7 @@ internal fun BookDocumentReaderScreen(
         activeSelectionSpeech?.identity,
         rootPosition,
         showTextSelectionMenuSetting.effectiveValue,
-        textClipboard,
+        dependencies.textClipboard,
     ) {
         BookDocumentTextInteraction(
             observeSelections = observeSelections,
@@ -220,11 +212,11 @@ internal fun BookDocumentReaderScreen(
                     currentOnChromeToggle()
                 }
             },
-            copyText = textClipboard::copy,
+            copyText = dependencies.textClipboard::copy,
             showTextSelectionMenu = showTextSelectionMenuSetting.effectiveValue,
             selectionActions = if (observeSelections) {
                 buildSet {
-                    add(BookDocumentSelectionAction.Listen)
+                    if (host.speaksSelections) add(BookDocumentSelectionAction.Listen)
                     if (!automaticTranslationEnabled) add(BookDocumentSelectionAction.Translate)
                 }
             } else {
@@ -276,10 +268,15 @@ internal fun BookDocumentReaderScreen(
                 footerColor = readerPalette.background,
                 // The status bar shows the time and battery already.
                 showTimeAndBattery = showTimeAndBatterySetting.effectiveValue && !showStatusBarSetting.effectiveValue,
+                powerSource = dependencies.powerSource,
                 translationController = selectionCoordinator?.translationController,
+                textClipboard = dependencies.textClipboard,
+                openLink = { url -> dependencies.linkOpener.open(host.context, url) },
                 translationSpeechState = translationSpeechState,
-                onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },
-                onTranslationPopupBoundsChanged = onTranslationPopupBoundsChanged,
+                onTranslationSpeechToggle = selectionCoordinator?.takeIf {
+                    host.speaksSelections
+                }?.let { it::toggleTranslationSpeech },
+                onTranslationPopupBoundsChanged = host.onTranslationPopupBoundsChanged,
                 translationSnackbarHostState = translationSnackbarHostState,
                 onRootPositionInWindow = { rootPosition = it },
                 modifier = Modifier
@@ -354,8 +351,9 @@ internal fun BookDocumentReaderScreen(
                                 onSearchAllChapters = { bookSearchVisible = true },
                                 onCloseSearch = closeSearch,
                                 onToggleBookmark = onToggleBookmark,
+                                webViewActions = host.webViewActions,
                                 onChildWebViewAction = onChildWebViewAction,
-                                onClose = onClose,
+                                onClose = host.onClose,
                             )
                         },
                         bottomBar = {
@@ -429,7 +427,11 @@ internal fun BookDocumentReaderScreen(
                 sections = state.loadedSections[state.currentChapterId]?.sections,
                 onReveal = onRevealSearchMatch,
             )
-            BackHandler(enabled = searching, onBack = closeSearch)
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                isBackEnabled = searching,
+                onBackCompleted = closeSearch,
+            )
             if (bookSearchVisible) {
                 BookDocumentBookSearchSheet(
                     query = search.query.orEmpty(),
@@ -471,13 +473,13 @@ internal fun BookDocumentReaderScreen(
             }
             if (state.settingsVisible) {
                 ReaderSettingsDialogHost(
-                    sharedSettingsRegistry = sharedSettingsRegistry,
+                    sharedSettingsRegistry = dependencies.sharedSettingsRegistry,
                     settingsSurfaceId = BookDocumentReaderProcessor.SETTINGS_SURFACE_ID,
                     capabilities = BookDocumentReaderProcessor.CAPABILITIES,
                     sharedSettingBindings = settingBindings.sharedSettings,
                     sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
-                    onOpenDefaultSettings = onOpenDefaultSettings,
+                    onOpenDefaultSettings = host.onOpenDefaultSettings,
                     // The page stays bright so a change of theme, size or spacing shows as it is made
                     backdrop = SheetBackdrop.Clear,
                     sharedSettingDetails = selectionCoordinator?.translationController?.let { controller ->

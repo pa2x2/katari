@@ -9,7 +9,7 @@ import mihon.entry.interactions.book.document.resource.SkiaBookDocumentResourceD
 
 @ContributesTo(AppScope::class)
 @BindingContainer
-object BookResourceDecodingBindings {
+object BookDesktopResourceDecodingBindings {
     @Provides
     internal fun resourceDecoding(): BookDocumentResourceDecoding = SkiaBookDocumentResourceDecoding
 }

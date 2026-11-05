@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.content.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +15,7 @@ import logcat.LogPriority
 import mihon.book.api.BookLocator
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.locatorAt
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.navigation.resolveNavigationDestination
@@ -31,12 +31,12 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 import kotlin.time.TimeSource
 
 /** Owns bounded adjacent session loading, activation, progress persistence, and completion evidence. */
 internal class BookDocumentChapterCoordinator(
-    private val context: Context,
+    private val context: PlatformContext,
     private val scope: CoroutineScope,
     private val retainedSessions: BookDocumentReaderSessionViewModel,
     private val sessionFactory: BookReaderSessionFactory,
@@ -107,7 +107,6 @@ internal class BookDocumentChapterCoordinator(
                 val current = retainedSessions.currentSession() ?: return@launch
                 when (
                     val result = sessionFactory.open(
-                        context,
                         BookReaderRequest(current.entry.id, chapter.id),
                         BookDocumentReaderProcessor.PROCESSOR_ID,
                     )

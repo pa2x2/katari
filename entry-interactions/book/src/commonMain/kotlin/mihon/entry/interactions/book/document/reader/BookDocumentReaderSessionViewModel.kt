@@ -11,9 +11,9 @@ import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import tachiyomi.domain.entry.model.Entry
 
 /**
- * Retains the bounded document-reader session window across configuration changes. Only the
- * current chapter outlives process death: sessions reopen from persisted progress, but the
- * reader must reopen the chapter it had moved on to, not the one it was launched with.
+ * Retains the bounded document-reader session window while the reader is rebuilt, as on an Android configuration
+ * change or when it reopens for new text rules. Only the current chapter outlives process death: sessions reopen from
+ * persisted progress, but the reader must reopen the chapter it had moved on to, not the one it was launched with.
  */
 internal class BookDocumentReaderSessionViewModel(private val savedState: SavedStateHandle) : ViewModel() {
     val jumpHistory = BookDocumentJumpHistory()

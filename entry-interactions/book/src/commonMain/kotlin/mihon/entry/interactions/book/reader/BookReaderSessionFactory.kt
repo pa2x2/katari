@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.reader
 
-import android.content.Context
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -57,7 +56,6 @@ internal class BookReaderSessionFactory(
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun open(
-        context: Context,
         request: BookReaderRequest,
         processorId: String,
     ): BookReaderOpenResult {
@@ -67,7 +65,7 @@ internal class BookReaderSessionFactory(
                 canRetry = prepared.canRetry,
                 sourceChapter = prepared.sourceChapter,
             )
-            is BookReaderPrepareResult.Success -> openPrepared(context, prepared.request, processorId)
+            is BookReaderPrepareResult.Success -> openPrepared(prepared.request, processorId)
         }
     }
 
@@ -76,13 +74,12 @@ internal class BookReaderSessionFactory(
      * does; null when it isn't downloaded or can't be opened.
      */
     suspend fun openDownloaded(
-        context: Context,
         request: BookReaderRequest,
         processorId: String,
     ): OpenedBookReaderSession? = when (val prepared = prepare(request, downloadedOnly = true)) {
         is BookReaderPrepareResult.Failure -> null
         is BookReaderPrepareResult.Success ->
-            (openPrepared(context, prepared.request, processorId) as? BookReaderOpenResult.Success)?.session
+            (openPrepared(prepared.request, processorId) as? BookReaderOpenResult.Success)?.session
     }
 
     suspend fun prepare(request: BookReaderRequest, downloadedOnly: Boolean = false): BookReaderPrepareResult {
@@ -150,7 +147,6 @@ internal class BookReaderSessionFactory(
     }
 
     suspend fun openPrepared(
-        context: Context,
         prepared: PreparedBookReaderRequest,
         processorId: String,
     ): BookReaderOpenResult {
