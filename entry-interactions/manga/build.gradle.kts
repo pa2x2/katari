@@ -33,6 +33,7 @@ kotlin {
 
                 implementation(projects.core.archive)
                 implementation(projects.core.common)
+                implementation(projects.core.image)
                 implementation(projects.core.metro)
                 implementation(projects.core.platform)
                 implementation(projects.coreMetadata)

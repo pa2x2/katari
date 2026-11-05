@@ -77,6 +77,7 @@ dependencies {
     implementation(projects.extensionRuntime)
     implementation(projects.extensionRuntime.jvmHost)
     implementation(projects.core.common)
+    implementation(projects.core.image)
     implementation(projects.core.metro)
     implementation(projects.core.platform)
     implementation(projects.i18n)

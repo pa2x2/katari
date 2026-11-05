@@ -6,7 +6,7 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.json.Json
-import mihon.core.common.image.progressive.ProgressiveImageEngine
+import mihon.core.image.progressive.ProgressiveImageEngine
 import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator

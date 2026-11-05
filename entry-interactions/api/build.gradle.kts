@@ -21,6 +21,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.core.common)
+                api(projects.core.image)
                 api(projects.core.platform)
                 api(projects.domain)
                 api(projects.entryViewerSettingsApi)

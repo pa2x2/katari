@@ -202,6 +202,7 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 icu4j = { module = "com.ibm.icu:icu4j", version.ref = "icu4j" }
 image-decoder = { module = "io.github.pa2x2:image-decoder-android", version.ref = "image-decoder" }
+image-decoder-jvm = { module = "io.github.pa2x2:image-decoder-jvm", version.ref = "image-decoder" }
 injekt = { module = "uy.kohesive.injekt:injekt-core", version.ref = "injekt" }
 jcef = { module = "org.jetbrains.intellij.deps.jcef:jcef", version.ref = "jcef" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }

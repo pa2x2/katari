@@ -259,6 +259,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.libraryUpdate.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.image.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))

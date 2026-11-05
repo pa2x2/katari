@@ -44,8 +44,8 @@ import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePre
 import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePreviewView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonStripImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
-import mihon.core.common.image.progressive.ProgressiveImageState
-import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.core.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageVisual
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage

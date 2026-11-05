@@ -1,8 +1,8 @@
 package mihon.entry.interactions.manga.page.acquisition
 
 import kotlinx.coroutines.flow.StateFlow
-import mihon.core.common.image.progressive.ProgressiveImageDecodeOptions
-import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageDecodeOptions
+import mihon.core.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.manga.page.MangaPageStore
 import okhttp3.Response
 import java.io.File

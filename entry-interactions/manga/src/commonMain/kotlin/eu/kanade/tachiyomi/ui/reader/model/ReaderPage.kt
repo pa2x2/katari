@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageState
 import java.io.InputStream
 
 internal open class ReaderPage(

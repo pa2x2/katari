@@ -17,10 +17,10 @@ import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import mihon.core.common.image.progressive.ProgressiveImageDecodeOptions
-import mihon.core.common.image.progressive.ProgressiveImageEngine
-import mihon.core.common.image.progressive.ProgressiveImageSession
-import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageDecodeOptions
+import mihon.core.image.progressive.ProgressiveImageEngine
+import mihon.core.image.progressive.ProgressiveImageSession
+import mihon.core.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.manga.page.MangaPageStore
 import okhttp3.Response
 import java.io.Closeable

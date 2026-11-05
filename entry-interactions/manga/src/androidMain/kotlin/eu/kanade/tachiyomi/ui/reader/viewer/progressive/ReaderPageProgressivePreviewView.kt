@@ -6,7 +6,7 @@ import android.graphics.Rect
 import android.widget.ImageView
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.github.chrisbanes.photoview.PhotoView
-import mihon.core.common.image.progressive.ProgressiveAnimationBuffer
+import mihon.core.image.progressive.ProgressiveAnimationBuffer
 import kotlin.math.roundToInt
 
 internal class ReaderPageProgressivePreviewView(

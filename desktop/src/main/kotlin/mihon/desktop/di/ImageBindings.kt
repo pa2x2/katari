@@ -10,7 +10,6 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.coil.ExtensionIconSource
 import eu.kanade.tachiyomi.data.coil.ImageLoaderPlatform
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.image.ApkExtensionIconSource
 import mihon.desktop.image.DesktopCoverCacheDirectories
@@ -30,10 +29,6 @@ interface ImageBindings {
         @SingleIn(AppScope::class)
         fun coverCache(@AppCoroutineScope scope: CoroutineScope, directories: DesktopDirectories): CoverCache =
             CoverCache(scope, DesktopCoverCacheDirectories(directories))
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun progressiveImageEngine(): ProgressiveImageEngine = ProgressiveImageEngine()
 
         // Coil builds image requests against this; desktop has one for the whole application.
         @Provides

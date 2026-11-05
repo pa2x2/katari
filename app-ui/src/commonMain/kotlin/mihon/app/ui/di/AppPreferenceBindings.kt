@@ -25,7 +25,7 @@ import mihon.app.ui.buildinfo.AppBuild
 import mihon.app.ui.buildinfo.AppBuildType
 import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
-import mihon.core.common.image.progressive.ProgressiveImagePreferences
+import mihon.core.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore

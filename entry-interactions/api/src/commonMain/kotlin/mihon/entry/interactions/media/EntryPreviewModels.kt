@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageState
 import mihon.core.platform.PlatformContext
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.entry.model.Entry

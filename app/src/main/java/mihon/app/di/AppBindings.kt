@@ -30,8 +30,6 @@ import mihon.app.ui.di.UncaughtErrorReporter
 import mihon.app.ui.host.LogDestinations
 import mihon.core.archive.AndroidArchiveOpener
 import mihon.core.archive.ArchiveOpener
-import mihon.core.common.image.progressive.ProgressiveImageEngine
-import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.power.PowerSource
@@ -214,11 +212,6 @@ interface AppBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun imageSaver(context: Context): ImageSaver = ImageSaver(context)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun progressiveImageEngine(preferences: ProgressiveImagePreferences): ProgressiveImageEngine =
-            ProgressiveImageEngine(preferences)
 
         @Provides
         @SingleIn(AppScope::class)

@@ -32,6 +32,11 @@
             <sha256 value="49e12e99c1fe5d64706c3daec94a72955d6794205ed0efb402cabb114d6508b9" origin="image-decoder-1.0.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
+      <component group="io.github.pa2x2" name="image-decoder-jvm" version="1.0.0">
+         <artifact name="image-decoder-jvm-1.0.0.jar">
+            <sha256 value="ab1c81b26510fe91847d607cef0a22d42ad96c066615d7804541b7e63901d972" origin="image-decoder-1.0.0-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
       <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.2">
          <artifact name="quickjs-kt-android-1.0.15-fork.2.aar">
             <sha256 value="1ed2fa754c5d3f22052a4f08c72b8da143de0158c23b0be074d3ca29e1d9b9c1" origin="quickjs-kt-1.0.15-fork.2-SHA256SUMS.txt"/>

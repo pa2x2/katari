@@ -5,8 +5,8 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.GLUtil
-import mihon.core.common.image.progressive.ProgressiveImageEngine
-import mihon.core.common.image.progressive.ProgressiveImagePreferences
+import mihon.core.image.progressive.ProgressiveImageEngine
+import mihon.core.image.progressive.ProgressiveImagePreferences
 import mihon.presentation.kit.files.DocumentAccess
 import mihon.presentation.kit.files.DocumentPickerRequest
 import mihon.presentation.kit.files.rememberDocumentPicker

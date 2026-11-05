@@ -28,7 +28,7 @@ import coil3.request.crossfade
 import coil3.size.Precision
 import eu.kanade.tachiyomi.ui.entry.preview.PreviewPage
 import kotlinx.coroutines.flow.flowOf
-import mihon.core.common.image.progressive.ProgressiveImageState
+import mihon.core.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.media.EntryPreviewPage
 import mihon.entry.interactions.media.EntryPreviewPageStatus
 import mihon.icons.materialsymbols.MaterialSymbols

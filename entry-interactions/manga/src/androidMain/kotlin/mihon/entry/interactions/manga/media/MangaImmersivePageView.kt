@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.core.common.image.progressive.ProgressiveImageVisual
+import mihon.core.image.progressive.ProgressiveImageVisual
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import okio.Buffer
