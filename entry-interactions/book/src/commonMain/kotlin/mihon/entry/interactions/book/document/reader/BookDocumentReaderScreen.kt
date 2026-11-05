@@ -267,7 +267,8 @@ internal fun BookDocumentReaderScreen(
                 },
                 footerColor = readerPalette.background,
                 // The status bar shows the time and battery already.
-                showTimeAndBattery = showTimeAndBatterySetting.effectiveValue && !showStatusBarSetting.effectiveValue,
+                showTimeAndBattery = showTimeAndBatterySetting.effectiveValue &&
+                    !(host.systemBars && showStatusBarSetting.effectiveValue),
                 powerSource = dependencies.powerSource,
                 translationController = selectionCoordinator?.translationController,
                 textClipboard = dependencies.textClipboard,
@@ -501,6 +502,7 @@ internal fun BookDocumentReaderScreen(
                                 bindings = settingBindings,
                                 progressStyleAvailable =
                                 readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
+                                systemBars = host.systemBars,
                             )
                         }
                     },

@@ -14,17 +14,24 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun BookDocumentReaderTimeAndBatterySettings(
     binding: ViewerSettingBinding<Boolean>,
-    statusBarBinding: ViewerSettingBinding<Boolean>,
+    /** Null where the window has no status bar, which would show the time and battery itself. */
+    statusBarBinding: ViewerSettingBinding<Boolean>?,
 ) {
     val setting by binding.state.collectAsState()
-    val statusBar by statusBarBinding.state.collectAsState()
+    val statusBarShown = statusBarBinding?.state?.collectAsState()?.value?.effectiveValue == true
     val scope = rememberCoroutineScope()
     val profileDefault = setting.profileValue ?: setting.processorDefault
     ToggleRow(
         title = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery),
-        subtitle = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery_summary),
+        subtitle = stringResource(
+            if (statusBarBinding != null) {
+                MR.strings.pref_book_document_reader_show_time_and_battery_summary
+            } else {
+                MR.strings.pref_book_document_reader_show_time_and_battery_summary_without_status_bar
+            },
+        ),
         checked = setting.effectiveValue,
-        enabled = !statusBar.effectiveValue,
+        enabled = !statusBarShown,
         onCheckedChange = { target ->
             scope.launch {
                 if (target == profileDefault) {

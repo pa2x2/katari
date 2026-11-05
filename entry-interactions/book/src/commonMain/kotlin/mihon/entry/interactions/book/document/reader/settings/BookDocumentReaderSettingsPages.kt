@@ -20,20 +20,29 @@ internal fun BookDocumentReaderAppearancePage(
     BookDocumentReaderTypographySettings(bindings)
 }
 
-/** [progressStyleAvailable] is whether the reading mode offers progress styles; only scrolling does. */
+/**
+ * [progressStyleAvailable] is whether the reading mode offers progress styles; only scrolling does. [systemBars] is
+ * whether the window has status and navigation bars the reader can show, which a desktop window doesn't.
+ */
 @Composable
 internal fun BookDocumentReaderBehaviorPage(
     bindings: BookDocumentReaderSettingBindings,
     progressStyleAvailable: Boolean,
+    systemBars: Boolean,
 ) {
     BookDocumentReaderPagingSettings(bindings)
     BookDocumentReaderChapterTransitionSettings(bindings.chapterTransitionMode)
     RowGroup {
         row { BookDocumentReaderScreenAliveSettings(bindings.keepScreenAlive) }
         row { BookDocumentReaderTextSelectionMenuSettings(bindings.showTextSelectionMenu) }
-        row { BookDocumentReaderStatusBarSettings(bindings.showStatusBar) }
-        row { BookDocumentReaderTimeAndBatterySettings(bindings.showTimeAndBattery, bindings.showStatusBar) }
-        row { BookDocumentReaderNavigationBarSettings(bindings.showNavigationBar) }
+        if (systemBars) row { BookDocumentReaderStatusBarSettings(bindings.showStatusBar) }
+        row {
+            BookDocumentReaderTimeAndBatterySettings(
+                binding = bindings.showTimeAndBattery,
+                statusBarBinding = bindings.showStatusBar.takeIf { systemBars },
+            )
+        }
+        if (systemBars) row { BookDocumentReaderNavigationBarSettings(bindings.showNavigationBar) }
         row { BookDocumentReaderShowProgressSetting(bindings.showReadingProgress) }
     }
     BookDocumentReaderProgressStyleSettings(

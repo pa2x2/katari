@@ -16,6 +16,8 @@ internal class BookDocumentReaderHost(
     val webViewActions: List<EntryChildWebViewAction>,
     /** Whether the selection menu offers Listen, which needs a speech engine the desktop doesn't have yet. */
     val speaksSelections: Boolean,
+    /** Whether the window has status and navigation bars the reader can show or hide, which a desktop window doesn't. */
+    val systemBars: Boolean,
     /** Shows a short message about what the reader just did, outside its own snackbars. */
     val showMessage: (String) -> Unit,
     val onClose: () -> Unit,

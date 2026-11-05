@@ -60,6 +60,12 @@ kotlin {
                 implementation(libs.androidsvg)
             }
         }
+        getByName("desktopMain") {
+            dependencies {
+                // The reader's retained sessions, kept by the screen that shows it
+                implementation(libs.metrox.viewmodel.compose)
+            }
+        }
         commonTest {
             dependencies {
                 implementation(libs.bundles.test)

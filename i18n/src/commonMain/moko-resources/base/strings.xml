@@ -806,6 +806,7 @@
     <string name="pref_reader_show_status_bar">Show status bar</string>
     <string name="pref_book_document_reader_show_time_and_battery">Show time and battery</string>
     <string name="pref_book_document_reader_show_time_and_battery_summary">Under the page, while the status bar is hidden</string>
+    <string name="pref_book_document_reader_show_time_and_battery_summary_without_status_bar">Under the page</string>
     <string name="book_reader_footer_battery">Battery %1$d%%</string>
     <string name="book_reader_search_hint">Search this chapter</string>
     <string name="book_reader_search_counter">%1$d of %2$d</string>

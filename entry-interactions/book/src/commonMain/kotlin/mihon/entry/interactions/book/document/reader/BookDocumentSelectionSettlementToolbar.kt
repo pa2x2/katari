@@ -20,7 +20,8 @@ internal fun ProvideBookDocumentSelectionSettlementToolbar(
     // before decorating it; installing our wrapper first would suppress that initialization.
     // The content's SelectionContainer owns the selectable text, so this outer registrar is empty.
     SelectionContainer(modifier = modifier) {
-        val platformToolbar = checkNotNull(LocalTextContextMenuToolbarProvider.current)
+        // Null on desktop, which has no floating toolbar; there the wrapper shows no menu.
+        val platformToolbar = LocalTextContextMenuToolbarProvider.current
         val toolbar = remember(selection, platformToolbar) {
             BookDocumentSelectionSettlementToolbar(selection, platformToolbar)
         }
@@ -31,13 +32,13 @@ internal fun ProvideBookDocumentSelectionSettlementToolbar(
 /** Observes Compose's selection completion signal, including handles in separate popup windows. */
 private class BookDocumentSelectionSettlementToolbar(
     private val selection: BookDocumentChapterSelection,
-    private val platformToolbar: TextContextMenuProvider,
+    private val platformToolbar: TextContextMenuProvider?,
 ) : TextContextMenuProvider {
     override suspend fun showTextContextMenu(dataProvider: TextContextMenuDataProvider) {
         // Compose requests the toolbar after release and cancels it when selection resumes.
         selection.setSelectionSettled(true)
         try {
-            if (selection.interaction.showTextSelectionMenu) {
+            if (selection.interaction.showTextSelectionMenu && platformToolbar != null) {
                 platformToolbar.showTextContextMenu(dataProvider.withReaderItemsFirst())
             }
             // Closing or disabling the menu does not start another selection gesture. Keep
