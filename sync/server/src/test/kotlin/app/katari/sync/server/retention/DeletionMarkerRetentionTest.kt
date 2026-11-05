@@ -69,6 +69,28 @@ class DeletionMarkerRetentionTest {
         }
     }
 
+    @Test
+    fun `a device taking the whole account pages through records older than the history kept`(
+        @TempDir dataDirectory: Path,
+    ) {
+        TestServer(dataDirectory).use { server ->
+            val account = server.account()
+            val old = server.device(account)
+            old.push(record("entry:1", basedOn = 0), record("entry:2", basedOn = 0))
+            old.push(record("entry:2", basedOn = 2))
+            old.pull(after = 3)
+            DeletionMarkerRetention(server.services.storage, server.clock).sweep()
+
+            val new = server.device(account)
+            val first = new.pull(after = 0, liveOnly = true, limit = 1).shouldBeInstanceOf<PullOutcome.Page>().page
+            first.records.single().sequence shouldBe 1
+            val second = new.pull(after = first.nextCursor, liveOnly = true, afterChain = first.nextChain, limit = 1)
+                .shouldBeInstanceOf<PullOutcome.Page>().page
+            second.records.single().sequence shouldBe 3
+            second.hasMore shouldBe false
+        }
+    }
+
     private fun TestServer.LinkedTestDevice.markerIsAfter(position: Long): Boolean =
         pull(after = position).shouldBeInstanceOf<PullOutcome.Page>().page.records.any { it.record.deleted }
 }

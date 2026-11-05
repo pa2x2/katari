@@ -32,13 +32,17 @@ enum class SyncErrorCode {
     DEVICE_REVOKED,
 
     /**
-     * The device was away so long that deletion markers it had not seen are gone, so pulling from its position
-     * would miss deletions. It resyncs in full.
+     * The device was away so long that the server no longer keeps what it needs for its position: deletion markers
+     * it had not seen, or the history chain the position is checked against. It resyncs in full.
      */
     @ProtoNumber(3)
     CURSOR_EXPIRED,
 
-    /** The position is past anything this server has given out: it lost data or was restored. The device resyncs in full. */
+    /**
+     * The position is past anything this server has given out, or the server's history up to it is not the one the
+     * device saw ([app.katari.sync.protocol.server.ServerIdentity.chain]): the server lost data or was restored. The
+     * device resyncs in full.
+     */
     @ProtoNumber(4)
     CURSOR_UNKNOWN,
 

@@ -17,4 +17,9 @@ data class PullRequest(
      * is: it pages and resumes like any pull, and a device with nothing of its own has no use for deletion markers.
      */
     @ProtoNumber(3) val liveOnly: Boolean = false,
+    /**
+     * The chain value the device was handed with [after] ([PullPage.nextChain]), so the server can tell its history up
+     * to there is the one the device saw. Empty skips the check, which only a device at 0 has reason to do.
+     */
+    @ProtoNumber(4) val afterChain: String = "",
 )

@@ -35,9 +35,11 @@ class RecordPush(
                 if (applied != null) return@map PushResult(record.changeId, PushOutcome.ACCEPTED, applied)
                 val current = storage.records.sequenceOf(accountId, record.key) ?: 0
                 if (record.basedOn != current) return@map PushResult(record.changeId, PushOutcome.STALE, current)
+                val previous = checkNotNull(storage.chainAt(accountId, storage.records.sequence(accountId)))
                 val sequence = storage.records.advanceSequence(accountId)
+                val chain = HistoryChain.next(previous, sequence, record.key, record.changeId)
                 // Stamped with the device that pushed it, whatever the envelope claims.
-                storage.records.write(accountId, record.copy(device = device.id), sequence)
+                storage.records.write(accountId, record.copy(device = device.id), sequence, chain)
                 wrote = true
                 PushResult(record.changeId, PushOutcome.ACCEPTED, sequence)
             }

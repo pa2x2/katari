@@ -1,0 +1,28 @@
+-- Each account's history chain value (see HistoryChain), which a device's position is checked against: at every
+-- sequence from the retention horizon on, and at the sequence of every stored record copy, since a pull from a
+-- position before the horizon pages through those.
+CREATE TABLE record_chain(
+    account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
+    sequence INTEGER NOT NULL,
+    chain BLOB NOT NULL,
+    PRIMARY KEY (account_id, sequence)
+);
+
+insert:
+INSERT INTO record_chain(account_id, sequence, chain)
+VALUES (:accountId, :sequence, :chain);
+
+chainAt:
+SELECT chain
+FROM record_chain
+WHERE account_id = :accountId AND sequence = :sequence;
+
+deleteUnusedBefore:
+DELETE FROM record_chain
+WHERE account_id = :accountId
+    AND sequence < :before
+    AND NOT EXISTS (
+        SELECT 1
+        FROM records r
+        WHERE r.account_id = record_chain.account_id AND r.sequence = record_chain.sequence
+    );

@@ -13,7 +13,8 @@ import kotlin.time.Duration.Companion.days
  * What is dropped is remembered as the account's markers-dropped-through sequence, so a device that comes back from
  * before it is sent to a full resync ([app.katari.sync.server.record.RecordPull]) instead of missing deletions. Applied
  * change ids are forgotten at the same point: every device has pulled the records they made, so a retry of one is
- * answered as stale and merged, which loses nothing.
+ * answered as stale and merged, which loses nothing. So is the history chain before it, apart from where a pull
+ * from further back can still stop ([app.katari.sync.server.record.RecordStore.forgetChainBefore]).
  */
 class DeletionMarkerRetention(
     private val storage: ServerStorage,
@@ -30,6 +31,8 @@ class DeletionMarkerRetention(
         storage.records.dropMarkersThrough(accountId, horizon)
             ?.let { storage.records.raiseMarkersDroppedThrough(accountId, it) }
         storage.records.forgetChangesThrough(accountId, horizon)
+        // The chain at the horizon itself stays: the slowest device sits exactly there.
+        storage.records.forgetChainBefore(accountId, horizon)
     }
 
     companion object {

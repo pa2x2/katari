@@ -16,4 +16,6 @@ data class PullPage(
     @ProtoNumber(2) val nextCursor: Long,
     @ProtoNumber(3) val hasMore: Boolean = false,
     @ProtoNumber(4) val server: ServerIdentity,
+    /** The account's history chain at [nextCursor] ([ServerIdentity.chain]); the next pull sends it back. */
+    @ProtoNumber(5) val nextChain: String = "",
 )

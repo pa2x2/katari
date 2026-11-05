@@ -22,30 +22,46 @@ class ReplacedServerTest {
     ) {
         val live = root.resolve("live").createDirectories()
         val backup = root.resolve("backup").createDirectories()
-        lateinit var token: String
+        lateinit var phoneToken: String
+        lateinit var desktopToken: String
         val instanceId = TestServer(live).use { server ->
-            val device = server.device(server.account())
-            token = device.token
-            device.push(record("entry:1", basedOn = 0), record("entry:2", basedOn = 0))
+            val account = server.account()
+            val phone = server.device(account)
+            phoneToken = phone.token
+            desktopToken = server.device(account).token
+            phone.push(record("entry:1", basedOn = 0), record("entry:2", basedOn = 0))
             server.services.storage.instanceId
         }
         live.listDirectoryEntries().forEach { it.copyTo(backup.resolve(it.fileName)) }
-        TestServer(live).use { server ->
-            val device = server.LinkedTestDevice(token)
-            device.push(record("entry:3", basedOn = 0))
-            device.pull(after = 0).shouldBeInstanceOf<PullOutcome.Page>().page.nextCursor shouldBe 3
+        val phoneChain = TestServer(live).use { server ->
+            val phone = server.LinkedTestDevice(phoneToken)
+            phone.push(record("entry:3", basedOn = 0))
+            val page = phone.pull(after = 0).shouldBeInstanceOf<PullOutcome.Page>().page
+            page.nextCursor shouldBe 3
+            phone.pull(after = 3, afterChain = page.nextChain).shouldBeInstanceOf<PullOutcome.Page>()
+            page.nextChain
         }
 
         TestServer(backup).use { restored ->
-            val device = restored.LinkedTestDevice(token)
+            val phone = restored.LinkedTestDevice(phoneToken)
             restored.services.storage.instanceId shouldBe instanceId
-            device.pull(after = 3).shouldBeInstanceOf<PullOutcome.Refused>().code shouldBe SyncErrorCode.CURSOR_UNKNOWN
-            restored.services.snapshot.of(device.device.accountId).server.sequence shouldBe 2
+            phone.pull(after = 3, afterChain = phoneChain).shouldBeInstanceOf<PullOutcome.Refused>()
+                .code shouldBe SyncErrorCode.CURSOR_UNKNOWN
+
+            // Another device pushes past the phone's old position before the phone comes back, so the sequence
+            // alone no longer gives the restore away.
+            val desktop = restored.LinkedTestDevice(desktopToken)
+            desktop.push(record("entry:4", basedOn = 0), record("entry:5", basedOn = 0))
+            restored.services.snapshot.of(phone.device.accountId).server.sequence shouldBe 4
+            phone.pull(after = 3, afterChain = phoneChain).shouldBeInstanceOf<PullOutcome.Refused>()
+                .code shouldBe SyncErrorCode.CURSOR_UNKNOWN
         }
 
         TestServer(root.resolve("empty").createDirectories()).use { replaced ->
             replaced.services.storage.instanceId shouldNotBe instanceId
-            replaced.services.authentication.authenticate(token).shouldBeInstanceOf<AuthenticationOutcome.Refused>()
+            replaced.services.authentication.authenticate(
+                phoneToken,
+            ).shouldBeInstanceOf<AuthenticationOutcome.Refused>()
                 .code shouldBe SyncErrorCode.UNAUTHORIZED
         }
     }

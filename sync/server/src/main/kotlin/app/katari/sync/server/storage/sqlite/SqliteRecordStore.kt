@@ -12,6 +12,7 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
     private val records = database.recordsQueries
     private val files = database.record_filesQueries
     private val changes = database.record_changesQueries
+    private val chains = database.record_chainQueries
 
     override fun sequence(accountId: Long): Long = accounts.sequence(accountId).executeAsOne()
 
@@ -33,7 +34,11 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
     override fun appliedChange(accountId: Long, changeId: String): Long? =
         changes.sequenceOf(accountId, changeId).executeAsOneOrNull()
 
-    override fun write(accountId: Long, record: RecordEnvelope, sequence: Long) = database.transaction {
+    override fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray) {
+        database.transaction { writeInTransaction(accountId, record, sequence, chain) }
+    }
+
+    private fun writeInTransaction(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray) {
         records.upsert(
             accountId = accountId,
             recordKey = record.key,
@@ -59,7 +64,11 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
             }
         }
         changes.insert(accountId = accountId, changeId = record.changeId, sequence = sequence)
+        chains.insert(accountId = accountId, sequence = sequence, chain = chain)
     }
+
+    override fun chainAt(accountId: Long, sequence: Long): ByteArray? =
+        chains.chainAt(accountId, sequence).executeAsOneOrNull()
 
     override fun page(
         accountId: Long,
@@ -106,5 +115,9 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
 
     override fun forgetChangesThrough(accountId: Long, through: Long) {
         changes.deleteThrough(accountId, through)
+    }
+
+    override fun forgetChainBefore(accountId: Long, before: Long) {
+        chains.deleteUnusedBefore(accountId, before)
     }
 }

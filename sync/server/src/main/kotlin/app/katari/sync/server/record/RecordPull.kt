@@ -10,11 +10,14 @@ import app.katari.sync.server.storage.ServerStorage
  * Hands out records after a device's position and records that position as how far the device has synced, which is
  * what holds back the removal of deletion markers it has not seen.
  *
- * A position past the account's sequence is refused as [SyncErrorCode.CURSOR_UNKNOWN]: the device synced with a
- * server that had given out more, so this one lost data or was restored from an old copy, and the device must resync
- * in full rather than skip what was written here since. A position from before a dropped deletion marker is refused
- * as [SyncErrorCode.CURSOR_EXPIRED], since pulling from it would miss that deletion; a pull that leaves out deletions
- * has nothing to miss and is never refused for it.
+ * A position past the account's sequence, or one whose history chain differs from the one the device was handed
+ * there, is refused as [SyncErrorCode.CURSOR_UNKNOWN]: the device synced with a server that had given out more, or
+ * gave its sequences to other changes, so this one lost data or was restored from an old copy (and other devices may
+ * have pushed past it since), and the device must resync in full rather than skip or misread what was written here.
+ *
+ * A position the history chain is no longer kept for, or one from before a dropped deletion marker, is refused as
+ * [SyncErrorCode.CURSOR_EXPIRED]: the first cannot be checked, and pulling from the second would miss that deletion
+ * (a pull that leaves out deletions has nothing to miss and is never refused for it).
  */
 class RecordPull(
     private val storage: ServerStorage,
@@ -24,6 +27,11 @@ class RecordPull(
         val accountId = device.accountId
         val sequence = storage.records.sequence(accountId)
         if (request.after > sequence) return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_UNKNOWN)
+        val chainThere = storage.chainAt(accountId, request.after)
+            ?: return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_EXPIRED)
+        if (request.afterChain.isNotEmpty() && request.afterChain != chainThere.toHexString()) {
+            return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_UNKNOWN)
+        }
         if (!request.liveOnly && request.after < storage.records.markersDroppedThrough(accountId)) {
             return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_EXPIRED)
         }
@@ -38,14 +46,16 @@ class RecordPull(
         )
         val hasMore = found.size > limit
         val records = found.take(limit)
+        // Sequences between the last record and the account's are copies since replaced or left out, so a complete
+        // page moves the device to the account's sequence.
+        val nextCursor = if (hasMore) records.last().sequence else sequence
         PullOutcome.Page(
             PullPage(
                 records = records,
-                // Sequences between the last record and the account's are copies since replaced or left out, so a
-                // complete page moves the device to the account's sequence.
-                nextCursor = if (hasMore) records.last().sequence else sequence,
+                nextCursor = nextCursor,
                 hasMore = hasMore,
                 server = storage.identityOf(accountId),
+                nextChain = checkNotNull(storage.chainAt(accountId, nextCursor)).toHexString(),
             ),
         )
     }

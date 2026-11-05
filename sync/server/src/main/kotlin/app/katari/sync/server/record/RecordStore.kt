@@ -22,8 +22,14 @@ interface RecordStore {
     /** The sequence the change was stored with, or null if the account has no record of applying it. */
     fun appliedChange(accountId: Long, changeId: String): Long?
 
-    /** Replaces the stored copy of [record]'s key, with the files it lists, and remembers its change as applied. */
-    fun write(accountId: Long, record: RecordEnvelope, sequence: Long)
+    /**
+     * Replaces the stored copy of [record]'s key, with the files it lists, remembers its change as applied, and
+     * records [chain] as the account's history chain at [sequence].
+     */
+    fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray)
+
+    /** The account's history chain at [sequence], or null when it is not kept. */
+    fun chainAt(accountId: Long, sequence: Long): ByteArray?
 
     /** Stored copies with sequences in ([after], [through]], in sequence order. */
     fun page(accountId: Long, after: Long, through: Long, limit: Int, includeDeleted: Boolean): List<SequencedRecord>
@@ -34,6 +40,12 @@ interface RecordStore {
     fun dropMarkersThrough(accountId: Long, through: Long): Long?
 
     fun forgetChangesThrough(accountId: Long, through: Long)
+
+    /**
+     * Forgets the history chain before [before], except at the sequences of stored record copies, which a pull from
+     * further back still pages through and hands out as positions.
+     */
+    fun forgetChainBefore(accountId: Long, before: Long)
 }
 
 data class RecordTotals(

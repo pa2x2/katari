@@ -49,8 +49,8 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
             PushRequest(records.toList()),
         )
 
-        fun pull(after: Long, liveOnly: Boolean = false): PullOutcome =
-            services.pull.pull(device, PullRequest(after = after, liveOnly = liveOnly))
+        fun pull(after: Long, liveOnly: Boolean = false, afterChain: String = "", limit: Int = 0): PullOutcome =
+            services.pull.pull(device, PullRequest(after, limit, liveOnly, afterChain))
     }
 
     override fun close() = services.storage.close()

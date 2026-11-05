@@ -2,7 +2,6 @@ package app.katari.sync.server.http
 
 import app.katari.sync.protocol.http.SyncHttp
 import app.katari.sync.protocol.live.ChangesAvailable
-import app.katari.sync.protocol.server.ServerIdentity
 import app.katari.sync.server.SyncServices
 import app.katari.sync.server.record.identityOf
 import io.ktor.server.routing.Route
@@ -30,7 +29,7 @@ internal fun Route.liveRoute(services: SyncServices) {
             send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent))))
             services.changes.sequence(device.accountId).collect { sequence ->
                 if (sequence > sent.sequence) {
-                    sent = ServerIdentity(instanceId = sent.instanceId, sequence = sequence)
+                    sent = withContext(Dispatchers.IO) { services.storage.identityOf(device.accountId) }
                     send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent))))
                 }
             }
