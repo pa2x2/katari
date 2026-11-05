@@ -102,7 +102,7 @@ class SettingsScreen(
             Navigator(
                 screen = initialScreen,
                 onBackPressed = null,
-            ) {
+            ) { navigator ->
                 val insets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
                 TwoPanes(
                     modifier = Modifier
@@ -113,7 +113,7 @@ class SettingsScreen(
                             SettingsMainScreen.Content(twoPane = true)
                         }
                     },
-                    end = { DefaultNavigatorScreenTransition(navigator = it) },
+                    end = { DefaultNavigatorScreenTransition(navigator = navigator) },
                 )
             }
         }

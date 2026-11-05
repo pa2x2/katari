@@ -60,6 +60,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.refresh.PullRefresh
@@ -202,6 +203,7 @@ data class CatalogScreen(
             )
         } else {
             Scaffold(
+                frame = ScreenFrame.Wide,
                 topBar = { scrollBehavior ->
                     Surface(container = SurfaceContainer.Surface) {
                         Column {

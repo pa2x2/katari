@@ -12,9 +12,6 @@ import kotlinx.coroutines.flow.Flow
 interface FeedItemSource<T : Any> {
     suspend fun observeItems(refs: List<FeedItemRef>): Flow<List<T>>
 
-    /** Whether [candidate] should replace [current], the same item observed earlier. */
-    fun supersedes(candidate: T, current: T): Boolean
-
     suspend fun resolveFilters(): EntryFilterList
 
     fun createPagingSource(filters: EntryFilterList): PagingSource<Long, T>

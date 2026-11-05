@@ -264,8 +264,6 @@ private class FakeFeedItemSource(
         return flowOf(refs.mapNotNull { itemsById[it.id] })
     }
 
-    override fun supersedes(candidate: FakeItem, current: FakeItem): Boolean = true
-
     override suspend fun resolveFilters(): EntryFilterList = EntryFilterList()
 
     override fun createPagingSource(filters: EntryFilterList): PagingSource<Long, FakeItem> {

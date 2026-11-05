@@ -16,13 +16,12 @@ import tachiyomi.domain.entry.model.Entry
 class ObservedItemStoreTest {
 
     @Test
-    fun `loaded cards share one growing entry observation`() = runTest {
+    fun `loaded cards share one growing observation, and seeding a page again keeps what was observed`() = runTest {
         val persistedEntries = MutableStateFlow((1L..101L).map(::entry))
         val observedIdSets = mutableListOf<List<Long>>()
         val store = ObservedItemStore<Long, Entry>(
             scope = backgroundScope,
             keyOf = Entry::id,
-            supersedes = { candidate, current -> candidate.version >= current.version },
         ) { entryIds ->
             observedIdSets += entryIds.sorted()
             persistedEntries.map { entries -> entries.filter { it.id in entryIds } }
@@ -56,34 +55,23 @@ class ObservedItemStoreTest {
             (1L..101L).toList(),
         )
 
-        val reseeded = entry(1).copy(title = "Reseeded", favorite = true, version = 5)
-        val reseededState = store.seed(reseeded)
+        // A page loaded before entry 1 was added to the library seeds it again, as scrolling back does
+        persistedEntries.value = persistedEntries.value.map { entry ->
+            if (entry.id == 1L) entry.copy(favorite = true) else entry
+        }
+        runCurrent()
+        val reseededState = store.seed(entry(1))
         (reseededState === states.first()) shouldBe true
-        reseededState.value!!.run {
-            title shouldBe "Reseeded"
-            favorite shouldBe true
-        }
+        reseededState.value!!.favorite shouldBe true
 
         persistedEntries.value = persistedEntries.value.map { entry ->
-            if (entry.id == 1L) entry.copy(title = "Older observation", favorite = false, version = 4) else entry
+            if (entry.id == 1L) entry.copy(title = "Renamed") else entry
         }
         runCurrent()
         reseededState.value!!.run {
-            title shouldBe "Reseeded"
+            title shouldBe "Renamed"
             favorite shouldBe true
         }
-
-        persistedEntries.value = persistedEntries.value.map { entry ->
-            if (entry.id == 1L) entry.copy(title = "Authoritative", favorite = true, version = 6) else entry
-        }
-        runCurrent()
-        reseededState.value!!.run {
-            title shouldBe "Authoritative"
-            favorite shouldBe true
-        }
-
-        store.seed(entry(1).copy(title = "Older seed", version = 5))
-        reseededState.value!!.title shouldBe "Authoritative"
     }
 
     private fun entry(id: Long): Entry {

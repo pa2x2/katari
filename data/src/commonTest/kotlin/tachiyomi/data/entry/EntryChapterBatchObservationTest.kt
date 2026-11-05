@@ -89,8 +89,6 @@ class EntryChapterBatchObservationTest {
             sourceOrder = null,
             dateFetch = null,
             dateUpload = null,
-            version = null,
-            isSyncing = null,
             memo = null,
             chapterId = chapterId,
         )

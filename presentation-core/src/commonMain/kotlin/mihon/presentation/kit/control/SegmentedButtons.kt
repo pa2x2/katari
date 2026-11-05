@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.runtime.Composable
@@ -14,6 +15,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
+import mihon.presentation.kit.layout.RowListMaxWidth
 
 /**
  * A row of mutually exclusive options, drawn as one connected group of equally wide toggle buttons like
@@ -81,11 +83,14 @@ fun <T> MultiSegmentedButtons(
     }
 }
 
-// As wide as the widest option needs for every option, unless the caller stretches the row
+// As wide as the widest option needs for every option, unless the caller stretches the row. Stretched, it stops at a
+// row column's width: past that the options drift too far apart to read as one choice.
 @Composable
 private fun ConnectedRow(modifier: Modifier, content: @Composable RowScope.() -> Unit) {
     Row(
-        modifier = modifier
+        modifier = Modifier
+            .widthIn(max = RowListMaxWidth)
+            .then(modifier)
             .selectableGroup()
             .width(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),

@@ -43,11 +43,6 @@ class CatalogFeedItemSource(
             .map { entries -> entries.map { CatalogListItem.EntryItem(it, sourceItemOrientation) } }
     }
 
-    override fun supersedes(candidate: CatalogListItem, current: CatalogListItem): Boolean {
-        if (candidate !is CatalogListItem.EntryItem || current !is CatalogListItem.EntryItem) return true
-        return candidate.entry.version >= current.entry.version
-    }
-
     override suspend fun resolveFilters(): EntryFilterList {
         return filterLoader.load(sourceId).applySnapshot(initialFilterSnapshot)
     }

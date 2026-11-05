@@ -26,6 +26,7 @@ import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.FullScreenDialog
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.navigation.AppBar
@@ -65,6 +66,7 @@ fun EntryCoverDialog(
     val page = pages[pagerState.currentPage.coerceAtMost(pages.lastIndex)]
     FullScreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(
+            frame = ScreenFrame.Window,
             snackbarHostState = snackbarHostState,
             container = SurfaceContainer.None,
             bottomBar = {

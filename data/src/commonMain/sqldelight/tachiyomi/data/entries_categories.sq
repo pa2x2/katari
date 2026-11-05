@@ -11,14 +11,6 @@ CREATE TABLE entries_categories(
 CREATE INDEX idx_entries_categories_entry ON entries_categories(profile_id, entry_id);
 CREATE INDEX idx_entries_categories_category ON entries_categories(profile_id, category_id);
 
-CREATE TRIGGER insert_entry_category_update_version AFTER INSERT ON entries_categories
-BEGIN
-    UPDATE entries
-    SET version = version + 1
-    WHERE _id = new.entry_id
-      AND (SELECT is_syncing FROM entries WHERE _id = new.entry_id) = 0;
-END;
-
 categoryMappingTableInvalidation:
 SELECT _id
 FROM entries_categories

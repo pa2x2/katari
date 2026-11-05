@@ -24,6 +24,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import mihon.app.ui.di.LocalAppUiGraph
+import mihon.presentation.kit.layout.ScreenFrame
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -93,6 +94,8 @@ data object BrowseTab : Tab {
             state = state,
             searchQuery = extensionsSearchQuery,
             onChangeSearchQuery = extensionsViewModel::search,
+            // Feeds are cover grids
+            frame = ScreenFrame.Wide,
         )
         LaunchedEffect(state, sourcesTabIndex) {
             switchToPageChannel.receiveAsFlow()

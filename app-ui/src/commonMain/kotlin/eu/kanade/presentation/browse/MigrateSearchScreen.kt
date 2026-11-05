@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.presentation.kit.layout.CardFlow
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
@@ -38,6 +39,7 @@ fun MigrateSearchScreen(
     onLongClickItem: (Entry) -> Unit,
 ) {
     Scaffold(
+        frame = ScreenFrame.Wide,
         topBar = { scrollBehavior ->
             GlobalSearchToolbar(
                 searchQuery = state.searchQuery,

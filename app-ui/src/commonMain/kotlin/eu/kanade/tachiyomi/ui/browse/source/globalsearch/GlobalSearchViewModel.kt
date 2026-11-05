@@ -71,7 +71,6 @@ class GlobalSearchViewModel(
     private val itemStore = ObservedItemStore<Long, GlobalSearchItem>(
         scope = viewModelScope + Dispatchers.IO,
         keyOf = GlobalSearchItem::id,
-        supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
     ) { entryIds ->
         getEntry.subscribe(entryIds).map { entries -> entries.map(::GlobalSearchItem) }
     }

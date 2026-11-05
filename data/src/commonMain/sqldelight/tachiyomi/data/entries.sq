@@ -27,10 +27,6 @@ CREATE TABLE entries (
     date_added INTEGER NOT NULL DEFAULT 0,
     update_strategy INTEGER AS EntryUpdateStrategy NOT NULL DEFAULT 0,
     calculate_interval INTEGER NOT NULL DEFAULT 0,
-    last_modified_at INTEGER NOT NULL DEFAULT 0,
-    favorite_modified_at INTEGER,
-    version INTEGER NOT NULL DEFAULT 0,
-    is_syncing INTEGER AS Boolean NOT NULL DEFAULT 0,
     notes TEXT NOT NULL DEFAULT "",
     memo BLOB AS JsonObject NOT NULL DEFAULT '{}',
     type TEXT NOT NULL DEFAULT 'manga',
@@ -46,34 +42,6 @@ CREATE UNIQUE INDEX idx_entries_profile_source_url_type ON entries(profile_id, s
 CREATE INDEX idx_entries_favorite ON entries(profile_id, favorite) WHERE favorite = 1;
 CREATE INDEX idx_entries_url ON entries(profile_id, url);
 CREATE INDEX idx_entries_source ON entries(profile_id, source);
-
-CREATE TRIGGER update_last_favorited_at_entries
-AFTER UPDATE OF favorite ON entries
-BEGIN
-    UPDATE entries
-    SET favorite_modified_at = strftime('%s', 'now')
-    WHERE _id = new._id;
-END;
-
-CREATE TRIGGER update_last_modified_at_entries
-AFTER UPDATE ON entries
-FOR EACH ROW
-BEGIN
-    UPDATE entries
-    SET last_modified_at = strftime('%s', 'now')
-    WHERE _id = new._id;
-END;
-
-CREATE TRIGGER update_entry_version AFTER UPDATE ON entries
-BEGIN
-    UPDATE entries SET version = version + 1
-    WHERE _id = new._id AND new.is_syncing = 0 AND (
-        new.url != old.url OR
-        new.description != old.description OR
-        new.favorite != old.favorite OR
-        new.library_pinned != old.library_pinned
-    );
-END;
 
 getEntryById:
 SELECT *
@@ -138,12 +106,6 @@ FROM entries
 WHERE profile_id = :profileId
 AND _id IN :entryIds;
 
-getEntriesWithFavoriteTimestamp:
-SELECT *
-FROM entries
-WHERE profile_id = :profileId
-AND favorite_modified_at IS NOT NULL;
-
 getSourceIdWithFavoriteCount:
 SELECT
     source,
@@ -207,12 +169,6 @@ resetViewerFlags:
 UPDATE entries
 SET viewer = 0
 WHERE profile_id = :profileId;
-
-resetIsSyncing:
-UPDATE entries
-SET is_syncing = 0
-WHERE profile_id = :profileId
-AND is_syncing = 1;
 
 setDownloadTitleIfMissing:
 UPDATE entries
@@ -314,14 +270,14 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    notes, memo, type, library_pinned, merged_by_source, download_title,
     background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
     :backgroundUrl
 );
 
@@ -330,14 +286,14 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    notes, memo, type, library_pinned, merged_by_source, download_title,
     background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
     :backgroundUrl
 )
 RETURNING _id;
@@ -365,8 +321,6 @@ UPDATE entries SET
     date_added = coalesce(:dateAdded, date_added),
     update_strategy = coalesce(:updateStrategy, update_strategy),
     calculate_interval = coalesce(:calculateInterval, calculate_interval),
-    version = coalesce(:version, version),
-    is_syncing = coalesce(:isSyncing, is_syncing),
     notes = coalesce(:notes, notes),
     memo = coalesce(:memo, memo),
     type = coalesce(:type, type),
@@ -441,14 +395,14 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, memo, type, library_pinned, merged_by_source, download_title,
+    memo, type, library_pinned, merged_by_source, download_title,
     background_url
 )
 SELECT
     :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
     :backgroundUrl
 WHERE NOT EXISTS(
     SELECT 0 FROM entries

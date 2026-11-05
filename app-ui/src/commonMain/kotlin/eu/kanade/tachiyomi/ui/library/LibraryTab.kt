@@ -56,6 +56,7 @@ import mihon.core.platform.currentPlatformContext
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import mihon.presentation.kit.selection.ItemSelection
@@ -167,6 +168,8 @@ data object LibraryTab : Tab {
         )
 
         Scaffold(
+
+            frame = ScreenFrame.Wide,
             topBarScrollBehavior = topBarScrollBehavior,
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(

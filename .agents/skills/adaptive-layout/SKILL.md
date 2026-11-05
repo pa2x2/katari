@@ -1,15 +1,15 @@
 ---
 name: adaptive-layout
-description: Rules every Katari screen follows so it works at any window size and through folding: where window facts come from, which kit layout types build a screen, insets, state that survives a fold, and the four windows to check. Use whenever UI work in Katari adds or changes a screen, tab, pane, list, grid, sheet, dialog, menu, app bar or navigation, and when `checkUiKitBoundaries` reports an adaptive-layout violation.
+description: Rules every Katari screen follows so it works at any window size and through folding: where window facts come from, which kit layout types build a screen, insets, state that survives a fold, and the five windows to check. Use whenever UI work in Katari adds or changes a screen, tab, pane, list, grid, sheet, dialog, menu, app bar or navigation, and when `checkUiKitBoundaries` reports an adaptive-layout violation.
 ---
 
 # Adaptive layout rules
 
-Katari runs on phones, tablets, foldables and resizable windows. A book-style foldable shows a narrow portrait screen folded and a wide, nearly square one unfolded, both portrait, and switches between them while a screen is open. These rules let one screen work in all of them without per-screen fixes. The UI kit (`presentation-core`, `mihon.presentation.kit`) owns every decision below; a screen supplies content and behaviour. They extend the UI kit rules in `AGENTS.md`.
+Katari runs on phones, tablets, foldables, resizable windows and desktop windows. A book-style foldable shows a narrow portrait screen folded and a wide, nearly square one unfolded, both portrait, and switches between them while a screen is open. These rules let one screen work in all of them without per-screen fixes. The UI kit (`presentation-core`, `mihon.presentation.kit`) owns every decision below; a screen supplies content and behaviour. They extend the UI kit rules in `AGENTS.md`.
 
 ## 1. Window facts come from the kit only
 
-- Read the window through `currentWindowLayout()` (`kit/window/WindowLayout.kt`): `width` (`WindowWidth.Compact` < 600 dp, `Medium` < 840 dp, `Expanded`), `isShort` (< 480 dp tall), `fold` (a `WindowFold`, with its position and whether it's half-open), `usesSideNavigation` and `usesTwoPanes`. The Tablet UI setting ("Never") is already applied to them.
+- Read the window through `currentWindowLayout()` (`kit/window/WindowLayout.kt`): `width` (`WindowWidth.Compact` < 600 dp, `Medium` < 840 dp, `Expanded` < 1200 dp, `Large` < 1600 dp, `ExtraLarge`), `isShort` (< 480 dp tall), `fold` (a `WindowFold`, with its position and whether it's half-open), `usesSideNavigation` and `usesTwoPanes`. The Tablet UI setting ("Never") is already applied to them.
 - Never read `LocalConfiguration`'s size or orientation, `LocalWindowInfo`, `Configuration.ORIENTATION_*`, display metrics or `WindowInfoTracker` outside the kit. Orientation says nothing about the room a screen has: folded and unfolded are both portrait.
 - Never choose a layout from a width you measured (`BoxWithConstraints` plus a breakpoint). If a kit type should adapt, change the kit type.
 
@@ -18,12 +18,13 @@ Katari runs on phones, tablets, foldables and resizable windows. A book-style fo
 | Job | Kit type |
 |---|---|
 | A screen: bars, FAB, snackbars, insets, room for the floating dock | `kit/navigation/Scaffold` |
-| A vertical list of rows (row group cards, history, sources, settings) | `kit/layout/RowList`: rows capped at 640 dp and centred, with a scroll indicator while scrolling; `fastScroll = true` makes it a draggable thumb for long lists (`fastScrollTopPadding` when the first row runs under a transparent bar); `columnInset` in its scope lets a backdrop behind the first rows bleed to the list's edges |
+| How wide the screen's content may grow | `Scaffold(frame = …)` with a `kit/layout/ScreenFrame`: `Rows` (the default: one column of rows, 640 dp), `ListDetail` (`TwoPanes` where the window holds them), `Wide` (cover grids and card flows, up to 1600 dp), `Window` (web pages, pictures, shells around other screens). The frame is centred beside the dock; the app bar's contents, the content padding and the FAB line up with it, so pass the content padding on and never centre or cap content yourself |
+| A vertical list of rows (row group cards, history, sources, settings) | `kit/layout/RowList`, with `RowListHeader` for a search field or other control that stays above it: rows capped at 640 dp, at the frame's start edge (a `Rows` frame is exactly that wide), with a scroll indicator while scrolling; `fastScroll = true` makes it a draggable thumb for long lists (`fastScrollTopPadding` when the first row runs under a transparent bar); `columnInset` in its scope lets a backdrop behind the first rows bleed to the list's edges. A list of row groups that may sit side by side (sources, extensions; not ordered lists such as history or settings) sets `wrapGroups = true`: once its frame holds two 400 dp columns, the rows `rowGroupItems` adds wrap into lines across each group's card and headers span the frame |
 | A grid of entry covers | `GridCells` from `kit/layout/coverGridCells(coverSize, wideCovers)`; the column count follows the user's Cover size, never a fixed count or orientation |
-| Entries shown as rows through a grid (list display modes) | `kit/layout/RowGridColumn(contentPadding) { columns, padding -> … }`: one column, centred like `RowList` |
-| Cards of varying height (global search sources, statistics) | `kit/layout/CardFlow`: one column, two once two cards fit; a wide card spans with `StaggeredGridItemSpan.FullLine`. Row group and dashboard cards bring their own side margin and gap, so the flow adds none |
+| Entries shown as rows through a grid (list display modes) | `kit/layout/RowGridColumn(contentPadding) { columns, padding -> … }`: one column, placed like `RowList` |
+| Cards of varying height (global search sources, statistics) | `kit/layout/CardFlow`: as many columns as keep each card 320 to 480 dp wide, one on a phone; a wide card spans with `StaggeredGridItemSpan.FullLine`. Row group and dashboard cards bring their own side margin and gap, so the flow adds none. A dashboard's headline tiles go in `kit/layout/DashboardTiles`: one line where they fit, two to a line otherwise |
 | Actions or chips that may not fit on one line | `ActionButtonRow(wrap)`, `ChipRow(wrap)`: scroll sideways in compact windows and wrap where the pane has room, such as an entry's info pane in two panes |
-| List and detail side by side | `kit/layout/TwoPanes`, when `usesTwoPanes`: splits on a vertical fold, start pane clear of the side dock |
+| List and detail side by side | `kit/layout/TwoPanes`, when `usesTwoPanes`: splits on a vertical fold; otherwise a start pane that widens with the window class beside an end pane of rows (at most 640 dp), centred together; start pane clear of the side dock. Its screen uses the `ListDetail` frame |
 | Sheet, dialog, menu, selection actions | `Sheet`, `Dialog`, `DropdownMenu`, `SelectionActionBar`: each picks its own form (side sheet in wide windows, one half of a half-open fold, floating selection pill from Medium) |
 
 A raw `LazyColumn`, a `GridCells` or `StaggeredGridCells` built outside the kit, or a hand-built pane split is a structure of your own; use the type above or add one to the kit.
@@ -47,9 +48,9 @@ A raw `LazyColumn`, a `GridCells` or `StaggeredGridCells` built outside the kit,
 - Close things only on real events observed where they happen (a profile switch in the view model), never in a `LaunchedEffect` keyed on a value that is simply read again on recomposition.
 - Don't cache window facts at screen creation; read them where they are used.
 
-## 6. Check on four windows
+## 6. Check on five windows
 
-Before calling UI work done, look at it in each of these, on a foldable device or a foldable or resizable emulator:
+Before calling UI work done, look at it in each of these, on a foldable device or a foldable or resizable emulator, and a desktop window for the last:
 
 | Window | What it catches |
 |---|---|
@@ -57,6 +58,7 @@ Before calling UI work done, look at it in each of these, on a foldable device o
 | Short and wide (a phone or folded foldable in landscape) | `isShort` layouts, the side dock beside a low window, a side cutout |
 | Expanded (a tablet, or a foldable unfolded) | the side dock on pushed screens, two panes on the fold, side sheets, centred row lists |
 | Half-open book posture | dialogs and sheets kept to one half, nothing important across the bend |
+| Extra-large (a desktop window maximised, 1600 dp and wider) | the screen frame: title, tabs, content and main action share one edge; no row or card stretched across the window; grouped rows and cards gain columns |
 
 Also change the window while a sheet, dialog, selection and search are open, by folding or resizing: each must stay open.
 

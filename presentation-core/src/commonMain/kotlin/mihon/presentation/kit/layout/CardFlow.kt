@@ -13,11 +13,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlin.math.ceil
+import kotlin.math.min
 
 /**
- * Cards flowing down the screen in one column, or in two once the width holds two cards of [CardFlowMinCardWidth],
- * such as global search's source cards or the statistics dashboard. A card goes into the shorter column, so cards of
- * different heights leave no gaps; one that needs the width, such as a wide chart, spans both columns with
+ * Cards flowing down the screen in columns, such as global search's source cards or the statistics dashboard. A card
+ * stays between [CardMinWidth] and [CardMaxWidth] wide, so a wider window adds columns rather than stretching cards; a
+ * window too narrow for two columns has one card across its width. A card goes into the shortest column, so cards of
+ * different heights leave no gaps; one that needs the width, such as a wide chart, spans every column with
  * `StaggeredGridItemSpan.FullLine`. The flow adds no space of its own: row group and dashboard cards already keep
  * their side margin and the gap below them, so one column looks as it does in a [RowList].
  */
@@ -32,7 +35,7 @@ fun CardFlow(
     BoxWithConstraints(modifier = modifier) {
         val width = maxWidth - contentPadding.calculateStartPadding(direction) -
             contentPadding.calculateEndPadding(direction)
-        val columns = if (width >= CardFlowMinCardWidth * 2) 2 else 1
+        val columns = min((width / CardMinWidth).toInt(), ceil(width / CardMaxWidth).toInt()).coerceAtLeast(1)
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(columns),
             state = state,
@@ -42,4 +45,5 @@ fun CardFlow(
     }
 }
 
-private val CardFlowMinCardWidth = 320.dp
+private val CardMinWidth = 320.dp
+private val CardMaxWidth = 480.dp

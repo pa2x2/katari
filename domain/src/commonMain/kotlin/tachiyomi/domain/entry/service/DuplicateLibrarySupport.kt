@@ -27,7 +27,6 @@ data class DuplicateLibraryCandidate<T>(
     val memberIds: List<Long>,
     val memberEntries: List<DuplicateEntryMetadata>,
     val count: Long,
-    val contentSignature: Long,
 )
 
 data class DuplicateLibraryMatch<T>(
@@ -37,7 +36,6 @@ data class DuplicateLibraryMatch<T>(
     val scoreMax: Int,
     val score: Int,
     val reasons: List<DuplicateMatchReason>,
-    val contentSignature: Long,
 )
 
 data class DuplicateConfig(
@@ -156,7 +154,6 @@ object DuplicateLibrarySupport {
             } else {
                 bestMatch.reasons
             },
-            contentSignature = libraryItem.contentSignature,
         )
     }
 
@@ -294,7 +291,6 @@ object DuplicateLibrarySupport {
             scoreMax = LEGACY_SCORE_MAX,
             score = score,
             reasons = reasons.toList(),
-            contentSignature = libraryItem.contentSignature,
         )
     }
 

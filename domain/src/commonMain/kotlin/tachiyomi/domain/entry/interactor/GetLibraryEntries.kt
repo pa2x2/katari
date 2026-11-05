@@ -365,17 +365,9 @@ private fun List<Entry>.isPinOnlyUpdateFrom(previous: List<Entry>): Boolean {
         val currentEntry = this[index]
         val previousEntry = previous[index]
         pinChanged = pinChanged || currentEntry.libraryPinned != previousEntry.libraryPinned
-        if (currentEntry.withoutPinMutationState() != previousEntry.withoutPinMutationState()) return false
+        if (currentEntry.copy(libraryPinned = false) != previousEntry.copy(libraryPinned = false)) return false
     }
     return pinChanged
-}
-
-private fun Entry.withoutPinMutationState(): Entry {
-    return copy(
-        libraryPinned = false,
-        lastModifiedAt = 0L,
-        version = 0L,
-    )
 }
 
 private fun List<LibraryItem>.applyEntryUpdates(favorites: List<Entry>): List<LibraryItem> {

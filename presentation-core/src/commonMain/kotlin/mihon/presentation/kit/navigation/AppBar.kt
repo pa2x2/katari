@@ -48,6 +48,7 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.LocalScreenFrameMargin
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.theme.style
@@ -386,7 +387,8 @@ fun UpButton(onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVect
 
 /**
  * Content under an [AppBar] in the same top bar, such as filter chips or a summary line, kept clear of the system bars,
- * a camera cutout and a side dock like the bar's own contents. The caller's background runs under them with the bar's.
+ * a camera cutout and a side dock, and inside the screen's frame, like the bar's own contents. The caller's background
+ * runs under them with the bar's.
  */
 @Composable
 fun AppBarExtension(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
@@ -395,15 +397,17 @@ fun AppBarExtension(modifier: Modifier = Modifier, content: @Composable () -> Un
     }
 }
 
-// The bars, a camera cutout and a side dock, as the content under the bar is inset by, so the large title lines up
-// with it. The dock's room is added rather than combined: the dock itself sits inside the other insets.
+// The bars, a camera cutout, a side dock and the screen frame's margins, as the content under the bar is inset by, so
+// the bar's contents line up with it. The dock's room and the margins are added rather than combined: the dock sits
+// inside the other insets, and the frame is centred in the room they leave.
 private val AppBarInsets: WindowInsets
     @Composable get() {
         val dock = LocalDockClearance.current.start
-        val dockInsets = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
-            WindowInsets(left = dock)
+        val margin = LocalScreenFrameMargin.current
+        val frameInsets = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
+            WindowInsets(left = dock + margin, right = margin)
         } else {
-            WindowInsets(right = dock)
+            WindowInsets(left = margin, right = dock + margin)
         }
-        return WindowInsets.systemBars.union(WindowInsets.displayCutout).add(dockInsets)
+        return WindowInsets.systemBars.union(WindowInsets.displayCutout).add(frameInsets)
     }

@@ -29,10 +29,10 @@ class LegacyBackupManga(
     @ProtoNumber(103) var viewer_flags: Int? = null,
     @ProtoNumber(104) var history: List<BackupHistory> = emptyList(),
     @ProtoNumber(105) var updateStrategy: EntryUpdateStrategy = EntryUpdateStrategy.ALWAYS_UPDATE,
-    @ProtoNumber(106) var lastModifiedAt: Long = 0,
+    // @ProtoNumber(106) var lastModifiedAt: Long, part of the sync scaffold inherited from Mihon
     @ProtoNumber(107) var favoriteModifiedAt: Long? = null,
     @ProtoNumber(108) var excludedScanlators: List<String> = emptyList(),
-    @ProtoNumber(109) var version: Long = 0,
+    // @ProtoNumber(109) var version: Long, part of the sync scaffold inherited from Mihon
     @ProtoNumber(110) var notes: String = "",
     @ProtoNumber(111) var initialized: Boolean = false,
     // Mihon uses this field for memo bytes, while older Katari backups used it for displayName.
@@ -56,8 +56,8 @@ data class LegacyBackupChapter(
     @ProtoNumber(8) var dateUpload: Long = 0,
     @ProtoNumber(9) var chapterNumber: Float = 0F,
     @ProtoNumber(10) var sourceOrder: Long = 0,
-    @ProtoNumber(11) var lastModifiedAt: Long = 0,
-    @ProtoNumber(12) var version: Long = 0,
+    // @ProtoNumber(11) var lastModifiedAt: Long, part of the sync scaffold inherited from Mihon
+    // @ProtoNumber(12) var version: Long, part of the sync scaffold inherited from Mihon
     @ProtoNumber(13) var memo: ByteArray = mihon.core.common.extensions.JsonObjectEmptyBytes,
 )
 
@@ -77,9 +77,9 @@ data class LegacyBackupAnime(
     @ProtoNumber(12) var favorite: Boolean = true,
     @ProtoNumber(13) var initialized: Boolean = false,
     @ProtoNumber(14) var lastUpdate: Long = 0,
-    @ProtoNumber(16) var lastModifiedAt: Long = 0,
+    // @ProtoNumber(16) var lastModifiedAt: Long, part of the sync scaffold inherited from Mihon
     @ProtoNumber(17) var favoriteModifiedAt: Long? = null,
-    @ProtoNumber(18) var version: Long = 0,
+    // @ProtoNumber(18) var version: Long, part of the sync scaffold inherited from Mihon
     @ProtoNumber(19) var notes: String = "",
     @ProtoNumber(20) var displayName: String? = null,
     @ProtoNumber(21) var playbackPreferences: BackupPlaybackPreferences? = null,
@@ -101,8 +101,8 @@ data class LegacyBackupAnimeEpisode(
     @ProtoNumber(6) var dateUpload: Long = 0,
     @ProtoNumber(7) var episodeNumber: Float = 0F,
     @ProtoNumber(8) var sourceOrder: Long = 0,
-    @ProtoNumber(9) var lastModifiedAt: Long = 0,
-    @ProtoNumber(10) var version: Long = 0,
+    // @ProtoNumber(9) var lastModifiedAt: Long, part of the sync scaffold inherited from Mihon
+    // @ProtoNumber(10) var version: Long, part of the sync scaffold inherited from Mihon
 )
 
 internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
@@ -123,9 +123,7 @@ internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
         viewerFlags = (viewer_flags ?: viewer).toLong(),
         chapterFlags = chapterFlags.toLong(),
         updateStrategy = updateStrategy,
-        lastModifiedAt = lastModifiedAt,
         favoriteModifiedAt = favoriteModifiedAt,
-        version = version,
         notes = notes,
         initialized = initialized,
         memo = memo,
@@ -180,8 +178,6 @@ internal fun LegacyBackupChapter.toBackupChapter(): BackupChapter {
         dateFetch = dateFetch,
         dateUpload = dateUpload,
         sourceOrder = sourceOrder,
-        lastModifiedAt = lastModifiedAt,
-        version = version,
         memo = memo,
     )
 }
@@ -201,9 +197,7 @@ internal fun LegacyBackupAnime.toBackupEntry(): BackupEntry {
         chapterFlags = episodeFlags,
         coverLastModified = coverLastModified,
         updateStrategy = EntryUpdateStrategy.ALWAYS_UPDATE,
-        lastModifiedAt = lastModifiedAt,
         favoriteModifiedAt = favoriteModifiedAt,
-        version = version,
         notes = notes,
         initialized = initialized,
         lastUpdate = lastUpdate,
@@ -237,7 +231,5 @@ internal fun LegacyBackupAnimeEpisode.toBackupChapter(): BackupChapter {
         dateFetch = dateFetch,
         dateUpload = dateUpload,
         sourceOrder = sourceOrder,
-        lastModifiedAt = lastModifiedAt,
-        version = version,
     )
 }
