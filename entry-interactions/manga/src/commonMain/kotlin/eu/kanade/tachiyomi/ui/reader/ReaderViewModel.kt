@@ -84,7 +84,7 @@ import mihon.entry.interactions.manga.reader.text.translation.MangaReaderTransla
 import mihon.entry.interactions.manga.reader.text.translation.MangaTextTranslationController
 import mihon.entry.interactions.manga.reader.text.translation.MangaTranslationLanguageStore
 import mihon.entry.interactions.manga.state.mangaProgressState
-import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.manga.state.resumePageIndex
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
@@ -447,7 +447,7 @@ internal class ReaderViewModel(
                     manga = mangaById[chapter.entryId],
                     group = chapter.groupKey?.let { ReaderChapterGroup(it, groupTitles[chapter.groupId] ?: it) },
                 ).apply {
-                    requestedPage = progressByChapterId[chapter.id]?.pageIndex?.toInt() ?: 0
+                    requestedPage = progressByChapterId[chapter.id]?.resumePageIndex?.toInt() ?: 0
                 }
             }
     }

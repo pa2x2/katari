@@ -9,6 +9,10 @@ internal const val MANGA_PROGRESS_LOCATOR_KIND = "page"
 internal val EntryProgressState.pageIndex: Long
     get() = locator.takeIf { it.kind == MANGA_PROGRESS_LOCATOR_KIND }?.position ?: 0L
 
+/** The page a chapter opens at: a read chapter starts over, as the page saved with it is its last. */
+internal val EntryProgressState.resumePageIndex: Long
+    get() = if (completed) 0L else pageIndex
+
 internal val EntryProgressState.pageCount: Long
     get() = locator.takeIf { it.kind == MANGA_PROGRESS_LOCATOR_KIND }?.extent ?: 0L
 

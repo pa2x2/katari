@@ -7,7 +7,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.manga.state.mangaProgressState
-import mihon.entry.interactions.manga.state.pageIndex
+import mihon.entry.interactions.manga.state.resumePageIndex
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
@@ -53,7 +53,7 @@ internal class MangaImmersiveChapters(
                 chapterId = chapter.id,
                 delegate = MangaImmersiveMedia(
                     readerChapter = readerChapter,
-                    initialPageIndex = progress?.pageIndex?.toInt()?.coerceIn(0, pages.lastIndex) ?: 0,
+                    initialPageIndex = progress?.resumePageIndex?.toInt()?.coerceIn(0, pages.lastIndex) ?: 0,
                     entry = entry,
                     child = chapter,
                 ),
