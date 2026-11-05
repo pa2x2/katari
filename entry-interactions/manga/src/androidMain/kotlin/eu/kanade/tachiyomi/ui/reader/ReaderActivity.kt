@@ -66,11 +66,13 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupErrorScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -164,8 +166,8 @@ class ReaderActivity : EntryInteractionActivity() {
         MangaReaderTextInteraction(
             session = viewModel.textSession,
             translation = viewModel.textTranslation,
-            visibleSurfaces = { viewModel.state.value.viewer?.visibleTextSurfaces().orEmpty() },
-            preloadedSurfaces = { viewModel.state.value.viewer?.preloadedTextSurfaces().orEmpty() },
+            visibleSurfaces = { viewer?.visibleTextSurfaces().orEmpty() },
+            preloadedSurfaces = { viewer?.preloadedTextSurfaces().orEmpty() },
             processAheadAllowed = {
                 val settings = viewModel.settingsBindings.value
                 settings != null && textProcessAheadPolicy.allows(
@@ -188,6 +190,10 @@ class ReaderActivity : EntryInteractionActivity() {
     private var readerBackgroundColor: Int? = null
 
     private var loadingIndicator: ReaderProgressIndicator? = null
+
+    // The View viewer showing the pages (pager, webtoon, ...), which this activity makes and owns
+    private val currentViewer = MutableStateFlow<Viewer?>(null)
+    private val viewer: Viewer? get() = currentViewer.value
     private var isAutoScrollRunning by mutableStateOf(false)
     private var autoScrollSpeed by mutableStateOf(MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT)
     private var appliedRuntimeSettings: ReaderRuntimeSettings? = null
@@ -258,7 +264,7 @@ class ReaderActivity : EntryInteractionActivity() {
             .onEach { speed ->
                 autoScrollSpeed = speed
                 if (isAutoScrollRunning) {
-                    viewModel.state.value.viewer?.updateAutoScrollSpeed(speed)
+                    viewer?.updateAutoScrollSpeed(speed)
                 }
             }
             .launchIn(lifecycleScope)
@@ -328,12 +334,6 @@ class ReaderActivity : EntryInteractionActivity() {
                     is ReaderViewModel.Event.SavedImage -> {
                         onSaveImageResult(event.result)
                     }
-                    is ReaderViewModel.Event.ShareImage -> {
-                        onShareImageResult(event.uri, event.page)
-                    }
-                    is ReaderViewModel.Event.CopyImage -> {
-                        onCopyImageResult(event.uri)
-                    }
                     is ReaderViewModel.Event.SetCoverResult -> {
                         onSetAsCoverResult(event.result)
                     }
@@ -344,10 +344,11 @@ class ReaderActivity : EntryInteractionActivity() {
 
     private fun ReaderActivityViews.setComposeOverlay(): Unit = composeOverlay.setReaderComposeContent content@{
         val state by viewModel.state.collectAsState()
+        val viewer by currentViewer.collectAsState()
         val currentWindowLayout = currentWindowLayout()
         LaunchedEffect(currentWindowLayout) {
             windowLayout = currentWindowLayout
-            (viewModel.state.value.viewer as? PagerViewer)?.onSpreadConditionsChanged()
+            (viewer as? PagerViewer)?.onSpreadConditionsChanged()
         }
         when (val startup = state.startupState) {
             ReaderStartupState.Loading -> {
@@ -368,7 +369,7 @@ class ReaderActivity : EntryInteractionActivity() {
         val showPageNumber by settings.showPageNumber.state.collectAsState()
         val settingsScreenModel = remember(settings) {
             ReaderSettingsScreenModel(
-                readerState = viewModel.state,
+                viewerFlow = currentViewer,
                 settings = settings,
                 onChangeReadingMode = viewModel::setMangaReadingMode,
                 onChangeOrientation = viewModel::setMangaOrientationType,
@@ -389,7 +390,7 @@ class ReaderActivity : EntryInteractionActivity() {
                     } else {
                         null
                     },
-                    rightToLeft = state.viewer is R2LPagerViewer,
+                    rightToLeft = viewer is R2LPagerViewer,
                     pageMiddles = spreadPageMiddles?.takeIf { it.first == state.currentPage }?.second,
                 ) {
                     ReaderPageIndicator(state.currentPage, state.totalPages, Modifier.align(Alignment.Center))
@@ -453,8 +454,8 @@ class ReaderActivity : EntryInteractionActivity() {
                 ReaderPageActionsDialog(
                     onDismissRequest = onDismissRequest,
                     onSetAsCover = viewModel::setAsCover,
-                    onShare = viewModel::shareImage,
-                    onSave = viewModel::saveImage,
+                    onShare = { copyToClipboard -> viewModel.shareImage(this@ReaderActivity, copyToClipboard) },
+                    onSave = { viewModel.saveImage(this@ReaderActivity) },
                 )
             }
             null -> {}
@@ -468,7 +469,7 @@ class ReaderActivity : EntryInteractionActivity() {
         stopAutoScroll(showToast = false)
         systemBars.release()
         super.onDestroy()
-        viewModel.state.value.viewer?.destroy()
+        viewer?.destroy()
         config = null
         menuToggleToast?.cancel()
         readingModeToast?.cancel()
@@ -559,7 +560,7 @@ class ReaderActivity : EntryInteractionActivity() {
      * Dispatches a key event. If the viewer doesn't handle it, call the default implementation.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val handled = handleAutoScrollKeyEvent(event) || (viewModel.state.value.viewer?.handleKeyEvent(event) ?: false)
+        val handled = handleAutoScrollKeyEvent(event) || (viewer?.handleKeyEvent(event) ?: false)
         return handled || super.dispatchKeyEvent(event)
     }
 
@@ -568,7 +569,7 @@ class ReaderActivity : EntryInteractionActivity() {
      * implementation.
      */
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
-        val handled = viewModel.state.value.viewer?.handleGenericMotionEvent(event) ?: false
+        val handled = viewer?.handleGenericMotionEvent(event) ?: false
         return handled || super.dispatchGenericMotionEvent(event)
     }
 
@@ -602,13 +603,14 @@ class ReaderActivity : EntryInteractionActivity() {
             return
         }
         val settings = viewModel.settingsBindings.collectAsState().value ?: return
+        val viewer by currentViewer.collectAsState()
 
         val cropBorderPaged by settings.cropBorders.state.collectAsState()
         val cropBorderWebtoon by settings.cropBordersWebtoon.state.collectAsState()
         val autoScrollFeatureEnabled by settings.autoScrollEnabled.state.collectAsState()
         val isPagerType = ReadingMode.isPagerType(viewModel.getMangaReadingMode())
         val cropEnabled = if (isPagerType) cropBorderPaged.effectiveValue else cropBorderWebtoon.effectiveValue
-        val showAutoScrollToggle = autoScrollFeatureEnabled.effectiveValue && state.viewer?.supportsAutoScroll() == true
+        val showAutoScrollToggle = autoScrollFeatureEnabled.effectiveValue && viewer?.supportsAutoScroll() == true
 
         val textState by viewModel.textSession.state.collectAsState()
         val verticalNavigatorModes by settings.verticalNavigator.state.collectAsState()
@@ -629,10 +631,10 @@ class ReaderActivity : EntryInteractionActivity() {
             onToggleBookmarked = viewModel::toggleChapterBookmark,
             childWebView = chapterWebView,
             onChildWebViewAction = ::launchChapterWebViewAction,
-            onShiftPages = (state.viewer as? PagerViewer)?.takeIf { state.showsTwoPages }?.let { it::shiftPages },
+            onShiftPages = (viewer as? PagerViewer)?.takeIf { state.showsTwoPages }?.let { it::shiftPages },
 
             chapterNavigatorType = if (!verticalNavigator) {
-                if (state.viewer is R2LPagerViewer) {
+                if (viewer is R2LPagerViewer) {
                     ChapterNavigatorType.HORIZONTAL_RTL
                 } else {
                     ChapterNavigatorType.HORIZONTAL_LTR
@@ -767,7 +769,7 @@ class ReaderActivity : EntryInteractionActivity() {
     }
 
     private fun updateViewer() {
-        val prevViewer = viewModel.state.value.viewer
+        val prevViewer = viewer
         val newViewer = ReadingMode.toViewer(viewModel.getMangaReadingMode(), this)
 
         stopAutoScroll(showToast = false)
@@ -786,7 +788,8 @@ class ReaderActivity : EntryInteractionActivity() {
             prevViewer.destroy()
             views.viewerContainer.removeAllViews()
         }
-        viewModel.onViewerLoaded(newViewer)
+        currentViewer.value = newViewer
+        viewModel.onViewerChanged()
         val settings = viewModel.readerSettings
         updateViewerInset(settings.drawUnderCutout.state.value.effectiveValue)
         views.viewerContainer.addView(newViewer.getView())
@@ -832,7 +835,7 @@ class ReaderActivity : EntryInteractionActivity() {
     @SuppressLint("RestrictedApi")
     private fun setChapters(viewerChapters: ViewerChapters) {
         views.readerContainer.removeView(loadingIndicator)
-        viewModel.state.value.viewer?.setChapters(viewerChapters)
+        viewer?.setChapters(viewerChapters)
 
         val chapterId = viewerChapters.current.chapter.id
         chapterWebView = null
@@ -872,7 +875,7 @@ class ReaderActivity : EntryInteractionActivity() {
      * page is not found.
      */
     private fun moveToPageIndex(index: Int) {
-        val viewer = viewModel.state.value.viewer ?: return
+        val viewer = currentViewer.value ?: return
         val currentChapter = viewModel.state.value.currentChapter ?: return
         val page = currentChapter.pages?.getOrNull(index) ?: return
         viewer.moveToPage(page)
@@ -965,7 +968,7 @@ class ReaderActivity : EntryInteractionActivity() {
             ?.value
             ?.effectiveValue
             ?: false
-        return autoScrollEnabled && viewModel.state.value.viewer?.supportsAutoScroll() == true
+        return autoScrollEnabled && viewer?.supportsAutoScroll() == true
     }
 
     private fun toggleAutoScroll() {
@@ -981,7 +984,7 @@ class ReaderActivity : EntryInteractionActivity() {
             return
         }
 
-        viewModel.state.value.viewer?.startAutoScroll(autoScrollSpeed)
+        viewer?.startAutoScroll(autoScrollSpeed)
         isAutoScrollRunning = true
         hideMenu()
 
@@ -996,7 +999,7 @@ class ReaderActivity : EntryInteractionActivity() {
             return
         }
 
-        viewModel.state.value.viewer?.stopAutoScroll()
+        viewer?.stopAutoScroll()
         isAutoScrollRunning = false
 
         if (showToast) {
@@ -1016,7 +1019,7 @@ class ReaderActivity : EntryInteractionActivity() {
         }
 
         autoScrollSpeed = newSpeed
-        viewModel.state.value.viewer?.updateAutoScrollSpeed(newSpeed)
+        viewer?.updateAutoScrollSpeed(newSpeed)
     }
 
     private fun handleAutoScrollKeyEvent(event: KeyEvent): Boolean {
@@ -1057,27 +1060,6 @@ class ReaderActivity : EntryInteractionActivity() {
         if (viewModel.state.value.menuVisible) {
             setMenuVisibility(false)
         }
-    }
-
-    /**
-     * Called from the presenter when a page is ready to be shared. It shows Android's default
-     * sharing tool.
-     */
-    private fun onShareImageResult(uri: Uri, page: ReaderPage) {
-        val manga = viewModel.manga ?: return
-        val chapter = page.chapter.chapter
-
-        val intent = uri.toReaderShareIntent(
-            context = applicationContext,
-            message = stringResource(MR.strings.share_page_info, manga.displayTitle, chapter.name, page.number),
-        )
-        startActivity(intent)
-    }
-
-    private fun onCopyImageResult(uri: Uri) {
-        val clipboardManager = applicationContext.getSystemService<ClipboardManager>() ?: return
-        val clipData = ClipData.newUri(applicationContext.contentResolver, "", uri)
-        clipboardManager.setPrimaryClip(clipData)
     }
 
     /**

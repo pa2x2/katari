@@ -2,7 +2,7 @@ package mihon.entry.interactions.manga.reader.text.geometry
 
 import mihon.text.recognition.api.image.ImageRect
 import mihon.text.recognition.api.image.ImageSize
-import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.SpreadSide
 
 /** How a viewer derived the image it displays from the raw page of [rawSize]. */
 internal sealed interface MangaPageTransform {
@@ -19,7 +19,7 @@ internal sealed interface MangaPageTransform {
     }
 
     /** One half of a double-page spread, displayed on its own (dual-page split in the paged viewers). */
-    data class Half(val rawSize: ImageSize, val side: ImageUtil.Side) : MangaPageTransform {
+    data class Half(val rawSize: ImageSize, val side: SpreadSide) : MangaPageTransform {
         override fun pieceShowing(bounds: ImageRect): MangaPagePiece? {
             val half = rawSize.half(side)
             return MangaPagePiece.Moved(half, dx = -half.left, dy = 0).takeIf { it.holdsMostOf(bounds) }
@@ -27,7 +27,7 @@ internal sealed interface MangaPageTransform {
     }
 
     /** Both halves of a spread, [upper] above the other (dual-page split in the webtoon viewer). */
-    data class Stacked(val rawSize: ImageSize, val upper: ImageUtil.Side) : MangaPageTransform {
+    data class Stacked(val rawSize: ImageSize, val upper: SpreadSide) : MangaPageTransform {
         override fun pieceShowing(bounds: ImageRect): MangaPagePiece? {
             val top = rawSize.half(upper)
             val bottom = rawSize.half(upper.opposite)
@@ -77,14 +77,8 @@ internal sealed interface MangaPagePiece {
     }
 }
 
-/** The half [ImageUtil.splitInHalf] and [ImageUtil.splitAndMerge] take for [side]. */
-private fun ImageSize.half(side: ImageUtil.Side): ImageRect = when (side) {
-    ImageUtil.Side.LEFT -> ImageRect(0, 0, width / 2, height)
-    ImageUtil.Side.RIGHT -> ImageRect(width - width / 2, 0, width, height)
+/** The half the viewers' spread splitting takes for [side]. */
+private fun ImageSize.half(side: SpreadSide): ImageRect = when (side) {
+    SpreadSide.LEFT -> ImageRect(0, 0, width / 2, height)
+    SpreadSide.RIGHT -> ImageRect(width - width / 2, 0, width, height)
 }
-
-private val ImageUtil.Side.opposite: ImageUtil.Side
-    get() = when (this) {
-        ImageUtil.Side.LEFT -> ImageUtil.Side.RIGHT
-        ImageUtil.Side.RIGHT -> ImageUtil.Side.LEFT
-    }

@@ -39,16 +39,26 @@ kotlin {
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.language.api)
+                implementation(projects.modelArtifacts.api)
                 implementation(projects.sourceApi)
                 implementation(projects.sourceLocal)
+                implementation(projects.textRecognition.api)
+                implementation(projects.translation.api)
                 implementation(projects.translation.ui)
+                implementation(projects.tts.api)
+                implementation(projects.tts.ui)
                 implementation(libs.bundles.serialization)
                 implementation(libs.androidx.annotation)
+                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodelSavedstate)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.ui)
                 implementation(libs.diskLruCache)
+                api(libs.metrox.viewmodel)
             }
         }
         androidMain {
-            // The reader's Compose and Coil APIs; the shared code uses neither.
+            // The reader's Compose UI and Coil APIs, which only the Android viewers use.
             languageSettings {
                 optIn("androidx.compose.foundation.ExperimentalFoundationApi")
                 optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
@@ -59,11 +69,7 @@ kotlin {
                 implementation(projects.entryViewerSettingsUi)
                 implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.modelArtifacts.ui)
-                implementation(projects.textRecognition.api)
                 implementation(projects.textRecognition.ui)
-                implementation(projects.translation.api)
-                implementation(projects.tts.api)
-                implementation(projects.tts.ui)
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.presentationCore)
                 implementation(projects.sourceCompat)
@@ -82,7 +88,6 @@ kotlin {
                 implementation(libs.androidx.viewPager)
                 implementation(libs.bundles.coil)
                 implementation(libs.material)
-                api(libs.metrox.viewmodel)
                 implementation(libs.photoView)
             }
         }

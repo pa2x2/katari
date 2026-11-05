@@ -43,6 +43,7 @@ import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -61,6 +62,9 @@ abstract class AppEntryHostBindings {
 
     @Binds
     internal abstract val AppEntryMigrationHost.consequenceHost: EntryMigrationConsequenceHost
+
+    @Binds
+    abstract val CoverCache.customCoverWriter: EntryCustomCoverWriter
 
     companion object {
         @Provides

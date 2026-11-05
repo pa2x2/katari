@@ -68,7 +68,6 @@ import tachiyomi.core.common.storage.AndroidMediaScanner
 import tachiyomi.core.common.storage.MediaScanner
 import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.core.common.storage.UniFileStorageFileResolver
-import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.storage.service.StorageManager
@@ -99,9 +98,6 @@ interface AppBindings {
 
     @Binds
     val AndroidPowerSource.powerSource: PowerSource
-
-    @Binds
-    val CoverCache.customCoverWriter: EntryCustomCoverWriter
 
     @Binds
     val AndroidSourcePreferenceFileStore.sourcePreferenceFileStore: SourcePreferenceFileStore

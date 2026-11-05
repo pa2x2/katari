@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.setting
 
-import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
+import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,18 +15,13 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingSource
 
 internal class ReaderSettingsScreenModel(
-    private val readerState: StateFlow<ReaderViewModel.State>,
+    val viewerFlow: StateFlow<Viewer?>,
     val settings: MangaReaderSettingsBindings,
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,
 ) {
 
     private val ioCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    val viewerFlow = readerState
-        .map { it.viewer }
-        .distinctUntilChanged()
-        .stateIn(ioCoroutineScope, SharingStarted.Lazily, null)
 
     /**
      * Exposes the override (or [ReadingMode.DEFAULT] when none is set) so the "for this series" section keeps its

@@ -1,7 +1,9 @@
-package eu.kanade.tachiyomi.ui.reader
+package mihon.entry.interactions.manga.reader.image
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -16,14 +18,13 @@ import coil3.imageLoader
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.size.ScaleDrawable
+import mihon.entry.interactions.reader.image.toReaderShareIntent
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
-/**
- * Class used to show BigPictureStyle notifications
- */
-internal class SaveImageNotifier(private val context: Context) {
+/** The notification for a saved page: the picture, opening it on a tap, with an action to share it. */
+internal class SavedPageNotifier(private val context: Context) {
 
     private val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_COMMON)
     private val notificationId: Int = ID_DOWNLOAD_IMAGE
@@ -108,6 +109,28 @@ internal class SaveImageNotifier(private val context: Context) {
 
 private const val CHANNEL_COMMON = "common_channel"
 private const val ID_DOWNLOAD_IMAGE = 2
+
+private fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "image/*")
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+    }
+    return PendingIntent.getActivity(
+        context,
+        0,
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+}
+
+private fun shareImagePendingActivity(context: Context, uri: Uri): PendingIntent {
+    return PendingIntent.getActivity(
+        context,
+        0,
+        uri.toReaderShareIntent(context),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+    )
+}
 
 private fun Drawable.getBitmapOrNull(): Bitmap? = when (this) {
     is BitmapDrawable -> bitmap

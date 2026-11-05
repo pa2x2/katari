@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.reader.text.ui
 
-import android.graphics.RectF
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -38,7 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 @Composable
 internal fun MangaReaderAreaSelectionLayer(
-    onAreaSelected: (RectF) -> Unit,
+    onAreaSelected: (Rect) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -67,14 +66,7 @@ internal fun MangaReaderAreaSelectionLayer(
                         if (outline == null || outline.width < MINIMUM_OUTLINE || outline.height < MINIMUM_OUTLINE) {
                             onCancel()
                         } else {
-                            onAreaSelected(
-                                RectF(
-                                    outline.left + origin.x,
-                                    outline.top + origin.y,
-                                    outline.right + origin.x,
-                                    outline.bottom + origin.y,
-                                ),
-                            )
+                            onAreaSelected(outline.translate(origin))
                         }
                     },
                     onDragCancel = {

@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader
 
-import android.app.Application
-import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
@@ -29,7 +27,6 @@ import eu.kanade.tachiyomi.ui.reader.model.unref
 import eu.kanade.tachiyomi.ui.reader.navigation.MangaReaderJumpHistory
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.startup.toReaderStartupFailure
-import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -66,12 +63,14 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.core.platform.PlatformContext
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
+import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
@@ -87,9 +86,6 @@ import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslati
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
-import mihon.entry.interactions.reader.image.ReaderImage
-import mihon.entry.interactions.reader.image.ReaderImageLocation
-import mihon.entry.interactions.reader.image.ReaderImageSaver
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
@@ -136,6 +132,8 @@ import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.*
+import tachiyomi.i18n.platform.stringResource
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
 import java.io.File
@@ -150,7 +148,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class ReaderViewModel(
     private val savedState: SavedStateHandle,
-    private val application: Application,
+    private val appContext: PlatformContext,
     private val sourceManager: SourceManager,
     private val webViewFeature: EntryWebViewFeature,
     private val mangaReaderSettings: MangaReaderSettings,
@@ -180,9 +178,8 @@ internal class ReaderViewModel(
     textRecognitionFeature: TextRecognitionFeature,
     modelArtifactStore: ModelArtifactStore,
     networkConnectivity: NetworkConnectivity,
+    private val pageImageExport: MangaPageImageExport,
 ) : ViewModel() {
-
-    private val imageSaver = ReaderImageSaver(application)
 
     private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
 
@@ -526,7 +523,7 @@ internal class ReaderViewModel(
                         )
                     sourceManager.isInitialized.first { it }
                     installViewerSettingBindings(entry)
-                    pageSessionLoader.chapterLoader(application, entry).also { loader = it }
+                    pageSessionLoader.chapterLoader(appContext, entry).also { loader = it }
                 }
                 if (chapterList.isEmpty()) chapterList = loadChapterList(checkNotNull(manga))
                 val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
@@ -695,10 +692,9 @@ internal class ReaderViewModel(
         chapter.firstPagesPreloaded = true
     }
 
-    fun onViewerLoaded(viewer: Viewer?) {
-        mutableState.update {
-            it.copy(viewer = viewer, facingPage = null, showsTwoPages = false)
-        }
+    /** The host replaced the viewer showing the pages, which starts on a single page. */
+    fun onViewerChanged() {
+        mutableState.update { it.copy(facingPage = null, showsTwoPages = false) }
     }
 
     fun onShowsTwoPagesChanged(showsTwoPages: Boolean) {
@@ -1202,80 +1198,48 @@ internal class ReaderViewModel(
         mutableState.update { it.copy(brightnessOverlayValue = value) }
     }
 
-    /**
-     * Saves the image of the selected page on the pictures directory and notifies the UI of the result.
-     * There's also a notification to allow sharing the image somewhere else or deleting it.
-     */
-    fun saveImage() {
+    /** Saves the selected page's image into the pictures folder, in a folder per series when the user wants one. */
+    fun saveImage(context: PlatformContext) {
         val page = (state.value.dialog as? Dialog.PageActions)?.page
         if (page?.status != Page.State.Ready) return
         val manga = manga ?: return
-
-        val notifier = SaveImageNotifier(application)
-        notifier.onClear()
-
-        val filename = generateFilename(manga, page)
-
-        // Pictures directory.
-        val relativePath = if (readerSettings.folderPerManga.effectiveValue) {
-            StorageFileNames.buildValidFilename(
-                manga.displayTitle,
-            )
-        } else {
-            ""
-        }
-
-        // Copy file in background.
+        val stream = page.stream ?: return
+        val folder = StorageFileNames.buildValidFilename(manga.displayTitle)
+            .takeIf { readerSettings.folderPerManga.effectiveValue }
         viewModelScope.launchNonCancellable {
-            try {
-                val uri = imageSaver.save(
-                    image = ReaderImage(
-                        inputStream = page.stream!!,
-                        name = filename,
-                        location = ReaderImageLocation.Pictures.create(relativePath),
-                    ),
-                )
-                withUIContext {
-                    notifier.onComplete(uri)
-                    eventChannel.send(Event.SavedImage(SaveImageResult.Success(uri)))
-                }
+            val result = try {
+                pageImageExport.save(context, stream, generateFilename(manga, page), folder)
+                SaveImageResult.Success
             } catch (e: Throwable) {
-                notifier.onError(e.message)
-                eventChannel.send(Event.SavedImage(SaveImageResult.Error(e)))
+                SaveImageResult.Error(e)
             }
+            eventChannel.send(Event.SavedImage(result))
         }
     }
 
-    /**
-     * Shares the image of the selected page and notifies the UI with the path of the file to share.
-     * The image must be first copied to the internal partition because there are many possible
-     * formats it can come from, like a zipped chapter, in which case it's not possible to directly
-     * get a path to the file and it has to be decompressed somewhere first. Only the last shared
-     * image will be kept so it won't be taking lots of internal disk space.
-     */
-    fun shareImage(copyToClipboard: Boolean) {
+    /** Shares the selected page's image to an app the user picks, or puts it on the clipboard. */
+    fun shareImage(context: PlatformContext, copyToClipboard: Boolean) {
         val page = (state.value.dialog as? Dialog.PageActions)?.page
         if (page?.status != Page.State.Ready) return
         val manga = manga ?: return
-
-        val destDir = File(application.cacheDir, "shared_image")
-
-        val filename = generateFilename(manga, page)
-
-        try {
-            viewModelScope.launchNonCancellable {
-                destDir.deleteRecursively()
-                val uri = imageSaver.save(
-                    image = ReaderImage(
-                        inputStream = page.stream!!,
-                        name = filename,
-                        location = ReaderImageLocation.Cache,
-                    ),
-                )
-                eventChannel.send(if (copyToClipboard) Event.CopyImage(uri) else Event.ShareImage(uri, page))
+        val stream = page.stream ?: return
+        val name = generateFilename(manga, page)
+        viewModelScope.launchNonCancellable {
+            try {
+                if (copyToClipboard) {
+                    pageImageExport.copy(context, stream, name)
+                } else {
+                    val message = context.stringResource(
+                        MR.strings.share_page_info,
+                        manga.displayTitle,
+                        page.chapter.chapter.name,
+                        page.number,
+                    )
+                    pageImageExport.share(context, stream, name, message)
+                }
+            } catch (e: Throwable) {
+                logcat(LogPriority.ERROR, e)
             }
-        } catch (e: Throwable) {
-            logcat(LogPriority.ERROR, e)
         }
     }
 
@@ -1328,7 +1292,7 @@ internal class ReaderViewModel(
     }
 
     sealed interface SaveImageResult {
-        class Success(val uri: Uri) : SaveImageResult
+        data object Success : SaveImageResult
         class Error(val error: Throwable) : SaveImageResult
     }
 
@@ -1368,10 +1332,6 @@ internal class ReaderViewModel(
         val effectiveOrientation: Int = ReaderOrientation.FREE.flagValue,
         val orientationOverride: Int = ReaderOrientation.DEFAULT.flagValue,
 
-        /**
-         * Viewer used to display the pages (pager, webtoon, ...).
-         */
-        val viewer: Viewer? = null,
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
@@ -1425,8 +1385,6 @@ internal class ReaderViewModel(
         data class SetCoverResult(val result: SetAsCoverResult) : Event
 
         data class SavedImage(val result: SaveImageResult) : Event
-        data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
-        data class CopyImage(val uri: Uri) : Event
     }
 
     /** A page change waiting to be saved. [observedAt] is when the page was shown, in epoch milliseconds. */

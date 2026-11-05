@@ -1,6 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.surface
 
-import android.graphics.RectF
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.toComposeRect
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
@@ -17,7 +18,8 @@ internal class ReaderPageTextSurface(
     override suspend fun displayedImage(): DisplayedPageImage? =
         view.displayedStillImage()?.let { MangaDisplayedPageImage.open(it) }
 
-    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? = view.imageToWindow(rect, imageSize)
+    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): Rect? =
+        view.imageToWindow(rect, imageSize)?.toComposeRect()
 
     override fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? =
         view.windowToImage(x, y, imageSize)

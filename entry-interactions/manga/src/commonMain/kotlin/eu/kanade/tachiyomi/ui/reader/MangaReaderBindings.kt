@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
@@ -15,6 +14,7 @@ import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.archive.ArchiveOpener
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.platform.PlatformContext
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
@@ -23,6 +23,7 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
+import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.source.EntryWebViewFeature
@@ -76,7 +77,7 @@ object MangaReaderBindings {
     @IntoMap
     @ViewModelAssistedFactoryKey(ReaderViewModel::class)
     internal fun readerViewModelFactory(
-        application: Application,
+        appContext: PlatformContext,
         sourceManager: SourceManager,
         webViewFeature: EntryWebViewFeature,
         mangaReaderSettings: MangaReaderSettings,
@@ -106,10 +107,11 @@ object MangaReaderBindings {
         textRecognitionFeature: TextRecognitionFeature,
         modelArtifactStore: ModelArtifactStore,
         networkConnectivity: NetworkConnectivity,
+        pageImageExport: MangaPageImageExport,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = ReaderViewModel(
             savedState = extras.createSavedStateHandle(),
-            application = application,
+            appContext = appContext,
             sourceManager = sourceManager,
             webViewFeature = webViewFeature,
             mangaReaderSettings = mangaReaderSettings,
@@ -139,6 +141,7 @@ object MangaReaderBindings {
             textRecognitionFeature = textRecognitionFeature,
             modelArtifactStore = modelArtifactStore,
             networkConnectivity = networkConnectivity,
+            pageImageExport = pageImageExport,
         )
     }
 }

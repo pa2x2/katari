@@ -1,6 +1,6 @@
 package mihon.entry.interactions.manga.reader.text.interaction
 
-import android.graphics.RectF
+import androidx.compose.ui.geometry.Rect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -75,7 +75,7 @@ internal class MangaReaderTextInteraction(
     }
 
     /** Recognizes and translates the text inside [area], a rectangle the user outlined in window coordinates. */
-    fun onAreaSelected(area: RectF) {
+    fun onAreaSelected(area: Rect) {
         scope.launch {
             val (surface, imageArea, result) = recognizeOutline(area) ?: return@launch
             val imageSize = result.imageSize
@@ -98,13 +98,13 @@ internal class MangaReaderTextInteraction(
      * Recognizes the outlined [area] on the visible page under its centre. Returns `null` when no page lies under it,
      * or when the session reported a missing prerequisite itself.
      */
-    private suspend fun recognizeOutline(area: RectF): OutlineRecognition? {
+    private suspend fun recognizeOutline(area: Rect): OutlineRecognition? {
         visibleSurfaces().forEach { surface ->
             val image = surface.displayedImage() ?: return@forEach
             image.use {
                 val size = image.size
                 val bounds = surface.imageToWindow(size.bounds, size) ?: return@forEach
-                if (!bounds.contains(area.centerX(), area.centerY())) return@forEach
+                if (!bounds.contains(area.center)) return@forEach
                 val topLeft = surface.windowToImage(area.left, area.top, size) ?: return null
                 val bottomRight = surface.windowToImage(area.right, area.bottom, size) ?: return null
                 val imageArea = clampedArea(topLeft, bottomRight, size.width, size.height) ?: return null
@@ -139,7 +139,7 @@ internal class MangaReaderTextInteraction(
         )
     }
 
-    private fun anchor(window: RectF): TranslationSelectionAnchor {
+    private fun anchor(window: Rect): TranslationSelectionAnchor {
         val (originX, originY) = overlayOrigin()
         return TranslationSelectionAnchor(
             left = window.left - originX,

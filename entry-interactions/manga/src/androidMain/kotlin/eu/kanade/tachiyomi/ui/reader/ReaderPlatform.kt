@@ -1,13 +1,11 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Activity
-import android.app.PendingIntent
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Rect
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.view.View
@@ -20,7 +18,6 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -48,28 +45,6 @@ fun Context.mangaEntryIntent(entryId: Long): Intent {
 
 fun Context.openReaderPageInWebView(url: String, sourceId: Long?) {
     metroGraph<EntryInteractionActivityGraph>().entryWebViewDestination.open(this, url, title = null, sourceId)
-}
-
-fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(uri, "image/*")
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-    }
-    return PendingIntent.getActivity(
-        context,
-        0,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
-}
-
-fun shareImagePendingActivity(context: Context, uri: Uri): PendingIntent {
-    return PendingIntent.getActivity(
-        context,
-        0,
-        uri.toReaderShareIntent(context),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
 }
 
 fun dismissNewChaptersNotification(context: Context, entryNotificationId: Int) {

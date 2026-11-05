@@ -15,7 +15,6 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.navigation.MangaOpenProcessor
 import mihon.entry.interactions.manga.translation.background.MangaEntryTranslateProcessor
 import mihon.entry.interactions.media.EntryMediaCacheProvider
-import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
@@ -80,11 +79,6 @@ object MangaEntryInteractionProviderBindings {
         loadPageSession = { context, entry, chapter -> pageSessionLoader.value.load(context, entry, chapter) },
         bindKeepScreenOn = { entryId -> viewerSettingBinder.bind(readerSettings.display.keepScreenOn, entryId) },
     )
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.MANGA)
-    internal fun mediaSession(processor: MangaMediaSessionProcessor): EntryMediaSessionProcessor = processor
 
     @Provides
     @IntoMap

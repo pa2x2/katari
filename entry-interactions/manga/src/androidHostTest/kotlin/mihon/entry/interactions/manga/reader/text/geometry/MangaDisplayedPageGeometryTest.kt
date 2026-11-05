@@ -7,7 +7,7 @@ import mihon.text.recognition.api.result.RecognizedTextRegion
 import mihon.text.recognition.api.result.TextOrientation
 import mihon.text.recognition.api.result.TextRegionKind
 import org.junit.jupiter.api.Test
-import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.SpreadSide
 
 class MangaDisplayedPageGeometryTest {
 
@@ -20,12 +20,12 @@ class MangaDisplayedPageGeometryTest {
         val onLeftPage = region(ImageRect(100, 100, 200, 200))
         val onRightPage = region(ImageRect(600, 100, 700, 200))
 
-        val rightHalf = geometry(MangaPageTransform.Half(spread, ImageUtil.Side.RIGHT))
+        val rightHalf = geometry(MangaPageTransform.Half(spread, SpreadSide.RIGHT))
         rightHalf.toDisplayed(acrossGutter)?.bounds shouldBe ImageRect(0, 100, 59, 200)
         rightHalf.toDisplayed(acrossGutter)?.container shouldBe ImageRect(0, 50, 99, 250)
-        geometry(MangaPageTransform.Half(spread, ImageUtil.Side.LEFT)).toDisplayed(acrossGutter) shouldBe null
+        geometry(MangaPageTransform.Half(spread, SpreadSide.LEFT)).toDisplayed(acrossGutter) shouldBe null
 
-        val stacked = geometry(MangaPageTransform.Stacked(spread, upper = ImageUtil.Side.RIGHT))
+        val stacked = geometry(MangaPageTransform.Stacked(spread, upper = SpreadSide.RIGHT))
         stacked.toDisplayed(onRightPage)?.bounds shouldBe ImageRect(99, 100, 199, 200)
         stacked.toDisplayed(onLeftPage)?.bounds shouldBe ImageRect(100, 700, 200, 800)
     }

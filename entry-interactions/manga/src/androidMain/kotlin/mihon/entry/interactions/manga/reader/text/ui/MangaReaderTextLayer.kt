@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.reader.text.ui
 
-import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -63,7 +62,7 @@ internal fun MangaReaderTextLayer(
     areaResult: MangaReaderTextInteraction.AreaResult?,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onConsumeAreaResult: () -> Unit,
-    onAreaSelected: (RectF) -> Unit,
+    onAreaSelected: (Rect) -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: (LanguageTag?) -> Unit,

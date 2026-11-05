@@ -38,6 +38,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.SpreadSide
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -255,7 +256,7 @@ internal class WebtoonPageHolder(
         if (viewer.config.dualPageSplit) {
             val isDoublePage = ImageUtil.isWideImage(imageSource)
             if (isDoublePage) {
-                val upperSide = if (viewer.config.dualPageInvert) ImageUtil.Side.LEFT else ImageUtil.Side.RIGHT
+                val upperSide = if (viewer.config.dualPageInvert) SpreadSide.LEFT else SpreadSide.RIGHT
                 return transformedPageImage(
                     raw = imageSource,
                     transform = { MangaPageTransform.Stacked(it, upperSide) },

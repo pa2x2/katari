@@ -124,7 +124,7 @@ object ImageUtil {
     /**
      * Extract the 'side' part from [BufferedSource] and return it as [BufferedSource].
      */
-    fun splitInHalf(imageSource: BufferedSource, side: Side): BufferedSource {
+    fun splitInHalf(imageSource: BufferedSource, side: SpreadSide): BufferedSource {
         val imageBitmap = BitmapFactory.decodeStream(imageSource.inputStream())
         val height = imageBitmap.height
         val width = imageBitmap.width
@@ -133,8 +133,8 @@ object ImageUtil {
 
         val half = createBitmap(width / 2, height)
         val part = when (side) {
-            Side.RIGHT -> Rect(width - width / 2, 0, width, height)
-            Side.LEFT -> Rect(0, 0, width / 2, height)
+            SpreadSide.RIGHT -> Rect(width - width / 2, 0, width, height)
+            SpreadSide.LEFT -> Rect(0, 0, width / 2, height)
         }
         half.applyCanvas {
             drawBitmap(imageBitmap, part, singlePage, null)
@@ -163,7 +163,7 @@ object ImageUtil {
     /**
      * Split the image into left and right parts, then merge them into a new image.
      */
-    fun splitAndMerge(imageSource: BufferedSource, upperSide: Side): BufferedSource {
+    fun splitAndMerge(imageSource: BufferedSource, upperSide: SpreadSide): BufferedSource {
         val imageBitmap = BitmapFactory.decodeStream(imageSource.inputStream())
         val height = imageBitmap.height
         val width = imageBitmap.width
@@ -172,15 +172,15 @@ object ImageUtil {
         result.applyCanvas {
             // right -> upper
             val rightPart = when (upperSide) {
-                Side.RIGHT -> Rect(width - width / 2, 0, width, height)
-                Side.LEFT -> Rect(0, 0, width / 2, height)
+                SpreadSide.RIGHT -> Rect(width - width / 2, 0, width, height)
+                SpreadSide.LEFT -> Rect(0, 0, width / 2, height)
             }
             val upperPart = Rect(0, 0, width / 2, height)
             drawBitmap(imageBitmap, rightPart, upperPart, null)
             // left -> bottom
             val leftPart = when (upperSide) {
-                Side.LEFT -> Rect(width - width / 2, 0, width, height)
-                Side.RIGHT -> Rect(0, 0, width / 2, height)
+                SpreadSide.LEFT -> Rect(width - width / 2, 0, width, height)
+                SpreadSide.RIGHT -> Rect(0, 0, width / 2, height)
             }
             val bottomPart = Rect(0, height, width / 2, height * 2)
             drawBitmap(imageBitmap, leftPart, bottomPart, null)
@@ -189,11 +189,6 @@ object ImageUtil {
         val output = Buffer()
         result.compress(Bitmap.CompressFormat.JPEG, 100, output.outputStream())
         return output
-    }
-
-    enum class Side {
-        RIGHT,
-        LEFT,
     }
 
     fun canUseHardwareBitmap(bitmap: Bitmap): Boolean {

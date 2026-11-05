@@ -1,7 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.session
 
 import android.graphics.Bitmap
-import android.graphics.RectF
+import androidx.compose.ui.geometry.Rect
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import io.mockk.mockk
@@ -76,7 +76,7 @@ internal class FakeSurface(private val index: Int, chapter: ReaderChapter? = nul
         override fun close() = Unit
     }
 
-    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? = null
+    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): Rect? = null
 
     override fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? = null
 

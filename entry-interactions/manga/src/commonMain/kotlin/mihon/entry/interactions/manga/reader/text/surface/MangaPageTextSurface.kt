@@ -1,6 +1,6 @@
 package mihon.entry.interactions.manga.reader.text.surface
 
-import android.graphics.RectF
+import androidx.compose.ui.geometry.Rect
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import mihon.entry.interactions.manga.reader.text.session.MangaPageTextOverlay
@@ -19,7 +19,7 @@ internal interface MangaPageTextSurface {
     suspend fun displayedImage(): DisplayedPageImage?
 
     /** Where [rect] of an image of [imageSize] currently appears in the window, if the page is laid out. */
-    fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF?
+    fun imageToWindow(rect: ImageRect, imageSize: ImageSize): Rect?
 
     /**
      * Image coordinates of window point ([x], [y]), possibly outside the image bounds, or `null` while the page is

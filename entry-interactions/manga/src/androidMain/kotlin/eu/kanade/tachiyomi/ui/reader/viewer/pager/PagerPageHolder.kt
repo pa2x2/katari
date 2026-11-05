@@ -34,6 +34,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.SpreadSide
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -287,19 +288,14 @@ internal class PagerPageHolder(
 
     private fun splitInHalf(imageSource: BufferedSource): ProcessedPageImage {
         var side = when {
-            viewer is L2RPagerViewer && page is InsertPage -> ImageUtil.Side.RIGHT
-            viewer !is L2RPagerViewer && page is InsertPage -> ImageUtil.Side.LEFT
-            viewer is L2RPagerViewer && page !is InsertPage -> ImageUtil.Side.LEFT
-            viewer !is L2RPagerViewer && page !is InsertPage -> ImageUtil.Side.RIGHT
+            viewer is L2RPagerViewer && page is InsertPage -> SpreadSide.RIGHT
+            viewer !is L2RPagerViewer && page is InsertPage -> SpreadSide.LEFT
+            viewer is L2RPagerViewer && page !is InsertPage -> SpreadSide.LEFT
+            viewer !is L2RPagerViewer && page !is InsertPage -> SpreadSide.RIGHT
             else -> error("We should choose a side!")
         }
 
-        if (viewer.config.dualPageInvert) {
-            side = when (side) {
-                ImageUtil.Side.RIGHT -> ImageUtil.Side.LEFT
-                ImageUtil.Side.LEFT -> ImageUtil.Side.RIGHT
-            }
-        }
+        if (viewer.config.dualPageInvert) side = side.opposite
 
         return transformedPageImage(
             raw = imageSource,
