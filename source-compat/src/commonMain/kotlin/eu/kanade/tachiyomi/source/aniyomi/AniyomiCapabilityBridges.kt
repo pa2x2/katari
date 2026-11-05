@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.getEntryPreferenceProvider
 import eu.kanade.tachiyomi.source.failure.runExtensionCode
 import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -52,8 +53,12 @@ internal interface AniyomiWebBridge : ChapterWebViewSource, SourceHomePage, Entr
 
     override fun getContentUrl(entry: SEntry): String = runExtensionCode { httpSource.getAnimeUrl(entry.toSAnime()) }
 
-    override fun getChapterUrl(chapter: SEntryChapter): String =
-        runExtensionCode { httpSource.getEpisodeUrl(chapter.toSEpisode()) }
+    // Aniyomi's own getEpisodeUrl returns the episode's url as stored, which most extensions keep without the domain
+    // and request as baseUrl + url; the web view and the browser need the whole address.
+    override fun getChapterUrl(chapter: SEntryChapter): String = runExtensionCode {
+        val url = httpSource.getEpisodeUrl(chapter.toSEpisode())
+        if (url.toHttpUrlOrNull() != null) url else httpSource.baseUrl + url
+    }
 
     override fun getWebViewHeaders(): Map<String, String> =
         headers.toMultimap().mapValues { it.value.getOrNull(0).orEmpty() }
