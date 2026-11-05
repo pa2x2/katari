@@ -25,6 +25,7 @@ import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.layout.TwoPanes
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -67,6 +68,7 @@ fun UpcomingScreenContent(
             )
         },
         modifier = modifier,
+        frame = ScreenFrame.ListDetail,
     ) { paddingValues ->
         if (currentWindowLayout().usesTwoPanes) {
             UpcomingScreenLargeImpl(

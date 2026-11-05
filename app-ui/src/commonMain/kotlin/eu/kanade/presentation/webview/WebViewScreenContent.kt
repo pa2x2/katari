@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.platform.currentPlatformContext
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -127,6 +128,8 @@ fun WebViewScreenContent(
     )
 
     Scaffold(
+
+        frame = ScreenFrame.Window,
         topBar = {
             WebViewTopBar(
                 page = page,

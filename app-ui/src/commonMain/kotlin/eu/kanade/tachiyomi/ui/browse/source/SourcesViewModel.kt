@@ -140,11 +140,7 @@ class SourcesViewModel(
         val listState: SourceListState = SourceListState(),
         val contentTypeFilter: ContentTypeFilter = ContentTypeFilter(),
         val filter: SourcesFilterState = SourcesFilterState(),
-    ) {
-        val isLoading get() = listState.isLoading
-        val items get() = listState.items
-        val isEmpty get() = listState.isEmpty
-    }
+    )
 }
 
 @Immutable

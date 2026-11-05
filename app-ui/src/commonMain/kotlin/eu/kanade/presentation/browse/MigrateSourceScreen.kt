@@ -86,6 +86,7 @@ private fun MigrateSourceList(
 ) {
     RowList(
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
+        wrapGroups = true,
     ) {
         if (activeSessions.isNotEmpty()) {
             item(key = "active-migrations-header") {

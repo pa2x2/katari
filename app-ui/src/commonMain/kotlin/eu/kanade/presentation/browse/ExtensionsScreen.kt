@@ -144,6 +144,7 @@ private fun ExtensionContent(
     RowList(
         fastScroll = true,
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
+        wrapGroups = true,
     ) {
         if (state.filter.activeFilterCount > 0) {
             item(key = "extension-filter-summary") {

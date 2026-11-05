@@ -24,6 +24,7 @@ import mihon.icons.materialsymbols.rounded.TravelExplore
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.layout.CardFlow
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -43,6 +44,7 @@ fun GlobalSearchScreen(
     onLongClickItem: (GlobalSearchItem) -> Unit,
 ) {
     Scaffold(
+        frame = ScreenFrame.Wide,
         topBar = { scrollBehavior ->
             GlobalSearchToolbar(
                 searchQuery = state.searchQuery,

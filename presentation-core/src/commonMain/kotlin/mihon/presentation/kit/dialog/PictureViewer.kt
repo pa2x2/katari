@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -56,6 +57,7 @@ fun PictureViewer(
 ) {
     FullScreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(
+            frame = ScreenFrame.Window,
             snackbarHostState = snackbarHostState,
             container = SurfaceContainer.None,
             bottomBar = {

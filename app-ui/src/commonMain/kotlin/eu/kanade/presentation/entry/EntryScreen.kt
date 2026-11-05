@@ -79,6 +79,7 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.layout.TwoPanes
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -777,6 +778,7 @@ fun EntryScreenLargeImpl(
     )
 
     Scaffold(
+        frame = ScreenFrame.ListDetail,
         topBar = {
             val selectedChapterCount = state.selectedChapters.size
             EntryToolbar(
@@ -852,17 +854,19 @@ fun EntryScreenLargeImpl(
             val startPadding = contentPadding.calculateStartPadding(layoutDirection)
             TwoPanes(
                 modifier = Modifier.padding(end = contentPadding.calculateEndPadding(layoutDirection)),
-                start = {
+                contentPadding = PaddingValues(start = startPadding),
+                start = { panePadding ->
+                    val paneStart = panePadding.calculateStartPadding(layoutDirection)
                     // Inset inside the scroll, whose bounds clip, so the backdrop can still reach the window's edge
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
-                            .padding(start = startPadding, bottom = contentPadding.calculateBottomPadding()),
+                            .padding(start = paneStart, bottom = contentPadding.calculateBottomPadding()),
                     ) {
                         EntryInfoBox(
                             coverAbove = !currentWindowLayout().isShort,
                             appBarPadding = contentPadding.calculateTopPadding(),
-                            backdropBleed = PaddingValues(start = startPadding),
+                            backdropBleed = PaddingValues(start = paneStart),
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,

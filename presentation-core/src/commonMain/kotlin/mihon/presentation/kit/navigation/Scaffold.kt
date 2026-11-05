@@ -38,6 +38,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.util.fastForEach
@@ -46,9 +47,15 @@ import androidx.compose.ui.util.fastMaxBy
 import mihon.presentation.kit.feedback.ScreenSnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.claimScreenMessages
+import mihon.presentation.kit.layout.LocalContentFrameMargin
+import mihon.presentation.kit.layout.LocalScreenFrameMargin
+import mihon.presentation.kit.layout.ScreenFrame
+import mihon.presentation.kit.layout.width
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.colors
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.WindowLayout
+import mihon.presentation.kit.window.currentWindowLayout
 import kotlin.math.max
 
 /**
@@ -74,6 +81,7 @@ import kotlin.math.max
  * * Fixes for fab and snackbar horizontal placements when [contentWindowInsets] is used
  * * Handle consumed window insets
  * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold
+ * * Centre the content, top bar contents and FAB in the [ScreenFrame]
  *
  * @param modifier the [Modifier] to be applied to this scaffold
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
@@ -83,6 +91,8 @@ import kotlin.math.max
  * behind a snackbar of the screen's that closes on its own, and a never-ending one steps aside for it.
  * @param floatingActionButton Main action button of the screen, typically a [FloatingActionButton]
  * @param container what the screen is filled with; [SurfaceContainer.None] for a scaffold laid over other content.
+ * @param frame how wide the screen's content may grow. The frame is centred beside the dock: the top bar's contents,
+ * the content padding and the FAB line up with it, and the content padding widens by the room left on each side.
  * @param contentWindowInsets window insets to be passed to content slot via PaddingValues params.
  * Scaffold will take the insets into account from the top/bottom only if the topBar/ bottomBar
  * are not present, as the scaffold expect topBar/bottomBar to handle insets instead
@@ -100,6 +110,7 @@ fun Scaffold(
     snackbarHostState: SnackbarHostState? = null,
     floatingActionButton: @Composable () -> Unit = {},
     container: SurfaceContainer = SurfaceContainer.Background,
+    frame: ScreenFrame = ScreenFrame.Rows,
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -122,6 +133,8 @@ fun Scaffold(
         CompositionLocalProvider(LocalAppBarScrollBehavior provides topBarScrollBehavior) {
             ScaffoldLayout(
                 dockClearance = LocalDockClearance.current,
+                frame = frame,
+                window = currentWindowLayout(),
                 fabPosition = FabPosition.End,
                 topBar = { topBar(topBarScrollBehavior) },
                 bottomBar = bottomBar,
@@ -150,6 +163,8 @@ fun Scaffold(
 @Composable
 private fun ScaffoldLayout(
     dockClearance: DockClearance,
+    frame: ScreenFrame,
+    window: WindowLayout,
     fabPosition: FabPosition,
     topBar: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
@@ -175,9 +190,15 @@ private fun ScaffoldLayout(
 
             // Tachiyomi: layoutWidth after horizontal insets
             val insetLayoutWidth = layoutWidth - leftInset - rightInset
+            val frameMargin = ((insetLayoutWidth.toDp() - frame.width(window, insetLayoutWidth.toDp())) / 2)
+                .coerceAtLeast(0.dp)
+            val frameMarginPx = frameMargin.roundToPx()
 
-            // The kit's app bar keeps its own contents clear of a side dock while its container runs under it
-            val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar, topBar).fastMap {
+            // The kit's app bar keeps its own contents clear of a side dock and inside the frame while its container
+            // runs under them
+            val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar) {
+                CompositionLocalProvider(LocalScreenFrameMargin provides frameMargin, content = topBar)
+            }.fastMap {
                 it.measure(looseConstraints)
             }
 
@@ -210,9 +231,9 @@ private fun ScaffoldLayout(
                 // Tachiyomi: Calculate insets for fab placement offset
                 val fabLeftOffset = if (fabPosition == FabPosition.End) {
                     if (layoutDirection == LayoutDirection.Ltr) {
-                        layoutWidth - FabSpacing.roundToPx() - fabWidth - rightInset
+                        layoutWidth - FabSpacing.roundToPx() - fabWidth - rightInset - frameMarginPx
                     } else {
-                        FabSpacing.roundToPx() + leftInset
+                        FabSpacing.roundToPx() + leftInset + frameMarginPx
                     }
                 } else {
                     leftInset + ((insetLayoutWidth - fabWidth) / 2)
@@ -261,11 +282,15 @@ private fun ScaffoldLayout(
                     } else {
                         max(bottomBarHeightPx.toDp(), fabOffsetDp)
                     },
-                    start = insets.calculateStartPadding((this@SubcomposeLayout).layoutDirection) + dockClearance.start,
-                    end = insets.calculateEndPadding((this@SubcomposeLayout).layoutDirection),
+                    start = insets.calculateStartPadding((this@SubcomposeLayout).layoutDirection) +
+                        dockClearance.start + frameMargin,
+                    end = insets.calculateEndPadding((this@SubcomposeLayout).layoutDirection) + frameMargin,
                 )
                 // The padding already clears the dock, so scaffolds nested in the content mustn't clear it again
-                CompositionLocalProvider(LocalDockClearance provides DockClearance.None) {
+                CompositionLocalProvider(
+                    LocalDockClearance provides DockClearance.None,
+                    LocalContentFrameMargin provides frameMargin,
+                ) {
                     content(innerPadding)
                 }
             }.fastMap { it.measure(looseConstraints) }

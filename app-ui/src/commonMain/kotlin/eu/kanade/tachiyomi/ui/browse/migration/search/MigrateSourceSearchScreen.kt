@@ -30,6 +30,7 @@ import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
 import tachiyomi.domain.entry.model.Entry
@@ -76,6 +77,8 @@ data class MigrateSourceSearchScreen(
         CatalogScreenEventsEffect(viewModel, snackbarHostState)
 
         Scaffold(
+
+            frame = ScreenFrame.Wide,
             topBar = { scrollBehavior ->
                 SearchToolbar(
                     searchQuery = state.toolbarQuery ?: "",
