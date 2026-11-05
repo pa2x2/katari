@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -28,6 +27,7 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.navigation.Tab
 import mihon.presentation.kit.navigation.TabRow
+import mihon.presentation.kit.pager.HorizontalPager
 import mihon.presentation.kit.shortcut.KeyboardShortcutScope
 import tachiyomi.presentation.core.i18n.stringResource
 

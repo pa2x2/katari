@@ -6,6 +6,8 @@ package mihon.gradle.tasks
  * or sp literal, a colour, a text style, a corner shape, a shadow or an alpha written outside the kit fails the build.
  * The kit's own colour and shape scales are off limits too: outside the kit, a fill is picked by SurfaceContainer
  * role, content by ContentTone, and a rounded or raised container by the kit component that names its job.
+ * Pagers are the kit's too, so every pager turns one page for a wheel notch or a touchpad swipe; only the readers in
+ * entry-interactions, which turn their own pages from the wheel, use Compose's pagers directly.
  * Generated icon modules are not UI code, and tests may build whatever harness they need.
  *
  * The kit also owns how a screen adapts to the window (.agents/skills/adaptive-layout): outside it, nothing reads the
@@ -40,7 +42,10 @@ internal fun checkUiKitBoundaries(
             val code = source.content.withoutCommentsAndStrings()
             val compose = COMPOSE_IMPORT.containsMatchIn(code)
             val rules = UI_KIT_RULES + ADAPTIVE_LAYOUT_RULES
-            val facts = SourceFacts(CONFIGURATION_ALIAS.findAll(code).map { it.groupValues[1] }.toSet())
+            val facts = SourceFacts(
+                relativePath = source.relativePath,
+                configurationNames = CONFIGURATION_ALIAS.findAll(code).map { it.groupValues[1] }.toSet(),
+            )
             code.lineSequence().forEachIndexed { index, line ->
                 rules
                     .filter { rule -> compose || !rule.composeOnly }
@@ -61,7 +66,7 @@ private class UiKitRule(
 }
 
 /** What a rule may need to know about the whole file, beyond the line it matches. */
-private class SourceFacts(val configurationNames: Set<String>)
+private class SourceFacts(val relativePath: String, val configurationNames: Set<String>)
 
 private val UI_KIT_RULES = listOf(
     UiKitRule(
@@ -106,6 +111,12 @@ private val UI_KIT_RULES = listOf(
     UiKitRule(
         "Emphasis comes from colour roles and enabled states, not alpha",
         Regex("""\.copy\(\s*alpha\s*=|\balpha\s*\(\s*0?\.\d|\balpha\s*=\s*0?\.\d"""),
+    ),
+    UiKitRule(
+        "Pagers come from mihon.presentation.kit.pager, which turns one page for a wheel notch or a touchpad swipe",
+        Regex("""\bandroidx\.compose\.foundation\.pager\.(HorizontalPager|VerticalPager)\b"""),
+        // Readers turn their own pages from the wheel, through zoom and across chapters
+        accept = { _, facts -> !facts.relativePath.startsWith("entry-interactions/") },
     ),
 )
 

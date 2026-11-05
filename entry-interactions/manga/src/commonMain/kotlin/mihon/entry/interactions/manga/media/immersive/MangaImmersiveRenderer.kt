@@ -31,8 +31,8 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
-import mihon.entry.viewer.chrome.ui.wheel.WheelTurns
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.presentation.kit.pager.WheelTurns
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ShortcutGroup
