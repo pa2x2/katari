@@ -7,7 +7,8 @@ import java.io.File
 
 @PlatformFacility
 interface EntryPageImageCache {
-    val readableSize: String
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
     fun isImageInCache(imageUrl: String): Boolean
     fun getImageFile(imageUrl: String): File
     fun clear(): Int
@@ -15,7 +16,8 @@ interface EntryPageImageCache {
 
 @PlatformFacility
 interface EntryPlayerCache {
-    val readableSize: String
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
     fun clear(): Int
 }
 

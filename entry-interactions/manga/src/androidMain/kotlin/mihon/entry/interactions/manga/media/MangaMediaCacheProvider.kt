@@ -22,6 +22,6 @@ private class MangaPageImageCacheArtifact(
     override val clearLabel = MR.strings.pref_clear_chapter_cache
     override val autoClearLabel = MR.strings.pref_auto_clear_chapter_cache
     override val autoClearPreference = EntryMediaCacheAutoClearPreference("auto_clear_chapter_cache")
-    override val readableSize: String get() = delegate.readableSize
+    override val sizeBytes: Long get() = delegate.sizeBytes
     override fun clear(): Int = delegate.clear()
 }

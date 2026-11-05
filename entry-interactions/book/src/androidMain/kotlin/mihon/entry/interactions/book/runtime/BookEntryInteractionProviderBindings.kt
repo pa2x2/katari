@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.runtime
 
-import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -37,7 +36,6 @@ object BookEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)
     internal fun mediaCache(
-        application: Application,
         materializationCache: () -> BookMaterializationCache,
-    ): EntryMediaCacheProvider = BookMediaCacheProvider(application, materializationCache)
+    ): EntryMediaCacheProvider = BookMediaCacheProvider(materializationCache)
 }

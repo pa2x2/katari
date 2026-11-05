@@ -1,7 +1,6 @@
 package mihon.entry.interactions.manga.page
 
 import android.content.Context
-import android.text.format.Formatter
 import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -35,8 +34,8 @@ internal class MangaPageStore(
     private val pageLists by lazy { MangaPageListStore(diskCache, json, entryLocks) }
     private val images by lazy { MangaPageImageStore(diskCache, entryLocks) }
 
-    override val readableSize: String
-        get() = Formatter.formatFileSize(context, DiskUtil.getDirectorySize(diskCache.directory))
+    override val sizeBytes: Long
+        get() = DiskUtil.getDirectorySize(diskCache.directory)
 
     suspend fun getOrPutPageList(
         chapter: Chapter,

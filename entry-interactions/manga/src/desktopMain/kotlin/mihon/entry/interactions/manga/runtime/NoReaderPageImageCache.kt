@@ -4,7 +4,7 @@ import mihon.entry.interactions.runtime.EntryPageImageCache
 import java.io.File
 
 internal object NoReaderPageImageCache : EntryPageImageCache {
-    override val readableSize: String = "0 B"
+    override val sizeBytes: Long = 0L
 
     override fun isImageInCache(imageUrl: String): Boolean = false
 
