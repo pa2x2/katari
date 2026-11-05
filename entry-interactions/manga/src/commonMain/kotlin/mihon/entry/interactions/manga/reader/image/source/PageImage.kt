@@ -26,6 +26,8 @@ internal sealed interface PageImage : AutoCloseable {
         private val lock = Any()
         private var closed = false
 
+        val isClosed: Boolean get() = synchronized(lock) { closed }
+
         /** [region] of the image divided by [sampleSize]; null once closed or when the region can't be decoded. */
         suspend fun decode(region: IntRect, sampleSize: Int): PlatformBitmap? = withContext(Dispatchers.Default) {
             synchronized(lock) { if (closed) null else decoder.decode(region, sampleSize) }

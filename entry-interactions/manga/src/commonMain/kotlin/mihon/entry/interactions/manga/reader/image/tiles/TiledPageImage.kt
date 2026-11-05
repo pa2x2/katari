@@ -12,15 +12,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import kotlinx.coroutines.flow.collectLatest
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.image.layout.inPiece
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 
 /**
@@ -42,36 +38,10 @@ internal fun TiledPageImage(
     LaunchedEffect(store) {
         snapshotFlow { currentView() to boxSize }.collectLatest { (view, size) -> store.load(this, view, size) }
     }
-    // Antialiased edges would leave tiles that meet at a fractional pixel partly covered, a line of the backdrop
-    // between them; without it, each pixel along the shared edge belongs to exactly one tile
-    val tilePaint = remember {
-        Paint().apply {
-            isAntiAlias = false
-            filterQuality = FilterQuality.Medium
-        }
-    }
+    val tilePaint = rememberTilePaint()
     Canvas(modifier.onSizeChanged { boxSize = it }) {
         if (store.displayedSize.width <= 0) return@Canvas
         val boxScale = size.width / store.displayedSize.width
-        scale(boxScale, pivot = Offset.Zero) {
-            // Coarse tiles first, so sharper ones cover them where both are decoded
-            val tiles = store.decoded.entries.sortedByDescending { it.key.sampleSize }
-            store.pieces.forEach { piece ->
-                inPiece(piece) {
-                    tiles.forEach { (tile, decoded) ->
-                        if (piece.source.overlaps(tile.region)) {
-                            drawIntoCanvas { canvas ->
-                                canvas.drawImageRect(
-                                    image = decoded.image,
-                                    dstOffset = tile.region.topLeft - piece.source.topLeft,
-                                    dstSize = tile.region.size,
-                                    paint = tilePaint,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        scale(boxScale, pivot = Offset.Zero) { drawTiles(store.pieces, store.decoded, tilePaint) }
     }
 }

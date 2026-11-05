@@ -887,6 +887,4 @@
     <string name="pref_hardware_bitmap_threshold">Özel bitmap donanım sınırı</string>
     <string name="pref_hardware_bitmap_threshold_default">Varsayılan (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Eğer okuyucu boş bir görsel yüklerse bu sınırı kademeli olarak azaltın.\nSeçili: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Performansı etkiler. Yalnızca bitmap sınırını düşürmek boş görsel sorunlarını çözmediğinde kullanın</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Uzun şerit okuyucusu için eski çözümleyiciyi kullan</string>
 </resources>

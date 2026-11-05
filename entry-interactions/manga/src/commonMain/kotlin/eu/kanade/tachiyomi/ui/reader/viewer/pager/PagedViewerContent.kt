@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,9 +30,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntSize
 import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.presentation.reader.ViewerChapterTransition
-import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
+import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
+import eu.kanade.tachiyomi.ui.reader.viewer.key
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.hidesTapZones
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.rememberReaderTapZones
@@ -113,15 +113,15 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier) {
                 }
             }
             .pointerInput(viewer) {
-                detectTapGestures(
+                detectReaderTaps(
                     onTap = { position -> onTap(position, size, placements.root) },
                     onDoubleTap = { position ->
-                        val (page, bounds) = pageAt(position) ?: return@detectTapGestures
-                        val zoom = zoomOf(page) ?: return@detectTapGestures
+                        val (page, bounds) = pageAt(position) ?: return@detectReaderTaps
+                        val zoom = zoomOf(page) ?: return@detectReaderTaps
                         scope.launch { zoom.toggleZoom(position - bounds.topLeft, settings.doubleTapMillis) }
                     },
                     onLongPress = { position ->
-                        val page = pageAt(position)?.first ?: return@detectTapGestures
+                        val page = pageAt(position)?.first ?: return@detectReaderTaps
                         if (onPageLongPress(page)) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     },
                 )
@@ -287,13 +287,3 @@ private class SpreadPlacements(val leftPage: ReaderPage, val rightPage: ReaderPa
         middles = spread.localBoundingBoxOf(left).center.x / width to spread.localBoundingBoxOf(right).center.x / width
     }
 }
-
-/** A key for the pager to follow a slot by while slots are added before it, as Android can save it. */
-private val ReaderViewerItem.key: String
-    get() = when (this) {
-        is ReaderViewerItem.Page -> "page:${page.key}:${facing?.key}"
-        is ReaderViewerItem.Transition -> "transition:${transition.from.chapter.id}:${transition.direction}"
-    }
-
-private val ReaderPage.key: String
-    get() = "${chapter.chapter.id}:$index:${if (this is InsertPage) "second" else "first"}"

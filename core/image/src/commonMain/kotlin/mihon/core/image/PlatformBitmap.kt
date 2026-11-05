@@ -23,3 +23,9 @@ expect fun PlatformBitmap.release()
 
 /** The same pixels as Compose draws them, without a copy; valid until the bitmap is released. */
 expect fun PlatformBitmap.asImageBitmap(): ImageBitmap
+
+/**
+ * Rows [top] until [bottom] as a bitmap of their own that this one can be released without; it is not changed again,
+ * so a platform that uploads bitmaps to the GPU may start doing so at once.
+ */
+expect fun PlatformBitmap.copyRows(top: Int, bottom: Int): PlatformBitmap

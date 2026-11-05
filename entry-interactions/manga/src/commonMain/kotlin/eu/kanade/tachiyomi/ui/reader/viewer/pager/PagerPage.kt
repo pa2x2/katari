@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -22,7 +21,10 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
+import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
+import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
+import eu.kanade.tachiyomi.ui.reader.viewer.page.PageProblem
+import eu.kanade.tachiyomi.ui.reader.viewer.page.rememberReaderPageContent
 import kotlinx.coroutines.delay
 import mihon.core.image.progressive.rememberProgressivePreview
 import mihon.entry.interactions.manga.reader.image.animation.AnimatedPageImage
@@ -33,18 +35,10 @@ import mihon.entry.interactions.manga.reader.image.layout.displayedSize
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.tiles.PageImageView
 import mihon.entry.interactions.manga.reader.image.tiles.TiledPageImage
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Error
-import mihon.icons.materialsymbols.rounded.OpenInBrowser
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.presentation.kit.feedback.ProblemAction
-import mihon.presentation.kit.feedback.ProblemCard
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.pageBackdropBrush
 import mihon.presentation.kit.theme.pageBackdropColor
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -55,22 +49,12 @@ import kotlin.math.roundToInt
  */
 @Composable
 internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boolean, modifier: Modifier = Modifier) {
-    var content by remember(page) { mutableStateOf<PagerPageContent>(PagerPageContent.Loading(null)) }
-    val imageSettings = viewer.imageSettingsKey()
-    LaunchedEffect(page, imageSettings) {
-        loadPagerPage(page, viewer::pageRequest) { next ->
-            val previous = content
-            content = next
-            if (previous is PagerPageContent.Shown && previous.image !== (next as? PagerPageContent.Shown)?.image) {
-                previous.image.close()
-            }
-        }
-    }
-    DisposableEffect(page) { onDispose { (content as? PagerPageContent.Shown)?.image?.close() } }
+    val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
+    val content = contentState.content
 
     val progressive by page.progressiveImageState.collectAsState(null)
     val preview = rememberProgressivePreview(progressive)
-    val shown = content as? PagerPageContent.Shown
+    val shown = content as? PageContent.Shown
     LaunchedEffect(shown) { if (shown != null) page.releaseProgressivePreviewAfterFinalImageReady() }
     val previewImage = preview.image?.takeIf { shown == null || preview.keepsAnimation }
     val previewSize = progressive?.metadata?.let { IntSize(it.width, it.height) }
@@ -111,6 +95,12 @@ internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boo
             .narrowedToImage(if (narrowToImage) displayedSize else null)
             .onSizeChanged { slotSize = it }
             .pageBackground(shown?.background)
+            .quickZoomGesture(
+                key = zoom,
+                enabled = { true },
+                onStart = { viewer.onPageZoomed() },
+                onZoom = { factor, focus -> zoom.zoomBy(factor, focus) },
+            )
             .pagerPageGestures(zoom, scope, onZoomed = viewer::onPageZoomed),
         contentAlignment = Alignment.Center,
     ) {
@@ -124,16 +114,16 @@ internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boo
                         image = image,
                         layout = shown.layout,
                         displayProfile = TachiyomiImageDecoder.displayProfile,
-                        onFailed = { content = PagerPageContent.Failed(null) },
+                        onFailed = contentState::fail,
                     )
                 }
             }
-            content is PagerPageContent.Loading -> CombinedCircularProgressIndicator(
-                progress = { (content as? PagerPageContent.Loading)?.progress ?: 0f },
+            content is PageContent.Loading -> CombinedCircularProgressIndicator(
+                progress = { (contentState.content as? PageContent.Loading)?.progress ?: 0f },
             )
-            content is PagerPageContent.Failed -> PageProblem(
+            content is PageContent.Failed -> PageProblem(
                 page = page,
-                error = (content as PagerPageContent.Failed).error,
+                error = content.error,
                 onOpenInWebView = viewer.pageWebView(page),
             )
         }
@@ -197,30 +187,6 @@ private fun Modifier.pageBackground(background: PageBackground?): Modifier = whe
     null -> this
     is PageBackground.Solid -> background(pageBackdropColor(background.argb))
     is PageBackground.Gradient -> background(pageBackdropBrush(background.argb))
-}
-
-@Composable
-private fun PageProblem(page: ReaderPage, error: Throwable?, onOpenInWebView: (() -> Unit)?) {
-    ProblemCard(
-        icon = MaterialSymbols.Rounded.Error,
-        heading = stringResource(MR.strings.decode_image_error),
-        message = error?.readerFormattedMessage.orEmpty(),
-        actions = listOfNotNull(
-            ProblemAction(
-                stringResource(MR.strings.action_retry),
-                { page.chapter.pageLoader?.retryPage(page) },
-                MaterialSymbols.Rounded.Refresh,
-            ),
-            onOpenInWebView?.let {
-                ProblemAction(
-                    stringResource(MR.strings.action_open_in_web_view),
-                    it,
-                    MaterialSymbols.Rounded.OpenInBrowser,
-                )
-            },
-        ),
-        modifier = Modifier.padding(KatariTheme.spacing.xl),
-    )
 }
 
 private const val LANDSCAPE_ZOOM_DELAY_MILLIS = 500L

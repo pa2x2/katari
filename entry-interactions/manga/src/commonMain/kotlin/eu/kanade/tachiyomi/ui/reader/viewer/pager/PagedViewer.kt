@@ -15,6 +15,8 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
+import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
+import eu.kanade.tachiyomi.ui.reader.viewer.page.pageWebViewAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
@@ -294,7 +296,7 @@ internal class PagedViewer(
     internal fun onTextTap(x: Float, y: Float): Boolean = controller.textInteraction.onTap(x, y)
 
     /** What opening [page]'s image needs now: the settings, and the layout rules that report on the pages around it. */
-    internal fun pageRequest(): PagerPageRequest = PagerPageRequest(
+    internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
         automaticBackground = settings.automaticBackground,
         landscape = landscape,
@@ -313,11 +315,8 @@ internal class PagedViewer(
         pagerPageLayout(page, imageSize, direction, settings.spreadSettings(showsSpreads)).layout
 
     /** Opens [page]'s image address in a web view, where the platform can and the page has one on the web. */
-    internal fun pageWebView(page: ReaderPage): (() -> Unit)? {
-        val open = openPageInWebView ?: return null
-        val url = page.imageUrl?.takeIf { it.startsWith("http", ignoreCase = true) } ?: return null
-        return { open(url, viewModel.manga?.source) }
-    }
+    internal fun pageWebView(page: ReaderPage): (() -> Unit)? =
+        pageWebViewAction(page, viewModel.manga?.source, openPageInWebView)
 
     private fun onWidePage(page: ReaderPage) {
         // Only a wide page shown beside another moves; one already alone is shown whole as it is

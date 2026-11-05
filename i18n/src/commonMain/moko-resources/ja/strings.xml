@@ -884,9 +884,7 @@
     <string name="follow_language">システムの言語に従う</string>
     <string name="time_24_hours">24 時間制</string>
     <string name="time_12_hours">12 時間制</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">パフォーマンスに影響します。ビットマップのしきい値を下げても空白画像の問題が解決しない場合にのみ有効にしてください</string>
     <string name="pref_hardware_bitmap_threshold_default">デフォルト (%d)</string>
     <string name="pref_hardware_bitmap_threshold">カスタムハードウェアビットマップのしきい値</string>
     <string name="pref_hardware_bitmap_threshold_summary">リーダが空の画像を読み込んだ場合は、しきい値を徐々に下げてください。\n選択されました: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">レガシーデコーダーを長尺ストリップリーダーに使用する</string>
 </resources>
