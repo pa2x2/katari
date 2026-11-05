@@ -151,6 +151,8 @@ internal fun PagedGroupFilterContent(
             title = filter.name,
             selectedCount = filter.currentSelectedItemCount(),
             onBack = onBack,
+            onRefresh = { browseSession.refresh(viewKey) },
+            refreshEnabled = !queryTooShort && items.loadState.refresh !is LoadState.Loading,
         )
         banner()
 

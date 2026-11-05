@@ -17,7 +17,8 @@ import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
+import mihon.presentation.kit.refresh.RefreshButton
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import tachiyomi.domain.entry.model.Entry
@@ -41,7 +42,14 @@ fun RelatedEntriesDialog(
     // A sheet capped below the window's height; the grid fills it, so loading and empty states keep its size.
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column(modifier = Modifier.fillMaxHeight()) {
-            SheetHeader(title = stringResource(MR.strings.related_entries))
+            // Loading, error and empty states offer their own retry in the body.
+            val results = (state as? RelatedEntriesViewModel.State.Success)?.takeIf { it.groups.isNotEmpty() }
+            SheetHeader(
+                title = stringResource(MR.strings.related_entries),
+                actions = results?.let { success ->
+                    { RefreshButton(onClick = viewModel::refresh, enabled = !success.isRefreshing) }
+                },
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

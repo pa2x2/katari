@@ -36,7 +36,9 @@ import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadingBackground
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
+import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
+import mihon.presentation.kit.shortcut.ScreenShortcuts
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import tachiyomi.domain.entry.model.Entry
@@ -107,6 +109,16 @@ internal fun EntryImmersiveContent(
         immersiveModel.retain(retainedItemKeys)
     }
 
+    val refreshEnabled = !pagingBlocked && !refreshing
+    val refreshFromTop: () -> Unit = {
+        scope.launch {
+            pagerState.scrollToPage(0)
+            onRefresh()
+        }
+    }
+    // The refresh button hides with the controls, so F5 is declared here as well to keep working while they are hidden.
+    KeyboardShortcutHandler(ScreenShortcuts.Refresh, enabled = refreshEnabled, onTrigger = refreshFromTop)
+
     LaunchedEffect(pageRequest) {
         if (pageRequest > 0 && currentItemCount > 0) pagerState.animateScrollToPage(0)
     }
@@ -176,6 +188,8 @@ internal fun EntryImmersiveContent(
                     onLibraryAction = onLibraryAction,
                     showBackToTop = pagerState.currentPage > 0,
                     onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
+                    onRefresh = refreshFromTop,
+                    refreshEnabled = refreshEnabled,
                     onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
                         val openTarget = immersiveFeature.openTarget(itemState.handle)
                         val chapter = itemState.chapter
@@ -227,6 +241,8 @@ private fun EntryImmersivePage(
     onLibraryAction: (Entry) -> Unit,
     showBackToTop: Boolean,
     onBackToTop: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
     onPagingBlockedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
@@ -311,6 +327,8 @@ private fun EntryImmersivePage(
                 onLibraryAction = { onLibraryAction(entry) },
                 showBackToTop = showBackToTop,
                 onBackToTop = onBackToTop,
+                onRefresh = onRefresh,
+                refreshEnabled = refreshEnabled,
                 onOpenChapter = onOpenChapter,
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
             )

@@ -62,7 +62,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
@@ -223,6 +223,8 @@ data class CatalogScreen(
                                 } else {
                                     null
                                 },
+                                onRefresh = catalogList::refresh,
+                                refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
                                 scrollBehavior = scrollBehavior,
                             )
 
