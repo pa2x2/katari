@@ -189,7 +189,8 @@ private fun WindowTitle(viewModel: VideoPlayerViewModel, shown: Boolean) {
                 videoPlayerWindowTitle(current.entryTitle, current.memberTitle, current.chapterName)
             is VideoPlayerViewModel.State.Loading ->
                 current.title?.let { videoPlayerWindowTitle(it, current.memberTitle, current.episodeName) }
-            is VideoPlayerViewModel.State.Error -> null
+            is VideoPlayerViewModel.State.Error ->
+                current.title?.let { videoPlayerWindowTitle(it, current.memberTitle, current.episodeName) }
         }?.takeIf { shown },
     )
 }
