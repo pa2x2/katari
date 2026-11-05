@@ -246,7 +246,7 @@ class ReaderActivity : EntryInteractionActivity() {
         context = this,
         sharedSettingsRegistry = graph.readerSharedSettingsRegistry,
         webViewActions = EntryChildWebViewAction.entries,
-        hasDisplayCutout = { hasDisplayCutout() },
+        deviceControls = metroGraph<MangaReaderGraph>().viewerDeviceControls,
         onNavigateUp = onBackPressedDispatcher::onBackPressed,
         onClose = ::finish,
         onOpenEntry = ::openMangaScreen,

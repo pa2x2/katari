@@ -17,8 +17,9 @@ import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** [volumeKeys] is whether the device has volume keys that can turn pages. */
 @Composable
-internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettingBindings) {
+internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettingBindings, volumeKeys: Boolean) {
     val mode by bindings.readingMode.state.collectAsState()
     val pageLayout by bindings.pageLayout.state.collectAsState()
     val zones by bindings.tapZones.state.collectAsState()
@@ -53,9 +54,14 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
         )
         RowGroup {
             row { PagingToggle(bindings.animatePages, stringResource(MR.strings.pref_page_transitions)) }
-            row { PagingToggle(bindings.volumeKeys, stringResource(MR.strings.pref_read_with_volume_keys)) }
-            row {
-                PagingToggle(bindings.invertVolumeKeys, stringResource(MR.strings.pref_read_with_volume_keys_inverted))
+            if (volumeKeys) {
+                row { PagingToggle(bindings.volumeKeys, stringResource(MR.strings.pref_read_with_volume_keys)) }
+                row {
+                    PagingToggle(
+                        bindings.invertVolumeKeys,
+                        stringResource(MR.strings.pref_read_with_volume_keys_inverted),
+                    )
+                }
             }
         }
     }

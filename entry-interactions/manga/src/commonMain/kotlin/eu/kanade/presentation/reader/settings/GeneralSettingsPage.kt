@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
@@ -34,13 +35,18 @@ private val flashColors = listOf(
 )
 
 @Composable
-internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel, hasDisplayCutout: Boolean) {
+internal fun ColumnScope.GeneralPage(
+    screenModel: ReaderSettingsScreenModel,
+    deviceControls: ViewerDeviceControls,
+    hasDisplayCutout: Boolean,
+) {
     val settings = screenModel.settings
     val scope = rememberCoroutineScope()
 
     val readerTheme by settings.readerTheme.state.collectAsState()
 
     val flashPageState by settings.flashOnPageChange.state.collectAsState()
+    val flashing = deviceControls.eInkFlashes && flashPageState.effectiveValue
 
     val flashMillis by settings.flashDurationMillis.state.collectAsState()
 
@@ -100,9 +106,11 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel, has
                 )
             }
         }
-        row { BindingToggleRow(stringResource(MR.strings.pref_reader_show_status_bar), settings.showStatusBar) }
-        row {
-            BindingToggleRow(stringResource(MR.strings.pref_reader_show_navigation_bar), settings.showNavigationBar)
+        if (deviceControls.systemBars) {
+            row { BindingToggleRow(stringResource(MR.strings.pref_reader_show_status_bar), settings.showStatusBar) }
+            row {
+                BindingToggleRow(stringResource(MR.strings.pref_reader_show_navigation_bar), settings.showNavigationBar)
+            }
         }
         if (hasDisplayCutout) {
             row { BindingToggleRow(stringResource(MR.strings.pref_cutout_short), settings.drawUnderCutout) }
@@ -125,8 +133,10 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel, has
 
     RowGroup {
         row { BindingToggleRow(stringResource(MR.strings.pref_page_transitions), settings.pageTransitions) }
-        row { BindingToggleRow(stringResource(MR.strings.pref_flash_page), settings.flashOnPageChange) }
-        if (flashPageState.effectiveValue) {
+        if (deviceControls.eInkFlashes) {
+            row { BindingToggleRow(stringResource(MR.strings.pref_flash_page), settings.flashOnPageChange) }
+        }
+        if (flashing) {
             row {
                 SliderRow(
                     value = flashMillis.effectiveValue / MangaReaderSettings.MILLI_CONVERSION,
@@ -155,7 +165,7 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel, has
             }
         }
     }
-    if (flashPageState.effectiveValue) {
+    if (flashing) {
         ChipsRow(title = stringResource(MR.strings.pref_flash_with)) {
             flashColors.forEach { (labelRes, value) ->
                 FilterChip(

@@ -250,8 +250,9 @@ internal fun BookDocumentReaderScreen(
             },
             copyText = dependencies.textClipboard::copy,
             openLink = { url -> dependencies.linkOpener.open(host.context, url) },
-            showTextSelectionMenu = host.selectionToolbar && showTextSelectionMenuSetting.effectiveValue,
-            selectionMenuOnRightClick = !host.selectionToolbar,
+            showTextSelectionMenu =
+            dependencies.deviceControls.textSelectionToolbar && showTextSelectionMenuSetting.effectiveValue,
+            selectionMenuOnRightClick = !dependencies.deviceControls.textSelectionToolbar,
             selectionActions = if (observeSelections) {
                 buildSet {
                     if (host.speaksSelections) add(BookDocumentSelectionAction.Listen)
@@ -306,7 +307,7 @@ internal fun BookDocumentReaderScreen(
                 footerColor = readerPalette.background,
                 // The status bar shows the time and battery already.
                 showTimeAndBattery = showTimeAndBatterySetting.effectiveValue &&
-                    !(host.systemBars && showStatusBarSetting.effectiveValue),
+                    !(dependencies.deviceControls.systemBars && showStatusBarSetting.effectiveValue),
                 powerSource = dependencies.powerSource,
                 translationController = selectionCoordinator?.translationController,
                 textClipboard = dependencies.textClipboard,
@@ -543,8 +544,7 @@ internal fun BookDocumentReaderScreen(
                                 bindings = settingBindings,
                                 progressStyleAvailable =
                                 readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
-                                systemBars = host.systemBars,
-                                selectionToolbar = host.selectionToolbar,
+                                deviceControls = dependencies.deviceControls,
                             )
                         }
                     },

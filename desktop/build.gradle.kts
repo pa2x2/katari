@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.entryInteractions)
     implementation(projects.entryInteractions.host)
     implementation(projects.entrySourceApi)
+    implementation(projects.entryViewerSettingsUi)
     implementation(projects.extensionRuntime)
     implementation(projects.extensionRuntime.jvmHost)
     implementation(projects.core.common)

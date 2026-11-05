@@ -5,7 +5,7 @@ import dev.zacsweers.metro.Binds
 import eu.kanade.presentation.more.settings.screen.animeplayer.MpvPlayerEngineAddon
 import eu.kanade.presentation.more.settings.screen.animeplayer.PlayerEngineAddon
 import eu.kanade.presentation.more.settings.screen.viewer.AndroidViewerDeviceControls
-import eu.kanade.presentation.more.settings.screen.viewer.ViewerDeviceControls
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 
 @BindingContainer
 interface ViewerSettingsBindings {

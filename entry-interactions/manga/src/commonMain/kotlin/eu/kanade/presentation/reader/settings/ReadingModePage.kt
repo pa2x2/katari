@@ -12,6 +12,7 @@ import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
@@ -25,7 +26,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import java.text.NumberFormat
 
 @Composable
-internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel) {
+internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel, deviceControls: ViewerDeviceControls) {
     RowGroupHeader(stringResource(MR.strings.pref_category_for_this_series))
     val readingMode by screenModel.readingModeFlow.collectAsState()
     ChipsRow(title = stringResource(MR.strings.pref_category_reading_mode)) {
@@ -38,18 +39,20 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
         }
     }
 
-    val orientation by screenModel.orientationFlow.collectAsState()
-    ChipsRow(
-        title = stringResource(MR.strings.rotation_type),
-        supportingText = stringResource(MR.strings.rotation_not_applied)
-            .takeUnless { currentWindowLayout().honoursOrientationRequests },
-    ) {
-        ReaderOrientation.entries.map {
-            FilterChip(
-                selected = it == orientation,
-                onClick = { screenModel.onChangeOrientation(it) },
-                label = stringResource(it.stringRes),
-            )
+    if (deviceControls.screenOrientation) {
+        val orientation by screenModel.orientationFlow.collectAsState()
+        ChipsRow(
+            title = stringResource(MR.strings.rotation_type),
+            supportingText = stringResource(MR.strings.rotation_not_applied)
+                .takeUnless { currentWindowLayout().honoursOrientationRequests },
+        ) {
+            ReaderOrientation.entries.map {
+                FilterChip(
+                    selected = it == orientation,
+                    onClick = { screenModel.onChangeOrientation(it) },
+                    label = stringResource(it.stringRes),
+                )
+            }
         }
     }
 

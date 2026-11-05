@@ -105,7 +105,9 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
             onHideMenus = { controller.setMenuVisibility(false) },
             screenModel = settingsScreenModel,
             sharedSettingsRegistry = host.sharedSettingsRegistry,
-            hasDisplayCutout = host.hasDisplayCutout(),
+            deviceControls = host.deviceControls,
+            // Asked here, in the reader's window: the sheet is a window of its own, without the cutout.
+            hasDisplayCutout = host.deviceControls.hasDisplayCutout(),
         )
         is ReaderViewModel.Dialog.ReadingModeSelect -> ReadingModeSelectDialog(
             onDismissRequest = onDismissRequest,

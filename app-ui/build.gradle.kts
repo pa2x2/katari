@@ -42,6 +42,7 @@ kotlin {
                 implementation(projects.domain)
                 implementation(projects.entryInteractions.api)
                 implementation(projects.entryViewerChromeUi)
+                implementation(projects.entryViewerSettingsUi)
                 // Extension and source icons load through the extension host.
                 implementation(projects.extensionRuntime)
                 implementation(projects.i18n)

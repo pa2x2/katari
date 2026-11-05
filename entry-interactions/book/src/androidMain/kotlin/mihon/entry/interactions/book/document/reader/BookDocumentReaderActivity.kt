@@ -54,8 +54,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             context = this,
             webViewActions = EntryChildWebViewAction.entries,
             speaksSelections = true,
-            systemBars = true,
-            selectionToolbar = true,
             showMessage = { message -> toast(message) },
             onClose = ::finish,
             onChildWebViewAction = { action, resolution, title ->

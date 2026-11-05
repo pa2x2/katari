@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.viewer
+package mihon.entry.viewer.settings.ui.device
 
 import androidx.compose.runtime.Composable
 import mihon.core.common.platform.PlatformFacility

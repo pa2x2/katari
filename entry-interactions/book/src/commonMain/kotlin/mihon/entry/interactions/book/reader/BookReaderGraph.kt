@@ -19,6 +19,7 @@ import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
@@ -67,6 +68,7 @@ class BookReaderDependencies internal constructor(
     powerSource: Lazy<PowerSource>,
     linkOpener: Lazy<LinkOpener>,
     sharedSettingsRegistry: Lazy<ReaderSharedSettingsRegistry>,
+    deviceControls: Lazy<ViewerDeviceControls>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -93,4 +95,5 @@ class BookReaderDependencies internal constructor(
     internal val powerSource by powerSource
     internal val linkOpener by linkOpener
     internal val sharedSettingsRegistry by sharedSettingsRegistry
+    internal val deviceControls by deviceControls
 }

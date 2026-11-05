@@ -45,6 +45,7 @@ import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
 import mihon.entry.viewer.chrome.ui.window.ViewerFullScreen
 import mihon.entry.viewer.chrome.ui.window.rememberReaderPointer
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import mihon.presentation.kit.window.LocalWindowFullScreen
 import mihon.presentation.kit.window.ReportScreenTitle
 import tachiyomi.core.common.preference.PreferenceStore
@@ -65,6 +66,7 @@ internal class DesktopMangaReader(
     preferenceStore: PreferenceStore,
     private val linkOpener: LinkOpener,
     private val screenIdleInhibitor: ScreenIdleInhibitor,
+    private val deviceControls: ViewerDeviceControls,
 ) : MangaReader {
     private val preferences = MangaReaderPreferences(preferenceStore)
 
@@ -131,7 +133,7 @@ internal class DesktopMangaReader(
             if (navigation.webViewAvailable) add(EntryChildWebViewAction.OPEN_IN_WEB_VIEW)
             add(EntryChildWebViewAction.OPEN_IN_BROWSER)
         },
-        hasDisplayCutout = { false },
+        deviceControls = deviceControls,
         onNavigateUp = navigation::close,
         onClose = navigation::close,
         onOpenEntry = { viewModel.manga?.id?.let(navigation::openEntry) },
