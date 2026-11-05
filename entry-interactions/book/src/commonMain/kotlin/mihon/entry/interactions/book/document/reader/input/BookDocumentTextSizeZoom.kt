@@ -13,6 +13,7 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.document.reader.settings.profileTextSize
@@ -29,38 +30,47 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The text size changed a step at a time from the keyboard, or with Ctrl and the wheel, for this book as the Text size
- * setting changes it. While steps keep coming only [pending], which [BookDocumentTextSizePill] shows, changes: the size
- * is set, and the pages laid out again, once they stop for a moment.
+ * setting changes it: each step sets the size at once, as the setting's buttons do, and [BookDocumentTextSizePill]
+ * shows it for a moment.
  */
 @Stable
 internal class BookDocumentTextSizeZoom(
     private val binding: ViewerSettingBinding<Int>,
     private val scope: CoroutineScope,
 ) {
-    /** The size about to be set, in percent; null once it is set. */
-    var pending by mutableStateOf<Int?>(null)
+    /** The size last stepped to, in percent, while the pill shows it; null once it hides. */
+    var shown by mutableStateOf<Int?>(null)
         private set
 
-    private var settle: Job? = null
+    // Saving lags behind the keys, so steps count on from the size last asked for rather than the saved one, and the
+    // sizes are saved one after another so the last one asked for is the one kept
+    private val requested = Channel<Int>(Channel.CONFLATED)
+    private var hide: Job? = null
+
+    init {
+        scope.launch {
+            for (size in requested) binding.setBookTextSize(size)
+        }
+    }
 
     fun step(steps: Int) {
-        val from = pending ?: binding.state.value.effectiveValue
-        show(
+        val from = shown ?: binding.state.value.effectiveValue
+        set(
             (from + steps * BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT)
                 .coerceIn(BookDocumentReaderSettings.TEXT_SIZE_RANGE),
         )
     }
 
     /** Back to the profile's size, which leaves the book without a size of its own. */
-    fun reset() = show(binding.profileTextSize)
+    fun reset() = set(binding.profileTextSize)
 
-    private fun show(size: Int) {
-        pending = size
-        settle?.cancel()
-        settle = scope.launch {
-            delay(SETTLE_MS)
-            binding.setBookTextSize(size)
-            pending = null
+    private fun set(size: Int) {
+        shown = size
+        requested.trySend(size)
+        hide?.cancel()
+        hide = scope.launch {
+            delay(SHOWN_MS)
+            shown = null
         }
     }
 }
@@ -88,10 +98,9 @@ internal fun Modifier.textSizeWheel(zoom: BookDocumentTextSizeZoom): Modifier = 
     }
 }
 
-/** The size [zoom] is about to set, while it is about to set one. */
 @Composable
 internal fun BookDocumentTextSizePill(zoom: BookDocumentTextSizeZoom, modifier: Modifier = Modifier) {
-    val size = zoom.pending ?: return
+    val size = zoom.shown ?: return
     OverlayPill(modifier = modifier, style = OverlayStyle.Scrim) {
         Text(
             text = stringResource(MR.strings.book_reader_text_size_value, size),
@@ -101,5 +110,4 @@ internal fun BookDocumentTextSizePill(zoom: BookDocumentTextSizeZoom, modifier: 
     }
 }
 
-// Long enough for the next notch or key repeat to arrive, so a run of steps lays the pages out once
-private const val SETTLE_MS = 600L
+private const val SHOWN_MS = 1_000L
