@@ -21,8 +21,14 @@ interface ViewerDeviceControls {
     /** Flashing the screen between pages, which clears the ghosting of e-ink panels. */
     val eInkFlashes: Boolean
 
-    /** Shrinking the player into a picture-in-picture window. */
+    /** Moving the player into the system's picture-in-picture by itself when the app is left. */
     val pictureInPicture: Boolean
+
+    /**
+     * A setting for whether the player keeps playing out of sight. Where false the platform has no such choice to
+     * make, as on desktop, where a hidden or minimised window plays on.
+     */
+    val backgroundPlayback: Boolean
 
     /** Changing the screen's brightness, as the player's gestures do. */
     val screenBrightness: Boolean
