@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.reader.window
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -11,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.SavedStateHandle
@@ -25,6 +28,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentReaderControlle
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderHost
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderSessionViewModel
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPreferences
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookReaderDependencies
 import mihon.entry.interactions.book.reader.BookReaderHostContent
@@ -36,6 +40,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
 import mihon.entry.viewer.chrome.ui.window.ViewerFullScreen
+import mihon.entry.viewer.chrome.ui.window.rememberReaderPointer
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.window.LocalWindowFullScreen
 import mihon.presentation.kit.window.ReportScreenTitle
@@ -44,12 +49,15 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The desktop's [BookReader]: the shared open flow, then the shared reader, as Android's two activities host them. It
- * offers the window's full screen, keeps the screen awake as the reader's setting says, and names the book and chapter
- * in the window's title while it fills the window. There is no speech engine on the desktop yet, so Listen stays out.
+ * takes the keyboard ([BookReaderKeys]), hides the mouse pointer while it rests over the book ([rememberReaderPointer]),
+ * offers the window's full screen, keeps the screen awake as the reader's setting says, shows a guide to the mouse and
+ * keys the first time it opens in a profile ([BookReaderInputGuide]), and names the book and chapter in the window's
+ * title while it fills the window. There is no speech engine on the desktop yet, so Listen stays out.
  */
 @Inject
 internal class DesktopBookReader(
     private val dependencies: BookReaderDependencies,
+    private val preferences: BookDocumentReaderPreferences,
     private val screenIdleInhibitor: ScreenIdleInhibitor,
 ) : BookReader {
     @Composable
@@ -129,6 +137,7 @@ internal class DesktopBookReader(
                     },
                     speaksSelections = false,
                     systemBars = false,
+                    selectionToolbar = false,
                     showMessage = { message -> messages.show(message) },
                     onClose = navigation::close,
                     onChildWebViewAction = { action, resolution, title ->
@@ -174,7 +183,17 @@ internal class DesktopBookReader(
                     stringResource(MR.strings.reader_window_title, state.entryTitle, state.window.current.name)
                 },
             )
-            BookDocumentReaderContent(controller, host, dependencies)
+            val state = controller.readerState
+            val guideDue = bookInputGuideDue(preferences, shown = state != null)
+            // Nothing but the book shows: no menu, and no sheet or dialog, which back would close
+            val overBook = state != null && !state.chromeVisible && !controller.handlesBack &&
+                controller.pendingHiddenText == null
+            val pointer = rememberReaderPointer(hidesWhenStill = overBook && !guideDue)
+            Box(modifier = Modifier.fillMaxSize().then(pointer)) {
+                BookDocumentReaderContent(controller, host, dependencies)
+                BookReaderKeys(controller, LocalWindowFullScreen.current, enabled = state != null && !guideDue)
+                if (guideDue) BookReaderInputGuide(preferences)
+            }
         }
     }
 

@@ -8,8 +8,12 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntSize
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterEnd
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
@@ -18,6 +22,8 @@ import mihon.entry.interactions.book.document.reader.BookDocumentNavigationReque
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
+import mihon.entry.interactions.book.document.reader.input.detectRepeatedClicks
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
@@ -44,6 +50,7 @@ internal fun BookDocumentPagedViewer(
     volumeKeys: Boolean,
     invertVolumeKeys: Boolean,
     chromeVisible: Boolean,
+    keys: BookDocumentReaderKeys,
     chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
@@ -59,7 +66,7 @@ internal fun BookDocumentPagedViewer(
 ) {
     val navigation = rememberBookDocumentPagedNavigation(
         pages, mode, initialLocation, navigationRequest,
-        animatePages, volumeKeys, invertVolumeKeys, chromeVisible,
+        animatePages, volumeKeys, invertVolumeKeys, chromeVisible, keys,
         chapterEnd,
         onLocation, onChapterBoundaryReached, onChapterEndObservation, onScrollStarted, onUserScrollStarted,
         onViewportLocation,
@@ -68,8 +75,22 @@ internal fun BookDocumentPagedViewer(
     val vertical = mode == BookDocumentReadingMode.PAGED_VERTICAL
     val rtl = mode == BookDocumentReadingMode.PAGED_RTL
     BookDocumentPageProgressEffect(pages, pager, rtl, onPageProgress)
-    val modifier = navigation.modifier
     val move = navigation.move
+    val tap = { offset: Offset, size: IntSize ->
+        when (readerTapAction(tapZones, vertical, tapInversion, offset.x / size.width, offset.y / size.height)) {
+            ReaderTapAction.MENU -> onReaderTap()
+            ReaderTapAction.NEXT -> move(1)
+            ReaderTapAction.PREV -> move(-1)
+            ReaderTapAction.LEFT -> move(if (rtl) 1 else -1)
+            ReaderTapAction.RIGHT -> move(if (rtl) -1 else 1)
+        }
+    }
+    val currentTap by rememberUpdatedState(tap)
+    // The pager, which stays put, takes the mouse's quick clicks and those that come while pages turn: a turning page
+    // slides out from under the mouse, so its own tap would never come, and its text would count them as a double click
+    val modifier = navigation.modifier.pointerInput(pager) {
+        detectRepeatedClicks(takesAll = { pager.isScrollInProgress }) { offset -> currentTap(offset, size) }
+    }
     val pageContent: @Composable (Int) -> Unit = { index ->
         val page = pages[index]
         val chapterId = page.ownerChapter.id
@@ -85,32 +106,9 @@ internal fun BookDocumentPagedViewer(
                 BookDocumentPageContent(it, loadStates, onAnchorClick, onExternalLinkClick, onTransitionRetry)
             }
             Box(
-                modifier = Modifier.fillMaxSize().pointerInput(
-                    page.key,
-                    tapZones,
-                    tapInversion,
-                    vertical,
-                    rtl,
-                    animatePages,
-                ) {
+                modifier = Modifier.fillMaxSize().pointerInput(page.key) {
                     detectTapGestures { offset ->
-                        if (!selection.consumeSelectionTap()) {
-                            when (
-                                readerTapAction(
-                                    tapZones,
-                                    vertical,
-                                    tapInversion,
-                                    offset.x / size.width,
-                                    offset.y / size.height,
-                                )
-                            ) {
-                                ReaderTapAction.MENU -> onReaderTap()
-                                ReaderTapAction.NEXT -> move(1)
-                                ReaderTapAction.PREV -> move(-1)
-                                ReaderTapAction.LEFT -> move(if (rtl) 1 else -1)
-                                ReaderTapAction.RIGHT -> move(if (rtl) -1 else 1)
-                            }
-                        }
+                        if (!selection.consumeSelectionTap()) currentTap(offset, size)
                     }
                 },
             ) {

@@ -19,6 +19,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +31,10 @@ import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRendere
 import mihon.entry.interactions.book.document.reader.BookDocumentSelectableText
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceDecoding
+import mihon.entry.interactions.book.document.reader.input.secondaryClicks
+import mihon.entry.interactions.book.document.reader.picture.BookDocumentPictureMenu
 import mihon.entry.interactions.book.document.reader.picture.BookDocumentPictureViewer
+import mihon.entry.interactions.book.document.reader.picture.rememberBookDocumentPictureHandOn
 import mihon.entry.interactions.book.document.resource.BookDocumentImageHeaders
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.ProseImage
@@ -39,6 +43,7 @@ import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import mihon.entry.interactions.book.document.resource.readProseImageHeader
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -64,6 +69,8 @@ internal fun BookDocumentFigureRenderer(
     var retryGeneration by remember(resourceId) { mutableIntStateOf(0) }
     val decoding = LocalBookDocumentResourceDecoding.current
     var viewing by remember(resourceId) { mutableStateOf(false) }
+    var pictureMenu by remember(resourceId) { mutableStateOf<Offset?>(null) }
+    val handOn = rememberBookDocumentPictureHandOn()
     var header by remember(resourceLoader, resourceId) {
         mutableStateOf(resourceLoader?.let { BookDocumentImageHeaders.cached(it, resourceId) })
     }
@@ -111,19 +118,38 @@ internal fun BookDocumentFigureRenderer(
             ?.let { with(density) { Modifier.fillMaxWidth().height(it.figureHeightPx(targetWidth).toDp()) } }
             ?: Modifier.fillMaxWidth().sizeIn(maxHeight = maxWidth * 2)
         when {
-            image != null -> Image(
-                bitmap = image.bitmap,
-                contentDescription = when {
-                    content.image.decorative -> null
-                    alternativeText != null -> alternativeText
-                    captionText != null -> captionText
-                    else -> stringResource(MR.strings.book_document_image_description_unavailable)
-                },
-                contentScale = ContentScale.Fit,
-                modifier = imageModifier.clickable {
-                    selection?.handleReaderTap { viewing = true } ?: run { viewing = true }
-                },
-            )
+            image != null -> Box {
+                Image(
+                    bitmap = image.bitmap,
+                    contentDescription = when {
+                        content.image.decorative -> null
+                        alternativeText != null -> alternativeText
+                        captionText != null -> captionText
+                        else -> stringResource(MR.strings.book_document_image_description_unavailable)
+                    },
+                    contentScale = ContentScale.Fit,
+                    modifier = imageModifier
+                        .clickable { selection?.handleReaderTap { viewing = true } ?: run { viewing = true } }
+                        .clickCursor()
+                        .secondaryClicks { position ->
+                            // A selection keeps its own menu, wherever the click lands
+                            val opens = resourceLoader != null && selection?.hasSelection != true
+                            if (opens) pictureMenu = position
+                            opens
+                        },
+                )
+                val menuPosition = pictureMenu
+                if (menuPosition != null && resourceLoader != null) {
+                    BookDocumentPictureMenu(
+                        resourceId = resourceId,
+                        resourceLoader = resourceLoader,
+                        handOn = handOn,
+                        position = menuPosition,
+                        onOpen = { viewing = true },
+                        onDismissRequest = { pictureMenu = null },
+                    )
+                }
+            }
             imageResult == null -> Box(modifier = imageModifier) {
                 DisableSelection {
                     Text(stringResource(MR.strings.book_document_image_loading), role = TextRole.ItemTitle)

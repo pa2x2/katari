@@ -22,19 +22,21 @@ internal fun BookDocumentReaderAppearancePage(
 
 /**
  * [progressStyleAvailable] is whether the reading mode offers progress styles; only scrolling does. [systemBars] is
- * whether the window has status and navigation bars the reader can show, which a desktop window doesn't.
+ * whether the window has status and navigation bars the reader can show, which a desktop window doesn't, and
+ * [selectionToolbar] whether selected text gets a floating toolbar whose system actions a setting can leave out.
  */
 @Composable
 internal fun BookDocumentReaderBehaviorPage(
     bindings: BookDocumentReaderSettingBindings,
     progressStyleAvailable: Boolean,
     systemBars: Boolean,
+    selectionToolbar: Boolean,
 ) {
     BookDocumentReaderPagingSettings(bindings)
     BookDocumentReaderChapterTransitionSettings(bindings.chapterTransitionMode)
     RowGroup {
         row { BookDocumentReaderScreenAliveSettings(bindings.keepScreenAlive) }
-        row { BookDocumentReaderTextSelectionMenuSettings(bindings.showTextSelectionMenu) }
+        if (selectionToolbar) row { BookDocumentReaderTextSelectionMenuSettings(bindings.showTextSelectionMenu) }
         if (systemBars) row { BookDocumentReaderStatusBarSettings(bindings.showStatusBar) }
         row {
             BookDocumentReaderTimeAndBatterySettings(

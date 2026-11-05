@@ -6,6 +6,7 @@ import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
+import mihon.presentation.kit.shortcut.ContextMenuKey
 
 /**
  * What the reader's keys do, on every platform. The arrows turn toward their side of the screen, so in right to left
@@ -48,7 +49,7 @@ internal val ReaderKeyCommand.chords: List<ReaderKeyChord>
         ReaderKeyCommand.LastPage -> listOf(ReaderKeyChord(Key.MoveEnd))
         ReaderKeyCommand.NextChapter -> listOf(ReaderKeyChord(Key.N))
         ReaderKeyCommand.PreviousChapter -> listOf(ReaderKeyChord(Key.P))
-        ReaderKeyCommand.ToggleMenu -> listOf(ReaderKeyChord(Key.Menu))
+        ReaderKeyCommand.ToggleMenu -> listOf(ReaderKeyChord(ContextMenuKey))
         ReaderKeyCommand.ZoomIn -> listOf(
             ReaderKeyChord(Key.Equals, ctrl = true),
             // Where + is Shift and =

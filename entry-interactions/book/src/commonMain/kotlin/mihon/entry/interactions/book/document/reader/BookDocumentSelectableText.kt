@@ -6,13 +6,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
@@ -20,6 +27,9 @@ import mihon.book.api.document.BookDocumentBlockKind
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.input.secondaryClicks
+import mihon.entry.interactions.book.document.reader.links.BookDocumentLinkMenu
+import mihon.entry.interactions.book.document.reader.links.webLinkAt
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportText
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
@@ -174,6 +184,11 @@ internal fun BookDocumentSelectableText(
         Modifier
     }
 
+    // Read only as the right button goes down, so laying the text out again recomposes nothing
+    var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var textOrigin by remember { mutableStateOf(Offset.Zero) }
+    var linkMenu by remember { mutableStateOf<Pair<String, Offset>?>(null) }
+    val hasWebLinks = links.any { it.target is BookDocumentLinkTarget.External }
     Box(modifier = modifier) {
         BasicText(
             text = annotatedText,
@@ -188,10 +203,25 @@ internal fun BookDocumentSelectableText(
             onTextLayout = { result ->
                 selection?.updateTextLayout(token, result)
                 viewportText?.layout = result
+                textLayout = result
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .then(quoteModifier)
+                .then(
+                    if (hasWebLinks) {
+                        Modifier
+                            .onPlaced { textOrigin = it.positionInParent() }
+                            .secondaryClicks { position ->
+                                // A selection keeps its own menu, wherever in the text the click lands
+                                val url = textLayout?.webLinkAt(position, links)
+                                    ?.takeIf { selection?.hasSelection != true }
+                                url?.let { linkMenu = it to textOrigin + position } != null
+                            }
+                    } else {
+                        Modifier
+                    },
+                )
                 .then(if (viewportText != null) Modifier.onGloballyPositioned { viewportText.placed(it) } else Modifier)
                 .then(
                     if (trackSelectionGeometry) {
@@ -204,6 +234,7 @@ internal fun BookDocumentSelectableText(
                 )
                 .padding(bottom = terminalSpacing),
         )
+        linkMenu?.let { (url, position) -> BookDocumentLinkMenu(url, position) { linkMenu = null } }
     }
 }
 

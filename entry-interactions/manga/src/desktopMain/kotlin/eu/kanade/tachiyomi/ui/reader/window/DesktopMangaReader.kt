@@ -43,6 +43,7 @@ import mihon.entry.interactions.reader.window.MangaReaderRequest
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
 import mihon.entry.viewer.chrome.ui.window.ViewerFullScreen
+import mihon.entry.viewer.chrome.ui.window.rememberReaderPointer
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.presentation.kit.window.LocalWindowFullScreen
 import mihon.presentation.kit.window.ReportScreenTitle

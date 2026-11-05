@@ -13,7 +13,15 @@ internal data class BookDocumentTextInteraction(
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
     /** Puts selected text on the clipboard, under a label for platforms that show clipboard contents. */
     val copyText: (label: String, text: String) -> Unit,
+    /** Opens a web link in the browser, as its menu offers, without the confirmation a click on it asks for. */
+    val openLink: (url: String) -> Unit = {},
     val showTextSelectionMenu: Boolean = true,
+    /**
+     * Whether a right click on the selection opens the reader's own menu of its actions, where the platform has no
+     * floating toolbar for them, as on the desktop. A selection there is settled once the mouse lets go, rather than
+     * as the toolbar comes up.
+     */
+    val selectionMenuOnRightClick: Boolean = false,
     val selectionActions: Set<BookDocumentSelectionAction> = emptySet(),
     val activeSpeechSelectionIdentity: String? = null,
     val onSelectionAction: (

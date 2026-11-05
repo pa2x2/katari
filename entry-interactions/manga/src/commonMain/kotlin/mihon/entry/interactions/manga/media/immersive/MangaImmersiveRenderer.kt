@@ -25,7 +25,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
-import eu.kanade.tachiyomi.ui.reader.viewer.gesture.WheelTurns
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.pagerMouseDrags
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -33,6 +32,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.entry.viewer.chrome.ui.wheel.WheelTurns
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPage
 import tachiyomi.domain.entry.model.EntryChapter
@@ -19,6 +20,10 @@ internal class BookDocumentSeekState {
 
     var pendingValue by mutableStateOf<Float?>(null)
         private set
+
+    /** The section read now, kept whether or not the controls show. */
+    val section: BookDocumentSection<EntryChapter>?
+        get() = location?.section
 
     fun beginSeek(value: Float) {
         pendingValue = value

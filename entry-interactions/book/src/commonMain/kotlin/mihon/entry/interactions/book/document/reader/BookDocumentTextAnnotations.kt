@@ -20,6 +20,7 @@ import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.links.BOOK_DOCUMENT_LINK_TAG_PREFIX
 import mihon.entry.interactions.book.document.reader.search.BookDocumentSearchMark
 import mihon.presentation.kit.content.documentSpanStyle
 
@@ -50,7 +51,7 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
         if (end <= start) return@forEachIndexed
         addLink(
             LinkAnnotation.Clickable(
-                tag = "book-document-link-$index",
+                tag = "$BOOK_DOCUMENT_LINK_TAG_PREFIX$index",
                 styles = TextLinkStyles(
                     style = documentSpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
                 ),

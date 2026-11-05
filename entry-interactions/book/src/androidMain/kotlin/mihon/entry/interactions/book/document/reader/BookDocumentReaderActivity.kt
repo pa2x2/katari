@@ -13,6 +13,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -52,6 +55,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             webViewActions = EntryChildWebViewAction.entries,
             speaksSelections = true,
             systemBars = true,
+            selectionToolbar = true,
             showMessage = { message -> toast(message) },
             onClose = ::finish,
             onChildWebViewAction = { action, resolution, title ->
@@ -86,6 +90,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             },
         )
         readerContent.setEntryInteractionContent {
+            // Back returns to where a link was followed from first, as the desktop's mouse back and Alt+← do. Composed
+            // first, so whatever is open over the book closes before it.
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                isBackEnabled = controller.returnsFromJump,
+                onBackCompleted = controller::returnToJumpOrigin,
+            )
             BookDocumentReaderContent(controller, host, dependencies)
         }
         lifecycleScope.launch {

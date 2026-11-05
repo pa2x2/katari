@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPage
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedViewer
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
@@ -57,6 +58,7 @@ internal fun BookDocumentModeViewport(
     volume: Boolean,
     invertVolume: Boolean,
     chromeVisible: Boolean,
+    keys: BookDocumentReaderKeys,
     modifier: Modifier = Modifier,
     onPageProgress: (BookReaderProgress.Page?) -> Unit = {},
     onSeekPages: (List<BookDocumentPage>) -> Unit = {},
@@ -80,6 +82,8 @@ internal fun BookDocumentModeViewport(
             chapterEnd, onLocation, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
             onAnchorMissing, onInternalLinkClick,
             onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
+            chromeVisible = chromeVisible,
+            keys = keys,
             initialLocation = anchor.location,
             onViewportLocation = observeViewport,
             modifier = modifier,
@@ -135,7 +139,7 @@ internal fun BookDocumentModeViewport(
                     BookDocumentPagedViewer(
                         shown, spread, mode, initialLocation, navigationRequest, loadStates,
                         tapZones, inversion, animation,
-                        volume, invertVolume, chromeVisible,
+                        volume, invertVolume, chromeVisible, keys,
                         chapterEnd,
                         pagedLocationChanged, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
                         onInternalLinkClick,

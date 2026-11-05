@@ -17,6 +17,7 @@ import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
@@ -103,7 +104,12 @@ internal class BookDocumentReaderController(
         private set
 
     val snackbarHostState = SnackbarHostState()
+    val keys = BookDocumentReaderKeys()
     val jumpHistory get() = retainedSessions.jumpHistory
+
+    /** Whether back would go to where a link or footnote was followed from, before anything else. */
+    val returnsFromJump: Boolean
+        get() = readerState != null && jumpHistory.returnTarget != null
 
     private var startupJob: Job? = null
     private var navigationPresentationJob: Job? = null

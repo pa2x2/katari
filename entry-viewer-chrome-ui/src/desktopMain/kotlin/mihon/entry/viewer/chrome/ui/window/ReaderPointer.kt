@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.reader.window
+package mihon.entry.viewer.chrome.ui.window
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,11 +18,12 @@ import kotlinx.coroutines.delay
 import mihon.presentation.kit.pointer.HiddenPointer
 
 /**
- * The mouse pointer over the pages, which goes once the mouse has rested a moment while [hidesWhenStill], as the
- * player hides it over the picture, and comes back on any move, press or scroll.
+ * The mouse pointer over a reader's pages, which goes once the mouse has rested a moment while [hidesWhenStill], as the
+ * player hides it over the picture, and comes back on any move, press or scroll. Hidden, it hides the pointers the pages
+ * show of their own too, such as a text cursor or a link's hand.
  */
 @Composable
-internal fun rememberReaderPointer(hidesWhenStill: Boolean): Modifier {
+fun rememberReaderPointer(hidesWhenStill: Boolean): Modifier {
     var activity by remember { mutableIntStateOf(0) }
     var hidden by remember { mutableStateOf(false) }
     LaunchedEffect(hidesWhenStill, activity) {
@@ -45,7 +46,8 @@ internal fun rememberReaderPointer(hidesWhenStill: Boolean): Modifier {
                 }
             }
         }
-        .pointerHoverIcon(if (hidden) HiddenPointer else PointerIcon.Default)
+        // Always there, changing its icon: a hover icon added under a resting pointer shows only once the pointer moves
+        .pointerHoverIcon(if (hidden) HiddenPointer else PointerIcon.Default, overrideDescendants = hidden)
 }
 
 private const val IDLE_MS = 2_000L

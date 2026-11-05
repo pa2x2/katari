@@ -215,6 +215,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showTextSelectionMenu,
                         title = stringResource(MR.strings.pref_book_document_reader_show_text_selection_menu),
+                        visible = deviceControls.textSelectionToolbar,
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showStatusBar,

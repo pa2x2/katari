@@ -60,6 +60,7 @@ internal fun BookDocumentReaderContent(
                         fonts = fonts,
                         bookSearch = controller.bookSearch,
                         selectionCoordinator = controller.selectionCoordinator,
+                        keys = controller.keys,
                         host = host,
                         dependencies = dependencies,
                         onLocation = coordinator::onLocation,

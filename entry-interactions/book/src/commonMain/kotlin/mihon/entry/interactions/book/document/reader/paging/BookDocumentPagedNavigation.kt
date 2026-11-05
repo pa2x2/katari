@@ -17,16 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterEnd
 import mihon.entry.interactions.book.document.reader.BookDocumentNavigationRequest
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
+import mihon.entry.interactions.book.document.reader.input.BookDocumentKeyCommand
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
+import mihon.entry.interactions.book.document.reader.input.bookDocumentKeyCommands
+import mihon.entry.interactions.book.document.reader.input.pageWheel
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -43,6 +44,7 @@ internal fun rememberBookDocumentPagedNavigation(
     volumeKeys: Boolean,
     invertVolumeKeys: Boolean,
     chromeVisible: Boolean,
+    keys: BookDocumentReaderKeys,
     chapterEnd: BookDocumentChapterEnd?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onChapterBoundaryReached: (EntryChapter) -> Unit,
@@ -89,8 +91,9 @@ internal fun rememberBookDocumentPagedNavigation(
     fun move(delta: Int) {
         // A keyed page can retain its tap handler while adjacent chapters change the page window.
         if (pager.pageCount == 0) return
-        val destination = (pager.currentPage + delta).coerceIn(0, pager.pageCount - 1)
-        if (destination == pager.currentPage) return
+        // From the page a turn under way heads to, so quick turns each go a page further
+        val destination = (pager.targetPage + delta).coerceIn(0, pager.pageCount - 1)
+        if (destination == pager.targetPage) return
         currentOnUserScrollStarted()
         currentOnScrollStarted()
         scope.launch {
@@ -174,23 +177,36 @@ internal fun rememberBookDocumentPagedNavigation(
             currentOnScrollStarted()
         }
     }
-    val modifier = Modifier.fillMaxSize().focusRequester(focus).onPreviewKeyEvent { event ->
-        val delta = when (event.key) {
-            Key.DirectionRight -> if (rtl) -1 else 1
-            Key.DirectionLeft -> if (rtl) 1 else -1
-            Key.DirectionDown, Key.PageDown -> 1
-            Key.DirectionUp, Key.PageUp -> -1
-            Key.VolumeDown -> if (volumeKeys) (if (invertVolumeKeys) -1 else 1) else 0
-            Key.VolumeUp -> if (volumeKeys) (if (invertVolumeKeys) 1 else -1) else 0
-            else -> 0
+    keys.ViewerMoves { command ->
+        // The section the page starts in, as the position bar counts sections
+        val sectionKey = pages.getOrNull(pager.targetPage)?.fragments?.first()?.section?.key
+        fun inSection(page: BookDocumentPage) = sectionKey != null && page.fragments.first().section?.key == sectionKey
+        when (command) {
+            BookDocumentKeyCommand.PageRight -> move(if (rtl) -1 else 1)
+            BookDocumentKeyCommand.PageLeft -> move(if (rtl) 1 else -1)
+            BookDocumentKeyCommand.NextPage, BookDocumentKeyCommand.ScrollDown -> move(1)
+            BookDocumentKeyCommand.PreviousPage, BookDocumentKeyCommand.ScrollUp -> move(-1)
+            BookDocumentKeyCommand.ChapterStart -> pages.indexOfFirst(::inSection)
+                .takeIf { it >= 0 }?.let { move(it - pager.targetPage) }
+            BookDocumentKeyCommand.ChapterEnd -> pages.indexOfLast(::inSection)
+                .takeIf { it >= 0 }?.let { move(it - pager.targetPage) }
+            else -> Unit
         }
-        if (chromeVisible || delta == 0) {
-            false
-        } else {
-            if (event.type == KeyEventType.KeyUp) move(delta)
-            true
+    }
+    val modifier = Modifier
+        .fillMaxSize()
+        .pageWheel(pager, rtl, ::move)
+        .focusRequester(focus)
+        .bookDocumentKeyCommands(keys, enabled = !chromeVisible) { event ->
+            val forward = when (event.key) {
+                Key.VolumeDown -> !invertVolumeKeys
+                Key.VolumeUp -> invertVolumeKeys
+                else -> null
+            }
+            forward?.takeIf { volumeKeys }
+                ?.let { if (it) BookDocumentKeyCommand.NextPage else BookDocumentKeyCommand.PreviousPage }
         }
-    }.focusable()
+        .focusable()
     return BookDocumentPagedNavigation(pager, modifier, ::move)
 }
 

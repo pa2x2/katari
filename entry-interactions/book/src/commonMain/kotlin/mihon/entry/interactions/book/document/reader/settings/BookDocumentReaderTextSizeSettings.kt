@@ -18,16 +18,9 @@ internal fun BookDocumentReaderTextSizeSettings(
     val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     val value = setting.effectiveValue
-    val profileDefault = setting.profileValue ?: setting.processorDefault
 
     fun updateValue(target: Int) {
-        scope.launch {
-            if (target == profileDefault) {
-                binding.clearEntryOverride()
-            } else {
-                binding.setEntryOverride(target)
-            }
-        }
+        scope.launch { binding.setBookTextSize(target) }
     }
 
     StepperRow(
@@ -42,4 +35,13 @@ internal fun BookDocumentReaderTextSizeSettings(
         editContentDescription = stringResource(MR.strings.book_document_reader_edit_text_size),
         onValueChange = ::updateValue,
     )
+}
+
+/** The text size this book is read at without a size of its own: the profile's, or the reader's default. */
+internal val ViewerSettingBinding<Int>.profileTextSize: Int
+    get() = state.value.let { it.profileValue ?: it.processorDefault }
+
+/** Gives this book [target] as its text size, or none of its own when that is the profile's. */
+internal suspend fun ViewerSettingBinding<Int>.setBookTextSize(target: Int) {
+    if (target == profileTextSize) clearEntryOverride() else setEntryOverride(target)
 }

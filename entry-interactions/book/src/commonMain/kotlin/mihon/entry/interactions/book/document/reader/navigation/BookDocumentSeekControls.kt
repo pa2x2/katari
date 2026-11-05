@@ -18,7 +18,6 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.style.TextOverflow
-import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
@@ -70,12 +69,8 @@ internal fun BookDocumentSeekControls(
     var track by remember { mutableStateOf<ClosedFloatingPointRange<Float>?>(null) }
     val sections = state.loadedSections[snapshot.section.owner.id]?.sections.orEmpty()
     val sectionIndex = sections.indexOfFirst { it.key == snapshot.section.key }
-    fun sectionTarget(index: Int) = sections.getOrNull(index)?.let {
-        BookDocumentNavigationTarget(it.owner, BookLocator(it.document.document.resourceId))
-    }
-    val chapterWindow = state.readingOrder.window(snapshot.section.owner.id)
-    val previous = sectionTarget(sectionIndex - 1) ?: chapterWindow?.previous?.let { BookDocumentNavigationTarget(it) }
-    val next = sectionTarget(sectionIndex + 1) ?: chapterWindow?.next?.let { BookDocumentNavigationTarget(it) }
+    val previous = state.sectionStep(snapshot.section, forward = false)
+    val next = state.sectionStep(snapshot.section, forward = true)
     val sectionTitle = if (sections.size > 1) {
         stringResource(MR.strings.book_navigation_section, sectionIndex + 1, sections.size)
     } else {

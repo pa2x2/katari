@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -33,11 +34,17 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
+import mihon.entry.interactions.book.document.reader.input.BookDocumentKeyCommand
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
+import mihon.entry.interactions.book.document.reader.input.BookDocumentTextSizePill
+import mihon.entry.interactions.book.document.reader.input.BookDocumentTextSizeZoom
+import mihon.entry.interactions.book.document.reader.input.textSizeWheel
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekState
 import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
+import mihon.entry.interactions.book.document.reader.navigation.sectionStep
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearchSheet
 import mihon.entry.interactions.book.document.reader.search.BookDocumentChapterSearch
@@ -98,6 +105,7 @@ internal fun BookDocumentReaderScreen(
     fonts: BookDocumentReaderFonts,
     bookSearch: BookDocumentBookSearch,
     selectionCoordinator: BookSelectionActionCoordinator?,
+    keys: BookDocumentReaderKeys,
     host: BookDocumentReaderHost,
     dependencies: BookReaderDependencies,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -161,6 +169,34 @@ internal fun BookDocumentReaderScreen(
         bookSearchVisible = false
         onSearchClosed(search.close())
     }
+    val scope = rememberCoroutineScope()
+    val textSizeZoom = remember(settingBindings.textSize, scope) {
+        BookDocumentTextSizeZoom(settingBindings.textSize, scope)
+    }
+    val scrolling = readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL
+    SideEffect { keys.scrolling = scrolling }
+    keys.ScreenCommands { command ->
+        when (command) {
+            // Section by section, as the position bar's buttons step
+            BookDocumentKeyCommand.NextChapter ->
+                seekState.section?.let { state.sectionStep(it, forward = true) }?.let(onNavigationSelected)
+            BookDocumentKeyCommand.PreviousChapter ->
+                seekState.section?.let { state.sectionStep(it, forward = false) }?.let(onNavigationSelected)
+            BookDocumentKeyCommand.ToggleMenu -> onChromeToggle()
+            BookDocumentKeyCommand.TextSizeUp -> textSizeZoom.step(1)
+            BookDocumentKeyCommand.TextSizeDown -> textSizeZoom.step(-1)
+            BookDocumentKeyCommand.TextSizeReset -> textSizeZoom.reset()
+            BookDocumentKeyCommand.SearchChapter -> if (!searching) search.open(jumpHistory.location)
+            // Searching every chapter needs something to search for, which the chapter's search bar takes first
+            BookDocumentKeyCommand.SearchBook -> when {
+                !searching -> search.open(jumpHistory.location)
+                !search.query.isNullOrBlank() -> bookSearchVisible = true
+            }
+            BookDocumentKeyCommand.NextMatch -> if (searching) search.step(true)?.let(onRevealSearchMatch)
+            BookDocumentKeyCommand.PreviousMatch -> if (searching) search.step(false)?.let(onRevealSearchMatch)
+            else -> Unit
+        }
+    }
 
     // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
     val settingsSnackbarHostState = remember { SnackbarHostState() }
@@ -213,7 +249,9 @@ internal fun BookDocumentReaderScreen(
                 }
             },
             copyText = dependencies.textClipboard::copy,
-            showTextSelectionMenu = showTextSelectionMenuSetting.effectiveValue,
+            openLink = { url -> dependencies.linkOpener.open(host.context, url) },
+            showTextSelectionMenu = host.selectionToolbar && showTextSelectionMenuSetting.effectiveValue,
+            selectionMenuOnRightClick = !host.selectionToolbar,
             selectionActions = if (observeSelections) {
                 buildSet {
                     if (host.speaksSelections) add(BookDocumentSelectionAction.Listen)
@@ -293,6 +331,7 @@ internal fun BookDocumentReaderScreen(
                             onViewportLocation(it)
                         },
                         chromeVisible = state.chromeVisible,
+                        keys = keys,
                         currentChapter = state.window.current,
                         currentChapterId = state.currentChapterId,
                         window = state.window,
@@ -319,6 +358,7 @@ internal fun BookDocumentReaderScreen(
                         },
                         modifier = Modifier
                             .fillMaxSize()
+                            .textSizeWheel(textSizeZoom)
                             .windowInsetsPadding(bookReaderPageInsets),
                     )
                     state.chapterSelection?.let { selection ->
@@ -408,6 +448,7 @@ internal fun BookDocumentReaderScreen(
                             }
                         },
                     )
+                    BookDocumentTextSizePill(textSizeZoom, Modifier.align(Alignment.Center))
                     SnackbarHost(
                         hostState = snackbarHostState,
                         modifier = Modifier
@@ -503,6 +544,7 @@ internal fun BookDocumentReaderScreen(
                                 progressStyleAvailable =
                                 readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
                                 systemBars = host.systemBars,
+                                selectionToolbar = host.selectionToolbar,
                             )
                         }
                     },

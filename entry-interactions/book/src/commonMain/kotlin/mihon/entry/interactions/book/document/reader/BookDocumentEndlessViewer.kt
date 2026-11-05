@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,18 +14,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.input.BookDocumentKeyCommand
+import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
+import mihon.entry.interactions.book.document.reader.input.bookDocumentKeyCommands
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -50,6 +61,8 @@ internal fun BookDocumentEndlessViewer(
     onScrollStarted: () -> Unit,
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
+    chromeVisible: Boolean,
+    keys: BookDocumentReaderKeys,
     initialLocation: BookDocumentViewerLocation<EntryChapter>? = null,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
     modifier: Modifier = Modifier,
@@ -348,10 +361,49 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 
+    val scope = rememberCoroutineScope()
+    val lineHeight = with(LocalDensity.current) {
+        (BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * LocalBookDocumentTypography.current.textScale).sp.toPx() * BODY_LINE_SPACING
+    }
+    keys.ViewerMoves { command ->
+        val info = listState.layoutInfo
+        val screen = (info.viewportEndOffset - info.viewportStartOffset).toFloat()
+        // The section read, as the position bar counts sections
+        val sectionKey = lastObservedLocation?.section?.key
+        val sectionIndices = currentItems.indices.filter { index ->
+            sectionKey != null && (currentItems[index] as? BookDocumentViewerItem.Block)?.section?.key == sectionKey
+        }
+        scope.launch {
+            when (command) {
+                BookDocumentKeyCommand.ScrollDown -> listState.animateScrollBy(lineHeight * KEY_SCROLL_LINES)
+                BookDocumentKeyCommand.ScrollUp -> listState.animateScrollBy(-lineHeight * KEY_SCROLL_LINES)
+                // A screen on, the line that was last is the first, so reading goes on from it
+                BookDocumentKeyCommand.NextPage -> listState.animateScrollBy(screen - lineHeight)
+                BookDocumentKeyCommand.PreviousPage -> listState.animateScrollBy(-(screen - lineHeight))
+                BookDocumentKeyCommand.ChapterStart -> sectionIndices.firstOrNull()?.let { listState.scrollToItem(it) }
+                BookDocumentKeyCommand.ChapterEnd -> sectionIndices.lastOrNull()?.let { last ->
+                    listState.scrollToItem(last)
+                    val size = listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == last }?.size ?: 0
+                    listState.scrollBy(size - screen)
+                }
+                else -> Unit
+            }
+        }
+    }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(chromeVisible) {
+        // Keys go to the focused viewer; a selection takes focus into the text, and the menu into its bars
+        if (!chromeVisible) focus.requestFocus()
+    }
+
     CompositionLocalProvider(LocalBookDocumentViewportGeometry provides viewportGeometry) {
         BookDocumentChapterSelectionContainer(
             chapterId = currentChapterId,
-            modifier = modifier.onPlaced { viewportGeometry.viewport = it },
+            modifier = modifier
+                .onPlaced { viewportGeometry.viewport = it }
+                .focusRequester(focus)
+                .bookDocumentKeyCommands(keys, enabled = !chromeVisible)
+                .focusable(),
         ) { selection ->
             BookDocumentViewerList(
                 items = items,
@@ -367,6 +419,10 @@ internal fun BookDocumentEndlessViewer(
         }
     }
 }
+
+// What ↓ and ↑ scroll, and about how tall a line of body text is for its size
+private const val KEY_SCROLL_LINES = 3
+private const val BODY_LINE_SPACING = 1.5f
 
 private fun androidx.compose.foundation.lazy.LazyListLayoutInfo.visibleBookDocumentLayouts() =
     visibleItemsInfo.map {

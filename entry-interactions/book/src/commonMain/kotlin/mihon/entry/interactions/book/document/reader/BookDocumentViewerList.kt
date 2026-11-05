@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
+import mihon.entry.interactions.book.document.reader.input.detectRepeatedClicks
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
@@ -31,6 +35,7 @@ internal fun BookDocumentViewerList(
     onTransitionRetry: (EntryChapter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentOnReaderTap by rememberUpdatedState(onReaderTap)
     val sections = remember(items.identity) { items.current + items.next + items.previous }
     val transitionMode = LocalBookDocumentChapterTransitionMode.current
     val preparedChapterIds = remember(items.identity) { sections.map { it.owner.id }.toSet() }
@@ -39,9 +44,10 @@ internal fun BookDocumentViewerList(
         ReadingColumn(
             state = state,
             maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
-            modifier = Modifier.fillMaxSize().clickableNoIndication {
-                selection.handleReaderTap(onReaderTap)
-            },
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(selection) { detectRepeatedClicks { selection.handleReaderTap(currentOnReaderTap) } }
+                .clickableNoIndication { selection.handleReaderTap(onReaderTap) },
         ) {
             items(items, key = { it.key }) { item ->
                 val transition = (item as? BookDocumentViewerItem.Transition)?.transition

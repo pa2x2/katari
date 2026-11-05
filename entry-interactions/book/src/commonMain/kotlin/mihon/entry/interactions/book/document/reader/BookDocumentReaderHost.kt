@@ -18,6 +18,12 @@ internal class BookDocumentReaderHost(
     val speaksSelections: Boolean,
     /** Whether the window has status and navigation bars the reader can show or hide, which a desktop window doesn't. */
     val systemBars: Boolean,
+    /**
+     * Whether selected text gets the platform's floating toolbar, as on Android, whose own actions the Show text
+     * selection menu setting keeps or leaves out. Without one, as on the desktop, a right click on the selection offers
+     * only the reader's actions, and the setting is hidden.
+     */
+    val selectionToolbar: Boolean,
     /** Shows a short message about what the reader just did, outside its own snackbars. */
     val showMessage: (String) -> Unit,
     val onClose: () -> Unit,

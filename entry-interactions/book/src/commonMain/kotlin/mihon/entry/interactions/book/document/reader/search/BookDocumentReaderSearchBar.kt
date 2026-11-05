@@ -36,6 +36,7 @@ internal fun BookDocumentReaderSearchBar(
             } else {
                 stringResource(MR.strings.book_reader_search_counter, search.currentIndex + 1, matchCount)
             },
+            onStepMatch = { forward -> if (matchCount > 0) onStep(forward) },
             overlay = true,
             large = false,
             actions = {

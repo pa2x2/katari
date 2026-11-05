@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.reader.viewer.gesture
+package mihon.entry.viewer.chrome.ui.wheel
 
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
  * many to a swipe, so a swipe turns one page and the next turn waits until scrolling has stopped for a moment, which
  * [scope] times.
  */
-internal class WheelTurns(private val scope: CoroutineScope) {
+class WheelTurns(private val scope: CoroutineScope) {
     private var notches = Offset.Zero
     private var swipeTurned = false
     private var swipeEnd: Job? = null

@@ -4,15 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceDecoding
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.ProseImage
@@ -24,8 +20,6 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.dialog.PictureViewer
-import mihon.presentation.kit.feedback.ScreenMessages
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.core.common.util.system.logcat
@@ -48,15 +42,11 @@ internal fun BookDocumentPictureViewer(
     contentDescription: String?,
     onDismissRequest: () -> Unit,
 ) {
-    val context = currentPlatformContext()
-    val export = LocalBookDocumentPictureExport.current
+    val handOn = rememberBookDocumentPictureHandOn()
+    val export = handOn.export
     val decoding = LocalBookDocumentResourceDecoding.current
     val windowSize = currentWindowLayout().size
     val density = LocalDensity.current
-    val scope = rememberCoroutineScope()
-    val messages = rememberScreenMessages()
-    val savedMessage = stringResource(MR.strings.picture_saved)
-    val saveFailedMessage = stringResource(MR.strings.error_saving_picture)
     val maxSidePx = with(density) {
         maxOf(windowSize.width, windowSize.height).roundToPx() * ZOOM_DETAIL
     }.coerceAtMost(MAX_DECODED_SIDE_PX)
@@ -78,7 +68,6 @@ internal fun BookDocumentPictureViewer(
     val current = loaded
     DisposableEffect(current) { onDispose { current?.second?.release() } }
     val (resource, image) = current ?: return
-    val name = resourceId.pictureName()
 
     PictureViewer(
         picture = image.bitmap,
@@ -88,41 +77,18 @@ internal fun BookDocumentPictureViewer(
             AppBar.Action(
                 title = stringResource(MR.strings.action_share),
                 icon = MaterialSymbols.Rounded.Share,
-                onClick = {
-                    scope.handOn(messages, saveFailedMessage) {
-                        export.share(context, { resource.bytes.inputStream() }, name, message = null)
-                    }
-                },
+                onClick = { handOn.share(resourceId) { resource.bytes } },
             ).takeIf { export.offersSharing },
             AppBar.Action(
                 title = stringResource(MR.strings.action_save),
                 icon = MaterialSymbols.Rounded.Save,
-                onClick = {
-                    scope.handOn(messages, saveFailedMessage) {
-                        export.save(context, { resource.bytes.inputStream() }, name, folder = null)
-                        messages.show(savedMessage)
-                    }
-                },
+                onClick = { handOn.save(resourceId) { resource.bytes } },
             ).takeIf { export.offersSaving },
         ),
     )
 }
 
-private fun CoroutineScope.handOn(messages: ScreenMessages, failedMessage: String, block: suspend () -> Unit) {
-    launch {
-        runCatching { block() }.onFailure { error ->
-            logcat(LogPriority.ERROR, error) { "Failed to hand on a BOOK picture" }
-            messages.show(failedMessage)
-        }
-    }
-}
-
-/** The picture's file name in the book, without its folder or extension, which the export adds for its type. */
-private fun String.pictureName(): String =
-    substringAfterLast('/').substringBeforeLast('.').ifBlank { DEFAULT_PICTURE_NAME }
-
 // The viewer decodes up to this many times the screen's longer side, so a zoomed picture stays sharp, but no larger
 // than the texture size every GPU draws.
 private const val ZOOM_DETAIL = 2
 private const val MAX_DECODED_SIDE_PX = 4096
-private const val DEFAULT_PICTURE_NAME = "picture"
