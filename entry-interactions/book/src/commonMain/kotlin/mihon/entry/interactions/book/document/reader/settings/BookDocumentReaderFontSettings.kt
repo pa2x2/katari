@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.document.reader.settings
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +22,8 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import mihon.presentation.kit.list.FontChoiceRow
 import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
@@ -67,10 +67,10 @@ private fun BookDocumentReaderFontDialog(
         }
     }
 
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    val importPicker = rememberDocumentPicker(DocumentPickerRequest.OpenDocument(FONT_MIME_TYPES)) { pick ->
+        if (pick == null) return@rememberDocumentPicker
         scope.launch {
-            val font = fonts.import(uri)
+            val font = fonts.import(pick.uri)
             if (font == null) messages.show(importFailed) else choose(font)
         }
     }
@@ -80,7 +80,7 @@ private fun BookDocumentReaderFontDialog(
         confirm = DialogAction(stringResource(MR.strings.action_close), onDismiss),
         neutral = DialogAction(
             label = stringResource(MR.strings.book_document_reader_font_import),
-            onClick = { importLauncher.launch(FONT_MIME_TYPES) },
+            onClick = { importPicker.launch() },
         ),
     ) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -115,7 +115,7 @@ private fun BookDocumentReaderFont.name(): String = when (this) {
 }
 
 // Pickers label font files inconsistently, and some only as binary data.
-private val FONT_MIME_TYPES = arrayOf(
+private val FONT_MIME_TYPES = listOf(
     "font/ttf",
     "font/otf",
     "font/sfnt",

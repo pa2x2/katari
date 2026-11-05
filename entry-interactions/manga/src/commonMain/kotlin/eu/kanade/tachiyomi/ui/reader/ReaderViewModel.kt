@@ -72,7 +72,6 @@ import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
-import mihon.entry.interactions.manga.reader.image.export.MangaPageImageExport
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
@@ -89,6 +88,7 @@ import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslati
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.reader.image.export.ReaderImageExport
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
@@ -182,7 +182,7 @@ internal class ReaderViewModel(
     modelArtifactStore: ModelArtifactStore,
     networkConnectivity: NetworkConnectivity,
     powerSource: PowerSource,
-    private val pageImageExport: MangaPageImageExport,
+    private val pageImageExport: ReaderImageExport,
 ) : ViewModel() {
 
     private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)

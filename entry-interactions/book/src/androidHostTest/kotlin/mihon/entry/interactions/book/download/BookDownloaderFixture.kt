@@ -20,7 +20,7 @@ import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.content.BookMaterializationCache
-import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
+import mihon.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.preparation.BookContentPreparer
@@ -114,7 +114,7 @@ internal abstract class BookDownloaderFixture {
                     ),
                 ),
             ),
-            decoding = AndroidBookDocumentResourceDecoding,
+            decoding = HostBookDocumentResourceDecoding,
             resourceBudget = budget,
         )
 

@@ -6,10 +6,12 @@ import dev.zacsweers.metro.Inject
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
+import mihon.entry.interactions.book.document.resource.BookDocumentResourceDecoding
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeadingLoader
 import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.reader.image.export.ReaderImageExport
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
@@ -17,6 +19,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 
@@ -55,6 +58,9 @@ class BookReaderDependencies internal constructor(
     chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
     fontStore: Lazy<BookDocumentReaderFontStore>,
     textClipboard: Lazy<TextClipboard>,
+    resourceDecoding: Lazy<BookDocumentResourceDecoding>,
+    imageExport: Lazy<ReaderImageExport>,
+    storageFiles: Lazy<StorageFileResolver>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -75,4 +81,7 @@ class BookReaderDependencies internal constructor(
     internal val chapterHeadingLoader by chapterHeadingLoader
     internal val fontStore by fontStore
     internal val textClipboard by textClipboard
+    internal val resourceDecoding by resourceDecoding
+    internal val imageExport by imageExport
+    internal val storageFiles by storageFiles
 }

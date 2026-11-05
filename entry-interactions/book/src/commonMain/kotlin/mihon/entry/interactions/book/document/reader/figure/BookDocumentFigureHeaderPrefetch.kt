@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import mihon.entry.interactions.book.document.preparation.resourceRequirements
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceDecoding
 import mihon.entry.interactions.book.document.resource.BookDocumentImageHeaders
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 
@@ -13,13 +14,14 @@ import mihon.entry.interactions.book.preparation.BookResourceContentKind
  */
 @Composable
 internal fun PrefetchBookDocumentFigureHeaders(sections: List<BookDocumentSection<*>>) {
-    LaunchedEffect(sections) {
+    val decoding = LocalBookDocumentResourceDecoding.current
+    LaunchedEffect(sections, decoding) {
         sections.forEach { section ->
             val loader = section.resourceLoader ?: return@forEach
             section.document.document.resourceRequirements()
                 .filterValues { it.contentKind == BookResourceContentKind.DOCUMENT_IMAGE }
                 .keys
-                .forEach { resourceId -> BookDocumentImageHeaders.read(loader, resourceId) }
+                .forEach { resourceId -> BookDocumentImageHeaders.read(loader, resourceId, decoding) }
         }
     }
 }

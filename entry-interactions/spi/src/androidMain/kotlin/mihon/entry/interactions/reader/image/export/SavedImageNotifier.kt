@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.reader.image.export
+package mihon.entry.interactions.reader.image.export
 
 import android.Manifest
 import android.app.PendingIntent
@@ -23,8 +23,8 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
-/** The notification for a saved page: the picture, opening it on a tap, with an action to share it. */
-internal class SavedPageNotifier(private val context: Context) {
+/** The notification for a saved image: the picture, opening it on a tap, with an action to share it. */
+internal class SavedImageNotifier(private val context: Context) {
 
     private val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_COMMON)
     private val notificationId: Int = ID_DOWNLOAD_IMAGE
@@ -32,7 +32,7 @@ internal class SavedPageNotifier(private val context: Context) {
     /**
      * Called when image download/copy is complete.
      *
-     * @param uri image file containing downloaded page image.
+     * @param uri the saved image.
      */
     fun onComplete(uri: Uri) {
         val request = ImageRequest.Builder(context)

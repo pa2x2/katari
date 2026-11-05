@@ -23,7 +23,11 @@ internal object BookDocumentImageHeaders {
     }
 
     /** Null when the image can't be loaded or read; failures are not kept, since access can change. */
-    suspend fun read(loader: BookPublicationResourceLoader, resourceId: String): ProseImageHeader? {
+    suspend fun read(
+        loader: BookPublicationResourceLoader,
+        resourceId: String,
+        decoding: BookDocumentResourceDecoding,
+    ): ProseImageHeader? {
         cached(loader, resourceId)?.let { return it }
         return try {
             val resource = loader.load(
@@ -31,7 +35,7 @@ internal object BookDocumentImageHeaders {
                 acceptedMediaTypes = PROSE_IMAGE_RESOURCE_REQUIREMENT.acceptedMediaTypes,
                 maxBytes = PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes,
             ).getOrThrow()
-            withContext(Dispatchers.Default) { readProseImageHeader(resource.bytes, resource.mediaType) }
+            withContext(Dispatchers.Default) { readProseImageHeader(resource.bytes, resource.mediaType, decoding) }
                 .also { record(loader, resourceId, it) }
         } catch (error: CancellationException) {
             throw error

@@ -6,7 +6,7 @@ import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-class SkiaBookDocumentResourceDecodingTest {
+class ProseImageDecodingTest {
     @Test
     fun `a truncated image fails although its header reads`() {
         val image = BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB).apply {
@@ -14,9 +14,15 @@ class SkiaBookDocumentResourceDecodingTest {
         }
         val png = ByteArrayOutputStream().also { ImageIO.write(image, "png", it) }.toByteArray()
 
-        SkiaBookDocumentResourceDecoding.requireDecodableImage(png, "image/png")
-        assertFailsWith<Exception> {
-            SkiaBookDocumentResourceDecoding.requireDecodableImage(png.copyOf(png.size / 2), "image/png")
-        }
+        decode(png).release()
+        assertFailsWith<Exception> { decode(png.copyOf(png.size / 2)).release() }
     }
+
+    private fun decode(bytes: ByteArray) = decodeValidatedProseImage(
+        bytes = bytes,
+        mediaType = "image/png",
+        targetWidthPx = 1_024,
+        targetHeightPx = 1_024,
+        decoding = SkiaBookDocumentResourceDecoding,
+    )
 }

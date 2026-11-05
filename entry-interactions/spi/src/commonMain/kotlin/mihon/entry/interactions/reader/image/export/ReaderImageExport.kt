@@ -1,17 +1,17 @@
-package mihon.entry.interactions.manga.reader.image.export
+package mihon.entry.interactions.reader.image.export
 
 import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 import java.io.InputStream
 
 /**
- * Hands a reader page's image out of the app, from the page actions: saved into the platform's pictures folder,
- * shared to an app the user picks, or copied to the clipboard. [image] opens the page's image each time it is read.
- * Each call throws when the image can't be read or written, for the caller to report.
+ * Hands a reader's image, a manga page or a book's picture, out of the app: saved into the platform's pictures folder,
+ * shared to an app the user picks, or copied to the clipboard. [image] opens the image's encoded bytes each time it is
+ * read. Each call throws when the image can't be read or written, for the caller to report.
  */
 @PlatformFacility
-internal interface MangaPageImageExport {
-    /** False where the platform can't save pages; Save is then not offered. */
+interface ReaderImageExport {
+    /** False where the platform can't save images; Save is then not offered. */
     val offersSaving: Boolean
 
     /** False where the platform has no share sheet; Share is then not offered. */
@@ -23,8 +23,8 @@ internal interface MangaPageImageExport {
     /** Saves the image as [name] into the pictures folder, inside [folder] there when given. */
     suspend fun save(context: PlatformContext, image: () -> InputStream, name: String, folder: String?)
 
-    /** Hands the image, named [name], to an app the user picks, with [message] saying which page it is. */
-    suspend fun share(context: PlatformContext, image: () -> InputStream, name: String, message: String)
+    /** Hands the image, named [name], to an app the user picks, with [message], when given, saying what it is. */
+    suspend fun share(context: PlatformContext, image: () -> InputStream, name: String, message: String?)
 
     /** Puts the image, named [name], on the clipboard. */
     suspend fun copy(context: PlatformContext, image: () -> InputStream, name: String)

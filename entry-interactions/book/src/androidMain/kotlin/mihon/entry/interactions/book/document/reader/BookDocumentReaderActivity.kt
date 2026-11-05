@@ -10,6 +10,7 @@ import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,7 @@ import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.picture.LocalBookDocumentPictureExport
 import mihon.entry.interactions.book.document.reader.rules.BookDocumentHideTextDialog
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
@@ -208,55 +210,62 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                     )
                 }
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
-                    BookDocumentReaderScreen(
-                        state = state,
-                        visualChapterProgression = visualChapterProgression,
-                        settingBindings = requireNotNull(settingBindings),
-                        fonts = requireNotNull(readerFonts),
-                        bookSearch = bookSearch,
-                        selectionCoordinator = selectionCoordinator,
-                        textClipboard = dependencies.textClipboard,
-                        onLocation = chapterCoordinator::onLocation,
-                        onViewportLocation = retainedSessions.jumpHistory::observe,
-                        jumpHistory = retainedSessions.jumpHistory,
-                        onReturn = {
-                            retainedSessions.jumpHistory.returnTarget?.let {
-                                chapterCoordinator.selectNavigationTarget(it.copy(returnToOrigin = true))
-                            }
-                        },
-                        onChapterBoundaryReached = {
-                            chapterCoordinator.loadChapter(it, activate = false, retry = true)
-                        },
-                        onTransitionRetry = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
-                        onChapterEndObservation = chapterCoordinator::onChapterEndObservation,
-                        onNavigationSelected = ::selectFromNavigation,
-                        onRevealSearchMatch = { chapterCoordinator.revealSearchMatch(it.sectionKey, it.match.start) },
-                        onSearchClosed = { returnTo ->
-                            returnTo?.let { chapterCoordinator.selectNavigationTarget(it, rememberOrigin = false) }
-                        },
-                        onChromeToggle = ::toggleChrome,
-                        onChromeHide = { setChromeVisible(false) },
-                        onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
-                        onNavigationVisibilityChange = ::setNavigationVisible,
-                        onSettingsVisibilityChange = { visible ->
-                            readerState = readerState?.copy(settingsVisible = visible)
-                        },
-                        onOpenDefaultSettings = {
-                            openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
-                        },
-                        onChildWebViewAction = ::launchChildWebViewAction,
-                        onToggleBookmark = ::toggleCurrentChapterBookmark,
-                        onHideText = { pendingHiddenText = it },
-                        snackbarHostState = snackbarHostState,
-                        onAnchorMissing = { showReaderFeedback(MR.strings.book_document_anchor_missing) },
-                        onInternalLinkClick = chapterCoordinator::navigateLink,
-                        onExternalLinkClick = ::confirmExternalLink,
-                        onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
-                        onChapterSelectionRetry = chapterCoordinator::retryChapterSelection,
-                        onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
-                        onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
-                        onClose = ::finish,
-                    )
+                    CompositionLocalProvider(
+                        LocalBookDocumentResourceDecoding provides dependencies.resourceDecoding,
+                        LocalBookDocumentPictureExport provides dependencies.imageExport,
+                    ) {
+                        BookDocumentReaderScreen(
+                            state = state,
+                            visualChapterProgression = visualChapterProgression,
+                            settingBindings = requireNotNull(settingBindings),
+                            fonts = requireNotNull(readerFonts),
+                            bookSearch = bookSearch,
+                            selectionCoordinator = selectionCoordinator,
+                            textClipboard = dependencies.textClipboard,
+                            onLocation = chapterCoordinator::onLocation,
+                            onViewportLocation = retainedSessions.jumpHistory::observe,
+                            jumpHistory = retainedSessions.jumpHistory,
+                            onReturn = {
+                                retainedSessions.jumpHistory.returnTarget?.let {
+                                    chapterCoordinator.selectNavigationTarget(it.copy(returnToOrigin = true))
+                                }
+                            },
+                            onChapterBoundaryReached = {
+                                chapterCoordinator.loadChapter(it, activate = false, retry = true)
+                            },
+                            onTransitionRetry = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
+                            onChapterEndObservation = chapterCoordinator::onChapterEndObservation,
+                            onNavigationSelected = ::selectFromNavigation,
+                            onRevealSearchMatch = {
+                                chapterCoordinator.revealSearchMatch(it.sectionKey, it.match.start)
+                            },
+                            onSearchClosed = { returnTo ->
+                                returnTo?.let { chapterCoordinator.selectNavigationTarget(it, rememberOrigin = false) }
+                            },
+                            onChromeToggle = ::toggleChrome,
+                            onChromeHide = { setChromeVisible(false) },
+                            onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
+                            onNavigationVisibilityChange = ::setNavigationVisible,
+                            onSettingsVisibilityChange = { visible ->
+                                readerState = readerState?.copy(settingsVisible = visible)
+                            },
+                            onOpenDefaultSettings = {
+                                openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
+                            },
+                            onChildWebViewAction = ::launchChildWebViewAction,
+                            onToggleBookmark = ::toggleCurrentChapterBookmark,
+                            onHideText = { pendingHiddenText = it },
+                            snackbarHostState = snackbarHostState,
+                            onAnchorMissing = { showReaderFeedback(MR.strings.book_document_anchor_missing) },
+                            onInternalLinkClick = chapterCoordinator::navigateLink,
+                            onExternalLinkClick = ::confirmExternalLink,
+                            onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
+                            onChapterSelectionRetry = chapterCoordinator::retryChapterSelection,
+                            onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
+                            onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
+                            onClose = ::finish,
+                        )
+                    }
                 }
             }
             pendingHiddenText?.let { text ->
@@ -484,7 +493,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         visualChapterProgression.floatValue = progression
         val fonts = readerFonts ?: BookDocumentReaderFonts(
             store = dependencies.fontStore,
-            contentResolver = applicationContext.contentResolver,
+            documents = dependencies.storageFiles,
+            decoding = dependencies.resourceDecoding,
             profileId = session.entry.profileId,
         ).also { readerFonts = it }
         fonts.refresh()

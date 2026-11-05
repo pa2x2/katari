@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.document.resource
 
-import android.graphics.Typeface
+import androidx.compose.ui.text.font.FontFamily
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.book.document.resource.font.unpackWebFont
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
-import java.io.File
 import java.util.WeakHashMap
 
 /** Bounded decoded fonts per live publication, without retaining closed resource owners. */
@@ -18,8 +18,8 @@ internal object BookDocumentFontCache {
         loader: BookPublicationResourceLoader,
         resourceId: String,
         generation: Int,
-        directory: File,
-    ): Typeface? {
+        decoding: BookDocumentResourceDecoding,
+    ): FontFamily? {
         val cache = synchronized(publications) { publications.getOrPut(loader) { PublicationFonts() } }
         return cache.mutex.withLock {
             if (cache.generation != generation) {
@@ -34,15 +34,9 @@ internal object BookDocumentFontCache {
                     requirement.acceptedMediaTypes,
                     requirement.maxBytes,
                 ).getOrThrow()
-                withContext(Dispatchers.IO) {
+                withContext(Dispatchers.Default) {
                     require(resource.bytes.size in 1..requirement.maxBytes)
-                    val file = File.createTempFile("book-font-", ".sfnt", directory)
-                    try {
-                        file.writeBytes(resource.bytes)
-                        createValidatedProseTypeface(file)
-                    } finally {
-                        file.delete()
-                    }
+                    decoding.fontFamily(unpackWebFont(resource.bytes) ?: resource.bytes)
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -58,7 +52,7 @@ internal object BookDocumentFontCache {
     private class PublicationFonts {
         val mutex = Mutex()
         var generation = -1
-        val fonts = linkedMapOf<String, Typeface?>()
+        val fonts = linkedMapOf<String, FontFamily?>()
     }
 
     private const val MAX_FONTS = 16

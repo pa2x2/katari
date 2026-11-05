@@ -1,16 +1,16 @@
 package mihon.entry.interactions.book.document.reader.font
 
-import android.content.ContentResolver
-import android.net.Uri
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import mihon.entry.interactions.book.document.resource.BookDocumentResourceDecoding
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.domain.storage.DocumentUri
 
 /**
  * The open book's profile's fonts: the imported ones to pick from, the face each choice draws with, and the fall back
@@ -18,7 +18,8 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
  */
 internal class BookDocumentReaderFonts(
     private val store: BookDocumentReaderFontStore,
-    private val contentResolver: ContentResolver,
+    private val documents: StorageFileResolver,
+    private val decoding: BookDocumentResourceDecoding,
     private val profileId: Long,
 ) {
     private val importedFonts = MutableStateFlow(emptyList<BookDocumentReaderFont.Imported>())
@@ -28,14 +29,16 @@ internal class BookDocumentReaderFonts(
     // made for one font are reused.
     private val families = mutableMapOf<String, FontFamily>()
 
-    /** Null for [BookDocumentReaderFont.Book], and for an imported font whose file is gone. */
+    /** Null for [BookDocumentReaderFont.Book], and for an imported font whose file is gone or no longer reads. */
     fun family(font: BookDocumentReaderFont): FontFamily? = when (font) {
         BookDocumentReaderFont.Book -> null
         BookDocumentReaderFont.Serif -> FontFamily.Serif
         BookDocumentReaderFont.SansSerif -> FontFamily.SansSerif
         BookDocumentReaderFont.Monospace -> FontFamily.Monospace
         is BookDocumentReaderFont.Imported -> families[font.fileName]
-            ?: store.file(profileId, font)?.let { FontFamily(Font(it)) }?.also { families[font.fileName] = it }
+            ?: store.file(profileId, font)
+                ?.let { file -> runCatching { decoding.fontFamily(file.readBytes()) }.getOrNull() }
+                ?.also { families[font.fileName] = it }
     }
 
     suspend fun refresh() {
@@ -52,9 +55,17 @@ internal class BookDocumentReaderFonts(
         if (isMissing(setting.profileValue)) binding.resetProfileValue()
     }
 
-    /** Null when the file isn't a font. */
-    suspend fun import(uri: Uri): BookDocumentReaderFont.Imported? {
-        val font = withContext(Dispatchers.IO) { store.import(contentResolver, profileId, uri) }
+    /** Imports the document picked at [uri], kept only when it reads as a font; null when it doesn't. */
+    suspend fun import(uri: DocumentUri): BookDocumentReaderFont.Imported? {
+        val font = withContext(Dispatchers.IO) {
+            val document = documents.fromUri(uri.value)
+            store.import(
+                profileId = profileId,
+                open = { document?.openInputStream() },
+                isFont = { file -> runCatching { decoding.fontFamily(file.readBytes()) }.isSuccess },
+                displayName = { document?.name },
+            )
+        }
         refresh()
         return font
     }

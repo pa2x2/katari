@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.reader.image.export
+package mihon.entry.interactions.reader.image.export
 
 import android.app.Application
 import android.content.ClipData
@@ -15,10 +15,11 @@ import tachiyomi.core.common.util.lang.withUIContext
 import java.io.InputStream
 
 /**
- * Saves pages through MediaStore with a notification of the saved picture. Sharing and copying first copy the image
- * into the app's cache, as a page may come from inside an archive with no file of its own; only the last one is kept.
+ * Saves images through MediaStore with a notification of the saved picture. Sharing and copying first copy the image
+ * into the app's cache, as an image may come from inside an archive or a book with no file of its own; only the last
+ * one is kept.
  */
-internal class AndroidMangaPageImageExport(private val application: Application) : MangaPageImageExport {
+internal class AndroidReaderImageExport(private val application: Application) : ReaderImageExport {
     private val saver = ReaderImageSaver(application)
 
     override val offersSaving: Boolean = true
@@ -26,7 +27,7 @@ internal class AndroidMangaPageImageExport(private val application: Application)
     override val offersCopying: Boolean = true
 
     override suspend fun save(context: Context, image: () -> InputStream, name: String, folder: String?) {
-        val notifier = SavedPageNotifier(application)
+        val notifier = SavedImageNotifier(application)
         notifier.onClear()
         try {
             val uri = withIOContext {
@@ -39,7 +40,7 @@ internal class AndroidMangaPageImageExport(private val application: Application)
         }
     }
 
-    override suspend fun share(context: Context, image: () -> InputStream, name: String, message: String) {
+    override suspend fun share(context: Context, image: () -> InputStream, name: String, message: String?) {
         val uri = saveToCache(image, name)
         withUIContext { context.startActivity(uri.toReaderShareIntent(context, message = message)) }
     }
