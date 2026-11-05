@@ -33,4 +33,11 @@ internal interface ReaderViewer {
 
     /** Moves a spread of two pages on by one page, so the pages pair the other way. Viewers without spreads ignore it. */
     fun shiftPages() {}
+
+    /**
+     * The middles of the left and the right page of the spread that starts with [page], as fractions of the viewer's
+     * width, for their numbers; null unless that spread is laid out now. Read from snapshot state, so it updates as the
+     * pages are laid out.
+     */
+    fun spreadPageMiddles(page: ReaderPage): Pair<Float, Float>? = null
 }

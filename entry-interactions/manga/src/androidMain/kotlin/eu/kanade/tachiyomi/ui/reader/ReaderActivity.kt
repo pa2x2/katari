@@ -407,9 +407,6 @@ class ReaderActivity : EntryInteractionActivity() {
 
     internal fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) = controller.onPageSelected(page, facing)
 
-    internal fun onSpreadPageMiddles(pageNumber: Int, middles: Pair<Float, Float>) =
-        controller.onSpreadPageMiddles(pageNumber, middles)
-
     internal fun onPageTextSurfacesChanged() = controller.onPageTextSurfacesChanged()
 
     /** Called from viewers before a tap is used for navigation. Returns whether translate mode consumed the tap. */
