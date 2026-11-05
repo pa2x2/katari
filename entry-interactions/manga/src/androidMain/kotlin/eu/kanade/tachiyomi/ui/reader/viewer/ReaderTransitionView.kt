@@ -14,7 +14,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.runtime.EntryInteractionTheme
 import mihon.entry.interactions.viewer.EntryChildTransition
-import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadState
+import mihon.entry.viewer.chrome.ui.transition.ReaderEntryChildTransitionLoadState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

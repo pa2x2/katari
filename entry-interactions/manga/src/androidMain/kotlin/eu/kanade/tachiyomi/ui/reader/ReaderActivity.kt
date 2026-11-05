@@ -99,8 +99,8 @@ import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
-import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
-import mihon.entry.viewer.chrome.ui.ReaderUnderPages
+import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
+import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.dialog.ProgressDialog
 import mihon.presentation.kit.window.WindowLayout

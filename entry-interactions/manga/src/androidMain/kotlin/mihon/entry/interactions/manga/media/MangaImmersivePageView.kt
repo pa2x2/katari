@@ -24,8 +24,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.core.common.image.progressive.ProgressiveImageVisual
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import okio.Buffer
 import okio.BufferedSource
 import tachiyomi.core.common.util.system.ImageUtil

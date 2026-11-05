@@ -3,8 +3,8 @@ package eu.kanade.presentation.reader.components
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.entry.viewer.chrome.ui.ReaderPageNavigator
-import mihon.entry.viewer.chrome.ui.ReaderPageNavigatorType
+import mihon.entry.viewer.chrome.ui.position.ReaderPageNavigator
+import mihon.entry.viewer.chrome.ui.position.ReaderPageNavigatorType
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

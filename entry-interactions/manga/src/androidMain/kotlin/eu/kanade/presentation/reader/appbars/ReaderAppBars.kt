@@ -29,10 +29,10 @@ import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.chrome.ui.ReaderChrome
-import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBar
-import mihon.entry.viewer.chrome.ui.ReaderFloatingControlRow
-import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
+import mihon.entry.viewer.chrome.ui.bars.ReaderChrome
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBar
+import mihon.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
+import mihon.entry.viewer.chrome.ui.position.ReaderReturnPositionBar
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.window.WindowWidth
 import mihon.presentation.kit.window.currentWindowLayout

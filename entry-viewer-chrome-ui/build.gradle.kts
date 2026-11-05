@@ -9,10 +9,6 @@ plugins {
 kotlin {
     android {
         namespace = "mihon.entry.viewer.chrome.ui"
-        // The return-position bar's labels are Android string resources of this module.
-        androidResources {
-            enable = true
-        }
     }
     desktop()
 

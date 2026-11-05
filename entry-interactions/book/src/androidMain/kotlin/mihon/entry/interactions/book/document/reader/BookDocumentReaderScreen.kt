@@ -71,9 +71,9 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.chrome.ui.ReaderChrome
-import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBar
-import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.bars.ReaderChrome
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBar
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList

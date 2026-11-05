@@ -12,8 +12,8 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
-import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
-import mihon.entry.viewer.chrome.ui.ReaderProgressIndicator
+import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
+import mihon.entry.viewer.chrome.ui.position.ReaderProgressIndicator
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.roundToInt

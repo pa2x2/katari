@@ -9,7 +9,7 @@ import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.viewer.chrome.ui.ModeSelectionSheet
+import mihon.entry.viewer.chrome.ui.mode.ModeSelectionSheet
 import mihon.presentation.kit.list.IconChoiceGrid
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

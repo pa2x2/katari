@@ -190,7 +190,7 @@ private fun ColumnScope.TapZonesItems(
     invertMode: MangaReaderSettings.TappingInvertMode,
     onSelectInvertMode: (MangaReaderSettings.TappingInvertMode) -> Unit,
 ) {
-    mihon.entry.viewer.chrome.ui.navigation.ReaderTapZoneSettings(
+    mihon.entry.viewer.chrome.ui.tap.ReaderTapZoneSettings(
         selected,
         onSelect,
         invertMode.ordinal,

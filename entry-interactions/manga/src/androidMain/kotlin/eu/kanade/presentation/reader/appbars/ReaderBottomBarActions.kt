@@ -7,7 +7,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
 import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
 import mihon.icons.custommaterialsymbols.rounded.CropOff
 import mihon.icons.materialsymbols.MaterialSymbols

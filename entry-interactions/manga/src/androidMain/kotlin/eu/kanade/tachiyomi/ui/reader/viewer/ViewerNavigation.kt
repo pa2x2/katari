@@ -6,8 +6,8 @@ import android.graphics.RectF
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.lang.invert
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.viewer.chrome.ui.navigation.ReaderTapAction
-import mihon.entry.viewer.chrome.ui.navigation.readerTapRegions
+import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
+import mihon.entry.viewer.chrome.ui.tap.readerTapRegions
 import tachiyomi.i18n.*
 
 internal abstract class ViewerNavigation {

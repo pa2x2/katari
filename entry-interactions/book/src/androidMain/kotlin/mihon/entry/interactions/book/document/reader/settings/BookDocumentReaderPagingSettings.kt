@@ -7,7 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ReaderPageLayout
-import mihon.entry.viewer.chrome.ui.navigation.ReaderTapZoneSettings
+import mihon.entry.viewer.chrome.ui.tap.ReaderTapZoneSettings
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip

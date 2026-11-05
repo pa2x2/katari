@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
-import mihon.entry.viewer.chrome.ui.OverlayDrawer
-import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
+import mihon.entry.viewer.chrome.ui.drawer.OverlayDrawer
+import mihon.entry.viewer.chrome.ui.drawer.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.list.ProvideRowDensity

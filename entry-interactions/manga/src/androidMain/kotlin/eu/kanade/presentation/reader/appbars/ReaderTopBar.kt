@@ -5,7 +5,7 @@ import androidx.compose.ui.Modifier
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionItems
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.chrome.ui.ReaderChromeTopBar
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeTopBar
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Bookmark
 import mihon.icons.materialsymbols.rounded.SwapHoriz

@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.chrome.ui.ReaderReadingModeDialog
+import mihon.entry.viewer.chrome.ui.mode.ReaderReadingModeDialog
 import mihon.presentation.kit.theme.KatariPreviewTheme
 
 private val ReadingModesWithoutDefault = ReadingMode.entries - ReadingMode.DEFAULT
