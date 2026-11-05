@@ -1,5 +1,17 @@
 # Desktop Changelog
 
+## [0.1.0-alpha.4] - 2026-11-05
+
+### ✨ Added
+
+- Books open in the desktop app's reader.
+
+### 🐛 Fixed
+
+- On X11 and Xwayland, a touchpad swipe turns one page in the manga reader instead of several.
+- On X11 and Xwayland, a touchpad swipe moves one tab in the library and other tabbed screens instead of several.
+- Page numbers in two-page spreads no longer jump on wide windows.
+
 ## [0.1.0-alpha.3] - 2026-11-05
 
 ### ✨ Added
@@ -49,7 +61,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.4...HEAD
+[0.1.0-alpha.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.4
 [0.1.0-alpha.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.1
