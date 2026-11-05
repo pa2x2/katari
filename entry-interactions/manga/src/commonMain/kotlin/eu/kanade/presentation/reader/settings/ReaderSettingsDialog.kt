@@ -1,12 +1,9 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import mihon.core.metro.metroGraph
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.presentation.kit.sheet.SheetBackdrop
 import tachiyomi.i18n.*
@@ -21,17 +18,15 @@ internal fun ReaderSettingsDialog(
     onShowMenus: () -> Unit,
     onHideMenus: () -> Unit,
     screenModel: ReaderSettingsScreenModel,
+    sharedSettingsRegistry: ReaderSharedSettingsRegistry,
+    /** Whether the window has a display cutout that pages can be drawn under, which offers that setting. */
+    hasDisplayCutout: Boolean,
 ) {
     val tabTitles = listOf(
         stringResource(MR.strings.pref_category_reading_mode),
         stringResource(MR.strings.pref_category_general),
         stringResource(MR.strings.custom_filter),
     )
-    val context = LocalContext.current
-    val sharedSettingsRegistry = remember {
-        context.metroGraph<EntryInteractionActivityGraph>().readerSharedSettingsRegistry
-    }
-
     ReaderSettingsDialogHost(
         sharedSettingsRegistry = sharedSettingsRegistry,
         settingsSurfaceId = MangaReaderSettings.PROVIDER_ID,
@@ -58,7 +53,7 @@ internal fun ReaderSettingsDialog(
     ) { page ->
         when (page) {
             0 -> ReadingModePage(screenModel)
-            1 -> GeneralPage(screenModel)
+            1 -> GeneralPage(screenModel, hasDisplayCutout)
             2 -> ColorFilterPage(screenModel)
         }
     }

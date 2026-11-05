@@ -65,6 +65,7 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.core.platform.PlatformContext
 import mihon.core.platform.network.NetworkConnectivity
+import mihon.core.platform.power.PowerSource
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -73,6 +74,7 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
+import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
 import mihon.entry.interactions.manga.reader.text.session.declaredContentLanguage
 import mihon.entry.interactions.manga.reader.text.speech.MangaTranslationSpeechController
 import mihon.entry.interactions.manga.reader.text.stored.MangaReaderStoredTranslations
@@ -178,6 +180,7 @@ internal class ReaderViewModel(
     textRecognitionFeature: TextRecognitionFeature,
     modelArtifactStore: ModelArtifactStore,
     networkConnectivity: NetworkConnectivity,
+    powerSource: PowerSource,
     private val pageImageExport: MangaPageImageExport,
 ) : ViewModel() {
 
@@ -199,7 +202,18 @@ internal class ReaderViewModel(
 
     val sourcesInitialized: StateFlow<Boolean> = sourceManager.isInitialized
 
+    /** The reading mode the pages show in, with the default resolved. */
+    val effectiveReadingMode: StateFlow<ReadingMode> = state
+        .map { ReadingMode.fromPreference(it.effectiveReadingMode) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ReadingMode.fromPreference(state.value.effectiveReadingMode))
+
+    val offersPageSaving: Boolean get() = pageImageExport.offersSaving
+    val offersPageSharing: Boolean get() = pageImageExport.offersSharing
+    val offersPageCopying: Boolean get() = pageImageExport.offersCopying
+
     private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(networkConnectivity))
+
+    private val textProcessAhead = MangaTextProcessAheadPolicy(networkConnectivity, powerSource, viewModelScope)
 
     /**
      * The series the current chapter belongs to, once it is loaded. In a merged entry that is the chapter's member, not
@@ -1160,6 +1174,15 @@ internal class ReaderViewModel(
             "${manga.displayTitle} - ${chapter.name}",
             StorageFileNames.MAX_FILE_NAME_BYTES - filenameSuffix.byteSize(),
         ) + filenameSuffix
+    }
+
+    /** Whether pages the reader hasn't reached may be processed for text now, as the series' settings allow. */
+    fun textProcessAheadAllowed(): Boolean {
+        val settings = settingsBindings.value ?: return false
+        return textProcessAhead.allows(
+            onlyOnUnmeteredNetwork = settings.pageTextProcessAheadOnlyOnUnmeteredNetwork.state.value.effectiveValue,
+            onlyWhileCharging = settings.pageTextProcessAheadOnlyWhileCharging.state.value.effectiveValue,
+        )
     }
 
     fun showMenus(visible: Boolean) {

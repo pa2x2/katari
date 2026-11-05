@@ -509,7 +509,7 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     }
 
     /** Moves the pairing by one page from the pages shown now to the end of their chapter. */
-    fun shiftPages() {
+    override fun shiftPages() {
         val item = adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page ?: return
         if (showsSpreads && pairing.shiftAt(item.page)) regroup()
     }

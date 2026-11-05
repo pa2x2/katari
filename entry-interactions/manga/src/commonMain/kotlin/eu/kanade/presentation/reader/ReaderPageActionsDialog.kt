@@ -21,12 +21,14 @@ import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** The actions on a long-pressed page; [onCopy], [onShare] and [onSave] are null where the platform can't do them. */
 @Composable
 fun ReaderPageActionsDialog(
     onDismissRequest: () -> Unit,
     onSetAsCover: () -> Unit,
-    onShare: (Boolean) -> Unit,
-    onSave: () -> Unit,
+    onCopy: (() -> Unit)?,
+    onShare: (() -> Unit)?,
+    onSave: (() -> Unit)?,
 ) {
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
@@ -42,33 +44,39 @@ fun ReaderPageActionsDialog(
                 icon = MaterialSymbols.Rounded.Photo,
                 onClick = { showSetCoverDialog = true },
             )
-            StackedActionButton(
-                modifier = Modifier.weight(1f),
-                label = stringResource(MR.strings.action_copy_to_clipboard),
-                icon = MaterialSymbols.Rounded.ContentCopy,
-                onClick = {
-                    onShare(true)
-                    onDismissRequest()
-                },
-            )
-            StackedActionButton(
-                modifier = Modifier.weight(1f),
-                label = stringResource(MR.strings.action_share),
-                icon = MaterialSymbols.Rounded.Share,
-                onClick = {
-                    onShare(false)
-                    onDismissRequest()
-                },
-            )
-            StackedActionButton(
-                modifier = Modifier.weight(1f),
-                label = stringResource(MR.strings.action_save),
-                icon = MaterialSymbols.Rounded.Save,
-                onClick = {
-                    onSave()
-                    onDismissRequest()
-                },
-            )
+            if (onCopy != null) {
+                StackedActionButton(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(MR.strings.action_copy_to_clipboard),
+                    icon = MaterialSymbols.Rounded.ContentCopy,
+                    onClick = {
+                        onCopy()
+                        onDismissRequest()
+                    },
+                )
+            }
+            if (onShare != null) {
+                StackedActionButton(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(MR.strings.action_share),
+                    icon = MaterialSymbols.Rounded.Share,
+                    onClick = {
+                        onShare()
+                        onDismissRequest()
+                    },
+                )
+            }
+            if (onSave != null) {
+                StackedActionButton(
+                    modifier = Modifier.weight(1f),
+                    label = stringResource(MR.strings.action_save),
+                    icon = MaterialSymbols.Rounded.Save,
+                    onClick = {
+                        onSave()
+                        onDismissRequest()
+                    },
+                )
+            }
         }
     }
 

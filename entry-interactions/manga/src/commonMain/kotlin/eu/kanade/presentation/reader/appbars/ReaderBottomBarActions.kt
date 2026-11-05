@@ -40,7 +40,8 @@ fun RowScope.ReaderBottomBarActions(
     onClickAutoScroll: () -> Unit,
     onClickChapterNavigation: () -> Unit,
     textTranslationActive: Boolean,
-    onClickTextTranslation: () -> Unit,
+    /** Null where the platform has no text features, which leaves out their button. */
+    onClickTextTranslation: (() -> Unit)?,
     onClickSettings: () -> Unit,
     shareWidth: Boolean,
 ) {
@@ -87,15 +88,17 @@ fun RowScope.ReaderBottomBarActions(
         shareWidth = shareWidth,
     )
 
-    val textTranslationState = stringResource(if (textTranslationActive) MR.strings.on else MR.strings.off)
-    ReaderChromeBottomBarAction(
-        icon = MaterialSymbols.Rounded.Translate,
-        contentDescription = stringResource(MR.strings.reader_text_translate),
-        onClick = onClickTextTranslation,
-        modifier = Modifier.semantics { stateDescription = textTranslationState },
-        tone = if (textTranslationActive) ContentTone.Primary else ContentTone.Inherit,
-        shareWidth = shareWidth,
-    )
+    if (onClickTextTranslation != null) {
+        val textTranslationState = stringResource(if (textTranslationActive) MR.strings.on else MR.strings.off)
+        ReaderChromeBottomBarAction(
+            icon = MaterialSymbols.Rounded.Translate,
+            contentDescription = stringResource(MR.strings.reader_text_translate),
+            onClick = onClickTextTranslation,
+            modifier = Modifier.semantics { stateDescription = textTranslationState },
+            tone = if (textTranslationActive) ContentTone.Primary else ContentTone.Inherit,
+            shareWidth = shareWidth,
+        )
+    }
 
     ReaderChromeBottomBarAction(
         icon = MaterialSymbols.Rounded.Settings,

@@ -5,10 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.core.graphics.alpha
-import androidx.core.graphics.blue
-import androidx.core.graphics.green
-import androidx.core.graphics.red
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.MangaReaderSettings.Companion.ColorFilterMode
@@ -57,7 +53,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
             row {
                 ColorChannelSlider(
                     title = stringResource(MR.strings.color_filter_r_value),
-                    value = colorFilterValue.effectiveValue.red,
+                    value = colorFilterValue.effectiveValue.channel(16),
                     onValueChange = { red ->
                         val newValue = getColorValue(colorFilterValue.effectiveValue, red, RED_MASK, 16)
                         scope.launch { settings.colorFilterValue.updateEntry(newValue) }
@@ -67,7 +63,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
             row {
                 ColorChannelSlider(
                     title = stringResource(MR.strings.color_filter_g_value),
-                    value = colorFilterValue.effectiveValue.green,
+                    value = colorFilterValue.effectiveValue.channel(8),
                     onValueChange = { green ->
                         val newValue = getColorValue(colorFilterValue.effectiveValue, green, GREEN_MASK, 8)
                         scope.launch { settings.colorFilterValue.updateEntry(newValue) }
@@ -77,7 +73,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
             row {
                 ColorChannelSlider(
                     title = stringResource(MR.strings.color_filter_b_value),
-                    value = colorFilterValue.effectiveValue.blue,
+                    value = colorFilterValue.effectiveValue.channel(0),
                     onValueChange = { blue ->
                         val newValue = getColorValue(colorFilterValue.effectiveValue, blue, BLUE_MASK, 0)
                         scope.launch { settings.colorFilterValue.updateEntry(newValue) }
@@ -87,7 +83,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
             row {
                 ColorChannelSlider(
                     title = stringResource(MR.strings.color_filter_a_value),
-                    value = colorFilterValue.effectiveValue.alpha,
+                    value = colorFilterValue.effectiveValue.channel(24),
                     onValueChange = { alpha ->
                         val newValue = getColorValue(colorFilterValue.effectiveValue, alpha, ALPHA_MASK, 24)
                         scope.launch { settings.colorFilterValue.updateEntry(newValue) }
@@ -121,6 +117,9 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
 private fun ColorChannelSlider(title: String, value: Int, onValueChange: (Int) -> Unit) {
     SliderRow(value = value, valueRange = 0..255, steps = 0, title = title, onValueChange = onValueChange)
 }
+
+/** The 8-bit channel of this ARGB colour that starts at bit [bitShift]. */
+private fun Int.channel(bitShift: Int): Int = (this ushr bitShift) and 0xFF
 
 private fun getColorValue(currentColor: Int, color: Int, mask: Long, bitShift: Int): Int {
     return (color shl bitShift) or (currentColor and mask.inv().toInt())

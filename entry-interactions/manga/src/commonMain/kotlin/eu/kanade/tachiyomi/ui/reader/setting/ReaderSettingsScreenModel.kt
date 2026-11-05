@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader.setting
 
-import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,7 +14,8 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingSource
 
 internal class ReaderSettingsScreenModel(
-    val viewerFlow: StateFlow<Viewer?>,
+    /** The reading mode the pages show in, with the default resolved, which picks the viewer's own settings. */
+    val effectiveReadingMode: StateFlow<ReadingMode>,
     val settings: MangaReaderSettingsBindings,
     val onChangeReadingMode: (ReadingMode) -> Unit,
     val onChangeOrientation: (ReaderOrientation) -> Unit,

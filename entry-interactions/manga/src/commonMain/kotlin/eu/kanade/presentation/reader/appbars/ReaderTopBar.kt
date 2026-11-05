@@ -26,6 +26,8 @@ fun ReaderTopBar(
     onToggleBookmarked: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    /** The web page actions the platform can carry out. */
+    webViewActions: List<EntryChildWebViewAction>,
     /** Null while one page shows at a time. */
     onShiftPages: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -54,7 +56,7 @@ fun ReaderTopBar(
 
             if (childWebView != null || onShiftPages != null) {
                 OverflowMenu { close ->
-                    childWebView?.let { EntryChildWebViewActionItems(it, onChildWebViewAction, close) }
+                    childWebView?.let { EntryChildWebViewActionItems(it, onChildWebViewAction, close, webViewActions) }
                     if (onShiftPages != null) {
                         if (childWebView != null) DropdownMenuDivider()
                         DropdownMenuItem(

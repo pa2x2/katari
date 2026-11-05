@@ -1,12 +1,10 @@
 package eu.kanade.presentation.reader.settings
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import eu.kanade.tachiyomi.ui.reader.hasDisplayCutout
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -36,7 +34,7 @@ private val flashColors = listOf(
 )
 
 @Composable
-internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
+internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel, hasDisplayCutout: Boolean) {
     val settings = screenModel.settings
     val scope = rememberCoroutineScope()
 
@@ -84,7 +82,6 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
     }
 
     val verticalNavigatorHeight by settings.verticalNavigatorHeight.state.collectAsState()
-    val hasDisplayCutout = LocalActivity.current?.hasDisplayCutout() == true
     RowGroup {
         if (verticalNavigatorModes.effectiveValue.isNotEmpty()) {
             row {

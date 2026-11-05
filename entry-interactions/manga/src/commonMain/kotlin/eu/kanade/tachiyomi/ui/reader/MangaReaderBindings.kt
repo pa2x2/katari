@@ -16,6 +16,7 @@ import mihon.core.archive.ArchiveOpener
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.PlatformContext
 import mihon.core.platform.network.NetworkConnectivity
+import mihon.core.platform.power.PowerSource
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -107,6 +108,7 @@ object MangaReaderBindings {
         textRecognitionFeature: TextRecognitionFeature,
         modelArtifactStore: ModelArtifactStore,
         networkConnectivity: NetworkConnectivity,
+        powerSource: PowerSource,
         pageImageExport: MangaPageImageExport,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = ReaderViewModel(
@@ -141,6 +143,7 @@ object MangaReaderBindings {
             textRecognitionFeature = textRecognitionFeature,
             modelArtifactStore = modelArtifactStore,
             networkConnectivity = networkConnectivity,
+            powerSource = powerSource,
             pageImageExport = pageImageExport,
         )
     }

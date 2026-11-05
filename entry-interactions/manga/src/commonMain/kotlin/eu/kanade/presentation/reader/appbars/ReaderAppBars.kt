@@ -52,6 +52,7 @@ internal fun ReaderAppBars(
     onToggleBookmarked: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    webViewActions: List<EntryChildWebViewAction>,
     onShiftPages: (() -> Unit)?,
 
     chapterNavigatorType: ChapterNavigatorType,
@@ -79,7 +80,7 @@ internal fun ReaderAppBars(
     onClickAutoScroll: () -> Unit,
     onClickChapterNavigation: () -> Unit,
     textTranslationActive: Boolean,
-    onClickTextTranslation: () -> Unit,
+    onClickTextTranslation: (() -> Unit)?,
     onClickSettings: () -> Unit,
     menuBounds: ReaderMenuBounds,
 ) {
@@ -99,6 +100,7 @@ internal fun ReaderAppBars(
                 onToggleBookmarked = onToggleBookmarked,
                 childWebView = childWebView,
                 onChildWebViewAction = onChildWebViewAction,
+                webViewActions = webViewActions,
                 onShiftPages = onShiftPages,
             )
         },

@@ -7,8 +7,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import eu.kanade.tachiyomi.ui.reader.viewer.pager.VerticalPagerViewer
-import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
@@ -55,11 +53,11 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
         }
     }
 
-    val viewer by screenModel.viewerFlow.collectAsState()
-    if (viewer is WebtoonViewer) {
+    val effectiveReadingMode by screenModel.effectiveReadingMode.collectAsState()
+    if (effectiveReadingMode.type == ReadingMode.ViewerType.Webtoon) {
         WebtoonViewerSettings(screenModel)
     } else {
-        PagerViewerSettings(screenModel, showsPageLayout = viewer !is VerticalPagerViewer)
+        PagerViewerSettings(screenModel, showsPageLayout = effectiveReadingMode != ReadingMode.VERTICAL)
     }
 }
 
