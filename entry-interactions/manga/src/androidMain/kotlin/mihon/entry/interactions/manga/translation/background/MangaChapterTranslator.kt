@@ -1,7 +1,6 @@
 package mihon.entry.interactions.manga.translation.background
 
 import logcat.LogPriority
-import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage
 import mihon.entry.interactions.manga.reader.text.image.MangaDisplayedPageImage
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslation
@@ -96,7 +95,6 @@ internal class MangaChapterTranslator(
         val still = DisplayedStillImage(
             encoded = page.read().toByteString(),
             cropBorders = false,
-            transform = MangaPageTransform.None,
             rawContent = null,
         )
         val image = MangaDisplayedPageImage.open(still) ?: return PageOutcome.Skipped("unsupported image")

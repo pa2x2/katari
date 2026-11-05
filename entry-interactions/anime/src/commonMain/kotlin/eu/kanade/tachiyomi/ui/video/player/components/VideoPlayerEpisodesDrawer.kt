@@ -20,7 +20,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
-import mihon.entry.viewer.chrome.ui.OverlayListDrawer
+import mihon.entry.viewer.chrome.ui.drawer.OverlayListDrawer
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown

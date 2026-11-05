@@ -36,6 +36,8 @@ import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.stableNavigationBars
+import mihon.presentation.kit.window.stableStatusBars
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -72,7 +74,7 @@ internal fun ImmersiveOverlay(
                         .fillMaxWidth()
                         .padding(
                             start = KatariTheme.spacing.m,
-                            top = WindowInsets.immersiveStatusBars
+                            top = WindowInsets.stableStatusBars
                                 .asPaddingValues()
                                 .calculateTopPadding() + KatariTheme.spacing.m,
                             end = KatariTheme.spacing.m,
@@ -140,7 +142,7 @@ private fun ImmersiveBottomBar(
                 start = KatariTheme.spacing.l,
                 top = KatariTheme.spacing.xxl,
                 end = KatariTheme.spacing.l,
-                bottom = WindowInsets.immersiveNavigationBars
+                bottom = WindowInsets.stableNavigationBars
                     .asPaddingValues()
                     .calculateBottomPadding() + KatariTheme.spacing.s,
             ),

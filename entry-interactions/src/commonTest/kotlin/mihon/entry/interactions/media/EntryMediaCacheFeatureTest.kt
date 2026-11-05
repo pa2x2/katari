@@ -86,7 +86,7 @@ class EntryMediaCacheFeatureTest {
     ) : EntryMediaCacheArtifact {
         override val clearLabel: StringResource = mockk()
         override val autoClearLabel: StringResource = mockk()
-        override val readableSize: String = "0 B"
+        override val sizeBytes: Long = 0L
         var clearCount = 0
             private set
 

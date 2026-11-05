@@ -3,74 +3,14 @@ package eu.kanade.tachiyomi.ui.reader.viewer
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
-import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 
-/**
- * Interface for implementing a viewer.
- */
-internal interface Viewer {
-
-    /**
-     * Returns the view this viewer uses.
-     */
+/** An Android View viewer: a [ReaderViewer] drawn by a [View] that takes the activity's key and motion events. */
+internal interface Viewer : ReaderViewer {
     fun getView(): View
 
-    /**
-     * Destroys this viewer. Called when leaving the reader or swapping viewers.
-     */
-    fun destroy() {}
-
-    /**
-     * Tells this viewer to set the given [chapters] as active.
-     */
-    fun setChapters(chapters: ViewerChapters)
-
-    /**
-     * Tells this viewer to move to the given [page].
-     */
-    fun moveToPage(page: ReaderPage)
-
-    /**
-     * Pages this viewer currently shows to the reader, for text features.
-     */
-    fun visibleTextSurfaces(): List<MangaPageTextSurface>
-
-    /**
-     * Pages this viewer has loaded around the visible ones, for text features that work ahead of the reader.
-     */
-    fun preloadedTextSurfaces(): List<MangaPageTextSurface>
-
-    /**
-     * Whether this viewer supports automatic scrolling.
-     */
-    fun supportsAutoScroll(): Boolean = false
-
-    /**
-     * Starts automatic scrolling with the given [speed].
-     */
-    fun startAutoScroll(speed: Int) {}
-
-    /**
-     * Updates the automatic scrolling [speed].
-     */
-    fun updateAutoScrollSpeed(speed: Int) {}
-
-    /**
-     * Stops automatic scrolling.
-     */
-    fun stopAutoScroll() {}
-
-    /**
-     * Called from the containing activity when a key [event] is received. It should return true
-     * if the event was handled, false otherwise.
-     */
+    /** Returns whether the viewer handled the key [event]. */
     fun handleKeyEvent(event: KeyEvent): Boolean
 
-    /**
-     * Called from the containing activity when a generic motion [event] is received. It should
-     * return true if the event was handled, false otherwise.
-     */
+    /** Returns whether the viewer handled the generic motion [event]. */
     fun handleGenericMotionEvent(event: MotionEvent): Boolean
 }

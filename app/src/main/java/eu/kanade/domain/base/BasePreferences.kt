@@ -30,10 +30,5 @@ class BasePreferences(
         GLUtil.SAFE_TEXTURE_LIMIT,
     )
 
-    val alwaysDecodeLongStripWithSSIV: Preference<Boolean> = preferenceStore.getBoolean(
-        "pref_always_decode_long_strip_with_ssiv",
-        false,
-    )
-
     val installationId: Preference<String> = InstallationPreferences(preferenceStore).installationId
 }

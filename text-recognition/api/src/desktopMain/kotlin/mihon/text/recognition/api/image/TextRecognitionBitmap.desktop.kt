@@ -7,3 +7,7 @@ package mihon.text.recognition.api.image
 actual class TextRecognitionBitmap private constructor()
 
 actual fun TextRecognitionBitmap.release() = Unit
+
+actual fun TextRecognitionBitmap.readArgbPixels(): IntArray {
+    throw UnsupportedOperationException("Desktop decodes no recognition bitmaps")
+}

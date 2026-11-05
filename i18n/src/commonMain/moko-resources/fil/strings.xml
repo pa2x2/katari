@@ -887,6 +887,4 @@
     <string name="pref_hardware_bitmap_threshold_summary">Kung naglo-load ang reader ng isang blangkong imahe ay unti-unting bawasan ang threshold.\nNapili: %s</string>
     <string name="pref_hardware_bitmap_threshold">Custom na threshold sa hardware bitmap</string>
     <string name="pref_hardware_bitmap_threshold_default">Default (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Nakakaapekto sa performance. Paganahin lamang kung ang pagbabawas ng bitmap threshold ay hindi nakakapag-ayos ng mga isyu sa blangkong imahe</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Gamitin ang legacy decoder para sa long strip reader</string>
 </resources>

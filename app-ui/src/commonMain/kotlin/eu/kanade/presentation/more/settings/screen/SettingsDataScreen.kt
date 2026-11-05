@@ -56,6 +56,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
+import tachiyomi.presentation.core.i18n.fileSize
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -217,10 +218,10 @@ object SettingsDataScreen : SearchableSettings {
         val mediaCacheFeature = remember(graph) { graph.entryMediaCacheFeature }
         val mediaCacheSettings = remember(mediaCacheFeature) { mediaCacheFeature.settings() }
         var cacheSizeSema by remember { mutableIntStateOf(0) }
-        val cacheSizes by produceState(emptyMap<EntryMediaCacheId, String>(), mediaCacheSettings, cacheSizeSema) {
+        val cacheSizes by produceState(emptyMap<EntryMediaCacheId, Long>(), mediaCacheSettings, cacheSizeSema) {
             value = withContext(Dispatchers.IO) {
                 mediaCacheSettings.mapNotNull { setting ->
-                    mediaCacheFeature.readableSize(setting.id)?.let { setting.id to it }
+                    mediaCacheFeature.sizeBytes(setting.id)?.let { setting.id to it }
                 }.toMap()
             }
         }
@@ -240,7 +241,12 @@ object SettingsDataScreen : SearchableSettings {
                     add(
                         Preference.PreferenceItem.TextPreference(
                             title = stringResource(setting.clearLabel),
-                            subtitle = stringResource(MR.strings.used_cache, cacheSizes[setting.id].orEmpty()),
+                            subtitle = stringResource(
+                                MR.strings.used_cache,
+                                cacheSizes[setting.id]?.let {
+                                    fileSize(it)
+                                }.orEmpty(),
+                            ),
                             onClick = {
                                 scope.launchNonCancellable {
                                     when (val result = mediaCacheFeature.clear(setting.id)) {

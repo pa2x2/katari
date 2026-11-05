@@ -116,6 +116,7 @@ dependencyResolutionManagement {
             }
             filter {
                 includeModule("io.github.pa2x2", "image-decoder-android")
+                includeModule("io.github.pa2x2", "image-decoder-jvm")
             }
         }
         exclusiveContent {
@@ -170,6 +171,7 @@ include(":book-api")
 include(":core-metadata")
 include(":core:archive")
 include(":core:common")
+include(":core:image")
 include(":core:metro")
 include(":core:platform")
 include(":core:test-fixtures")

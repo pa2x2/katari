@@ -783,6 +783,4 @@
     <string name="pref_hardware_bitmap_threshold">เกณฑ์บิตแมปฮาร์ดแวร์กำหนดเอง</string>
     <string name="pref_hardware_bitmap_threshold_default">ค่าเริ่มต้น (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">หากตัวอ่านโหลดภาพเปล่า ให้ลดเกณฑ์ลงทีละน้อย\nเลือกแล้ว: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">ใช้ตัวถอดรหัสแบบเก่าสำหรับตัวอ่านภาพยาว</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">มีผลต่อประสิทธิภาพ เปิดใช้งานเฉพาะเมื่อการลดเกณฑ์บิตแมปไม่สามารถแก้ไขปัญหาภาพเปล่าได้</string>
 </resources>

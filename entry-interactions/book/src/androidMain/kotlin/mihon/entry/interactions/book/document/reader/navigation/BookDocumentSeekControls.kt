@@ -23,10 +23,10 @@ import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
-import mihon.entry.viewer.chrome.ui.ReaderFloatingControlRow
-import mihon.entry.viewer.chrome.ui.ReaderPageNavigatorType
-import mihon.entry.viewer.chrome.ui.ReaderPositionNavigator
-import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
+import mihon.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
+import mihon.entry.viewer.chrome.ui.position.ReaderPageNavigatorType
+import mihon.entry.viewer.chrome.ui.position.ReaderPositionNavigator
+import mihon.entry.viewer.chrome.ui.position.ReaderReturnPositionBar
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.OverlayPanel
 import mihon.presentation.kit.surface.Pill

@@ -21,7 +21,9 @@ interface EntryMediaCacheArtifact {
     val clearLabel: StringResource
     val autoClearLabel: StringResource
     val autoClearPreference: EntryMediaCacheAutoClearPreference
-    val readableSize: String
+
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
     fun clear(): Int
 }
 

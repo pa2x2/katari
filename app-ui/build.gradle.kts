@@ -33,6 +33,7 @@ kotlin {
 
                 api(projects.appUpdate)
                 implementation(projects.core.common)
+                implementation(projects.core.image)
                 implementation(projects.core.platform)
                 // The debug info shows the backup format's schema.
                 implementation(projects.backup)

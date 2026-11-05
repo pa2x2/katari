@@ -33,9 +33,9 @@ import mihon.entry.interactions.media.EntryImmersiveOpenTargetResult
 import mihon.entry.interactions.media.EntryImmersivePreloadRadiusResult
 import mihon.entry.interactions.media.EntryImmersiveRendererResult
 import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadingBackground
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
 import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ScreenShortcuts

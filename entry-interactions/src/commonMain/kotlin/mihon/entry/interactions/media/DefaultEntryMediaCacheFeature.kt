@@ -57,7 +57,7 @@ internal class DefaultEntryMediaCacheFeature(
         }
     }
 
-    override fun readableSize(id: EntryMediaCacheId): String? = artifactsById[id]?.readableSize
+    override fun sizeBytes(id: EntryMediaCacheId): Long? = artifactsById[id]?.sizeBytes
 
     override fun clear(id: EntryMediaCacheId): EntryMediaCacheClearResult {
         val artifact = artifactsById[id] ?: return EntryMediaCacheClearResult.Inapplicable(id)
@@ -65,7 +65,6 @@ internal class DefaultEntryMediaCacheFeature(
             EntryMediaCacheClearResult.Cleared(
                 id = id,
                 deletedFiles = artifact.clear(),
-                readableSize = artifact.readableSize,
             )
         } catch (error: Throwable) {
             EntryMediaCacheClearResult.Failed(id, error)

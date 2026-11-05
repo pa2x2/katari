@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.page
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.model.Page
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -11,6 +10,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import mihon.core.platform.storage.AppPrivateDirectories
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
@@ -101,10 +101,10 @@ class MangaPageStoreTest {
     }
 
     private fun pageCache(): MangaPageStore {
-        val context = mockk<Context> {
-            every { cacheDir } returns temporaryDirectory
+        val directories = mockk<AppPrivateDirectories> {
+            every { cache } returns temporaryDirectory
         }
-        return MangaPageStore(context, Json)
+        return MangaPageStore(directories, Json)
     }
 
     private fun imageResponse(body: String): Response {

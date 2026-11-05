@@ -5,8 +5,8 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.util.system.GLUtil
-import mihon.core.common.image.progressive.ProgressiveImageEngine
-import mihon.core.common.image.progressive.ProgressiveImagePreferences
+import mihon.core.image.progressive.ProgressiveImageEngine
+import mihon.core.image.progressive.ProgressiveImagePreferences
 import mihon.presentation.kit.files.DocumentAccess
 import mihon.presentation.kit.files.DocumentPickerRequest
 import mihon.presentation.kit.files.rememberDocumentPicker
@@ -14,7 +14,7 @@ import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The manga reader's progressive loading, hardware bitmaps, subsampling and colour profile. */
+/** The manga reader's progressive loading, hardware bitmaps and colour profile. */
 @Inject
 class AndroidReaderDecodingSettings(
     private val basePreferences: BasePreferences,
@@ -58,11 +58,6 @@ class AndroidReaderDecodingSettings(
                 },
                 visible = !ImageUtil.HARDWARE_BITMAP_UNSUPPORTED &&
                     GLUtil.DEVICE_TEXTURE_LIMIT > GLUtil.SAFE_TEXTURE_LIMIT,
-            ),
-            Preference.PreferenceItem.SwitchPreference(
-                preference = basePreferences.alwaysDecodeLongStripWithSSIV,
-                title = stringResource(MR.strings.pref_always_decode_long_strip_with_ssiv_2),
-                subtitle = stringResource(MR.strings.pref_always_decode_long_strip_with_ssiv_summary),
             ),
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_display_profile),

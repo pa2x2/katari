@@ -52,14 +52,16 @@ interface PageSpreadScope {
 
     /**
      * Lays [left] and [right] out as the two pages, each [pageWidth] wide and centred on its side of the split, in a box
-     * as large as the [PageSpread]. The sides are physical because the order of a book's pages follows its reading
-     * direction, not the layout's.
+     * as large as the [PageSpread]. With [meetAtSplit], as the two halves of a printed spread do, each page instead
+     * takes the width it measures to, up to its side's, and sits against the split. The sides are physical because the
+     * order of a book's pages follows its reading direction, not the layout's.
      */
     @Composable
     fun Pages(
         left: @Composable BoxScope.() -> Unit,
         right: @Composable BoxScope.() -> Unit,
         modifier: Modifier = Modifier,
+        meetAtSplit: Boolean = false,
     )
 }
 
@@ -91,16 +93,20 @@ private class PageSpreadScopeImpl(private val split: PageSpreadSplit) : PageSpre
         left: @Composable BoxScope.() -> Unit,
         right: @Composable BoxScope.() -> Unit,
         modifier: Modifier,
+        meetAtSplit: Boolean,
     ) {
         Box(modifier, contentAlignment = AbsoluteAlignment.TopLeft) {
-            Box(Modifier.width(split.leftWidth), contentAlignment = Alignment.TopCenter) {
-                Box(Modifier.width(pageWidth), content = left)
+            Box(
+                Modifier.width(split.leftWidth),
+                contentAlignment = if (meetAtSplit) AbsoluteAlignment.TopRight else Alignment.TopCenter,
+            ) {
+                Box(if (meetAtSplit) Modifier else Modifier.width(pageWidth), content = left)
             }
             Box(
                 Modifier.absoluteOffset(x = split.rightStart).width(split.rightWidth),
-                contentAlignment = Alignment.TopCenter,
+                contentAlignment = if (meetAtSplit) AbsoluteAlignment.TopLeft else Alignment.TopCenter,
             ) {
-                Box(Modifier.width(pageWidth), content = right)
+                Box(if (meetAtSplit) Modifier else Modifier.width(pageWidth), content = right)
             }
         }
     }

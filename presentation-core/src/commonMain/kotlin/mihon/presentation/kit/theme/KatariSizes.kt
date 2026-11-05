@@ -33,5 +33,11 @@ object KatariSizes {
     /** Widest a column of cards or text grows on tablets and in landscape, so lines stay readable. */
     val readableWidth: Dp = 720.dp
 
+    /**
+     * Widest a long strip of pages grows: a strip drawn for phones reads at a comfortable size, and a page still shows
+     * whole on a screen wider than that.
+     */
+    val stripWidth: Dp = 600.dp
+
     val none: Dp = 0.dp
 }

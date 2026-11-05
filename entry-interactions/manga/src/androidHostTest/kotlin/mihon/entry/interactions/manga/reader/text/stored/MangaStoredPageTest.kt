@@ -3,7 +3,6 @@ package mihon.entry.interactions.manga.reader.text.stored
 import android.graphics.Bitmap
 import io.kotest.matchers.shouldBe
 import mihon.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
-import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslation
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
@@ -69,7 +68,7 @@ class MangaStoredPageTest {
         object : DisplayedPageImage {
             override val key = ImageContentKey("displayed")
             override val size = ImageSize(shown.width, shown.height)
-            override val geometry = MangaDisplayedPageGeometry(MangaPageTransform.None, shown)
+            override val geometry = MangaDisplayedPageGeometry(shown)
             override val rawContent = ImageContentKey(rawContent)
             override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap = error("Not decoded")
             override fun close() = Unit

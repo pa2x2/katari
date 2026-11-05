@@ -22,6 +22,9 @@ internal class MangaReaderPreferences(
 ) {
     // region General
 
+    /** Whether the desktop reader's guide to the mouse and keys has been shown and dismissed. */
+    val inputGuideShown: Preference<Boolean> = preferenceStore.getBoolean("reader_input_guide_shown", false)
+
     val pageTransitions: Preference<Boolean> = preferenceStore.getBoolean("pref_enable_transitions_key", true)
 
     val loadAheadOnlyOverWifi: Preference<Boolean> = preferenceStore.getBoolean(

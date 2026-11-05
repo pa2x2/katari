@@ -9,10 +9,6 @@ plugins {
 kotlin {
     android {
         namespace = "mihon.entry.viewer.chrome.ui"
-        // The return-position bar's labels are Android string resources of this module.
-        androidResources {
-            enable = true
-        }
     }
     desktop()
 
@@ -20,6 +16,7 @@ kotlin {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
             "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi",
+            "-opt-in=androidx.compose.ui.ExperimentalComposeUiApi",
         )
     }
 
@@ -33,7 +30,13 @@ kotlin {
                 implementation(libs.compose.multiplatform.runtime)
                 implementation(libs.compose.multiplatform.animation)
                 implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.navigationEvent)
                 implementation(libs.coil.compose)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                implementation(projects.core.platform)
             }
         }
     }

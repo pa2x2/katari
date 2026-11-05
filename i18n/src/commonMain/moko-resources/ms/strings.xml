@@ -859,6 +859,4 @@
     <string name="pref_hardware_bitmap_threshold">Ambang bitmap perkakasan tersuai</string>
     <string name="pref_hardware_bitmap_threshold_default">Lalai (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Sekiranya pembaca memuatkan imej kosong kurangkan ambang secara bertokok.\nDipilih: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Gunakan penyahkod warisan untuk pembaca jalur panjang</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Mempengaruhi prestasi. Hanya bolehkan sekiranya mengurangkan ambang bitmap tidak membetulkan masalah imej kosong</string>
 </resources>

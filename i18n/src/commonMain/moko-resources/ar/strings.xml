@@ -860,9 +860,7 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">قد تحتوي المصادر الواردة من هذه الإضافة على محتوى آمن وآخر مخصص للبالغين (18+).</string>
     <string name="ext_content_warning_nsfw_description">تركز المصادر الواردة من هذه الإضافة بشكل أساسي على المحتوى الموجه لمن هم في سن 18 عاماً فما فوق.</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">استخدم فك التشفير القديم لقارئ الشرائط الطويلة</string>
     <string name="pref_hardware_bitmap_threshold_summary">ادا تم تحميل صورة فارغة قلل الحد تدريجيا لحل المشكلة.\nتم تحديد:%s</string>
     <string name="pref_hardware_bitmap_threshold">عتبة خريطة الصورة النقطية للأجهزة المخصصة</string>
     <string name="pref_hardware_bitmap_threshold_default">افتراضي (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">يؤثر على الأداء. فعّله فقط إذا لم يُحل تقليل عتبة الخريطة النقطية مشاكل الصورة الفارغة</string>
 </resources>

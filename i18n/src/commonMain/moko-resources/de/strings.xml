@@ -891,6 +891,4 @@
     <string name="pref_hardware_bitmap_threshold_summary">Reduziert stufenweise den Grenzwert, wenn der Leser nur ein leeres Bild lädt.\nAusgewählt: %s</string>
     <string name="pref_hardware_bitmap_threshold">Benutzerdefinierter Hardware-Bitmap-Grenzwert</string>
     <string name="pref_hardware_bitmap_threshold_default">Standard (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Beeinflusst die Leistung. Nur aktivieren, wenn das Reduzieren des Bitmap-Grenzwerts das Problem von leeren Bildern nicht behebt</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Legacy-Decoder für Langer-Streifen-Leser verwenden</string>
 </resources>

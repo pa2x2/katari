@@ -789,5 +789,4 @@
     <string name="pref_hardware_bitmap_threshold_default">Domyślne (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Jeżeli czytnik załaduje pusty obraz, stopniowo zmniejszaj zakres graniczny.\nWybrany: %s</string>
     <string name="pref_hardware_bitmap_threshold">Niestandardowy zakres graniczny bitmapy dla urządzenia</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Wpływa na wydajność. Włącz tylko wtedy, gdy zmniejszenie zakresu granicznego bitmapy nie pomaga przy naprawie nieładujących się obrazów</string>
 </resources>

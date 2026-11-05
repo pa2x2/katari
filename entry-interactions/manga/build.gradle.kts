@@ -33,20 +33,42 @@ kotlin {
 
                 implementation(projects.core.archive)
                 implementation(projects.core.common)
+                implementation(projects.core.image)
                 implementation(projects.core.metro)
                 implementation(projects.core.platform)
                 implementation(projects.coreMetadata)
+                implementation(projects.entryViewerChromeUi)
+                implementation(projects.entryViewerSettingsUi)
                 implementation(projects.i18n)
+                implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.language.api)
+                implementation(projects.modelArtifacts.api)
+                implementation(projects.modelArtifacts.ui)
+                implementation(projects.presentationCore)
                 implementation(projects.sourceApi)
                 implementation(projects.sourceLocal)
+                implementation(projects.textRecognition.api)
+                implementation(projects.textRecognition.ui)
+                implementation(projects.translation.api)
                 implementation(projects.translation.ui)
+                implementation(projects.tts.api)
+                implementation(projects.tts.ui)
                 implementation(libs.bundles.serialization)
+                implementation(libs.androidx.annotation)
+                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodelSavedstate)
+                implementation(libs.compose.multiplatform.animation)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.navigationEvent)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.ui)
+                implementation(libs.diskLruCache)
+                api(libs.metrox.viewmodel)
             }
         }
         androidMain {
-            // The reader's Compose and Coil APIs; the shared code uses neither.
+            // The reader's Compose UI and Coil APIs, which only the Android viewers use.
             languageSettings {
                 optIn("androidx.compose.foundation.ExperimentalFoundationApi")
                 optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
@@ -54,20 +76,9 @@ kotlin {
                 optIn("coil3.annotation.ExperimentalCoilApi")
             }
             dependencies {
-                implementation(projects.entryViewerSettingsUi)
-                implementation(projects.icons.customMaterialSymbols)
-                implementation(projects.modelArtifacts.ui)
-                implementation(projects.textRecognition.api)
-                implementation(projects.textRecognition.ui)
-                implementation(projects.translation.api)
-                implementation(projects.tts.api)
-                implementation(projects.tts.ui)
-                implementation(projects.entryViewerChromeUi)
-                implementation(projects.presentationCore)
                 implementation(projects.sourceCompat)
 
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.androidx.annotation)
                 implementation(libs.androidx.appCompat)
                 implementation(libs.androidx.compose.foundation)
                 implementation(libs.androidx.compose.animation)
@@ -77,13 +88,14 @@ kotlin {
                 implementation(libs.androidx.core)
                 implementation(libs.androidx.interpolator)
                 implementation(libs.bundles.androidx.lifecycle)
-                implementation(libs.androidx.recyclerView)
-                implementation(libs.androidx.viewPager)
                 implementation(libs.bundles.coil)
-                implementation(libs.diskLruCache)
                 implementation(libs.material)
-                api(libs.metrox.viewmodel)
-                implementation(libs.photoView)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                // The reader's ViewModel, made with its arguments in the screen that shows it
+                implementation(libs.metrox.viewmodel.compose)
             }
         }
         getByName("androidHostTest") {
@@ -96,15 +108,9 @@ kotlin {
     }
 }
 
-// A source set's dependency block cannot configure a catalog dependency, so these take their exclusions and artifact
-// type (the decoder is an AAR, which Gradle can't tell without metadata) here.
+// A source set's dependency block cannot configure a catalog dependency, so the decoder takes its artifact type here:
+// it is an AAR, which Gradle can't tell without metadata.
 dependencies {
-    "androidMainImplementation"(libs.directionalViewPager) {
-        exclude(group = "androidx.viewpager", module = "viewpager")
-    }
-    "androidMainImplementation"(libs.subsamplingScaleImageView) {
-        exclude(module = "image-decoder")
-    }
     "androidMainImplementation"(libs.image.decoder) {
         artifact { type = "aar" }
     }

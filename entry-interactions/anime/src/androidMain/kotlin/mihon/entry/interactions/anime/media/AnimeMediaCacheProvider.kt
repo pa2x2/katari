@@ -25,6 +25,6 @@ private class AnimePlaybackCacheArtifact(
         key = "auto_clear_anime_playback_cache",
         seedFromKeyWhenAbsent = "auto_clear_chapter_cache",
     )
-    override val readableSize: String get() = delegate.readableSize
+    override val sizeBytes: Long get() = delegate.sizeBytes
     override fun clear(): Int = delegate.clear()
 }

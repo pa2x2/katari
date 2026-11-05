@@ -695,5 +695,4 @@
     <string name="pref_hardware_bitmap_threshold">Vlastný prah pre hardvérové bitmapy</string>
     <string name="pref_hardware_bitmap_threshold_default">Predvolený (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Ak čítacie rozhranie načítava prázdne obrázky, postupne znížte prah.\nVybrané: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Použiť starší dekodér pre čítacie rozhranie \"dlhé pásy\"</string>
 </resources>
