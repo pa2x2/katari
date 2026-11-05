@@ -69,8 +69,6 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
-import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
-import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -107,8 +105,6 @@ import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.dialog.ProgressDialog
-import mihon.presentation.kit.window.WindowLayout
-import mihon.presentation.kit.window.currentWindowLayout
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import mihon.tts.ui.playback.ShortFormSpeechFailure
@@ -171,10 +167,6 @@ class ReaderActivity : EntryInteractionActivity() {
     private var appliedRuntimeSettings: ReaderRuntimeSettings? = null
 
     val isNavigatingFromControls: Boolean get() = controller.isNavigatingFromControls
-
-    /** The window's layout as the Compose overlay last saw it, for the pager to decide on two pages; null until then. */
-    internal var windowLayout: WindowLayout? = null
-        private set
 
     /**
      * Called when the activity is created. Initializes the presenter and configuration.
@@ -263,10 +255,6 @@ class ReaderActivity : EntryInteractionActivity() {
         onOpenEntry = ::openMangaScreen,
         onOpenWebView = ::launchChapterWebViewAction,
         onOpenDefaultSettings = { openViewerSettings(MangaReaderSettings.PROVIDER_ID) },
-        onWindowLayoutChanged = { layout ->
-            windowLayout = layout
-            (viewer as? PagerViewer)?.onSpreadConditionsChanged()
-        },
         textLayer = { menuVisible, menuBounds ->
             MangaReaderTextFeatures(
                 controller = controller,

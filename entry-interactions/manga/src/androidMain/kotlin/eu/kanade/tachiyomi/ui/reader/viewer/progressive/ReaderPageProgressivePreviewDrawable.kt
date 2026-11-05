@@ -38,9 +38,6 @@ internal class ReaderPageProgressivePreviewDrawable : Drawable() {
             ReaderPageProgressiveTransformation.None -> {
                 canvas.drawBitmap(preview, null, destination, bitmapPaint)
             }
-            is ReaderPageProgressiveTransformation.CropHalf -> {
-                canvas.drawBitmap(preview, transformation.side.sourceRect(preview), destination, bitmapPaint)
-            }
             is ReaderPageProgressiveTransformation.Rotate -> {
                 canvas.save()
                 canvas.rotate(transformation.degrees, destination.centerX(), destination.centerY())

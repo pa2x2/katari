@@ -34,7 +34,6 @@ import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.presentation.kit.dialog.ProgressDialog
 import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,10 +49,6 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
     val messages = rememberScreenMessages()
     LaunchedEffect(controller) {
         controller.notices.collect { messages.show(it) }
-    }
-    val windowLayout = currentWindowLayout()
-    LaunchedEffect(windowLayout) {
-        host.onWindowLayoutChanged(windowLayout)
     }
     when (val startup = state.startupState) {
         ReaderStartupState.Loading -> {

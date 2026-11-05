@@ -78,9 +78,13 @@ fun View?.isVisibleOnScreen(): Boolean {
     return getGlobalVisibleRect(Rect())
 }
 
-fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
+/**
+ * Whether content drawn on the reader's background is the dark theme's: the black and grey backgrounds are dark, and
+ * the automatic one follows the app's theme.
+ */
+fun Context.readerBackgroundIsDark(readerTheme: Int, uiPreferences: UiPreferences): Boolean {
     val themeMode = uiPreferences.themeMode.get()
-    val isDarkBackground = when (readerTheme) {
+    return when (readerTheme) {
         1, 2 -> true
         3 -> when (themeMode) {
             ThemeMode.SYSTEM -> applicationContext.isNightMode()
@@ -88,6 +92,10 @@ fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferen
         }
         else -> false
     }
+}
+
+fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
+    val isDarkBackground = readerBackgroundIsDark(readerTheme, uiPreferences)
     val expected = if (isDarkBackground) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
     if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == expected) {
         return this
@@ -101,9 +109,3 @@ fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferen
         applyOverrideConfiguration(overrideConf)
     }
 }
-
-val Throwable.readerFormattedMessage: String
-    get() = when (val className = this::class.simpleName) {
-        null, "Exception", "IOException" -> message ?: className.orEmpty()
-        else -> "$className: $message"
-    }

@@ -8,15 +8,18 @@ import mihon.core.image.PlatformBitmap
 import mihon.core.image.decode.ImageRegionDecoder
 import mihon.core.image.decode.detectImageType
 
-/** A reader page's image, ready to draw: [size] is what the viewer lays out, in the image's own pixels. */
-internal sealed interface PageImage {
+/**
+ * A reader page's image, ready to draw: [size] is what the viewer lays out, in the image's own pixels. Closed once no
+ * longer shown.
+ */
+internal sealed interface PageImage : AutoCloseable {
     val size: IntSize
 
     /**
      * A still image, drawn from regions decoded as they come into view. [size] is the image without its borders when
      * they are cropped. Holds the native decoder until [close].
      */
-    class Still internal constructor(private val decoder: ImageRegionDecoder) : PageImage, AutoCloseable {
+    class Still internal constructor(private val decoder: ImageRegionDecoder) : PageImage {
         override val size = IntSize(decoder.width, decoder.height)
 
         // The native decoder serves one region at a time and must not be closed during a decode
@@ -38,7 +41,10 @@ internal sealed interface PageImage {
     }
 
     /** An animated image, played from its encoded [bytes]; borders are not cropped from animations. */
-    class Animated internal constructor(val bytes: ByteArray, override val size: IntSize) : PageImage
+    class Animated internal constructor(val bytes: ByteArray, override val size: IntSize) : PageImage {
+        // Playback decodes from the bytes and frees its own frames
+        override fun close() = Unit
+    }
 }
 
 /**

@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.widget.ImageView
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.github.chrisbanes.photoview.PhotoView
 import mihon.core.image.progressive.ProgressiveAnimationBuffer
 import kotlin.math.roundToInt
@@ -195,22 +194,11 @@ internal enum class ReaderPageProgressiveScaleMode {
     CROP,
 }
 
-internal fun Int.toReaderPageProgressiveScaleMode(): ReaderPageProgressiveScaleMode = when (this) {
-    SubsamplingScaleImageView.SCALE_TYPE_CENTER_CROP -> ReaderPageProgressiveScaleMode.CROP
-    SubsamplingScaleImageView.SCALE_TYPE_FIT_WIDTH -> ReaderPageProgressiveScaleMode.FIT_WIDTH
-    SubsamplingScaleImageView.SCALE_TYPE_FIT_HEIGHT -> ReaderPageProgressiveScaleMode.FIT_HEIGHT
-    else -> ReaderPageProgressiveScaleMode.FIT_INSIDE
-}
-
 internal sealed interface ReaderPageProgressiveTransformation {
     data object None : ReaderPageProgressiveTransformation
 
     data class Rotate(
         val degrees: Float,
-    ) : ReaderPageProgressiveTransformation
-
-    data class CropHalf(
-        val side: ReaderPageProgressiveSide,
     ) : ReaderPageProgressiveTransformation
 
     data class SplitAndStack(
@@ -225,7 +213,6 @@ internal sealed interface ReaderPageProgressiveTransformation {
         return when (effective(bitmap)) {
             None -> PreviewDimensions(bitmap.width.toFloat(), bitmap.height.toFloat())
             is Rotate -> PreviewDimensions(bitmap.height.toFloat(), bitmap.width.toFloat())
-            is CropHalf -> PreviewDimensions((bitmap.width / 2).toFloat(), bitmap.height.toFloat())
             is SplitAndStack -> PreviewDimensions((bitmap.width / 2).toFloat(), bitmap.height * 2f)
         }
     }

@@ -3,20 +3,16 @@ package eu.kanade.tachiyomi.ui.reader.viewer
 import android.content.Context
 import android.util.AttributeSet
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
-import eu.kanade.presentation.reader.ChapterTransition
 import eu.kanade.presentation.reader.ChapterTransitionPlacement
+import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.runtime.EntryInteractionTheme
 import mihon.entry.interactions.viewer.EntryChildTransition
-import mihon.entry.viewer.chrome.ui.transition.ReaderEntryChildTransitionLoadState
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 internal class ReaderTransitionView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     AbstractComposeView(context, attrs) {
@@ -34,67 +30,19 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
         placement: ChapterTransitionPlacement,
         onRetry: (ReaderChapter) -> Unit,
     ) {
-        val toChapter = transition.to
-        val toManga = toChapter?.manga
-
-        data = Data(
-            transition = transition,
-            currChapterDownloaded = transition.from.pageLoader?.isLocal == true,
-            goingToChapterDownloaded =
-            if (toManga == null) {
-                false
-            } else {
-                toManga.source == tachiyomi.source.local.LocalSource.ID ||
-                    downloadManager.isChapterDownloaded(
-                        chapterName = toChapter.chapter.name,
-                        chapterScanlator = toChapter.chapter.scanlator,
-                        chapterUrl = toChapter.chapter.url,
-                        mangaTitle = toManga.downloadFolderTitle,
-                        sourceId = toManga.source,
-                        skipCache = true,
-                    )
-            },
-            config = config,
-            placement = placement,
-            onRetry = onRetry,
-        )
+        data = Data(transition, downloadManager, config, placement, onRetry)
     }
 
     @Composable
     override fun Content() {
-        data?.let { transitionData ->
-            val destinationState = transitionData.transition.to?.stateFlow?.collectAsState()?.value
-            val loadState = when (destinationState) {
-                ReaderChapter.State.Loading -> ReaderEntryChildTransitionLoadState.Loading(
-                    stringResource(MR.strings.transition_pages_loading),
-                )
-                is ReaderChapter.State.Error -> ReaderEntryChildTransitionLoadState.Failed(
-                    stringResource(
-                        MR.strings.transition_pages_error,
-                        destinationState.error.message.orEmpty(),
-                    ),
-                )
-                ReaderChapter.State.Wait,
-                is ReaderChapter.State.Loaded,
-                null,
-                -> ReaderEntryChildTransitionLoadState.Idle
-            }
-            val onRetryAction = if (destinationState is ReaderChapter.State.Error) {
-                transitionData.transition.to?.let { destination ->
-                    { transitionData.onRetry(destination) }
-                }
-            } else {
-                null
-            }
+        data?.let {
             EntryInteractionTheme {
-                ChapterTransition(
-                    transition = transitionData.transition,
-                    currChapterDownloaded = transitionData.currChapterDownloaded,
-                    goingToChapterDownloaded = transitionData.goingToChapterDownloaded,
-                    loadState = loadState,
-                    onRetry = onRetryAction,
-                    displayMode = transitionData.config.chapterTransitionMode,
-                    placement = transitionData.placement,
+                ViewerChapterTransition(
+                    transition = it.transition,
+                    downloadManager = it.downloadManager,
+                    displayMode = it.config.chapterTransitionMode,
+                    placement = it.placement,
+                    onRetry = it.onRetry,
                 )
             }
         }
@@ -102,8 +50,7 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
 
     private data class Data(
         val transition: EntryChildTransition<ReaderChapter>,
-        val currChapterDownloaded: Boolean,
-        val goingToChapterDownloaded: Boolean,
+        val downloadManager: DownloadManager,
         val config: ViewerConfig,
         val placement: ChapterTransitionPlacement,
         val onRetry: (ReaderChapter) -> Unit,

@@ -6,7 +6,6 @@ import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
-import mihon.presentation.kit.window.WindowLayout
 
 /**
  * What the reader screen gets from the platform that hosts it: what the platform does its own way, and the actions
@@ -28,8 +27,6 @@ internal class MangaReaderScreenHost(
     val onOpenWebView: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     /** The reader's own settings screen, from the settings sheet's menu. */
     val onOpenDefaultSettings: () -> Unit,
-    /** Called with the window's layout when it changes, which may pair pages into spreads or split them. */
-    val onWindowLayoutChanged: (WindowLayout) -> Unit,
     /**
      * The text features' controls, translations and sheets over the pages, given whether the reader's controls show
      * and where they are; null where the platform can't recognize text, which leaves out their button too.

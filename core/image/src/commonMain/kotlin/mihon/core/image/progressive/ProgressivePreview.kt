@@ -1,4 +1,4 @@
-package eu.kanade.presentation.entry.components.preview
+package mihon.core.image.progressive
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,16 +8,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import mihon.core.image.PlatformBitmap
 import mihon.core.image.asImageBitmap
-import mihon.core.image.progressive.ProgressiveImageState
-import mihon.core.image.progressive.ProgressiveImageVisual
+
+/**
+ * What a screen shows of a page that arrives progressively: the frame to draw so far, or null, and whether a finished
+ * replayable animation keeps playing instead of the decoded page.
+ */
+class ProgressivePreview(val image: ImageBitmap?, val keepsAnimation: Boolean)
 
 /** What [state] has decoded so far, with a finished animation played through its frames. */
 @Composable
-internal fun rememberProgressivePreview(state: ProgressiveImageState?): ProgressivePreview {
+fun rememberProgressivePreview(state: ProgressiveImageState?): ProgressivePreview {
     val bitmap = rememberProgressiveEntryPreviewBitmap(state)
     val keepsAnimation = state?.animation?.let { it.isComplete && it.isReplayable } == true
     return ProgressivePreview(image = bitmap?.asImageBitmap(), keepsAnimation = keepsAnimation)

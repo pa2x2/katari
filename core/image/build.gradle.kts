@@ -24,6 +24,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 // Decoded pixels are handed to Compose as its ImageBitmap, and regions are Compose's IntRect.
                 api(libs.compose.multiplatform.ui)
+                implementation(libs.compose.multiplatform.runtime)
             }
         }
     }
