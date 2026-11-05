@@ -57,7 +57,6 @@ kotlin {
                 implementation(libs.androidx.core)
                 implementation(libs.androidx.fragment)
                 implementation(libs.androidsvg)
-                implementation(libs.image.decoder)
             }
         }
         commonTest {
@@ -76,6 +75,14 @@ kotlin {
                 runtimeOnly(libs.junit.vintage)
             }
         }
+    }
+}
+
+// A source set's dependency block cannot configure a catalog dependency. Named as an AAR, which Gradle can't tell
+// without metadata.
+dependencies {
+    "androidMainImplementation"(libs.image.decoder) {
+        artifact { type = "aar" }
     }
 }
 

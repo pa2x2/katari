@@ -1,5 +1,6 @@
 package mihon.core.common.image.progressive
 
+import android.graphics.Bitmap
 import android.os.SystemClock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -7,16 +8,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.decoder.Format
+import tachiyomi.decoder.ImageRegion
 import tachiyomi.decoder.incremental.IncrementalBlendOperation
 import tachiyomi.decoder.incremental.IncrementalDecodeUpdate
 import tachiyomi.decoder.incremental.IncrementalDisposalOperation
 import tachiyomi.decoder.incremental.IncrementalImageDecoder
 import tachiyomi.decoder.incremental.IncrementalImageInfo
-import tachiyomi.decoder.incremental.IncrementalImageRegion
 import java.io.Closeable
 
 class ProgressiveImageSession internal constructor(
-    private var decoder: IncrementalImageDecoder?,
+    private var decoder: IncrementalImageDecoder<Bitmap>?,
     private val onTerminated: (ProgressiveImageSession) -> Unit,
 ) : Closeable {
     private val mutableState = MutableStateFlow(ProgressiveImageState())
@@ -105,7 +106,7 @@ class ProgressiveImageSession internal constructor(
         }
     }
 
-    private fun drainUpdates(activeDecoder: IncrementalImageDecoder) {
+    private fun drainUpdates(activeDecoder: IncrementalImageDecoder<Bitmap>) {
         while (!terminal) {
             when (val update = activeDecoder.pollUpdate() ?: return) {
                 is IncrementalDecodeUpdate.FormatDetected -> {
@@ -123,7 +124,7 @@ class ProgressiveImageSession internal constructor(
                 is IncrementalDecodeUpdate.StillImageAvailable -> {
                     mutableState.value = mutableState.value.copy(
                         visual = ProgressiveImageVisual.Still(
-                            bitmap = update.bitmap,
+                            bitmap = update.pixels,
                             updatedRegion = update.updatedRegion.toProgressiveRegion(),
                             generation = update.generation,
                         ),
@@ -138,7 +139,7 @@ class ProgressiveImageSession internal constructor(
                         disposalOperation = update.frame.disposalOperation.toProgressiveDisposalOperation(),
                     )
                     val frameVisual = ProgressiveAnimationFrameVisual(
-                        bitmap = update.bitmap,
+                        bitmap = update.pixels,
                         frame = frame,
                         generation = update.generation,
                     )
@@ -146,13 +147,13 @@ class ProgressiveImageSession internal constructor(
                         frames = emptyList(),
                         retainedBytes = 0,
                     )
-                    val frameBytes = update.bitmap.allocationByteCount.toLong()
+                    val frameBytes = update.pixels.allocationByteCount.toLong()
                     val retainFrame = currentAnimation.isReplayable &&
                         currentAnimation.frames.size < MAXIMUM_RETAINED_ANIMATION_FRAMES &&
                         currentAnimation.retainedBytes + frameBytes <= MAXIMUM_RETAINED_ANIMATION_BYTES
                     mutableState.value = mutableState.value.copy(
                         visual = ProgressiveImageVisual.AnimationFrame(
-                            bitmap = update.bitmap,
+                            bitmap = update.pixels,
                             frame = frame,
                             generation = update.generation,
                         ),
@@ -249,7 +250,7 @@ private fun IncrementalImageInfo.toProgressiveMetadata() = ProgressiveImageMetad
     loopCount = loopCount,
 )
 
-private fun IncrementalImageRegion.toProgressiveRegion() = ProgressiveImageRegion(
+private fun ImageRegion.toProgressiveRegion() = ProgressiveImageRegion(
     left = left,
     top = top,
     right = right,

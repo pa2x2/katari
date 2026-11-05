@@ -81,7 +81,6 @@ kotlin {
                 implementation(libs.androidx.viewPager)
                 implementation(libs.bundles.coil)
                 implementation(libs.diskLruCache)
-                implementation(libs.image.decoder)
                 implementation(libs.material)
                 api(libs.metrox.viewmodel)
                 implementation(libs.photoView)
@@ -97,12 +96,16 @@ kotlin {
     }
 }
 
-// A source set's dependency block cannot configure a catalog dependency, so these two take their exclusions here.
+// A source set's dependency block cannot configure a catalog dependency, so these take their exclusions and artifact
+// type (the decoder is an AAR, which Gradle can't tell without metadata) here.
 dependencies {
     "androidMainImplementation"(libs.directionalViewPager) {
         exclude(group = "androidx.viewpager", module = "viewpager")
     }
     "androidMainImplementation"(libs.subsamplingScaleImageView) {
         exclude(module = "image-decoder")
+    }
+    "androidMainImplementation"(libs.image.decoder) {
+        artifact { type = "aar" }
     }
 }

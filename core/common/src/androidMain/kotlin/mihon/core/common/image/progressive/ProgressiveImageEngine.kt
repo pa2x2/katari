@@ -11,6 +11,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.decoder.incremental.IncrementalDecodeOptions
 import tachiyomi.decoder.incremental.IncrementalImageDecoder
+import tachiyomi.decoder.incremental.newInstance
 import java.io.Closeable
 
 class ProgressiveImageEngine(
