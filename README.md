@@ -8,7 +8,7 @@
 
 Comics, books, and video in one app.
 
-[Download](https://github.com/pa2x2/katari/releases/latest) · [Website](https://pa2x2.github.io/katari/)
+[Download](https://pa2x2.github.io/katari/download/) · [Website](https://pa2x2.github.io/katari/)
 
 <img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
