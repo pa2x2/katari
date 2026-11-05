@@ -1,15 +1,11 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Activity
-import android.app.PendingIntent
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.graphics.Rect
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
@@ -20,7 +16,6 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -50,28 +45,6 @@ fun Context.openReaderPageInWebView(url: String, sourceId: Long?) {
     metroGraph<EntryInteractionActivityGraph>().entryWebViewDestination.open(this, url, title = null, sourceId)
 }
 
-fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(uri, "image/*")
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-    }
-    return PendingIntent.getActivity(
-        context,
-        0,
-        intent,
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
-}
-
-fun shareImagePendingActivity(context: Context, uri: Uri): PendingIntent {
-    return PendingIntent.getActivity(
-        context,
-        0,
-        uri.toReaderShareIntent(context),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
-}
-
 fun dismissNewChaptersNotification(context: Context, entryNotificationId: Int) {
     NotificationManagerCompat.from(context).cancel(entryNotificationId)
 }
@@ -94,18 +67,13 @@ private fun View.hasDisplayCutout(): Boolean {
     return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && rootWindowInsets?.displayCutout != null
 }
 
-val Context.animatorDurationScale: Float
-    get() = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
-
-/** Whether any part of the view shows in its window. */
-fun View?.isVisibleOnScreen(): Boolean {
-    if (this == null || !isShown) return false
-    return getGlobalVisibleRect(Rect())
-}
-
-fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
+/**
+ * Whether content drawn on the reader's background is the dark theme's: the black and grey backgrounds are dark, and
+ * the automatic one follows the app's theme.
+ */
+fun Context.readerBackgroundIsDark(readerTheme: Int, uiPreferences: UiPreferences): Boolean {
     val themeMode = uiPreferences.themeMode.get()
-    val isDarkBackground = when (readerTheme) {
+    return when (readerTheme) {
         1, 2 -> true
         3 -> when (themeMode) {
             ThemeMode.SYSTEM -> applicationContext.isNightMode()
@@ -113,6 +81,10 @@ fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferen
         }
         else -> false
     }
+}
+
+fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
+    val isDarkBackground = readerBackgroundIsDark(readerTheme, uiPreferences)
     val expected = if (isDarkBackground) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO
     if (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == expected) {
         return this
@@ -126,9 +98,3 @@ fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferen
         applyOverrideConfiguration(overrideConf)
     }
 }
-
-val Throwable.readerFormattedMessage: String
-    get() = when (val className = this::class.simpleName) {
-        null, "Exception", "IOException" -> message ?: className.orEmpty()
-        else -> "$className: $message"
-    }

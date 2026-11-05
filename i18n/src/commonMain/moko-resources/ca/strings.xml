@@ -876,10 +876,8 @@
     <string name="pref_filter_update_categories_details">Les actualitzacions de les categories excloses no es mostraran fins i tot si són també en qualsevol categoria inclosa.</string>
     <string name="pref_filter_upcoming_categories_details">Els elements de les categories excloses no es mostren, fins i tot si són també en qualsevol categoria inclosa.</string>
     <string name="pref_hardware_bitmap_threshold_default">Per defecte (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Afecta el rendiment. Activeu-ho només si en reduir el llindar de mapes de bits no se solucionen els problemes d’imatges buides</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si el lector carrega una imatge buida, reduïu-ne el llindar a poc a poc.\nActual: %s</string>
     <string name="pref_hardware_bitmap_threshold">Llindar personalitzat dels mapes de bits per maquinari</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Utilitza el decodificador antic per al lector de tira llarga</string>
     <string name="refresh_tracker_profile">Actualitza el perfil del servei de seguiment</string>
     <string name="refresh_tracker_success">S’ha actualitzat el perfil de %s</string>
     <string name="refresh_tracker_error">S’ha produït un error en actualitzar %1$s: %2$s</string>

@@ -859,6 +859,4 @@
     <string name="pref_hardware_bitmap_threshold">कस्टम हार्डवेयर बिटमैप सीमा</string>
     <string name="pref_hardware_bitmap_threshold_default">डिफ़ॉल्ट (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">यदि रीडर खाली छवि लोड करता है तो सीमा धीरे-धीरे कम करें।\nचयनित: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">लॉन्ग स्ट्रिप रीडर के लिए पुराना डिकोडर उपयोग करें</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">प्रदर्शन को प्रभावित करता है। केवल तभी सक्षम करें जब बिटमैप सीमा कम करने से खाली छवि की समस्याएं ठीक न हों</string>
 </resources>

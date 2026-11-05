@@ -111,6 +111,7 @@
     <string name="action_remove_bookmark_item">Unbookmark item</string>
     <string name="action_delete">Delete</string>
     <string name="action_update_library">Update library</string>
+    <string name="action_update_entire_library">Update entire library</string>
     <string name="action_enable_all">Enable all</string>
     <string name="action_disable_all">Disable all</string>
     <string name="action_edit">Edit</string>
@@ -716,6 +717,11 @@
     <string name="key_escape">Esc</string>
     <string name="key_enter">Enter</string>
     <string name="key_space">Space</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_menu">Menu</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
     <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
@@ -1283,8 +1289,6 @@
     <string name="pref_hardware_bitmap_threshold_summary">If reader loads a blank image incrementally reduce the threshold.\nSelected: %s</string>
     <string name="pref_progressive_image_loading">Progressive image loading</string>
     <string name="pref_progressive_image_loading_summary">Display downloaded portions of supported images before the download finishes. Disable this if images fail to render correctly</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Use legacy decoder for long strip reader</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Affects performance. Only enable if reducing bitmap threshold doesn\'t fix blank image issues</string>
     <string name="pref_display_profile">Custom display profile</string>
     <string name="pref_crop_borders">Crop borders</string>
     <string name="pref_custom_brightness">Custom brightness</string>
@@ -1328,6 +1332,29 @@
     <string name="nav_zone_next">Next</string>
     <string name="nav_zone_left">Left</string>
     <string name="nav_zone_right">Right</string>
+    <!-- The window's title while the desktop reader fills it: the series, then the chapter -->
+    <string name="reader_window_title">%1$s · %2$s</string>
+    <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
+    <string name="reader_keeps_screen_awake">Reading</string>
+    <string name="reader_shortcut_page_right">Page to the right</string>
+    <string name="reader_shortcut_page_left">Page to the left</string>
+    <string name="reader_shortcut_next_page">Next page</string>
+    <string name="reader_shortcut_previous_page">Previous page</string>
+    <string name="reader_shortcut_first_page">First page</string>
+    <string name="reader_shortcut_last_page">Last page</string>
+    <string name="reader_shortcut_menu">Show or hide the menu</string>
+    <string name="reader_shortcut_zoom_in">Zoom in</string>
+    <string name="reader_shortcut_zoom_out">Zoom out</string>
+    <string name="reader_shortcut_zoom_fit">Fit the page</string>
+    <string name="reader_guide_click">Click to turn pages or show the menu</string>
+    <string name="reader_guide_double_click">Double-click to zoom</string>
+    <string name="reader_guide_right_click">Right-click for page actions</string>
+    <string name="reader_guide_scroll">Scroll to move through pages</string>
+    <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
+    <string name="reader_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="reader_guide_keys_turn">← and → turn pages</string>
+    <string name="reader_guide_keys_chapter">N and P change chapter</string>
+    <string name="reader_guide_keys_list">? lists every key</string>
     <string name="left_to_right_viewer">Paged (left to right)</string>
     <string name="right_to_left_viewer">Paged (right to left)</string>
     <string name="vertical_viewer">Paged (vertical)</string>
@@ -1790,7 +1817,6 @@
     <string name="anime_playback_window_title">%1$s · %2$s</string>
     <string name="anime_playback_enter_full_screen">Full screen</string>
     <string name="anime_playback_exit_full_screen">Exit full screen</string>
-    <string name="anime_playback_full_screen_hint">Press Esc to leave full screen</string>
     <!-- The player's keyboard shortcuts, as the shortcut list names them -->
     <string name="anime_shortcut_play_pause">Play or pause</string>
     <string name="anime_shortcut_volume_up">Volume up</string>
@@ -2347,6 +2373,10 @@
     <string name="transition_pages_loading">Loading pages…</string>
     <string name="transition_pages_error">Failed to load pages: %1$s</string>
     <string name="transition_chapter_failed">Couldn\'t open this chapter</string>
+    <string name="reader_navigation_return">Return to previous position</string>
+    <string name="reader_navigation_dismiss_return">Dismiss return position</string>
+    <!-- Full-screen viewers such as the reader and the player -->
+    <string name="viewer_full_screen_hint">Press Esc to leave full screen</string>
     <string name="page_list_empty_error">No pages found</string>
     <string name="loader_not_implemented_error">Source not found</string>
 

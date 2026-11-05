@@ -26,7 +26,7 @@ import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

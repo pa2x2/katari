@@ -21,7 +21,6 @@ import eu.kanade.tachiyomi.ui.browse.feed.timeline.feedRows
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveContent
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
-import eu.kanade.tachiyomi.ui.browse.immersive.immersiveStatusBars
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
@@ -36,6 +35,7 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.stableStatusBars
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.domain.source.model.Source
@@ -109,7 +109,7 @@ internal fun EntryImmersiveFeedContent(
     )
 
     EntryImmersiveContent(
-        itemCount = pages.size,
+        itemCount = { pages.size },
         itemIdentity = { page -> pages.itemRef(page)?.toImmersiveItemKey() },
         itemContent = { page ->
             pages.itemRef(page)?.let { rememberFeedEntry(it, timelineModel) }
@@ -152,7 +152,7 @@ internal fun EntryImmersiveFeedContent(
         },
         modifier = modifier,
     ) { pagerState ->
-        val statusBarTop = WindowInsets.immersiveStatusBars.asPaddingValues().calculateTopPadding()
+        val statusBarTop = WindowInsets.stableStatusBars.asPaddingValues().calculateTopPadding()
         KeepFeedPositionAcrossPrepends(
             rows = pages,
             viewportKey = pagerState,

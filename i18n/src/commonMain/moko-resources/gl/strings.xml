@@ -793,6 +793,4 @@
     <string name="pref_hardware_bitmap_threshold">Elixir un tamaño máximo co que decodificar imáxenes por hardware</string>
     <string name="pref_hardware_bitmap_threshold_default">Por defecto (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se o lector carga unha páxina en branco, recomendámoste reducilo pouco a pouco.\nLímite actual: %s</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Afecta ao rendemento. Recomendámosche activalo só se a imaxe segue sen verse ao reducir o tamaño máximo</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Cargar imaxes de tira vertical co decodificador antigo</string>
 </resources>

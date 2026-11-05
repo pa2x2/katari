@@ -850,8 +850,6 @@
     <string name="pref_webtoon_vertical_navigator_on_left">Placer le menu de navigation à gauche</string>
     <string name="download_bookmarked">Mis en favoris</string>
     <string name="pref_hardware_bitmap_threshold_default">Par défaut (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Affecte les performances. Ne l\'activer que si la réduction du seuil de bitmap ne résout pas les problèmes d\'images vierges</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si le lecteur charge une image vierge, réduire progressivement le seuil.\nSélectionné : %s</string>
     <string name="pref_hardware_bitmap_threshold">Seuil de bitmap matériel personnalisé</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Utiliser l\'ancien décodeur pour le lecteur de bandes longues</string>
 </resources>

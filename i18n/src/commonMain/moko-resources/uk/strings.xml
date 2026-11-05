@@ -786,8 +786,6 @@
     <string name="action_webview_close_tab">Закрити вкладку</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="pref_display_images_description">Рендерити зображення в описах манґи</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Використовуйте застарілий декодер для читалки довгих сторінок</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Впливає на продуктивність. Увімкніть, якщо зменшення порогу растрового зображення не розв\'язує проблему з порожніми зображеннями</string>
     <string name="pref_hardware_bitmap_threshold">Користувацький поріг апаратного растра</string>
     <string name="pref_hardware_bitmap_threshold_summary">Якщо читалка завантажує порожнє зображення, поступово зменшувати поріг.\nВибрано: %s</string>
     <string name="pref_hardware_bitmap_threshold_default">За замовчуванням (%d)</string>

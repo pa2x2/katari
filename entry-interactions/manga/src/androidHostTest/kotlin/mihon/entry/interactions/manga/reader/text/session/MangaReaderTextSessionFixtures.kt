@@ -1,7 +1,7 @@
 package mihon.entry.interactions.manga.reader.text.session
 
 import android.graphics.Bitmap
-import android.graphics.RectF
+import androidx.compose.ui.geometry.Rect
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import io.mockk.mockk
@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import mihon.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
-import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
@@ -70,13 +69,13 @@ internal class FakeSurface(private val index: Int, chapter: ReaderChapter? = nul
     override suspend fun displayedImage(): DisplayedPageImage = object : DisplayedPageImage {
         override val key = ImageContentKey("page-$index")
         override val size = PAGE_SIZE
-        override val geometry = MangaDisplayedPageGeometry(MangaPageTransform.None, PAGE_SIZE.bounds)
+        override val geometry = MangaDisplayedPageGeometry(PAGE_SIZE.bounds)
         override val rawContent = ImageContentKey("raw-page-$index")
         override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap = mockk(relaxed = true)
         override fun close() = Unit
     }
 
-    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? = null
+    override fun imageToWindow(rect: ImageRect, imageSize: ImageSize): Rect? = null
 
     override fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? = null
 

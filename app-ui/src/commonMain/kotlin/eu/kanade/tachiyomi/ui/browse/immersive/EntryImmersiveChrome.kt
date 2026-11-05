@@ -28,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.refresh.RefreshButton
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.surface.OverlayPill
@@ -35,6 +36,8 @@ import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.stableNavigationBars
+import mihon.presentation.kit.window.stableStatusBars
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -53,6 +56,8 @@ internal fun ImmersiveOverlay(
     onLibraryAction: () -> Unit,
     showBackToTop: Boolean,
     onBackToTop: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
     onBottomOverlaySize: (Int) -> Unit,
 ) {
@@ -69,7 +74,7 @@ internal fun ImmersiveOverlay(
                         .fillMaxWidth()
                         .padding(
                             start = KatariTheme.spacing.m,
-                            top = WindowInsets.immersiveStatusBars
+                            top = WindowInsets.stableStatusBars
                                 .asPaddingValues()
                                 .calculateTopPadding() + KatariTheme.spacing.m,
                             end = KatariTheme.spacing.m,
@@ -108,6 +113,8 @@ internal fun ImmersiveOverlay(
                     onLibraryAction = onLibraryAction,
                     showBackToTop = showBackToTop,
                     onBackToTop = onBackToTop,
+                    onRefresh = onRefresh,
+                    refreshEnabled = refreshEnabled,
                     onOpenChapter = onOpenChapter,
                 )
             }
@@ -124,6 +131,8 @@ private fun ImmersiveBottomBar(
     onLibraryAction: () -> Unit,
     showBackToTop: Boolean,
     onBackToTop: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
 ) {
     Row(
@@ -133,7 +142,7 @@ private fun ImmersiveBottomBar(
                 start = KatariTheme.spacing.l,
                 top = KatariTheme.spacing.xxl,
                 end = KatariTheme.spacing.l,
-                bottom = WindowInsets.immersiveNavigationBars
+                bottom = WindowInsets.stableNavigationBars
                     .asPaddingValues()
                     .calculateBottomPadding() + KatariTheme.spacing.s,
             ),
@@ -165,6 +174,7 @@ private fun ImmersiveBottomBar(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            RefreshButton(onClick = onRefresh, enabled = refreshEnabled)
             if (showBackToTop) {
                 ImmersiveActionButton(
                     label = stringResource(MR.strings.action_move_to_top),

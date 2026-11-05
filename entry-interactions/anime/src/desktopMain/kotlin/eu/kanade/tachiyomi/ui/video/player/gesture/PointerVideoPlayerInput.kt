@@ -13,10 +13,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
+import mihon.presentation.kit.pointer.HiddenPointer
 import mihon.video.engine.spi.player.VideoPlayer
-import java.awt.Point
-import java.awt.Toolkit
-import java.awt.image.BufferedImage
 
 /**
  * The desktop's mouse and keys: the mouse's buttons ([videoPlayerMouse]) and scrolling ([videoPlayerWheel]) on the
@@ -63,8 +61,3 @@ internal object PointerVideoPlayerInput : VideoPlayerInput {
 
 internal const val VOLUME_STEP_PERCENT = 5
 internal const val PICTURE_ZOOM_STEP = 1.1f
-
-private val HiddenPointer by lazy {
-    val blank = BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB)
-    PointerIcon(Toolkit.getDefaultToolkit().createCustomCursor(blank, Point(0, 0), "hidden"))
-}

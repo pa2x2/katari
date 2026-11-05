@@ -20,8 +20,8 @@ import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
-import mihon.entry.viewer.chrome.ui.navigation.ReaderTapAction
-import mihon.entry.viewer.chrome.ui.navigation.readerTapAction
+import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
+import mihon.entry.viewer.chrome.ui.tap.readerTapAction
 import mihon.presentation.kit.layout.PageSpreadScope
 import tachiyomi.domain.entry.model.EntryChapter
 

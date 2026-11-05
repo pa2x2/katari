@@ -54,6 +54,13 @@ internal sealed interface AndroidSystemPlatformExecution {
 
     data object ContextUnsupported : AndroidSystemPlatformExecution
 
+    /**
+     * The service declined to open a translator for a pair it had just reported as on-device.
+     * Android gives no reason; in practice its installed language data no longer satisfies the
+     * service, as after an Android System Intelligence update moved to newer models.
+     */
+    data object TranslatorRefused : AndroidSystemPlatformExecution
+
     data class Failed(
         val reason: String,
     ) : AndroidSystemPlatformExecution

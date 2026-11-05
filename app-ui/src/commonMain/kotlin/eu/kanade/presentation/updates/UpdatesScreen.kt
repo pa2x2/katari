@@ -26,7 +26,6 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CalendarMonth
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -37,7 +36,8 @@ import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
 import mihon.presentation.kit.selection.SelectionActions
@@ -216,10 +216,9 @@ private fun UpdatesAppBar(
                 }
                 if (onUpdateLibrary != null) {
                     add(
-                        AppBar.Action(
-                            title = stringResource(MR.strings.action_update_library),
-                            icon = MaterialSymbols.Rounded.Refresh,
+                        refreshAppBarAction(
                             onClick = onUpdateLibrary,
+                            title = stringResource(MR.strings.action_update_library),
                         ),
                     )
                 }

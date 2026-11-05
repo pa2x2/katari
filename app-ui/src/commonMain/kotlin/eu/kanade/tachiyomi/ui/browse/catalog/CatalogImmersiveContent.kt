@@ -75,7 +75,7 @@ internal fun CatalogImmersiveContent(
     }
 
     EntryImmersiveContent(
-        itemCount = catalogList.itemCount,
+        itemCount = { catalogList.itemCount },
         itemIdentity = { page ->
             val entry = (catalogList.peek(page)?.value as? CatalogListItem.EntryItem)?.entry
             entry?.let { EntryImmersiveItemKey(id = it.id, type = it.type) }

@@ -12,7 +12,6 @@ import mihon.entry.interactions.manga.R
 internal class ReaderActivityViews private constructor(val root: FrameLayout) {
     val readerContainer: FrameLayout = root.findViewById(R.id.reader_container)
     val viewerContainer: FrameLayout = root.findViewById(R.id.viewer_container)
-    val navigationOverlay: ReaderNavigationOverlayView = root.findViewById(R.id.navigation_overlay)
     val composeOverlay: ComposeView = root.findViewById(R.id.compose_overlay)
 
     companion object {

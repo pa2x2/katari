@@ -15,9 +15,15 @@ internal actual fun rememberScreenMessagePlatform(): ScreenMessagePlatform {
 }
 
 private class ToastScreenMessagePlatform(private val context: Context) : ScreenMessagePlatform {
+    // A new message replaces the one showing, as a screen's snackbar does, rather than queueing behind it
+    private var showing: Toast? = null
+
     override fun string(resource: StringResource): String = context.stringResource(resource)
 
     override fun showOutsideScreen(message: String, long: Boolean) {
-        Toast.makeText(context.applicationContext, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+        showing?.cancel()
+        showing =
+            Toast.makeText(context.applicationContext, message, if (long) Toast.LENGTH_LONG else Toast.LENGTH_SHORT)
+                .also { it.show() }
     }
 }

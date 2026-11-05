@@ -7,7 +7,6 @@ import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.icons.materialsymbols.rounded.Shuffle
 import mihon.icons.materialsymbols.rounded.Sync
@@ -17,6 +16,7 @@ import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.domain.library.model.LibraryGrouping
@@ -105,23 +105,20 @@ private fun LibraryRegularToolbar(
                             onClick = onClickFilter,
                         ),
                     )
-                    onClickGlobalUpdate?.let {
-                        add(
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_update_library),
-                                onClick = it,
-                                icon = MaterialSymbols.Rounded.Refresh,
-                            ),
-                        )
-                    }
                     onClickRefresh?.let {
-                        add(
-                            AppBar.OverflowAction(
-                                title = updateCurrentGroupTitle,
-                                onClick = it,
-                                icon = MaterialSymbols.Rounded.Sync,
-                            ),
-                        )
+                        add(refreshAppBarAction(onClick = it, title = updateCurrentGroupTitle))
+                    }
+                    // An ungrouped library shows everything on one page, which the refresh icon already updates.
+                    if (currentGrouping.dimensions.isNotEmpty()) {
+                        onClickGlobalUpdate?.let {
+                            add(
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_update_entire_library),
+                                    onClick = it,
+                                    icon = MaterialSymbols.Rounded.Sync,
+                                ),
+                            )
+                        }
                     }
                     add(
                         AppBar.OverflowAction(

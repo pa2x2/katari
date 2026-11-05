@@ -892,6 +892,4 @@
     <string name="pref_hardware_bitmap_threshold_summary">Если читалка загружает пустое изображение, постепенно уменьшайте пороговую обработку.\nВыбрано: %s</string>
     <string name="pref_hardware_bitmap_threshold">Пользовательская аппаратная пороговая обработка растрового изображения</string>
     <string name="pref_hardware_bitmap_threshold_default">По умолчанию (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Влияет на производительность. Включите этот параметр, если пороговая обработка растрового изображения не помогает с ошибками, связанными с пустыми изображениями</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Использовать старый декодер для читалки с длинными страницами</string>
 </resources>

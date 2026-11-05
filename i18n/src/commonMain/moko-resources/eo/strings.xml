@@ -892,6 +892,4 @@
     <string name="pref_hardware_bitmap_threshold_default">Defaŭlta (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se legilo ŝargas malplenan bildon alkremente redukti la sojlon.\nElektita: %s</string>
     <string name="pref_hardware_bitmap_threshold">Propra rastruma sojlo de aparataro</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Influas rendimenton. Ŝaltu nur se redukto de rastruma sojlo ne riparas problemojn pri malplenaj bildoj</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Uzi malmodernan malkodilon por longa stria legilo</string>
 </resources>

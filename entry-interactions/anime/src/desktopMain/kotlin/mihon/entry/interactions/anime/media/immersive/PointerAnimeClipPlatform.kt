@@ -11,13 +11,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
-import eu.kanade.tachiyomi.ui.video.player.window.KeepScreenAwake
 import mihon.core.platform.power.ScreenIdleInhibitor
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.domain.entry.model.PictureFraming
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The desktop's feed clips: a click shows or hides the clip's controls, and the current clip takes the player's keys
@@ -52,7 +54,11 @@ internal class PointerAnimeClipPlatform(
     }
 
     @Composable
-    override fun KeepAwake(playing: Boolean) = KeepScreenAwake(playing = playing, inhibitor = inhibitor)
+    override fun KeepAwake(playing: Boolean) = KeepScreenAwake(
+        active = playing,
+        reason = stringResource(MR.strings.anime_playback_keeps_screen_awake),
+        inhibitor = inhibitor,
+    )
 
     @Composable
     override fun UnmuteOnVolumeRaise(active: Boolean, muted: Boolean, onUnmute: () -> Unit) = Unit

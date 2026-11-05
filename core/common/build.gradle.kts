@@ -65,8 +65,6 @@ kotlin {
         }
         androidMain {
             dependencies {
-                implementation(libs.image.decoder)
-
                 implementation(libs.unifile)
                 implementation(libs.archive)
 
@@ -84,6 +82,14 @@ kotlin {
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
             "-Xexpect-actual-classes",
         )
+    }
+}
+
+// A source set's dependency block cannot configure a catalog dependency. Named as an AAR, which Gradle can't tell
+// without metadata.
+dependencies {
+    "androidMainImplementation"(libs.image.decoder) {
+        artifact { type = "aar" }
     }
 }
 

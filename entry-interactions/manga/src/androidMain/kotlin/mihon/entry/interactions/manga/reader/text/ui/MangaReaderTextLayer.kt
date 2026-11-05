@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.reader.text.ui
 
-import android.graphics.RectF
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,9 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.Flow
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
@@ -39,6 +36,7 @@ import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.text.recognition.ui.approval.TextRecognitionPlatformModelsDialog
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
@@ -49,7 +47,6 @@ import mihon.translation.ui.presentation.language.translationEffectiveTargetSumm
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.i18n.context.stringResource as contextStringResource
 
 /** Everything translate mode draws above the reader: its toolbar, area outlining, dialogs, and the translation. */
 @Composable
@@ -63,7 +60,7 @@ internal fun MangaReaderTextLayer(
     areaResult: MangaReaderTextInteraction.AreaResult?,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
     onConsumeAreaResult: () -> Unit,
-    onAreaSelected: (RectF) -> Unit,
+    onAreaSelected: (Rect) -> Unit,
     onApproveModels: (List<ModelArtifactDownloadApproval>) -> Unit,
     onApprovePlatformModels: (MangaReaderTextBlocker.PlatformModelsRequired) -> Unit,
     onChooseLanguage: (LanguageTag?) -> Unit,
@@ -78,7 +75,7 @@ internal fun MangaReaderTextLayer(
     onOpenTranslationSettings: () -> Unit,
     onClose: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val messages = rememberScreenMessages()
     var selectingArea by remember { mutableStateOf(false) }
     var approving by remember { mutableStateOf<List<ModelArtifactDescriptor>?>(null) }
     var approvingPlatform by remember { mutableStateOf<MangaReaderTextBlocker.PlatformModelsRequired?>(null) }
@@ -98,7 +95,7 @@ internal fun MangaReaderTextLayer(
 
     LaunchedEffect(areaResult) {
         if (areaResult == MangaReaderTextInteraction.AreaResult.NoText) {
-            context.toast(context.contextStringResource(MR.strings.reader_text_area_empty))
+            messages.show(MR.strings.reader_text_area_empty)
         }
         if (areaResult != null) onConsumeAreaResult()
     }

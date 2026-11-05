@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
-import mihon.entry.viewer.chrome.ui.ReaderProgressIndicator
-import mihon.entry.viewer.chrome.ui.ReaderUnderPages
+import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
+import mihon.entry.viewer.chrome.ui.position.ReaderProgressIndicator
+import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.presentation.kit.content.ReadingMetrics
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

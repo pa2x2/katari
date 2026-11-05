@@ -801,6 +801,4 @@
     <string name="pref_hardware_bitmap_threshold_default">Predefinidu (%d)</string>
     <string name="pref_hardware_bitmap_threshold_summary">Si su leghidore càrrigat un\'immàgine bianca, mìnima de pagu a pagu su lìmite.\nSeletzionadu: %s</string>
     <string name="pref_hardware_bitmap_threshold">Mannària màssima pro sa decodìfica hardware (bitmap) de sas immàgines</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Influentzat su rendimentu. Abilita·lu petzi si sa minimada de sa mannària màssima pro sa decodìfica hardware (bitmap) de sas immàgines non risolvet sos problemas de sas immàgines bòidas</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Imprea su codificadore betzu pro su leghidore de immàgines longas</string>
 </resources>

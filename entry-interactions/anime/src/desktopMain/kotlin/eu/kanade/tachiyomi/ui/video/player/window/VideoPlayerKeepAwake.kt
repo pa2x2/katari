@@ -5,7 +5,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import mihon.core.platform.power.ScreenIdleInhibitor
+import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
 import mihon.video.engine.spi.player.VideoPlayerState
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Keeps the screen awake while the watched episode plays, or waits to play, where it is seen: in the main window while
@@ -22,7 +25,12 @@ internal fun VideoPlayerKeepAwake(
         value = false
         player?.state?.collect { value = it.meansToPlay }
     }
-    KeepScreenAwake(playing = playing, inhibitor = inhibitor, evenWhenHidden = inPictureInPicture)
+    KeepScreenAwake(
+        active = playing,
+        reason = stringResource(MR.strings.anime_playback_keeps_screen_awake),
+        inhibitor = inhibitor,
+        evenWhenHidden = inPictureInPicture,
+    )
 }
 
 // Buffering counts, so a stall doesn't let go of the screen only to take it again a moment later

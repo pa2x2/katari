@@ -49,8 +49,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 89
-        versionName = "2.0.4"
+        versionCode = 90
+        versionName = "2.0.5"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
@@ -259,6 +259,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.libraryUpdate.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.image.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
@@ -337,7 +338,6 @@ dependencies {
     implementation(libs.androidx.media3.exoplayerHls)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.datasourceOkhttp)
-    implementation(libs.androidx.viewPager)
     implementation(libs.androidx.profileInstaller)
 
     implementation(libs.bundles.androidx.lifecycle)
@@ -371,17 +371,13 @@ dependencies {
 
     // Image loading
     implementation(libs.bundles.coil)
-    implementation(libs.subsamplingScaleImageView) {
-        exclude(module = "image-decoder")
+    // Named as an AAR, which Gradle can't tell without metadata
+    implementation(libs.image.decoder) {
+        artifact { type = "aar" }
     }
-    implementation(libs.image.decoder)
 
     // UI libraries
     implementation(libs.material)
-    implementation(libs.photoView)
-    implementation(libs.directionalViewPager) {
-        exclude(group = "androidx.viewpager", module = "viewpager")
-    }
     implementation(libs.composeRichEditor)
     implementation(libs.aboutLibraries.core)
     // Its GitHub release has no metadata naming the artifact's type.

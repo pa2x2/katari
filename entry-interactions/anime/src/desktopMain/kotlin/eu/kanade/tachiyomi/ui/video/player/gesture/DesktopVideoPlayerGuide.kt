@@ -2,12 +2,13 @@ package eu.kanade.tachiyomi.ui.video.player.gesture
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGuideHint
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerInputGuide
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Keyboard
 import mihon.icons.materialsymbols.rounded.Mouse
 import mihon.icons.materialsymbols.rounded.SwipeVertical
+import mihon.presentation.kit.gesture.InputGuide
+import mihon.presentation.kit.gesture.InputGuideHint
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -17,9 +18,9 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 @Composable
 internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    VideoPlayerInputGuide(
+    InputGuide(
         hints = listOf(
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.Mouse,
                 title = stringResource(MR.strings.anime_guide_click),
                 details = listOf(
@@ -28,7 +29,7 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
                     stringResource(MR.strings.anime_guide_right_click),
                 ),
             ),
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(MR.strings.anime_guide_scroll_volume),
                 details = listOf(
@@ -36,7 +37,7 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
                     stringResource(MR.strings.anime_guide_scroll_zoom),
                 ),
             ),
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,
                 title = stringResource(MR.strings.anime_guide_keys_play),
                 details = listOf(
@@ -47,5 +48,6 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
         ),
         onDismiss = onDismiss,
         modifier = modifier,
+        safeArea = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
     )
 }

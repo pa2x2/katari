@@ -10,7 +10,9 @@ import mihon.core.archive.ArchiveOpener
 import mihon.core.archive.PathArchiveOpener
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.storage.AppPrivateDirectories
+import mihon.core.platform.storage.UserPicturesFolder
 import mihon.desktop.storage.DesktopAppPrivateDirectories
+import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.DesktopStorageFolderProvider
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.storage.MediaScanner
@@ -41,6 +43,10 @@ interface StorageBindings {
 
         @Provides
         fun archiveOpener(): ArchiveOpener = PathArchiveOpener
+
+        @Provides
+        fun userPicturesFolder(directories: DesktopDirectories): UserPicturesFolder =
+            UserPicturesFolder { directories.pictures }
 
         @Provides
         @SingleIn(AppScope::class)

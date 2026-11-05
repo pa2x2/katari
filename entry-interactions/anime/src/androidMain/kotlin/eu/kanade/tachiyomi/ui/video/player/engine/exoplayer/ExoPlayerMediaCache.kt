@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import android.app.Application
-import android.text.format.Formatter
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
@@ -31,8 +30,8 @@ internal class ExoPlayerMediaCache(
     val cache: SimpleCache
         get() = cacheDelegate.value
 
-    override val readableSize: String
-        get() = Formatter.formatFileSize(context, DiskUtil.getDirectorySize(cacheDir))
+    override val sizeBytes: Long
+        get() = DiskUtil.getDirectorySize(cacheDir)
 
     override fun clear(): Int {
         return if (cacheDelegate.isInitialized()) {

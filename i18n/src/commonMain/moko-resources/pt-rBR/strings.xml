@@ -887,8 +887,6 @@
     <string name="pref_filter_update_categories_details">Atualizações nas categorias excluídas não serão exibidas mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_filter_upcoming_categories_details">Títulos nas categorias excluídas não serão exibidas, mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_hardware_bitmap_threshold_default">Padrão (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">Afeta o desempenho. Habilite somente se a redução do limite de bitmap não corrigir problemas de imagem em branco</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">Use o decodificador legado para leitor de tira longa</string>
     <string name="pref_hardware_bitmap_threshold">Limite de bitmap de hardware personalizado</string>
     <string name="pref_hardware_bitmap_threshold_summary">Se o leitor carregar uma imagem em branco, reduza o limite incrementalmente.\nSelecionado: %s</string>
 </resources>

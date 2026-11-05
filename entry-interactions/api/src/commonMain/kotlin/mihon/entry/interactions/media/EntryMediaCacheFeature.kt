@@ -23,7 +23,6 @@ sealed interface EntryMediaCacheClearResult {
     data class Cleared(
         override val id: EntryMediaCacheId,
         val deletedFiles: Int,
-        val readableSize: String,
     ) : EntryMediaCacheClearResult
 
     data class Failed(
@@ -44,7 +43,7 @@ interface EntryMediaCacheFeature {
      * Measures the cache on disk, so call it off the main thread. Null when [id] is not a currently applicable
      * cache.
      */
-    fun readableSize(id: EntryMediaCacheId): String?
+    fun sizeBytes(id: EntryMediaCacheId): Long?
 
     /** Clears one currently applicable cache without exposing its provider to application code. */
     fun clear(id: EntryMediaCacheId): EntryMediaCacheClearResult

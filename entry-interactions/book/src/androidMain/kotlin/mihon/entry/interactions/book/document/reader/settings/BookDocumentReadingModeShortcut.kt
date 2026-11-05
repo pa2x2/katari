@@ -13,8 +13,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
-import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
-import mihon.entry.viewer.chrome.ui.ReaderReadingModeDialog
+import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.mode.ReaderReadingModeDialog
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

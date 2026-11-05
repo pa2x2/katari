@@ -73,7 +73,8 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.FloatingToolbarBox
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
@@ -98,6 +99,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
     // Saved with the screen: on desktop the player opens over it as a screen of its own, and coming back from an episode
     // opened from the immersive feed returns to it.
     var feedViewMode by rememberSaveable { mutableStateOf(FeedViewMode.Regular) }
+    var timelineRefresh by remember { mutableStateOf<FeedTimelineRefresh?>(null) }
 
     return TabContent(
         titleRes = MR.strings.browse_feeds,
@@ -122,6 +124,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                     onClick = viewModel::showCreateDialog,
                 ),
             )
+            timelineRefresh?.let { add(refreshAppBarAction(onClick = it.refresh, enabled = !it.refreshing)) }
             add(
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.browse_manage_feeds),
@@ -153,10 +156,14 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                 contentMode = contentMode,
                 feedViewMode = feedViewMode,
                 onFeedViewModeChange = { feedViewMode = it },
+                onTimelineRefreshChange = { timelineRefresh = it },
             )
         },
     )
 }
+
+/** The refresh of the timeline the tab shows, which the tab's app bar offers; null while no timeline is shown. */
+private data class FeedTimelineRefresh(val refreshing: Boolean, val refresh: () -> Unit)
 
 internal enum class FeedViewMode {
     Regular,
@@ -194,6 +201,7 @@ private fun Screen.FeedsTabContent(
     contentMode: SourceFeedContentMode,
     feedViewMode: FeedViewMode,
     onFeedViewModeChange: (FeedViewMode) -> Unit,
+    onTimelineRefreshChange: (FeedTimelineRefresh?) -> Unit,
 ) {
     if (!state.sourcesLoaded) {
         LoadingScreen()
@@ -301,6 +309,11 @@ private fun Screen.FeedsTabContent(
                         )
                     }
                 val timelineState by timelineModel.state.collectAsState()
+                val timelineRefreshing = timelineState.isRefreshing
+                LaunchedEffect(timelineModel, timelineRefreshing) {
+                    onTimelineRefreshChange(FeedTimelineRefresh(timelineRefreshing, timelineModel::refresh))
+                }
+                DisposableEffect(timelineModel) { onDispose { onTimelineRefreshChange(null) } }
                 val immersiveModel = metroViewModel<EntryImmersiveViewModel>(
                     key = "feed-immersive-$activeProfileId-${activeFeed.id}",
                 )

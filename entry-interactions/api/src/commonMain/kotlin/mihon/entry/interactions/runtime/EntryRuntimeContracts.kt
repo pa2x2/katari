@@ -5,9 +5,10 @@ import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.EntryChapter
 import java.io.File
 
-@PlatformFacility
+/** The reader's chapter page cache, the same store on every platform, which downloads take already-read pages from. */
 interface EntryPageImageCache {
-    val readableSize: String
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
     fun isImageInCache(imageUrl: String): Boolean
     fun getImageFile(imageUrl: String): File
     fun clear(): Int
@@ -15,7 +16,8 @@ interface EntryPageImageCache {
 
 @PlatformFacility
 interface EntryPlayerCache {
-    val readableSize: String
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
     fun clear(): Int
 }
 

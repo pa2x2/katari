@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.navigation.UpButton
+import mihon.presentation.kit.refresh.RefreshButton
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -17,16 +18,27 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /** Back to the sheet, the list's name, and how many of its items are selected. */
 @Composable
-internal fun PagedGroupFilterHeader(title: String, selectedCount: Int, onBack: () -> Unit) {
+internal fun PagedGroupFilterHeader(
+    title: String,
+    selectedCount: Int,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
+) {
     val spacing = KatariTheme.spacing
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = spacing.xs, end = spacing.l, top = spacing.s, bottom = spacing.xs),
+            // The end inset is sized for the refresh button, whose touch area pads its icon.
+            .padding(start = spacing.xs, end = spacing.xs, top = spacing.s, bottom = spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         UpButton(onClick = onBack)
-        Column(Modifier.padding(start = spacing.xs)) {
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(start = spacing.xs),
+        ) {
             Text(
                 text = title,
                 role = TextRole.SectionTitle,
@@ -38,5 +50,6 @@ internal fun PagedGroupFilterHeader(title: String, selectedCount: Int, onBack: (
                 role = TextRole.Supporting,
             )
         }
+        RefreshButton(onClick = onRefresh, enabled = refreshEnabled)
     }
 }

@@ -21,8 +21,8 @@ import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.presetNameRes
 import mihon.entry.interactions.reader.settings.systemNameRes
-import mihon.entry.viewer.chrome.ui.navigation.readerTapInversionLabels
-import mihon.entry.viewer.chrome.ui.navigation.readerTapZoneLabels
+import mihon.entry.viewer.chrome.ui.tap.readerTapInversionLabels
+import mihon.entry.viewer.chrome.ui.tap.readerTapZoneLabels
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource

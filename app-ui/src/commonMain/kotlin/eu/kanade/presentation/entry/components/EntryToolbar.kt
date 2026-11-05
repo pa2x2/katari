@@ -19,13 +19,13 @@ import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.EditNote
 import mihon.icons.materialsymbols.rounded.Explore
 import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.icons.materialsymbols.rounded.SwapHoriz
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -118,13 +118,7 @@ fun EntryToolbar(
                             onClick = onClickFilter,
                         ),
                     )
-                    add(
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.action_webview_refresh),
-                            onClick = onClickRefresh,
-                            icon = MaterialSymbols.Rounded.Refresh,
-                        ),
-                    )
+                    add(refreshAppBarAction(onClick = onClickRefresh))
                     if (onClickEditCategory != null) {
                         add(
                             AppBar.OverflowAction(

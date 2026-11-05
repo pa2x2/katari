@@ -34,8 +34,8 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
-import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
+import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp

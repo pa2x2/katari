@@ -841,6 +841,4 @@
     <string name="pref_hardware_bitmap_threshold">কাষ্টম হাৰ্ডৱেৰ বিটমেপ থ্ৰেছহ\'ল্ড</string>
     <string name="pref_hardware_bitmap_threshold_summary">যদি পাঠকে খালী ছবি ল\'ড কৰে তেন্তে ক্ৰমে থ্ৰেছহ\'ল্ড হ্ৰাস কৰক।\nনিৰ্বাচিত: %s</string>
     <string name="pref_hardware_bitmap_threshold_default">ডিফল্ট (%d)</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_summary">কাৰ্য্যক্ষমতা প্ৰভাৱিত কৰে। কেৱল সক্ষম কৰক যদি বিটমেপ থ্ৰেছহ\'ল্ড হ্ৰাস কৰিলে খালী ছবিৰ সমস্যা সমাধান নহয়</string>
-    <string name="pref_always_decode_long_strip_with_ssiv_2">দীঘল ষ্ট্ৰিপ পাঠকৰ বাবে লিগাচি ডিক\'ডাৰ ব্যৱহাৰ কৰক</string>
 </resources>
