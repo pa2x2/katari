@@ -6,13 +6,14 @@
 
 ### Every kind of story. One library.
 
-Comics, books, and video in one Android app, with on-device translation and reading statistics.
+Comics, books, and video in one app.
 
 [Download](https://github.com/pa2x2/katari/releases/latest) · [Website](https://pa2x2.github.io/katari/)
 
 <img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
-[![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=release)](https://github.com/pa2x2/katari/releases/latest)
+[![Latest Android release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=Android%20release)](https://github.com/pa2x2/katari/releases/latest)
+[![Latest Linux release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=Linux%20release)](https://github.com/pa2x2/katari/releases/latest)
 ![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)
 [![License](https://img.shields.io/github/license/pa2x2/katari)](./LICENSE)
 
@@ -20,7 +21,7 @@ Comics, books, and video in one Android app, with on-device translation and read
 
 ## Built on Mihon
 
-Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it. 
+Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and the many people who contribute to it.
 > [!IMPORTANT]
 > This is an independent, preference-driven fork—not an official Mihon project.
 > Built for my personal use and my needs. Do not expect me to add features or make changes on your request. I may consider it but no guarantees here.
