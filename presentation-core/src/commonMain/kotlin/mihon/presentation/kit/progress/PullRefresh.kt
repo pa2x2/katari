@@ -16,6 +16,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.navigation.LocalAppBarScrollBehavior
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
@@ -42,6 +45,7 @@ fun PullRefresh(
     val state = rememberPullToRefreshState()
     val appBarState = LocalAppBarScrollBehavior.current?.state
     val expandAppBarFirst = remember(appBarState) { appBarState?.let(::ExpandAppBarBeforePull) }
+    val wheelSkipsPull = remember { WheelScrollSkipsPull() }
     KeyboardShortcutHandler(ScreenShortcuts.Refresh, enabled = enabled && !refreshing, onTrigger = onRefresh)
     Box(
         modifier = modifier
@@ -51,6 +55,17 @@ fun PullRefresh(
                 enabled = enabled,
                 onRefresh = onRefresh,
             )
+            .pointerInput(wheelSkipsPull) {
+                awaitPointerEventScope {
+                    while (true) {
+                        when (awaitPointerEvent(PointerEventPass.Initial).type) {
+                            PointerEventType.Scroll -> wheelSkipsPull.wheelDriven = true
+                            PointerEventType.Press -> wheelSkipsPull.wheelDriven = false
+                        }
+                    }
+                }
+            }
+            .nestedScroll(wheelSkipsPull)
             .then(expandAppBarFirst?.let { Modifier.nestedScroll(it) } ?: Modifier),
     ) {
         content()
@@ -80,4 +95,17 @@ private class ExpandAppBarBeforePull(private val appBarState: TopAppBarState) : 
         appBarState.heightOffset = before + available.y
         return Offset(0f, appBarState.heightOffset - before)
     }
+}
+
+/**
+ * Material's pull settles only in `onPreFling`, and Compose never flings after a mouse wheel or touchpad scroll, so a
+ * wheel scroll past the content's top would leave the indicator stuck half-pulled with no way to release or trigger
+ * it. Wheel input therefore never pulls; F5 refreshes instead. The flag stays set through the wheel's smooth-scroll
+ * animation, which keeps dispatching after the last event, and clears on the next press so touch drags pull again.
+ */
+private class WheelScrollSkipsPull : NestedScrollConnection {
+    var wheelDriven = false
+
+    override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+        if (wheelDriven && available.y > 0f) Offset(0f, available.y) else Offset.Zero
 }
