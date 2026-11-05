@@ -24,6 +24,7 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
     val clock = SettableClock()
     private val config = ServerConfig.fromEnvironment(emptyMap()).copy(dataDirectory = dataDirectory)
     val services = SyncServices(config, SqliteServerStorage.open(config.databaseFile), clock)
+        .also { it.content.prepare() }
 
     fun account(username: String = "reader"): Long =
         services.storage.accounts.create(username, passwordHash = "", isAdmin = false, clock.millis).id
