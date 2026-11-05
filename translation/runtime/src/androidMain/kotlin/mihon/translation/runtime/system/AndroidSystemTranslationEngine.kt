@@ -109,6 +109,12 @@ internal class AndroidSystemTranslationEngine(
                         ),
                     ),
                 )
+            AndroidSystemPlatformExecution.TranslatorRefused ->
+                TranslationEngineExecution.PreparationChanged(
+                    TranslationEnginePreparation.SystemSetupRequired(
+                        TranslationSystemSetupReason.ProviderActionRequired(LANGUAGES_REFUSED_DESCRIPTION),
+                    ),
+                )
             is AndroidSystemPlatformExecution.Failed ->
                 TranslationEngineExecution.Failed(result.reason)
         }
@@ -187,6 +193,9 @@ internal class AndroidSystemTranslationEngine(
     companion object {
         val ENGINE_ID = TranslationEngineId("android-system")
         val PROVIDER_ID = TranslationProviderId("android")
+        private const val LANGUAGES_REFUSED_DESCRIPTION =
+            "Android’s translation service didn’t accept these languages. " +
+                "Download them again in Android’s translation settings."
         private const val ANDROID_ROBOT_ATTRIBUTION =
             "The Android robot is reproduced or modified from work created and shared by Google and used " +
                 "according to terms described in the Creative Commons 3.0 Attribution License."

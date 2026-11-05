@@ -120,11 +120,7 @@ internal class DefaultAndroidSystemTranslationPlatform(
                 selected.sourceLanguageTag,
                 selected.targetLanguageTag,
             )
-            if (translator == null) {
-                return AndroidSystemPlatformExecution.Failed(
-                    "Android translation service could not create a translator",
-                )
-            }
+            if (translator == null) return AndroidSystemPlatformExecution.TranslatorRefused
             if (result.isCompleted) return result.await()
 
             val activeTranslator = translator
