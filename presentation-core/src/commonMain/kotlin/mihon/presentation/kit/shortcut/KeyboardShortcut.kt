@@ -8,6 +8,9 @@ package mihon.presentation.kit.shortcut
  *
  * [whileTyping] false leaves the keys to a focused text field, for keys typing may mean something to, such as Ctrl+F in
  * a search field or Ctrl+/ in a note.
+ *
+ * [beforeFocus] takes the keys before the focused control has them, for a screen whose keys mean the same wherever
+ * focus is, such as a player's Space and arrows: they then never press the focused button or move focus.
  */
 data class KeyboardShortcut(
     val id: String,
@@ -16,6 +19,7 @@ data class KeyboardShortcut(
     val group: ShortcutGroup,
     val reach: ShortcutReach = ShortcutReach.Screen,
     val whileTyping: Boolean = true,
+    val beforeFocus: Boolean = false,
 )
 
 /** The heading a shortcut is listed under. */

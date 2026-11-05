@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Pins the AARs and jars Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime
-  that tools/onnxruntime/build-aar.sh made and verified, the desktop app's libarchive that
-  tools/libarchive/build-jar.sh made and verified, and libmpv and quickjs-kt as released
-  from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Also pins JCEF's API from JetBrains'
-  intellij-dependencies repository (the .sha256 files it publishes beside each file). Every other dependency comes
-  from a repository Gradle already trusts and stays unchecked.
+  that tools/onnxruntime/build-aar.sh made and verified, the desktop app's libarchive and libmpv that
+  tools/libarchive/build-jar.sh and tools/libmpv/build-jar.sh made and verified, and libmpv and quickjs-kt as
+  released from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Also pins JCEF's API from
+  JetBrains' intellij-dependencies repository (the .sha256 files it publishes beside each file). Every other
+  dependency comes from a repository Gradle already trusts and stays unchecked.
 -->
 <verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -49,6 +49,11 @@
       <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11">
          <artifact name="libarchive-linux-x86-64-3.8.11.jar">
             <sha256 value="e5ad22bea331f376eba0ec915e4017aac677b7ac795a232ccdbf33767a93c069" origin="build-jar.sh"/>
+         </artifact>
+      </component>
+      <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-10-27-1">
+         <artifact name="libmpv-linux-x86-64-2026-10-27-1.jar">
+            <sha256 value="3babc0ef929542c142802427817d7aadd1aaebaf854338aea3d235d5afb773ea" origin="build-jar.sh"/>
          </artifact>
       </component>
    </components>

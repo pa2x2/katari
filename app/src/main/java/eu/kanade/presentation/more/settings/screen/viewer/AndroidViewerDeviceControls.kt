@@ -13,6 +13,7 @@ class AndroidViewerDeviceControls : ViewerDeviceControls {
     override val screenOrientation: Boolean = true
     override val eInkFlashes: Boolean = true
     override val pictureInPicture: Boolean = true
+    override val backgroundPlayback: Boolean = true
     override val screenBrightness: Boolean = true
 
     @Composable

@@ -45,4 +45,4 @@ fun KeyboardShortcutScope(active: Boolean, content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalShortcutsActive provides (active && LocalShortcutsActive.current), content = content)
 }
 
-private val LocalShortcutsActive = compositionLocalOf { true }
+internal val LocalShortcutsActive = compositionLocalOf { true }

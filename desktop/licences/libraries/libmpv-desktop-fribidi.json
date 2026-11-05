@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:fribidi",
+  "artifactVersion": "1.0.17",
+  "name": "FriBidi",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://github.com/fribidi/fribidi",
+  "licenses": [
+    "libmpv-desktop-fribidi"
+  ]
+}

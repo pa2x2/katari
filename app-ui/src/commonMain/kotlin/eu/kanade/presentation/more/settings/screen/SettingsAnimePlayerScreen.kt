@@ -123,6 +123,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 preference = backgroundPlayback,
                 title = stringResource(MR.strings.pref_anime_background_playback),
                 subtitle = stringResource(MR.strings.pref_anime_background_playback_summary),
+                visible = deviceControls.backgroundPlayback,
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = pictureInPicture,

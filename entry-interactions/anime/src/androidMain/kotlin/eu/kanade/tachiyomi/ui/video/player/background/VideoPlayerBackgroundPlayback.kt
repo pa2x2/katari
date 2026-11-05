@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.background
 
 import android.content.Context
-import androidx.media3.common.Player
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoPlayerMediaControls
+import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The player's media session and, while background playback is on, its hosting in [VideoPlaybackService]. The session
@@ -10,24 +12,33 @@ import androidx.media3.common.Player
  */
 internal class VideoPlayerBackgroundPlayback(
     private val context: Context,
-) {
+) : VideoPlayerMediaControls {
     var enabled = false
         private set
     private var mediaSession: VideoPlayerMediaSession? = null
 
     // The session outlives each episode's composition, so its next-episode button calls whichever handler is current.
-    var onNextEpisode: () -> Unit = {}
+    override var onNextEpisode: () -> Unit = {}
+
+    // The notification has no previous-episode button: its back button seeks back by the seek step
+    override var onPreviousEpisode: () -> Unit = {}
 
     fun setEnabled(enabled: Boolean) {
         this.enabled = enabled
         syncHosting()
     }
 
-    fun attach(player: Player, seekStepSeconds: Int, hasNextEpisode: Boolean) {
+    override fun attach(
+        player: VideoPlayer,
+        metadata: VideoMetadata,
+        seekStepSeconds: Int,
+        hasPreviousEpisode: Boolean,
+        hasNextEpisode: Boolean,
+    ) {
         val session = mediaSession
-            ?: VideoPlayerMediaSession(context, player) { onNextEpisode() }
+            ?: VideoPlayerMediaSession(context) { onNextEpisode() }
                 .also { mediaSession = it }
-        session.setPlayer(player, seekStepSeconds, hasNextEpisode = hasNextEpisode)
+        session.setPlayer(player, metadata, seekStepSeconds, hasNextEpisode = hasNextEpisode)
         syncHosting()
     }
 

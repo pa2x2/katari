@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:dav1d",
+  "artifactVersion": "1.5.4",
+  "name": "dav1d",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://code.videolan.org/videolan/dav1d",
+  "licenses": [
+    "libmpv-desktop-dav1d"
+  ]
+}

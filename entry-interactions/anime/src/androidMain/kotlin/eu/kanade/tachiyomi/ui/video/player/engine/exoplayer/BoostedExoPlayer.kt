@@ -9,7 +9,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import logcat.LogPriority
-import mihon.video.engine.spi.audio.VolumeBoost
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.core.common.util.system.logcat
 import kotlin.math.log10
 import kotlin.math.roundToInt
@@ -24,7 +24,7 @@ internal class BoostedExoPlayer(private val player: ExoPlayer) :
     ForwardingPlayer(player),
     VolumeBoost {
 
-    private var boostPercent = VolumeBoost.NO_VOLUME_BOOST_PERCENT
+    private var boostPercent = VideoPlayer.NO_VOLUME_BOOST_PERCENT
     private var enhancer: LoudnessEnhancer? = null
     private val sessionListener = object : AnalyticsListener {
         override fun onAudioSessionIdChanged(eventTime: AnalyticsListener.EventTime, audioSessionId: Int) {
@@ -41,7 +41,7 @@ internal class BoostedExoPlayer(private val player: ExoPlayer) :
         get() = loudnessEnhancerAvailable
 
     override fun setVolumeBoost(percent: Int) {
-        boostPercent = percent.coerceIn(VolumeBoost.NO_VOLUME_BOOST_PERCENT, VolumeBoost.MAX_VOLUME_BOOST_PERCENT)
+        boostPercent = percent.coerceIn(VideoPlayer.NO_VOLUME_BOOST_PERCENT, VideoPlayer.MAX_VOLUME_BOOST_PERCENT)
         applyBoost()
     }
 
@@ -52,7 +52,7 @@ internal class BoostedExoPlayer(private val player: ExoPlayer) :
     }
 
     private fun applyBoost() {
-        if (boostPercent == VolumeBoost.NO_VOLUME_BOOST_PERCENT || !canBoostVolume) {
+        if (boostPercent == VideoPlayer.NO_VOLUME_BOOST_PERCENT || !canBoostVolume) {
             releaseEnhancer()
             return
         }
@@ -76,7 +76,7 @@ internal class BoostedExoPlayer(private val player: ExoPlayer) :
 
 // mpv's mixer applies the cube of its volume level, which is 60·log10(level) in decibels.
 private fun gainMillibels(percent: Int): Int =
-    (MILLIBELS_PER_CUBED_DECADE * log10(percent / VolumeBoost.NO_VOLUME_BOOST_PERCENT.toDouble())).roundToInt()
+    (MILLIBELS_PER_CUBED_DECADE * log10(percent / VideoPlayer.NO_VOLUME_BOOST_PERCENT.toDouble())).roundToInt()
 
 private const val MILLIBELS_PER_CUBED_DECADE = 6_000
 

@@ -19,15 +19,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayback
-import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
-import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
+import eu.kanade.tachiyomi.ui.video.player.brightness.WindowBrightness
+import eu.kanade.tachiyomi.ui.video.player.engine.InstalledMpvAddonEngine
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngines
+import eu.kanade.tachiyomi.ui.video.player.gesture.TouchVideoPlayerInput
+import eu.kanade.tachiyomi.ui.video.player.pip.ActivityPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerScreen
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerScreenHost
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerSettingBindings
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerVisitState
-import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
+import eu.kanade.tachiyomi.ui.video.player.surface.TextureSeekPreviewSurface
+import eu.kanade.tachiyomi.ui.video.player.volume.DeviceStreamVolume
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
@@ -44,9 +48,10 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
- * The anime player. It holds the window setup, the lifecycle and the owners that outlive each episode's composition:
- * the watched player's playback, picture-in-picture, background playback, brightness and volume. The screen itself is
- * [VideoPlayerScreen].
+ * The anime player on Android. It holds the window setup, the lifecycle and the owners that outlive each episode's
+ * composition: the watched player's playback, picture-in-picture, background playback, brightness and volume. The
+ * screen itself is the shared [VideoPlayerScreen], which gets Android's engines, touch input, picture-in-picture, media
+ * controls, brightness, volume and orientation from it.
  */
 class VideoPlayerActivity : AppCompatActivity() {
 
@@ -72,14 +77,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             )
         }
     }
-    private val pictureInPicture by lazy { VideoPlayerPictureInPicture(this) { playback.player } }
+    private val pictureInPicture by lazy { ActivityPictureInPicture(this) { playback.player } }
     private val background by lazy { VideoPlayerBackgroundPlayback(this) }
     private val brightness by lazy {
-        VideoPlayerBrightness(window, contentResolver, dependencies.devicePreferences)
+        WindowBrightness(window, contentResolver, dependencies.devicePreferences)
     }
-    private val volume by lazy {
-        VideoPlayerVolume(getSystemService(Context.AUDIO_SERVICE) as AudioManager) { playback.player }
-    }
+    private val volume by lazy { DeviceStreamVolume(getSystemService(Context.AUDIO_SERVICE) as AudioManager) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val activityGraph = metroGraph<EntryInteractionActivityGraph>()
@@ -114,7 +117,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         pictureInPicture.onCreate(autoEnter = settings.autoEnterPictureInPicture.resolveProfile().effectiveValue)
         background.setEnabled(settings.backgroundPlayback.resolveProfile().effectiveValue)
         brightness.restore()
-        volume.sync()
+        volume.sync(playback.player)
         brightness.registerObserver()
 
         val animeId = intent.extras?.getLong(EXTRA_VIDEO_ID, INVALID_ID) ?: INVALID_ID
@@ -134,23 +137,38 @@ class VideoPlayerActivity : AppCompatActivity() {
         )
 
         val host = VideoPlayerScreenHost(
-            engine = dependencies.videoEngine,
-            mpvEngine = dependencies.mpvEngine,
-            mpvAddon = dependencies.mpvAddon,
-            mpvAddonInstallation = dependencies.mpvAddonInstallation,
+            engines = VideoPlayerEngines(
+                builtIn = dependencies.videoEngine,
+                mpvAddon = InstalledMpvAddonEngine(
+                    engine = dependencies.mpvEngine,
+                    addon = dependencies.mpvAddon,
+                    installation = dependencies.mpvAddonInstallation,
+                    onOpenSettings = {
+                        openViewerSettings(
+                            AnimePlayerPreferences.PROVIDER_ID,
+                            highlight = stringResource(MR.strings.mpv_addon),
+                        )
+                    },
+                ),
+            ),
             preferences = dependencies.animePlayerPreferences,
             settings = settings,
             visit = visit,
             playback = playback,
+            input = TouchVideoPlayerInput,
+            seekPreviewSurface = TextureSeekPreviewSurface,
             pictureInPicture = pictureInPicture,
-            brightness = brightness,
+            mediaControls = background,
             volume = volume,
-            background = background,
+            volumeControl = null,
+            fullScreen = null,
+            brightness = brightness,
+            orientation = ActivityOrientationRequests(this),
+            locksControls = true,
+            clipboard = dependencies.textClipboard,
+            webViewActions = EntryChildWebViewAction.entries,
             onClose = ::finish,
             onHideSystemUi = ::hideSystemUi,
-            onOpenAddonSettings = {
-                openViewerSettings(AnimePlayerPreferences.PROVIDER_ID, highlight = stringResource(MR.strings.mpv_addon))
-            },
             onOpenDefaultSettings = { openViewerSettings(AnimePlayerPreferences.PROVIDER_ID) },
             onProblemAction = { action ->
                 when (action) {
@@ -163,7 +181,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         )
         setPlayerComposeContent {
             VideoPlayerScreen(
-                activity = this,
                 viewModel = viewModel,
                 host = host,
             )

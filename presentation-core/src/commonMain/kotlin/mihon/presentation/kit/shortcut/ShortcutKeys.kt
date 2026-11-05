@@ -18,8 +18,11 @@ sealed interface ShortcutKeys {
         val alt: Boolean = false,
         val shift: Boolean = false,
     ) : ShortcutKeys {
-        internal fun matches(press: KeyPress): Boolean =
-            press.key == key && press.ctrl == ctrl && press.alt == alt && press.shift == shift && !press.meta
+        internal fun matches(press: KeyPress): Boolean = press == this.press
+
+        /** The press that triggers it, whatever the list names its key. */
+        internal val press: KeyPress
+            get() = KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift)
     }
 
     /** The mouse's back button. The window watches the pointer for it, so it is listed but never matched to a key. */

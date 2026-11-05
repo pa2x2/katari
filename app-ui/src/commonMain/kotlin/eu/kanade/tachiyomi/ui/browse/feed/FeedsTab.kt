@@ -95,7 +95,9 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
     val singleEnabledFeedSource = singleEnabledFeed?.let { viewModel.sourceFor(it.sourceId) }
     val singleEnabledFeedPreset = singleEnabledFeed?.let(viewModel::presetFor)
     val activeFeedSource = viewModel.activeFeed()?.let { viewModel.sourceFor(it.sourceId) }
-    var feedViewMode by remember { mutableStateOf(FeedViewMode.Regular) }
+    // Saved with the screen: on desktop the player opens over it as a screen of its own, and coming back from an episode
+    // opened from the immersive feed returns to it.
+    var feedViewMode by rememberSaveable { mutableStateOf(FeedViewMode.Regular) }
 
     return TabContent(
         titleRes = MR.strings.browse_feeds,

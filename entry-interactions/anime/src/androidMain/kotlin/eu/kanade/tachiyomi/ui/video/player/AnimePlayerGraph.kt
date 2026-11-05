@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.video.player
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import mihon.core.platform.clipboard.TextClipboard
 import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.ViewerSettingBinder
@@ -29,4 +30,5 @@ class AnimePlayerDependencies internal constructor(
     internal val animePlayerPreferences: AnimePlayerPreferences,
     internal val devicePreferences: AnimePlayerDevicePreferences,
     internal val viewerSettingBinder: ViewerSettingBinder,
+    internal val textClipboard: TextClipboard,
 )

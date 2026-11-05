@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:libplacebo",
+  "artifactVersion": "7.360.1",
+  "name": "libplacebo",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://code.videolan.org/videolan/libplacebo",
+  "licenses": [
+    "libmpv-desktop-libplacebo"
+  ]
+}

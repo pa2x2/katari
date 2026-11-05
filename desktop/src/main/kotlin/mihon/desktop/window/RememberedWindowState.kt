@@ -20,7 +20,9 @@ import kotlin.math.roundToInt
  */
 @Composable
 fun rememberSavedWindowState(preferences: WindowPreferences): WindowState {
-    val state = remember(preferences) {
+    // Made once for the window: the graph hands out a new preferences object each time it is asked, and a new state
+    // would put the window back as it was saved, out of full screen
+    val state = remember {
         val saved = preferences.floatingBounds.get()
         val screens = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
             .map { it.defaultConfiguration.bounds }

@@ -28,6 +28,7 @@ import mihon.presentation.kit.files.LocalSystemFileChooser
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
 import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.window.LocalScreenTitles
+import mihon.presentation.kit.window.LocalWindowFullScreen
 import mihon.presentation.kit.window.ScreenTitles
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.window_title_with_screen
@@ -39,11 +40,11 @@ import javax.swing.JFrame
  * screen's title, carrying the app's icon, brought forward when the app is launched again and opening what that launch
  * opens, and closing the app when it closes, after asking while background work runs (see
  * [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame Compose draws into where the
- * display backend needs one. [content] gets what
- * [AppUiRoot] gives every platform's screens, and around it what only a desktop window has: the window as platform
- * context, a lifecycle and ViewModel store for each screen its navigators show, as Voyager gives them on Android, the
- * window's keyboard shortcuts, which get the keys the content leaves, the window's screen titles, which the screens'
- * app bars report to, the desktop's file chooser, which the screens' document pickers open, and the density of the
+ * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it what only
+ * a desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
+ * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
+ * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
+ * as the player enter, the desktop's file chooser, which the screens' document pickers open, and the density of the
  * session's scale and the interface size. While it is open, extensions find the activity that stands for it in the
  * foreground ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity
  * open in it.
@@ -55,6 +56,7 @@ fun ApplicationScope.KatariWindow(
     content: @Composable () -> Unit,
 ) {
     val state = rememberSavedWindowState(graph.windowPreferences)
+    val opening = remember(state) { OpeningBounds(state) }
     val shortcuts = remember { KeyboardShortcutRegistry() }
     val screenTitles = remember { ScreenTitles() }
     val appName = DesktopAppVariant.current.displayName
@@ -82,7 +84,10 @@ fun ApplicationScope.KatariWindow(
             title = title,
             icon = icon,
             onKeyEvent = shortcuts::onKeyEvent,
-        ) { windowContent(window) }
+        ) {
+            OpensAtBounds(window, state, opening)
+            windowContent(window)
+        }
         WindowDrawing.SwingGraphics -> SwingGraphicsWindow(
             state = state,
             title = title,
@@ -107,6 +112,7 @@ private fun WindowContent(
     content: @Composable () -> Unit,
 ) {
     val platformContext = remember(window) { WindowPlatformContext(window) }
+    val fullScreen = remember(state) { PlacementFullScreen(state) }
     DisposableEffect(platformContext) {
         graph.openWindow.context = platformContext
         onDispose {
@@ -122,13 +128,14 @@ private fun WindowContent(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,
         LocalScreenTitles provides screenTitles,
+        LocalWindowFullScreen provides fullScreen,
         LocalSystemFileChooser provides graph.systemFileChooser,
     ) {
         ProvideInterfaceDensity(graph.sessionScale, graph.interfaceSizePreferences) {
             AppUiRoot(graph) {
                 KeyboardShortcutsHost(shortcuts) {
                     val backInput = rememberWindowBackInput()
-                    WindowShortcuts(state = state, backInput = backInput, onQuit = onQuit)
+                    WindowShortcuts(fullScreen = fullScreen, backInput = backInput, onQuit = onQuit)
                     InterfaceSizeShortcuts(graph.interfaceSizePreferences)
                     Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(backInput)) { content() }
                     ExtensionDialogsHost(graph.windowExtensionDialogs)

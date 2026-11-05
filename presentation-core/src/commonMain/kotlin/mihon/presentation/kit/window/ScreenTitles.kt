@@ -39,9 +39,12 @@ internal class ScreenTitle {
 
 val LocalScreenTitles = staticCompositionLocalOf<ScreenTitles?> { null }
 
-/** Names the screen composing this [title] to the window's [ScreenTitles] while it is composed. */
+/**
+ * Names the screen composing this [title] to the window's [ScreenTitles] while it is composed. App bars report theirs;
+ * a screen without one, such as a player, reports its own.
+ */
 @Composable
-internal fun ReportScreenTitle(title: String?) {
+fun ReportScreenTitle(title: String?) {
     val titles = LocalScreenTitles.current ?: return
     val entry = remember(titles) { ScreenTitle() }
     SideEffect { entry.title = title }
