@@ -7,14 +7,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Scrolling counted into page turns. A wheel turns a page for each notch. A touchpad scrolls in fractions of a notch,
- * many to a swipe, so a swipe turns one page and the next turn waits until scrolling has stopped for a moment, which
- * [scope] times.
+ * Scrolling counted into page turns: a run of scrolling turns one page, and the next turn waits until scrolling has
+ * stopped for a moment, which [scope] times. A touchpad scrolls many times to a swipe, and on X11, Xwayland included,
+ * the runtime reports a touchpad's scrolling as whole wheel notches, so neither the size nor the count of the steps
+ * tells a swipe from a turned wheel; a notch per page, each after a pause, still turns a page each.
  */
 class WheelTurns(private val scope: CoroutineScope) {
     private var notches = Offset.Zero
-    private var swipeTurned = false
-    private var swipeEnd: Job? = null
+    private var turned = false
+    private var runEnd: Job? = null
 
     /** Forgets the notches counted so far, as when the scrolling went to something else. */
     fun reset() {
@@ -26,24 +27,22 @@ class WheelTurns(private val scope: CoroutineScope) {
      * notches and returns the notches it used.
      */
     fun onScroll(delta: Offset, turn: (notches: Offset) -> Offset) {
-        val fromTouchpad = delta.x % 1f != 0f || delta.y % 1f != 0f
-        if (fromTouchpad) {
-            swipeEnd?.cancel()
-            swipeEnd = scope.launch {
-                delay(SWIPE_END_MS)
-                swipeTurned = false
-                notches = Offset.Zero
-            }
-            if (swipeTurned) return
+        runEnd?.cancel()
+        runEnd = scope.launch {
+            delay(RUN_END_MS)
+            turned = false
+            notches = Offset.Zero
         }
+        if (turned) return
         notches += delta
-        val turned = turn(notches)
-        if (turned != Offset.Zero) {
-            notches -= turned
-            if (fromTouchpad) swipeTurned = true
+        // One page however far the first count of whole notches reaches
+        val used = turn(Offset(notches.x.coerceIn(-1f, 1f), notches.y.coerceIn(-1f, 1f)))
+        if (used != Offset.Zero) {
+            notches = Offset.Zero
+            turned = true
         }
     }
 }
 
-// How long after the last scroll a touchpad swipe counts as over, as the desktop player waits
-private const val SWIPE_END_MS = 500L
+// How long after the last scroll a run of scrolling counts as over, as the desktop player waits
+private const val RUN_END_MS = 500L
