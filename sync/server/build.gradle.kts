@@ -30,6 +30,10 @@ dependencies {
     implementation(libs.sqldelight.sqliteDriver)
     implementation(libs.bouncycastle.prov)
     runtimeOnly(libs.slf4j.simple)
+    constraints {
+        // Ktor brings kotlin-reflect at the Kotlin it was built with; reflection must match the stdlib it runs on.
+        implementation(libs.kotlin.reflect)
+    }
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
