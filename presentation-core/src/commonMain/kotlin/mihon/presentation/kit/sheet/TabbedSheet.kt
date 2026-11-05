@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +31,7 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.menu.OverflowMenu
 import mihon.presentation.kit.navigation.Tab
 import mihon.presentation.kit.navigation.TabRow
+import mihon.presentation.kit.pager.HorizontalPager
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -108,6 +108,8 @@ fun TabbedSheet(
                     CompositionLocalProvider(LocalBringIntoViewSpec provides contentBringIntoViewSpec) {
                         Column(
                             modifier = Modifier
+                                // Covers the pager below short content, so a wheel or touchpad swipe there turns pages
+                                .heightIn(min = tallestPagerHeight)
                                 .verticalScroll(rememberScrollState())
                                 .padding(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
                         ) {

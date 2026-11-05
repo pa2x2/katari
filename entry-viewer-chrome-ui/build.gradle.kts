@@ -34,13 +34,6 @@ kotlin {
                 implementation(libs.coil.compose)
             }
         }
-        commonTest {
-            dependencies {
-                implementation(libs.bundles.test)
-                implementation(libs.kotlinx.coroutines.test)
-                runtimeOnly(libs.junit.platform.launcher)
-            }
-        }
         getByName("desktopMain") {
             dependencies {
                 implementation(projects.core.platform)

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +29,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.navigation.Tab
 import mihon.presentation.kit.navigation.TabRow
+import mihon.presentation.kit.pager.HorizontalPager
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

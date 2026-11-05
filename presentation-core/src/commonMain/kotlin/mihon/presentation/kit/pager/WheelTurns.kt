@@ -1,4 +1,4 @@
-package mihon.entry.viewer.chrome.ui.wheel
+package mihon.presentation.kit.pager
 
 import androidx.compose.ui.geometry.Offset
 

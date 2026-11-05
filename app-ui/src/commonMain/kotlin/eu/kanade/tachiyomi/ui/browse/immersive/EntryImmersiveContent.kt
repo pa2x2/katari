@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +35,7 @@ import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
+import mihon.presentation.kit.pager.VerticalPager
 import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ScreenShortcuts
