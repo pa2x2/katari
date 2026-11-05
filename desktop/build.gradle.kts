@@ -19,7 +19,7 @@ plugins {
 
 // The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
 // workflow reads it from this line.
-version = "0.1.0-alpha.4"
+version = "0.1.0-beta.1"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
@@ -74,7 +74,6 @@ dependencies {
     implementation(projects.entryInteractions)
     implementation(projects.entryInteractions.host)
     implementation(projects.entrySourceApi)
-    implementation(projects.entryViewerSettingsUi)
     implementation(projects.extensionRuntime)
     implementation(projects.extensionRuntime.jvmHost)
     implementation(projects.core.common)
