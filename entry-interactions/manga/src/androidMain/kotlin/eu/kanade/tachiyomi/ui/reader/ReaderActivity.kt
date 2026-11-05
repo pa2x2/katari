@@ -376,13 +376,15 @@ class ReaderActivity : EntryInteractionActivity() {
             setOrientation(viewModel.getMangaOrientation())
         }
 
+        // Shown before the controller takes the viewer: it hands over chapters that have already loaded at once, and
+        // that takes the indicator down, so one added after it would stay up for good
+        views.readerContainer.removeView(loadingIndicator)
+        loadingIndicator = ReaderProgressIndicator(this).also(views.readerContainer::addView)
+
         controller.setViewer(newViewer)
         if (prevViewer != null) views.viewerContainer.removeAllViews()
         updateViewerInset(viewModel.readerSettings.drawUnderCutout.state.value.effectiveValue)
         views.viewerContainer.addView(newViewer.getView())
-
-        loadingIndicator = ReaderProgressIndicator(this)
-        views.readerContainer.addView(loadingIndicator)
 
         startPostponedEnterTransition()
     }
