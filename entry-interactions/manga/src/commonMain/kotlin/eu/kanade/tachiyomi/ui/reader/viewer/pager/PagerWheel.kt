@@ -8,7 +8,6 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import kotlinx.coroutines.coroutineScope
 import mihon.entry.viewer.chrome.ui.wheel.WheelTurns
 import kotlin.math.abs
 import kotlin.math.pow
@@ -24,25 +23,23 @@ internal fun Modifier.pagerWheel(
     viewer: PagedViewer,
     pageAt: (Offset) -> Pair<ReaderPage, Rect>?,
 ): Modifier = pointerInput(viewer) {
-    coroutineScope {
-        val turns = WheelTurns(this)
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                if (event.type != PointerEventType.Scroll) continue
-                val change = event.changes.firstOrNull() ?: continue
-                val delta = change.scrollDelta
-                change.consume()
-                val target = pageAt(change.position)
-                val zoom = target?.let { viewer.zoomOf(it.first) }
-                val ctrl = event.keyboardModifiers.isCtrlPressed
-                val focus = change.position - (target?.second?.topLeft ?: Offset.Zero)
-                if (zoom != null && zoom.takeWheel(delta, focus, ctrl, viewer::onPageZoomed)) {
-                    turns.reset()
-                    continue
-                }
-                if (!ctrl) turns.onScroll(delta, viewer::turnBy)
+    val turns = WheelTurns()
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.type != PointerEventType.Scroll) continue
+            val change = event.changes.firstOrNull() ?: continue
+            val delta = change.scrollDelta
+            change.consume()
+            val target = pageAt(change.position)
+            val zoom = target?.let { viewer.zoomOf(it.first) }
+            val ctrl = event.keyboardModifiers.isCtrlPressed
+            val focus = change.position - (target?.second?.topLeft ?: Offset.Zero)
+            if (zoom != null && zoom.takeWheel(delta, focus, ctrl, viewer::onPageZoomed)) {
+                turns.reset()
+                continue
             }
+            if (!ctrl) turns.onScroll(delta, change.uptimeMillis, viewer::turnBy)
         }
     }
 }

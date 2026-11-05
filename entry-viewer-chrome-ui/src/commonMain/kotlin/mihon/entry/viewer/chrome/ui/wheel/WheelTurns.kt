@@ -1,21 +1,24 @@
 package mihon.entry.viewer.chrome.ui.wheel
 
 import androidx.compose.ui.geometry.Offset
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 /**
- * Scrolling counted into page turns: a run of scrolling turns one page, and the next turn waits until scrolling has
- * stopped for a moment, which [scope] times. A touchpad scrolls many times to a swipe, and on X11, Xwayland included,
- * the runtime reports a touchpad's scrolling as whole wheel notches, so neither the size nor the count of the steps
- * tells a swipe from a turned wheel; a notch per page, each after a pause, still turns a page each.
+ * Scrolling counted into page turns: a swipe turns one page, as does a turned wheel's notch after a pause.
+ *
+ * On X11, Xwayland included, the runtime reports a touchpad's scrolling as whole wheel notches, many to a swipe, so
+ * neither the size nor the count of the steps tells a swipe from a turned wheel, and nothing says when fingers lift.
+ * The gaps between steps tell swipes apart. Within a swipe steps come a few tens of milliseconds apart, and further
+ * apart as the fingers slow down at its end; the next swipe starts after a gap and comes quickly again at once. So a
+ * run of steps turns one page; after a gap of [LIFT_MIN_MS] the first quick step starts the next run, and a step after
+ * [RUN_BREAK_MS], which no swipe pauses for, starts one by itself.
  */
-class WheelTurns(private val scope: CoroutineScope) {
+class WheelTurns {
     private var notches = Offset.Zero
     private var turned = false
-    private var runEnd: Job? = null
+    private var lastStepAt: Long? = null
+
+    // A gap long enough for the fingers to have lifted came, and no quick step since
+    private var liftSeen = false
 
     /** Forgets the notches counted so far, as when the scrolling went to something else. */
     fun reset() {
@@ -23,15 +26,16 @@ class WheelTurns(private val scope: CoroutineScope) {
     }
 
     /**
-     * Counts [delta], a scroll in notches, and hands what has been counted to [turn], which turns pages for whole
-     * notches and returns the notches it used.
+     * Counts [delta], a scroll in notches made at [uptimeMillis], and hands what has been counted to [turn], which
+     * turns pages for whole notches and returns the notches it used.
      */
-    fun onScroll(delta: Offset, turn: (notches: Offset) -> Offset) {
-        runEnd?.cancel()
-        runEnd = scope.launch {
-            delay(RUN_END_MS)
-            turned = false
-            notches = Offset.Zero
+    fun onScroll(delta: Offset, uptimeMillis: Long, turn: (notches: Offset) -> Offset) {
+        val gap = lastStepAt?.let { uptimeMillis - it }
+        lastStepAt = uptimeMillis
+        when {
+            gap == null || gap > RUN_BREAK_MS -> startRun()
+            gap >= LIFT_MIN_MS -> liftSeen = true
+            liftSeen && gap <= QUICK_STEP_MS -> startRun()
         }
         if (turned) return
         notches += delta
@@ -42,7 +46,19 @@ class WheelTurns(private val scope: CoroutineScope) {
             turned = true
         }
     }
+
+    private fun startRun() {
+        turned = false
+        notches = Offset.Zero
+        liftSeen = false
+    }
 }
 
-// How long after the last scroll a run of scrolling counts as over, as the desktop player waits
-private const val RUN_END_MS = 500L
+// No swipe pauses this long between steps; a wheel turned notch by notch at this pace turns a page each
+private const val RUN_BREAK_MS = 300L
+
+// Lifting the fingers and putting them down again for the next swipe takes at least this long
+private const val LIFT_MIN_MS = 90L
+
+// Steps this close come from fingers moving in earnest, as a new swipe's do from its start
+private const val QUICK_STEP_MS = 50L

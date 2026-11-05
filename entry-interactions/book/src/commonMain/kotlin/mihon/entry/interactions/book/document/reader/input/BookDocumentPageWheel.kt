@@ -5,7 +5,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
-import kotlinx.coroutines.coroutineScope
 import mihon.entry.viewer.chrome.ui.wheel.WheelTurns
 import kotlin.math.abs
 
@@ -17,17 +16,15 @@ import kotlin.math.abs
  */
 internal fun Modifier.pageWheel(key: Any?, rtl: Boolean, move: (pages: Int) -> Unit): Modifier =
     pointerInput(key, rtl) {
-        coroutineScope {
-            val turns = WheelTurns(this)
-            awaitPointerEventScope {
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Initial)
-                    if (event.type != PointerEventType.Scroll) continue
-                    // Taken already as Ctrl and the wheel change the text size
-                    val change = event.changes.firstOrNull()?.takeUnless { it.isConsumed } ?: continue
-                    change.consume()
-                    turns.onScroll(change.scrollDelta) { notches -> turnBy(notches, rtl, move) }
-                }
+        val turns = WheelTurns()
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                if (event.type != PointerEventType.Scroll) continue
+                // Taken already as Ctrl and the wheel change the text size
+                val change = event.changes.firstOrNull()?.takeUnless { it.isConsumed } ?: continue
+                change.consume()
+                turns.onScroll(change.scrollDelta, change.uptimeMillis) { notches -> turnBy(notches, rtl, move) }
             }
         }
     }
