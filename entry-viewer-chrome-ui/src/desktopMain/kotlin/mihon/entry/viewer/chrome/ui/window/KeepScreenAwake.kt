@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.video.player.window
+package mihon.entry.viewer.chrome.ui.window
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,8 +10,6 @@ import androidx.compose.ui.awt.LocalAwtWindow
 import kotlinx.coroutines.delay
 import mihon.core.platform.currentPlatformContext
 import mihon.core.platform.power.ScreenIdleInhibitor
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 import java.awt.Frame
 import java.awt.Window
 import java.awt.event.ComponentAdapter
@@ -20,18 +18,23 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowStateListener
 
 /**
- * Keeps the screen awake while a video is [playing] in the window this is composed in, while that window is shown, or
- * [evenWhenHidden], as when the video plays in a window of its own. A minimised or hidden window lets the screen lock
- * while the sound plays on, as nobody is watching it. The screen is let go of only once that has lasted a moment, as
- * switching to full screen hides the window for an instant and an episode change stops playing for one.
+ * Keeps the screen awake while a viewer is [active], such as a video playing, in the window this is composed in, while
+ * that window is shown, or [evenWhenHidden], as when a video plays in a window of its own. A minimised or hidden window
+ * lets the screen lock, as nobody is looking at it, even while a video's sound plays on. The screen is let go of only
+ * once that has lasted a moment, as switching to full screen hides the window for an instant and an episode change
+ * stops playing for one. [reason] is what the desktop lists as keeping the screen awake.
  */
 @Composable
-internal fun KeepScreenAwake(playing: Boolean, inhibitor: ScreenIdleInhibitor, evenWhenHidden: Boolean = false) {
+fun KeepScreenAwake(
+    active: Boolean,
+    reason: String,
+    inhibitor: ScreenIdleInhibitor,
+    evenWhenHidden: Boolean = false,
+) {
     val window = LocalAwtWindow.current ?: return
     val context = currentPlatformContext()
     val shown by rememberWindowShown(window)
-    val reason = stringResource(MR.strings.anime_playback_keeps_screen_awake)
-    val keepsAwake = playing && (shown || evenWhenHidden)
+    val keepsAwake = active && (shown || evenWhenHidden)
     val hold = remember { ScreenHold() }
     LaunchedEffect(keepsAwake) {
         if (keepsAwake) {
