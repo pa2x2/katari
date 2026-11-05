@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,9 +29,9 @@ import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.RowListHeader
 import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.ContentTone
@@ -58,14 +57,16 @@ fun SourcesScreen(
 ) {
     Column {
         if (state.isLoading || state.hasSources) {
-            SearchField(
-                query = searchQuery,
-                onQueryChange = onSearchQueryChange,
-                placeholder = stringResource(MR.strings.source_find_hint),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-            )
+            RowListHeader(wrapGroups = true) {
+                SearchField(
+                    query = searchQuery,
+                    onQueryChange = onSearchQueryChange,
+                    placeholder = stringResource(MR.strings.source_find_hint),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+                )
+            }
         }
         SourceList(
             state = state,
@@ -102,6 +103,7 @@ private fun SourceList(
         else -> {
             RowList(
                 contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
+                wrapGroups = true,
             ) {
                 if (contentTypeFilter.isActive) {
                     item(key = "source-content-type-filter-summary") {
@@ -109,41 +111,25 @@ private fun SourceList(
                     }
                 }
 
-                val positions = RowGroupPosition.ofRuns(state.items) { it is SourceUiModel.Item }
-                itemsIndexed(
-                    items = state.items,
-                    contentType = { _, model ->
-                        when (model) {
-                            is SourceUiModel.Header -> "header"
-                            is SourceUiModel.Item -> "item"
-                        }
-                    },
-                    key = { _, model ->
-                        when (model) {
-                            is SourceUiModel.Header -> model.hashCode()
-                            is SourceUiModel.Item -> "source-${model.source.key()}"
-                        }
-                    },
-                ) { index, model ->
-                    when (model) {
-                        is SourceUiModel.Header -> {
-                            SourceHeader(
-                                modifier = Modifier.animateItem(),
-                                language = model.language,
-                            )
-                        }
-                        is SourceUiModel.Item -> RowGroupItem(
-                            position = positions[index] ?: RowGroupPosition.Alone,
+                state.groups.forEach { group ->
+                    item(key = "source-header-${group.language}", contentType = "header") {
+                        SourceHeader(
                             modifier = Modifier.animateItem(),
-                        ) {
-                            SourceItem(
-                                source = model.source,
-                                onClickItem = onClickItem,
-                                onClickPin = onClickPin,
-                                onClickDisable = onClickDisable,
-                                itemClicksEnabled = itemClicksEnabled,
-                            )
-                        }
+                            language = group.language,
+                        )
+                    }
+                    rowGroupItems(
+                        items = group.sources,
+                        key = { "source-${it.key()}" },
+                        contentType = { "item" },
+                    ) { source ->
+                        SourceItem(
+                            source = source,
+                            onClickItem = onClickItem,
+                            onClickPin = onClickPin,
+                            onClickDisable = onClickDisable,
+                            itemClicksEnabled = itemClicksEnabled,
+                        )
                     }
                 }
             }
@@ -244,9 +230,4 @@ private fun SourceOptionsMenu(
             )
         }
     }
-}
-
-sealed interface SourceUiModel {
-    data class Item(val source: Source) : SourceUiModel
-    data class Header(val language: String) : SourceUiModel
 }

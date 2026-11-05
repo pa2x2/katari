@@ -1,6 +1,5 @@
 package eu.kanade.domain.source.interactor
 
-import eu.kanade.presentation.browse.SourceUiModel
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
@@ -43,15 +42,8 @@ object SourceListUiMapper {
         return SourceListState(
             isLoading = false,
             hasSources = sources.isNotEmpty(),
-            items = byLang
-                .flatMap {
-                    listOf(
-                        SourceUiModel.Header(it.key),
-                        *it.value.map { source ->
-                            SourceUiModel.Item(source)
-                        }.toTypedArray(),
-                    )
-                }
+            groups = byLang
+                .map { SourceGroup(language = it.key, sources = it.value.toImmutableList()) }
                 .toImmutableList(),
         )
     }

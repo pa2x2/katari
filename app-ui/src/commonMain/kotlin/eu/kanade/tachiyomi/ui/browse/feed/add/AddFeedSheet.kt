@@ -21,7 +21,6 @@ import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
-import eu.kanade.presentation.browse.SourceUiModel
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -67,7 +66,7 @@ internal fun AddFeedSheet(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var expandedSourceKey by rememberSaveable { mutableStateOf<String?>(null) }
-    val listItems = remember(sources, query) { SourceListUiMapper.map(sources, query).items }
+    val sourceGroups = remember(sources, query) { SourceListUiMapper.map(sources, query).groups }
     val feedCounts = remember(feeds) { feeds.groupingBy { it.sourceId }.eachCount() }
 
     Sheet(onDismissRequest = onDismissRequest) {
@@ -82,17 +81,14 @@ internal fun AddFeedSheet(
                     .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             )
             val rows = buildList {
-                listItems.forEach { item ->
-                    when (item) {
-                        is SourceUiModel.Header -> add(AddFeedRow.Language(item.language))
-                        is SourceUiModel.Item -> {
-                            val source = item.source
-                            val expanded = expandedSourceKey == source.key()
-                            add(AddFeedRow.SourceRow(source, expanded))
-                            if (expanded) {
-                                presetsFor(source).forEach { add(AddFeedRow.Preset(source, it)) }
-                                add(AddFeedRow.Filtered(source))
-                            }
+                sourceGroups.forEach { group ->
+                    add(AddFeedRow.Language(group.language))
+                    group.sources.forEach { source ->
+                        val expanded = expandedSourceKey == source.key()
+                        add(AddFeedRow.SourceRow(source, expanded))
+                        if (expanded) {
+                            presetsFor(source).forEach { add(AddFeedRow.Preset(source, it)) }
+                            add(AddFeedRow.Filtered(source))
                         }
                     }
                 }

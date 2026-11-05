@@ -2,13 +2,10 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +22,7 @@ import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
 import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.DashboardTiles
 import mihon.presentation.kit.progress.CircularProgressIndicator
 import mihon.presentation.kit.surface.DashboardTile
 import mihon.presentation.kit.theme.ContentTone
@@ -59,91 +57,32 @@ internal fun StatisticsActivitySummaryCards(
     val isLatest = activity?.window?.isLatest != false
     val shownGoal = goal?.takeIf { selectedType == null && isLatest }
     val completionTypes = selectedType?.let(::listOf) ?: types
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
-        Row(
-            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            SummaryTile(
-                label = stringResource(MR.strings.statistics_time_spent),
-                value = activity?.let { formatDuration(it.totalDurationMillis) } ?: dash,
-                modifier = Modifier.weight(1f),
-                detail = { activity?.let { PeriodComparison(it, formatDuration) } },
-            )
-            if (shownGoal != null) {
-                TodayGoalTile(goal = shownGoal, formatDuration = formatDuration, modifier = Modifier.weight(1f))
-            } else {
-                SummaryTile(
-                    label = stringResource(MR.strings.statistics_daily_average),
-                    value = activity?.takeIf { it.trackedDayCount > 0 }
-                        ?.let { formatDuration(it.totalDurationMillis / it.trackedDayCount) }
-                        ?: dash,
-                    modifier = Modifier.weight(1f),
-                    detail = {
-                        activity?.takeIf { it.trackedDayCount > 0 }?.let {
-                            TileDetail(
-                                pluralStringResource(
-                                    MR.plurals.statistics_days_active_of,
-                                    it.trackedDayCount,
-                                    it.activeDays,
-                                    it.trackedDayCount,
-                                ),
-                            )
-                        }
-                    },
-                )
-            }
-        }
-        Row(
-            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            SummaryTile(
-                label = stringResource(
-                    if (isLatest) MR.strings.statistics_streak else MR.strings.statistics_ending_streak,
-                ),
-                value =
-                activity?.let { pluralStringResource(MR.plurals.day, it.currentStreakDays, it.currentStreakDays) }
-                    ?: dash,
-                modifier = Modifier.weight(1f),
-                detail = {
-                    activity?.let {
-                        TileDetail(
-                            stringResource(
-                                MR.strings.statistics_best_streak,
-                                pluralStringResource(MR.plurals.day, it.longestStreakDays, it.longestStreakDays),
-                            ),
-                        )
-                    }
-                },
-            )
-            SummaryTile(
-                label = statisticsCompletionLabel(
-                    types = completionTypes,
-                    completionCountByType = activity?.completionCountByType.orEmpty(),
-                ),
-                value = activity?.completionCount?.let(numbers::format) ?: dash,
-                modifier = Modifier.weight(1f),
-                detail = {
-                    activity?.let {
-                        statisticsCompletionDetail(it, completionTypes, formatDuration)
-                    }?.let { TileDetail(it) }
-                },
-            )
-        }
+    val timeSpent: @Composable (Modifier) -> Unit = { tileModifier ->
+        SummaryTile(
+            label = stringResource(MR.strings.statistics_time_spent),
+            value = activity?.let { formatDuration(it.totalDurationMillis) } ?: dash,
+            modifier = tileModifier,
+            detail = { activity?.let { PeriodComparison(it, formatDuration) } },
+        )
+    }
+    val todayOrAverage: @Composable (Modifier) -> Unit = { tileModifier ->
         if (shownGoal != null) {
+            TodayGoalTile(goal = shownGoal, formatDuration = formatDuration, modifier = tileModifier)
+        } else {
             SummaryTile(
-                label = stringResource(MR.strings.statistics_goal_streak),
-                value = pluralStringResource(MR.plurals.day, shownGoal.currentStreakDays, shownGoal.currentStreakDays),
-                modifier = Modifier.fillMaxWidth(),
+                label = stringResource(MR.strings.statistics_daily_average),
+                value = activity?.takeIf { it.trackedDayCount > 0 }
+                    ?.let { formatDuration(it.totalDurationMillis / it.trackedDayCount) }
+                    ?: dash,
+                modifier = tileModifier,
                 detail = {
-                    if (shownGoal.consideredDays > 0) {
+                    activity?.takeIf { it.trackedDayCount > 0 }?.let {
                         TileDetail(
                             pluralStringResource(
-                                MR.plurals.statistics_goal_met_days,
-                                shownGoal.consideredDays,
-                                shownGoal.metDays,
-                                shownGoal.consideredDays,
+                                MR.plurals.statistics_days_active_of,
+                                it.trackedDayCount,
+                                it.activeDays,
+                                it.trackedDayCount,
                             ),
                         )
                     }
@@ -151,6 +90,67 @@ internal fun StatisticsActivitySummaryCards(
             )
         }
     }
+    val streak: @Composable (Modifier) -> Unit = { tileModifier ->
+        SummaryTile(
+            label = stringResource(
+                if (isLatest) MR.strings.statistics_streak else MR.strings.statistics_ending_streak,
+            ),
+            value =
+            activity?.let { pluralStringResource(MR.plurals.day, it.currentStreakDays, it.currentStreakDays) }
+                ?: dash,
+            modifier = tileModifier,
+            detail = {
+                activity?.let {
+                    TileDetail(
+                        stringResource(
+                            MR.strings.statistics_best_streak,
+                            pluralStringResource(MR.plurals.day, it.longestStreakDays, it.longestStreakDays),
+                        ),
+                    )
+                }
+            },
+        )
+    }
+    val completions: @Composable (Modifier) -> Unit = { tileModifier ->
+        SummaryTile(
+            label = statisticsCompletionLabel(
+                types = completionTypes,
+                completionCountByType = activity?.completionCountByType.orEmpty(),
+            ),
+            value = activity?.completionCount?.let(numbers::format) ?: dash,
+            modifier = tileModifier,
+            detail = {
+                activity?.let {
+                    statisticsCompletionDetail(it, completionTypes, formatDuration)
+                }?.let { TileDetail(it) }
+            },
+        )
+    }
+    val goalStreak: (@Composable (Modifier) -> Unit)? = shownGoal?.let { goal ->
+        { tileModifier ->
+            SummaryTile(
+                label = stringResource(MR.strings.statistics_goal_streak),
+                value = pluralStringResource(MR.plurals.day, goal.currentStreakDays, goal.currentStreakDays),
+                modifier = tileModifier,
+                detail = {
+                    if (goal.consideredDays > 0) {
+                        TileDetail(
+                            pluralStringResource(
+                                MR.plurals.statistics_goal_met_days,
+                                goal.consideredDays,
+                                goal.metDays,
+                                goal.consideredDays,
+                            ),
+                        )
+                    }
+                },
+            )
+        }
+    }
+    DashboardTiles(
+        tiles = listOfNotNull(timeSpent, todayOrAverage, streak, completions, goalStreak),
+        modifier = modifier,
+    )
 }
 
 @Composable

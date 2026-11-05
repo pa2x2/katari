@@ -3,6 +3,7 @@ package mihon.presentation.kit.list
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,14 +21,19 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.RowListScope
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.VerticalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -299,7 +305,9 @@ private val IconTileSize = 40.dp
 
 /**
  * [items] as one row group card, each row a [RowGroupItem] slice in its place that animates as the list changes.
- * [selected] fills a row's slice, such as the open category in a two-pane settings list.
+ * [selected] fills a row's slice, such as the open category in a two-pane settings list. In a [RowList] whose groups
+ * wrap into columns ([RowListScope.groupColumns]), the rows fill the card line by line instead, each line one item of
+ * the list that is as tall as its tallest row.
  */
 fun <T> LazyListScope.rowGroupItems(
     items: List<T>,
@@ -308,6 +316,28 @@ fun <T> LazyListScope.rowGroupItems(
     selected: (T) -> Boolean = { false },
     itemContent: @Composable (T) -> Unit,
 ) {
+    val columns = (this as? RowListScope)?.groupColumns ?: 1
+    if (columns > 1) {
+        val lines = items.chunked(columns)
+        itemsIndexed(
+            items = lines,
+            key = key?.let { { _, line -> it(line.first()) } },
+            contentType = { _, line -> contentType(line.first()) },
+        ) { index, line ->
+            RowGroupLine(
+                line = line,
+                columns = columns,
+                first = index == 0,
+                last = index == lines.lastIndex,
+                aboveShortLine = index == lines.lastIndex - 1 && lines.last().size < columns,
+                modifier = Modifier.animateItem(),
+                key = key,
+                selected = selected,
+                itemContent = itemContent,
+            )
+        }
+        return
+    }
     itemsIndexed(
         items = items,
         key = key?.let { { _, item -> it(item) } },
@@ -319,6 +349,98 @@ fun <T> LazyListScope.rowGroupItems(
             selected = selected(item),
         ) {
             itemContent(item)
+        }
+    }
+}
+
+/**
+ * One line of a row group card whose rows wrap into [columns]. The line draws its part of the card: the first and last
+ * lines round their outer corners, and the line above a short last line rounds the corner the short line leaves bare.
+ */
+@Composable
+private fun <T> RowGroupLine(
+    line: List<T>,
+    columns: Int,
+    first: Boolean,
+    last: Boolean,
+    aboveShortLine: Boolean,
+    modifier: Modifier,
+    key: ((T) -> Any)?,
+    selected: (T) -> Boolean,
+    itemContent: @Composable (T) -> Unit,
+) {
+    val large = MaterialTheme.shapes.large
+    val square = CornerSize(0)
+    val shape = large.copy(
+        topStart = if (first) large.topStart else square,
+        topEnd = if (first) large.topEnd else square,
+        bottomStart = if (last) large.bottomStart else square,
+        bottomEnd = if (last || aboveShortLine) large.bottomEnd else square,
+    )
+    val container = LocalRowGroupContainer.current
+    Row(modifier.padding(horizontal = KatariTheme.spacing.m)) {
+        Surface(modifier = Modifier.weight(line.size.toFloat()), container = container, shape = shape) {
+            Column {
+                if (!first) HorizontalDivider()
+                RowGroupLineCells(
+                    count = line.size,
+                    fill = { column ->
+                        Surface(container = if (selected(line[column])) SurfaceContainer.Selected else container) {}
+                    },
+                    cell = { column ->
+                        val item = line[column]
+                        key(key?.invoke(item) ?: column) {
+                            CompositionLocalProvider(
+                                LocalRowInset provides KatariTheme.spacing.l,
+                                LocalInRowGroup provides true,
+                            ) {
+                                itemContent(item)
+                            }
+                        }
+                    },
+                )
+            }
+        }
+        if (line.size < columns) Spacer(Modifier.weight((columns - line.size).toFloat()))
+    }
+}
+
+/**
+ * [count] cells side by side in equal columns, as tall as the tallest. Rows are measured as a list measures them, then
+ * each cell's [fill] and the line between columns are stretched to the line's height, so a short row's slice still
+ * reaches the next line. The column lines sit over the cells' edges rather than beside them, so the columns of a short
+ * line stay under those of a full one.
+ */
+@Composable
+private fun RowGroupLineCells(
+    count: Int,
+    fill: @Composable (column: Int) -> Unit,
+    cell: @Composable (column: Int) -> Unit,
+) {
+    Layout(
+        contents = listOf(
+            { repeat(count) { fill(it) } },
+            { repeat(count) { Box { cell(it) } } },
+            { repeat(count - 1) { VerticalDivider() } },
+        ),
+    ) { (fills, cells, dividers), constraints ->
+        val width = constraints.maxWidth
+        val starts = List(count + 1) { width * it / count }
+        val widths = List(count) { starts[it + 1] - starts[it] }
+        val cellPlaceables = cells.mapIndexed { column, cell ->
+            cell.measure(Constraints(minWidth = widths[column], maxWidth = widths[column]))
+        }
+        val height = cellPlaceables.maxOfOrNull { it.height } ?: 0
+        val fillPlaceables = fills.mapIndexed { column, fill ->
+            fill.measure(Constraints.fixed(widths[column], height))
+        }
+        val dividerPlaceables = dividers.map {
+            it.measure(Constraints(maxWidth = width, minHeight = height, maxHeight = height))
+        }
+        layout(width, height) {
+            fillPlaceables.forEachIndexed { column, placeable -> placeable.placeRelative(starts[column], 0) }
+            cellPlaceables.forEachIndexed { column, placeable -> placeable.placeRelative(starts[column], 0) }
+            dividerPlaceables.forEachIndexed { index, placeable -> placeable.placeRelative(starts[index + 1], 0) }
         }
     }
 }
