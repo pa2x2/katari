@@ -33,7 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.book.R
+import mihon.core.platform.clipboard.TextClipboard
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -91,7 +91,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import androidx.compose.ui.res.stringResource as androidStringResource
 
 @Composable
 internal fun BookDocumentReaderScreen(
@@ -101,6 +100,7 @@ internal fun BookDocumentReaderScreen(
     fonts: BookDocumentReaderFonts,
     bookSearch: BookDocumentBookSearch,
     selectionCoordinator: BookSelectionActionCoordinator?,
+    textClipboard: TextClipboard,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     jumpHistory: BookDocumentJumpHistory,
@@ -201,6 +201,7 @@ internal fun BookDocumentReaderScreen(
         activeSelectionSpeech?.identity,
         rootPosition,
         showTextSelectionMenuSetting.effectiveValue,
+        textClipboard,
     ) {
         BookDocumentTextInteraction(
             observeSelections = observeSelections,
@@ -219,6 +220,7 @@ internal fun BookDocumentReaderScreen(
                     currentOnChromeToggle()
                 }
             },
+            copyText = textClipboard::copy,
             showTextSelectionMenu = showTextSelectionMenuSetting.effectiveValue,
             selectionActions = if (observeSelections) {
                 buildSet {
@@ -487,8 +489,8 @@ internal fun BookDocumentReaderScreen(
                     snackbarHostState = settingsSnackbarHostState,
                     onResetProcessorSettings = settingBindings::clearProcessorEntryOverrides,
                     processorTabTitles = listOf(
-                        androidStringResource(R.string.book_reader_appearance_settings),
-                        androidStringResource(R.string.book_reader_behavior_settings),
+                        stringResource(MR.strings.book_reader_appearance_settings),
+                        stringResource(MR.strings.book_reader_behavior_settings),
                     ),
                     content = { page ->
                         when (page) {

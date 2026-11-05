@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.reader.translation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import mihon.entry.interactions.book.R
 import mihon.entry.viewer.settings.ui.ReaderSharedSettingDetails
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.list.SettingsRow
@@ -13,7 +12,6 @@ import mihon.translation.ui.presentation.language.translationEffectiveTargetSumm
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import androidx.compose.ui.res.stringResource as androidStringResource
 
 /**
  * The book's translation languages, shown with the automatic-translation setting. They also apply to Translate in
@@ -31,7 +29,7 @@ internal fun bookTranslationLanguageDetails(
     val bookLanguageSummary = bookLanguageSummary(choices.source, declaredLanguage)
     return ReaderSharedSettingDetails(
         summary = target?.let {
-            androidStringResource(R.string.book_reader_automatic_translation_target, it.language.displayName())
+            stringResource(MR.strings.book_reader_automatic_translation_target, it.language.displayName())
         },
         rows = listOf<@Composable () -> Unit>(
             {
@@ -45,7 +43,7 @@ internal fun bookTranslationLanguageDetails(
             },
             {
                 SettingsRow(
-                    title = androidStringResource(R.string.book_reader_book_language),
+                    title = stringResource(MR.strings.book_reader_book_language),
                     subtitle = bookLanguageSummary,
                     onClick = {
                         coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
@@ -60,6 +58,6 @@ internal fun bookTranslationLanguageDetails(
 @Composable
 private fun bookLanguageSummary(kept: LanguageTag?, declared: LanguageTag?): String = when {
     kept != null -> stringResource(MR.strings.translation_language_this_series, kept.displayName())
-    declared != null -> androidStringResource(R.string.book_reader_book_language_declared, declared.displayName())
+    declared != null -> stringResource(MR.strings.book_reader_book_language_declared, declared.displayName())
     else -> stringResource(MR.strings.translation_source_automatic)
 }

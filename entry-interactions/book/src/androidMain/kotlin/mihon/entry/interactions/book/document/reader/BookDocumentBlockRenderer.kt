@@ -12,19 +12,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.figure.BookDocumentFigureRenderer
 import mihon.entry.interactions.book.document.reader.sidebyside.BookDocumentSideBySideRenderer
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Projects and renders one composed semantic block without retaining chapter-wide Android spans. */
 @Composable
@@ -133,7 +133,7 @@ internal fun BookDocumentBlockRenderer(
                     .background(palette.outline),
             )
             is BookDocumentBlockContent.Unsupported -> BookDocumentSelectableText(
-                text = stringResource(R.string.book_document_unsupported, content.elementType),
+                text = stringResource(MR.strings.book_document_unsupported, content.elementType),
                 links = emptyList(),
                 inlineStyles = emptyList(),
                 identity = "$selectionIdentity:unsupported",

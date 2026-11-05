@@ -13,3 +13,7 @@ expect val WindowInsets.Companion.stableStatusBars: WindowInsets
 /** The navigation bar's room even while it is hidden, as [stableStatusBars] keeps the top's. */
 expect val WindowInsets.Companion.stableNavigationBars: WindowInsets
     @Composable get
+
+/** Every system bar's room even while hidden, including a free-form window's caption bar, as [stableStatusBars]. */
+expect val WindowInsets.Companion.stableSystemBars: WindowInsets
+    @Composable get

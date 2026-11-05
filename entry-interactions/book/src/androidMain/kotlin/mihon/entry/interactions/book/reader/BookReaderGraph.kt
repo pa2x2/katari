@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.reader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import mihon.core.platform.clipboard.TextClipboard
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
@@ -53,6 +54,7 @@ class BookReaderDependencies internal constructor(
     ttsFeature: Lazy<TtsFeature>,
     chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
     fontStore: Lazy<BookDocumentReaderFontStore>,
+    textClipboard: Lazy<TextClipboard>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -72,4 +74,5 @@ class BookReaderDependencies internal constructor(
     internal val ttsFeature by ttsFeature
     internal val chapterHeadingLoader by chapterHeadingLoader
     internal val fontStore by fontStore
+    internal val textClipboard by textClipboard
 }

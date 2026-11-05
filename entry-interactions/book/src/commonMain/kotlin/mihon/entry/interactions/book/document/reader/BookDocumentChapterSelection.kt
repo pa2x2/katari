@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.graphics.RectF
 import androidx.compose.foundation.text.selection.SelectionState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -8,6 +7,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.IntOffset
@@ -122,7 +122,7 @@ internal class BookDocumentChapterSelection(
         }
         restrictedChapterId = projection.chapterId
         geometryTokens = projection.selectedTokens
-        val bounds = projection.boundsInReaderRoot ?: RectF()
+        val bounds = projection.boundsInReaderRoot ?: Rect.Zero
         if (bounds.isEmpty) return
         interaction.onSelection(
             BookDocumentTextSelection.Changed(

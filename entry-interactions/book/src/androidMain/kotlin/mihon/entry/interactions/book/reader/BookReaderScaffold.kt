@@ -2,8 +2,6 @@
 
 package mihon.entry.interactions.book.reader
 
-import android.view.View
-import android.view.ViewGroup
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -18,12 +16,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -31,7 +24,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
@@ -49,9 +41,7 @@ import mihon.translation.ui.presentation.TranslationResultSpeechTarget
  * Owns the safe reading viewport and progress placement for BOOK reader content.
  *
  * Processor chrome remains a full-screen overlay. Ambient progress is drawn inside the reading
- * viewport, while footer progress reserves space below it and moves with chrome. Native processor
- * views can opt into the same viewport through [nativeContentView] without reproducing inset or
- * progress sizing logic.
+ * viewport, while footer progress reserves space below it and moves with chrome.
  */
 @Composable
 internal fun BookReaderScaffold(
@@ -59,7 +49,6 @@ internal fun BookReaderScaffold(
     footerColor: Color,
     modifier: Modifier = Modifier,
     showTimeAndBattery: Boolean = false,
-    nativeContentView: View? = null,
     translationController: BookSelectionTranslationController? = null,
     translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
     onTranslationSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)? = null,
@@ -70,7 +59,6 @@ internal fun BookReaderScaffold(
     content: @Composable BoxScope.() -> Unit,
     overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
 ) {
-    var footerHeight by remember { mutableIntStateOf(0) }
     val deviceStatus = if (showTimeAndBattery) {
         val time by rememberDeviceTime()
         val batteryPercent by rememberBatteryPercent()
@@ -79,22 +67,6 @@ internal fun BookReaderScaffold(
         null
     }
     val showsFooter = progress.showsFooter(deviceStatus)
-    val originalNativeBottomMargin = remember(nativeContentView) {
-        (nativeContentView?.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin
-    }
-
-    DisposableEffect(nativeContentView, originalNativeBottomMargin) {
-        onDispose {
-            if (originalNativeBottomMargin != null) {
-                nativeContentView?.setBottomMargin(originalNativeBottomMargin)
-            }
-        }
-    }
-    SideEffect {
-        if (originalNativeBottomMargin != null) {
-            nativeContentView?.setBottomMargin(originalNativeBottomMargin + footerHeight)
-        }
-    }
 
     Box(
         modifier = modifier.onGloballyPositioned { coordinates ->
@@ -128,8 +100,7 @@ internal fun BookReaderScaffold(
                     .background(footerColor)
                     .windowInsetsPadding(
                         WindowInsets.navigationBarsIgnoringVisibility.only(WindowInsetsSides.Bottom),
-                    )
-                    .onSizeChanged { footerHeight = it.height },
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 if (showsFooter) {
@@ -183,11 +154,4 @@ internal fun BookReaderScaffold(
             }
         }
     }
-}
-
-private fun View.setBottomMargin(bottomMargin: Int) {
-    val margins = layoutParams as? ViewGroup.MarginLayoutParams ?: return
-    if (margins.bottomMargin == bottomMargin) return
-    margins.bottomMargin = bottomMargin
-    layoutParams = margins
 }

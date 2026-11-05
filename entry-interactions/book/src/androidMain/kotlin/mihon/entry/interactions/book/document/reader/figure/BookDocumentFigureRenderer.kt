@@ -23,13 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRenderer
 import mihon.entry.interactions.book.document.reader.BookDocumentSelectableText
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
@@ -42,6 +40,8 @@ import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Bounded, composition-scoped figure resource renderer. A lazy list forgets a row's bitmap once it scrolls away,
@@ -112,19 +112,19 @@ internal fun BookDocumentFigureRenderer(
                     content.image.decorative -> null
                     alternativeText != null -> alternativeText
                     captionText != null -> captionText
-                    else -> stringResource(R.string.book_document_image_description_unavailable)
+                    else -> stringResource(MR.strings.book_document_image_description_unavailable)
                 },
                 contentScale = ContentScale.Fit,
                 modifier = imageModifier,
             )
             bitmapResult == null -> Box(modifier = imageModifier) {
                 DisableSelection {
-                    Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)
+                    Text(stringResource(MR.strings.book_document_image_loading), role = TextRole.ItemTitle)
                 }
             }
             else -> {
                 val fallback = content.image.alternativeText
-                val fallbackText = fallback?.text ?: stringResource(R.string.book_document_image_unavailable)
+                val fallbackText = fallback?.text ?: stringResource(MR.strings.book_document_image_unavailable)
                 BookDocumentSelectableText(
                     text = fallbackText,
                     links = fallback?.links.orEmpty(),

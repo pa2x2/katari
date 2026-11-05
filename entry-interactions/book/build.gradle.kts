@@ -12,11 +12,6 @@ plugins {
 kotlin {
     android {
         namespace = "mihon.entry.interactions.book"
-        // The reader's strings are Android resources of this module.
-        androidResources {
-            enable = true
-        }
-
         withHostTest { }
     }
     desktop()
@@ -33,25 +28,28 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.core.metro)
                 implementation(projects.core.platform)
+                implementation(projects.entryViewerChromeUi)
+                implementation(projects.entryViewerSettingsUi)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.language.api)
+                implementation(projects.presentationCore)
                 // The automatic translation setting asks the translation host whether an engine is ready.
                 implementation(projects.translation.api)
                 implementation(projects.translation.ui)
+                implementation(projects.tts.api)
+                implementation(projects.tts.ui)
                 implementation(libs.brotli.dec)
                 implementation(libs.bundles.serialization)
+                implementation(libs.compose.multiplatform.animation)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.ui)
                 implementation(libs.jsoup)
             }
         }
         androidMain {
             dependencies {
-                implementation(projects.entryViewerChromeUi)
-                implementation(projects.entryViewerSettingsUi)
-                implementation(projects.presentationCore)
-                implementation(projects.tts.api)
-                implementation(projects.tts.ui)
-
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.compose.foundation)
                 implementation(libs.androidx.core)

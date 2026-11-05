@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -18,7 +17,6 @@ import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
 import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
@@ -31,6 +29,9 @@ import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Generic BOOK host for processor selection, launch, and structured unsupported-content failures. */
 internal class BookReaderHostActivity : EntryInteractionActivity() {
@@ -47,7 +48,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = getString(R.string.book_reader_host_title)
+        title = stringResource(MR.strings.book_reader_host_title)
         setEntryInteractionContent {
             BookReaderHostContent(
                 state = hostState,
@@ -101,7 +102,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
             hostState = BookReaderHostState.Unavailable(
                 failure = BookFailure(
                     reason = BookFailureReason.CONTENT_UNAVAILABLE,
-                    message = getString(R.string.book_reader_invalid_request),
+                    message = stringResource(MR.strings.book_reader_invalid_request),
                 ),
             )
             return
@@ -218,7 +219,7 @@ private fun BookReaderHostContent(
 ) {
     when (state) {
         null -> BookReaderLoadingScreen(
-            contentDescription = stringResource(R.string.book_reader_loading),
+            contentDescription = stringResource(MR.strings.book_reader_loading),
         )
         is BookReaderHostState.Unavailable -> {
             val sourceChapter = state.sourceChapter

@@ -10,7 +10,6 @@ import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -75,6 +74,8 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /** Native endless-scroll host for semantic BOOK documents. */
 internal class BookDocumentReaderActivity : EntryInteractionActivity() {
@@ -159,7 +160,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             currentState = { readerState },
             updateState = { readerState = it },
             updateVisualChapterProgression = { visualChapterProgression.floatValue = it },
-            onNavigationMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
+            onNavigationMissing = { showReaderFeedback(MR.strings.book_document_anchor_missing) },
             onSessionActivated = { session ->
                 selectionCoordinator?.updateCapabilities(session.readerCapabilities)
                 childWebViewResolver.resolve(session)
@@ -181,7 +182,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         readerContent.setEntryInteractionContent {
             when (val surface = surfaceState) {
                 BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(
-                    contentDescription = getString(R.string.book_reader_loading),
+                    contentDescription = stringResource(MR.strings.book_reader_loading),
                 )
                 is BookDocumentReaderSurfaceState.Error -> {
                     val sourceChapter = surface.sourceChapter
@@ -214,6 +215,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         fonts = requireNotNull(readerFonts),
                         bookSearch = bookSearch,
                         selectionCoordinator = selectionCoordinator,
+                        textClipboard = dependencies.textClipboard,
                         onLocation = chapterCoordinator::onLocation,
                         onViewportLocation = retainedSessions.jumpHistory::observe,
                         jumpHistory = retainedSessions.jumpHistory,
@@ -246,7 +248,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onToggleBookmark = ::toggleCurrentChapterBookmark,
                         onHideText = { pendingHiddenText = it },
                         snackbarHostState = snackbarHostState,
-                        onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
+                        onAnchorMissing = { showReaderFeedback(MR.strings.book_document_anchor_missing) },
                         onInternalLinkClick = chapterCoordinator::navigateLink,
                         onExternalLinkClick = ::confirmExternalLink,
                         onAuxiliaryDismiss = chapterCoordinator::dismissAuxiliarySection,
@@ -294,7 +296,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             }
         }
         if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
-            showError(getString(R.string.book_reader_invalid_request))
+            showError(stringResource(MR.strings.book_reader_invalid_request))
         } else {
             startOpen()
         }
@@ -468,10 +470,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             dependencies.chapterNavigationResolver.resolveAll(session.entry, session.chapter.id),
         )
         val window = readingOrder.window(session.chapter.id)
-            ?: return showError(getString(R.string.book_document_chapter_missing))
+            ?: return showError(stringResource(MR.strings.book_document_chapter_missing))
         val sections = session.toDocumentSections(retainedSessions.locator(session.chapter.id))
             ?: return showError(
-                getString(R.string.book_document_incompatible),
+                stringResource(MR.strings.book_document_incompatible),
                 reason = BookFailureReason.FORMAT_UNSUPPORTED,
             )
         ensureSelectionCoordinator(session)
@@ -610,15 +612,15 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private fun showSpeechFailure(failure: BookShortFormSpeechFailure) {
         val message = when (failure) {
             BookShortFormSpeechFailure.LanguageUnavailable ->
-                R.string.book_reader_selection_speech_language_unavailable
+                MR.strings.book_reader_selection_speech_language_unavailable
             BookShortFormSpeechFailure.ConfigurationRequired ->
-                R.string.book_reader_selection_speech_configuration_required
+                MR.strings.book_reader_selection_speech_configuration_required
             BookShortFormSpeechFailure.Unavailable ->
-                R.string.book_reader_selection_speech_unavailable
+                MR.strings.book_reader_selection_speech_unavailable
             BookShortFormSpeechFailure.PlaybackFailed ->
-                R.string.book_reader_selection_speech_failed
+                MR.strings.book_reader_selection_speech_failed
         }
-        toast(getString(message))
+        toast(stringResource(message))
     }
 
     private fun launchChildWebViewAction(
@@ -632,7 +634,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private fun confirmExternalLink(url: String) {
         val uri = runCatching { Uri.parse(url) }.getOrNull()
         if (uri?.host.isNullOrBlank() || !(uri.scheme.equals("http", true) || uri.scheme.equals("https", true))) {
-            showReaderFeedback(R.string.book_document_external_link_unavailable)
+            showReaderFeedback(MR.strings.book_document_external_link_unavailable)
             return
         }
         pendingExternalLink = url
@@ -647,13 +649,13 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             startActivity(Intent(Intent.ACTION_VIEW, uri))
         }.onFailure { error ->
             logcat(LogPriority.ERROR, error) { "Failed to launch prose external link" }
-            showReaderFeedback(R.string.book_document_external_link_unavailable)
+            showReaderFeedback(MR.strings.book_document_external_link_unavailable)
         }
     }
 
-    private fun showReaderFeedback(@StringRes messageRes: Int) {
+    private fun showReaderFeedback(message: StringResource) {
         lifecycleScope.launch {
-            snackbarHostState.showSnackbar(getString(messageRes))
+            snackbarHostState.showSnackbar(stringResource(message))
         }
     }
 

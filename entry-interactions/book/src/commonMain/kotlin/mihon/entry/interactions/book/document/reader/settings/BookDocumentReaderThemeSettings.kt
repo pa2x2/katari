@@ -7,9 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.presetNameRes
@@ -23,6 +21,7 @@ import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
 
@@ -43,7 +42,7 @@ internal fun BookDocumentReaderThemeSettings(
     val scope = rememberCoroutineScope()
     var colorsDialog by remember { mutableStateOf<ColorsDialog?>(null) }
     val unsaved = (setting.effectiveValue as? BookDocumentReaderTheme.Custom)?.takeUnless { it in saved }
-    RowGroupHeader(stringResource(R.string.book_document_reader_theme))
+    RowGroupHeader(stringResource(MR.strings.book_document_reader_theme))
     RowGroup {
         (BookDocumentReaderTheme.presets + saved + listOfNotNull(unsaved)).forEach { theme ->
             row(key = theme.id) {
@@ -69,8 +68,8 @@ internal fun BookDocumentReaderThemeSettings(
         }
         row(key = PUBLISHER_STYLES_ROW) {
             ToggleRow(
-                title = stringResource(R.string.book_document_reader_publisher_styles),
-                subtitle = stringResource(R.string.book_document_reader_publisher_styles_summary),
+                title = stringResource(MR.strings.book_document_reader_publisher_styles),
+                subtitle = stringResource(MR.strings.book_document_reader_publisher_styles_summary),
                 checked = publisherStyles.effectiveValue,
                 onCheckedChange = { target ->
                     scope.launch {

@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
 import android.content.Context
-import android.os.SystemClock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,6 @@ import logcat.LogPriority
 import mihon.book.api.BookLocator
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.locatorAt
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.navigation.resolveNavigationDestination
@@ -32,6 +30,9 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
+import kotlin.time.TimeSource
 
 /** Owns bounded adjacent session loading, activation, progress persistence, and completion evidence. */
 internal class BookDocumentChapterCoordinator(
@@ -51,7 +52,7 @@ internal class BookDocumentChapterCoordinator(
     private val chapterSelectionRequests = mutableSetOf<Long>()
     private var persistLocationJob: Job? = null
     private var activityCheckpointJob: Job? = null
-    private var readingStartedAt: Long? = null
+    private var readingStartedAt: TimeSource.Monotonic.ValueTimeMark? = null
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
     private var navigationRequestId = 0L
@@ -62,7 +63,7 @@ internal class BookDocumentChapterCoordinator(
 
     fun startReading() {
         if (retainedSessions.currentSession() != null && readingStartedAt == null) {
-            readingStartedAt = SystemClock.elapsedRealtime()
+            readingStartedAt = TimeSource.Monotonic.markNow()
         }
         if (retainedSessions.currentSession() != null && activityCheckpointJob?.isActive != true) {
             activityCheckpointJob = scope.launchIO {
@@ -131,7 +132,7 @@ internal class BookDocumentChapterCoordinator(
                 setLoadState(
                     chapter,
                     BookDocumentChapterLoadState.Failed(
-                        error.message ?: context.getString(R.string.book_document_chapter_unavailable),
+                        error.message ?: context.stringResource(MR.strings.book_document_chapter_unavailable),
                     ),
                     selected = chapterSelectionRequests.remove(chapter.id),
                 )
@@ -363,7 +364,7 @@ internal class BookDocumentChapterCoordinator(
         val restoredSections = session.toDocumentSections(retainedSessions.locator(session.chapter.id)) ?: run {
             setLoadState(
                 session.chapter,
-                BookDocumentChapterLoadState.Failed(context.getString(R.string.book_document_incompatible)),
+                BookDocumentChapterLoadState.Failed(context.stringResource(MR.strings.book_document_incompatible)),
                 selected = explicitSelection,
             )
             return
@@ -484,7 +485,7 @@ internal class BookDocumentChapterCoordinator(
             observedLocation?.let { section.totalProgression(it.visualProgression) } ?: progression,
         )
         onSessionActivated(session)
-        readingStartedAt = SystemClock.elapsedRealtime()
+        readingStartedAt = TimeSource.Monotonic.markNow()
         return true
     }
 
@@ -538,14 +539,14 @@ internal class BookDocumentChapterCoordinator(
     private suspend fun checkpointReading() {
         val session = retainedSessions.currentSession() ?: return
         val elapsed = consumeReadingDuration()
-        readingStartedAt = SystemClock.elapsedRealtime()
+        readingStartedAt = TimeSource.Monotonic.markNow()
         recordActivity(session, elapsed)
     }
 
     private fun consumeReadingDuration(): Long {
         val started = readingStartedAt ?: return 0L
         readingStartedAt = null
-        return (SystemClock.elapsedRealtime() - started).coerceAtLeast(0L)
+        return started.elapsedNow().inWholeMilliseconds.coerceAtLeast(0L)
     }
 
     private companion object {

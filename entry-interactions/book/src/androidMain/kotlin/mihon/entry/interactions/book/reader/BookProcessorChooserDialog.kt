@@ -11,13 +11,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import mihon.entry.interactions.book.R
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Asks which installed reader opens the book when several can, optionally remembering the answer. */
 @Composable
@@ -33,12 +33,12 @@ internal fun BookProcessorChooserDialog(
         BookReaderDialogBackground()
         Dialog(
             onDismissRequest = onClose,
-            title = stringResource(R.string.book_reader_choose_title),
+            title = stringResource(MR.strings.book_reader_choose_title),
             confirm = DialogAction(
-                label = stringResource(R.string.book_reader_confirm),
+                label = stringResource(MR.strings.book_reader_confirm),
                 onClick = { onChoose(state, selectedId, rememberChoice) },
             ),
-            dismiss = DialogAction(label = stringResource(R.string.book_reader_close), onClick = onClose),
+            dismiss = DialogAction(label = stringResource(MR.strings.book_reader_close), onClick = onClose),
         ) {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 state.choices.forEach { choice ->
@@ -49,7 +49,7 @@ internal fun BookProcessorChooserDialog(
                     )
                 }
                 CheckRow(
-                    title = stringResource(R.string.book_reader_remember_choice),
+                    title = stringResource(MR.strings.book_reader_remember_choice),
                     checked = rememberChoice,
                     onCheckedChange = { rememberChoice = it },
                     modifier = Modifier.padding(top = KatariTheme.spacing.s),

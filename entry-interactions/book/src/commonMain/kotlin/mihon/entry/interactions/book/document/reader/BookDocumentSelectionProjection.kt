@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.graphics.RectF
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.IntOffset
@@ -36,7 +36,7 @@ internal data class BookDocumentSelectionProjection(
     val languageContextText: String,
     /** Languages the document declares for the selected text, in reading order. */
     val languageTags: List<String>,
-    val boundsInReaderRoot: RectF?,
+    val boundsInReaderRoot: Rect?,
 )
 
 internal fun projectBookDocumentSelection(
@@ -97,7 +97,7 @@ internal fun projectBookDocumentSelection(
                 readerRootPositionInWindow = readerRootPositionInWindow,
             )
         }
-        .reduceOrNull(RectF::unionWith)
+        .reduceOrNull(Rect::unionWith)
 
     return BookDocumentSelectionProjection(
         chapterId = chapterId,
@@ -162,7 +162,7 @@ private data class ResolvedBookDocumentSelectionFragment(
     fun boundsInReaderRoot(
         layout: BookDocumentSelectionLayout?,
         readerRootPositionInWindow: Offset,
-    ): RectF? {
+    ): Rect? {
         val textLayout = layout?.textLayout ?: return null
         val positionInWindow = layout.positionInWindow ?: return null
         if (endExclusive <= start) return null
@@ -170,7 +170,7 @@ private data class ResolvedBookDocumentSelectionFragment(
         if (localBounds.isEmpty) return null
         val left = localBounds.left + positionInWindow.x - readerRootPositionInWindow.x
         val top = localBounds.top + positionInWindow.y - readerRootPositionInWindow.y
-        return RectF(
+        return Rect(
             left,
             top,
             localBounds.right + positionInWindow.x - readerRootPositionInWindow.x,
@@ -179,7 +179,13 @@ private data class ResolvedBookDocumentSelectionFragment(
     }
 }
 
-private fun RectF.unionWith(other: RectF): RectF = RectF(this).apply { union(other) }
+// Both are fragment bounds, which are never empty, so the union is their plain bounding box
+private fun Rect.unionWith(other: Rect): Rect = Rect(
+    minOf(left, other.left),
+    minOf(top, other.top),
+    maxOf(right, other.right),
+    maxOf(bottom, other.bottom),
+)
 
 private fun String.takeCodePoints(maximum: Int): String {
     val count = codePointCount(0, length)

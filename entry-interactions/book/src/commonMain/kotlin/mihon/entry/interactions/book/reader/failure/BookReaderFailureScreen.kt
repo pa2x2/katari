@@ -1,9 +1,7 @@
 package mihon.entry.interactions.book.reader.failure
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import mihon.book.api.BookFailureReason
-import mihon.entry.interactions.book.R
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Book
 import mihon.icons.materialsymbols.rounded.Error
@@ -12,6 +10,7 @@ import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.feedback.ProblemAction
 import mihon.presentation.kit.feedback.ProblemScreen
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.i18n.stringResource as mokoStringResource
 
 /**
@@ -37,12 +36,12 @@ internal fun BookReaderFailureScreen(
         onRetry?.let {
             add(ProblemAction(mokoStringResource(MR.strings.action_retry), it, MaterialSymbols.Rounded.Refresh))
         }
-        if (isEmpty()) add(ProblemAction(stringResource(R.string.book_reader_back_to_book), onClose))
+        if (isEmpty()) add(ProblemAction(stringResource(MR.strings.book_reader_back_to_book), onClose))
     }
     ProblemScreen(
         icon = if (bookCannotOpen) MaterialSymbols.Rounded.Book else MaterialSymbols.Rounded.Error,
         heading = if (bookCannotOpen) {
-            stringResource(R.string.book_reader_failure_book)
+            stringResource(MR.strings.book_reader_failure_book)
         } else {
             mokoStringResource(MR.strings.transition_chapter_failed)
         },
@@ -51,6 +50,6 @@ internal fun BookReaderFailureScreen(
         actions = actions,
         title = heading?.bookTitle,
         subtitle = heading?.chapterName,
-        attribution = sourceName?.let { stringResource(R.string.book_reader_failure_source_message, it) },
+        attribution = sourceName?.let { stringResource(MR.strings.book_reader_failure_source_message, it) },
     )
 }

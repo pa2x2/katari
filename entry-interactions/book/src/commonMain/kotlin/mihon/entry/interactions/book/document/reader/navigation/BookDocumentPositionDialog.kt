@@ -9,15 +9,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import mihon.entry.interactions.book.R
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.field.TextField
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 
 /** Accessible exact page/percentage entry with bounded input and start/end shortcuts. */
@@ -34,14 +34,14 @@ internal fun BookDocumentPositionDialog(
     val go: () -> Unit = { value?.let { onGo(it.toFloat()) } }
     Dialog(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.book_navigation_go_to),
+        title = stringResource(MR.strings.book_navigation_go_to),
         confirm = DialogAction(
-            label = stringResource(R.string.book_navigation_go),
+            label = stringResource(MR.strings.book_navigation_go),
             onClick = go,
             enabled = value != null,
         ),
         dismiss = DialogAction(
-            label = stringResource(R.string.book_document_external_link_cancel),
+            label = stringResource(MR.strings.book_document_external_link_cancel),
             onClick = onDismiss,
         ),
     ) {
@@ -51,24 +51,24 @@ internal fun BookDocumentPositionDialog(
                 onValueChange = { input = it },
                 label = stringResource(
                     if (snapshot.paged) {
-                        R.string.book_navigation_page
+                        MR.strings.book_navigation_page
                     } else {
-                        R.string.book_navigation_percentage
+                        MR.strings.book_navigation_percentage
                     },
                 ),
-                supportingText = stringResource(R.string.book_navigation_range, min, max),
+                supportingText = stringResource(MR.strings.book_navigation_range, min, max),
                 isError = input.isNotEmpty() && value == null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Go),
                 keyboardActions = KeyboardActions(onGo = { go() }),
             )
             Row {
                 Button(
-                    label = stringResource(R.string.book_navigation_start),
+                    label = stringResource(MR.strings.book_navigation_start),
                     onClick = { onGo(snapshot.range.start) },
                     style = ButtonStyle.Text,
                 )
                 Button(
-                    label = stringResource(R.string.book_navigation_end),
+                    label = stringResource(MR.strings.book_navigation_end),
                     onClick = { onGo(snapshot.range.endInclusive) },
                     style = ButtonStyle.Text,
                 )

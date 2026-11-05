@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.graphics.RectF
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 
 internal data class BookDocumentTextInteraction(
     val observeSelections: Boolean,
@@ -11,6 +11,8 @@ internal data class BookDocumentTextInteraction(
     val isReaderTapBlocked: () -> Boolean,
     val onBlockedReaderTap: () -> Unit,
     val onNonLinkTap: (x: Float, width: Float) -> Unit,
+    /** Puts selected text on the clipboard, under a label for platforms that show clipboard contents. */
+    val copyText: (label: String, text: String) -> Unit,
     val showTextSelectionMenu: Boolean = true,
     val selectionActions: Set<BookDocumentSelectionAction> = emptySet(),
     val activeSpeechSelectionIdentity: String? = null,
@@ -30,6 +32,7 @@ internal data class BookDocumentTextInteraction(
             isReaderTapBlocked = { false },
             onBlockedReaderTap = {},
             onNonLinkTap = { _, _ -> },
+            copyText = { _, _ -> },
         )
     }
 }
@@ -48,7 +51,7 @@ internal sealed interface BookDocumentTextSelection {
         val text: String,
         val languageContextText: String,
         val languageTags: List<String>,
-        val boundsInReaderRoot: RectF,
+        val boundsInReaderRoot: Rect,
         val isSettled: Boolean,
     ) : BookDocumentTextSelection
 

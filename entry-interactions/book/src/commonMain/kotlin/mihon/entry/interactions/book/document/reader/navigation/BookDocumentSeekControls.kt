@@ -17,10 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.book.api.BookLocator
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
@@ -34,6 +32,7 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 import tachiyomi.presentation.core.i18n.stringResource as sharedStringResource
 
@@ -78,9 +77,9 @@ internal fun BookDocumentSeekControls(
     val previous = sectionTarget(sectionIndex - 1) ?: chapterWindow?.previous?.let { BookDocumentNavigationTarget(it) }
     val next = sectionTarget(sectionIndex + 1) ?: chapterWindow?.next?.let { BookDocumentNavigationTarget(it) }
     val sectionTitle = if (sections.size > 1) {
-        stringResource(R.string.book_navigation_section, sectionIndex + 1, sections.size)
+        stringResource(MR.strings.book_navigation_section, sectionIndex + 1, sections.size)
     } else {
-        stringResource(R.string.book_navigation_chapter_position)
+        stringResource(MR.strings.book_navigation_chapter_position)
     }
     val commit: (Float) -> Unit = { value ->
         seekState.beginSeek(value)
@@ -106,12 +105,12 @@ internal fun BookDocumentSeekControls(
             onValueChangeFinished = commit,
             onValueChangeCancelled = { draft = null },
             previousSectionDescription = if (sectionIndex > 0) {
-                stringResource(R.string.book_navigation_previous_section)
+                stringResource(MR.strings.book_navigation_previous_section)
             } else {
                 sharedStringResource(MR.strings.action_previous_chapter)
             },
             nextSectionDescription = if (sectionIndex < sections.lastIndex) {
-                stringResource(R.string.book_navigation_next_section)
+                stringResource(MR.strings.book_navigation_next_section)
             } else {
                 sharedStringResource(MR.strings.action_next_chapter)
             },

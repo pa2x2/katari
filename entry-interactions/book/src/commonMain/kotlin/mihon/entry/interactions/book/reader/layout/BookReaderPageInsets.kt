@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
+import mihon.presentation.kit.window.stableSystemBars
 
 /**
  * The window edges the book's page keeps clear of. They are the system bars' even while hidden: the reader's controls
@@ -14,5 +14,5 @@ import androidx.compose.runtime.Composable
  * again and moving the reader to another page number.
  */
 internal val bookReaderPageInsets: WindowInsets
-    @Composable get() = WindowInsets.systemBarsIgnoringVisibility.union(WindowInsets.displayCutout)
+    @Composable get() = WindowInsets.stableSystemBars.union(WindowInsets.displayCutout)
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)

@@ -1,12 +1,12 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
 import mihon.entry.interactions.book.preparation.BookRemoteResourceRequest
 import mihon.entry.interactions.book.preparation.BookRemoteResourceType
 import mihon.presentation.kit.dialog.ConfirmDialog
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun BookDocumentExternalLinkDialog(
@@ -15,12 +15,12 @@ internal fun BookDocumentExternalLinkDialog(
     onDismiss: () -> Unit,
 ) {
     ConfirmDialog(
-        title = stringResource(R.string.book_document_external_link_title),
-        text = stringResource(R.string.book_document_external_link_message, host),
-        confirmLabel = stringResource(R.string.book_document_external_link_open),
+        title = stringResource(MR.strings.book_document_external_link_title),
+        text = stringResource(MR.strings.book_document_external_link_message, host),
+        confirmLabel = stringResource(MR.strings.book_document_external_link_open),
         onConfirm = onOpen,
         onDismissRequest = onDismiss,
-        dismissLabel = stringResource(R.string.book_document_external_link_cancel),
+        dismissLabel = stringResource(MR.strings.book_document_external_link_cancel),
     )
 }
 
@@ -30,10 +30,10 @@ internal fun BookRemoteResourceConsentDialog(
     onAllow: () -> Unit,
     onBlock: () -> Unit,
 ) {
-    val imageLabel = stringResource(R.string.book_remote_resource_images)
-    val fontLabel = stringResource(R.string.book_remote_resource_fonts)
+    val imageLabel = stringResource(MR.strings.book_remote_resource_images)
+    val fontLabel = stringResource(MR.strings.book_remote_resource_fonts)
     ConfirmDialog(
-        title = stringResource(R.string.book_remote_resources_title),
+        title = stringResource(MR.strings.book_remote_resources_title),
         text = pending.requests
             .sortedWith(compareBy(BookRemoteResourceRequest::origin, BookRemoteResourceRequest::type))
             .joinToString("\n") { request ->
@@ -43,9 +43,9 @@ internal fun BookRemoteResourceConsentDialog(
                 }
                 "• ${request.origin} — $type"
             },
-        confirmLabel = stringResource(R.string.book_remote_resources_allow),
+        confirmLabel = stringResource(MR.strings.book_remote_resources_allow),
         onConfirm = onAllow,
         onDismissRequest = onBlock,
-        dismissLabel = stringResource(R.string.book_remote_resources_block),
+        dismissLabel = stringResource(MR.strings.book_remote_resources_block),
     )
 }

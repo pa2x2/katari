@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader
 
-import android.content.ClipData
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -18,16 +17,12 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.toClipEntry
-import kotlinx.coroutines.launch
-import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** Binds the active chapter's selection owner to Compose selection and Android context actions. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -44,8 +39,6 @@ internal fun BookDocumentChapterSelectionContainer(
     val selectionColors = remember(palette.accent) {
         TextSelectionColors(handleColor = palette.accent, backgroundColor = palette.selection)
     }
-    val clipboard = LocalClipboard.current
-    val coroutineScope = rememberCoroutineScope()
     val session = remember(selectionState) {
         BookDocumentChapterSelection(
             ownerIdentity = ownerIdentity,
@@ -60,16 +53,16 @@ internal fun BookDocumentChapterSelectionContainer(
     val selectedTexts = selectionState.selectedTexts
     val layoutRevision = session.layoutRevision
     val projection = session.project(selectedTexts, interaction.rootPositionInWindow)
-    val copyLabel = androidx.compose.ui.res.stringResource(android.R.string.copy)
-    val listenLabel = androidx.compose.ui.res.stringResource(
+    val copyLabel = stringResource(MR.strings.action_copy)
+    val listenLabel = stringResource(
         if (projection?.identity == interaction.activeSpeechSelectionIdentity) {
-            R.string.book_reader_selection_stop_listening
+            MR.strings.book_reader_selection_stop_listening
         } else {
-            R.string.book_reader_selection_listen
+            MR.strings.book_reader_selection_listen
         },
     )
-    val translateLabel = androidx.compose.ui.res.stringResource(R.string.book_reader_selection_translate)
-    val hideTextLabel = tachiyomi.presentation.core.i18n.stringResource(MR.strings.book_reader_hide_text)
+    val translateLabel = stringResource(MR.strings.book_reader_selection_translate)
+    val hideTextLabel = stringResource(MR.strings.book_reader_hide_text)
 
     LaunchedEffect(
         selectedTexts,
@@ -103,11 +96,7 @@ internal fun BookDocumentChapterSelectionContainer(
                     .appendTextContextMenuComponents {
                         projection ?: return@appendTextContextMenuComponents
                         item(BookDocumentSelectionMenuKey.Copy, copyLabel) {
-                            coroutineScope.launch {
-                                clipboard.setClipEntry(
-                                    ClipData.newPlainText(copyLabel, projection.text).toClipEntry(),
-                                )
-                            }
+                            interaction.copyText(copyLabel, projection.text)
                             session.clearSelection()
                             close()
                         }
