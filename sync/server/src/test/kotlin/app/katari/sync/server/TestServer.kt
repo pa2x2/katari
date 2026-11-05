@@ -10,6 +10,7 @@ import app.katari.sync.protocol.record.RecordEnvelope
 import app.katari.sync.server.config.ServerConfig
 import app.katari.sync.server.device.AuthenticationOutcome
 import app.katari.sync.server.device.Device
+import app.katari.sync.server.device.RegistrationOutcome
 import app.katari.sync.server.record.PullOutcome
 import app.katari.sync.server.storage.sqlite.SqliteServerStorage
 import java.nio.file.Path
@@ -30,13 +31,14 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
     /** Registers a device into [accountId] the way a new device joins with a link code. */
     fun device(accountId: Long): LinkedTestDevice {
         val code = services.devices.issueLinkCode(accountId).code
-        val response = services.registration.register(
+        val outcome = services.registration.register(
             RegisterDeviceRequest(
                 DeviceDescription(name = "Device", platform = "Linux", appVersion = "1"),
                 linkCode = code,
             ),
-        )!!
-        return LinkedTestDevice(response.token)
+            remoteAddress = "192.0.2.1",
+        )
+        return LinkedTestDevice((outcome as RegistrationOutcome.Registered).response.token)
     }
 
     inner class LinkedTestDevice(val token: String) {

@@ -13,6 +13,11 @@ data class ServerConfig(
     val maxFileBytes: Long,
     /** The most records one pull page holds; a device asking for more, or for 0, gets this many. */
     val pullPageSize: Int,
+    /**
+     * How many reverse proxies in front of the server append to X-Forwarded-For; 0 when clients connect directly, so
+     * the header, which a client can forge, is ignored.
+     */
+    val trustedProxies: Int,
 ) {
     val databaseFile: Path
         get() = dataDirectory.resolve("katari-sync.db")
@@ -24,6 +29,7 @@ data class ServerConfig(
         const val MAX_REQUEST_BYTES = "KATARI_SYNC_MAX_REQUEST_BYTES"
         const val MAX_FILE_BYTES = "KATARI_SYNC_MAX_FILE_BYTES"
         const val PULL_PAGE_SIZE = "KATARI_SYNC_PULL_PAGE_SIZE"
+        const val TRUSTED_PROXIES = "KATARI_SYNC_TRUSTED_PROXIES"
 
         private const val MEBIBYTE = 1024L * 1024
 
@@ -46,6 +52,7 @@ data class ServerConfig(
                 // Covers are well under this; CJK fonts reach tens of megabytes.
                 maxFileBytes = number(MAX_FILE_BYTES, default = 64 * MEBIBYTE, range = 1L..Long.MAX_VALUE),
                 pullPageSize = number(PULL_PAGE_SIZE, default = 500, range = 1L..10_000).toInt(),
+                trustedProxies = number(TRUSTED_PROXIES, default = 0, range = 0L..10).toInt(),
             )
         }
     }

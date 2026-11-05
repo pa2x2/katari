@@ -7,25 +7,46 @@ import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.device.RegisterDeviceResponse
 import app.katari.sync.server.account.Account
 import app.katari.sync.server.account.PasswordHasher
+import app.katari.sync.server.attemptlimit.AttemptLimiter
 import app.katari.sync.server.onetimecode.OneTimeCode
 import app.katari.sync.server.record.identityOf
 import app.katari.sync.server.storage.ServerStorage
 import java.security.SecureRandom
 import kotlin.time.Clock
+import kotlin.time.Duration
 
 /**
  * Links a device to an account, by the account's password or by a link code another of its devices asked for, and
  * gives it an id and a token of its own. Device ids are random over 64 bits (never 0) and never given out twice by this
  * server, since revoked devices keep their rows.
+ *
+ * Failed sign-ins are limited per remote address and, for passwords, per account; a link code names no account until
+ * it is right, so its guesses are limited per address only.
  */
 class DeviceRegistration(
     private val storage: ServerStorage,
     private val passwords: PasswordHasher,
     private val clock: Clock,
     private val random: SecureRandom,
+    private val attempts: AttemptLimiter,
 ) {
+    fun register(request: RegisterDeviceRequest, remoteAddress: String): RegistrationOutcome {
+        val keys = buildList {
+            add(AttemptLimiter.address(remoteAddress))
+            request.password?.let { add(AttemptLimiter.account(it.username)) }
+        }
+        attempts.blockedFor(keys)?.let { return RegistrationOutcome.Throttled(it) }
+        val response = registerChecked(request)
+        if (response == null) {
+            attempts.failed(keys)
+            return RegistrationOutcome.Refused
+        }
+        attempts.succeeded(keys)
+        return RegistrationOutcome.Registered(response)
+    }
+
     /** Null when the sign-in is refused: wrong password, unknown, used or expired link code, or a disabled account. */
-    fun register(request: RegisterDeviceRequest): RegisterDeviceResponse? {
+    private fun registerChecked(request: RegisterDeviceRequest): RegisterDeviceResponse? {
         val passwordAccount = request.password?.let { signIn -> passwordAccount(signIn) ?: return null }
         return storage.transaction {
             val account = passwordAccount
@@ -69,4 +90,13 @@ class DeviceRegistration(
 
     private fun DeviceDescription.trimmed() =
         DeviceDescription(name = name.trim(), platform = platform.trim(), appVersion = appVersion.trim())
+}
+
+sealed interface RegistrationOutcome {
+    data class Registered(val response: RegisterDeviceResponse) : RegistrationOutcome
+
+    data object Refused : RegistrationOutcome
+
+    /** Too many failed attempts; the sign-in was not checked. */
+    data class Throttled(val retryAfter: Duration) : RegistrationOutcome
 }

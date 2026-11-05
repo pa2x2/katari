@@ -13,7 +13,8 @@ private const val USAGE = """Usage:
   katari-sync-server reset-password <user>   Give an account a new random password and enable it
 
 Configured by the environment variables ${ServerConfig.DATA_DIRECTORY}, ${ServerConfig.HOST}, ${ServerConfig.PORT},
-${ServerConfig.MAX_REQUEST_BYTES}, ${ServerConfig.MAX_FILE_BYTES} and ${ServerConfig.PULL_PAGE_SIZE}."""
+${ServerConfig.MAX_REQUEST_BYTES}, ${ServerConfig.MAX_FILE_BYTES}, ${ServerConfig.PULL_PAGE_SIZE} and
+${ServerConfig.TRUSTED_PROXIES}."""
 
 fun main(args: Array<String>) {
     val config = try {

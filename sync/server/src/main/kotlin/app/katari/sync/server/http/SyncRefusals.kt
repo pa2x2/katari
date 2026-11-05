@@ -6,6 +6,7 @@ import app.katari.sync.protocol.version.ProtocolVersionRange
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import kotlin.time.Duration
 
 internal suspend fun ApplicationCall.respondRefusal(
     code: SyncErrorCode,
@@ -14,6 +15,19 @@ internal suspend fun ApplicationCall.respondRefusal(
 ) {
     if (code == SyncErrorCode.UNAUTHORIZED) response.headers.append(HttpHeaders.WWWAuthenticate, "Bearer")
     respondProto(SyncError(code, message, supportedVersions), code.httpStatus)
+}
+
+/** A sign-in refused unchecked after too many failures. */
+internal suspend fun ApplicationCall.respondThrottled(retryAfter: Duration) {
+    response.headers.append(HttpHeaders.RetryAfter, retryAfter.inWholeSeconds.plus(1).toString())
+    respondProto(
+        SyncError(
+            code = SyncErrorCode.UNAUTHORIZED,
+            message = "Too many failed attempts",
+            retryAfterMillis = retryAfter.inWholeMilliseconds,
+        ),
+        HttpStatusCode.TooManyRequests,
+    )
 }
 
 private val SyncErrorCode.httpStatus: HttpStatusCode

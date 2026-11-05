@@ -5,6 +5,7 @@ import app.katari.sync.protocol.device.RevokeDeviceRequest
 import app.katari.sync.protocol.error.SyncErrorCode
 import app.katari.sync.protocol.http.SyncHttp
 import app.katari.sync.server.SyncServices
+import app.katari.sync.server.device.RegistrationOutcome
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -18,9 +19,11 @@ internal fun Route.registrationRoute(services: SyncServices) {
     post(SyncHttp.REGISTER) {
         val request = call.receiveProto<RegisterDeviceRequest>(services.config.maxRequestBytes)
         RequestChecks.check(request)
-        when (val response = withContext(Dispatchers.IO) { services.registration.register(request) }) {
-            null -> call.respondRefusal(SyncErrorCode.UNAUTHORIZED)
-            else -> call.respondProto(response)
+        val from = call.clientAddress(services.config.trustedProxies)
+        when (val outcome = withContext(Dispatchers.IO) { services.registration.register(request, from) }) {
+            is RegistrationOutcome.Registered -> call.respondProto(outcome.response)
+            RegistrationOutcome.Refused -> call.respondRefusal(SyncErrorCode.UNAUTHORIZED)
+            is RegistrationOutcome.Throttled -> call.respondThrottled(outcome.retryAfter)
         }
     }
 }

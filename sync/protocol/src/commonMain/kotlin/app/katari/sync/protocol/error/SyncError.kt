@@ -15,6 +15,11 @@ data class SyncError(
     @ProtoNumber(2) val message: String = "",
     /** Set with [SyncErrorCode.PROTOCOL_VERSION_UNSUPPORTED]. */
     @ProtoNumber(3) val supportedVersions: ProtocolVersionRange? = null,
+    /**
+     * Set with [SyncErrorCode.UNAUTHORIZED] when the sign-in was not checked because too many attempts failed from
+     * this address or for this account: how long to wait before trying again, in milliseconds.
+     */
+    @ProtoNumber(4) val retryAfterMillis: Long = 0,
 )
 
 /**
@@ -23,7 +28,10 @@ data class SyncError(
  */
 @Serializable
 enum class SyncErrorCode {
-    /** Wrong password, an expired or used link code, or a token the server does not know. The person signs in again. */
+    /**
+     * Wrong password, an expired or used link code, or a token the server does not know. The person signs in again,
+     * after [SyncError.retryAfterMillis] when it is set.
+     */
     @ProtoNumber(1)
     UNAUTHORIZED,
 

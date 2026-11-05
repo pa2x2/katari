@@ -2,6 +2,7 @@ package app.katari.sync.server
 
 import app.katari.sync.server.account.FirstAdminSetup
 import app.katari.sync.server.account.PasswordHasher
+import app.katari.sync.server.attemptlimit.AttemptLimiter
 import app.katari.sync.server.config.ServerConfig
 import app.katari.sync.server.device.AccountDevices
 import app.katari.sync.server.device.DeviceAuthentication
@@ -29,9 +30,10 @@ class SyncServices(
     val passwords = PasswordHasher(random = random)
     val changes = AccountChanges()
     val content = FileContentStore(config.dataDirectory)
+    val attempts = AttemptLimiter(clock)
 
-    val firstAdminSetup = FirstAdminSetup(storage, passwords, clock, random)
-    val registration = DeviceRegistration(storage, passwords, clock, random)
+    val firstAdminSetup = FirstAdminSetup(storage, passwords, clock, random, attempts)
+    val registration = DeviceRegistration(storage, passwords, clock, random, attempts)
     val authentication = DeviceAuthentication(storage, clock)
     val devices = AccountDevices(storage, changes, clock, random)
     val push = RecordPush(storage, changes)
