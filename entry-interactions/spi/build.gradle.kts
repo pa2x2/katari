@@ -21,9 +21,18 @@ kotlin {
                 api(projects.entryInteractions.api)
                 api(libs.coil.core)
 
+                implementation(projects.core.common)
                 implementation(projects.core.metro)
+                implementation(projects.core.platform)
+                implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.presentationCore)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                // Copying an image to the clipboard decodes it the way the readers draw it.
+                implementation(projects.core.image)
             }
         }
         androidMain {

@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyChord
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import eu.kanade.tachiyomi.ui.reader.viewer.key.chords
+import mihon.presentation.kit.shortcut.ContextMenuKey
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
@@ -82,7 +83,7 @@ private fun keyName(chord: ReaderKeyChord): String = when (chord.key) {
     Key.PageUp -> stringResource(MR.strings.key_page_up)
     Key.MoveHome -> stringResource(MR.strings.key_home)
     Key.MoveEnd -> stringResource(MR.strings.key_end)
-    Key.Menu -> stringResource(MR.strings.key_menu)
+    ContextMenuKey -> stringResource(MR.strings.key_menu)
     Key.Equals -> if (chord.shift) "+" else "="
     Key.NumPadAdd -> "+"
     Key.Minus, Key.NumPadSubtract -> "−"

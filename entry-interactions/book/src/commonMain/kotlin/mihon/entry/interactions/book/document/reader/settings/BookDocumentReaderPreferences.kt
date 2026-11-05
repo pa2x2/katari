@@ -74,6 +74,9 @@ internal class BookDocumentReaderPreferences(
         ChapterTransitionMode.ALWAYS,
     )
 
+    /** Whether the guide to the mouse and keys was dismissed in this profile, which shows it only until then. */
+    val inputGuideShown: Preference<Boolean> = preferenceStore.getBoolean(INPUT_GUIDE_SHOWN_KEY, false)
+
     companion object {
         const val READING_MODE_KEY = "book_document_reader_reading_mode"
         const val PAGE_LAYOUT_KEY = "book_document_reader_page_layout"
@@ -100,5 +103,6 @@ internal class BookDocumentReaderPreferences(
         const val SHOW_TEXT_SELECTION_MENU_KEY = "book_document_reader_show_text_selection_menu"
         const val SHOW_READING_PROGRESS_KEY = "book_document_reader_show_reading_progress"
         const val READING_PROGRESS_STYLE_KEY = "book_document_reader_reading_progress_style"
+        const val INPUT_GUIDE_SHOWN_KEY = "book_document_reader_input_guide_shown"
     }
 }

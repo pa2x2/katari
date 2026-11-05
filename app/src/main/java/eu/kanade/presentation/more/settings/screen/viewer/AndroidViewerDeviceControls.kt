@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 class AndroidViewerDeviceControls : ViewerDeviceControls {
     override val volumeKeys: Boolean = true
     override val systemBars: Boolean = true
+    override val textSelectionToolbar: Boolean = true
     override val screenOrientation: Boolean = true
     override val eInkFlashes: Boolean = true
     override val pictureInPicture: Boolean = true

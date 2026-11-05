@@ -15,6 +15,12 @@ interface ViewerDeviceControls {
     /** The system's status and navigation bars, which viewers can show or hide. */
     val systemBars: Boolean
 
+    /**
+     * A floating toolbar over selected text, whose system actions a reader can leave out. Where the platform has none,
+     * a right click on the selection offers the reader's own actions.
+     */
+    val textSelectionToolbar: Boolean
+
     /** Turning the screen to the orientation a viewer asks for. */
     val screenOrientation: Boolean
 

@@ -215,6 +215,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showTextSelectionMenu,
                         title = stringResource(MR.strings.pref_book_document_reader_show_text_selection_menu),
+                        visible = deviceControls.textSelectionToolbar,
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showStatusBar,
@@ -224,7 +225,13 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showTimeAndBattery,
                         title = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery),
-                        subtitle = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery_summary),
+                        subtitle = stringResource(
+                            if (deviceControls.systemBars) {
+                                MR.strings.pref_book_document_reader_show_time_and_battery_summary
+                            } else {
+                                MR.strings.pref_book_document_reader_show_time_and_battery_summary_without_status_bar
+                            },
+                        ),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showNavigationBar,

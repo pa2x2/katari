@@ -1,6 +1,9 @@
 package mihon.entry.interactions.book.document.resource
 
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.IntSize
 import mihon.core.common.platform.PlatformFacility
+import mihon.entry.interactions.book.document.resource.font.unpackWebFont
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import java.io.File
@@ -29,13 +32,31 @@ internal val PROSE_FONT_RESOURCE_REQUIREMENT = BookResourceRequirement(
     contentKind = BookResourceContentKind.FONT,
 )
 
-/** Whether a book's image or font is one the platform's book reader can draw. Both throw when it isn't. */
+/**
+ * What reading a book's images and fonts needs from the platform: raster images, which both platforms read through
+ * [readImageDecoderSize] and [decodeWithImageDecoder] before their own decoder takes the formats the image decoder
+ * doesn't read, such as GIF; the drawing of vector images; and the platform's own font objects. Each throws for data
+ * it can't use.
+ */
 @PlatformFacility
 internal interface BookDocumentResourceDecoding {
-    /** [mediaType] is lowercase and without parameters. */
-    fun requireDecodableImage(bytes: ByteArray, mediaType: String?)
+    /** The size of a raster image; null when neither the image decoder nor the platform reads it. */
+    fun readRasterSize(bytes: ByteArray): IntSize?
 
-    fun requireLoadableFont(file: File)
+    /** Decodes a raster image at 1/[sampleSize] of its size, a power of two. */
+    fun decodeRaster(bytes: ByteArray, sampleSize: Int): ProseImage
+
+    /** The size [svg], a sanitized SVG document, declares for itself, in CSS pixels. */
+    fun readSvgSize(svg: String): ProseImageHeader.Vector
+
+    /** Draws [svg] scaled to [width] by [height] pixels. */
+    fun renderSvg(svg: String, width: Int, height: Int): ProseImage
+
+    /**
+     * A family of the one font in [sfnt], a TrueType or OpenType font, falling back to the system's font for glyphs it
+     * lacks, as a browser would.
+     */
+    fun fontFamily(sfnt: ByteArray): FontFamily
 }
 
 internal fun File.validateBookDocumentResource(
@@ -51,7 +72,16 @@ internal fun File.validateBookDocumentResource(
         "Required BOOK resource exceeds its byte limit"
     }
     when (requirement.contentKind) {
-        BookResourceContentKind.DOCUMENT_IMAGE -> decoding.requireDecodableImage(readBytes(), normalizedMediaType)
-        BookResourceContentKind.FONT -> decoding.requireLoadableFont(this)
+        BookResourceContentKind.DOCUMENT_IMAGE -> decodeValidatedProseImage(
+            bytes = readBytes(),
+            mediaType = normalizedMediaType,
+            targetWidthPx = VALIDATION_IMAGE_DIMENSION,
+            targetHeightPx = VALIDATION_IMAGE_DIMENSION,
+            decoding = decoding,
+        ).release()
+        BookResourceContentKind.FONT -> decoding.fontFamily(readBytes().let { unpackWebFont(it) ?: it })
     }
 }
+
+// Images are checked by decoding them as a figure about this wide would, every pixel read
+private const val VALIDATION_IMAGE_DIMENSION = 1_024

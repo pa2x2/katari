@@ -3,7 +3,7 @@ package mihon.entry.interactions.book.download
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.content.MaterializedBookResource
-import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
+import mihon.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -38,7 +38,7 @@ internal class BookDownloadDocumentStorageTest {
                 staging,
                 BookDownloadResourceBudget().tracker(),
                 emptyMap(),
-                AndroidBookDocumentResourceDecoding,
+                HostBookDocumentResourceDecoding,
             )
                 .write("chapter", resource)
             assertNotEquals(provider.resourceFileName("chapter", resource.metadata.mediaType), stored.fileName)

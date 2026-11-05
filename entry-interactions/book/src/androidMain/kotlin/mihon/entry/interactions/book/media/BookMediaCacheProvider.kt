@@ -7,6 +7,7 @@ import mihon.entry.interactions.media.EntryMediaCacheId
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import tachiyomi.i18n.*
 
+/** Android's book media caches: the materialized resources the reader opens books from. */
 internal class BookMediaCacheProvider(
     cache: () -> BookMaterializationCache,
 ) : EntryMediaCacheProvider {

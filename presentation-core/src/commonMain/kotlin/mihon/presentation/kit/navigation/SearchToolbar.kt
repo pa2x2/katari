@@ -14,6 +14,12 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -40,8 +46,9 @@ import tachiyomi.presentation.core.util.showSoftKeyboard
  * [placeholderText] null uses [MR.strings.action_search_hint]. While searching the bar is always compact and holds
  * the query in a rounded field, so it reads as a search box rather than a title. [onClickCloseSearch] null hides the
  * up button while searching, for a screen that is only a search and has nowhere to go back to. [matchCounter], such as
- * "1 of 2", shows in the field for a search that steps through matches. [overlay] draws the bar over content, as a
- * reader's bar is.
+ * "1 of 2", shows in the field for a search that steps through matches; with [onStepMatch] given, Enter steps to the
+ * next match and Shift+Enter to the previous one, and the field keeps the cursor for the query to be changed. [overlay]
+ * draws the bar over content, as a reader's bar is.
  */
 @Composable
 fun SearchToolbar(
@@ -58,6 +65,7 @@ fun SearchToolbar(
     scrollBehavior: AppBarScrollBehavior? = null,
     large: Boolean = true,
     matchCounter: String? = null,
+    onStepMatch: ((forward: Boolean) -> Unit)? = null,
     overlay: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -79,6 +87,7 @@ fun SearchToolbar(
                     placeholderText = placeholderText ?: stringResource(MR.strings.action_search_hint),
                     focusRequester = focusRequester,
                     matchCounter = matchCounter,
+                    onStepMatch = onStepMatch,
                 )
             }
         },
@@ -112,6 +121,7 @@ private fun SearchField(
     placeholderText: String,
     focusRequester: FocusRequester,
     matchCounter: String?,
+    onStepMatch: ((forward: Boolean) -> Unit)?,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -132,7 +142,17 @@ private fun SearchField(
             .fillMaxWidth()
             .focusRequester(focusRequester)
             .typingFocus()
-            .runOnEnterKeyPressed(action = searchAndClearFocus)
+            .then(
+                if (onStepMatch != null) {
+                    Modifier.onPreviewKeyEvent { event ->
+                        if (event.key != Key.Enter && event.key != Key.NumPadEnter) return@onPreviewKeyEvent false
+                        if (event.type == KeyEventType.KeyDown) onStepMatch(!event.isShiftPressed)
+                        true
+                    }
+                } else {
+                    Modifier.runOnEnterKeyPressed(action = searchAndClearFocus)
+                },
+            )
             .showSoftKeyboard(remember { searchQuery.isEmpty() })
             .clearFocusOnSoftKeyboardHide(),
         textStyle = searchFieldTextStyle(),

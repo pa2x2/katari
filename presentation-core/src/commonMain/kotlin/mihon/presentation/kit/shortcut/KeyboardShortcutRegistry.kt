@@ -57,6 +57,19 @@ class KeyboardShortcutRegistry {
         typing: Boolean = false,
     ): Boolean = trigger(KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift, meta = meta), typing)
 
+    /**
+     * The mouse's back button, pressed anywhere in the window: runs the newest declaration that names
+     * [ShortcutKeys.MouseBack] among its keys and can run, as a chord runs the newest declaration of its key. Returns
+     * false when none can.
+     */
+    fun onMouseBack(): Boolean {
+        val registration = registrations.lastOrNull { registration ->
+            registration.canRun() && ShortcutKeys.MouseBack in registration.shortcut.keys
+        } ?: return false
+        registration.action()
+        return true
+    }
+
     internal fun trigger(
         press: KeyPress,
         typingElsewhere: Boolean = false,

@@ -8,8 +8,8 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import eu.kanade.tachiyomi.ui.reader.viewer.gesture.WheelTurns
 import kotlinx.coroutines.coroutineScope
+import mihon.entry.viewer.chrome.ui.wheel.WheelTurns
 import kotlin.math.abs
 import kotlin.math.pow
 

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -75,7 +76,11 @@ fun DropdownMenu(
         shadowElevation = MenuDefaults.ShadowElevation,
         border = null,
     ) {
-        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { KeyboardShortcutLayer { content() } }
+        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) {
+            // A menu opened over selectable text, such as a reader's, would otherwise give the text's selection its
+            // items, which it can't place: they are in the popup's own window, and a press on one crashes
+            DisableSelection { KeyboardShortcutLayer { content() } }
+        }
     }
 }
 
