@@ -13,11 +13,12 @@ android {
     targetProjectPath = projects.app.path
 
     buildTypes {
-        // Captures run against the release-like benchmark build, which is debug-signed like this APK.
-        create("benchmark") {
+        // Captures run against the app's release-like benchmark build, which is debug-signed like this APK. The build
+        // type is named after its job, so assembleBenchmark and installBenchmark across the whole build leave it out.
+        create("showcase") {
             isDebuggable = true
             signingConfig = getByName("debug").signingConfig
-            matchingFallbacks += "release"
+            matchingFallbacks += listOf("benchmark", "release")
         }
     }
 
@@ -28,7 +29,7 @@ android {
 
 androidComponents {
     beforeVariants { variant ->
-        variant.enable = variant.buildType == "benchmark"
+        variant.enable = variant.buildType == "showcase"
     }
 }
 

@@ -5,7 +5,7 @@
  * (seed/generate.ts) into the benchmark build and readies on-page translation. Then the clock moves to the showcase
  * moment and the scenes run. Expects the content server's folder (content/fetch.ts), the seed, and the three APKs built:
  *
- *   ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+ *   ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
  */
 import { type ChildProcess, spawn } from "node:child_process";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -42,11 +42,11 @@ const { values } = parseArgs({
     "app-apk": { type: "string", default: join(repository, "app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk") },
     "extension-apk": {
       type: "string",
-      default: join(repository, "showcase/extension/build/outputs/apk/debug/extension-debug.apk"),
+      default: join(repository, "showcase/extension/build/outputs/apk/showcase/extension-showcase.apk"),
     },
     "capture-apk": {
       type: "string",
-      default: join(repository, "showcase/capture/build/outputs/apk/benchmark/capture-benchmark.apk"),
+      default: join(repository, "showcase/capture/build/outputs/apk/showcase/capture-showcase.apk"),
     },
     "keep-emulator": { type: "boolean", default: false },
     // For working on scenes: runs these, by the class names in scenes.ts and in that order, instead of all of them.

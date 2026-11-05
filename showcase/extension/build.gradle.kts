@@ -22,9 +22,24 @@ android {
         buildConfig = true
     }
 
+    buildTypes {
+        // Named after its job, so the task names the app's build types share (installDebug, assembleRelease) never
+        // select this project when they run across the whole build.
+        create("showcase") {
+            initWith(getByName("debug"))
+            matchingFallbacks += "debug"
+        }
+    }
+
     sourceSets {
         // The factory lists its sources from the content's source list before any network request is possible.
         getByName("main").resources.directories.add("../content/source-list")
+    }
+}
+
+androidComponents {
+    beforeVariants { variant ->
+        variant.enable = variant.buildType == "showcase"
     }
 }
 
