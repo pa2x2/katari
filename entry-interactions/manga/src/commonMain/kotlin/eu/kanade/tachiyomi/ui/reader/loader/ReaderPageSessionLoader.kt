@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
-import android.content.Context
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.archive.ArchiveOpener
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.page.MangaPageStore
@@ -22,7 +22,7 @@ internal class ReaderPageSessionLoader(
     private val pageAcquisition: MangaPageAcquisitionCoordinator,
     private val appScope: CoroutineScope,
 ) {
-    fun chapterLoader(context: Context, manga: Entry): ChapterLoader = ChapterLoader(
+    fun chapterLoader(context: PlatformContext, manga: Entry): ChapterLoader = ChapterLoader(
         context = context,
         archives = archives,
         downloadManager = downloadManager,
@@ -34,7 +34,7 @@ internal class ReaderPageSessionLoader(
         appScope = appScope,
     )
 
-    suspend fun load(context: Context, entry: Entry, chapter: EntryChapter): ReaderChapter {
+    suspend fun load(context: PlatformContext, entry: Entry, chapter: EntryChapter): ReaderChapter {
         val readerChapter = ReaderChapter(
             chapter = chapter.toReaderChapter(),
             manga = entry,

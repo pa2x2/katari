@@ -7,7 +7,10 @@ actual data class ProgressiveImageState(
     val visual: ProgressiveImageVisual? = null,
     val animation: ProgressiveAnimationBuffer? = null,
     val status: ProgressiveImageStatus = ProgressiveImageStatus.Receiving,
-)
+) {
+    actual val holdsReplayableAnimation: Boolean
+        get() = animation?.let { it.isComplete && it.isReplayable } == true
+}
 
 sealed interface ProgressiveImageStatus {
     data object Receiving : ProgressiveImageStatus

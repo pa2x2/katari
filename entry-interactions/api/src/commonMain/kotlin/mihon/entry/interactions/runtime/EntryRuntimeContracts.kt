@@ -5,7 +5,7 @@ import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.EntryChapter
 import java.io.File
 
-@PlatformFacility
+/** The reader's chapter page cache, the same store on every platform, which downloads take already-read pages from. */
 interface EntryPageImageCache {
     /** Measured on disk, so read it off the main thread. */
     val sizeBytes: Long

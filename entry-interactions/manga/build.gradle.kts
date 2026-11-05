@@ -43,6 +43,8 @@ kotlin {
                 implementation(projects.sourceLocal)
                 implementation(projects.translation.ui)
                 implementation(libs.bundles.serialization)
+                implementation(libs.androidx.annotation)
+                implementation(libs.diskLruCache)
             }
         }
         androidMain {
@@ -67,7 +69,6 @@ kotlin {
                 implementation(projects.sourceCompat)
 
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.androidx.annotation)
                 implementation(libs.androidx.appCompat)
                 implementation(libs.androidx.compose.foundation)
                 implementation(libs.androidx.compose.animation)
@@ -80,7 +81,6 @@ kotlin {
                 implementation(libs.androidx.recyclerView)
                 implementation(libs.androidx.viewPager)
                 implementation(libs.bundles.coil)
-                implementation(libs.diskLruCache)
                 implementation(libs.material)
                 api(libs.metrox.viewmodel)
                 implementation(libs.photoView)

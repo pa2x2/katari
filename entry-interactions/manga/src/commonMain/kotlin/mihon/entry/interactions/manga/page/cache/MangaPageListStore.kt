@@ -2,7 +2,7 @@ package mihon.entry.interactions.manga.page.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.util.storage.DiskUtil
+import eu.kanade.tachiyomi.util.lang.Hash
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import okio.buffer
@@ -16,7 +16,7 @@ internal class MangaPageListStore(
     private val entryLocks: MangaPageCacheEntryLocks,
 ) {
     fun get(chapter: Chapter): List<Page> {
-        val key = DiskUtil.hashKeyForDisk(chapter.key())
+        val key = Hash.md5(chapter.key())
         return diskCache.get(key).use {
             json.decodeFromString(it.getString(0))
         }
@@ -47,7 +47,7 @@ internal class MangaPageListStore(
         if (pages.isEmpty()) return
         var editor: DiskLruCache.Editor? = null
         try {
-            val key = DiskUtil.hashKeyForDisk(chapter.key())
+            val key = Hash.md5(chapter.key())
             editor = diskCache.edit(key) ?: return
             editor.newOutputStream(0).sink().buffer().use {
                 it.write(json.encodeToString(pages).toByteArray())
@@ -64,7 +64,7 @@ internal class MangaPageListStore(
 
     private fun remove(chapter: Chapter) {
         try {
-            diskCache.remove(DiskUtil.hashKeyForDisk(chapter.key()))
+            diskCache.remove(Hash.md5(chapter.key()))
             diskCache.flush()
         } catch (error: Exception) {
             logcat(LogPriority.WARN, error) { "Failed to remove empty page list from cache" }

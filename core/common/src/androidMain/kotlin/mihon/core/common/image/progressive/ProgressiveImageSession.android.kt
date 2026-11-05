@@ -16,7 +16,7 @@ import tachiyomi.decoder.incremental.IncrementalImageDecoder
 import tachiyomi.decoder.incremental.IncrementalImageInfo
 import java.io.Closeable
 
-class ProgressiveImageSession internal constructor(
+actual class ProgressiveImageSession internal constructor(
     private var decoder: IncrementalImageDecoder<Bitmap>?,
     private val onTerminated: (ProgressiveImageSession) -> Unit,
 ) : Closeable {
@@ -25,10 +25,10 @@ class ProgressiveImageSession internal constructor(
     private var terminal = false
     private var released = false
 
-    val state: StateFlow<ProgressiveImageState> = mutableState.asStateFlow()
+    actual val state: StateFlow<ProgressiveImageState> = mutableState.asStateFlow()
     internal val subscriptionCount: StateFlow<Int> = mutableState.subscriptionCount
 
-    fun append(bytes: ByteArray, offset: Int = 0, length: Int = bytes.size - offset) {
+    actual fun append(bytes: ByteArray, offset: Int, length: Int) {
         synchronized(this) {
             val activeDecoder = decoder ?: return
             try {
@@ -47,7 +47,7 @@ class ProgressiveImageSession internal constructor(
         }
     }
 
-    fun finish() {
+    actual fun finish() {
         synchronized(this) {
             val activeDecoder = decoder ?: return
             try {
@@ -62,7 +62,7 @@ class ProgressiveImageSession internal constructor(
         }
     }
 
-    fun fail(error: Throwable) {
+    actual fun fail(error: Throwable) {
         synchronized(this) {
             if (!terminal) failLocked(error)
         }
@@ -80,7 +80,7 @@ class ProgressiveImageSession internal constructor(
         }
     }
 
-    override fun close() {
+    actual override fun close() {
         synchronized(this) {
             if (released) return
             mutableState.value = if (terminal) {

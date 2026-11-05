@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.archive.ArchiveOpener
 import mihon.core.archive.openEpub
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.page.MangaPageStore
@@ -17,7 +17,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.io.Format
 
@@ -25,7 +25,7 @@ import tachiyomi.source.local.io.Format
  * Loader used to retrieve the [PageLoader] for a given chapter.
  */
 internal class ChapterLoader(
-    private val context: Context,
+    private val context: PlatformContext,
     private val archives: ArchiveOpener,
     private val downloadManager: DownloadManager,
     private val downloadProvider: DownloadProvider,

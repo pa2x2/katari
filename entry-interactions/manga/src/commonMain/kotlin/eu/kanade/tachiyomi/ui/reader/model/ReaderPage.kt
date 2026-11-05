@@ -29,8 +29,7 @@ internal open class ReaderPage(
     }
 
     fun releaseProgressivePreviewAfterFinalImageReady() {
-        val animation = progressiveImageSession.value?.value?.animation
-        if (animation?.let { it.isComplete && it.isReplayable } != true) {
+        if (progressiveImageSession.value?.value?.holdsReplayableAnimation != true) {
             progressiveImageSession.value = null
         }
     }

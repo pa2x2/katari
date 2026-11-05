@@ -1,11 +1,10 @@
 package mihon.entry.interactions.manga.page
 
-import android.content.Context
 import com.jakewharton.disklrucache.DiskLruCache
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.manga.page.cache.MangaPageCacheEntryLocks
 import mihon.entry.interactions.manga.page.cache.MangaPageImageStore
 import mihon.entry.interactions.manga.page.cache.MangaPageListStore
@@ -17,13 +16,13 @@ import tachiyomi.domain.chapter.model.Chapter
 import java.io.File
 
 internal class MangaPageStore(
-    private val context: Context,
+    private val directories: AppPrivateDirectories,
     json: Json,
 ) : EntryPageImageCache {
     // Opening reads the journal from disk, and the store is built at startup long before a reader needs it
     private val diskCacheLazy = lazy {
         DiskLruCache.open(
-            File(context.cacheDir, "chapter_disk_cache"),
+            File(directories.cache, "chapter_disk_cache"),
             PARAMETER_APP_VERSION,
             PARAMETER_VALUE_COUNT,
             PARAMETER_CACHE_SIZE,
@@ -35,7 +34,7 @@ internal class MangaPageStore(
     private val images by lazy { MangaPageImageStore(diskCache, entryLocks) }
 
     override val sizeBytes: Long
-        get() = DiskUtil.getDirectorySize(diskCache.directory)
+        get() = diskCache.directory.walk().filter(File::isFile).sumOf(File::length)
 
     suspend fun getOrPutPageList(
         chapter: Chapter,

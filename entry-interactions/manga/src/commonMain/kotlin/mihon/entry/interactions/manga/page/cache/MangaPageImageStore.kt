@@ -1,7 +1,7 @@
 package mihon.entry.interactions.manga.page.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
-import eu.kanade.tachiyomi.util.storage.DiskUtil
+import eu.kanade.tachiyomi.util.lang.Hash
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.runInterruptible
@@ -19,7 +19,7 @@ internal class MangaPageImageStore(
 ) {
     fun getCommitted(imageUrl: String): File? {
         return try {
-            val key = DiskUtil.hashKeyForDisk(imageUrl)
+            val key = Hash.md5(imageUrl)
             val inJournal = diskCache.get(key).use { it != null }
             val imageFile = file(imageUrl)
             val fileExists = imageFile.exists()
@@ -33,7 +33,7 @@ internal class MangaPageImageStore(
     }
 
     fun file(imageUrl: String): File {
-        val imageName = DiskUtil.hashKeyForDisk(imageUrl) + ".0"
+        val imageName = Hash.md5(imageUrl) + ".0"
         return File(diskCache.directory, imageName)
     }
 
@@ -69,7 +69,7 @@ internal class MangaPageImageStore(
     }
 
     fun beginWrite(imageUrl: String): MangaPageStagingWrite {
-        val key = DiskUtil.hashKeyForDisk(imageUrl)
+        val key = Hash.md5(imageUrl)
         val editor = diskCache.edit(key)
             ?: throw IOException("Page cache entry is already being edited")
         return try {

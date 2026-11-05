@@ -14,7 +14,7 @@ import tachiyomi.decoder.incremental.IncrementalImageDecoder
 import tachiyomi.decoder.incremental.newInstance
 import java.io.Closeable
 
-class ProgressiveImageEngine(
+actual class ProgressiveImageEngine(
     private val preferences: ProgressiveImagePreferences,
 ) : Closeable {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -22,7 +22,7 @@ class ProgressiveImageEngine(
     private val managedSessions = mutableMapOf<ProgressiveImageSession, Job>()
     private var acceptingSessions = preferences.enabled.get()
 
-    val isEnabled: Boolean
+    actual val isEnabled: Boolean
         get() = preferences.enabled.get()
 
     init {
@@ -33,9 +33,7 @@ class ProgressiveImageEngine(
         }
     }
 
-    fun openSession(
-        options: ProgressiveImageDecodeOptions = ProgressiveImageDecodeOptions(),
-    ): ProgressiveImageSession? {
+    actual fun openSession(options: ProgressiveImageDecodeOptions): ProgressiveImageSession? {
         return synchronized(sessionsLock) {
             if (!acceptingSessions || !preferences.enabled.get()) return@synchronized null
             if (managedSessions.size >= MAXIMUM_ADMITTED_SESSIONS) return@synchronized null
@@ -68,7 +66,7 @@ class ProgressiveImageEngine(
         sessions.forEach(ProgressiveImageSession::disable)
     }
 
-    override fun close() {
+    actual override fun close() {
         val sessions = synchronized(sessionsLock) {
             acceptingSessions = false
             managedSessions.toList().also { managedSessions.clear() }

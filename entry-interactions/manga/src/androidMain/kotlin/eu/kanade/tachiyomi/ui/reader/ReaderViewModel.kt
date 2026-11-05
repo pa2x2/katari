@@ -66,6 +66,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -178,6 +179,7 @@ internal class ReaderViewModel(
     ttsFeature: TtsFeature,
     textRecognitionFeature: TextRecognitionFeature,
     modelArtifactStore: ModelArtifactStore,
+    networkConnectivity: NetworkConnectivity,
 ) : ViewModel() {
 
     private val imageSaver = ReaderImageSaver(application)
@@ -200,7 +202,7 @@ internal class ReaderViewModel(
 
     val sourcesInitialized: StateFlow<Boolean> = sourceManager.isInitialized
 
-    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(application))
+    private val readAhead = ReaderReadAhead(LoadAheadNetworkPolicy(networkConnectivity))
 
     /**
      * The series the current chapter belongs to, once it is loaded. In a merged entry that is the chapter's member, not
