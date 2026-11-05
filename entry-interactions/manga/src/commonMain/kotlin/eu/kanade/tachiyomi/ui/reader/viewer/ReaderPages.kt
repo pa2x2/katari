@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.Content
@@ -52,10 +53,15 @@ internal fun ReaderPages(
         inverted = inverted.effectiveValue,
         modifier = modifier.fillMaxSize(),
     ) {
-        when (viewer) {
-            is PagedViewer -> viewer.Content(tapZonesHeld = tapZonesHeld)
-            is StripViewer -> viewer.Content(tapZonesHeld = tapZonesHeld)
-            else -> error("No content for ${viewer::class.simpleName}")
+        // A viewer replacing one of the same class (left to right after right to left, say) must not inherit its
+        // composition: effects keyed on the window, such as the one telling the paged viewer it has two panes,
+        // would not run again for it
+        key(viewer) {
+            when (viewer) {
+                is PagedViewer -> viewer.Content(tapZonesHeld = tapZonesHeld)
+                is StripViewer -> viewer.Content(tapZonesHeld = tapZonesHeld)
+                else -> error("No content for ${viewer::class.simpleName}")
+            }
         }
     }
 }
