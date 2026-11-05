@@ -1,5 +1,26 @@
 # Desktop Changelog
 
+## [0.1.0-alpha.3] - 2026-11-05
+
+### ✨ Added
+
+- Manga chapters open in the app's reader.
+- Right-clicking a page offers copying it, saving it and setting it as the cover.
+- Manga show in the immersive feed, and series screens show page previews.
+
+### 🔄 Changed
+
+- The library's refresh button sits in the app bar and updates the category shown, and Update entire library is in the menu.
+
+### 🧩 Improved
+
+- Screens you can pull to refresh also have a refresh button.
+
+### 🐛 Fixed
+
+- Scrolling past the top of a list with the wheel no longer leaves the refresh indicator stuck.
+- The immersive view no longer crashes when a refresh returns fewer titles.
+
 ## [0.1.0-alpha.2] - 2026-11-05
 
 ### ✨ Added
@@ -28,6 +49,7 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.3...HEAD
+[0.1.0-alpha.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.1
