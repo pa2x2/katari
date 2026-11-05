@@ -24,13 +24,6 @@ dependencyResolutionManagement {
 
     @Suppress("UnstableApiUsage")
     repositories {
-        if (providers.gradleProperty("useLocalImageDecoder").orNull.toBoolean()) {
-            mavenLocal {
-                content {
-                    includeModule("com.github.pa2x2", "image-decoder")
-                }
-            }
-        }
         exclusiveContent {
             // Reduced ONNX Runtime build, published as a GitHub release by the scripts in
             // tools/onnxruntime and checked against gradle/verification-metadata.xml.
@@ -104,6 +97,26 @@ dependencyResolutionManagement {
                 }
             }
             filter { includeModule("app.katari.libmpv", "libmpv-linux-x86-64") }
+        }
+        exclusiveContent {
+            // The image decoder for Android and the desktop app, released by pa2x2/image-decoder and checked against
+            // gradle/verification-metadata.xml. -PlocalImageDecoder reads the fork's publishToMavenLocal output
+            // instead (with --dependency-verification=lenient), to try a change before it is released.
+            forRepository {
+                if (providers.gradleProperty("localImageDecoder").orNull.toBoolean()) {
+                    mavenLocal()
+                } else {
+                    ivy {
+                        name = "ImageDecoder"
+                        url = uri("https://github.com/pa2x2/image-decoder/releases/download")
+                        patternLayout { artifact("image-decoder-[revision]/[artifact]-[revision].[ext]") }
+                        metadataSources { artifact() }
+                    }
+                }
+            }
+            filter {
+                includeModule("io.github.pa2x2", "image-decoder-android")
+            }
         }
         exclusiveContent {
             // quickjs-kt with fixes for interrupting and failing evaluations, released by pa2x2/quickjs-kt and

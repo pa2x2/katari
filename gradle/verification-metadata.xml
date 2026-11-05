@@ -2,8 +2,9 @@
 <!--
   Pins the AARs and jars Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime
   that tools/onnxruntime/build-aar.sh made and verified, the desktop app's libarchive and libmpv that
-  tools/libarchive/build-jar.sh and tools/libmpv/build-jar.sh made and verified, and libmpv and quickjs-kt as
-  released from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Also pins JCEF's API from
+  tools/libarchive/build-jar.sh and tools/libmpv/build-jar.sh made and verified, and libmpv, quickjs-kt and
+  image-decoder as released from pa2x2/mpv-android, pa2x2/quickjs-kt and pa2x2/image-decoder (each release's
+  SHA256SUMS). Also pins JCEF's API from
   JetBrains' intellij-dependencies repository (the .sha256 files it publishes beside each file). Every other
   dependency comes from a repository Gradle already trusts and stays unchecked.
 -->
@@ -24,6 +25,11 @@
          </artifact>
          <artifact name="jcef-150.0.14-g7c1aa68-chromium-150.0.7871.129-api-1.21-263-b16.pom">
             <sha256 value="5cad8197d5056c3bcc0fb10b21db9c1a8637aa224b8a080893ba15cac9fd0fc5" origin="intellij-dependencies .sha256"/>
+         </artifact>
+      </component>
+      <component group="io.github.pa2x2" name="image-decoder-android" version="1.0.0">
+         <artifact name="image-decoder-android-1.0.0.aar">
+            <sha256 value="49e12e99c1fe5d64706c3daec94a72955d6794205ed0efb402cabb114d6508b9" origin="image-decoder-1.0.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
       <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.2">

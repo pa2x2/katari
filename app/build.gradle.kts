@@ -374,7 +374,10 @@ dependencies {
     implementation(libs.subsamplingScaleImageView) {
         exclude(module = "image-decoder")
     }
-    implementation(libs.image.decoder)
+    // Named as an AAR, which Gradle can't tell without metadata
+    implementation(libs.image.decoder) {
+        artifact { type = "aar" }
+    }
 
     // UI libraries
     implementation(libs.material)
