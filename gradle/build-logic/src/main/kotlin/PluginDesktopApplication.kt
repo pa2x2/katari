@@ -31,6 +31,8 @@ class PluginDesktopApplication : Plugin<Project> {
             jvmArgs += "--enable-native-access=ALL-UNNAMED"
             // The X11 toolkit's window class, which the app names after its desktop entry (X11WindowClass)
             jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
+            // The native Wayland toolkit's screen scale, which videos render at (the video engine's RenderScale)
+            jvmArgs += "--add-opens=java.desktop/sun.awt.wl=ALL-UNNAMED"
             runOnJetBrainsRuntime(this)
         }
     }

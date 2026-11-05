@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:fast-float",
+  "artifactVersion": "7.360.1",
+  "name": "fast_float",
+  "description": "Built into the desktop app's libmpv, in libplacebo.",
+  "website": "https://github.com/fastfloat/fast_float",
+  "licenses": [
+    "libmpv-desktop-fast-float"
+  ]
+}

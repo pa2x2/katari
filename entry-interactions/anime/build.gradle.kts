@@ -11,12 +11,14 @@ plugins {
 kotlin {
     android {
         namespace = "mihon.entry.interactions.anime"
-        // The player's strings, styles and transition animations are Android resources of this module.
+        // The player activity's theme and transitions, the benchmark build's paused start and ExoPlayer's audio
+        // attribution are Android resources of this module.
         androidResources {
             enable = true
         }
 
-        // The engine policy test builds switch reasons, whose messages load from i18n's Android resources.
+        // The shared tests also run on the Android host, where the player's problems and engine switch reasons load
+        // their strings from i18n's Android resources.
         withHostTest {
             isIncludeAndroidResources = true
         }
@@ -24,7 +26,13 @@ kotlin {
     desktop()
 
     compilerOptions {
-        optIn.addAll("kotlinx.coroutines.ExperimentalCoroutinesApi", "kotlinx.coroutines.FlowPreview")
+        optIn.addAll(
+            "kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "kotlinx.coroutines.FlowPreview",
+            "androidx.compose.foundation.ExperimentalFoundationApi",
+            "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+            "androidx.compose.ui.ExperimentalComposeUiApi",
+        )
     }
 
     sourceSets {
@@ -37,24 +45,33 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.core.metro)
                 implementation(projects.core.platform)
+                implementation(projects.entryViewerChromeUi)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.presentationCore)
                 implementation(projects.sourceApi)
                 implementation(projects.videoEngine.dash)
                 implementation(projects.videoEngine.spi)
                 implementation(libs.bundles.serialization)
+                implementation(libs.coil.compose)
+                implementation(libs.compose.multiplatform.animation)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.navigationEvent)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.ui)
+                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.viewmodelSavedstate)
+                api(libs.metrox.viewmodel)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                implementation(projects.videoEngine.mpv)
+                implementation(libs.metrox.viewmodel.compose)
             }
         }
         androidMain {
-            // The player's Compose APIs; the shared code uses none.
-            languageSettings {
-                optIn("androidx.compose.foundation.ExperimentalFoundationApi")
-                optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
-                optIn("androidx.compose.ui.ExperimentalComposeUiApi")
-            }
             dependencies {
-                implementation(projects.entryViewerChromeUi)
-                implementation(projects.presentationCore)
                 implementation(projects.videoEngine.mpv)
 
                 implementation(libs.androidx.activity.compose)
@@ -69,10 +86,7 @@ kotlin {
                 implementation(libs.androidx.media3.exoplayerDash)
                 implementation(libs.androidx.media3.exoplayerHls)
                 implementation(libs.androidx.media3.session)
-                implementation(libs.androidx.media3.ui)
                 implementation(libs.bundles.androidx.lifecycle)
-                implementation(libs.coil.compose)
-                api(libs.metrox.viewmodel)
             }
         }
         commonTest {

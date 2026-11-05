@@ -13,9 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.LocalInTooltip
-import mihon.presentation.kit.feedback.Tooltip
-import mihon.presentation.kit.pointer.LocalWindowHasMouse
+import mihon.presentation.kit.feedback.HoverTooltip
+import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -26,8 +25,9 @@ enum class IconButtonStyle { Standard, Filled, Tonal, Outlined }
 enum class IconButtonSize { Standard, Large }
 
 /**
- * In a window worked with a mouse, hovering the button shows [contentDescription] as its tooltip unless the button
- * already sits in one, such as an app bar action's, which names the action's shortcut too.
+ * In a window worked with a mouse, hovering the button shows [contentDescription] as its tooltip, with the keys of
+ * [shortcut], the shortcut that does what the button does, unless the button already sits in a tooltip, such as an app
+ * bar action's.
  */
 @Composable
 fun IconButton(
@@ -40,6 +40,7 @@ fun IconButton(
     tone: ContentTone = ContentTone.Inherit,
     enabled: Boolean = true,
     badgeCount: Int? = null,
+    shortcut: KeyboardShortcut? = null,
 ) {
     val sizedModifier = when (size) {
         IconButtonSize.Standard -> modifier
@@ -56,7 +57,7 @@ fun IconButton(
             Icon(icon, contentDescription, tone = tone)
         }
     }
-    MouseTooltip(contentDescription) {
+    HoverTooltip(contentDescription, shortcut = shortcut) {
         when (style) {
             IconButtonStyle.Standard ->
                 androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
@@ -85,7 +86,7 @@ fun IconToggleButton(
     val content: @Composable () -> Unit = {
         Icon(if (checked) checkedIcon else icon, contentDescription)
     }
-    MouseTooltip(contentDescription) {
+    HoverTooltip(contentDescription) {
         if (filled) {
             FilledIconToggleButton(checked, onCheckedChange, modifier, enabled, content = content)
         } else {
@@ -98,14 +99,5 @@ fun IconToggleButton(
                 content = content,
             )
         }
-    }
-}
-
-@Composable
-private fun MouseTooltip(text: String?, button: @Composable () -> Unit) {
-    if (text != null && LocalWindowHasMouse.current && !LocalInTooltip.current) {
-        Tooltip(text, content = button)
-    } else {
-        button()
     }
 }

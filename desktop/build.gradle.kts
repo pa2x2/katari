@@ -19,7 +19,7 @@ plugins {
 
 // The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
 // workflow reads it from this line.
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
@@ -56,7 +56,8 @@ tasks.processResources {
     from(generateDesktopIcon)
 }
 
-// Libraries resolved without a POM: libarchive and what it builds in, whose entries tools/libarchive writes to licences/
+// Libraries resolved without a POM: libarchive, libmpv and what they build in, whose entries tools/libarchive and
+// tools/libmpv write to licences/
 aboutLibraries {
     collect {
         configPath.set(layout.projectDirectory.dir("licences"))

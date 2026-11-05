@@ -1,17 +1,16 @@
 package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
-import android.content.Context
+import android.app.Application
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import mihon.video.engine.spi.VideoEngine
 import mihon.video.engine.spi.VideoPlayerRole
+import mihon.video.engine.spi.player.VideoPlayer
 
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180
@@ -21,16 +20,13 @@ private const val SEEK_PREVIEW_MAX_HEIGHT = 180
  * watched player can boost its volume ([BoostedExoPlayer]).
  */
 internal class ExoPlayerVideoEngine(
+    private val context: Application,
     private val networkHelper: NetworkHelper,
     private val mediaCache: ExoPlayerMediaCache,
 ) : VideoEngine {
 
     @OptIn(markerClass = [UnstableApi::class])
-    override fun createPlayer(
-        context: Context,
-        stream: VideoStream,
-        role: VideoPlayerRole,
-    ): Player {
+    override fun createPlayer(stream: VideoStream, role: VideoPlayerRole): VideoPlayer {
         val mediaSourceFactory = buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream)
         val builder = ExoPlayer.Builder(context, mediaSourceFactory)
         if (role is VideoPlayerRole.Watched) {
@@ -49,9 +45,8 @@ internal class ExoPlayerVideoEngine(
                 .setSeekBackIncrementMs(role.seekStepMs)
                 .setSeekForwardIncrementMs(role.seekStepMs)
         }
-        val metadata = (role as? VideoPlayerRole.Watched)?.metadata ?: MediaMetadata.EMPTY
         val player = builder.build().apply {
-            setStreamWithExternalAudio(mediaSourceFactory, stream, metadata)
+            setStreamWithExternalAudio(mediaSourceFactory, stream)
             if (role == VideoPlayerRole.SeekPreview) {
                 volume = 0f
                 playWhenReady = false
@@ -63,6 +58,6 @@ internal class ExoPlayerVideoEngine(
                     .build()
             }
         }
-        return if (role is VideoPlayerRole.Watched) BoostedExoPlayer(player) else player
+        return Media3VideoPlayer(if (role is VideoPlayerRole.Watched) BoostedExoPlayer(player) else player)
     }
 }

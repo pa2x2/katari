@@ -11,11 +11,11 @@ fun audioChoiceKey(track: VideoAudioTrack): String {
 
 /**
  * The external audio track a playing track comes from. An engine publishes the tracks it loads for a stream's audio
- * tracks with a `Format.id` of `<n>:…`, n counting them from 1 in order: the form ExoPlayer's merging media source gives
- * the n-th source merged after the stream, whose own tracks are `0:…`.
+ * tracks with a [VideoTrack.id] of `<n>:…`, n counting them from 1 in order: the form ExoPlayer's merging media
+ * source gives the n-th source merged after the stream, whose own tracks are `0:…`.
  */
-fun externalAudioTrackOf(formatId: String?, audioTracks: List<VideoAudioTrack>): VideoAudioTrack? {
+fun externalAudioTrackOf(trackId: String?, audioTracks: List<VideoAudioTrack>): VideoAudioTrack? {
     if (audioTracks.isEmpty()) return null
-    val position = formatId?.substringBefore(':', missingDelimiterValue = "")?.toIntOrNull() ?: return null
+    val position = trackId?.substringBefore(':', missingDelimiterValue = "")?.toIntOrNull() ?: return null
     return audioTracks.getOrNull(position - 1)
 }

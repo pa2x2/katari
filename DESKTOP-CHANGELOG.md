@@ -1,5 +1,24 @@
 # Desktop Changelog
 
+## [0.1.0-alpha.2] - 2026-11-05
+
+### ✨ Added
+
+- Anime episodes play in the app through mpv.
+- Episodes can keep playing in a picture-in-picture window.
+- The desktop's media controls show the playing episode and can pause it, change episodes and raise the window.
+- Manga chapters, episodes and books can be downloaded.
+
+### 🐛 Fixed
+
+- The app no longer crashes after a library update or another task that waits for a connection.
+- The window opens at its saved size under window managers that frame it differently.
+- Moving to another screen no longer takes the window out of full screen.
+- Leaving full screen from a maximized window works.
+- Chapter and episode rows no longer grow taller under the pointer.
+- Links with characters such as `|` in them open in the browser.
+- About labels pre-release builds as pre-releases instead of stable.
+
 ## [0.1.0-alpha.1] - 2026-11-03
 
 ### ✨ Added
@@ -9,5 +28,6 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.2...HEAD
+[0.1.0-alpha.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.1

@@ -6,8 +6,8 @@ import Task from "../../guide/Task.astro";
 import { leavesSite, sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage manual="docs" slug="video" lead="Episodes play in Katari's built-in player, or in mpv once its add-on is installed.">
-  <Task id="player" title="Choose the player">
+<GuidePage manual="docs" slug="video" lead="Episodes play in Katari's built-in player, or in mpv once its add-on is installed. On Linux they play in mpv, which comes with Katari.">
+  <Task id="player" title="Choose the player" platform="Android">
     <p>
       Every title starts on <strong>Auto</strong>, which uses the built-in player. If the <a href="#mpv-addon">mpv add-on</a> is
       installed, Auto switches to mpv for videos, audio or subtitles the built-in player can't handle, and goes back if mpv can't play
@@ -20,7 +20,7 @@ import { leavesSite, sitePath } from "../../site/links.ts";
     <p>The choice applies to the whole title. On Auto, the same row says which player is in use and why.</p>
   </Task>
 
-  <Task id="mpv-addon" title="The mpv add-on">
+  <Task id="mpv-addon" title="The mpv add-on" platform="Android">
     <p>
       mpv plays formats and styled subtitles the built-in player can't. It is a separate app, downloaded from the
       <a href="https://github.com/pa2x2/mpv-android/releases" {...leavesSite()}>pa2x2/mpv-android releases</a>, and Katari only uses a
@@ -34,6 +34,17 @@ import { leavesSite, sitePath } from "../../site/links.ts";
     <p>
       Katari keeps the add-on up to date along with itself. After an add-on update, tap <strong>Restart</strong> on its row; until then
       the old version keeps playing.
+    </p>
+  </Task>
+
+  <Task id="mouse-and-keys" title="Mouse and keys" platform="Linux">
+    <p>
+      Click the picture to play or pause, double-click for full screen, and hold the button for 2× speed. Right-click opens the
+      settings. The wheel sets the volume, scrolling sideways seeks, and Ctrl with the wheel zooms.
+    </p>
+    <p>
+      Space plays or pauses, the arrow keys seek and set the volume, F switches full screen, and I moves the episode to a small
+      picture-in-picture window. Press ? to list every key. Hovering a button shows its key as well.
     </p>
   </Task>
 

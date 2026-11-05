@@ -1,18 +1,13 @@
 package mihon.desktop.window
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.window.WindowPlacement
-import androidx.compose.ui.window.WindowState
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ShortcutGroup
 import mihon.presentation.kit.shortcut.ShortcutKeys
 import mihon.presentation.kit.shortcut.ShortcutReach
+import mihon.presentation.kit.window.WindowFullScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -21,7 +16,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * on F11, and quitting on Ctrl+Q. Navigation has no forward history to go to, so Alt+→ does nothing.
  */
 @Composable
-fun WindowShortcuts(state: WindowState, backInput: WindowBackInput, onQuit: () -> Unit) {
+fun WindowShortcuts(fullScreen: WindowFullScreen, backInput: WindowBackInput, onQuit: () -> Unit) {
     // Compose goes back on an Esc nothing in the window used; taking it here first does the same
     KeyboardShortcutHandler(
         KeyboardShortcut(
@@ -38,7 +33,6 @@ fun WindowShortcuts(state: WindowState, backInput: WindowBackInput, onQuit: () -
         onTrigger = backInput::goBack,
     )
 
-    var placementBeforeFullScreen by remember(state) { mutableStateOf(WindowPlacement.Floating) }
     KeyboardShortcutHandler(
         KeyboardShortcut(
             id = "window.fullScreen",
@@ -48,12 +42,7 @@ fun WindowShortcuts(state: WindowState, backInput: WindowBackInput, onQuit: () -
             reach = ShortcutReach.Window,
         ),
     ) {
-        if (state.placement == WindowPlacement.Fullscreen) {
-            state.placement = placementBeforeFullScreen
-        } else {
-            placementBeforeFullScreen = state.placement
-            state.placement = WindowPlacement.Fullscreen
-        }
+        if (fullScreen.isFullScreen) fullScreen.leave() else fullScreen.enter()
     }
 
     KeyboardShortcutHandler(

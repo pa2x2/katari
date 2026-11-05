@@ -37,6 +37,12 @@ class KeyboardShortcutRegistry {
         return trigger(event.toKeyPress())
     }
 
+    /** Keys on their way to the focused control, for shortcuts taking them first ([KeyboardShortcut.beforeFocus]). */
+    internal fun onPreviewKeyEvent(event: KeyEvent): Boolean {
+        if (event.type != KeyEventType.KeyDown) return false
+        return trigger(event.toKeyPress(), beforeFocusOnly = true)
+    }
+
     /**
      * As [onKeyEvent], for keys that reach the window from elsewhere than as its Compose events, such as from the
      * platform or keys a web page left: [key] going down with these modifiers held. [typing] where the key was typed
@@ -51,20 +57,34 @@ class KeyboardShortcutRegistry {
         typing: Boolean = false,
     ): Boolean = trigger(KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift, meta = meta), typing)
 
-    internal fun trigger(press: KeyPress, typingElsewhere: Boolean = false): Boolean {
+    internal fun trigger(
+        press: KeyPress,
+        typingElsewhere: Boolean = false,
+        beforeFocusOnly: Boolean = false,
+    ): Boolean {
         val typing = typingElsewhere || typingFields.isNotEmpty()
         val registration = registrations.lastOrNull { registration ->
             registration.canRun() &&
                 (!typing || registration.shortcut.whileTyping) &&
                 registration.shortcut.keys.any { it is ShortcutKeys.Chord && it.matches(press) }
         } ?: return false
+        // The newest declaration of the key decides, so one that waits for focus keeps it from older ones that don't
+        if (beforeFocusOnly && !registration.shortcut.beforeFocus) return false
         registration.action()
         return true
     }
 
+    /** Lists what can run, leaving out a shortcut whose every key a newer declaration has taken, such as a screen's. */
     fun showList() {
-        listed = registrations
-            .filter { it.canRun() }
+        val runnable = registrations.filter { it.canRun() }
+        listed = runnable
+            .filterIndexed { index, registration ->
+                val chords = registration.shortcut.keys.filterIsInstance<ShortcutKeys.Chord>()
+                val taken = runnable.drop(index + 1).flatMap { newer ->
+                    newer.shortcut.keys.filterIsInstance<ShortcutKeys.Chord>().map { it.press }
+                }
+                chords.isEmpty() || chords.any { it.press !in taken }
+            }
             .asReversed()
             .distinctBy { it.shortcut.id }
             .asReversed()

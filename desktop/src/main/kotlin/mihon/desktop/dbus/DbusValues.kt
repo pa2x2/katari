@@ -9,7 +9,7 @@ import java.nio.ByteOrder
  * as: `y` Byte, `b` Boolean, `n`/`q` Short, `i`/`u` Int, `x`/`t` Long, `d` Double, `s`/`o`/`g` String, `v` [Variant],
  * `ay` ByteArray, `a{..}` Map, other arrays List, and structs List.
  */
-internal class Variant(val signature: String, val value: Any?)
+internal data class Variant(val signature: String, val value: Any?)
 
 /** Writes values little-endian, aligned as the specification requires from the start of the message. */
 internal class DbusWriter {

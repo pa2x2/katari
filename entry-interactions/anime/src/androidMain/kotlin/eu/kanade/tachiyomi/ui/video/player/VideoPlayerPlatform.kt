@@ -12,17 +12,6 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
-import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.PreferenceStore
-
-internal class AnimePlayerBasePreferences(
-    preferenceStore: PreferenceStore,
-) {
-    val incognitoMode = preferenceStore.getBoolean(Preference.appStateKey("incognito_mode"), false)
-
-    // Keep this session-scoped so every new app process starts immersive playback muted.
-    var immersiveFeedMuted = true
-}
 
 internal fun AppCompatActivity.registerAnimePlayerSecureScreen(
     readerPreferences: ReaderBasePreferences,

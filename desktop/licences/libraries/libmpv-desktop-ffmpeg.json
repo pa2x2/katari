@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:ffmpeg",
+  "artifactVersion": "9.0.2",
+  "name": "FFmpeg",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://ffmpeg.org",
+  "licenses": [
+    "libmpv-desktop-ffmpeg"
+  ]
+}

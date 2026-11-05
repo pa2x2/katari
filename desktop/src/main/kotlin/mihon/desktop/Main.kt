@@ -25,6 +25,7 @@ import mihon.desktop.extension.prepareExtensionHost
 import mihon.desktop.extension.startExtensionHost
 import mihon.desktop.home.HomeWindowContent
 import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.desktop.player.Host
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.systemDesktopDirectories
 import mihon.desktop.update.DesktopAppUpdatePrompt
@@ -98,7 +99,8 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
     runWindow(graph, laterLaunches = instance.requests) {
-        HomeWindowContent(startup, graph.homeDestinations) {
+        HomeWindowContent(startup, graph.homeDestinations) { navigator ->
+            graph.windowAnimePlayer.Host(navigator)
             DesktopAppUpdatePrompt(graph.appUpdateController, graph.onboardingPreferences)
         }
         // They wait in the destinations until the home has started, as a later launch's do

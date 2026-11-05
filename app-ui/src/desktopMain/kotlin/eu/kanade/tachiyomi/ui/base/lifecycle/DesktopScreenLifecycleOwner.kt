@@ -91,7 +91,10 @@ class DesktopScreenLifecycleOwner private constructor() :
         )
     }
 
-    override fun onDispose(screen: Screen) {
+    override fun onDispose(screen: Screen) = destroy()
+
+    /** Clears the ViewModels and ends the lifecycle, for an owner made with [detached] once its content is gone. */
+    fun destroy() {
         viewModelStore.clear()
         lifecycle.currentState = Lifecycle.State.DESTROYED
     }
@@ -110,5 +113,11 @@ class DesktopScreenLifecycleOwner private constructor() :
         /** The owner of [screen], the same one its navigator renders it with. */
         fun get(screen: Screen): DesktopScreenLifecycleOwner =
             ScreenLifecycleStore.get(screen) { DesktopScreenLifecycleOwner() }
+
+        /**
+         * An owner of no screen, for content that outlives the screens it shows over, such as a player that plays on
+         * in another window; it lasts until [destroy].
+         */
+        fun detached(): DesktopScreenLifecycleOwner = DesktopScreenLifecycleOwner()
     }
 }

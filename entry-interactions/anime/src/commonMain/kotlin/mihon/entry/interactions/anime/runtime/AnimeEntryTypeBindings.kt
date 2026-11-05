@@ -47,10 +47,9 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 
 /**
  * What anime contributes on every platform: watch state, the episode list, the episode continuing opens, library
- * progress, labels, statistics, migration, per-entry playback preferences and the player's settings. The player,
- * downloads and previews, and what needs them, such as the media session events only the player sends, are contributed
- * by the Android part, `AnimeEntryInteractionProviderBindings`; desktop stands in for the player with
- * `AnimeViewerStandInBindings`.
+ * progress, labels, statistics, migration, per-entry playback preferences and the player's settings. The player's
+ * shared parts are in [AnimePlayerBindings] and downloads in [AnimeDownloadBindings]; each platform adds how episodes
+ * open and the engine they play in, and Android its previews and immersive view.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer

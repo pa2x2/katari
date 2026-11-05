@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -22,6 +23,7 @@ import mihon.presentation.kit.pointer.LocalWindowHasMouse
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
+import tachiyomi.presentation.core.components.material.IconButtonTokens
 
 /**
  * What swiping a row far enough does. [icon] shows under the row as it slides away; [isUndo] marks an action that
@@ -94,7 +96,14 @@ internal class RowHoverActions(val actions: List<SwipeAction>, val shown: Boolea
 /** Null outside a [SwipeActionsRow] in a window worked with a mouse. */
 internal val LocalRowHoverActions = staticCompositionLocalOf<RowHoverActions?> { null }
 
-/** The enclosing [SwipeActionsRow]'s actions as buttons, for a row to place among its trailing controls. */
+/**
+ * The enclosing [SwipeActionsRow]'s actions as buttons, for a row to place among its trailing controls.
+ *
+ * They come and go with the pointer, so they must never be what sets the row's height. They only ever face a pointer,
+ * which needs no touch target, so they take the footprint of the row's own controls, such as a
+ * [DownloadIndicator][mihon.presentation.kit.button.DownloadIndicator], instead of a touch target that would make the
+ * row taller while hovered.
+ */
 @Composable
 internal fun RowHoverActionButtons() {
     val hoverActions = LocalRowHoverActions.current ?: return
@@ -104,6 +113,7 @@ internal fun RowHoverActionButtons() {
             icon = action.icon,
             contentDescription = action.label,
             onClick = action.onSwipe,
+            modifier = Modifier.size(IconButtonTokens.StateLayerSize),
             tone = ContentTone.Secondary,
         )
     }

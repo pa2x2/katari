@@ -9,7 +9,7 @@ import Task from "../../guide/Task.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage manual="docs" slug="backups-and-storage" lead="Katari keeps automatic backups, your own comics and, on Android, downloads in one folder you choose.">
+<GuidePage manual="docs" slug="backups-and-storage" lead="Katari keeps automatic backups, your own comics and downloads in one folder you choose.">
   <Task id="storage-folder" title="The storage folder">
     <p>
       Setup asks for it, and <Path>Settings › Data and storage › Storage location</Path> changes it. Give Katari a folder of its own; it
@@ -17,14 +17,14 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <pre><code>{`Katari/
   autobackup/                      automatic backups
-  downloads/                       on Android
+  downloads/                       downloads
     Pepper&Carrot (EN)/            comics, one folder per source
     Blender Studio (EN) [anime]/   video
     Project Gutenberg [book]/      books
   local/                           your own comics`}</code></pre>
     <p>
-      <PlatformLabel platform="Android" lead />Inside <code>downloads/</code>, each title has a folder of its own. After moving or deleting
-      files there yourself, tap <Path>Settings › Advanced › Reindex downloads</Path> so Katari notices.
+      Inside <code>downloads/</code>, each title has a folder of its own. After moving or deleting files there yourself, select
+      <Path>Settings › Advanced › Reindex downloads</Path> so Katari notices.
     </p>
   </Task>
 
@@ -70,7 +70,7 @@ import { sitePath } from "../../site/links.ts";
         <tr><th>Left out</th> <th>After a restore</th></tr>
       </thead>
       <tbody>
-        <tr><td><PlatformLabel platform="Android" lead /><strong>Downloads</strong></td> <td>Keep the storage folder, or download again</td></tr>
+        <tr><td><strong>Downloads</strong></td> <td>Keep the storage folder, or download again</td></tr>
         <tr>
           <td><strong>Extensions and their trust</strong></td>
           <td>Install them again. Ones that didn't come from a restored extension store need trusting again</td>

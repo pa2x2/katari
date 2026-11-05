@@ -21,9 +21,10 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
             }
         }
-        androidMain {
+        getByName("desktopMain") {
             dependencies {
-                api(libs.androidx.media3.common)
+                // Skia's image type, which a Compose window's video output hands its frames over as
+                api(libs.compose.multiplatform.ui)
             }
         }
         commonTest {

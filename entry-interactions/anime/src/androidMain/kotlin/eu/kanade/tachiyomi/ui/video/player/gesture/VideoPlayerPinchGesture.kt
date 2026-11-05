@@ -10,7 +10,7 @@ import kotlin.math.hypot
  * lands the touch is the pinch's until every finger lifts, so the finger left behind neither swipes nor taps. Each move
  * previews its framing on [target], and the last one is committed when the fingers lift.
  */
-internal class VideoPlayerPinchGesture(private val target: VideoPlayerTouchTarget) {
+internal class VideoPlayerPinchGesture(private val target: VideoPlayerInputTarget) {
     var active = false
         private set
 
