@@ -43,9 +43,14 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * [itemCount] is read where it is needed rather than passed as a number: [itemIdentity] may read a live list, such as
+ * paging items, and a count captured at the last composition would let the pager ask that list for pages past its end
+ * the moment a refresh shrinks it.
+ */
 @Composable
 internal fun EntryImmersiveContent(
-    itemCount: Int,
+    itemCount: () -> Int,
     itemIdentity: (Int) -> EntryImmersiveItemKey?,
     itemContent: @Composable (Int) -> Entry?,
     immersiveModel: EntryImmersiveViewModel,
@@ -71,8 +76,9 @@ internal fun EntryImmersiveContent(
     val context = currentPlatformContext()
     val graph = LocalAppUiGraph.current
     val immersiveState by immersiveModel.state.collectAsState()
-    val initialPageInBounds = positionState.itemIndex.coerceIn(0, (itemCount - 1).coerceAtLeast(0))
-    val pagerState = rememberPagerState(initialPage = initialPageInBounds) { itemCount }
+    val currentItemCount = itemCount()
+    val initialPageInBounds = positionState.itemIndex.coerceIn(0, (currentItemCount - 1).coerceAtLeast(0))
+    val pagerState = rememberPagerState(initialPage = initialPageInBounds, pageCount = itemCount)
     val scope = rememberCoroutineScope()
     val entryOpenFeature = remember { graph.entryOpenFeature }
     val openMessages = rememberEntryOpenMessages()
@@ -90,11 +96,11 @@ internal fun EntryImmersiveContent(
     }
     val retainedItemKeys = buildSet {
         pagerState.settledPage
-            .takeIf { it in 0 until itemCount }
+            .takeIf { it in 0 until currentItemCount }
             ?.let(itemIdentity)
             ?.let(::add)
         for (page in pagerState.currentPage - preloadRadius..pagerState.currentPage + preloadRadius) {
-            if (page in 0 until itemCount) itemIdentity(page)?.let(::add)
+            if (page in 0 until currentItemCount) itemIdentity(page)?.let(::add)
         }
     }
     LaunchedEffect(retainedItemKeys) {
@@ -102,22 +108,22 @@ internal fun EntryImmersiveContent(
     }
 
     LaunchedEffect(pageRequest) {
-        if (pageRequest > 0 && itemCount > 0) pagerState.animateScrollToPage(0)
+        if (pageRequest > 0 && currentItemCount > 0) pagerState.animateScrollToPage(0)
     }
 
-    LaunchedEffect(itemCount) {
-        if (itemCount > 0 && pagerState.currentPage >= itemCount) {
-            pagerState.scrollToPage(itemCount - 1)
+    LaunchedEffect(currentItemCount) {
+        if (currentItemCount > 0 && pagerState.currentPage >= currentItemCount) {
+            pagerState.scrollToPage(currentItemCount - 1)
         }
     }
 
-    LaunchedEffect(pagerState, itemCount) {
+    LaunchedEffect(pagerState, currentItemCount) {
         snapshotFlow { pagerState.settledPage }
             .distinctUntilChanged()
             .collectLatest { page ->
                 positionState.updateItemIndex(page)
                 currentOnPageSettled(page)
-                if (page >= itemCount - LOAD_MORE_PAGE_THRESHOLD - 1) currentOnNearEnd(page)
+                if (page >= currentItemCount - LOAD_MORE_PAGE_THRESHOLD - 1) currentOnNearEnd(page)
             }
     }
 

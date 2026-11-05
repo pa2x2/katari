@@ -109,7 +109,7 @@ internal fun EntryImmersiveFeedContent(
     )
 
     EntryImmersiveContent(
-        itemCount = pages.size,
+        itemCount = { pages.size },
         itemIdentity = { page -> pages.itemRef(page)?.toImmersiveItemKey() },
         itemContent = { page ->
             pages.itemRef(page)?.let { rememberFeedEntry(it, timelineModel) }
