@@ -34,11 +34,6 @@ class StoreSettingWrites(
         editor.commit()
     }
 
-    override fun deleteProfile(profileId: Long) {
-        profileStore.deleteProfileState(profileId)
-        sourceFiles.deleteProfile(profileId)
-    }
-
     private fun PreferenceStore.write(key: String, value: Any?) {
         when (value) {
             null -> getString(key).delete()

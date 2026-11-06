@@ -2,6 +2,7 @@ package app.katari.sync.client.apply
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.setting.apply.SettingWrites
 import app.katari.sync.data.Sync_outbox
@@ -26,6 +27,7 @@ class SyncWriting(
     private val handler: DatabaseHandler,
     private val drain: OutboxDrain,
     private val settings: SettingWrites,
+    private val profileDeletion: LocalProfileDeletion,
     private val profileStore: ProfileStore,
 ) {
     internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T =
@@ -47,7 +49,7 @@ class SyncWriting(
         } while (drained > 0)
         val device = checkNotNull(sync_stateQueries.get().awaitAsOne().device_id) { "Not registered with a server" }
         val capturedBefore = sync_outboxQueries.lastSeq().awaitAsOne()
-        val session = ApplySession(this, settings, profileStore.currentProfileId, DeviceId(device)) {
+        val session = ApplySession(this, settings, profileDeletion, profileStore.currentProfileId, DeviceId(device)) {
             Clock.System.now().toEpochMilliseconds()
         }
         val result = block(session, taken)

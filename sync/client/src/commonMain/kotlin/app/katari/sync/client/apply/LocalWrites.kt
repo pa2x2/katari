@@ -1,5 +1,6 @@
 package app.katari.sync.client.apply
 
+import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.setting.apply.SettingWrites
@@ -17,6 +18,7 @@ import tachiyomi.data.Database
 internal interface LocalWrites {
     val database: Database
     val settings: SettingWrites
+    val profileDeletion: LocalProfileDeletion
 
     /** The profile open on this device, which sync never deletes from under the person. */
     val activeProfileId: Long

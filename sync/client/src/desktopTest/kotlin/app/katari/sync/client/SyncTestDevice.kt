@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.firstsync.FirstSync
+import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.setMain
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.TemporarySchema
 import mihon.data.database.createSqlDriver
+import mihon.feature.profiles.core.ProfileDatabase
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
@@ -68,7 +70,16 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val settingsCapture =
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
     val drain = OutboxDrain(handler, preferences.reads)
-    val writing = SyncWriting(handler, drain, preferences.writes, preferences.profiles)
+
+    // What the app's deletion does to the database and preferences; the test devices own no files
+    private val profileDeletion = object : LocalProfileDeletion {
+        override suspend fun delete(profileId: Long) {
+            ProfileDatabase(handler).deleteProfile(profileId)
+            preferences.profiles.deleteProfileState(profileId)
+            preferences.sourceFiles.deleteProfile(profileId)
+        }
+    }
+    val writing = SyncWriting(handler, drain, preferences.writes, profileDeletion, preferences.profiles)
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)

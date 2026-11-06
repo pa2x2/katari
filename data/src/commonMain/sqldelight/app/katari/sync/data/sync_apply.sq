@@ -26,10 +26,6 @@ UPDATE profiles
 SET uuid = :uuid
 WHERE _id = :profileId;
 
-deleteProfile:
-DELETE FROM profiles
-WHERE uuid = :uuid;
-
 -- Entries
 
 entryId:

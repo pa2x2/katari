@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
+import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.question.QuestionDetection
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
@@ -45,6 +46,7 @@ import tachiyomi.domain.source.identity.SourceIdScheme
 internal class ApplySession(
     override val database: Database,
     override val settings: SettingWrites,
+    override val profileDeletion: LocalProfileDeletion,
     override val activeProfileId: Long,
     private val device: DeviceId,
     private val now: () -> Long,

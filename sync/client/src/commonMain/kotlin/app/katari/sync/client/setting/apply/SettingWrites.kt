@@ -14,7 +14,4 @@ interface SettingWrites {
 
     /** [profileId]'s setting [key] of the source with its own ID [sourceId]. */
     fun writeSourceValue(profileId: Long, sourceId: Long, key: String, value: Any?)
-
-    /** Removes every preference and source setting of [profileId], whose profile sync deleted. */
-    fun deleteProfile(profileId: Long)
 }

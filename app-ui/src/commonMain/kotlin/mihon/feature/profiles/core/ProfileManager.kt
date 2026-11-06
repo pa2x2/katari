@@ -14,17 +14,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
-import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.defaultHomeScreenTabs
 import mihon.core.metro.AppCoroutineScope
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.domain.library.service.LibraryUpdateQueue
@@ -42,8 +37,7 @@ class ProfileManager(
     private val profilesPreferences: ProfilesPreferences,
     private val legacyPreferenceKeys: LegacyProfilePreferenceKeys,
     private val extensions: ProfileExtensions,
-    private val entryRepository: EntryRepository,
-    private val destructiveRemoval: EntryDestructiveRemovalFeature,
+    private val deletion: ProfileDeletion,
     private val bookReaderFonts: BookDocumentReaderFontLibrary,
     private val libraryUpdateQueue: LibraryUpdateQueue,
     private val libraryUpdateSchedule: LibraryUpdateSchedule,
@@ -172,23 +166,7 @@ class ProfileManager(
         if (profileId == activeProfileId) return
         val profile = profileDatabase.getProfileById(profileId) ?: return
         if (!profile.isArchived) return
-        when (val result = destructiveRemoval.remove(entryRepository.getAllEntriesByProfile(profileId))) {
-            is EntryDestructiveRemovalResult.Failed -> throw result.cause
-            EntryDestructiveRemovalResult.NoChange -> Unit
-            is EntryDestructiveRemovalResult.Removed -> {
-                result.failures.forEach { failure ->
-                    logcat(LogPriority.ERROR, failure.cause) {
-                        "Profile deletion consequence ${failure.consequence} failed"
-                    }
-                }
-            }
-        }
-        libraryUpdateQueue.stop(profileId)
-        libraryUpdateSchedule.cancel(profileId)
-        profileDatabase.deleteProfile(profileId)
-        profileStore.deleteProfileState(profileId)
-        extensions.deleteSettings(profileId)
-        bookReaderFonts.deleteProfile(profileId)
+        deletion.delete(profileId)
     }
 
     /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */

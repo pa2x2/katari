@@ -83,10 +83,9 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
     }
 
     /**
-     * Deletes the profile with everything in it, as deleting it here does, but for its files: downloads of its
-     * entries stay until they are cleaned up. The default profile is never deleted, the profile open here waits
-     * until another one is, and a profile something was changed in after its deletion stays until the question about
-     * it is answered.
+     * Deletes the profile with everything in it, files included, as deleting it here does ([LocalProfileDeletion]).
+     * The default profile is never deleted, the profile open here waits until another one is, and a profile something
+     * was changed in after its deletion stays until the question about it is answered.
      */
     override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
         val uuid = ref?.text(0) ?: return ApplyOutcome.Applied(null)
@@ -95,8 +94,7 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
         val profileId = queries.profileId(uuid).awaitAsOneOrNull() ?: return ApplyOutcome.Applied(null)
         if (profileId == writes.activeProfileId) return ApplyOutcome.Held(HoldReason.PROFILE_OPEN)
         if (deletionInQuestion(writes, uuid)) return ApplyOutcome.Applied(ref)
-        queries.deleteProfile(uuid)
-        writes.settings.deleteProfile(profileId)
+        writes.profileDeletion.delete(profileId)
         return ApplyOutcome.Applied(null)
     }
 
