@@ -21,6 +21,7 @@ import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.client.server.SyncServerClients
 import app.katari.sync.client.setting.capture.SettingsCapture
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.server.ServerInfo
 import app.katari.sync.protocol.version.ProtocolCompatibility
 import app.katari.sync.protocol.version.SyncProtocolVersion
 import dev.zacsweers.metro.Inject
@@ -105,7 +106,10 @@ class SyncPass(
         }
         val client = clients.of(checkNotNull(state.server), token)
         return try {
-            if (state.stopped == SyncStop.SERVER_TOO_OLD && !serverUpdated(client)) return SyncOutcome.IDLE
+            // Also how a server that takes connections but never answers is found within a small call's time limit,
+            // before a page of records waits the long ones
+            val info = client.info()
+            if (state.stopped == SyncStop.SERVER_TOO_OLD && !serverUpdated(info)) return SyncOutcome.IDLE
             stages(client, checkNotNull(state.device), request).also { outcome ->
                 connection.reached(synced = outcome == SyncOutcome.SYNCED)
             }
@@ -136,8 +140,8 @@ class SyncPass(
         SyncStop.SIGN_IN_AGAIN, SyncStop.REMOVED, SyncStop.ACCOUNT_DISABLED -> false
     }
 
-    private suspend fun serverUpdated(client: SyncServerClient): Boolean {
-        val compatibility = client.info().protocolVersions.compatibilityOf(SyncProtocolVersion.CURRENT)
+    private suspend fun serverUpdated(info: ServerInfo): Boolean {
+        val compatibility = info.protocolVersions.compatibilityOf(SyncProtocolVersion.CURRENT)
         if (compatibility == ProtocolCompatibility.SUPPORTED) connection.stop(null)
         return compatibility == ProtocolCompatibility.SUPPORTED
     }
