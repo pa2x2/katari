@@ -59,4 +59,35 @@ class ReplacedEntryCoverTest {
             }
         }
     }
+
+    @Test
+    fun `an entry moved to another profile takes its custom cover along and leaves no copy behind`(): Unit =
+        runBlocking {
+            TestSyncServer(directory).use { server ->
+                val account = server.account("reader")
+                SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.sql(
+                            "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                            "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                            "INSERT INTO entries(source, url, title, favorite, type) VALUES (-2, '/show', 'Show', 1, 'anime')",
+                        )
+                        val cover = "custom cover".toByteArray()
+                        a.local.setCustomCover("/show", cover)
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        val before = b.local.entryId("/show")
+
+                        a.sql("UPDATE entries SET profile_id = 2 WHERE url = '/show'")
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.sync() shouldBe SyncOutcome.SYNCED
+
+                        b.local.customCover("/show") shouldBe cover
+                        b.local.files.cover(before) shouldBe null
+                    }
+                }
+            }
+        }
 }

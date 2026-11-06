@@ -100,15 +100,21 @@ class FilePlacement(
         handler.await { sync_filesQueries.setPlaced(reference.sha256, row.category, row.owner) }
     }
 
+    /**
+     * Removes a file no record names any more. Its owner may be gone already, as the old entry of a move to another
+     * profile is: the file is still removed, since custom covers are kept by entry ID and nothing else would.
+     */
     private suspend fun removeUnnamed(row: Sync_local_files) {
         val owner = FileOwner.of(fileCategoryOf(row.category), LocalRef(row.owner))
         files.locked {
-            val current = current(owner) ?: return@locked
-            if (current.wanted_sha256 != null) return@locked
+            val known = handler.await { sync_filesQueries.get(row.category, row.owner).awaitAsOneOrNull() }
+            if (known == null || known.wanted_sha256 != null) return@locked
             val inPlace = content(owner)?.sha256
-            if (inPlace != current.placed_sha256) return@locked
-            if (inPlace != null) remove(owner)
-            handler.await { sync_filesQueries.setPlaced(null, current.category, current.owner) }
+            val unchanged = inPlace == known.placed_sha256
+            if (unchanged && inPlace != null) remove(owner)
+            if (current(owner) != null && unchanged) {
+                handler.await { sync_filesQueries.setPlaced(null, known.category, known.owner) }
+            }
         }
     }
 
