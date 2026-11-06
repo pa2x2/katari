@@ -1,20 +1,26 @@
 package app.katari.sync.client.run
 
+import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.protocol.push.PushOutcome
 import app.katari.sync.protocol.push.PushRequest
+import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 
 /**
  * Pushes every change waiting to be sent, in chunks of [CHUNK] in key order. A change keeps its id until the server
  * acknowledges it, and only an acknowledgement marks it sent, so a push retried after its answer was lost is
  * recognised by the server as the one it took (D022) and nothing is stored twice.
+ *
+ * Records naming custom covers or fonts go after the rest of their chunk, once the server has their files
+ * ([FileUploads]); a record whose file waits for Wi-Fi stays unsent with it, holding back nothing else.
  */
 @Inject
 class PushChanges(
     private val continuity: ServerContinuity,
     private val pending: PendingChanges,
+    private val uploads: FileUploads,
 ) {
     /**
      * Pushes everything once. Returns whether the server refused some change as stale: another device changed the
@@ -30,21 +36,34 @@ class PushChanges(
         while (true) {
             val chunk = pending.after(after, CHUNK)
             if (chunk.isEmpty()) return stale
-            val response = client.push(PushRequest(chunk))
-            continuity.check(response.server)
-            val sent = chunk.associateBy { it.changeId }
-            response.results.forEach { result ->
-                val envelope = sent[result.changeId] ?: return@forEach
-                when (result.outcome) {
-                    PushOutcome.ACCEPTED -> pending.taken(envelope.key, envelope.changeId, result.sequence)
-                    PushOutcome.STALE -> {
-                        stale = true
-                        if (afterPull && result.sequence == 0L && envelope.basedOn != 0L) pending.rebase(envelope.key)
-                    }
-                }
+            val (plain, naming) = chunk.partition { it.files.isEmpty() }
+            if (push(client, plain, afterPull)) stale = true
+            if (naming.isNotEmpty()) {
+                val waiting = uploads.ensure(client, naming.flatMap { it.files })
+                if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull)) stale = true
             }
             after = chunk.last().key
         }
+    }
+
+    /** Pushes [records] and returns whether the server refused some as stale. */
+    private suspend fun push(client: SyncServerClient, records: List<RecordEnvelope>, afterPull: Boolean): Boolean {
+        if (records.isEmpty()) return false
+        var stale = false
+        val response = client.push(PushRequest(records))
+        continuity.check(response.server)
+        val sent = records.associateBy { it.changeId }
+        response.results.forEach { result ->
+            val envelope = sent[result.changeId] ?: return@forEach
+            when (result.outcome) {
+                PushOutcome.ACCEPTED -> pending.taken(envelope.key, envelope.changeId, result.sequence)
+                PushOutcome.STALE -> {
+                    stale = true
+                    if (afterPull && result.sequence == 0L && envelope.basedOn != 0L) pending.rebase(envelope.key)
+                }
+            }
+        }
+        return stale
     }
 
     private companion object {

@@ -8,6 +8,8 @@ import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
+import app.katari.sync.client.file.transfer.FileTransferRule
+import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.ExistingFiles
 import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
@@ -43,7 +45,7 @@ import java.io.File
 internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()) : AutoCloseable {
     val local = SyncTestDevice(file)
     private val tokens = MemoryTokens()
-    private val network = Network()
+    val network = Network()
     val work = RecordedBackgroundWork()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
@@ -59,14 +61,16 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
     )
     private val resync = FullResync(local.handler, local.writing)
-    private val preferences = SyncPreferences(local.preferences.profiles)
+    val preferences = SyncPreferences(local.preferences.profiles)
     private val continuity = ServerContinuity(local.handler, connection)
+    private val fileRule = FileTransferRule(network, preferences)
+    private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
-            PullChanges(connection, continuity, local.incoming, handOff), PushChanges(continuity, local.pending),
-            local.incoming, local.pending, local.settingsCapture, local.fileCapture, local.drain, handOff,
-            disconnection,
+            PullChanges(connection, continuity, local.incoming, handOff),
+            PushChanges(continuity, local.pending, uploads), local.incoming, local.pending, local.settingsCapture,
+            local.fileCapture, local.drain, uploads, handOff, disconnection,
         ),
     )
     private val thisDevice = object : ThisDevice {
@@ -120,8 +124,13 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         }
     }
 
-    private class Network : NetworkConnectivity {
+    /** On Wi-Fi until a test puts it on mobile data. */
+    class Network : NetworkConnectivity {
         private val state = MutableStateFlow(NetworkState(hasNetwork = true, isOnline = true, isMetered = false, true))
+
+        fun onWifi(wifi: Boolean) {
+            state.value = state.value.copy(isMetered = !wifi, countsAsWifi = wifi)
+        }
 
         override fun state() = state
 

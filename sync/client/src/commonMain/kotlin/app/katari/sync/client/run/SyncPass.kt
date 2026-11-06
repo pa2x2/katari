@@ -7,6 +7,7 @@ import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.file.capture.FileCapture
+import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.outbox.OutboxDrain
@@ -39,7 +40,10 @@ import tachiyomi.core.common.util.system.logcat
  * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
  *    drained, and every change pushed.
  *    Pulling first (D021) means the push is based on the newest copies, so it is rarely refused as stale; one that is
- *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run.
+ *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run. Records naming a
+ *    custom cover or font go once the server has the file ([PushChanges]).
+ * 4. Files queued for upload that no pushed record took along, such as after a full resync. A file that can't move
+ *    now, for want of Wi-Fi or of an answer, waits for a later run without holding back any record.
  *
  * Every page and every acknowledged change is committed as it arrives, so a run cut off anywhere loses nothing and
  * the next one carries on. A refusal that means the device left its account ends the connection ([Disconnection]);
@@ -61,6 +65,7 @@ class SyncPass(
     private val settings: SettingsCapture,
     private val fileCapture: FileCapture,
     private val drain: OutboxDrain,
+    private val uploads: FileUploads,
     private val handOff: EntryHandOff,
     private val disconnection: Disconnection,
 ) {
@@ -149,14 +154,28 @@ class SyncPass(
         if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
         pull.pullAll(client, device, liveOnly = false)
         incoming.retryHeld()
-        repeat(PUSH_ROUNDS) { round ->
-            settings.flush()
-            fileCapture.flush()
-            drainAll()
-            if (!push.pushAll(client, afterPull = round > 0)) return SyncOutcome.SYNCED
-            pull.pullAll(client, device, liveOnly = false)
+        run rounds@{
+            repeat(PUSH_ROUNDS) { round ->
+                settings.flush()
+                fileCapture.flush()
+                drainAll()
+                if (!push.pushAll(client, afterPull = round > 0)) return@rounds
+                pull.pullAll(client, device, liveOnly = false)
+            }
         }
+        moveFiles(client)
         return SyncOutcome.SYNCED
+    }
+
+    private suspend fun moveFiles(client: SyncServerClient) {
+        try {
+            uploads.offerQueued(client)
+        } catch (e: SyncFailure.Refused) {
+            throw e
+        } catch (e: SyncFailure) {
+            // The records are synced; the files wait for the next run.
+            logcat(LogPriority.INFO, e) { "Synced files not moved" }
+        }
     }
 
     private suspend fun refused(reason: Refusal): SyncOutcome {

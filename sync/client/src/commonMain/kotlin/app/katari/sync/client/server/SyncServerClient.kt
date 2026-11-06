@@ -10,6 +10,9 @@ import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.device.RegisterDeviceResponse
 import app.katari.sync.protocol.device.RevokeDeviceRequest
 import app.katari.sync.protocol.error.SyncError
+import app.katari.sync.protocol.file.FileClaimRequest
+import app.katari.sync.protocol.file.FileClaimResponse
+import app.katari.sync.protocol.file.FileReference
 import app.katari.sync.protocol.http.SyncHttp
 import app.katari.sync.protocol.pull.GroupRecords
 import app.katari.sync.protocol.pull.GroupRequest
@@ -31,17 +34,21 @@ import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.Buffer
 import okio.GzipSink
 import okio.buffer
+import java.io.File
 import java.io.IOException
+import java.time.Duration
 
 /**
- * Every call of the protocol except files, to the server at [server], as the device whose [token] it is (null before
+ * Every call of the protocol to the server at [server], as the device whose [token] it is (null before
  * the device has one). Bodies are protobuf, request bodies larger than [COMPRESS_FROM] go gzipped, and OkHttp asks
- * for and unpacks gzipped answers itself. Every call but [info] carries the protocol version.
+ * for and unpacks gzipped answers itself. Every call but [info] carries the protocol version. Files travel as raw
+ * bytes, with no limit on how long the whole call takes, since a large font on a slow network takes a while.
  *
  * Each call returns the server's answer or throws a [SyncFailure].
  */
@@ -91,6 +98,28 @@ class SyncServerClient internal constructor(
 
     suspend fun snapshot(): SnapshotInfo = call(get(SyncHttp.SNAPSHOT))
 
+    /** Claims [files] for records about to be pushed and returns those the server lacks. */
+    suspend fun claimFiles(files: List<FileReference>): FileClaimResponse =
+        call(post(SyncHttp.FILE_CLAIM, FileClaimRequest(files)))
+
+    /**
+     * Uploads [source] as [file]. False when the server turned the bytes down, as not hashing to [file]'s name, which
+     * happens when the file changed while it was read, or as too large.
+     */
+    suspend fun uploadFile(file: FileReference, source: File): Boolean {
+        val body = source.asRequestBody(OCTET_STREAM)
+        val request = authorized(Request.Builder().url(url(SyncHttp.filePath(file.category, file.sha256))).put(body))
+            .build()
+        return execute(request, fileHttp) { response ->
+            when {
+                response.isSuccessful -> true
+                isSyncError(response) -> throw failureOf(response)
+                response.code == HTTP_BAD_REQUEST || response.code == HTTP_TOO_LARGE -> false
+                else -> throw SyncFailure.NotASyncServer(response.code)
+            }
+        }
+    }
+
     /** Opens the live channel ([LiveChannel]); its frames and its end go to [listener]. */
     internal fun live(listener: LiveChannel.Listener): LiveChannel {
         // OkHttp turns http and https into ws and wss itself.
@@ -116,7 +145,7 @@ class SyncServerClient internal constructor(
     private fun get(path: String, versioned: Boolean = true): Request =
         authorized(Request.Builder().url(url(path)).get(), versioned).build()
 
-    private fun authorized(builder: Request.Builder, versioned: Boolean): Request.Builder = builder.apply {
+    private fun authorized(builder: Request.Builder, versioned: Boolean = true): Request.Builder = builder.apply {
         if (versioned) header(SyncHttp.PROTOCOL_VERSION_HEADER, SyncProtocolVersion.CURRENT.toString())
         token?.let { header(AUTHORIZATION, "Bearer $it") }
     }
@@ -129,9 +158,9 @@ class SyncServerClient internal constructor(
         decode(serializer<T>(), response) ?: throw SyncFailure.NotASyncServer(response.code)
     }
 
-    private suspend fun <T> execute(request: Request, read: (Response) -> T): T {
+    private suspend fun <T> execute(request: Request, client: OkHttpClient = http, read: (Response) -> T): T {
         val response = try {
-            http.newCall(request).await()
+            client.newCall(request).await()
         } catch (e: IOException) {
             throw SyncFailure.Unreachable(e)
         }
@@ -145,6 +174,11 @@ class SyncServerClient internal constructor(
             }
         }
     }
+
+    private val fileHttp: OkHttpClient by lazy { http.newBuilder().callTimeout(Duration.ZERO).build() }
+
+    private fun isSyncError(response: Response): Boolean = response.body.contentType()
+        ?.let { "${it.type}/${it.subtype}" == SyncHttp.CONTENT_TYPE } == true
 
     private fun failureOf(response: Response): SyncFailure {
         val error = decode(SyncError.serializer(), response) ?: return SyncFailure.NotASyncServer(response.code)
@@ -167,10 +201,13 @@ class SyncServerClient internal constructor(
     private companion object {
         const val AUTHORIZATION = "Authorization"
         const val CONTENT_ENCODING = "Content-Encoding"
+        const val HTTP_BAD_REQUEST = 400
         const val HTTP_NOT_FOUND = 404
+        const val HTTP_TOO_LARGE = 413
 
         // Below this, gzip's header and the work cost more than the bytes saved.
         const val COMPRESS_FROM = 1024
         val PROTOBUF = SyncHttp.CONTENT_TYPE.toMediaType()
+        val OCTET_STREAM = "application/octet-stream".toMediaType()
     }
 }
