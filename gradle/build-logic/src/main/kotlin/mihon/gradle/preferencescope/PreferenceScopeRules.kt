@@ -90,6 +90,8 @@ internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
         "the desktop's shared preferences, a store",
     "backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/restorers/PreferenceRestorer.kt" to
         "restores whatever keys a backup holds",
+    "sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/apply/StoreSettingWrites.kt" to
+        "writes the person-level keys other devices synced, which the scope tables already mark",
     "app/src/main/java/mihon/feature/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
         "moves keys of earlier versions into profiles",
     "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/media/DefaultEntryMediaCacheFeature.kt" to
