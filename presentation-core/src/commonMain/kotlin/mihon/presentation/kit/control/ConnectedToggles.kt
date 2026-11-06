@@ -110,6 +110,7 @@ internal fun ConnectedToggle(
     icon: ImageVector?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    contentPadding: PaddingValues? = null,
 ) {
     ToggleButton(
         checked = checked,
@@ -119,6 +120,8 @@ internal fun ConnectedToggle(
         shapes = connectedShapes(index, count),
         colors = connectedToggleColors(),
         icon = icon?.let { { Icon(it, contentDescription = null, Modifier.size(KatariTheme.sizes.iconSmall)) } },
+        contentPadding = contentPadding
+            ?: ToggleButtonDefaults.contentPaddingFor(ToggleButtonDefaults.size, hasStartIcon = icon != null),
     ) {
         Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
