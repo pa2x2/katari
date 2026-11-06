@@ -125,7 +125,11 @@ class SyncAccount(
 
     private suspend fun start(server: HttpUrl, registered: RegisterDeviceResponse) {
         val previous = connection.state()
-        val returning = previous.enabled && previous.stopped == SyncStop.SIGN_IN_AGAIN && previous.server == server
+        // Signing in again to the account and server storage the device synced with resumes it in full. Another
+        // account, or a server that lost its storage and started over, is one the device never synced with: it joins
+        // as a device with data of its own, so its profiles pair with the account's by name (D065).
+        val returning = previous.enabled && previous.stopped == SyncStop.SIGN_IN_AGAIN && previous.server == server &&
+            previous.instanceId == registered.server.instanceId && previous.accountName == registered.accountName
         if (returning) {
             connection.connect(server, registered, SyncStage.RESYNC)
             resync.start(SyncStage.RESYNC, registered.server)
