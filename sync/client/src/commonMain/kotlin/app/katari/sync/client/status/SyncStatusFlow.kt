@@ -5,6 +5,8 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.file.transfer.FileTransferRule
+import app.katari.sync.client.file.transfer.PendingFiles
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.run.SyncOutcome
@@ -16,7 +18,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
 
-/** [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions and held records. */
+/**
+ * [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions, held records and the
+ * files waiting to move.
+ */
 @Inject
 class SyncStatusFlow(
     private val connection: SyncConnection,
@@ -25,14 +30,17 @@ class SyncStatusFlow(
     private val pending: PendingChanges,
     private val questions: Questions,
     private val held: HeldRecords,
+    private val pendingFiles: PendingFiles,
+    private val fileRule: FileTransferRule,
 ) {
     fun status(): Flow<SyncStatus> {
         val activity = combine(connection.states(), runs.running, runs.lastOutcome, network.state(), ::Inputs)
-        return combine(activity, pending.counts(), questions.open(), held.unreadableKinds()) {
+        return combine(activity, pending.counts(), questions.open(), held.unreadableKinds(), files()) {
                 inputs,
                 unsent,
                 open,
                 kinds,
+                files,
             ->
             val state = inputs.state
             val activityNow = activityOf(inputs)
@@ -43,8 +51,23 @@ class SyncStatusFlow(
                 unsentBecause = unsentReason(state, activityNow).takeIf { state.isLinked && unsent > 0 },
                 questions = if (state.isLinked) open else emptyList(),
                 heldKinds = if (state.isLinked) kinds else emptyList(),
+                files = if (state.isLinked) files else SyncStatus.Files.NONE,
             )
         }.distinctUntilChanged()
+    }
+
+    private fun files(): Flow<SyncStatus.Files> = combine(
+        pendingFiles.uploads(),
+        pendingFiles.downloads(),
+        pendingFiles.missingOnServer(),
+        fileRule.allows(),
+    ) { uploads, downloads, missing, allowed ->
+        SyncStatus.Files(
+            toUpload = uploads,
+            toDownload = downloads,
+            missingOnServer = missing,
+            waitingForWifi = !allowed && uploads + downloads > 0,
+        )
     }
 
     private class Inputs(

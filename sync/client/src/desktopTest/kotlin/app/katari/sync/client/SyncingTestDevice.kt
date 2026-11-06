@@ -11,6 +11,7 @@ import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.FileUploads
+import app.katari.sync.client.file.transfer.PendingFiles
 import app.katari.sync.client.firstsync.ExistingFiles
 import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
@@ -90,7 +91,16 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.handler,
         local.preferences.profiles,
     )
-    val status = SyncStatusFlow(connection, runs, network, local.pending, local.questions, local.held)
+    val status = SyncStatusFlow(
+        connection,
+        runs,
+        network,
+        local.pending,
+        local.questions,
+        local.held,
+        PendingFiles(local.handler),
+        fileRule,
+    )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */
     suspend fun join(server: TestSyncServer, accountId: Long) {

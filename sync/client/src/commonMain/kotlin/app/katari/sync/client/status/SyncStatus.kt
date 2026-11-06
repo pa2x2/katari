@@ -21,6 +21,8 @@ data class SyncStatus(
     val questions: List<Question>,
     /** Kinds of records a newer app version synced, held until this one is updated (D031). */
     val heldKinds: List<String>,
+    /** Custom covers and fonts still to move; 0 everywhere while the device isn't linked. */
+    val files: Files,
 ) {
     sealed interface Link {
         /** Standalone, never set up or after disconnecting. */
@@ -61,6 +63,25 @@ data class SyncStatus(
 
         /** Last synced at [atMillis]; null when the first sync hasn't finished yet. */
         data class UpToDate(val atMillis: Long?) : Activity
+    }
+
+    /** Custom covers and fonts that haven't moved yet (D016, D022, D028). */
+    data class Files(
+        /** Files this device holds that the server may lack; the records naming them wait with them. */
+        val toUpload: Long,
+        /** Files the records here name that aren't on this device yet. */
+        val toDownload: Long,
+        /**
+         * Files the records here name that the server said it doesn't have, or sent damaged: their records stay, and
+         * each is asked for again a day later.
+         */
+        val missingOnServer: Long,
+        /** Whether [toUpload] and [toDownload] wait for Wi-Fi, mobile data not being allowed for files (D022). */
+        val waitingForWifi: Boolean,
+    ) {
+        companion object {
+            val NONE = Files(toUpload = 0, toDownload = 0, missingOnServer = 0, waitingForWifi = false)
+        }
     }
 
     enum class UnsentReason {
