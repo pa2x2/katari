@@ -56,3 +56,7 @@ WHERE f.account_id = :accountId
         FROM record_files r
         WHERE r.account_id = f.account_id AND r.category = f.category AND r.sha256 = f.sha256
     );
+
+deleteAccount:
+DELETE FROM stored_files
+WHERE account_id = :accountId;

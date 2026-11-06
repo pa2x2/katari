@@ -7,6 +7,7 @@ import app.katari.sync.server.device.DeviceStore
 
 internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
     private val queries = database.devicesQueries
+    private val retired = database.retired_devicesQueries
 
     override fun exists(id: DeviceId): Boolean = queries.countWithId(id.value).executeAsOne() > 0
 
@@ -47,6 +48,17 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
     override fun revoke(id: DeviceId) {
         queries.revoke(id.value)
     }
+
+    override fun revokeAll(accountId: Long) {
+        queries.revokeAllInAccount(accountId)
+    }
+
+    override fun retireAll(accountId: Long) {
+        retired.retireAccount(accountId)
+    }
+
+    override fun isRetiredToken(tokenHash: ByteArray): Boolean =
+        retired.countWithTokenHash(tokenHash).executeAsOne() > 0
 
     override fun oldestHeldPosition(accountId: Long, seenSinceMillis: Long): Long? =
         queries.oldestHeldPosition(accountId, seenSinceMillis).executeAsOne().position

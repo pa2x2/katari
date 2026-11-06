@@ -15,4 +15,16 @@ interface AccountStore {
     fun setPasswordHash(id: Long, passwordHash: String)
 
     fun setDisabled(id: Long, disabled: Boolean)
+
+    fun setAdmin(id: Long, admin: Boolean)
+
+    fun countEnabledAdmins(): Long
+
+    /** Removes the account with everything it holds: devices, records, file index, link codes and web sessions. */
+    fun delete(id: Long)
+
+    /** Every account, by username. */
+    fun summaries(): List<AccountSummary>
+
+    fun summary(id: Long): AccountSummary?
 }

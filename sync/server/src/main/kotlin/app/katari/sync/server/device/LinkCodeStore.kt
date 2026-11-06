@@ -7,4 +7,6 @@ interface LinkCodeStore {
     fun take(codeHash: ByteArray, nowMillis: Long): Long?
 
     fun deleteExpired(nowMillis: Long)
+
+    fun deleteForAccount(accountId: Long)
 }

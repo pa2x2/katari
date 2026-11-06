@@ -117,6 +117,14 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
         changes.deleteThrough(accountId, through)
     }
 
+    override fun clear(accountId: Long, sequence: Long, chain: ByteArray) = database.transaction {
+        records.deleteAccount(accountId)
+        changes.deleteAccount(accountId)
+        chains.deleteAccount(accountId)
+        accounts.restartHistory(sequence = sequence, id = accountId)
+        chains.insert(accountId = accountId, sequence = sequence, chain = chain)
+    }
+
     override fun forgetChainBefore(accountId: Long, before: Long) {
         chains.deleteUnusedBefore(accountId, before)
     }

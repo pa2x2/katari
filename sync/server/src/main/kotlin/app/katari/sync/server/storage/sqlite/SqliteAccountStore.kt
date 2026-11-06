@@ -2,9 +2,11 @@ package app.katari.sync.server.storage.sqlite
 
 import app.katari.sync.server.account.Account
 import app.katari.sync.server.account.AccountStore
+import app.katari.sync.server.account.AccountSummary
 
 internal class SqliteAccountStore(private val database: SyncServerDatabase) : AccountStore {
     private val queries = database.accountsQueries
+    private val summaries = database.account_summariesQueries
 
     override fun count(): Long = queries.count().executeAsOne()
 
@@ -33,4 +35,18 @@ internal class SqliteAccountStore(private val database: SyncServerDatabase) : Ac
     override fun setDisabled(id: Long, disabled: Boolean) {
         queries.setDisabled(isDisabled = disabled, id = id)
     }
+
+    override fun setAdmin(id: Long, admin: Boolean) {
+        queries.setAdmin(isAdmin = admin, id = id)
+    }
+
+    override fun countEnabledAdmins(): Long = queries.countEnabledAdmins().executeAsOne()
+
+    override fun delete(id: Long) {
+        queries.delete(id)
+    }
+
+    override fun summaries(): List<AccountSummary> = summaries.all(::AccountSummary).executeAsList()
+
+    override fun summary(id: Long): AccountSummary? = summaries.byId(id, ::AccountSummary).executeAsOneOrNull()
 }

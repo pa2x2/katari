@@ -1,7 +1,7 @@
 package app.katari.sync.server.recovery
 
+import app.katari.sync.server.account.GeneratedPasswords
 import app.katari.sync.server.account.PasswordHasher
-import app.katari.sync.server.onetimecode.OneTimeCode
 import app.katari.sync.server.storage.ServerStorage
 import java.security.SecureRandom
 
@@ -17,17 +17,13 @@ class PasswordReset(
     /** The new password, or null when no account has [username]. */
     fun reset(username: String): String? {
         val account = storage.accounts.byUsername(username.trim()) ?: return null
-        val password = OneTimeCode.generate(PASSWORD_LENGTH, random)
+        val password = GeneratedPasswords.generate(random)
         val hash = passwords.hash(password)
         storage.transaction {
             storage.accounts.setPasswordHash(account.id, hash)
             storage.accounts.setDisabled(account.id, disabled = false)
+            storage.webSessions.deleteForAccount(account.id)
         }
         return password
-    }
-
-    private companion object {
-        // 80 bits, typed once before the admin picks their own on the web page.
-        const val PASSWORD_LENGTH = 16
     }
 }

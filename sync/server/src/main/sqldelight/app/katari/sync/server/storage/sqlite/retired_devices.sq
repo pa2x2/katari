@@ -1,0 +1,17 @@
+-- The devices of deleted accounts, whose rows went with the account: their ids are never given out again, and their
+-- tokens are answered as revoked, so the apps on them carry on standalone rather than ask to sign in again.
+CREATE TABLE retired_devices(
+    _id INTEGER NOT NULL PRIMARY KEY,
+    token_hash BLOB NOT NULL UNIQUE
+);
+
+retireAccount:
+INSERT INTO retired_devices(_id, token_hash)
+SELECT _id, token_hash
+FROM devices
+WHERE account_id = :accountId;
+
+countWithTokenHash:
+SELECT count(*)
+FROM retired_devices
+WHERE token_hash = :tokenHash;

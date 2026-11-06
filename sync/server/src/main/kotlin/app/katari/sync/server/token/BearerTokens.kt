@@ -1,11 +1,11 @@
-package app.katari.sync.server.device
+package app.katari.sync.server.token
 
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
 
-/** The long-lived bearer tokens devices sign their calls with; the server keeps only their hashes. */
-internal object DeviceTokens {
+/** The secrets devices sign their calls with and browsers hold as web sessions; the server keeps only their hashes. */
+internal object BearerTokens {
     private const val TOKEN_BYTES = 32
 
     fun generate(random: SecureRandom): String =

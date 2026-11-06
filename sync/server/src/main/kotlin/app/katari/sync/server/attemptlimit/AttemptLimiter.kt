@@ -1,5 +1,6 @@
 package app.katari.sync.server.attemptlimit
 
+import java.net.InetAddress
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -7,9 +8,10 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 /**
- * Slows down guessing of secrets people type: passwords, link codes and the setup code. Each key (an account, a
- * remote address) gets [freeFailures] failed attempts; every failure after that blocks the key for [firstBlock],
- * doubling each time up to [longestBlock], and a success clears it, as does a day without failures. A blocked attempt
+ * Slows down guessing of secrets people type: passwords, and the setup, link and invite codes. Each key (an account,
+ * a remote address) gets [freeFailures] failed attempts; every failure after that blocks the key for [firstBlock],
+ * doubling each time up to [longestBlock]. A success clears it unless it is a code key ([codesFrom]), as does a day
+ * without failures. A blocked attempt
  * is refused before its secret is checked, so guessing also costs the server no hashing.
  *
  * State is in memory: a restart clears it, which gives an attacker a handful of guesses per restart at most.
@@ -63,7 +65,32 @@ class AttemptLimiter(
     companion object {
         fun account(username: String): String = "account:${username.trim().lowercase()}"
 
-        fun address(remoteAddress: String): String = "address:$remoteAddress"
+        /** Password guesses from the address. */
+        fun passwordsFrom(remoteAddress: String): String = "passwords:${addressGroup(remoteAddress)}"
+
+        /**
+         * Code guesses from the address. A code names no account until it is right, so this is their only limit, and
+         * callers never clear it on success: someone who can make a link code, or holds one invite they keep from
+         * being used up, could otherwise reset it between guesses. Passwords have their own key for the same reason,
+         * since any account holder can sign in successfully at will.
+         */
+        fun codesFrom(remoteAddress: String): String = "codes:${addressGroup(remoteAddress)}"
+
+        // Whoever has one IPv6 address usually has its whole /64, so the /64 counts as one address.
+        private fun addressGroup(remoteAddress: String): String {
+            val literal = remoteAddress.removePrefix("[").substringBefore(']').substringBefore('%')
+            // A name with a colon is never a host name, so this never looks anything up.
+            if (':' !in literal ||
+                !literal.all { it == ':' || it == '.' || it.isDigit() || it.lowercaseChar() in 'a'..'f' }
+            ) {
+                return remoteAddress
+            }
+            val bytes = runCatching { InetAddress.getByName(literal).address }.getOrNull()
+            if (bytes == null || bytes.size != IPV6_BYTES) return remoteAddress
+            return bytes.copyOf(IPV6_BYTES / 2).toHexString() + "::/64"
+        }
+
+        private const val IPV6_BYTES = 16
 
         private const val MAX_TRACKED_KEYS = 100_000
         private const val MAX_DOUBLINGS = 20

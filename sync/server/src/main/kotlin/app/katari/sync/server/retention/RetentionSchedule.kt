@@ -1,6 +1,8 @@
 package app.katari.sync.server.retention
 
 import app.katari.sync.server.device.AccountDevices
+import app.katari.sync.server.invite.Invites
+import app.katari.sync.server.websession.WebSessions
 import io.ktor.util.logging.KtorSimpleLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +18,8 @@ class RetentionSchedule(
     private val markers: DeletionMarkerRetention,
     private val files: UnreferencedFileRetention,
     private val devices: AccountDevices,
+    private val invites: Invites,
+    private val webSessions: WebSessions,
     private val interval: Duration = 1.hours,
 ) {
     private val log = KtorSimpleLogger("app.katari.sync.server.retention")
@@ -33,6 +37,8 @@ class RetentionSchedule(
             markers.sweep()
             files.sweep()
             devices.forgetExpiredLinkCodes()
+            invites.forgetExpired()
+            webSessions.forgetExpired()
         }.onFailure { log.error("Retention sweep failed", it) }
     }
 }

@@ -1,5 +1,6 @@
 package app.katari.sync.server.account
 
+import app.katari.sync.protocol.account.AccountCredentials
 import app.katari.sync.server.attemptlimit.AttemptLimiter
 import app.katari.sync.server.onetimecode.OneTimeCode
 import app.katari.sync.server.storage.ServerStorage
@@ -31,13 +32,12 @@ class FirstAdminSetup(
 
     fun createAdmin(setupCode: String, username: String, password: String, remoteAddress: String): FirstAdminOutcome {
         val expected = code.get() ?: return FirstAdminOutcome.AlreadySetUp
-        val keys = listOf(AttemptLimiter.address(remoteAddress))
+        val keys = listOf(AttemptLimiter.codesFrom(remoteAddress))
         attempts.blockedFor(keys)?.let { return FirstAdminOutcome.Throttled(it) }
         if (!OneTimeCode.matches(setupCode, expected)) {
             attempts.failed(keys)
             return FirstAdminOutcome.WrongCode
         }
-        attempts.succeeded(keys)
         val name = username.trim()
         if (!AccountCredentials.isValidUsername(name)) return FirstAdminOutcome.InvalidUsername
         if (!AccountCredentials.isValidPassword(password)) return FirstAdminOutcome.InvalidPassword

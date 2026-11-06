@@ -1,0 +1,31 @@
+-- Sign-ins on the web page, apart from device tokens. Ended by signing out, and for every session of an account by a
+-- password change or reset, disabling or deleting it.
+CREATE TABLE web_sessions(
+    -- SHA-256 of the session cookie's value; the value itself is never stored.
+    token_hash BLOB NOT NULL PRIMARY KEY,
+    account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX web_sessions_account_index ON web_sessions(account_id);
+
+insert:
+INSERT INTO web_sessions(token_hash, account_id, expires_at)
+VALUES (:tokenHash, :accountId, :expiresAt);
+
+unexpiredAccount:
+SELECT account_id
+FROM web_sessions
+WHERE token_hash = :tokenHash AND expires_at > :now;
+
+delete:
+DELETE FROM web_sessions
+WHERE token_hash = :tokenHash;
+
+deleteForAccount:
+DELETE FROM web_sessions
+WHERE account_id = :accountId;
+
+deleteExpired:
+DELETE FROM web_sessions
+WHERE expires_at <= :now;

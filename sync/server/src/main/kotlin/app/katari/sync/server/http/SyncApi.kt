@@ -7,10 +7,6 @@ import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.deflate
 import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.compression.matchContentType
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.RouteSelector
-import io.ktor.server.routing.RouteSelectorEvaluation
-import io.ktor.server.routing.RoutingResolveContext
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import kotlin.time.Duration.Companion.seconds
@@ -32,7 +28,7 @@ fun Application.syncApi(services: SyncServices) {
         infoRoutes(services)
         group("protocol version") {
             install(ProtocolVersionCheck)
-            registrationRoute(services)
+            registrationRoutes(services)
             group("device") {
                 install(deviceAuthenticationPlugin(services.authentication))
                 deviceRoutes(services)
@@ -42,14 +38,4 @@ fun Application.syncApi(services: SyncServices) {
             }
         }
     }
-}
-
-/** Routes under it share its plugins without adding to their paths. */
-private fun Route.group(name: String, build: Route.() -> Unit): Route = createChild(GroupSelector(name)).apply(build)
-
-private class GroupSelector(private val name: String) : RouteSelector() {
-    override suspend fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation =
-        RouteSelectorEvaluation.Transparent
-
-    override fun toString(): String = "($name)"
 }

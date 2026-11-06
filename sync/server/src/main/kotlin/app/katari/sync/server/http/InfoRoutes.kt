@@ -15,7 +15,13 @@ internal const val HEALTH_PATH = "/health"
 /** Reachable without the version header or a token. */
 internal fun Route.infoRoutes(services: SyncServices) {
     get(SyncHttp.INFO) {
-        call.respondProto(ServerInfo(services.storage.instanceId, SupportedProtocolVersions))
+        call.respondProto(
+            ServerInfo(
+                instanceId = services.storage.instanceId,
+                protocolVersions = SupportedProtocolVersions,
+                needsSetup = services.firstAdminSetup.setupCode != null,
+            ),
+        )
     }
     get(HEALTH_PATH) {
         withContext(Dispatchers.IO) { services.storage.accounts.count() }

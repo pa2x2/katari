@@ -3,6 +3,7 @@ package app.katari.sync.server
 import app.katari.sync.server.config.ServerConfig
 import app.katari.sync.server.http.syncApi
 import app.katari.sync.server.storage.sqlite.SqliteServerStorage
+import app.katari.sync.server.web.webPages
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
@@ -16,7 +17,9 @@ internal fun serve(config: ServerConfig) {
     val storage = SqliteServerStorage.open(config.databaseFile)
     val services = SyncServices(config, storage)
     services.content.prepare()
-    log.info("Data directory ${config.dataDirectory}, instance ${storage.instanceId}")
+    log.info(
+        "Katari sync server ${ServerVersion.name}, data directory ${config.dataDirectory}, instance ${storage.instanceId}",
+    )
     services.firstAdminSetup.setupCode?.let { code ->
         log.info("No accounts yet. The setup code for creating the admin account is $code")
     }
@@ -25,6 +28,7 @@ internal fun serve(config: ServerConfig) {
     // on amd64 and arm64. It speaks HTTP/1.1 only, which is all a server behind a reverse proxy needs.
     embeddedServer(CIO, port = config.port, host = config.host, watchPaths = emptyList()) {
         syncApi(services)
+        webPages(services)
         val retention = services.retention.start(this)
         monitor.subscribe(ApplicationStopped) {
             retention.cancel()

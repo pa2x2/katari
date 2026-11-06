@@ -18,6 +18,8 @@ interface StoredFileIndex {
 
     /** The files the account's live records list that the index has. */
     fun referencedTotals(accountId: Long): FileTotals
+
+    fun removeAccount(accountId: Long)
 }
 
 data class StoredFile(

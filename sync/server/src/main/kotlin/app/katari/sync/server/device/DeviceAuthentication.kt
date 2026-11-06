@@ -2,6 +2,7 @@ package app.katari.sync.server.device
 
 import app.katari.sync.protocol.error.SyncErrorCode
 import app.katari.sync.server.storage.ServerStorage
+import app.katari.sync.server.token.BearerTokens
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 
@@ -11,8 +12,17 @@ class DeviceAuthentication(
     private val clock: Clock,
 ) {
     fun authenticate(token: String?): AuthenticationOutcome {
-        val device = token?.let { storage.devices.byTokenHash(DeviceTokens.hash(it)) }
-            ?: return AuthenticationOutcome.Refused(SyncErrorCode.UNAUTHORIZED)
+        val tokenHash =
+            token?.let(BearerTokens::hash) ?: return AuthenticationOutcome.Refused(SyncErrorCode.UNAUTHORIZED)
+        val device = storage.devices.byTokenHash(tokenHash)
+        if (device == null) {
+            val code = if (storage.devices.isRetiredToken(tokenHash)) {
+                SyncErrorCode.DEVICE_REVOKED
+            } else {
+                SyncErrorCode.UNAUTHORIZED
+            }
+            return AuthenticationOutcome.Refused(code)
+        }
         if (device.isRevoked) return AuthenticationOutcome.Refused(SyncErrorCode.DEVICE_REVOKED)
         val account = storage.accounts.byId(device.accountId)
         if (account == null || account.isDisabled) return AuthenticationOutcome.Refused(SyncErrorCode.UNAUTHORIZED)

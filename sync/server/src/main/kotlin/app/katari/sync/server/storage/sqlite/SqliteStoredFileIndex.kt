@@ -38,4 +38,8 @@ internal class SqliteStoredFileIndex(database: SyncServerDatabase) : StoredFileI
     override fun referencedTotals(accountId: Long): FileTotals = queries.referencedTotals(accountId) { count, bytes ->
         FileTotals(files = count, bytes = bytes ?: 0)
     }.executeAsOne()
+
+    override fun removeAccount(accountId: Long) {
+        queries.deleteAccount(accountId)
+    }
 }

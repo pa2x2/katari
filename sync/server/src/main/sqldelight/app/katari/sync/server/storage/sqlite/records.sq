@@ -58,3 +58,7 @@ WHERE account_id = :accountId AND is_deleted = 1 AND sequence <= :through;
 deleteMarkersThrough:
 DELETE FROM records
 WHERE account_id = :accountId AND is_deleted = 1 AND sequence <= :through;
+
+deleteAccount:
+DELETE FROM records
+WHERE account_id = :accountId;

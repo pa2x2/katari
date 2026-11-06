@@ -72,3 +72,24 @@ raiseMarkersDroppedThrough:
 UPDATE accounts
 SET markers_dropped_through = max(markers_dropped_through, :through)
 WHERE _id = :id;
+
+setAdmin:
+UPDATE accounts
+SET is_admin = :isAdmin
+WHERE _id = :id;
+
+countEnabledAdmins:
+SELECT count(*)
+FROM accounts
+WHERE is_admin = 1 AND is_disabled = 0;
+
+delete:
+DELETE FROM accounts
+WHERE _id = :id;
+
+-- Starts the account's history over at :sequence, past where it was, with nothing before it kept: a pull from any
+-- earlier position is refused as expired.
+restartHistory:
+UPDATE accounts
+SET sequence = :sequence, markers_dropped_through = :sequence
+WHERE _id = :id;

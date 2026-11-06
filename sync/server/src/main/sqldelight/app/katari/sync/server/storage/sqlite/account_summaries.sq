@@ -1,0 +1,23 @@
+-- What the web page shows of each account. Last sync is the newest a linked device was seen; storage is every payload
+-- and file the account holds on the server, deletion markers and files in their grace day included.
+CREATE VIEW account_summaries AS
+SELECT
+    a._id,
+    a.username,
+    a.is_admin,
+    a.is_disabled,
+    (SELECT count(*) FROM devices d WHERE d.account_id = a._id AND d.is_revoked = 0) AS devices,
+    (SELECT max(d.last_seen_at) FROM devices d WHERE d.account_id = a._id AND d.is_revoked = 0) AS last_seen,
+    (SELECT coalesce(sum(length(r.payload)), 0) FROM records r WHERE r.account_id = a._id)
+        + (SELECT coalesce(sum(f.size), 0) FROM stored_files f WHERE f.account_id = a._id) AS stored_bytes
+FROM accounts a;
+
+all:
+SELECT *
+FROM account_summaries
+ORDER BY username COLLATE NOCASE;
+
+byId:
+SELECT *
+FROM account_summaries
+WHERE _id = :id;

@@ -1,5 +1,6 @@
 package app.katari.sync.server.http
 
+import app.katari.sync.protocol.account.RedeemInviteRequest
 import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.file.FileReference
@@ -17,12 +18,18 @@ internal object RequestChecks {
     private const val MAX_KIND_LENGTH = 128
     private const val MAX_CHANGE_ID_LENGTH = 128
     private const val MAX_DESCRIPTION_LENGTH = 128
+    private const val MAX_CODE_LENGTH = 64
     private val sha256Hex = Regex("[0-9a-f]{64}")
 
     fun check(request: RegisterDeviceRequest) {
         require((request.password == null) != (request.linkCode == null)) {
             "Exactly one of a password and a link code"
         }
+        check(request.device)
+    }
+
+    fun check(request: RedeemInviteRequest) {
+        require(request.code.length <= MAX_CODE_LENGTH) { "Invite code length" }
         check(request.device)
     }
 

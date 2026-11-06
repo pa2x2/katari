@@ -1,10 +1,7 @@
 package app.katari.sync.server.retention
 
-import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileClaimRequest
-import app.katari.sync.protocol.file.FileReference
 import app.katari.sync.server.TestServer
-import app.katari.sync.server.file.UploadOutcome
 import app.katari.sync.server.record
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -13,7 +10,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
-import java.security.MessageDigest
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 
@@ -61,12 +57,5 @@ class UnreferencedFileRetentionTest {
             server.services.files.claim(account, FileClaimRequest(listOf(cover))).missing shouldContainExactly
                 listOf(cover)
         }
-    }
-
-    private fun TestServer.upload(accountId: Long, content: String): FileReference {
-        val bytes = content.encodeToByteArray()
-        val sha256 = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString()
-        services.files.upload(accountId, FileCategory.COVER, sha256, bytes.inputStream()) shouldBe UploadOutcome.Stored
-        return FileReference(FileCategory.COVER, sha256, bytes.size.toLong())
     }
 }

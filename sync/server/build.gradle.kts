@@ -8,9 +8,18 @@ plugins {
     application
 }
 
+// The server's own version, shown on its web page and released apart from the apps.
+version = "0.1.0"
+
 application {
     applicationName = "katari-sync-server"
     mainClass = "app.katari.sync.server.MainKt"
+}
+
+tasks.jar {
+    manifest {
+        attributes("Implementation-Version" to project.version)
+    }
 }
 
 sqldelight {
@@ -36,6 +45,7 @@ dependencies {
     }
 
     testImplementation(libs.bundles.test)
+    testImplementation(libs.ktor.server.testHost)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

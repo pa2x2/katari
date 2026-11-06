@@ -17,4 +17,8 @@ internal class SqliteLinkCodeStore(private val database: SyncServerDatabase) : L
     override fun deleteExpired(nowMillis: Long) {
         queries.deleteExpired(nowMillis)
     }
+
+    override fun deleteForAccount(accountId: Long) {
+        queries.deleteForAccount(accountId)
+    }
 }

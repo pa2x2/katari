@@ -45,6 +45,11 @@ class FileContentStore(dataDirectory: Path) {
         pathOf(file).deleteIfExists()
     }
 
+    @OptIn(kotlin.io.path.ExperimentalPathApi::class)
+    fun deleteAccount(accountId: Long) {
+        files.resolve(accountId.toString()).deleteRecursively()
+    }
+
     private val FileCategory.folder: String
         get() = when (this) {
             FileCategory.COVER -> "covers"

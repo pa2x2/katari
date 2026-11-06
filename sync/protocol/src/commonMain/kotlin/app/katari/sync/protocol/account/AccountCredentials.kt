@@ -1,12 +1,15 @@
-package app.katari.sync.server.account
+package app.katari.sync.protocol.account
 
-/** What a username and a password must be, wherever an account gets one. */
+/**
+ * What a username and a password must be, wherever an account gets one: the server refuses anything else, and an app
+ * checks the same rules before sending, so the person learns what is wrong before the server is asked.
+ */
 object AccountCredentials {
-    private const val MAX_USERNAME_LENGTH = 64
-    private const val MIN_PASSWORD_LENGTH = 8
+    const val MAX_USERNAME_LENGTH: Int = 64
+    const val MIN_PASSWORD_LENGTH: Int = 8
 
     // Argon2 takes any length, but a password this long is a mistake or an attempt to make hashing costly.
-    private const val MAX_PASSWORD_LENGTH = 1024
+    const val MAX_PASSWORD_LENGTH: Int = 1024
 
     /** Letters, digits, `.`, `_` and `-`, so a username is easy to type on every device. */
     fun isValidUsername(username: String): Boolean = username.length in 1..MAX_USERNAME_LENGTH &&

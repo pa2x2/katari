@@ -6,8 +6,8 @@ import app.katari.sync.protocol.file.FileCategory
  * How the protocol's messages travel over HTTP. Request and answer bodies are single protobuf messages of this
  * protocol, which either side may compress with `Content-Encoding: gzip`.
  *
- * Every call except [INFO] carries [PROTOCOL_VERSION_HEADER], and every call except [INFO] and [REGISTER] carries
- * `Authorization: Bearer <token>` with the token registration gave the device. A refused call answers with a
+ * Every call except [INFO] carries [PROTOCOL_VERSION_HEADER], and every call except [INFO], [REGISTER] and
+ * [REDEEM_INVITE] carries `Authorization: Bearer <token>` with the token registration gave the device. A refused call answers with a
  * non-2xx status and a [app.katari.sync.protocol.error.SyncError] body, except for malformed requests, which get a
  * plain 4xx.
  */
@@ -25,6 +25,12 @@ object SyncHttp {
      * [app.katari.sync.protocol.device.RegisterDeviceResponse].
      */
     const val REGISTER: String = "/api/devices/register"
+
+    /**
+     * POST [app.katari.sync.protocol.account.RedeemInviteRequest]:
+     * [app.katari.sync.protocol.device.RegisterDeviceResponse].
+     */
+    const val REDEEM_INVITE: String = "/api/invites/redeem"
 
     /** GET: [app.katari.sync.protocol.device.LinkedDevices]. */
     const val DEVICES: String = "/api/devices"

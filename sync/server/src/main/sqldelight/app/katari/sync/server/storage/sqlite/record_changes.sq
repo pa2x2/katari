@@ -21,3 +21,7 @@ VALUES (:accountId, :changeId, :sequence);
 deleteThrough:
 DELETE FROM record_changes
 WHERE account_id = :accountId AND sequence <= :through;
+
+deleteAccount:
+DELETE FROM record_changes
+WHERE account_id = :accountId;

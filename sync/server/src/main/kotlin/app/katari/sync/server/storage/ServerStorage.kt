@@ -4,7 +4,9 @@ import app.katari.sync.server.account.AccountStore
 import app.katari.sync.server.device.DeviceStore
 import app.katari.sync.server.device.LinkCodeStore
 import app.katari.sync.server.file.StoredFileIndex
+import app.katari.sync.server.invite.InviteStore
 import app.katari.sync.server.record.RecordStore
+import app.katari.sync.server.websession.WebSessionStore
 
 /**
  * Everything the server keeps apart from file contents, behind one seam so a database other than SQLite can be added
@@ -22,6 +24,8 @@ interface ServerStorage : AutoCloseable {
     val linkCodes: LinkCodeStore
     val records: RecordStore
     val files: StoredFileIndex
+    val invites: InviteStore
+    val webSessions: WebSessionStore
 
     /**
      * Runs [block] as one atomic unit that no other transaction interleaves with; store calls made inside it join it.

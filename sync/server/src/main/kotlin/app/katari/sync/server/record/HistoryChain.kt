@@ -28,5 +28,12 @@ internal object HistoryChain {
         return sha256(input.array())
     }
 
+    /**
+     * The link that starts an account's history over after its records were wiped. No record has an empty key, so it
+     * never equals the link of a write.
+     */
+    fun restart(previous: ByteArray, sequence: Long): ByteArray =
+        next(previous, sequence, key = "", changeId = "history restarted")
+
     private fun sha256(bytes: ByteArray): ByteArray = MessageDigest.getInstance("SHA-256").digest(bytes)
 }

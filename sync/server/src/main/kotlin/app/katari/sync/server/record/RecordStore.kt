@@ -42,6 +42,12 @@ interface RecordStore {
     fun forgetChangesThrough(accountId: Long, through: Long)
 
     /**
+     * Removes every record copy, applied change and history chain value of the account, and starts its history over
+     * at [sequence], which must be past its current one, with [chain] as the chain there and nothing before it.
+     */
+    fun clear(accountId: Long, sequence: Long, chain: ByteArray)
+
+    /**
      * Forgets the history chain before [before], except at the sequences of stored record copies, which a pull from
      * further back still pages through and hands out as positions.
      */

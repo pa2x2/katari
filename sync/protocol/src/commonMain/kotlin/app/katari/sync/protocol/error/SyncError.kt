@@ -29,8 +29,8 @@ data class SyncError(
 @Serializable
 enum class SyncErrorCode {
     /**
-     * Wrong password, an expired or used link code, or a token the server does not know. The person signs in again,
-     * after [SyncError.retryAfterMillis] when it is set.
+     * Wrong password, an expired or used link code or invite, or a token the server does not know. The person signs in
+     * again, after [SyncError.retryAfterMillis] when it is set.
      */
     @ProtoNumber(1)
     UNAUTHORIZED,
@@ -57,4 +57,8 @@ enum class SyncErrorCode {
     /** The app's protocol version is outside [SyncError.supportedVersions]; one side needs an update. */
     @ProtoNumber(5)
     PROTOCOL_VERSION_UNSUPPORTED,
+
+    /** An invite was right but another account already has the username asked for; the invite is still unused. */
+    @ProtoNumber(6)
+    USERNAME_TAKEN,
 }

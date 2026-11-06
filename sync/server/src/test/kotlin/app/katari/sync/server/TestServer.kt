@@ -3,6 +3,8 @@ package app.katari.sync.server
 import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.RegisterDeviceRequest
+import app.katari.sync.protocol.file.FileCategory
+import app.katari.sync.protocol.file.FileReference
 import app.katari.sync.protocol.pull.PullRequest
 import app.katari.sync.protocol.push.PushRequest
 import app.katari.sync.protocol.push.PushResponse
@@ -11,9 +13,12 @@ import app.katari.sync.server.config.ServerConfig
 import app.katari.sync.server.device.AuthenticationOutcome
 import app.katari.sync.server.device.Device
 import app.katari.sync.server.device.RegistrationOutcome
+import app.katari.sync.server.file.UploadOutcome
 import app.katari.sync.server.record.PullOutcome
 import app.katari.sync.server.storage.sqlite.SqliteServerStorage
+import io.kotest.matchers.shouldBe
 import java.nio.file.Path
+import java.security.MessageDigest
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Duration
@@ -26,8 +31,18 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
     val services = SyncServices(config, SqliteServerStorage.open(config.databaseFile), clock)
         .also { it.content.prepare() }
 
-    fun account(username: String = "reader"): Long =
-        services.storage.accounts.create(username, passwordHash = "", isAdmin = false, clock.millis).id
+    /** With no [password], the account can't sign in with one. */
+    fun account(username: String = "reader", password: String? = null, isAdmin: Boolean = false): Long {
+        val hash = password?.let(services.passwords::hash).orEmpty()
+        return services.storage.accounts.create(username, hash, isAdmin, clock.millis).id
+    }
+
+    fun upload(accountId: Long, content: String): FileReference {
+        val bytes = content.encodeToByteArray()
+        val sha256 = MessageDigest.getInstance("SHA-256").digest(bytes).toHexString()
+        services.files.upload(accountId, FileCategory.COVER, sha256, bytes.inputStream()) shouldBe UploadOutcome.Stored
+        return FileReference(FileCategory.COVER, sha256, bytes.size.toLong())
+    }
 
     /** Registers a device into [accountId] the way a new device joins with a link code. */
     fun device(accountId: Long): LinkedTestDevice {

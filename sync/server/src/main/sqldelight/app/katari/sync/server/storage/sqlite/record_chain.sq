@@ -26,3 +26,7 @@ WHERE account_id = :accountId
         FROM records r
         WHERE r.account_id = record_chain.account_id AND r.sequence = record_chain.sequence
     );
+
+deleteAccount:
+DELETE FROM record_chain
+WHERE account_id = :accountId;

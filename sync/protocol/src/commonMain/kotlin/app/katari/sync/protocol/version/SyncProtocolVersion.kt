@@ -10,6 +10,8 @@ package app.katari.sync.protocol.version
  * field must not be ignored, or an enum gains an entry (kotlinx protobuf refuses enum numbers it does not know, so a
  * peer sends only the entries the other side's version has).
  *
+ * Version 1 has not been released, so no peer of it exists yet and its messages and enums still change in place.
+ *
  * Record payloads are not covered: each kind versions its own format
  * ([app.katari.sync.protocol.record.RecordEnvelope.kindVersion]), and the server never needs to understand it.
  */
