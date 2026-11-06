@@ -3299,7 +3299,8 @@
     <!-- %1$s is the server's address -->
     <string name="sync_ended_text">It no longer syncs with %1$s. Everything stays on this device, which works on its own again.</string>
     <string name="sync_action_sign_in_again">Sign in again</string>
-    <string name="sync_action_continue_choosing">Choose how this device joins</string>
+    <string name="sync_action_continue_choosing">Continue setting up</string>
+    <string name="sync_action_answer_questions">Review and answer</string>
 
     <!-- Sync: first sync of a device with data -->
     <string name="sync_first_sync_title">Before the first sync</string>

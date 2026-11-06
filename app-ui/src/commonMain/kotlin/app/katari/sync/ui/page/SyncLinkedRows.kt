@@ -95,7 +95,8 @@ private fun attentionRows(
     return when (headline) {
         SyncHeadline.ChoicesWaiting ->
             listOf(row(stringResource(MR.strings.sync_action_continue_choosing), actions.openChoices))
-        is SyncHeadline.Questions -> listOf(row(syncHeadlineText(headline), actions.openQuestions))
+        is SyncHeadline.Questions ->
+            listOf(row(stringResource(MR.strings.sync_action_answer_questions), actions.openQuestions))
         SyncHeadline.SignInAgain ->
             listOf(row(stringResource(MR.strings.sync_action_sign_in_again)) { actions.signIn(server) })
         else -> emptyList()
