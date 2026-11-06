@@ -84,7 +84,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)
     val held = HeldRecords(handler)
-    val firstSync = FirstSync(handler, writing, preferences.reads)
+    val firstSync = FirstSync(handler, writing, preferences.reads, preferences.profiles)
     val restoreStamping = RestoreStamping(handler, writing, settingsCapture, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {

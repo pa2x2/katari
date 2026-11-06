@@ -7,6 +7,7 @@ import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import mihon.domain.profile.ProfileSeedPreferences
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
@@ -22,6 +23,8 @@ class FirstSyncTest {
             val exchange = RecordExchange()
             SyncTestDevice(directory.resolve("a.db")).use { a ->
                 SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    // What the app writes on its first start, before the person does anything
+                    ProfileSeedPreferences.seed(b.preferences.profiles.profileStore(1))
                     b.firstSync.hasOwnData() shouldBe false
                     b.sql(
                         "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'b-work', 'work', 1, 1)",

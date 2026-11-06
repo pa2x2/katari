@@ -18,10 +18,9 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.defaultHomeScreenTabs
 import mihon.core.metro.AppCoroutineScope
+import mihon.domain.profile.ProfileSeedPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.domain.library.service.DuplicatePreferences
-import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
@@ -137,7 +136,7 @@ class ProfileManager(
         val customPreferences = CustomPreferences(profileStore.profileStore(id))
         customPreferences.homeScreenTabs.set(defaultHomeScreenTabs())
         customPreferences.homeScreenStartupTab.set(HomeScreenTabs.Library)
-        seedDuplicateTitleExclusions(profileId = id)
+        seedPreferences(profileId = id)
         libraryUpdateSchedule.schedule(id)
         return requireNotNull(profileDatabase.getProfileById(id))
     }
@@ -192,7 +191,7 @@ class ProfileManager(
         legacyPreferenceKeys.migrate(fromVersion = currentVersion) {
             migrateLegacyProfileUnlockSettings()
             migrateLegacySourceListPreferences()
-            seedDuplicateTitleExclusionsForProfiles(
+            seedPreferencesOf(
                 profileDatabase.getProfiles(includeArchived = true)
                     .map(Profile::id)
                     .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) },
@@ -210,14 +209,12 @@ class ProfileManager(
         }
     }
 
-    private fun seedDuplicateTitleExclusionsForProfiles(profileIds: Iterable<Long>) {
-        profileIds.forEach(::seedDuplicateTitleExclusions)
+    private fun seedPreferencesOf(profileIds: Iterable<Long>) {
+        profileIds.forEach { seedPreferences(it) }
     }
 
-    private fun seedDuplicateTitleExclusions(profileId: Long) {
-        val preference = DuplicatePreferences(profileStore.profileStore(profileId)).titleExclusionPatterns
-        if (preference.isSet()) return
-        preference.set(DuplicateTitleExclusions.defaultPatterns)
+    private fun seedPreferences(profileId: Long) {
+        ProfileSeedPreferences.seed(profileStore.profileStore(profileId))
     }
 
     private fun migrateLegacySourceListPreferences() {

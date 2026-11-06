@@ -13,6 +13,8 @@ import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
+import mihon.domain.profile.ProfileSeedPreferences
+import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
@@ -37,17 +39,20 @@ class FirstSync(
     private val handler: DatabaseHandler,
     private val writing: SyncWriting,
     private val settings: SettingReads,
+    private val profileStore: ProfileStore,
 ) {
     /**
      * Whether this device holds the person's data: anything in its database beyond the untouched default profile, or
-     * a person-level setting. A device that doesn't takes the whole account without questions.
+     * a person-level setting the app didn't write itself ([ProfileSeedPreferences]). A device that doesn't takes the
+     * whole account without questions.
      */
     suspend fun hasOwnData(): Boolean {
         if (handler.await { sync_first_syncQueries.hasOwnRows().awaitAsOne() }) return true
         val profiles = localProfiles()
         return settings.sharedKeys().any { it.isPersonLevel() && !settings.isProfileKey(it) } ||
             profiles.any { profile ->
-                settings.profileKeys(profile.id).any { it.isPersonLevel() } ||
+                val seeded = ProfileSeedPreferences.untouched(profileStore.profileStore(profile.id))
+                settings.profileKeys(profile.id).any { it.isPersonLevel() && it !in seeded } ||
                     settings.sourceKeys(profile.id).isNotEmpty()
             }
     }
