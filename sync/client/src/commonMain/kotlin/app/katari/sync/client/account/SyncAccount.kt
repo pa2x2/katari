@@ -120,7 +120,8 @@ class SyncAccount(
 
     suspend fun createLinkCode(): AccountCall<LinkCodeOffer> = linked { client, _ ->
         val code = client.createLinkCode()
-        LinkCodeOffer(client.server, code.code, code.expiresAtMillis)
+        val link = LinkCodeLink(client.server, code.code, connection.state().accountName, thisDevice.description().name)
+        LinkCodeOffer(code.code, code.expiresAtMillis, link)
     }
 
     /** Removes another device of the account; this device leaves with [disconnect]. */

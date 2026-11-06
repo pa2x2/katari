@@ -49,8 +49,13 @@ data class AccountDevice(val device: LinkedDevice, val isThisDevice: Boolean) {
     val id: DeviceId get() = device.id
 }
 
-/** A one-time code a new device joins with, shown with the server's address, which a QR code carries too (D024). */
-data class LinkCodeOffer(val server: HttpUrl, val code: String, val expiresAtMillis: Long)
+/**
+ * A one-time code a new device joins with, shown with the server's address, which the QR code of [link] carries too
+ * (D024). [expiresAtMillis] is the server's time.
+ */
+data class LinkCodeOffer(val code: String, val expiresAtMillis: Long, val link: LinkCodeLink) {
+    val server: HttpUrl get() = link.server
+}
 
 /** The answer to a call the Sync page makes to the server once the device is linked. */
 sealed interface AccountCall<out T> {

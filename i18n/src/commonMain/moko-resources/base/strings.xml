@@ -3146,4 +3146,243 @@
     <string name="filter_save_required">Save the repaired preset before applying it.</string>
     <string name="filter_replacement">Replacement</string>
     <string name="filter_choose_replacement">Choose a filter</string>
+
+    <!-- Sync: where it lives and how it reports -->
+    <string name="sync_title">Sync</string>
+    <string name="sync_summary_standalone">Keep your devices in step</string>
+    <string name="sync_status_up_to_date">Up to date</string>
+    <!-- %1$s says when, such as "2 minutes ago" -->
+    <string name="sync_status_up_to_date_at">Up to date · %1$s</string>
+    <string name="sync_status_syncing">Syncing…</string>
+    <!-- %1$d is how far the first download got, in percent -->
+    <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
+    <string name="sync_status_downloading_unknown">Downloading your library…</string>
+    <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
+    <string name="sync_status_offline">Offline · changes will sync when you\'re online</string>
+    <!-- %1$s is the server's address, such as sync.home.lan -->
+    <string name="sync_status_unreachable">Can\'t reach %1$s right now</string>
+    <!-- %1$s is the server's address; %2$s says since when, such as "yesterday" -->
+    <string name="sync_status_unreachable_long">Can\'t reach %1$s since %2$s</string>
+    <string name="sync_status_choices">Choose how this device joins your account</string>
+    <string name="sync_status_removed">This device was removed from the account · Sign in again</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_status_account_disabled">Your account on %1$s was disabled</string>
+    <string name="sync_status_sign_in_again">Sign in again to keep syncing</string>
+    <string name="sync_status_app_too_old">Update Katari to keep syncing</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_status_server_too_old">%1$s needs a server update</string>
+    <!-- %1$s lists what waits, such as "categories and fonts" -->
+    <string name="sync_status_held_kinds">Update Katari to sync %1$s</string>
+    <!-- Joins the main status and a note, such as "Up to date · 3 covers and fonts wait for Wi-Fi" -->
+    <string name="sync_status_with_note">%1$s · %2$s</string>
+    <string name="sync_unsent_no_connection">no connection</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_unsent_unreachable">can\'t reach %1$s</string>
+    <string name="sync_kind_entries">entries</string>
+    <string name="sync_kind_chapters">chapters</string>
+    <string name="sync_kind_progress">reading progress</string>
+    <string name="sync_kind_history">history</string>
+    <string name="sync_kind_statistics">statistics</string>
+    <string name="sync_kind_categories">categories</string>
+    <string name="sync_kind_trackers">tracker links</string>
+    <string name="sync_kind_settings">settings</string>
+    <string name="sync_kind_fonts">fonts</string>
+    <string name="sync_kind_profiles">profiles</string>
+    <string name="sync_kind_extension_repositories">extension repositories</string>
+    <string name="sync_kind_merges">merged entries</string>
+    <string name="sync_kind_questions">questions</string>
+    <string name="sync_kind_newer">data from a newer version</string>
+
+    <!-- Sync: before setup -->
+    <string name="sync_intro">Keep your library, reading progress, history and settings the same on all your devices, through a server you run yourself. Each device keeps its own full copy and works offline.</string>
+    <string name="sync_what_syncs_title">Synced</string>
+    <string name="sync_what_syncs">Library, categories, read state, progress, history, statistics, tracker links, your settings, custom covers and fonts</string>
+    <string name="sync_what_stays_title">Stays on this device</string>
+    <string name="sync_what_stays">Downloads, logins, screen and storage settings</string>
+    <string name="sync_action_sign_in_with_address">Sign in with server address</string>
+    <string name="sync_action_scan_code">Scan a code from a linked device</string>
+    <string name="sync_action_enter_code">Enter a code from a linked device</string>
+    <string name="sync_no_keyring">No keyring found. Sync keeps this device\'s sign-in in the desktop\'s keyring (Secret Service), and none is running. Start one, such as GNOME Keyring or KWallet, then sign in.</string>
+
+    <!-- Sync: signing in -->
+    <string name="sync_sign_in_title">Sign in to sync</string>
+    <string name="sync_server_address">Server address</string>
+    <string name="sync_action_sign_in">Sign in</string>
+    <string name="sync_server_checking">Checking the server…</string>
+    <string name="sync_server_plain_http_local">Not encrypted. Allowed because this address is on your local network.</string>
+    <string name="sync_server_plain_http_refused">Plain http:// works only for addresses on your local network. Use the server\'s https:// address.</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_server_needs_setup">This server has no accounts yet. Open %1$s in a browser to create the admin account, then sign in here.</string>
+    <string name="sync_server_malformed">That isn\'t a server address.</string>
+    <string name="sync_server_unreachable">Can\'t reach this server. Check the address and your connection.</string>
+    <string name="sync_server_not_sync">Something answered at this address, but it isn\'t a Katari sync server.</string>
+    <string name="sync_server_needs_newer_app">This server needs a newer Katari. Update the app to sync with it.</string>
+    <string name="sync_server_needs_update">This server is too old for this version of Katari. Update the server first.</string>
+    <string name="sync_refused_credentials">The username or password is wrong.</string>
+    <string name="sync_refused_link_code">This code doesn\'t work. It may have expired or been used; show a new one on the linked device.</string>
+    <string name="sync_refused_invite">This invite code doesn\'t work. It may have expired or been used.</string>
+    <!-- %1$s says how long, such as "5 minutes" -->
+    <string name="sync_refused_throttled">Too many attempts. Try again in %1$s.</string>
+    <string name="sync_refused_username_taken">That username is taken. Choose another.</string>
+    <string name="sync_refused_account_disabled">This account is disabled.</string>
+    <string name="sync_refused_other">The server didn\'t let this device join.</string>
+    <string name="sync_join_unreachable">Can\'t reach the server. Try again.</string>
+    <string name="sync_action_use_invite">I have an invite code</string>
+    <string name="sync_action_use_account">I already have an account</string>
+    <string name="sync_invite_code">Invite code</string>
+    <string name="sync_choose_username">Choose a username</string>
+    <string name="sync_choose_password">Choose a password</string>
+    <string name="sync_action_create_account">Create account</string>
+
+    <!-- Sync: codes from a linked device -->
+    <string name="sync_scan_title">Scan a code</string>
+    <string name="sync_scan_hint">Open Sync → Link a device on a device that is already linked.</string>
+    <string name="sync_action_enter_code_instead">Enter the code instead</string>
+    <string name="sync_enter_code_title">Enter a code</string>
+    <string name="sync_enter_code_hint">On a device that is already linked, open Sync → Link a device and type the server address and code it shows.</string>
+    <string name="sync_link_code">Code</string>
+    <string name="sync_camera_needed">Katari needs the camera to scan the code.</string>
+    <string name="sync_action_allow_camera">Allow camera</string>
+    <string name="sync_camera_unavailable">No camera is available.</string>
+    <string name="sync_not_a_link_code">This QR code isn\'t a Katari link code.</string>
+    <!-- %1$s is the account's name -->
+    <string name="sync_join_title">Join %1$s\'s account?</string>
+    <string name="sync_join_title_unnamed">Join this account?</string>
+    <!-- %1$s is the server's address, %2$s the account's name -->
+    <string name="sync_join_text">This device will sync with %1$s as %2$s.</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_join_text_unnamed">This device will sync with %1$s.</string>
+    <!-- %1$s is the name of the device that showed the code -->
+    <string name="sync_join_from">The code came from %1$s.</string>
+    <string name="sync_action_join">Join</string>
+    <string name="sync_joining">Joining…</string>
+
+    <!-- Sync: linking another device -->
+    <string name="sync_link_device">Link a device</string>
+    <string name="sync_link_device_summary">Show a code to scan on the new device</string>
+    <string name="sync_link_instructions">Scan this with the new device, or type the server address and code there.</string>
+    <!-- %1$s is the time left, such as 1:41 -->
+    <string name="sync_link_expires">Expires in %1$s.</string>
+    <string name="sync_link_expired">This code expired.</string>
+    <string name="sync_action_new_code">New code</string>
+    <string name="sync_link_unavailable">Can\'t get a code from the server right now.</string>
+    <string name="sync_link_qr_description">QR code for linking a new device</string>
+
+    <!-- Sync: the page of a linked device -->
+    <!-- %1$s is the account's name, %2$s the server's address -->
+    <string name="sync_account_on_server">%1$s · %2$s</string>
+    <!-- %1$s says when, such as "2 minutes ago" -->
+    <string name="sync_action_sync_now">Sync now</string>
+    <string name="sync_devices">Devices</string>
+    <string name="sync_this_device">This device</string>
+    <!-- %1$s is the platform, %2$s the app version, %3$s when it last synced -->
+    <string name="sync_device_summary">%1$s · %2$s · %3$s</string>
+    <string name="sync_device_not_synced">not synced yet</string>
+    <string name="sync_devices_unavailable">Can\'t list the account\'s devices right now.</string>
+    <!-- %1$s is the device's name -->
+    <string name="sync_remove_device_title">Remove %1$s?</string>
+    <!-- %1$s is the device's name -->
+    <string name="sync_remove_device_text">%1$s stops syncing and has to be linked again to rejoin. Its own data stays on it.</string>
+    <string name="sync_remove_device_failed">Couldn\'t remove the device. Try again when the server can be reached.</string>
+    <string name="sync_options">Options</string>
+    <string name="sync_use_mobile_data">Use mobile data for covers, fonts and first download</string>
+    <string name="sync_use_mobile_data_summary">Changes sync on any network</string>
+    <string name="sync_in_background">Sync in the background</string>
+    <string name="sync_in_background_summary">Every hour while the app is closed</string>
+    <string name="sync_disconnect">Disconnect this device</string>
+    <string name="sync_disconnect_title">Disconnect this device?</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_disconnect_text">This device stops syncing with %1$s. Your library, history and settings stay here, and the app works on its own again. Your account and other devices are not affected; deleting the account or its data is done on the server\'s web page.</string>
+    <string name="sync_action_disconnect">Disconnect</string>
+    <string name="sync_removed_title">This device was removed from your account</string>
+    <string name="sync_account_disabled_title">Your sync account was disabled</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_ended_text">It no longer syncs with %1$s. Everything stays on this device, which works on its own again.</string>
+    <string name="sync_action_sign_in_again">Sign in again</string>
+    <string name="sync_action_continue_choosing">Choose how this device joins</string>
+
+    <!-- Sync: first sync of a device with data -->
+    <string name="sync_first_sync_title">Before the first sync</string>
+    <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged; nothing is deleted.</string>
+    <string name="sync_first_sync_profiles">Profiles on this device</string>
+    <string name="sync_first_sync_default_paired">Paired automatically (default profile)</string>
+    <!-- %1$s is the account profile's name -->
+    <string name="sync_first_sync_same_as">Same as %1$s</string>
+    <string name="sync_first_sync_add_new">Add as new</string>
+    <string name="sync_first_sync_settings">Settings of paired profiles</string>
+    <string name="sync_first_sync_use_account">Use account\'s</string>
+    <string name="sync_first_sync_use_device">Use this device\'s</string>
+    <string name="sync_first_sync_device_settings">Settings tied to this device (screen, storage, network) are never replaced.</string>
+    <string name="sync_action_start_sync">Start sync</string>
+    <string name="sync_first_sync_unavailable">Can\'t reach the server to compare profiles. Try again when you\'re online.</string>
+
+    <!-- Sync: questions -->
+    <string name="sync_questions_title">Needs your answer</string>
+    <string name="sync_questions_none">Nothing needs your answer.</string>
+    <!-- %1$s is the entry's title -->
+    <string name="sync_question_migration_title">%1$s was migrated twice</string>
+    <!-- %1$s is a device's name, %2$s the source it migrated the entry to -->
+    <string name="sync_question_migration_move">%1$s moved it to %2$s</string>
+    <!-- %1$s is the source shown for now -->
+    <string name="sync_question_migration_now">Showing %1$s for now.</string>
+    <!-- %1$s is a source's name -->
+    <string name="sync_action_keep_source">Keep %1$s</string>
+    <!-- %1$s is the profile's name -->
+    <string name="sync_question_profile_title">%1$s was deleted</string>
+    <!-- %1$s is the device that deleted it, %2$s the device that changed it since -->
+    <string name="sync_question_profile_text">Deleted on %1$s, but %2$s changed things in it since. Kept for now.</string>
+    <string name="sync_action_keep_profile">Keep profile</string>
+    <!-- %1$s is the entry's title -->
+    <string name="sync_question_notes_title">Notes on %1$s</string>
+    <string name="sync_question_notes_text">Edited on two devices at the same time. Showing the later notes for now.</string>
+    <!-- %1$s is a device's name, %2$s when it wrote the notes -->
+    <string name="sync_question_notes_version">%1$s · %2$s</string>
+    <string name="sync_action_keep_these">Keep these</string>
+    <string name="sync_unknown_device">another device</string>
+    <string name="sync_unknown_entry">An entry</string>
+    <string name="sync_unknown_profile">A profile</string>
+    <string name="sync_banner_migration">Migrated on two devices</string>
+    <string name="sync_banner_migration_text">Choose which source to keep</string>
+    <string name="sync_banner_notes">Notes edited on two devices</string>
+    <string name="sync_banner_notes_text">Choose which notes to keep</string>
+    <string name="sync_notification_channel">Sync</string>
+    <string name="sync_notification_questions_text">Open Sync to choose.</string>
+    <string name="sync_notification_removed">This device was removed from sync</string>
+    <string name="sync_notification_account_disabled">Your sync account was disabled</string>
+    <string name="sync_notification_sign_in_again">Sign in to sync again</string>
+    <string name="sync_notification_ended_text">Everything stays on this device. Open Sync to sign in again.</string>
+
+    <!-- Sync: restoring a backup on a synced device -->
+    <string name="sync_restore_reach">How far the restore reaches</string>
+    <string name="sync_restore_here">Restore on this device</string>
+    <!-- %1$s is the backup's date -->
+    <string name="sync_restore_here_text">Fills in what\'s missing or older. Changes made on your other devices after %1$s are kept.</string>
+    <string name="sync_restore_rollback">Roll back the whole account</string>
+    <!-- %1$s is the backup's date -->
+    <string name="sync_restore_rollback_text">Every device returns to this backup. Changes made anywhere after %1$s are lost.</string>
+    <string name="sync_rollback_confirm_title">Roll back the whole account?</string>
+    <!-- %1$s is the backup's date -->
+    <string name="sync_rollback_confirm_text">This device is emptied and restored from the backup, and every device in your account follows: libraries, progress, history and settings changed anywhere after %1$s are lost. Profiles the backup doesn\'t have, downloads and reading statistics stay as they are.</string>
+    <string name="sync_action_roll_back">Roll back</string>
+    <string name="sync_rollback_needs_everything">Rolling back restores everything in the backup.</string>
+    <!-- Stands in for the backup's date in the restore texts when an old backup doesn\'t say when it was made -->
+    <string name="sync_backup_time_unknown">the backup was made</string>
+
+    <!-- Sync: picking up on another device -->
+    <string name="sync_handoff_checking">Checking your other devices…</string>
+    <!-- %1$s is a device's name, %2$s when, such as "2 minutes ago" -->
+    <string name="sync_handoff_from">From %1$s · %2$s</string>
+    <string name="sync_handoff_own">Can\'t reach your other devices · this device\'s progress</string>
+    <!-- %1$s is a device's name, %2$s where it is, such as "Ch. 12, page 18" -->
+    <string name="sync_handoff_further">%1$s is further: %2$s</string>
+    <!-- %1$s is where another device is, such as "Chapter 12, page 18", when the device's name isn't known -->
+    <string name="sync_handoff_further_unknown">Another device is further: %1$s</string>
+    <!-- %1$s is a chapter, such as "Chapter 12", %2$d the page -->
+    <string name="sync_handoff_position_page">%1$s, page %2$d</string>
+    <!-- %1$s is an episode, such as "Episode 5", %2$s the time in it, such as "12:34" -->
+    <string name="sync_handoff_position_time">%1$s, %2$s</string>
+    <!-- %1$s is a chapter, such as "Chapter 12", %2$d how far through it in percent -->
+    <string name="sync_handoff_position_percent">%1$s, %2$d%%</string>
+    <string name="sync_action_go_there">Go there</string>
+    <string name="sync_saved_offline">Saved on this device. It will sync when you\'re online.</string>
 </resources>

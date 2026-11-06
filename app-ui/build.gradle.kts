@@ -112,6 +112,11 @@ kotlin {
                 implementation(libs.compose.multiplatform.animationGraphics)
                 // The cover viewer zooms with Android's photo view.
                 implementation(libs.photoView)
+                // A new device scans a linked device's sync code with the camera, which ZXing reads.
+                implementation(libs.androidx.camera.camera2)
+                implementation(libs.androidx.camera.compose)
+                implementation(libs.androidx.camera.lifecycle)
+                implementation(libs.zxing.core)
             }
         }
         getByName("desktopMain") {

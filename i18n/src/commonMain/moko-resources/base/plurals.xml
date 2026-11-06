@@ -464,4 +464,25 @@
         <item quantity="one">%d rule</item>
         <item quantity="other">%d rules</item>
     </plurals>
+
+    <plurals name="sync_files_waiting_for_wifi">
+        <item quantity="one">%d cover or font waits for Wi-Fi</item>
+        <item quantity="other">%d covers and fonts wait for Wi-Fi</item>
+    </plurals>
+    <plurals name="sync_files_missing">
+        <item quantity="one">%d cover or font is missing on the server</item>
+        <item quantity="other">%d covers and fonts are missing on the server</item>
+    </plurals>
+    <plurals name="sync_unsent">
+        <item quantity="one">%d change not sent yet</item>
+        <item quantity="other">%d changes not sent yet</item>
+    </plurals>
+    <plurals name="sync_questions_waiting">
+        <item quantity="one">%d question needs your answer</item>
+        <item quantity="other">%d questions need your answer</item>
+    </plurals>
+    <plurals name="sync_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
 </resources>
