@@ -10,6 +10,7 @@ import mihon.gradle.platformparity.PLATFORM_API_LIBRARIES_ATTRIBUTE
 import mihon.gradle.platformparity.PlatformApiIndexTask
 import mihon.gradle.platformparity.PlatformFacilityCheckTask
 import mihon.gradle.platformparity.PlatformPlacementCheckTask
+import mihon.gradle.preferencescope.PreferenceScopeCheckTask
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
 import mihon.gradle.tasks.MetroContributionVisibilityCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
@@ -114,6 +115,11 @@ class PluginSpotless : Plugin<Project> {
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }
+            val preferenceScopeCheck = tasks.register<PreferenceScopeCheckTask>("checkPreferenceScopes") {
+                description = "Checks that every preference key is marked as following the person or the device."
+                group = "verification"
+                repositoryRoot.set(layout.projectDirectory)
+            }
             val hostParityCheck = tasks.register<HostParityCheckTask>("checkHostParity") {
                 description = "Checks that the Android and desktop graphs compose shared code the same way."
                 group = "verification"
@@ -165,6 +171,7 @@ class PluginSpotless : Plugin<Project> {
                 dependsOn(
                     featureBoundaryCheck,
                     metroContributionCheck,
+                    preferenceScopeCheck,
                     hostParityCheck,
                     platformPlacementCheck,
                     platformFacilityCheck,
