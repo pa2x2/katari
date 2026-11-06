@@ -14,6 +14,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -42,9 +44,6 @@ class LeftOfflineViewModel(
 
     private val status = statusState.status
 
-    // Whether sync last ended unable to send, from the last status that wasn't a run going
-    private var lastCouldntSend = false
-
     // When the entry's screen was last covered, as by a reader; null while it shows
     private var hiddenAt: Long? = null
 
@@ -53,16 +52,6 @@ class LeftOfflineViewModel(
     private val savedOfflineEvents = Channel<Unit>(Channel.CONFLATED)
 
     val savedOffline: Flow<Unit> = savedOfflineEvents.receiveAsFlow()
-
-    init {
-        viewModelScope.launch {
-            status.collect { status ->
-                if (status != null && status.activity !is SyncStatus.Activity.Syncing) {
-                    lastCouldntSend = status.couldntSend()
-                }
-            }
-        }
-    }
 
     fun onHidden() {
         shownCheck?.cancel()
@@ -73,23 +62,34 @@ class LeftOfflineViewModel(
         val since = hiddenAt ?: return
         hiddenAt = null
         shownCheck = viewModelScope.launch {
-            // A reader records its last reading as it closes, which can land just after this screen shows again
-            withTimeoutOrNull(SETTLE_WAIT) {
-                settledReading.lastSettled.first { (it[entryId] ?: 0L) >= since }
+            // A reader records its last reading as it stops, which Android may hold back until this screen has
+            // settled after coming back, up to its idle timeout
+            val settledAt = withTimeoutOrNull(SETTLE_WAIT) {
+                settledReading.lastSettled.map { it[entryId] ?: 0L }.first { it >= since }
             } ?: return@launch
-            // Recording it starts a run to send it; its outcome says whether it went, or else what sync last knew
-            val ended = withTimeoutOrNull(OUTCOME_WAIT) {
-                status.first { it != null && it.activity !is SyncStatus.Activity.Syncing }
+            // The status from before the reading was recorded says nothing about it: wait for sync to be unable to
+            // send, or to finish a sync after it
+            val couldntSend = withTimeoutOrNull(OUTCOME_WAIT) {
+                status.mapNotNull { it?.leftOffline(settledAt) }.first()
             }
-            if (ended?.couldntSend() ?: lastCouldntSend) savedOfflineEvents.trySend(Unit)
+            if (couldntSend == true) savedOfflineEvents.trySend(Unit)
         }
     }
 
-    private fun SyncStatus.couldntSend(): Boolean = link is SyncStatus.Link.Linked &&
-        (activity is SyncStatus.Activity.Offline || activity is SyncStatus.Activity.Unreachable)
+    /** True when sync can't send now, false once it synced after [settledAt], null while that isn't known yet. */
+    private fun SyncStatus.leftOffline(settledAt: Long): Boolean? {
+        if (link !is SyncStatus.Link.Linked) return false
+        return when (val activity = activity) {
+            is SyncStatus.Activity.Offline, is SyncStatus.Activity.Unreachable -> true
+            is SyncStatus.Activity.UpToDate -> if ((activity.atMillis ?: 0L) >= settledAt) false else null
+            else -> null
+        }
+    }
 
     private companion object {
-        val SETTLE_WAIT = 3.seconds
-        val OUTCOME_WAIT = 10.seconds
+        val SETTLE_WAIT = 15.seconds
+
+        // Longer than a run takes to find the server silent ([app.katari.sync.client.server.SyncServerClients])
+        val OUTCOME_WAIT = 45.seconds
     }
 }
