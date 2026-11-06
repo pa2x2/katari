@@ -1,5 +1,10 @@
 package app.katari.sync.client.kind.entry
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -12,6 +17,7 @@ import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import tachiyomi.domain.source.identity.SourceIdScheme
 
 /**
  * Entries, keyed by profile uuid, source identity, URL and type ([LocalReads.entryKey]). Local ref: `[entries._id]`.
@@ -86,4 +92,56 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
     )
+
+    /**
+     * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
+     * keeps the metadata of its own refreshes. An entry another one replaced stays out of the library; its changes
+     * carry over to the replacement instead. Local-source entries never sync.
+     */
+    override suspend fun apply(writes: LocalWrites, key: String, payload: EntryPayload): ApplyOutcome {
+        if (payload.source.idScheme == SourceIdScheme.LOCAL.key) return ApplyOutcome.Applied(null)
+        val profileId = writes.profileId(payload.profileUuid).idOr { return it }
+        val source = writes.sourceKey(payload.source)
+        val favorite = payload.favorite.value && writes.replacementOf(key) == null
+        val pinned = payload.libraryPinned.value && favorite
+        val queries = writes.database.sync_applyQueries
+        val existing = queries.entryId(profileId, source, payload.url, payload.type).awaitAsOneOrNull()
+        val entryId = if (existing == null) {
+            val metadata = payload.metadata
+            queries.insertEntry(
+                profileId = profileId,
+                source = source,
+                url = payload.url,
+                type = payload.type,
+                title = metadata.title,
+                author = metadata.author,
+                artist = metadata.artist,
+                description = metadata.description,
+                genre = metadata.genres,
+                status = metadata.status,
+                thumbnailUrl = metadata.thumbnailUrl,
+                backgroundUrl = metadata.backgroundUrl,
+                favorite = favorite,
+                dateAdded = payload.dateAdded.value,
+                displayName = payload.displayName.value,
+                notes = payload.notes.value,
+                libraryPinned = pinned,
+                viewer = payload.viewerFlags.value,
+                chapterFlags = payload.chapterFlags.value,
+            ).awaitAsOne()
+        } else {
+            queries.updateEntry(
+                favorite = favorite,
+                dateAdded = payload.dateAdded.value,
+                displayName = payload.displayName.value,
+                notes = payload.notes.value,
+                libraryPinned = pinned,
+                viewer = payload.viewerFlags.value,
+                chapterFlags = payload.chapterFlags.value,
+                entryId = existing,
+            )
+            existing
+        }
+        return ApplyOutcome.Applied(ref(entryId))
+    }
 }

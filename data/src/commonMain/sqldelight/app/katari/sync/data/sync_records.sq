@@ -17,19 +17,22 @@ CREATE TABLE sync_records(
     -- can be told apart as deleted elsewhere (set) or not uploaded yet (unset).
     synced INTEGER AS Boolean NOT NULL DEFAULT 0,
     -- Set while a local change waits to be pushed; a retried push sends the same id.
-    change_id TEXT
+    change_id TEXT,
+    -- The payload of the server copy at based_on, as this device last merged it or had it taken; NULL before the
+    -- server had the record. Fields that differ from it in payload were edited on this device since.
+    base_payload BLOB
 );
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
 CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
 
 getByKey:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
 FROM sync_records
 WHERE record_key = :recordKey;
 
 getByLocalRef:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
 FROM sync_records
 WHERE kind = :kind AND local_ref = :localRef;
 
@@ -49,22 +52,55 @@ ON CONFLICT(record_key) DO UPDATE SET
     deleted = excluded.deleted,
     change_id = excluded.change_id;
 
+-- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
+-- format over the newer one. It waits in sync_pending until an update can read it.
 pending:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
 FROM sync_records
 WHERE change_id IS NOT NULL
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason = 'unreadable')
 ORDER BY record_key
 LIMIT :limit;
 
 pendingCount:
 SELECT count(*)
 FROM sync_records
-WHERE change_id IS NOT NULL;
+WHERE change_id IS NOT NULL
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason = 'unreadable');
 
 -- The server took the change as :sequence. A change made since keeps its own id and stays pending.
 markPushed:
 UPDATE sync_records
 SET based_on = :sequence,
     synced = 1,
+    base_payload = CASE WHEN change_id = :changeId THEN payload ELSE base_payload END,
     change_id = CASE WHEN change_id = :changeId THEN NULL ELSE change_id END
 WHERE record_key = :recordKey;
+
+-- A server copy merged in: the record as merged, based on that copy, with a change id when the merge holds edits the
+-- copy lacks and so must be pushed.
+storeMerged:
+INSERT INTO sync_records(
+    record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+)
+VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :basedOn, 1, :changeId, :basePayload)
+ON CONFLICT(record_key) DO UPDATE SET
+    local_ref = excluded.local_ref,
+    kind_version = excluded.kind_version,
+    payload = excluded.payload,
+    deleted = excluded.deleted,
+    based_on = excluded.based_on,
+    synced = 1,
+    change_id = excluded.change_id,
+    base_payload = excluded.base_payload;
+
+setLocalRef:
+UPDATE sync_records
+SET local_ref = :localRef
+WHERE record_key = :recordKey;
+
+byKind:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE kind = :kind
+ORDER BY record_key;

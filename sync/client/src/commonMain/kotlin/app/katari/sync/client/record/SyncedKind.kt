@@ -1,5 +1,7 @@
 package app.katari.sync.client.record
 
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.payload.UnknownFields
 import kotlinx.serialization.KSerializer
@@ -29,6 +31,23 @@ abstract class SyncedKind<P : Any>(
      * fields a key is computed from are equal in both.
      */
     internal abstract fun merge(local: P, incoming: P): P
+
+    /**
+     * Writes [payload], the record [key] as merged with another device's copy, to this device's rows: inserting the
+     * row when it isn't here, updating the synced columns when it is. Only sync writes this way, never capturing it
+     * as an edit ([app.katari.sync.client.apply.IncomingRecords]).
+     */
+    internal abstract suspend fun apply(writes: LocalWrites, key: String, payload: P): ApplyOutcome
+
+    /**
+     * Removes the row [ref] locates, null when none here holds the record [key] another device deleted. Only kinds
+     * whose records are deleted ([Absence.TOMBSTONE]) remove anything.
+     */
+    internal open suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome =
+        ApplyOutcome.Applied(null)
+
+    /** The entry a record of this kind belongs to, so records of an entry another one replaced follow it there. */
+    internal open fun entryKeyOf(payload: P): String? = null
 
     /** For [Absence.REMOVED_FLAG]: [previous] marked removed. */
     internal open fun removed(previous: P, stamps: FieldStamps): P =

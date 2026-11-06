@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.merge
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -63,4 +67,16 @@ object MergeMemberKind : SyncedKind<MergeMemberPayload>(
         position = latest(local.position, incoming.position),
         removed = latest(local.removed, incoming.removed),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: MergeMemberPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.memberKey).idOr { return it }
+        val queries = writes.database.sync_applyQueries
+        val profileId = queries.entryProfile(entryId).awaitAsOne()
+        queries.deleteMergeMember(profileId, entryId)
+        if (!payload.removed.value) {
+            val targetId = writes.entryId(payload.target.value).idOr { return it }
+            queries.insertMergeMember(profileId, targetId, entryId, payload.position.value)
+        }
+        return ApplyOutcome.Applied(LocalRef.of(profileId, entryId))
+    }
 }

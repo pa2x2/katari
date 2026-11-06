@@ -1,6 +1,9 @@
 package app.katari.sync.client.kind.profile
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.HoldReason
+import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -53,4 +56,44 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
         position = latest(local.position, incoming.position),
         archived = latest(local.archived, incoming.archived),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ProfilePayload): ApplyOutcome {
+        val queries = writes.database.sync_applyQueries
+        if (queries.profileId(payload.uuid).awaitAsOneOrNull() == null) {
+            queries.insertProfile(
+                uuid = payload.uuid,
+                name = payload.name.value,
+                colorSeed = payload.colorSeed.value,
+                position = payload.position.value,
+                isArchived = payload.archived.value,
+            )
+        } else {
+            queries.updateProfile(
+                name = payload.name.value,
+                colorSeed = payload.colorSeed.value,
+                position = payload.position.value,
+                isArchived = payload.archived.value,
+                uuid = payload.uuid,
+            )
+        }
+        return ApplyOutcome.Applied(ref(payload.uuid))
+    }
+
+    /**
+     * Deletes the profile with everything in it, as deleting it here does, but for its files: downloads of its
+     * entries stay until they are cleaned up. The default profile is never deleted, and the profile open here waits
+     * until another one is.
+     */
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        val uuid = ref?.text(0) ?: return ApplyOutcome.Applied(null)
+        if (uuid == DEFAULT_UUID) return ApplyOutcome.Applied(ref)
+        val queries = writes.database.sync_applyQueries
+        val profileId = queries.profileId(uuid).awaitAsOneOrNull() ?: return ApplyOutcome.Applied(null)
+        if (profileId == writes.activeProfileId) return ApplyOutcome.Held(HoldReason.PROFILE_OPEN)
+        queries.deleteProfile(uuid)
+        writes.settings.deleteProfile(profileId)
+        return ApplyOutcome.Applied(null)
+    }
+
+    const val DEFAULT_UUID = "default"
 }

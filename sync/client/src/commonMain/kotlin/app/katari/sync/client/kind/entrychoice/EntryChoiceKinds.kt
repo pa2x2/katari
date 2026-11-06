@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.entrychoice
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -75,6 +79,19 @@ object EntryUpdateModeKind : SyncedKind<EntryUpdateModePayload>(
     override fun merge(local: EntryUpdateModePayload, incoming: EntryUpdateModePayload) = local.copy(
         mode = latest(local.mode, incoming.mode),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: EntryUpdateModePayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertEntryUpdateMode(entryId, payload.mode.value)
+        return ApplyOutcome.Applied(LocalRef.of(entryId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteEntryUpdateMode(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: EntryUpdateModePayload) = payload.entryKey
 }
 
 /** Local ref: `[entry_id, scanlator]`. */
@@ -103,6 +120,23 @@ object ExcludedScanlatorKind : SyncedKind<ExcludedScanlatorPayload>(
     override fun merge(local: ExcludedScanlatorPayload, incoming: ExcludedScanlatorPayload) = local.copy(
         removed = latest(local.removed, incoming.removed),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ExcludedScanlatorPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val queries = writes.database.sync_applyQueries
+        val excluded = queries.excludedScanlatorExists(entryId, payload.scanlator).awaitAsOne()
+        when {
+            payload.removed.value -> queries.deleteExcludedScanlator(entryId, payload.scanlator)
+            !excluded -> queries.insertExcludedScanlator(
+                queries.entryProfile(entryId).awaitAsOne(),
+                entryId,
+                payload.scanlator,
+            )
+        }
+        return ApplyOutcome.Applied(LocalRef.of(entryId, payload.scanlator))
+    }
+
+    override fun entryKeyOf(payload: ExcludedScanlatorPayload) = payload.entryKey
 }
 
 /** Local ref: `[entry_id, provider_id, setting_key]`. */
@@ -135,6 +169,24 @@ object ViewerSettingKind : SyncedKind<ViewerSettingPayload>(
     override fun merge(local: ViewerSettingPayload, incoming: ViewerSettingPayload) = local.copy(
         encodedValue = latest(local.encodedValue, incoming.encodedValue),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ViewerSettingPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertViewerSetting(
+            entryId = entryId,
+            providerId = payload.providerId,
+            settingKey = payload.settingKey,
+            encodedValue = payload.encodedValue.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId, payload.providerId, payload.settingKey))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteViewerSetting(it.long(0), it.text(1), it.text(2)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: ViewerSettingPayload) = payload.entryKey
 }
 
 /** Local ref: `[entry_id]`. */
@@ -180,6 +232,27 @@ object DownloadPreferencesKind : SyncedKind<DownloadPreferencesPayload>(
         serverKey = latest(local.serverKey, incoming.serverKey),
         audioKey = latest(local.audioKey, incoming.audioKey),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: DownloadPreferencesPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertDownloadPreferences(
+            entryId = entryId,
+            dubKey = payload.dubKey.value,
+            streamKey = payload.streamKey.value,
+            subtitleKey = payload.subtitleKey.value,
+            qualityMode = payload.qualityMode.value,
+            serverKey = payload.serverKey.value,
+            audioKey = payload.audioKey.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteDownloadPreferences(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: DownloadPreferencesPayload) = payload.entryKey
 }
 
 /** Local ref: `[entry_id]`. */
@@ -212,6 +285,24 @@ object TranslationLanguagesKind : SyncedKind<TranslationLanguagesPayload>(
         targetLanguage = latest(local.targetLanguage, incoming.targetLanguage),
         translateDownloads = latest(local.translateDownloads, incoming.translateDownloads),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: TranslationLanguagesPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertTranslationLanguages(
+            entryId = entryId,
+            contentLanguage = payload.contentLanguage.value,
+            targetLanguage = payload.targetLanguage.value,
+            translateDownloads = payload.translateDownloads.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteTranslationLanguages(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: TranslationLanguagesPayload) = payload.entryKey
 }
 
 /**
@@ -249,6 +340,27 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
     override fun merge(local: IntroTimesPickPayload, incoming: IntroTimesPickPayload) = local.copy(
         match = latest(local.match, incoming.match),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: IntroTimesPickPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val match = payload.match.value
+        writes.database.sync_applyQueries.upsertIntroTimesPick(
+            entryId = entryId,
+            groupKey = payload.groupKey,
+            anilistId = match.anilistId,
+            malId = match.malId,
+            title = match.title,
+            year = match.year,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId, payload.groupKey))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteIntroTimesPick(it.long(0), it.text(1)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: IntroTimesPickPayload) = payload.entryKey
 }
 
 /** Local ref: `[entry_id]`. */
@@ -329,4 +441,34 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
         playerEngine = latest(local.playerEngine, incoming.playerEngine),
         serverKey = latest(local.serverKey, incoming.serverKey),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: PlaybackPreferencesPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertPlaybackPreferences(
+            entryId = entryId,
+            dubKey = payload.dubKey.value,
+            streamKey = payload.streamKey.value,
+            sourceQualityKey = payload.sourceQualityKey.value,
+            subtitleKey = payload.subtitleKey.value,
+            playerQualityMode = payload.playerQualityMode.value,
+            playerQualityHeight = payload.playerQualityHeight.value,
+            subtitleOffsetX = payload.subtitleOffsetX.value,
+            subtitleOffsetY = payload.subtitleOffsetY.value,
+            subtitleTextSize = payload.subtitleTextSize.value,
+            subtitleTextColor = payload.subtitleTextColor.value,
+            subtitleBackgroundColor = payload.subtitleBackgroundColor.value,
+            subtitleBackgroundOpacity = payload.subtitleBackgroundOpacity.value,
+            subtitleTextEdge = payload.subtitleTextEdge.value,
+            playerEngine = payload.playerEngine.value,
+            serverKey = payload.serverKey.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deletePlaybackPreferences(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: PlaybackPreferencesPayload) = payload.entryKey
 }

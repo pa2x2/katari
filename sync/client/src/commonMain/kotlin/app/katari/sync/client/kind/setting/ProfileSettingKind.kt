@@ -1,5 +1,8 @@
 package app.katari.sync.client.kind.setting
 
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
@@ -9,6 +12,8 @@ import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.setting.apply.LocalSetting
+import app.katari.sync.client.setting.apply.localSetting
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.value.encodeSetting
@@ -49,4 +54,12 @@ object ProfileSettingKind : SyncedKind<ProfileSettingPayload>(
     }
     override fun merge(local: ProfileSettingPayload, incoming: ProfileSettingPayload) =
         local.copy(value = latest(local.value, incoming.value))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ProfileSettingPayload): ApplyOutcome {
+        val profileId = writes.profileId(payload.profileUuid).idOr { return it }
+        val setting = writes.localSetting(payload.key, payload.keySources, payload.value.value, payload.profileUuid)
+        if (setting !is LocalSetting.Ready) return (setting as LocalSetting.NotReady).outcome
+        writes.settings.writeProfileValue(profileId, setting.key, setting.value)
+        return ApplyOutcome.Applied(ref(profileId, setting.key))
+    }
 }

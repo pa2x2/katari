@@ -1,6 +1,8 @@
 package app.katari.sync.client.kind.replacement
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -26,6 +28,8 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
 ) {
     private const val MIGRATION = "migration"
     private const val MOVE = "move"
+
+    fun key(from: String): String = RecordKeys.derive(name, from)
 
     override val capture = listOf(
         CaptureTrigger(
@@ -88,7 +92,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         val to = reads.entryKey(toEntryId)
         if (from == null || to == null) return LocalRead.NotSynced
         return LocalRead.Found(
-            key = RecordKeys.derive(name, from),
+            key = key(from),
             parents = parents.map { RecordRef(EntryKind, EntryKind.ref(it)) },
         ) { previous, stamps ->
             EntryReplacementPayload(from, stamps.field(2, Replacement(to, cause), previous?.replacement))
@@ -96,4 +100,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
     }
     override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =
         local.copy(replacement = latest(local.replacement, incoming.replacement))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: EntryReplacementPayload): ApplyOutcome =
+        ApplyOutcome.Applied(null)
 }

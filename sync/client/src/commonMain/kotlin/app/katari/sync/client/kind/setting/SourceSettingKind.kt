@@ -1,5 +1,8 @@
 package app.katari.sync.client.kind.setting
 
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
@@ -50,4 +53,10 @@ object SourceSettingKind : SyncedKind<SourceSettingPayload>(
     }
     override fun merge(local: SourceSettingPayload, incoming: SourceSettingPayload) =
         local.copy(value = latest(local.value, incoming.value))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: SourceSettingPayload): ApplyOutcome {
+        val profileId = writes.profileId(payload.profileUuid).idOr { return it }
+        writes.settings.writeSourceValue(profileId, payload.sourceId, payload.key, payload.value.value.stored)
+        return ApplyOutcome.Applied(ref(profileId, payload.sourceId, payload.key))
+    }
 }

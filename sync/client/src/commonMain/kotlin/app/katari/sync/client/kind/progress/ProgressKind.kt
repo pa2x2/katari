@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.progress
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -79,4 +83,34 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
         locator = latest(local.locator, incoming.locator),
         completed = latest(local.completed, incoming.completed),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ProgressPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val chapterId = payload.chapterKey?.let { writes.chapterId(it).idOr { outcome -> return outcome } }
+        val locator = payload.locator.value
+        val queries = writes.database.sync_applyQueries
+        queries.upsertProgress(
+            entryId = entryId,
+            chapterId = chapterId,
+            contentKey = payload.contentKey,
+            resourceKey = payload.resourceKey,
+            resourceRevision = locator.resourceRevision,
+            locatorKind = locator.kind,
+            position = locator.position,
+            extent = locator.extent,
+            progression = locator.progression,
+            totalProgression = locator.totalProgression,
+            extensions = locator.extensions,
+            completed = payload.completed.value,
+        )
+        val id = queries.progressId(entryId, payload.contentKey, payload.resourceKey).awaitAsOne()
+        return ApplyOutcome.Applied(LocalRef.of(id))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteProgress(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: ProgressPayload) = payload.entryKey
 }

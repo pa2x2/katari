@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.category
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -61,6 +65,15 @@ object CategoryKind : SyncedKind<CategoryPayload>(
         order = latest(local.order, incoming.order),
         flags = latest(local.flags, incoming.flags),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: CategoryPayload): ApplyOutcome =
+        CategoryRows(writes, key, payload).apply()
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        // Its links go with it, so the entries only in it fall back to the Default category, as deleting it here does
+        ref?.let { writes.database.sync_applyQueries.deleteCategory(it.long(0)) }
+        return ApplyOutcome.Applied(null)
+    }
 }
 
 /** Entry–category links, keyed by entry key and category key. Local ref: `[entry_id, category_id]`. */
@@ -99,6 +112,23 @@ object CategoryMembershipKind : SyncedKind<CategoryMembershipPayload>(
 
     override fun merge(local: CategoryMembershipPayload, incoming: CategoryMembershipPayload) =
         local.copy(removed = latest(local.removed, incoming.removed))
+
+    /** A link to a deleted category links nothing, which leaves the entry in the Default category if in no other. */
+    override suspend fun apply(writes: LocalWrites, key: String, payload: CategoryMembershipPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val queries = writes.database.sync_applyQueries
+        val profileId = queries.entryProfile(entryId).awaitAsOne()
+        val profileUuid = writes.database.sync_local_rowsQueries.profileUuid(profileId).awaitAsOne()
+        val categoryId = writes.categoryId(payload.categoryKey, profileUuid).idOr { return it }
+        val linked = queries.membershipExists(entryId, categoryId).awaitAsOne()
+        when {
+            payload.removed.value -> queries.deleteMembership(entryId, categoryId)
+            !linked -> queries.insertMembership(profileId, entryId, categoryId)
+        }
+        return ApplyOutcome.Applied(LocalRef.of(entryId, categoryId))
+    }
+
+    override fun entryKeyOf(payload: CategoryMembershipPayload) = payload.entryKey
 }
 
 /**
@@ -170,4 +200,26 @@ object CategoryUpdateRulesKind : SyncedKind<CategoryUpdateRulesPayload>(
         skipOutsideReleasePeriod = latest(local.skipOutsideReleasePeriod, incoming.skipOutsideReleasePeriod),
         intervalHours = latest(local.intervalHours, incoming.intervalHours),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: CategoryUpdateRulesPayload): ApplyOutcome {
+        val profileId = writes.profileId(payload.profileUuid).idOr { return it }
+        val categoryId = writes.categoryId(payload.categoryKey, payload.profileUuid).idOr { return it }
+        writes.database.sync_applyQueries.upsertCategoryUpdateRules(
+            profileId = profileId,
+            categoryId = categoryId,
+            autoUpdate = payload.autoUpdate.value,
+            customRules = payload.customRules.value,
+            skipCompleted = payload.skipCompleted.value,
+            skipUnseen = payload.skipUnseen.value,
+            skipNotStarted = payload.skipNotStarted.value,
+            skipOutsideReleasePeriod = payload.skipOutsideReleasePeriod.value,
+            intervalHours = payload.intervalHours.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(profileId, categoryId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteCategoryUpdateRules(it.long(0), it.long(1)) }
+        return ApplyOutcome.Applied(null)
+    }
 }

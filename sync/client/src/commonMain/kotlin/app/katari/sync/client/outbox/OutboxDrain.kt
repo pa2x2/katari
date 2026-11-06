@@ -11,6 +11,7 @@ import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.protocol.clock.HybridTimestamp
 import app.katari.sync.protocol.device.DeviceId
@@ -18,7 +19,6 @@ import dev.zacsweers.metro.Inject
 import kotlinx.serialization.protobuf.ProtoBuf
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
-import kotlin.uuid.Uuid
 
 /**
  * Turns the outbox into record changes ready to push. Each drained edit gets the hybrid timestamp of when it was made
@@ -188,5 +188,3 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
         SyncedKind.Absence.KEEP -> Unit
     }
 }
-
-private fun newChangeId(): String = Uuid.random().toString()

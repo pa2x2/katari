@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.chapter
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -60,4 +64,33 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         bookmark = latest(local.bookmark, incoming.bookmark),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
     )
+
+    /** Creates the row from the record's metadata when the entry wasn't refreshed here; a refresh overrides it. */
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val queries = writes.database.sync_applyQueries
+        val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
+        val chapterId = if (existing == null) {
+            queries.insertChapter(
+                entryId = entryId,
+                url = payload.url,
+                name = payload.metadata.name,
+                read = payload.read.value,
+                bookmark = payload.bookmark.value,
+                chapterNumber = payload.metadata.number,
+                scanlator = payload.metadata.scanlator,
+                dateUpload = payload.metadata.dateUpload,
+            ).awaitAsOne()
+        } else {
+            queries.updateChapterMarks(
+                read = payload.read.value,
+                bookmark = payload.bookmark.value,
+                chapterId = existing,
+            )
+            existing
+        }
+        return ApplyOutcome.Applied(ref(chapterId))
+    }
+
+    override fun entryKeyOf(payload: ChapterPayload) = payload.entryKey
 }

@@ -50,3 +50,12 @@ FROM sync_records R, sync_clock C, sync_state S
 WHERE R.kind = :kind
 AND instr(R.local_ref, :localRefPrefix) = 1
 AND C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
+-- The newest row, 0 when there never was one; rows written later have a higher seq.
+lastSeq:
+SELECT coalesce(max(seq), 0)
+FROM sync_outbox;
+
+deleteAfter:
+DELETE FROM sync_outbox
+WHERE seq > :seq;

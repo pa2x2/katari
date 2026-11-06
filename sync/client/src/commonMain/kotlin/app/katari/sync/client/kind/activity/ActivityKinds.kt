@@ -1,6 +1,9 @@
 package app.katari.sync.client.kind.activity
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -45,6 +48,20 @@ object ActivitySessionKind : SyncedKind<ActivitySessionPayload>(
     /** A session only grows while it lasts, so the copy that ends later holds all of the other. */
     override fun merge(local: ActivitySessionPayload, incoming: ActivitySessionPayload) =
         maxOf(local, incoming, compareBy<ActivitySessionPayload>({ it.endedAt }, { it.duration }, { it.startedAt }))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ActivitySessionPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        writes.database.sync_applyQueries.upsertActivitySession(
+            sessionId = payload.sessionId,
+            entryId = entryId,
+            startedAt = payload.startedAt,
+            endedAt = payload.endedAt,
+            duration = payload.duration,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(payload.sessionId))
+    }
+
+    override fun entryKeyOf(payload: ActivitySessionPayload) = payload.entryKey
 }
 
 /**
@@ -99,6 +116,23 @@ object ActivitySegmentKind : SyncedKind<ActivitySegmentPayload>(
 
     override fun merge(local: ActivitySegmentPayload, incoming: ActivitySegmentPayload) =
         maxOf(local, incoming, compareBy<ActivitySegmentPayload>({ it.endedAt }, { it.duration }, { it.startedAt }))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ActivitySegmentPayload): ApplyOutcome {
+        writes.activitySession(payload.sessionId).idOr { return it }
+        val chapterId = payload.chapterKey?.let { writes.chapterId(it).idOr { outcome -> return outcome } }
+        val queries = writes.database.sync_applyQueries
+        queries.deleteActivitySegment(payload.sessionId, chapterId, payload.localDate, payload.timeZoneId)
+        queries.insertActivitySegment(
+            sessionId = payload.sessionId,
+            chapterId = chapterId,
+            localDate = payload.localDate,
+            timeZoneId = payload.timeZoneId,
+            startedAt = payload.startedAt,
+            endedAt = payload.endedAt,
+            duration = payload.duration,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(payload.sessionId, chapterId, payload.localDate, payload.timeZoneId))
+    }
 }
 
 /**
@@ -140,4 +174,24 @@ object ActivityCompletionKind : SyncedKind<ActivityCompletionPayload>(
 
     /** An event never changes once it happened. */
     override fun merge(local: ActivityCompletionPayload, incoming: ActivityCompletionPayload) = local
+
+    /** Stored under its record key, which is the same on every device, as this device's event ID for it. */
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ActivityCompletionPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val chapterId = payload.chapterKey?.let { writes.chapterId(it).idOr { outcome -> return outcome } }
+        payload.sessionId?.let { writes.activitySession(it).idOr { outcome -> return outcome } }
+        writes.database.sync_applyQueries.insertActivityCompletion(
+            eventId = key,
+            entryId = entryId,
+            chapterId = chapterId,
+            sessionId = payload.sessionId,
+            occurredAt = payload.occurredAt,
+            localDate = payload.localDate,
+            timeZoneId = payload.timeZoneId,
+            cause = payload.cause,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(key))
+    }
+
+    override fun entryKeyOf(payload: ActivityCompletionPayload) = payload.entryKey
 }

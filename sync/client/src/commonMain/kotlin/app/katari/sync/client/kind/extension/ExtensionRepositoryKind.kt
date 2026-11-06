@@ -1,6 +1,8 @@
 package app.katari.sync.client.kind.extension
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.identity.RecordKeys
@@ -45,4 +47,23 @@ object ExtensionRepositoryKind : SyncedKind<ExtensionRepositoryPayload>(
     /** Everything but the URL comes from the repository's index, which each device fetches; any copy will do. */
     override fun merge(local: ExtensionRepositoryPayload, incoming: ExtensionRepositoryPayload) =
         larger(local, incoming)
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: ExtensionRepositoryPayload): ApplyOutcome {
+        writes.database.sync_applyQueries.insertExtensionRepository(
+            indexUrl = payload.indexUrl,
+            name = payload.name,
+            badgeLabel = payload.badgeLabel,
+            signingKey = payload.signingKey,
+            contactWebsite = payload.contactWebsite,
+            contactDiscord = payload.contactDiscord,
+            format = payload.format,
+            extensionListUrl = payload.extensionListUrl,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(payload.indexUrl))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteExtensionRepository(it.text(0)) }
+        return ApplyOutcome.Applied(null)
+    }
 }

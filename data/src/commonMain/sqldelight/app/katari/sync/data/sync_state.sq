@@ -31,3 +31,9 @@ setServer:
 UPDATE sync_state
 SET server_url = :serverUrl, device_id = :deviceId
 WHERE id = 0;
+
+-- A pulled page is applied: the device's position on the server it came from.
+setPosition:
+UPDATE sync_state
+SET server_instance_id = :serverInstanceId, cursor = :cursor, chain = :chain
+WHERE id = 0;

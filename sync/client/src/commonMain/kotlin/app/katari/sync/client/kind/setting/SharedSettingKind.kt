@@ -1,5 +1,7 @@
 package app.katari.sync.client.kind.setting
 
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.merge.latest
@@ -7,6 +9,8 @@ import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.setting.apply.LocalSetting
+import app.katari.sync.client.setting.apply.localSetting
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.value.encodeSetting
@@ -45,4 +49,11 @@ object SharedSettingKind : SyncedKind<SharedSettingPayload>(
     }
     override fun merge(local: SharedSettingPayload, incoming: SharedSettingPayload) =
         local.copy(value = latest(local.value, incoming.value))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: SharedSettingPayload): ApplyOutcome {
+        val setting = writes.localSetting(payload.key, payload.keySources, payload.value.value, profileUuid = null)
+        if (setting !is LocalSetting.Ready) return (setting as LocalSetting.NotReady).outcome
+        writes.settings.writeSharedValue(setting.key, setting.value)
+        return ApplyOutcome.Applied(ref(setting.key))
+    }
 }

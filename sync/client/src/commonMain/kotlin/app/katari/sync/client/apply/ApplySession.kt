@@ -1,0 +1,298 @@
+package app.katari.sync.client.apply
+
+import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.kind.SyncKinds
+import app.katari.sync.client.kind.activity.ActivitySessionKind
+import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.merge.RecordState
+import app.katari.sync.client.merge.merge
+import app.katari.sync.client.merge.newestEdit
+import app.katari.sync.client.outbox.EditStamper
+import app.katari.sync.client.payload.SourceReference
+import app.katari.sync.client.record.LocalReads
+import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.record.newChangeId
+import app.katari.sync.client.setting.apply.SettingWrites
+import app.katari.sync.data.Sync_pending
+import app.katari.sync.protocol.clock.HybridLogicalClock
+import app.katari.sync.protocol.clock.HybridTimestamp
+import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.record.SequencedRecord
+import kotlinx.serialization.protobuf.ProtoBuf
+import tachiyomi.data.Database
+import tachiyomi.domain.source.identity.SourceIdScheme
+
+/**
+ * Applies pulled records inside one transaction: merges each with the copy this device stores (which holds its own
+ * edits not pushed yet), writes the result to the local rows, and stores it as the record's new copy.
+ *
+ * A record is stored as merged even when its rows can't be written yet, so the device's copy always holds every edit
+ * it has seen. Its rows wait in `sync_pending` for what they need: the record they refer to ([HoldReason.PARENT],
+ * retried as soon as that record is applied), or a reason that passes by itself, retried with each sync. A record of
+ * a kind or kind version this app can't read is held as received and not merged at all, and while it waits this
+ * device's own changes to that record are not pushed, so its older format never replaces the newer one.
+ *
+ * The merged copy is pushed back only when it holds edits the incoming copy lacks; a record this device had no
+ * unpushed edits of is stored exactly as received and produces nothing to push.
+ */
+internal class ApplySession(
+    override val database: Database,
+    override val settings: SettingWrites,
+    override val activeProfileId: Long,
+    private val device: DeviceId,
+    private val now: () -> Long,
+) : LocalWrites {
+    private val resolving = HashSet<String>()
+
+    /** The newest edit taken in, which this device's later edits must be stamped after. */
+    var newestSeen: HybridTimestamp? = null
+        private set
+
+    suspend fun receive(record: SequencedRecord) {
+        val envelope = record.record
+        val kind = SyncKinds.named(envelope.kind)
+        if (kind == null || envelope.kindVersion != kind.version) return hold(record, HoldReason.UNREADABLE)
+        receive(kind, record)
+    }
+
+    /** Applies again what waits for a reason that may have passed: an update, the clock, a reference, a profile. */
+    suspend fun retryHeld() {
+        database.sync_pendingQueries.retryable().awaitAsList().forEach { held ->
+            database.sync_pendingQueries.release(held.record_key)
+            receive(ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record))
+        }
+    }
+
+    private suspend fun <P : Any> receive(kind: SyncedKind<P>, record: SequencedRecord) {
+        val envelope = record.record
+        val incoming = RecordState.of(envelope.deleted, envelope.payload)
+        val edited = kind.newestEdit(incoming)
+        if (edited != null && edited.physicalMillis - now() > HybridLogicalClock.MAX_AHEAD.inWholeMilliseconds) {
+            return hold(record, HoldReason.AHEAD)
+        }
+        edited?.let(::see)
+        database.sync_pendingQueries.release(envelope.key)
+
+        val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
+        val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
+        val holdsLocalEdits = !kind.sameRecord(merged, incoming)
+        val outcome = write(kind, envelope.key, merged, stored?.local_ref)
+        val kept = (outcome as? ApplyOutcome.Superseded)?.let { RecordState.Deleted(it.tombstone) }
+        val payload = kept?.bytes ?: if (holdsLocalEdits) merged.bytes else envelope.payload
+        database.sync_recordsQueries.storeMerged(
+            recordKey = envelope.key,
+            kind = kind.name,
+            localRef = null,
+            kindVersion = kind.version.toLong(),
+            payload = payload,
+            deleted = kept?.deleted ?: merged.deleted,
+            basedOn = record.sequence,
+            changeId = if (kept != null || holdsLocalEdits) newChangeId() else null,
+            basePayload = envelope.payload,
+        )
+        settle(kind, envelope.key, outcome, stored?.local_ref, record)
+    }
+
+    /** Writes the record [key] as this device stores it again, once what it waited for is here. */
+    private suspend fun reapply(key: String, held: Sync_pending?): ApplyOutcome? {
+        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return null
+        val kind = SyncKinds.named(stored.kind) ?: return null
+        val outcome = write(kind, key, RecordState.of(stored.deleted, stored.payload), stored.local_ref)
+        if (outcome is ApplyOutcome.Superseded) {
+            database.sync_recordsQueries.storeLocalChange(
+                recordKey = key,
+                kind = kind.name,
+                localRef = null,
+                kindVersion = kind.version.toLong(),
+                payload = RecordState.Deleted(outcome.tombstone).bytes,
+                deleted = true,
+                changeId = newChangeId(),
+            )
+        }
+        settle(
+            kind,
+            key,
+            outcome,
+            stored.local_ref,
+            held?.let {
+                ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record)
+            },
+        )
+        return outcome
+    }
+
+    private suspend fun settle(
+        kind: SyncedKind<*>,
+        key: String,
+        outcome: ApplyOutcome,
+        previousRef: String?,
+        record: SequencedRecord?,
+    ) {
+        when (outcome) {
+            is ApplyOutcome.Applied -> {
+                link(kind, key, outcome.ref?.json)
+                database.sync_pendingQueries.release(key)
+                retryWaitingFor(key)
+            }
+            is ApplyOutcome.Superseded -> {
+                link(kind, key, null)
+                database.sync_pendingQueries.release(key)
+                retryWaitingFor(key)
+            }
+            is ApplyOutcome.WaitsFor -> {
+                link(kind, key, previousRef)
+                record?.let { hold(it, HoldReason.PARENT, waitsFor = outcome.key) }
+            }
+            is ApplyOutcome.Held -> {
+                link(kind, key, previousRef)
+                record?.let { hold(it, outcome.reason) }
+            }
+        }
+    }
+
+    private suspend fun link(kind: SyncedKind<*>, key: String, ref: String?) {
+        if (ref != null) database.sync_recordsQueries.detachLocalRef(kind.name, ref, key)
+        database.sync_recordsQueries.setLocalRef(localRef = ref, recordKey = key)
+    }
+
+    private suspend fun retryWaitingFor(key: String) {
+        database.sync_pendingQueries.waitingFor(key).awaitAsList().forEach { held ->
+            database.sync_pendingQueries.release(held.record_key)
+            reapply(held.record_key, held)
+        }
+    }
+
+    private suspend fun <P : Any> write(
+        kind: SyncedKind<P>,
+        key: String,
+        state: RecordState,
+        storedRef: String?,
+    ): ApplyOutcome = when (state) {
+        is RecordState.Live -> kind.apply(this, key, kind.decode(state.bytes))
+        is RecordState.Deleted -> kind.applyDeletion(this, key, storedRef?.let(::LocalRef))
+    }
+
+    private suspend fun hold(record: SequencedRecord, reason: HoldReason, waitsFor: String? = null) {
+        database.sync_pendingQueries.hold(
+            recordKey = record.record.key,
+            record = ProtoBuf.encodeToByteArray(SequencedRecord.serializer(), record),
+            reason = reason.stored,
+            waitsFor = waitsFor,
+            receivedAt = now(),
+            kind = record.record.kind,
+        )
+    }
+
+    private fun see(timestamp: HybridTimestamp) {
+        if (newestSeen.let { it == null || timestamp > it }) newestSeen = timestamp
+    }
+
+    override suspend fun profileId(uuid: String): Resolved {
+        database.sync_applyQueries.profileId(uuid).awaitAsOneOrNull()?.let { return Resolved.Found(it) }
+        return resolve(ProfileKind.key(uuid)) { ref ->
+            database.sync_applyQueries.profileId(ref.text(0)).awaitAsOneOrNull()
+        }
+    }
+
+    override suspend fun entryId(entryKey: String): Resolved = resolve(entryKey) { ref ->
+        ref.long(0).takeIf { database.sync_applyQueries.entryExists(it).awaitAsOne() }
+    }
+
+    override suspend fun chapterId(chapterKey: String): Resolved = resolve(chapterKey) { ref ->
+        ref.long(0).takeIf { database.sync_applyQueries.chapterExists(it).awaitAsOne() }
+    }
+
+    override suspend fun categoryId(categoryKey: String, profileUuid: String): Resolved {
+        var key = categoryKey
+        repeat(MAX_REPLACEMENTS) {
+            if (key == RecordKeys.derive(LocalReads.DEFAULT_CATEGORY, profileUuid)) return Resolved.Found(0)
+            val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return Resolved.Missing(key)
+            if (!stored.deleted) {
+                return resolve(key) { ref ->
+                    ref.long(0).takeIf { database.sync_applyQueries.categoryExists(it).awaitAsOne() }
+                }
+            }
+            key = (RecordState.of(true, stored.payload) as RecordState.Deleted).tombstone.replacedBy
+                ?: return Resolved.Gone
+        }
+        return Resolved.Gone
+    }
+
+    override suspend fun activitySession(sessionId: String): Resolved {
+        if (database.sync_applyQueries.activitySessionExists(sessionId).awaitAsOne()) return Resolved.Found(0)
+        return resolve(RecordKeys.derive(ActivitySessionKind.name, sessionId)) { ref ->
+            0L.takeIf { database.sync_applyQueries.activitySessionExists(ref.text(0)).awaitAsOne() }
+        }
+    }
+
+    /** Registers like [tachiyomi.data.source.identity.SourceIdentityRepositoryImpl], inside this transaction. */
+    override suspend fun sourceKey(source: SourceReference): Long {
+        val queries = database.source_identitiesQueries
+        suspend fun find() = queries.findByIdentity(source.idScheme, source.externalId).awaitAsOneOrNull()?.local_key
+        find()?.let { return it }
+        if (SourceIdScheme(source.idScheme).externalIdIsLocalKey) {
+            queries.insertKeepingExternalId(externalId = source.externalId, idScheme = source.idScheme)
+            find()?.let { return it }
+        }
+        queries.insertAllocatingKey(idScheme = source.idScheme, externalId = source.externalId)
+        return checkNotNull(find())
+    }
+
+    override suspend fun replacementOf(entryKey: String): String? {
+        val stored = database.sync_recordsQueries.getByKey(EntryReplacementKind.key(entryKey)).awaitAsOneOrNull()
+        if (stored == null || stored.deleted) return null
+        return EntryReplacementKind.decode(stored.payload).replacement.value.to
+    }
+
+    override suspend fun newEdit(): HybridTimestamp {
+        val clock = database.sync_clockQueries.get().awaitAsOne()
+        val seen = listOfNotNull(newestSeen, HybridTimestamp(clock.seen_physical, clock.seen_counter.toInt(), device))
+            .max()
+        val stamper = EditStamper(device, clock.issued_physical, clock.issued_counter.toInt())
+        val stamp = stamper.stamp(now(), seen.physicalMillis, seen.counter)
+        database.sync_clockQueries.setIssued(stamper.issuedPhysical, stamper.issuedCounter.toLong())
+        return stamp
+    }
+
+    /**
+     * The local ID of the record [key]: of the row it is stored as holding, or else of the row written from the
+     * stored record now. Missing when no record is stored, or when the record itself waits for its own parent.
+     */
+    private suspend fun resolve(key: String, idOf: suspend (LocalRef) -> Long?): Resolved {
+        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return Resolved.Missing(key)
+        if (stored.deleted) return Resolved.Gone
+        stored.local_ref?.let { idOf(LocalRef(it)) }?.let { return Resolved.Found(it) }
+        if (!resolving.add(key)) return Resolved.Missing(key)
+        try {
+            return when (val outcome = reapply(key, database.sync_pendingQueries.get(key).awaitAsOneOrNull())) {
+                is ApplyOutcome.Applied -> outcome.ref?.let { idOf(it) }?.let(Resolved::Found) ?: Resolved.Gone
+                is ApplyOutcome.WaitsFor -> Resolved.Missing(outcome.key)
+                is ApplyOutcome.Held, null -> Resolved.Missing(key)
+                is ApplyOutcome.Superseded -> Resolved.Gone
+            }
+        } finally {
+            resolving -= key
+        }
+    }
+
+    private companion object {
+        /** Categories merged into ones merged again; a chain this long can only be a loop. */
+        const val MAX_REPLACEMENTS = 16
+    }
+}
+
+private fun <P : Any> SyncedKind<P>.newestEdit(state: RecordState): HybridTimestamp? = when (state) {
+    is RecordState.Live -> newestEdit(serializer, decode(state.bytes))
+    is RecordState.Deleted -> state.tombstone.deletedAt
+}
+
+private fun <P : Any> SyncedKind<P>.sameRecord(a: RecordState, b: RecordState): Boolean = when {
+    a is RecordState.Live && b is RecordState.Live -> decode(a.bytes) == decode(b.bytes)
+    a is RecordState.Deleted && b is RecordState.Deleted -> a.tombstone == b.tombstone
+    else -> false
+}

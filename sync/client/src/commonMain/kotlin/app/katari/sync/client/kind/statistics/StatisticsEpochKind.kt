@@ -1,6 +1,9 @@
 package app.katari.sync.client.kind.statistics
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -43,4 +46,10 @@ object StatisticsEpochKind : SyncedKind<StatisticsEpochPayload>(
     }
     override fun merge(local: StatisticsEpochPayload, incoming: StatisticsEpochPayload) =
         local.copy(startedAt = latest(local.startedAt, incoming.startedAt))
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: StatisticsEpochPayload): ApplyOutcome {
+        val profileId = writes.profileId(payload.profileUuid).idOr { return it }
+        writes.database.sync_applyQueries.upsertStatisticsEpoch(profileId, payload.startedAt.value)
+        return ApplyOutcome.Applied(LocalRef.of(profileId))
+    }
 }

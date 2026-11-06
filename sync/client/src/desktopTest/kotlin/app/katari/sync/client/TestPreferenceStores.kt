@@ -1,5 +1,6 @@
 package app.katari.sync.client
 
+import app.katari.sync.client.setting.apply.StoreSettingWrites
 import app.katari.sync.client.setting.read.StoreSettingReads
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -49,6 +50,7 @@ internal class TestPreferenceStores(directory: File, handler: DatabaseHandler, s
             }
     }
     val reads = StoreSettingReads(profiles, sourceFiles, owners)
+    val writes = StoreSettingWrites(profiles, sourceFiles)
 }
 
 /** The shared store in `base.json` and each profile's in `<id>.json`, each telling who listens of its writes. */

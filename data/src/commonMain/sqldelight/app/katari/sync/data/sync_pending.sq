@@ -10,7 +10,49 @@ CREATE TABLE sync_pending(
     reason TEXT NOT NULL,
     -- The record key it waits for, when it waits for a parent.
     waits_for TEXT,
-    received_at INTEGER NOT NULL
+    received_at INTEGER NOT NULL,
+    kind TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;
+
+hold:
+INSERT INTO sync_pending(record_key, record, reason, waits_for, received_at, kind)
+VALUES (:recordKey, :record, :reason, :waitsFor, :receivedAt, :kind)
+ON CONFLICT(record_key) DO UPDATE SET
+    record = excluded.record,
+    reason = excluded.reason,
+    waits_for = excluded.waits_for,
+    received_at = excluded.received_at,
+    kind = excluded.kind;
+
+get:
+SELECT record_key, record, reason, waits_for, received_at, kind
+FROM sync_pending
+WHERE record_key = :recordKey;
+
+waitingFor:
+SELECT record_key, record, reason, waits_for, received_at, kind
+FROM sync_pending
+WHERE waits_for = :recordKey
+ORDER BY received_at, record_key;
+
+-- Everything held for a reason that may have gone away since: a newer app, a clock caught up, a reference arrived.
+retryable:
+SELECT record_key, record, reason, waits_for, received_at, kind
+FROM sync_pending
+WHERE waits_for IS NULL
+ORDER BY received_at, record_key;
+
+release:
+DELETE FROM sync_pending
+WHERE record_key = :recordKey;
+
+unreadableKinds:
+SELECT DISTINCT kind
+FROM sync_pending
+WHERE reason = 'unreadable'
+ORDER BY kind;
+
+clear:
+DELETE FROM sync_pending;

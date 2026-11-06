@@ -1,6 +1,10 @@
 package app.katari.sync.client.kind.tracking
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.apply.ApplyOutcome
+import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -84,4 +88,33 @@ object TrackerBindingKind : SyncedKind<TrackerBindingPayload>(
         finishDate = latest(local.finishDate, incoming.finishDate),
         private = latest(local.private, incoming.private),
     )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: TrackerBindingPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val queries = writes.database.sync_applyQueries
+        queries.upsertTrackerBinding(
+            profileId = queries.entryProfile(entryId).awaitAsOne(),
+            entryId = entryId,
+            trackerId = payload.trackerId,
+            remoteId = payload.remoteId.value,
+            libraryId = payload.libraryId.value,
+            title = payload.title.value,
+            lastChapterRead = payload.lastChapterRead.value,
+            totalChapters = payload.totalChapters.value,
+            status = payload.status.value,
+            score = payload.score.value,
+            remoteUrl = payload.remoteUrl.value,
+            startDate = payload.startDate.value,
+            finishDate = payload.finishDate.value,
+            private = payload.private.value,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId, payload.trackerId))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteTrackerBinding(it.long(0), it.long(1)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: TrackerBindingPayload) = payload.entryKey
 }
