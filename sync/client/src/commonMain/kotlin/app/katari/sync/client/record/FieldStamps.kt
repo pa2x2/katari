@@ -2,6 +2,7 @@ package app.katari.sync.client.record
 
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.protocol.clock.HybridTimestamp
+import app.katari.sync.protocol.device.DeviceId
 
 /**
  * The timestamps of the edits the outbox holds for one record: per payload field, the newest edit that touched it.
@@ -35,6 +36,27 @@ class FieldStamps internal constructor() {
         if (previous != null && previous.value == value) return previous
         val edited = newer(byField[number], everyField)
         return Stamped(value, edited ?: previous?.at ?: Stamped.UNKNOWN_EDIT)
+    }
+
+    /**
+     * [field] for a value whose row keeps the time it was last changed, [editedAtMillis] (0 for none), as reading
+     * positions do: an edit takes that time instead of the time of the write, so a write that carries an older value
+     * along with its time, as a position moved to a renamed chapter or copied by a migration does, doesn't pass for
+     * new reading and win over newer reading on other devices. A row with no time takes the write's. A value older
+     * than the one the record holds leaves the record's, as merging positions on one device keeps the newer.
+     */
+    fun <T> fieldEditedAt(
+        number: Int,
+        value: T,
+        previous: Stamped<T>?,
+        editedAtMillis: Long,
+        device: DeviceId,
+    ): Stamped<T> {
+        val stamped = field(number, value, previous)
+        val captured = newer(byField[number], everyField)
+        if (captured == null || stamped === previous || editedAtMillis <= 0) return stamped
+        val edited = Stamped(value, HybridTimestamp(editedAtMillis, 0, device))
+        return if (previous != null && previous.at > edited.at) previous else edited
     }
 
     private fun newer(a: HybridTimestamp?, b: HybridTimestamp?): HybridTimestamp? = when {

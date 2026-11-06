@@ -61,7 +61,7 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
                 contentKey = row.content_key,
                 resourceKey = row.resource_key,
                 chapterKey = chapterKey,
-                locator = stamps.field(
+                locator = stamps.fieldEditedAt(
                     5,
                     ProgressLocator(
                         kind = row.locator_kind,
@@ -73,8 +73,16 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
                         resourceRevision = row.resource_revision,
                     ),
                     previous?.locator,
+                    row.locator_updated_at,
+                    reads.device,
                 ),
-                completed = stamps.field(6, row.completed, previous?.completed),
+                completed = stamps.fieldEditedAt(
+                    6,
+                    row.completed,
+                    previous?.completed,
+                    row.completion_updated_at,
+                    reads.device,
+                ),
             )
         }
     }

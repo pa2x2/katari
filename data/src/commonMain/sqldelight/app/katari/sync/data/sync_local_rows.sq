@@ -63,7 +63,9 @@ SELECT
     progression,
     total_progression,
     extensions,
-    completed
+    completed,
+    locator_updated_at,
+    completion_updated_at
 FROM entry_progress_state
 WHERE _id = :id;
 
