@@ -94,6 +94,8 @@ class SyncConnection(
             sync_recordsQueries.clear()
             sync_pendingQueries.clear()
             sync_outboxQueries.clear()
+            sync_filesQueries.clear()
+            sync_filesQueries.clearUploads()
         }
     }
 

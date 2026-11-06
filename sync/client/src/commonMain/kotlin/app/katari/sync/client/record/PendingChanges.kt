@@ -26,6 +26,7 @@ class PendingChanges(private val handler: DatabaseHandler) {
                 device = device,
                 deleted = record.deleted,
                 payload = record.payload,
+                files = RecordFiles.of(record.kind, record.deleted, record.payload),
                 group = RecordGroups.of(record.kind, record.record_key, record.deleted, record.payload),
             )
         }

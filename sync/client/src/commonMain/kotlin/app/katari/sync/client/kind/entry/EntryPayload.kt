@@ -2,6 +2,7 @@ package app.katari.sync.client.kind.entry
 
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.payload.Stamped
+import app.katari.sync.client.payload.SyncedFile
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -25,6 +26,8 @@ data class EntryPayload(
     @ProtoNumber(10) val viewerFlags: Stamped<Long>,
     @ProtoNumber(11) val chapterFlags: Stamped<Long>,
     @ProtoNumber(12) val metadata: EntryMetadata,
+    /** The cover the person set for the entry; null for none, the source's own cover. */
+    @ProtoNumber(13) val customCover: Stamped<SyncedFile?> = Stamped(null, Stamped.UNKNOWN_EDIT),
 )
 
 /** The source's description of the entry as this device last fetched it. */

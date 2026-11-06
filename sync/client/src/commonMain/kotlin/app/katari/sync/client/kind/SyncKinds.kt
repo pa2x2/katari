@@ -16,6 +16,7 @@ import app.katari.sync.client.kind.entrychoice.PlaybackPreferencesKind
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesKind
 import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
 import app.katari.sync.client.kind.extension.ExtensionRepositoryKind
+import app.katari.sync.client.kind.font.ImportedFontKind
 import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.merge.MergeMemberKind
 import app.katari.sync.client.kind.profile.ProfileKind
@@ -31,7 +32,7 @@ import app.katari.sync.client.kind.statistics.StatisticsEpochKind
 import app.katari.sync.client.kind.tracking.TrackerBindingKind
 import app.katari.sync.client.record.SyncedKind
 
-/** Every kind of record this app version syncs. Files are added by their own unit. */
+/** Every kind of record this app version syncs. */
 object SyncKinds {
     val all: List<SyncedKind<*>> = listOf(
         ProfileKind,
@@ -57,6 +58,7 @@ object SyncKinds {
         MergeMemberKind,
         EntryReplacementKind,
         ExtensionRepositoryKind,
+        ImportedFontKind,
         ProfileSettingKind,
         SharedSettingKind,
         SourceSettingKind,

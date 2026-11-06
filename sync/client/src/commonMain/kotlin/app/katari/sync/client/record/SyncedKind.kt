@@ -4,6 +4,7 @@ import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.payload.UnknownFields
+import app.katari.sync.protocol.file.FileReference
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.protobuf.ProtoBuf
 
@@ -48,6 +49,12 @@ abstract class SyncedKind<P : Any>(
 
     /** The entry a record of this kind belongs to, so records of an entry another one replaced follow it there. */
     internal open fun entryKeyOf(payload: P): String? = null
+
+    /**
+     * The files [payload] names, which the envelope lists so the server keeps them while the record is live
+     * ([app.katari.sync.protocol.record.RecordEnvelope.files]).
+     */
+    internal open fun files(payload: P): List<FileReference> = emptyList()
 
     /** For [Absence.REMOVED_FLAG]: [previous] marked removed. */
     internal open fun removed(previous: P, stamps: FieldStamps): P =

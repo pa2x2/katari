@@ -8,6 +8,8 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.file.local.FileOwner
+import app.katari.sync.client.file.local.want
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.replacement.carry.ReplacedEntryEdits
@@ -145,8 +147,8 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
 
     /**
      * Moves the old entry's chapters, history, positions and activity to the entry it became in the other profile,
-     * then deletes the old row with what didn't move: its category links, as a local move drops them, and what the
-     * new entry already had, which its own records hold.
+     * then deletes the old row with what didn't move: its category links, as a local move drops them, what the new
+     * entry already had, which its own records hold, and its custom cover, which the new entry's record names.
      */
     private suspend fun moveRows(writes: LocalWrites, from: String, toId: Long) {
         val ref = writes.database.sync_recordsQueries.getByKey(from).awaitAsOneOrNull()?.local_ref ?: return
@@ -158,6 +160,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         queries.moveHistory(toEntryId = toId, fromEntryId = fromId)
         queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
         queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
+        writes.database.want(FileOwner.CustomCover(fromId), null)
         queries.deleteEntry(fromId)
     }
 }

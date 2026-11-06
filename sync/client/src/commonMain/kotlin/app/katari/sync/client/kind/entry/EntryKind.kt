@@ -8,22 +8,30 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.file.local.FileOwner
+import app.katari.sync.client.file.local.want
+import app.katari.sync.client.file.local.wanted
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
 import app.katari.sync.client.payload.SourceReference
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.protocol.file.FileCategory
+import app.katari.sync.protocol.file.FileReference
 import tachiyomi.domain.source.identity.SourceIdScheme
 
 /**
  * Entries, keyed by profile uuid, source identity, URL and type ([LocalReads.entryKey]). Local ref: `[entries._id]`.
  *
  * Only the person's fields are captured, so a source refresh rewriting the title or description is no change; the
- * metadata travels with the next change the person makes. An entry joins sync when it is added to the library, or
+ * metadata travels with the next change the person makes. The custom cover is the file the person set
+ * ([FileOwner.CustomCover]), captured from the app's file store rather than by a trigger
+ * ([app.katari.sync.client.file.capture.FileCapture]). An entry joins sync when it is added to the library, or
  * when a record of it (a read chapter, history) needs it as a parent. Entries are never deleted as records: rows of
  * entries outside the library are removed as cache, and a move to another profile is an entry replacement record.
  */
@@ -48,11 +56,16 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         ),
     )
 
+    /** `sync_outbox.fields` for a change of the custom cover alone. */
+    internal const val CUSTOM_COVER_FIELDS: Long = 1L shl 13
+
     fun ref(entryId: Long): LocalRef = LocalRef.of(entryId)
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<EntryPayload> {
         val row = reads.entry(ref.long(0)) ?: return LocalRead.Missing
         val key = reads.entryKeyOf(row) ?: return LocalRead.NotSynced
+        // A cover sync knows nothing of here, as after a restore wrote the row under a new ID, leaves the record's.
+        val cover = reads.database.wanted(FileOwner.CustomCover(row._id))
         return LocalRead.Found(
             key = key,
             parents = listOf(RecordRef(ProfileKind, ProfileKind.ref(row.profile_uuid))),
@@ -69,6 +82,9 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                 libraryPinned = stamps.field(9, row.library_pinned, previous?.libraryPinned),
                 viewerFlags = stamps.field(10, row.viewer, previous?.viewerFlags),
                 chapterFlags = stamps.field(11, row.chapter_flags, previous?.chapterFlags),
+                customCover = cover?.let { stamps.field(13, it.file, previous?.customCover) }
+                    ?: previous?.customCover
+                    ?: Stamped(null, Stamped.UNKNOWN_EDIT),
                 metadata = EntryMetadata(
                     title = row.title,
                     author = row.author,
@@ -91,11 +107,16 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         viewerFlags = latest(local.viewerFlags, incoming.viewerFlags),
         chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+        customCover = latest(local.customCover, incoming.customCover),
     )
+
+    override fun files(payload: EntryPayload): List<FileReference> =
+        listOfNotNull(payload.customCover.value?.reference(FileCategory.COVER))
 
     /**
      * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
-     * keeps the metadata of its own refreshes. An entry another one replaced stays out of the library; its changes
+     * keeps the metadata of its own refreshes. The custom cover is put in place after the transaction, fetched first
+     * when no file here holds it. An entry another one replaced stays out of the library; its changes
      * carry over to the replacement instead. An entry moved to another profile has no row of its own any more, as
      * after moving it here, so its record makes none. Local-source entries never sync.
      */
@@ -144,6 +165,7 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
             )
             existing
         }
+        writes.database.want(FileOwner.CustomCover(entryId), payload.customCover.value)
         return ApplyOutcome.Applied(ref(entryId))
     }
 }

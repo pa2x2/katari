@@ -94,6 +94,7 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
         val profileId = queries.profileId(uuid).awaitAsOneOrNull() ?: return ApplyOutcome.Applied(null)
         if (profileId == writes.activeProfileId) return ApplyOutcome.Held(HoldReason.PROFILE_OPEN)
         if (deletionInQuestion(writes, uuid)) return ApplyOutcome.Applied(ref)
+        writes.database.sync_filesQueries.releaseProfile(fontOwnerPrefix = "[$profileId,%", profileId = profileId)
         writes.profileDeletion.delete(profileId)
         return ApplyOutcome.Applied(null)
     }

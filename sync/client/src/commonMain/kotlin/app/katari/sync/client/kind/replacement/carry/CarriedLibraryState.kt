@@ -20,7 +20,8 @@ internal class CarriedLibraryState(private val carry: ReplacementCarry) {
      * chapter display and filters, the date added, and the notes when the person kept them; and the viewer flags, which
      * migration copies with the viewer settings. Being in the library is the migration's own doing, not the old
      * entry's, and the display name stays with the entry it was given to. An old entry out of the library, as another
-     * migration of it leaves it, no longer has a date added or pin to give.
+     * migration of it leaves it, no longer has a date added or pin to give. The custom cover carries when the person
+     * migrated it along.
      */
     suspend fun entry(from: EntryPayload) {
         val to = carry.stored(EntryKind, carry.to) ?: return
@@ -33,6 +34,7 @@ internal class CarriedLibraryState(private val carry: ReplacementCarry) {
                 libraryPinned = carry.pick(from.libraryPinned, to.libraryPinned),
                 viewerFlags = carry.pick(from.viewerFlags, to.viewerFlags),
                 chapterFlags = carry.pick(from.chapterFlags, to.chapterFlags),
+                customCover = carry.pick(from.customCover, to.customCover),
             )
         } else {
             val fields = migratedLibraryFields(
@@ -61,6 +63,11 @@ internal class CarriedLibraryState(private val carry: ReplacementCarry) {
                 },
                 viewerFlags = carry.pick(from.viewerFlags, to.viewerFlags),
                 chapterFlags = carry.ruled(fields.chapterFlags, from.chapterFlags, to.chapterFlags),
+                customCover = if (carry.carries(EntryMigrationOption.CUSTOM_COVER)) {
+                    carry.after(from.customCover) ?: to.customCover
+                } else {
+                    to.customCover
+                },
             )
         }
         if (carried != to) carry.writes.change(EntryKind, carry.to, carried)
