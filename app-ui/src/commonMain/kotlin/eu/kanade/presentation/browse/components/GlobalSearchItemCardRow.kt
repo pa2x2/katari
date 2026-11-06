@@ -16,6 +16,7 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover
@@ -56,7 +57,7 @@ private fun GlobalSearchItemCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth)) {
+    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth * entryCoverScale())) {
         EntryComfortableGridItem(
             title = item.displayTitle,
             titleMaxLines = 3,

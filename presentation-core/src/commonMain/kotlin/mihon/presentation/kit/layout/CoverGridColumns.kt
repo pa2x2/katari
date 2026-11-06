@@ -6,14 +6,18 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.content.entryCoverScale
 import tachiyomi.domain.library.model.CoverSize
 
 /**
- * Columns for a grid of entry covers: as many as fit the width at [size], so covers keep their size when the window
- * widens, as when a foldable unfolds. Pass [wideCovers] when every cover is landscape, such as video thumbnails.
+ * Columns for a grid of entry covers: as many as fit the width at [size], with covers scaled up in the wide window
+ * classes so a desktop window fills with large covers rather than many small ones. Pass [wideCovers] when every cover
+ * is landscape, such as video thumbnails.
  */
+@Composable
+@ReadOnlyComposable
 fun coverGridCells(size: CoverSize, wideCovers: Boolean = false): GridCells {
-    val minCellWidth = size.minCellWidth()
+    val minCellWidth = size.minCellWidth() * entryCoverScale()
     return GridCells.Adaptive(if (wideCovers) minCellWidth * WIDE_COVER_SCALE else minCellWidth)
 }
 

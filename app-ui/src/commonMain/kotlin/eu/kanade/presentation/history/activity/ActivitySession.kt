@@ -31,6 +31,7 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.list.RowGroupSeparator
 import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.surface.Pill
@@ -88,7 +89,7 @@ internal fun ActivitySession(
                 EntryCover.Book(
                     data = session.coverData,
                     contentDescription = "",
-                    modifier = Modifier.height(BrowseMetrics.listCoverHeight),
+                    modifier = Modifier.height(BrowseMetrics.listCoverHeight * entryCoverScale()),
                     frame = CoverFrame.Thumbnail,
                 )
                 Spacer(Modifier.width(KatariTheme.spacing.m))

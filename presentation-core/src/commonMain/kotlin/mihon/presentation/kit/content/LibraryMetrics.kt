@@ -4,7 +4,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
-/** Fixed geometry of entry covers in library and browse grids and lists that the spacing scale has no step for. */
+/**
+ * Geometry of entry covers in library and browse grids and lists that the spacing scale has no step for, at phone size.
+ * Wider windows scale covers with [entryCoverScale].
+ */
 object LibraryMetrics {
     /**
      * The cover of a row led by an entry, such as in history, updates or a list display mode: one portrait shape, so
