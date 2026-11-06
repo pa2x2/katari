@@ -14,7 +14,8 @@ import tachiyomi.domain.storage.DocumentUri
 
 /**
  * The open book's profile's fonts: the imported ones to pick from, the face each choice draws with, and the fall back
- * to Book when a chosen file is gone.
+ * to Book when a chosen file isn't here. A choice naming such a file is kept, since the file may still come, as a font
+ * imported on another device does once sync fetches it; only deleting the font here gives the choice up.
  */
 internal class BookDocumentReaderFonts(
     private val store: BookDocumentReaderFontStore,
@@ -45,16 +46,6 @@ internal class BookDocumentReaderFonts(
         importedFonts.value = withContext(Dispatchers.IO) { store.importedFonts(profileId) }
     }
 
-    /**
-     * Resets the book's and the profile's choice where it names an imported font whose file is gone, such as after a
-     * restore, which doesn't bring imported files back.
-     */
-    suspend fun forgetMissing(binding: ViewerSettingBinding<BookDocumentReaderFont>) {
-        val setting = binding.state.value
-        if (isMissing(setting.entryOverride)) binding.clearEntryOverride()
-        if (isMissing(setting.profileValue)) binding.resetProfileValue()
-    }
-
     /** Imports the document picked at [uri], kept only when it reads as a font; null when it doesn't. */
     suspend fun import(uri: DocumentUri): BookDocumentReaderFont.Imported? {
         val font = withContext(Dispatchers.IO) {
@@ -70,13 +61,13 @@ internal class BookDocumentReaderFonts(
         return font
     }
 
+    /** Deletes the font, and the book's and the profile's choice of it. */
     suspend fun delete(font: BookDocumentReaderFont.Imported, binding: ViewerSettingBinding<BookDocumentReaderFont>) {
         withContext(Dispatchers.IO) { store.delete(profileId, font) }
         families.remove(font.fileName)
         refresh()
-        forgetMissing(binding)
+        val setting = binding.state.value
+        if (setting.entryOverride == font) binding.clearEntryOverride()
+        if (setting.profileValue == font) binding.resetProfileValue()
     }
-
-    private suspend fun isMissing(font: BookDocumentReaderFont?): Boolean =
-        font is BookDocumentReaderFont.Imported && withContext(Dispatchers.IO) { store.file(profileId, font) } == null
 }

@@ -442,7 +442,6 @@ internal class BookDocumentReaderController(
             profileId = session.entry.profileId,
         ).also { readerFonts = it }
         fonts.refresh()
-        fonts.forgetMissing(requireNotNull(settingBindings).font)
         val chapterGroupTitles = readingOrder.chapters.map(EntryChapter::entryId).distinct()
             .flatMap { entryId -> dependencies.chapterGroupRepository.getByEntryId(entryId) }
             .associate { ChapterGroupId(it.entryId, it.key) to it.title }
