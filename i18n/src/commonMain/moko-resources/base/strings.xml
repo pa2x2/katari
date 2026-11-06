@@ -3149,7 +3149,7 @@
 
     <!-- Sync: where it lives and how it reports -->
     <string name="sync_title">Sync</string>
-    <string name="sync_summary_standalone">Keep your devices in step</string>
+    <string name="sync_summary_standalone">Share your library and reading progress between devices</string>
     <string name="sync_status_up_to_date">Up to date</string>
     <!-- %1$s says when, such as "2 minutes ago" -->
     <string name="sync_status_up_to_date_at">Up to date · %1$s</string>
