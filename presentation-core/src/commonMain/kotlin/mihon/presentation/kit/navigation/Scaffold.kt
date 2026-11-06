@@ -218,9 +218,12 @@ private fun ScaffoldLayout(
                 0
             }
 
+            // Measured in the room it is placed in, so a FAB slot that grows wide, such as one holding a note above
+            // the button, stays inside the frame instead of running past the start edge
+            val fabMaxWidth = (insetLayoutWidth - 2 * (frameMarginPx + FabSpacing.roundToPx())).coerceAtLeast(0)
             val fabPlaceables =
                 subcompose(ScaffoldLayoutContent.Fab, fab).fastMap { measurable ->
-                    measurable.measure(looseConstraints)
+                    measurable.measure(looseConstraints.copy(maxWidth = fabMaxWidth))
                 }
 
             val fabWidth = fabPlaceables.fastMaxBy { it.width }?.width ?: 0
