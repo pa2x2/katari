@@ -11,13 +11,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 
-/** Turns what it modifies a full turn every [TURN_MILLIS], for an icon that stands for work under way. */
+/** The way an icon that stands for work under way turns: the way its own arrows point, such as sync's. */
+enum class Spin { Clockwise, CounterClockwise }
+
+/** Turns what it modifies a full turn every [TURN_MILLIS] in the [spin] direction. */
 @Composable
-internal fun Modifier.spinning(): Modifier {
+internal fun Modifier.spinning(spin: Spin): Modifier {
     val transition = rememberInfiniteTransition(label = "spinning")
     val degrees by transition.animateFloat(
         initialValue = 0f,
-        targetValue = 360f,
+        targetValue = when (spin) {
+            Spin.Clockwise -> 360f
+            Spin.CounterClockwise -> -360f
+        },
         animationSpec = infiniteRepeatable(tween(TURN_MILLIS, easing = LinearEasing), RepeatMode.Restart),
         label = "spinning-degrees",
     )

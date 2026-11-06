@@ -8,6 +8,7 @@ import mihon.icons.materialsymbols.rounded.CloudUpload
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.SyncProblem
 import mihon.icons.materialsymbols.rounded.Wifi
+import mihon.presentation.kit.content.Spin
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.theme.ContentTone
 
@@ -29,7 +30,12 @@ fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
             tone = ContentTone.Warning,
         )
         headline is SyncHeadline.Syncing || headline is SyncHeadline.Downloading ->
-            AppBar.Action(title = title, icon = MaterialSymbols.Rounded.Sync, onClick = onClick, spinning = true)
+            AppBar.Action(
+                title = title,
+                icon = MaterialSymbols.Rounded.Sync,
+                onClick = onClick,
+                spin = Spin.CounterClockwise,
+            )
         headline is SyncHeadline.Unsent -> AppBar.Action(
             title = title,
             icon = MaterialSymbols.Rounded.CloudUpload,
