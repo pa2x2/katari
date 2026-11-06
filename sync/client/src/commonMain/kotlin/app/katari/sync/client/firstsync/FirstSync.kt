@@ -11,8 +11,8 @@ import dev.zacsweers.metro.Inject
 import logcat.LogPriority
 import mihon.domain.profile.ProfileSeedPreferences
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.data.DatabaseHandler
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
 /**
@@ -62,7 +62,9 @@ class FirstSync(
             val seeded = ProfileSeedPreferences.untouched(profileStore.profileStore(profile.id))
             settings.profileKeys(profile.id).firstOrNull { it.isPersonLevel() && it !in seeded }
                 ?.let { return "profile ${profile.id} setting $it" }
-            settings.sourceKeys(profile.id).keys.firstOrNull()?.let { return "profile ${profile.id} source $it settings" }
+            settings.sourceKeys(profile.id).keys.firstOrNull()?.let {
+                return "profile ${profile.id} source $it settings"
+            }
         }
         return null
     }
