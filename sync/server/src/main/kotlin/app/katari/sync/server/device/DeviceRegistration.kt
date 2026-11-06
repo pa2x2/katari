@@ -2,6 +2,7 @@ package app.katari.sync.server.device
 
 import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.device.LinkCodeAccount
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.device.RegisterDeviceResponse
 import app.katari.sync.server.account.Account
@@ -22,7 +23,8 @@ import kotlin.time.Duration
  * server, since revoked devices keep their rows and deleted accounts' devices are retired.
  *
  * Failed sign-ins are limited as [PasswordCheck] limits them; a link code names no account until it is right, so its
- * guesses are limited per address only ([AttemptLimiter.codesFrom]).
+ * guesses are limited per address only ([AttemptLimiter.codesFrom]), whether the code is used to join or only looked
+ * up ([accountOfLinkCode]).
  */
 class DeviceRegistration(
     private val storage: ServerStorage,
@@ -50,6 +52,22 @@ class DeviceRegistration(
         }
         if (outcome == null) attempts.failed(keys)
         return outcome ?: RegistrationOutcome.Refused
+    }
+
+    /**
+     * The account a link code joins, leaving the code to join with (D027). A wrong, expired or used code is refused
+     * as joining with it would be, and counts as a guess the same way.
+     */
+    fun accountOfLinkCode(code: String, remoteAddress: String): LinkCodeLookupOutcome {
+        val keys = listOf(AttemptLimiter.codesFrom(remoteAddress))
+        attempts.blockedFor(keys)?.let { return LinkCodeLookupOutcome.Throttled(it) }
+        val account = storage.linkCodes.accountOf(OneTimeCode.hash(code), clock.now().toEpochMilliseconds())
+            ?.let(storage.accounts::byId)
+        if (account == null) {
+            attempts.failed(keys)
+            return LinkCodeLookupOutcome.Refused
+        }
+        return LinkCodeLookupOutcome.Found(LinkCodeAccount(account.username))
     }
 
     /** Links a new device to [account]. Must run inside a transaction of [storage]. */
@@ -96,4 +114,13 @@ sealed interface RegistrationOutcome {
 
     /** Too many failed attempts; the sign-in was not checked. */
     data class Throttled(val retryAfter: Duration) : RegistrationOutcome
+}
+
+sealed interface LinkCodeLookupOutcome {
+    data class Found(val account: LinkCodeAccount) : LinkCodeLookupOutcome
+
+    data object Refused : LinkCodeLookupOutcome
+
+    /** Too many failed guesses from the address; the code was not checked. */
+    data class Throttled(val retryAfter: Duration) : LinkCodeLookupOutcome
 }

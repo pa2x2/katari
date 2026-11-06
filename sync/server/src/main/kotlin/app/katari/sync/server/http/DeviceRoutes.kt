@@ -1,11 +1,13 @@
 package app.katari.sync.server.http
 
 import app.katari.sync.protocol.account.RedeemInviteRequest
+import app.katari.sync.protocol.device.LinkCodeAccountRequest
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.device.RevokeDeviceRequest
 import app.katari.sync.protocol.error.SyncErrorCode
 import app.katari.sync.protocol.http.SyncHttp
 import app.katari.sync.server.SyncServices
+import app.katari.sync.server.device.LinkCodeLookupOutcome
 import app.katari.sync.server.device.RegistrationOutcome
 import app.katari.sync.server.invite.RedemptionOutcome
 import io.ktor.http.HttpStatusCode
@@ -28,6 +30,17 @@ internal fun Route.registrationRoutes(services: SyncServices) {
             RegistrationOutcome.Refused -> call.respondRefusal(SyncErrorCode.UNAUTHORIZED)
             RegistrationOutcome.Disabled -> call.respondRefusal(SyncErrorCode.ACCOUNT_DISABLED)
             is RegistrationOutcome.Throttled -> call.respondThrottled(outcome.retryAfter)
+        }
+    }
+    post(SyncHttp.LINK_CODE_ACCOUNT) {
+        val request = call.receiveProto<LinkCodeAccountRequest>(services.config.maxRequestBytes)
+        RequestChecks.check(request)
+        val from = call.clientAddress(services.config.trustedProxies)
+        val outcome = withContext(Dispatchers.IO) { services.registration.accountOfLinkCode(request.code, from) }
+        when (outcome) {
+            is LinkCodeLookupOutcome.Found -> call.respondProto(outcome.account)
+            LinkCodeLookupOutcome.Refused -> call.respondRefusal(SyncErrorCode.UNAUTHORIZED)
+            is LinkCodeLookupOutcome.Throttled -> call.respondThrottled(outcome.retryAfter)
         }
     }
     post(SyncHttp.REDEEM_INVITE) {

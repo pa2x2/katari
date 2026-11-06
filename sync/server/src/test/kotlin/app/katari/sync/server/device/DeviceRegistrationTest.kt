@@ -1,6 +1,7 @@
 package app.katari.sync.server.device
 
 import app.katari.sync.protocol.device.DeviceDescription
+import app.katari.sync.protocol.device.LinkCodeAccount
 import app.katari.sync.protocol.device.PasswordSignIn
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.server.TestServer
@@ -36,6 +37,39 @@ class DeviceRegistrationTest {
             signIn("right password", from = "203.0.113.9").shouldBeInstanceOf<RegistrationOutcome.Throttled>()
             server.clock.advance(1.minutes)
             signIn("right password", from = "203.0.113.9").shouldBeInstanceOf<RegistrationOutcome.Registered>()
+        }
+    }
+
+    @Test
+    fun `looking a link code up leaves it to join with and its wrong guesses count toward joining's limit`(
+        @TempDir dataDirectory: Path,
+    ) {
+        TestServer(dataDirectory).use { server ->
+            val account = server.account("reader")
+            val registration = server.services.registration
+            fun join(code: String, from: String) = registration.register(
+                RegisterDeviceRequest(DeviceDescription("Laptop", "Linux", "1"), linkCode = code),
+                remoteAddress = from,
+            )
+            val code = server.services.devices.issueLinkCode(account).code
+
+            repeat(2) {
+                registration.accountOfLinkCode(code, "198.51.100.7") shouldBe
+                    LinkCodeLookupOutcome.Found(LinkCodeAccount("reader"))
+            }
+            join(code, from = "198.51.100.7").shouldBeInstanceOf<RegistrationOutcome.Registered>()
+            registration.accountOfLinkCode(code, "198.51.100.7") shouldBe LinkCodeLookupOutcome.Refused
+
+            // With the used code, six failed guesses: the sixth blocks the address for joining as well
+            val next = server.services.devices.issueLinkCode(account).code
+            repeat(5) {
+                registration.accountOfLinkCode("WRONG-$it", "198.51.100.7") shouldBe
+                    LinkCodeLookupOutcome.Refused
+            }
+            join(next, from = "198.51.100.7").shouldBeInstanceOf<RegistrationOutcome.Throttled>()
+            registration.accountOfLinkCode(next, "198.51.100.7").shouldBeInstanceOf<LinkCodeLookupOutcome.Throttled>()
+            registration.accountOfLinkCode(next, "203.0.113.9") shouldBe
+                LinkCodeLookupOutcome.Found(LinkCodeAccount("reader"))
         }
     }
 }

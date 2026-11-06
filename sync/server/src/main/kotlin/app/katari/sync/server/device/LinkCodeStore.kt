@@ -3,6 +3,9 @@ package app.katari.sync.server.device
 interface LinkCodeStore {
     fun insert(codeHash: ByteArray, accountId: Long, expiresAtMillis: Long)
 
+    /** The account of the unexpired code with [codeHash], leaving the code in place; null when there is none. */
+    fun accountOf(codeHash: ByteArray, nowMillis: Long): Long?
+
     /** Removes the code and returns its account, or returns null when no unexpired code has [codeHash]. */
     fun take(codeHash: ByteArray, nowMillis: Long): Long?
 

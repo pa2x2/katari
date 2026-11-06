@@ -2,6 +2,7 @@ package app.katari.sync.server.http
 
 import app.katari.sync.protocol.account.RedeemInviteRequest
 import app.katari.sync.protocol.device.DeviceDescription
+import app.katari.sync.protocol.device.LinkCodeAccountRequest
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.file.FileReference
 import app.katari.sync.protocol.pull.GroupRequest
@@ -27,6 +28,10 @@ internal object RequestChecks {
             "Exactly one of a password and a link code"
         }
         check(request.device)
+    }
+
+    fun check(request: LinkCodeAccountRequest) {
+        require(request.code.length <= MAX_CODE_LENGTH) { "Link code length" }
     }
 
     fun check(request: RedeemInviteRequest) {

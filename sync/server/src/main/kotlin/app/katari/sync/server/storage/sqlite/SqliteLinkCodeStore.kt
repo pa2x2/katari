@@ -9,6 +9,9 @@ internal class SqliteLinkCodeStore(private val database: SyncServerDatabase) : L
         queries.insert(codeHash = codeHash, accountId = accountId, expiresAt = expiresAtMillis)
     }
 
+    override fun accountOf(codeHash: ByteArray, nowMillis: Long): Long? =
+        queries.unexpiredAccount(codeHash, nowMillis).executeAsOneOrNull()
+
     override fun take(codeHash: ByteArray, nowMillis: Long): Long? = database.transactionWithResult {
         queries.unexpiredAccount(codeHash, nowMillis).executeAsOneOrNull()
             ?.also { queries.delete(codeHash) }
