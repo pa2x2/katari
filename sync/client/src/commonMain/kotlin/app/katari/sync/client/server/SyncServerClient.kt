@@ -45,18 +45,17 @@ import okio.buffer
 import okio.sink
 import java.io.File
 import java.io.IOException
-import java.time.Duration
 
 /**
  * Every call of the protocol to the server at [server], as the device whose [token] it is (null before
  * the device has one). Bodies are protobuf, request bodies larger than [COMPRESS_FROM] go gzipped, and OkHttp asks
  * for and unpacks gzipped answers itself. Every call but [info] carries the protocol version. Files travel as raw
- * bytes, with no limit on how long the whole call takes, since a large font on a slow network takes a while.
+ * bytes. Each kind of call has its own time limits ([SyncTransports]).
  *
  * Each call returns the server's answer or throws a [SyncFailure].
  */
 class SyncServerClient internal constructor(
-    private val http: OkHttpClient,
+    private val transports: SyncTransports,
     val server: HttpUrl,
     private val token: String?,
 ) {
@@ -104,9 +103,9 @@ class SyncServerClient internal constructor(
 
     suspend fun push(request: PushRequest): PushResponse = call(post(SyncHttp.PUSH, request))
 
-    suspend fun pull(request: PullRequest): PullPage = call(post(SyncHttp.PULL, request))
+    suspend fun pull(request: PullRequest): PullPage = call(post(SyncHttp.PULL, request), transports.pages)
 
-    suspend fun group(group: String): GroupRecords = call(post(SyncHttp.GROUP, GroupRequest(group)))
+    suspend fun group(group: String): GroupRecords = call(post(SyncHttp.GROUP, GroupRequest(group)), transports.pages)
 
     suspend fun snapshot(): SnapshotInfo = call(get(SyncHttp.SNAPSHOT))
 
@@ -122,7 +121,7 @@ class SyncServerClient internal constructor(
         val body = source.asRequestBody(OCTET_STREAM)
         val request = authorized(Request.Builder().url(url(SyncHttp.filePath(file.category, file.sha256))).put(body))
             .build()
-        return execute(request, fileHttp) { response ->
+        return execute(request, transports.files) { response ->
             when {
                 response.isSuccessful -> true
                 isSyncError(response) -> throw failureOf(response)
@@ -136,7 +135,7 @@ class SyncServerClient internal constructor(
     suspend fun downloadFile(file: FileReference, target: File): Boolean {
         val request = authorized(Request.Builder().url(url(SyncHttp.filePath(file.category, file.sha256))).get())
             .build()
-        return execute(request, fileHttp) { response ->
+        return execute(request, transports.files) { response ->
             when {
                 response.isSuccessful -> {
                     target.sink().use { response.body.source().readAll(it) }
@@ -153,7 +152,7 @@ class SyncServerClient internal constructor(
     internal fun live(listener: LiveChannel.Listener): LiveChannel {
         // OkHttp turns http and https into ws and wss itself.
         val request = authorized(Request.Builder().url(url(SyncHttp.LIVE)), versioned = true).build()
-        return LiveChannel(http, request, listener)
+        return LiveChannel(transports.calls, request, listener)
     }
 
     private inline fun <reified T> post(path: String, message: T): Request {
@@ -182,12 +181,19 @@ class SyncServerClient internal constructor(
     // The server's address may carry a path of its own, as behind a reverse proxy that serves it under one.
     private fun url(path: String): HttpUrl = server.newBuilder().addPathSegments(path.removePrefix("/")).build()
 
-    private suspend inline fun <reified T> call(request: Request): T = execute(request) { response ->
+    private suspend inline fun <reified T> call(
+        request: Request,
+        client: OkHttpClient = transports.calls,
+    ): T = execute(request, client) { response ->
         if (!response.isSuccessful) throw failureOf(response)
         decode(serializer<T>(), response) ?: throw SyncFailure.NotASyncServer(response.code)
     }
 
-    private suspend fun <T> execute(request: Request, client: OkHttpClient = http, read: (Response) -> T): T {
+    private suspend fun <T> execute(
+        request: Request,
+        client: OkHttpClient = transports.calls,
+        read: (Response) -> T,
+    ): T {
         val response = try {
             client.newCall(request).await()
         } catch (e: IOException) {
@@ -204,8 +210,6 @@ class SyncServerClient internal constructor(
             }
         }
     }
-
-    private val fileHttp: OkHttpClient by lazy { http.newBuilder().callTimeout(Duration.ZERO).build() }
 
     private fun isSyncError(response: Response): Boolean = response.body.contentType()
         ?.let { "${it.type}/${it.subtype}" == SyncHttp.CONTENT_TYPE } == true
