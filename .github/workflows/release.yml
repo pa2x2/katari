@@ -1,11 +1,11 @@
 name: Release
 
 # A push to main releases each app whose version has notes in its changelog and no tag holding it yet: the Android app
-# from versionName in app/build.gradle.kts and CHANGELOG.md, tagged v<version>, and the desktop app from version in
-# desktop/build.gradle.kts and DESKTOP-CHANGELOG.md, tagged desktop-v<version>. One push can release either or both.
-# Each release is a draft, to try it before anyone is offered it, and its commit is tagged along with it. The sync
-# server needs no notes and gets no release: its version in sync/server/build.gradle.kts, once it has no
-# sync-server-v<version> tag, publishes its image to this repository's packages and tags the commit.
+# from versionName in app/build.gradle.kts and CHANGELOG.md, tagged v<version>, the desktop app from version in
+# desktop/build.gradle.kts and DESKTOP-CHANGELOG.md, tagged desktop-v<version>, and the sync server from version in
+# sync/server/build.gradle.kts and SYNC-SERVER-CHANGELOG.md, tagged sync-server-v<version>. One push can release any of
+# them. Each app's release is a draft, to try it before anyone is offered it, and its commit is tagged along with it.
+# The sync server gets no GitHub release: its image goes straight to this repository's packages.
 on:
   push:
     branches:
@@ -32,16 +32,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Get each app's tag name and release notes, and the sync server's version
+      - name: Get each app's tag name and release notes
         id: decide
         shell: bash
         run: |
           set -euo pipefail
 
-          # release_of APP VERSION_FILE VERSION_PATTERN TAG_PREFIX [CHANGELOG]
-          # Without a changelog, an untagged version is released without notes.
+          # release_of APP VERSION_FILE VERSION_PATTERN TAG_PREFIX CHANGELOG
           release_of() {
-            local app="$1" file="$2" pattern="$3" prefix="$4" changelog="${5:-}"
+            local app="$1" file="$2" pattern="$3" prefix="$4" changelog="$5"
 
             local version
             version="$(sed -n "s/$pattern/\1/p" "$file")"
@@ -57,33 +56,29 @@ jobs:
               return
             fi
 
-            local notes=""
-            if [[ -n "$changelog" ]]; then
-              # The version's section without its heading: the release is already named after it.
-              notes="$(awk -v heading="## [$version]" '
-                /^## \[/ { inside = index($0, heading) == 1; next }
-                inside && (seen || NF) { seen = 1; print }
-              ' "$changelog")"
-              if [[ -z "$notes" ]]; then
-                echo "::notice::$changelog has no notes for $version, so this push releases no $tag."
-                return
-              fi
+            # The version's section without its heading: the release is already named after it.
+            local notes
+            notes="$(awk -v heading="## [$version]" '
+              /^## \[/ { inside = index($0, heading) == 1; next }
+              inside && (seen || NF) { seen = 1; print }
+            ' "$changelog")"
+            if [[ -z "$notes" ]]; then
+              echo "::notice::$changelog has no notes for $version, so this push releases no $tag."
+              return
             fi
 
             {
               echo "${app}_tag=$tag"
               echo "${app}_version=$version"
-              if [[ -n "$notes" ]]; then
-                echo "${app}_notes<<END_OF_NOTES"
-                echo "$notes"
-                echo "END_OF_NOTES"
-              fi
+              echo "${app}_notes<<END_OF_NOTES"
+              echo "$notes"
+              echo "END_OF_NOTES"
             } >> "$GITHUB_OUTPUT"
           }
 
           release_of android app/build.gradle.kts '^ *versionName = "\(.*\)"$' v CHANGELOG.md
           release_of desktop desktop/build.gradle.kts '^version = "\(.*\)"$' desktop-v DESKTOP-CHANGELOG.md
-          release_of server sync/server/build.gradle.kts '^version = "\(.*\)"$' sync-server-v
+          release_of server sync/server/build.gradle.kts '^version = "\(.*\)"$' sync-server-v SYNC-SERVER-CHANGELOG.md
 
   build:
     name: Build

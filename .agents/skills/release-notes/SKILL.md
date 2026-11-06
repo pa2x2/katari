@@ -1,23 +1,24 @@
 ---
 name: release-notes
-description: Generate Katari release notes for the Android app, the desktop app and the extension SDK. Use when asked to run or prepare a Katari release changelog, for either app or both.
+description: Generate Katari release notes for the Android app, the desktop app, the sync server and the extension SDK. Use when asked to run or prepare a Katari release changelog, for any of them.
 ---
 
-The Android and desktop apps are versioned and released apart, from the same `main`: the Android app from `versionName`
-in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, and the desktop app from `version` in
-`desktop/build.gradle.kts` and `DESKTOP-CHANGELOG.md`, tagged `desktop-v<version>`. A push to `main` releases each app
-whose version has notes and no tag yet, so one release can carry either app or both. This skill decides which apps the
-release covers, holds the rules every changelog follows and the SDK's changelog, and hands each app's changelog to its
-own skill.
+The Android app, the desktop app and the sync server are versioned and released apart, from the same `main`: the
+Android app from `versionName` in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, the desktop app from
+`version` in `desktop/build.gradle.kts` and `DESKTOP-CHANGELOG.md`, tagged `desktop-v<version>`, and the sync server
+from `version` in `sync/server/build.gradle.kts` and `SYNC-SERVER-CHANGELOG.md`, tagged `sync-server-v<version>`. A push
+to `main` releases each of them whose version has notes and no tag yet, so one release can carry any of them. This
+skill decides what the release covers, holds the rules every changelog follows and the SDK's changelog, and hands each
+app's and the server's changelog to its own skill.
 
 ## Decide what the release covers
 
-1. Read both apps' configured versions and both changelogs. An app is in the release when the user names it, or, when
-   they name none, when its configured version has no section in its changelog yet and its last tag doesn't hold it.
-   Ask when it stays unclear which apps the user means.
-2. For each app in the release, follow its skill: `.agents/skills/android-release-notes/SKILL.md` and
-   `.agents/skills/desktop-release-notes/SKILL.md`. Each finds its own range of changes, since the last release of the
-   other app may have moved `main` without releasing this one.
+1. Read the configured versions and changelogs of both apps and the server. Each is in the release when the user names
+   it, or, when they name none, when its configured version has no section in its changelog yet and its last tag
+   doesn't hold it. Ask when it stays unclear which the user means.
+2. For each one in the release, follow its skill: `.agents/skills/android-release-notes/SKILL.md`,
+   `.agents/skills/desktop-release-notes/SKILL.md` and `.agents/skills/sync-server-release-notes/SKILL.md`. Each finds
+   its own range of changes, since another one's last release may have moved `main` without releasing this one.
 3. Review SDK changes as described below, whichever apps the release covers.
 
 ## Changelog writing rules
@@ -74,6 +75,8 @@ own skill.
    empty sections.
 8. An app's changelog takes only what users of that app notice. Code both apps share reaches each changelog its users
    notice it in, checked against that app's own code path; a change to one app's own code never appears in the other's.
+   The server's changelog takes only what the people running it notice; an app's sync screens and behaviour stay in
+   that app's changelog, and a protocol change reaches each changelog whose audience notices it.
 
 ## Update SDK-CHANGELOG.md
 
@@ -92,8 +95,8 @@ own skill.
 
 ## Update the website
 
-After the changelogs are written, run the `website-update` skill and give it the outcomes added to each changelog
-as the list to check. Report its result together with the changelog changes.
+After the changelogs are written, run the `website-update` skill and give it the outcomes added to each app's changelog
+and the SDK's as the list to check; the server's notes are not part of the website yet. Report its result together with the changelog changes.
 
 ## Guidance
 
