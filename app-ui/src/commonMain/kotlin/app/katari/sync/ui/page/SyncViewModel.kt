@@ -15,8 +15,10 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
@@ -47,9 +49,13 @@ class SyncViewModel(
 
     init {
         viewModelScope.launchIO { canKeepSignIn.value = tokens.isAvailable }
-        // The list follows the account the device is linked to, and is listed again when it links to another.
+        // Listed again when the device links to another account and after each sync, which is when devices join
+        // and when the server notes when each last synced; and once the server can't be reached, saying so
         viewModelScope.launch {
-            status.filterNotNull().distinctUntilChangedBy { (it.link as? SyncStatus.Link.Linked)?.server }
+            status.filterNotNull()
+                .filter { it.activity !is SyncStatus.Activity.Syncing }
+                .map { (it.link as? SyncStatus.Link.Linked)?.server to (it.activity as? SyncStatus.Activity.UpToDate) }
+                .distinctUntilChanged()
                 .collect { refreshDevices() }
         }
     }
