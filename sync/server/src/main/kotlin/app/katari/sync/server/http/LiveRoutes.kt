@@ -11,7 +11,10 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToByteArray
@@ -20,9 +23,12 @@ import kotlinx.serialization.protobuf.ProtoBuf
 internal fun Route.liveRoute(services: SyncServices) {
     webSocket(SyncHttp.LIVE) {
         val device = call.device
-        val revocation = launch {
-            services.changes.revocations.first { it == device.id }
-            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Device revoked"))
+        val closing = launch {
+            val reason = merge(
+                services.changes.revocations.filter { it == device.id }.map { "Device revoked" },
+                services.changes.disabledAccounts.filter { it == device.accountId }.map { "Account disabled" },
+            ).first()
+            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, reason))
         }
         val notices = launch {
             var sent = withContext(Dispatchers.IO) { services.storage.identityOf(device.accountId) }
@@ -38,7 +44,7 @@ internal fun Route.liveRoute(services: SyncServices) {
             // Devices send nothing; this waits for the connection to close.
             incoming.consumeEach { }
         } finally {
-            revocation.cancel()
+            closing.cancel()
             notices.cancel()
         }
     }

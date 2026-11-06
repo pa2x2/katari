@@ -16,7 +16,7 @@ import kotlin.time.Clock
  * What admins do to accounts on the web page. Every action names the acting account, which must be an enabled admin
  * when the action runs ([enabledAdmin]), and none may leave the server without an enabled admin: the last one cannot be
  * demoted, disabled or deleted. Actions that take away a sign-in end the account's web sessions; disabling keeps its
- * devices linked but refused until it is enabled again.
+ * devices linked but refused, and their live channels closed, until it is enabled again.
  */
 class AccountAdministration(
     private val storage: ServerStorage,
@@ -75,13 +75,17 @@ class AccountAdministration(
             AdminOutcome.Done(Unit)
         }
 
-    fun setDisabled(actorId: Long, accountId: Long, disabled: Boolean): AdminOutcome<Unit> =
-        change(actorId, accountId) { account ->
+    fun setDisabled(actorId: Long, accountId: Long, disabled: Boolean): AdminOutcome<Unit> {
+        val outcome = change(actorId, accountId) { account ->
             if (disabled && account.isLastEnabledAdmin()) return@change AdminOutcome.LastAdmin
             storage.accounts.setDisabled(account.id, disabled)
             if (disabled) storage.webSessions.deleteForAccount(account.id)
             AdminOutcome.Done(Unit)
         }
+        // After the commit, so a device that reconnects at once is already refused.
+        if (disabled && outcome is AdminOutcome.Done) changes.announceDisabled(accountId)
+        return outcome
+    }
 
     /**
      * Removes the account with its records, files and devices once [typedUsername] confirms which account it is. Its

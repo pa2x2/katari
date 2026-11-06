@@ -10,15 +10,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
-/** What the live channel tells connected devices: an account's sequence moving on, and devices being revoked. */
+/**
+ * What the live channel tells connected devices: an account's sequence moving on, and devices being revoked or their
+ * account disabled, either of which closes their connection.
+ */
 class AccountChanges {
     private val sequences = ConcurrentHashMap<Long, MutableStateFlow<Long>>()
     private val revoked = MutableSharedFlow<DeviceId>(extraBufferCapacity = 64)
+    private val disabled = MutableSharedFlow<Long>(extraBufferCapacity = 64)
 
     /** Holds 0 until the first [announce] for the account, not its stored sequence. */
     fun sequence(accountId: Long): StateFlow<Long> = flowOf(accountId).asStateFlow()
 
     val revocations: SharedFlow<DeviceId> = revoked.asSharedFlow()
+
+    /** Account ids. */
+    val disabledAccounts: SharedFlow<Long> = disabled.asSharedFlow()
 
     /** Called once a write that gave out [sequence] has committed. */
     fun announce(accountId: Long, sequence: Long) {
@@ -27,6 +34,10 @@ class AccountChanges {
 
     fun announceRevoked(device: DeviceId) {
         revoked.tryEmit(device)
+    }
+
+    fun announceDisabled(accountId: Long) {
+        disabled.tryEmit(accountId)
     }
 
     private fun flowOf(accountId: Long) = sequences.computeIfAbsent(accountId) { MutableStateFlow(0) }
