@@ -229,6 +229,8 @@ ktlint-bom = { module = "com.pinterest.ktlint:ktlint-bom", version.ref = "ktlint
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-htmlBuilder = { module = "io.ktor:ktor-server-html-builder", version.ref = "ktor" }
+ktor-server-testHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 leakCanary-core = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakCanary" }
 leakCanary-plumber = { module = "com.squareup.leakcanary:plumber-android", version.ref = "leakCanary" }
@@ -315,7 +317,7 @@ valkyrie = { id = "io.github.composegears.valkyrie", version.ref = "valkyrie" }
 androidx-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", "androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel", "androidx-lifecycle-viewmodelCompose"]
 coil = ["coil-core", "coil-gif", "coil-compose", "coil-network-okhttp"]
 kotlinx-coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android", "kotlinx-coroutines-guava"]
-ktor-server = ["ktor-server-core", "ktor-server-cio", "ktor-server-compression", "ktor-server-websockets"]
+ktor-server = ["ktor-server-core", "ktor-server-cio", "ktor-server-compression", "ktor-server-websockets", "ktor-server-htmlBuilder"]
 markdown = ["markdown-core", "markdown-coil"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-brotli", "okhttp-dnsOverHttps", "okhttp-zstd"]
 serialization = ["kotlinx-serialization-json", "kotlinx-serialization-jsonOkio", "kotlinx-serialization-protobuf", "xmlutil-core", "xmlutil-serialization"]
