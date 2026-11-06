@@ -1,5 +1,6 @@
 package mihon.app.ui.host
 
+import app.katari.sync.client.setting.capture.SettingsCapture
 import dev.zacsweers.metro.Multibinds
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -23,6 +24,7 @@ interface AppProcessGraph : MigrationGraph {
     val sourceManager: SourceManager
     val database: Database
     val startupWarmups: Set<StartupWarmup>
+    val settingsCapture: SettingsCapture
 
     /**
      * Profile copy and backup derive preference ownership from every registered owner, so owners register at startup

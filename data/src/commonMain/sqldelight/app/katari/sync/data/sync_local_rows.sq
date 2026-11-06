@@ -215,3 +215,9 @@ extensionRepositoryRow:
 SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord, format, extension_list_url
 FROM extension_store
 WHERE index_url = :indexUrl;
+
+-- The stable identity of the source this device stores under :localKey, for preferences that name sources.
+sourceIdentity:
+SELECT id_scheme, external_id
+FROM source_identities
+WHERE local_key = :localKey;

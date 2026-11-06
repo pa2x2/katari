@@ -2,6 +2,7 @@ package mihon.app.ui.host
 
 import eu.kanade.tachiyomi.crash.CrashPresenter
 import eu.kanade.tachiyomi.crash.UncaughtCrashHandling
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.app.ui.buildinfo.AppBuildType
@@ -80,6 +81,18 @@ object AppProcessStart {
                 preference.set(versionCode)
             },
         )
+    }
+
+    /**
+     * Resumes recording preference edits for sync, when sync is on, once the upgrade migrations have run, so their
+     * rewrites of preferences are never edits. The database's capture resumes by itself when it opens.
+     */
+    @HostEntryPoint
+    fun resumeSettingsCapture(graph: AppProcessGraph) {
+        Migrator.scope.launch {
+            Migrator.await()
+            graph.settingsCapture.resume()
+        }
     }
 
     /**

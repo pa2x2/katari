@@ -32,3 +32,21 @@ FROM sync_outbox;
 
 clear:
 DELETE FROM sync_outbox;
+
+-- An edit SQLite doesn't see, such as of a preference, recorded as the capture triggers record theirs; nothing while
+-- sync is off.
+recordEdit:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT :kind, :localRef, -1, NULL, :changedAt, C.seen_physical, C.seen_counter
+FROM sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
+-- An edit of every record of :kind whose local ref starts with :localRefPrefix, such as each setting of a source whose
+-- settings were cleared.
+recordEditOfEach:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT R.kind, R.local_ref, -1, NULL, :changedAt, C.seen_physical, C.seen_counter
+FROM sync_records R, sync_clock C, sync_state S
+WHERE R.kind = :kind
+AND instr(R.local_ref, :localRefPrefix) = 1
+AND C.id = 0 AND S.id = 0 AND S.enabled = 1;

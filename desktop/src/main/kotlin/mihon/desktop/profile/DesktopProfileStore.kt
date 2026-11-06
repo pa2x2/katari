@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import logcat.LogPriority
 import mihon.desktop.storage.DesktopDirectories
+import mihon.feature.profiles.core.PreferenceWrite
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfilesPreferences
 import tachiyomi.core.common.preference.DesktopPreferenceStore
@@ -20,6 +21,7 @@ import java.nio.file.DirectoryNotEmptyException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArraySet
 
 /**
  * The preference stores Android keeps in one file with profile-prefixed keys, as one file each in the configuration
@@ -35,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap
 class DesktopProfileStore(private val directories: DesktopDirectories) : ProfileStore, ActiveProfileProvider {
 
     private val stores = ConcurrentHashMap<Path, DesktopPreferenceStore>()
+    private val writeObservers = CopyOnWriteArraySet<(PreferenceWrite) -> Unit>()
     private val profilesPreferences = ProfilesPreferences(basePreferenceStore())
     private val activeProfile = MutableStateFlow(profilesPreferences.activeProfileId.get())
 
@@ -76,6 +79,12 @@ class DesktopProfileStore(private val directories: DesktopDirectories) : Profile
         listOf(activeProfileStore, activeAppStateStore, activePrivateStore).any { it.owns(preference) } ||
             stores.any { (path, store) -> path.startsWith(profilesDirectory()) && store.owns(preference) }
 
+    // Only the shared store and each profile's own: what the app-state and private files hold never leaves the device.
+    override fun watchPreferenceWrites(listener: (PreferenceWrite) -> Unit): AutoCloseable {
+        writeObservers += listener
+        return AutoCloseable { writeObservers -= listener }
+    }
+
     // The stores stay open, empty, for a new profile that gets the same ID.
     override fun deleteProfileState(profileId: Long) {
         PROFILE_FILES.forEach { name -> store(profileFile(profileId, name)).clear() }
@@ -95,7 +104,26 @@ class DesktopProfileStore(private val directories: DesktopDirectories) : Profile
 
     private fun profileFile(profileId: Long, name: String): Path = profileDirectory(profileId).resolve(name)
 
-    private fun store(path: Path): DesktopPreferenceStore = stores.computeIfAbsent(path, ::DesktopPreferenceStore)
+    // Every store tells the observers of its writes from its creation, so a store opened while they listen is heard.
+    private fun store(path: Path): DesktopPreferenceStore = stores.computeIfAbsent(path) {
+        DesktopPreferenceStore(path).apply {
+            val profileId = profileIdOf(path)
+            if (path == directories.configuration.resolve("base.json") || profileId != null) {
+                addWriteListener { key ->
+                    if (writeObservers.isNotEmpty()) {
+                        val write = PreferenceWrite(profileId, key)
+                        writeObservers.forEach { it(write) }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The profile whose own preferences [path] holds, or null for any other file. */
+    private fun profileIdOf(path: Path): Long? {
+        if (path.fileName?.toString() != PROFILE_FILE || path.parent?.parent != profilesDirectory()) return null
+        return path.parent?.fileName?.toString()?.toLongOrNull()
+    }
 
     private companion object {
         const val PROFILE_FILE = "profile.json"

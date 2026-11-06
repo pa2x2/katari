@@ -2,6 +2,7 @@ package mihon.feature.profiles.sourcepreferences
 
 private const val PREFIX = "source_"
 private val PROFILE_FILE = Regex("""source_-?\d+_(-?\d+)""")
+private val PROFILE_FILE_OWNER = Regex("""source_(-?\d+)_(-?\d+)""")
 
 /** The file holding the settings of the source with its own ID [sourceId] for [profileId]. */
 fun sourcePreferenceFileName(
@@ -25,6 +26,12 @@ fun extensionPreferenceFileName(sourceId: Long): String = "$PREFIX$sourceId"
 fun extensionPreferenceSourceId(name: String): Long? {
     if (!name.startsWith(PREFIX)) return null
     return name.substring(PREFIX.length).toLongOrNull()
+}
+
+/** The profile and the source's own ID whose settings the file [name] holds, if it is [sourcePreferenceFileName]. */
+fun sourcePreferenceFileOwner(name: String): Pair<Long, Long>? {
+    val (profileId, sourceId) = PROFILE_FILE_OWNER.matchEntire(name)?.destructured ?: return null
+    return (profileId.toLongOrNull() ?: return null) to (sourceId.toLongOrNull() ?: return null)
 }
 
 /**

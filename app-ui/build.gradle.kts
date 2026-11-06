@@ -55,6 +55,7 @@ kotlin {
                 implementation(projects.modelArtifacts.ui)
                 // A source's settings screen shows the preference tree the source settings host reads.
                 implementation(projects.sourceCompat)
+                implementation(projects.sync.client)
                 implementation(projects.textRecognition.ui)
                 implementation(projects.trackers)
                 implementation(projects.translation.ui)

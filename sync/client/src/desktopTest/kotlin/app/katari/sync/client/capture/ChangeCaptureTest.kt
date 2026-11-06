@@ -201,7 +201,8 @@ class ChangeCaptureTest {
             val stored = device.handler.await {
                 sync_recordsQueries.pending(Long.MAX_VALUE).awaitAsList().map { it.kind }
             }
-            stored.toSet() shouldBe SyncKinds.all.map { it.name }.toSet()
+            // Preferences aren't in the database; their kinds have no triggers
+            stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
             withClue("the local-source chapter never syncs") { stored.count { it == "chapter" } shouldBe 1 }
         }
     }

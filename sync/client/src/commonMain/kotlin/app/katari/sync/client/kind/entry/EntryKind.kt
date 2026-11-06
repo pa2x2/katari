@@ -4,6 +4,7 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef

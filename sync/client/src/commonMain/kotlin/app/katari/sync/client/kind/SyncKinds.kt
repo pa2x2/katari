@@ -21,11 +21,14 @@ import app.katari.sync.client.kind.merge.MergeMemberKind
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.setting.ProfileSettingKind
+import app.katari.sync.client.kind.setting.SharedSettingKind
+import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.kind.statistics.StatisticsEpochKind
 import app.katari.sync.client.kind.tracking.TrackerBindingKind
 import app.katari.sync.client.record.SyncedKind
 
-/** Every kind of record this app version syncs. Settings and files are added by their own units. */
+/** Every kind of record this app version syncs. Files are added by their own unit. */
 object SyncKinds {
     val all: List<SyncedKind<*>> = listOf(
         ProfileKind,
@@ -51,6 +54,9 @@ object SyncKinds {
         MergeMemberKind,
         EntryReplacementKind,
         ExtensionRepositoryKind,
+        ProfileSettingKind,
+        SharedSettingKind,
+        SourceSettingKind,
     )
 
     private val byName = all.associateBy { it.name }

@@ -1,6 +1,6 @@
 import mihon.gradle.extensions.desktop
 
-// The app's half of sync, the same on every platform: record keys, capture of local edits into the outbox while sync
+// The app's half of sync, the same on every platform: record keys, capture of local edits to rows and preferences into the outbox while sync
 // is on, the outbox drain that stamps them with hybrid timestamps, and the payload of every synced kind. The tables
 // it keeps its state in are part of the app database in :data.
 plugins {
@@ -26,9 +26,17 @@ kotlin {
 
                 implementation(projects.core.common)
                 implementation(projects.data)
+                implementation(projects.domain)
+                implementation(projects.extensionRuntime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.serialization.protobuf)
                 implementation(libs.okio)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                // Source settings are Android's shared preferences, which the desktop gets as stand-ins
+                implementation(projects.extensionRuntime.androidCompat)
             }
         }
         commonTest {
@@ -40,8 +48,8 @@ kotlin {
         }
         getByName("desktopTest") {
             dependencies {
-                implementation(projects.domain)
                 implementation(projects.entrySourceApi)
+                implementation(projects.extensionRuntime.jvmHost)
             }
         }
     }

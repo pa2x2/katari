@@ -11,6 +11,7 @@ import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.protocol.clock.HybridTimestamp
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
@@ -26,10 +27,10 @@ import kotlin.uuid.Uuid
  * undone, or a value merged from another device being written locally) changes nothing. Records the payload refers
  * to that were never synced, such as the entry of a chapter marked read, are stored along with it.
  *
- * It only reads the local database, so it runs whether or not the server is reachable.
+ * It only reads the local database and preferences, so it runs whether or not the server is reachable.
  */
 @Inject
-class OutboxDrain(private val handler: DatabaseHandler) {
+class OutboxDrain(private val handler: DatabaseHandler, private val settings: SettingReads) {
     /** Drains up to [limit] outbox rows in one transaction and returns how many it drained; 0 once it is empty. */
     suspend fun drain(limit: Long = BATCH): Int = handler.await(inTransaction = true) {
         val state = sync_stateQueries.get().awaitAsOne()
@@ -41,7 +42,7 @@ class OutboxDrain(private val handler: DatabaseHandler) {
         val clock = sync_clockQueries.get().awaitAsOne()
         val device = DeviceId(deviceId)
         val stamper = EditStamper(device, clock.issued_physical, clock.issued_counter.toInt())
-        val drain = Drain(this, LocalReads(this, device))
+        val drain = Drain(this, LocalReads(this, device, settings))
         rows.forEach { row ->
             val stamp = stamper.stamp(row.changed_at, row.seen_physical, row.seen_counter.toInt())
             val kind = SyncKinds.named(row.kind) ?: return@forEach

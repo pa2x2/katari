@@ -1,5 +1,6 @@
 package app.katari.sync.client.capture
 
+import app.katari.sync.client.setting.capture.SettingsCapture
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -7,14 +8,16 @@ import mihon.data.database.TemporarySchema
 import tachiyomi.data.DatabaseHandler
 
 /**
- * Turns change capture on and off with sync. The state is kept in `sync_state`, so capture comes back on by itself
- * when the database next opens ([SyncCaptureSchemaSource]).
+ * Turns change capture on and off with sync, of the database and of preferences ([SettingsCapture]). The state is kept
+ * in `sync_state`, so database capture comes back on by itself when the database next opens
+ * ([SyncCaptureSchemaSource]), and preference capture when the process starts ([SettingsCapture.resume]).
  */
 @Inject
 @SingleIn(AppScope::class)
 class SyncCapture(
     private val handler: DatabaseHandler,
     private val temporarySchema: TemporarySchema,
+    private val settings: SettingsCapture,
 ) {
     /**
      * Starts capturing. Edits made before now are not in the outbox, and rows a connection still wrote after the last
@@ -26,10 +29,12 @@ class SyncCapture(
             sync_stateQueries.setEnabled(true)
         }
         temporarySchema.publish(CaptureTriggers.install)
+        settings.start()
     }
 
     /** Stops capturing and drops edits not drained yet: with sync off they will never be sent. */
     suspend fun stop() {
+        settings.stop()
         temporarySchema.publish(CaptureTriggers.remove)
         handler.await(inTransaction = true) {
             sync_stateQueries.setEnabled(false)

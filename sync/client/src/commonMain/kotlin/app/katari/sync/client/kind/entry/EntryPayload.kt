@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.entry
 
+import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.payload.Stamped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -24,13 +25,6 @@ data class EntryPayload(
     @ProtoNumber(10) val viewerFlags: Stamped<Long>,
     @ProtoNumber(11) val chapterFlags: Stamped<Long>,
     @ProtoNumber(12) val metadata: EntryMetadata,
-)
-
-/** A source as every device knows it, never by the local key a device stores it under. */
-@Serializable
-data class SourceReference(
-    @ProtoNumber(1) val idScheme: String,
-    @ProtoNumber(2) val externalId: Long,
 )
 
 /** The source's description of the entry as this device last fetched it. */

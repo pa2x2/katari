@@ -2,18 +2,20 @@ package app.katari.sync.client.record
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.data.EntryRow
 import app.katari.sync.protocol.device.DeviceId
 import tachiyomi.data.Database
 
 /**
- * Reads of local rows during one drain, with the keys of the records rows refer to. Keys found or assigned here are
+ * Reads of local rows and preferences during one drain, with the keys of the records rows refer to. Keys found or assigned here are
  * remembered for the rest of the drain, so a category given a random key keeps it when its memberships refer to it.
  */
 class LocalReads internal constructor(
     val database: Database,
     /** This device, whose own share of running totals a record holds apart from other devices' shares. */
     val device: DeviceId,
+    val settings: SettingReads,
 ) {
     private val entries = HashMap<Long, EntryRow?>()
     private val profileUuids = HashMap<Long, String?>()

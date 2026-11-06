@@ -6,7 +6,14 @@ import app.cash.sqldelight.db.SqlDriver
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.capture.SyncCaptureSchemaSource
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.setting.capture.SettingsCapture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.setMain
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.TemporarySchema
 import mihon.data.database.createSqlDriver
@@ -22,7 +29,11 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import java.io.File
 
-/** One device's database file, opened with the driver, adapters and capture wiring the app uses. */
+/**
+ * One device's database file, opened with the driver, adapters and capture wiring the app uses, and its preferences
+ * in files beside it.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncTestDevice(file: File) : AutoCloseable {
     private val temporarySchema = TemporarySchema(SyncCaptureSchemaSource())
     val driver: SqlDriver = createSqlDriver(file, DatabaseRepositoryImpl(lazy { driver }), temporarySchema)
@@ -41,11 +52,20 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         override val activeProfileId = 1L
         override val activeProfileIdFlow = MutableStateFlow(1L)
     }
-    val drain = OutboxDrain(handler)
+    private val scope = CoroutineScope(SupervisorJob()).also {
+        // Source settings follow the active profile on the main thread, which tests don't have. Never reset: a device
+        // closed while another is open would take the main thread from under the other's work.
+        Dispatchers.setMain(Dispatchers.Unconfined)
+    }
+    val preferences =
+        TestPreferenceStores(file.resolveSibling("${file.nameWithoutExtension}-preferences"), handler, scope)
+    private val settingsCapture =
+        SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
+    val drain = OutboxDrain(handler, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }
-        SyncCapture(handler, temporarySchema).start()
+        SyncCapture(handler, temporarySchema, settingsCapture).start()
     }
 
     suspend fun sql(vararg statements: String) {
@@ -65,5 +85,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         } while (drained > 0)
     }
 
-    override fun close() = driver.close()
+    override fun close() {
+        settingsCapture.stop()
+        scope.cancel()
+        driver.close()
+    }
 }

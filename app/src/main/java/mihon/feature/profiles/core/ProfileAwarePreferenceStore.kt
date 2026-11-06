@@ -228,6 +228,15 @@ class ProfileAwarePreferenceStore(
                     hasNamespacedPrefix(key, Preference.privateKey("profile_"))
             }
 
+            /** The write of [key], as the shared store's file holds it, by the profile and key it was written for. */
+            fun preferenceWrite(key: String): PreferenceWrite {
+                NAMESPACED_KEY.matchEntire(key)?.let { match ->
+                    val (prefix, profileId, base) = match.destructured
+                    return PreferenceWrite(profileId.toLong(), prefix + base)
+                }
+                return PreferenceWrite(profileId = null, key = key)
+            }
+
             fun namespacedKey(base: String, profileId: Long): String {
                 return when {
                     Preference.isAppState(base) -> Preference.appStateKey(
@@ -239,6 +248,12 @@ class ProfileAwarePreferenceStore(
                     else -> profilePrefix(profileId) + base
                 }
             }
+
+            private val NAMESPACED_KEY = Regex(
+                "(${Regex.escape(Preference.appStateKey(""))}|${Regex.escape(Preference.privateKey(""))}|)" +
+                    "profile_(\\d+):(.*)",
+                RegexOption.DOT_MATCHES_ALL,
+            )
 
             private fun profilePrefix(profileId: Long) = "profile_$profileId:"
 
