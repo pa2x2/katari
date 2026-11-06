@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.replacement
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
@@ -155,8 +156,11 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         val fromId = LocalRef(ref).long(0)
         val queries = writes.database.sync_applyQueries
         if (fromId == toId || !queries.entryExists(fromId).awaitAsOne()) return
+        val progressChapters = queries.progressChapterLinks(fromId).awaitAsList()
+        queries.detachProgressChapters(fromId)
         queries.moveChapters(toEntryId = toId, fromEntryId = fromId)
         queries.moveProgress(toEntryId = toId, fromEntryId = fromId)
+        progressChapters.forEach { queries.relinkProgressChapter(chapterId = it.chapter_id, progressId = it._id) }
         queries.moveHistory(toEntryId = toId, fromEntryId = fromId)
         queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
         queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)

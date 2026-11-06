@@ -3,6 +3,7 @@ package app.katari.sync.client.kind.replacement
 import app.katari.sync.client.RecordExchange
 import app.katari.sync.client.SyncTestDevice
 import app.katari.sync.client.library
+import app.katari.sync.client.rows
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -145,6 +146,50 @@ class EntryReplacementTest {
                         """["entry","work","aniyomi",777,"/show","anime",1,0,null,"",0,0,0]""",
                         """["history","/show/1",3000,1800]""",
                     )
+                }
+            }
+        }
+
+    @Test
+    fun `a profile move takes the entry's reading positions along to the entry in the other profile`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                        "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                        "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/show', 'Show', 1, 'anime')",
+                        """
+                        INSERT INTO chapters(_id, entry_id, url, name, chapter_number, read)
+                        VALUES (10, 1, '/show/1', 'Episode 1', 1, 1), (11, 1, '/show/2', 'Episode 2', 2, 0)
+                        """,
+                        """
+                        INSERT INTO entry_progress_state(entry_id, chapter_id, resource_key, locator_kind, position)
+                        VALUES (1, 10, '/show/1', 'time', 1300), (1, 11, '/show/2', 'time', 600)
+                        """,
+                    )
+                    exchange.settle(listOf(a, b))
+
+                    a.sql("UPDATE entries SET profile_id = 2 WHERE _id = 1")
+                    exchange.settle(listOf(a, b))
+
+                    a.library() shouldBe b.library()
+                    b.library() shouldContainAll listOf(
+                        """["entry","work","aniyomi",777,"/show","anime",1,0,null,"",0,0,0]""",
+                        """["progress","/show","","/show/1",1300,0]""",
+                        """["progress","/show","","/show/2",600,0]""",
+                    )
+                    b.rows(
+                        """
+                        SELECT json_array(E.url, C.url)
+                        FROM entry_progress_state R JOIN entries E ON E._id = R.entry_id
+                        LEFT JOIN chapters C ON C._id = R.chapter_id AND C.entry_id = R.entry_id
+                        ORDER BY R.resource_key
+                        """,
+                    ) shouldBe listOf("""["/show","/show/1"]""", """["/show","/show/2"]""")
                 }
             }
         }

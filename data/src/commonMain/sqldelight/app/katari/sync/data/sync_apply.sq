@@ -432,6 +432,29 @@ WHERE index_url = :indexUrl;
 -- Moving an entry's rows to another entry, for a move to another profile whose target row exists already. Rows the
 -- target has of its own stay, so the moved ones that would clash are dropped.
 
+-- A position names its chapter together with its entry, so chapters can't change entry while positions point at them,
+-- and positions can't follow before their chapters have: positions let go of their chapters during the move and take
+-- them back by URL afterwards, which also finds the target's own chapter where the moved one clashed.
+
+progressChapterLinks:
+SELECT _id, chapter_id
+FROM entry_progress_state
+WHERE entry_id = :entryId AND chapter_id IS NOT NULL;
+
+detachProgressChapters:
+UPDATE entry_progress_state
+SET chapter_id = NULL
+WHERE entry_id = :entryId;
+
+relinkProgressChapter:
+UPDATE entry_progress_state
+SET chapter_id = (
+    SELECT C._id
+    FROM chapters C JOIN chapters Linked ON Linked.url = C.url
+    WHERE Linked._id = :chapterId AND C.entry_id = entry_progress_state.entry_id
+)
+WHERE _id = :progressId;
+
 moveChapters:
 UPDATE OR IGNORE chapters
 SET entry_id = :toEntryId
