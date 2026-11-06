@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.StatisticsMetrics
@@ -81,79 +83,86 @@ internal fun StatisticsReadingCalendarCard(
         title = stringResource(MR.strings.statistics_reading_calendar),
         note = stringResource(MR.strings.statistics_last_12_months),
     ) {
-        Row {
-            Column(Modifier.padding(top = MONTH_LABEL_HEIGHT, end = KatariTheme.spacing.s)) {
-                (0L until 7L).forEach { offset ->
-                    Box(Modifier.height(CELL_SIZE + CELL_GAP), contentAlignment = Alignment.CenterStart) {
-                        // Every other weekday keeps the column narrow while still anchoring the rows.
-                        if (offset % 2L == 0L) {
-                            Text(
-                                text = firstDayOfWeek.plus(offset).getDisplayName(TextStyle.SHORT, locale),
-                                role = TextRole.Badge,
-                                tone = ContentTone.Secondary,
-                            )
-                        }
-                    }
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .nestedScroll(StatisticsTrendChartPagerIsolation)
-                    .horizontalScroll(scrollState),
-                horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
-            ) {
-                weeks.forEach { week ->
-                    Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
-                        Box(Modifier.width(CELL_SIZE).height(MONTH_LABEL_HEIGHT - CELL_GAP)) {
-                            week.startsMonth?.let { month ->
+        BoxWithConstraints {
+            val cell = readingCalendarCell(maxWidth - DAY_LABEL_WIDTH - KatariTheme.spacing.s, weeks.size)
+            Row {
+                Column(
+                    Modifier
+                        .padding(top = MONTH_LABEL_HEIGHT, end = KatariTheme.spacing.s)
+                        .width(DAY_LABEL_WIDTH),
+                ) {
+                    (0L until 7L).forEach { offset ->
+                        Box(Modifier.height(cell + CELL_GAP), contentAlignment = Alignment.CenterStart) {
+                            // Every other weekday keeps the column narrow while still anchoring the rows.
+                            if (offset % 2L == 0L) {
                                 Text(
-                                    text = month.format(monthFormatter),
-                                    modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+                                    text = firstDayOfWeek.plus(offset).getDisplayName(TextStyle.SHORT, locale),
                                     role = TextRole.Badge,
                                     tone = ContentTone.Secondary,
-                                    maxLines = 1,
                                 )
                             }
                         }
-                        week.days.forEach { day ->
-                            if (day == null) {
-                                Spacer(Modifier.size(CELL_SIZE))
-                                return@forEach
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .nestedScroll(StatisticsTrendChartPagerIsolation)
+                        .horizontalScroll(scrollState),
+                    horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
+                ) {
+                    weeks.forEach { week ->
+                        Column(verticalArrangement = Arrangement.spacedBy(CELL_GAP)) {
+                            Box(Modifier.width(cell).height(MONTH_LABEL_HEIGHT - CELL_GAP)) {
+                                week.startsMonth?.let { month ->
+                                    Text(
+                                        text = month.format(monthFormatter),
+                                        modifier = Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+                                        role = TextRole.Badge,
+                                        tone = ContentTone.Secondary,
+                                        maxLines = 1,
+                                    )
+                                }
                             }
-                            val duration = durations[day] ?: 0L
-                            val isUntracked = trackingStartDate == null || day.isBefore(trackingStartDate)
-                            val label = "${day.format(dayFormatter)}: ${formatDuration(duration)}"
-                            Box(
-                                Modifier
-                                    .size(CELL_SIZE)
-                                    .chartCell()
-                                    .background(intensityColor(duration, maxDuration, color, emptyColor))
-                                    .then(
-                                        if (isUntracked && duration == 0L) {
-                                            Modifier.drawBehind {
-                                                drawUntrackedHatch(
-                                                    0f,
-                                                    size.width,
-                                                    0f,
-                                                    size.height,
-                                                    hatchColor,
-                                                    hatchStroke,
-                                                )
-                                            }
-                                        } else {
-                                            Modifier
-                                        },
-                                    )
-                                    .then(
-                                        if (duration > 0L) {
-                                            Modifier.clickable(onClickLabel = label) { onOpenDay(day) }
-                                        } else {
-                                            Modifier
-                                        },
-                                    )
-                                    .semantics { contentDescription = label },
-                            )
+                            week.days.forEach { day ->
+                                if (day == null) {
+                                    Spacer(Modifier.size(cell))
+                                    return@forEach
+                                }
+                                val duration = durations[day] ?: 0L
+                                val isUntracked = trackingStartDate == null || day.isBefore(trackingStartDate)
+                                val label = "${day.format(dayFormatter)}: ${formatDuration(duration)}"
+                                Box(
+                                    Modifier
+                                        .size(cell)
+                                        .chartCell()
+                                        .background(intensityColor(duration, maxDuration, color, emptyColor))
+                                        .then(
+                                            if (isUntracked && duration == 0L) {
+                                                Modifier.drawBehind {
+                                                    drawUntrackedHatch(
+                                                        0f,
+                                                        size.width,
+                                                        0f,
+                                                        size.height,
+                                                        hatchColor,
+                                                        hatchStroke,
+                                                    )
+                                                }
+                                            } else {
+                                                Modifier
+                                            },
+                                        )
+                                        .then(
+                                            if (duration > 0L) {
+                                                Modifier.clickable(onClickLabel = label) { onOpenDay(day) }
+                                            } else {
+                                                Modifier
+                                            },
+                                        )
+                                        .semantics { contentDescription = label },
+                                )
+                            }
                         }
                     }
                 }
@@ -200,6 +209,10 @@ private fun CalendarLegend(color: Color, emptyColor: Color) {
     }
 }
 
+// Days grow until the weeks fill [gridWidth]; a narrower screen keeps [CELL_SIZE] and scrolls the calendar instead.
+private fun readingCalendarCell(gridWidth: Dp, weeks: Int): Dp =
+    ((gridWidth - CELL_GAP * (weeks - 1)) / weeks).coerceAtLeast(CELL_SIZE)
+
 /** Levels are relative to the busiest day shown, so a light reader's calendar still shows contrast. */
 private fun intensityColor(duration: Long, maxDuration: Long, color: Color, emptyColor: Color): Color {
     if (duration <= 0L || maxDuration <= 0L) return emptyColor
@@ -217,3 +230,4 @@ private val CELL_SIZE = StatisticsMetrics.calendarCell
 private val CELL_GAP = StatisticsMetrics.calendarCellGap
 private val LEGEND_CELL_SIZE = StatisticsMetrics.calendarLegendCell
 private val MONTH_LABEL_HEIGHT = StatisticsMetrics.calendarMonthLabelHeight
+private val DAY_LABEL_WIDTH = StatisticsMetrics.calendarDayLabelWidth

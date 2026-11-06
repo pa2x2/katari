@@ -3,7 +3,10 @@ package mihon.presentation.kit.content
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/** Fixed geometry of browse surfaces (sources, extensions, catalogs and feeds) that the spacing scale has no step for. */
+/**
+ * Geometry of browse surfaces (sources, extensions, catalogs and feeds) that the spacing scale has no step for, with
+ * entry covers at phone size. Wider windows scale covers with [entryCoverScale].
+ */
 object BrowseMetrics {
     /** Width of a cover in a horizontally scrolling row of search results. */
     val searchResultCoverWidth: Dp = 96.dp

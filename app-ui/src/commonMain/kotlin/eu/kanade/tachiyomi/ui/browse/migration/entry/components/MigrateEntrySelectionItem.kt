@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -26,6 +27,7 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.control.TriStateCheckbox
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
@@ -58,7 +60,7 @@ fun MigrateEntrySelectionItem(
         modifier = modifier
             .selectionFill(isSelectable && resolvedSelectionState != ToggleableState.Off)
             .fillMaxWidth()
-            .heightIn(min = BrowseMetrics.listCoverRowMinHeight)
+            .heightIn(min = BrowseMetrics.listCoverRowMinHeight * entryCoverScale())
             .then(
                 if (isSelectable && !handlesExpansion) {
                     Modifier.semantics {
@@ -154,10 +156,11 @@ internal fun MigrateEntrySelectionCover(
         EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
     }
     val coverHeight = migrationCoverHeight(itemOrientation)
+    val coverScale = entryCoverScale()
     Box(
         modifier = Modifier
-            .width(BrowseMetrics.listCoverSlotWidth)
-            .height(BrowseMetrics.listCoverHeight),
+            .width(BrowseMetrics.listCoverSlotWidth * coverScale)
+            .height(BrowseMetrics.listCoverHeight * coverScale),
         contentAlignment = Alignment.Center,
     ) {
         coverType(
@@ -173,7 +176,12 @@ internal fun MigrateEntrySelectionCover(
 }
 
 /** Landscape covers keep the slot's width, so they are drawn at half the portrait height. */
-internal fun migrationCoverHeight(itemOrientation: EntryItemOrientation): Dp = when (itemOrientation) {
-    EntryItemOrientation.VERTICAL -> BrowseMetrics.listCoverHeight
-    EntryItemOrientation.HORIZONTAL -> BrowseMetrics.listCoverHeight / 2
+@Composable
+@ReadOnlyComposable
+internal fun migrationCoverHeight(itemOrientation: EntryItemOrientation): Dp {
+    val portraitHeight = BrowseMetrics.listCoverHeight * entryCoverScale()
+    return when (itemOrientation) {
+        EntryItemOrientation.VERTICAL -> portraitHeight
+        EntryItemOrientation.HORIZONTAL -> portraitHeight / 2
+    }
 }

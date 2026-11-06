@@ -39,6 +39,7 @@ import mihon.icons.materialsymbols.roundedfilled.Keep
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.layout.columnCount
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
@@ -219,7 +220,8 @@ internal fun LibraryPinnedListShelf(
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                 val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(KatariTheme.sizes.none)
-                val itemWidth = listShelfItemWidth(contentWidth, items.size)
+                val preferredWidth = LibraryMetrics.pinnedShelfRowWidth * entryCoverScale()
+                val itemWidth = listShelfItemWidth(contentWidth, items.size, preferredWidth)
                 LazyRow(
                     modifier = Modifier.shelfInputIsolation(),
                     contentPadding = PaddingValues(horizontal = SHELF_HORIZONTAL_PADDING),
@@ -292,8 +294,7 @@ private fun gridItemWidth(availableWidth: Dp, columns: Int, hasOverflow: Boolean
     }
 }
 
-private fun listShelfItemWidth(availableWidth: Dp, itemCount: Int): Dp {
-    val preferredWidth = LibraryMetrics.pinnedShelfRowWidth
+private fun listShelfItemWidth(availableWidth: Dp, itemCount: Int, preferredWidth: Dp): Dp {
     val spacing = KatariSpacing.s
     val fullyVisibleItems = floor((availableWidth + spacing) / (preferredWidth + spacing))
         .toInt()

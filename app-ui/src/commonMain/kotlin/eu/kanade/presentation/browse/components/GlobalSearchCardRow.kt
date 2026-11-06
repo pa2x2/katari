@@ -16,6 +16,7 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
@@ -68,7 +69,7 @@ private fun EntryItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth)) {
+    Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth * entryCoverScale())) {
         EntryComfortableGridItem(
             title = title,
             titleMaxLines = 3,
