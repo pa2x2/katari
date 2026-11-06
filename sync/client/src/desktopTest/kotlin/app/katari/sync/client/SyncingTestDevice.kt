@@ -8,6 +8,7 @@ import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
+import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.ExistingFiles
@@ -70,7 +71,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             connection, clients, network, preferences, firstSync, resync,
             PullChanges(connection, continuity, local.incoming, handOff),
             PushChanges(continuity, local.pending, uploads), local.incoming, local.pending, local.settingsCapture,
-            local.fileCapture, local.drain, uploads, handOff, disconnection,
+            local.fileCapture, local.drain, uploads,
+            FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
         ),
     )
     private val thisDevice = object : ThisDevice {

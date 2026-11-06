@@ -34,7 +34,8 @@ import tachiyomi.data.DatabaseHandler
  *   can't be compared with; one never synced is pushed as it would have been.
  *
  * Pushes are of merged copies and carry change ids, so pushing a record again changes nothing on any device. Every
- * custom cover and font in place here is offered to the server again, which uploads those a lost server lacks.
+ * custom cover and font in place here is offered to the server again, which uploads those a lost server lacks, and
+ * files the server reported missing are asked for again, as other devices may have uploaded them since.
  */
 @Inject
 class FullResync(
@@ -55,6 +56,7 @@ class FullResync(
         handler.await(inTransaction = true) {
             sync_recordsQueries.pushUnseen()
             sync_filesQueries.queuePlaced()
+            sync_filesQueries.forgetUnavailable()
             sync_stateQueries.setStage(SyncStage.READY.stored, 0)
         }
     }

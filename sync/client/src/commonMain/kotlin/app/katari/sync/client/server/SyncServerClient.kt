@@ -40,6 +40,7 @@ import okhttp3.Response
 import okio.Buffer
 import okio.GzipSink
 import okio.buffer
+import okio.sink
 import java.io.File
 import java.io.IOException
 import java.time.Duration
@@ -115,6 +116,23 @@ class SyncServerClient internal constructor(
                 response.isSuccessful -> true
                 isSyncError(response) -> throw failureOf(response)
                 response.code == HTTP_BAD_REQUEST || response.code == HTTP_TOO_LARGE -> false
+                else -> throw SyncFailure.NotASyncServer(response.code)
+            }
+        }
+    }
+
+    /** Downloads [file] into [target]; false when the server has no such file. The bytes are not checked here. */
+    suspend fun downloadFile(file: FileReference, target: File): Boolean {
+        val request = authorized(Request.Builder().url(url(SyncHttp.filePath(file.category, file.sha256))).get())
+            .build()
+        return execute(request, fileHttp) { response ->
+            when {
+                response.isSuccessful -> {
+                    target.sink().use { response.body.source().readAll(it) }
+                    true
+                }
+                isSyncError(response) -> throw failureOf(response)
+                response.code == HTTP_NOT_FOUND -> false
                 else -> throw SyncFailure.NotASyncServer(response.code)
             }
         }
