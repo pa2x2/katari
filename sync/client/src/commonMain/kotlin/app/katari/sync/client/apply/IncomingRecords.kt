@@ -1,7 +1,9 @@
 package app.katari.sync.client.apply
 
 import app.katari.sync.client.kind.SyncKinds
+import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.protocol.pull.PullPage
+import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.Inject
 
 /**
@@ -31,6 +33,17 @@ class IncomingRecords(private val writing: SyncWriting) {
             cursor = page.nextCursor,
             chain = page.nextChain,
         )
+    }
+
+    /**
+     * Applies [records] fetched ahead of the device's position, a group of them ([RecordGroups]), leaving the position
+     * where it is. Merging is idempotent and order-free, and the server hands out only a record's newest copy, so
+     * the pull that reaches them later applies the same copies again, or newer ones, and changes nothing else.
+     */
+    suspend fun applyAhead(records: List<SequencedRecord>) = writing.write { session ->
+        records
+            .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
+            .forEach { session.receive(it) }
     }
 
     /** Applies what was held for a reason that may have passed: an app update, the clock, a reference, a profile. */
