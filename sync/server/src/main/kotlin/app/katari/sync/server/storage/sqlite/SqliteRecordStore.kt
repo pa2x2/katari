@@ -50,6 +50,7 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
             deviceId = record.device.value,
             isDeleted = record.deleted,
             payload = record.payload,
+            recordGroup = record.group,
         )
         files.deleteForRecord(accountId, record.key)
         if (!record.deleted) {
@@ -77,31 +78,25 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
         limit: Int,
         includeDeleted: Boolean,
     ): List<SequencedRecord> = database.transactionWithResult {
-        val rows = records.page(accountId, after, through, includeDeleted, limit.toLong()).executeAsList()
-        val filesByKey = if (rows.isEmpty()) {
+        records.page(accountId, after, through, includeDeleted, limit.toLong(), ::StoredRow).executeAsList()
+            .withFiles(accountId)
+    }
+
+    override fun group(accountId: Long, group: String, limit: Int): List<SequencedRecord> =
+        database.transactionWithResult {
+            records.inGroup(accountId, group, limit.toLong(), ::StoredRow).executeAsList().withFiles(accountId)
+        }
+
+    private fun List<StoredRow>.withFiles(accountId: Long): List<SequencedRecord> {
+        val filesByKey = if (isEmpty()) {
             emptyMap()
         } else {
-            files.forRecords(accountId, rows.map { it.record_key }).executeAsList().groupBy(
+            files.forRecords(accountId, map { it.key }).executeAsList().groupBy(
                 keySelector = { it.record_key },
                 valueTransform = { FileReference(category = it.category, sha256 = it.sha256, size = it.size) },
             )
         }
-        rows.map { row ->
-            SequencedRecord(
-                sequence = row.sequence,
-                record = RecordEnvelope(
-                    key = row.record_key,
-                    kind = row.kind,
-                    kindVersion = row.kind_version.toInt(),
-                    basedOn = row.based_on,
-                    changeId = row.change_id,
-                    device = DeviceId(row.device_id),
-                    deleted = row.is_deleted,
-                    payload = row.payload,
-                    files = filesByKey[row.record_key].orEmpty(),
-                ),
-            )
-        }
+        return map { row -> SequencedRecord(row.sequence, row.envelope(filesByKey[row.key].orEmpty())) }
     }
 
     override fun liveTotals(accountId: Long): RecordTotals = records.liveTotals(accountId) { count, bytes ->
@@ -128,4 +123,31 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
     override fun forgetChainBefore(accountId: Long, before: Long) {
         chains.deleteUnusedBefore(accountId, before)
     }
+}
+
+/** One stored copy as a query reads it, before its files are added. */
+private class StoredRow(
+    val key: String,
+    val sequence: Long,
+    private val kind: String,
+    private val kindVersion: Long,
+    private val basedOn: Long,
+    private val changeId: String,
+    private val deviceId: Long,
+    private val isDeleted: Boolean,
+    private val payload: ByteArray,
+    private val group: String,
+) {
+    fun envelope(files: List<FileReference>) = RecordEnvelope(
+        key = key,
+        kind = kind,
+        kindVersion = kindVersion.toInt(),
+        basedOn = basedOn,
+        changeId = changeId,
+        device = DeviceId(deviceId),
+        deleted = isDeleted,
+        payload = payload,
+        files = files,
+        group = group,
+    )
 }

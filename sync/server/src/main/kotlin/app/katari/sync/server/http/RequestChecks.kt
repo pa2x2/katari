@@ -4,6 +4,7 @@ import app.katari.sync.protocol.account.RedeemInviteRequest
 import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.file.FileReference
+import app.katari.sync.protocol.pull.GroupRequest
 import app.katari.sync.protocol.pull.PullRequest
 import app.katari.sync.protocol.push.PushRequest
 import app.katari.sync.protocol.record.RecordEnvelope
@@ -41,6 +42,10 @@ internal object RequestChecks {
         require(request.after >= 0 && request.limit >= 0) { "Negative position or limit" }
     }
 
+    fun check(request: GroupRequest) {
+        require(request.group.length in 1..MAX_KEY_LENGTH) { "Group length" }
+    }
+
     fun isSha256(text: String): Boolean = sha256Hex.matches(text)
 
     fun check(file: FileReference) {
@@ -52,6 +57,7 @@ internal object RequestChecks {
         require(record.kind.length in 1..MAX_KIND_LENGTH) { "Record kind length" }
         require(record.changeId.length in 1..MAX_CHANGE_ID_LENGTH) { "Change id length" }
         require(record.basedOn >= 0) { "Negative based-on sequence" }
+        require(record.group.length <= MAX_KEY_LENGTH) { "Group length" }
         record.files.forEach(::check)
     }
 

@@ -15,6 +15,7 @@ import app.katari.sync.server.file.FileContentStore
 import app.katari.sync.server.file.FileTransfers
 import app.katari.sync.server.invite.Invites
 import app.katari.sync.server.live.AccountChanges
+import app.katari.sync.server.record.GroupPull
 import app.katari.sync.server.record.RecordPull
 import app.katari.sync.server.record.RecordPush
 import app.katari.sync.server.record.SnapshotSummary
@@ -51,6 +52,7 @@ class SyncServices(
     val devices = AccountDevices(storage, changes, clock, random)
     val push = RecordPush(storage, changes)
     val pull = RecordPull(storage, config.pullPageSize)
+    val groups = GroupPull(storage)
     val snapshot = SnapshotSummary(storage)
     val files = FileTransfers(storage, content, clock, config.maxFileBytes)
     val retention = RetentionSchedule(

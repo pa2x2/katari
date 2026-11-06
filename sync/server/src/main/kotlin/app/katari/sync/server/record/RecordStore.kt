@@ -34,6 +34,9 @@ interface RecordStore {
     /** Stored copies with sequences in ([after], [through]], in sequence order. */
     fun page(accountId: Long, after: Long, through: Long, limit: Int, includeDeleted: Boolean): List<SequencedRecord>
 
+    /** The stored copies in [group] ([RecordEnvelope.group]), in sequence order, at most [limit]. */
+    fun group(accountId: Long, group: String, limit: Int): List<SequencedRecord>
+
     fun liveTotals(accountId: Long): RecordTotals
 
     /** Drops the deletion markers up to [through] and returns the newest sequence dropped, or null if none was. */

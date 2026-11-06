@@ -47,6 +47,9 @@ object SyncHttp {
     /** POST [app.katari.sync.protocol.pull.PullRequest]: [app.katari.sync.protocol.pull.PullPage]. */
     const val PULL: String = "/api/records/pull"
 
+    /** POST [app.katari.sync.protocol.pull.GroupRequest]: [app.katari.sync.protocol.pull.GroupRecords]. */
+    const val GROUP: String = "/api/records/group"
+
     /** GET: [app.katari.sync.protocol.snapshot.SnapshotInfo]. */
     const val SNAPSHOT: String = "/api/snapshot"
 

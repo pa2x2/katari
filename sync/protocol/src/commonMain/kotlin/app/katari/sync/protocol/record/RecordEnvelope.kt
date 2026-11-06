@@ -37,6 +37,12 @@ data class RecordEnvelope(
      * still in use: it keeps a file while the newest copy of some live record lists it. A deletion lists none.
      */
     @ProtoNumber(9) val files: List<FileReference> = emptyList(),
+    /**
+     * Records a device fetches together ahead of its position ([app.katari.sync.protocol.pull.GroupRequest]), such as
+     * everything of one entry, named as opaquely as [key]; empty for none. A device sets it from the payload, the
+     * server only stores it and finds records by it.
+     */
+    @ProtoNumber(10) val group: String = "",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -49,7 +55,8 @@ data class RecordEnvelope(
             device == other.device &&
             deleted == other.deleted &&
             payload.contentEquals(other.payload) &&
-            files == other.files
+            files == other.files &&
+            group == other.group
     }
 
     override fun hashCode(): Int {
@@ -62,6 +69,7 @@ data class RecordEnvelope(
         result = 31 * result + deleted.hashCode()
         result = 31 * result + payload.contentHashCode()
         result = 31 * result + files.hashCode()
+        result = 31 * result + group.hashCode()
         return result
     }
 }

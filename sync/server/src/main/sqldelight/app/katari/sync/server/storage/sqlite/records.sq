@@ -12,10 +12,13 @@ CREATE TABLE records(
     device_id INTEGER NOT NULL,
     is_deleted INTEGER AS Boolean NOT NULL,
     payload BLOB NOT NULL,
+    -- RecordEnvelope.group, empty for none.
+    record_group TEXT NOT NULL DEFAULT '',
     PRIMARY KEY (account_id, record_key)
 );
 
 CREATE UNIQUE INDEX records_sequence_index ON records(account_id, sequence);
+CREATE INDEX records_group_index ON records(account_id, record_group) WHERE record_group != '';
 
 sequenceOf:
 SELECT sequence
@@ -23,8 +26,12 @@ FROM records
 WHERE account_id = :accountId AND record_key = :recordKey;
 
 upsert:
-INSERT INTO records(account_id, record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload)
-VALUES (:accountId, :recordKey, :sequence, :kind, :kindVersion, :basedOn, :changeId, :deviceId, :isDeleted, :payload)
+INSERT INTO records(
+    account_id, record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+)
+VALUES (
+    :accountId, :recordKey, :sequence, :kind, :kindVersion, :basedOn, :changeId, :deviceId, :isDeleted, :payload, :recordGroup
+)
 ON CONFLICT(account_id, record_key) DO UPDATE SET
     sequence = excluded.sequence,
     kind = excluded.kind,
@@ -33,15 +40,23 @@ ON CONFLICT(account_id, record_key) DO UPDATE SET
     change_id = excluded.change_id,
     device_id = excluded.device_id,
     is_deleted = excluded.is_deleted,
-    payload = excluded.payload;
+    payload = excluded.payload,
+    record_group = excluded.record_group;
 
 page:
-SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
 FROM records
 WHERE account_id = :accountId
     AND sequence > :after
     AND sequence <= :through
     AND (:includeDeleted OR is_deleted = 0)
+ORDER BY sequence
+LIMIT :limit;
+
+inGroup:
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+FROM records
+WHERE account_id = :accountId AND record_group = :recordGroup
 ORDER BY sequence
 LIMIT :limit;
 

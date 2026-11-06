@@ -1,6 +1,7 @@
 package app.katari.sync.server.http
 
 import app.katari.sync.protocol.http.SyncHttp
+import app.katari.sync.protocol.pull.GroupRequest
 import app.katari.sync.protocol.pull.PullRequest
 import app.katari.sync.protocol.push.PushRequest
 import app.katari.sync.server.SyncServices
@@ -24,6 +25,11 @@ internal fun Route.recordRoutes(services: SyncServices) {
             is PullOutcome.Page -> call.respondProto(outcome.page)
             is PullOutcome.Refused -> call.respondRefusal(outcome.code)
         }
+    }
+    post(SyncHttp.GROUP) {
+        val request = call.receiveProto<GroupRequest>(services.config.maxRequestBytes)
+        RequestChecks.check(request)
+        call.respondProto(withContext(Dispatchers.IO) { services.groups.of(call.device.accountId, request.group) })
     }
     get(SyncHttp.SNAPSHOT) {
         call.respondProto(withContext(Dispatchers.IO) { services.snapshot.of(call.device.accountId) })
