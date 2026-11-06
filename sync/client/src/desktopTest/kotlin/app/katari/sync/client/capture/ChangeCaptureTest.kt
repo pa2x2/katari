@@ -199,7 +199,7 @@ class ChangeCaptureTest {
             }
 
             val stored = device.handler.await {
-                sync_recordsQueries.pending(Long.MAX_VALUE).awaitAsList().map { it.kind }
+                sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList().map { it.kind }
             }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()

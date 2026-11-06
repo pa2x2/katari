@@ -4,13 +4,8 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.profile.ProfileKind
-import app.katari.sync.client.kind.setting.ProfileSettingKind
-import app.katari.sync.client.kind.setting.SharedSettingKind
-import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.setting.read.SettingReads
-import app.katari.sync.client.setting.scope.PreferenceScope
-import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import mihon.domain.profile.ProfileSeedPreferences
@@ -26,10 +21,13 @@ import kotlin.time.Clock
  * 1. [hasOwnData]. A device without data skips the screen and calls [pair] with [proposal]'s pairings as they are,
  *    taking the account's settings. So does the first device of an empty account, whose profiles all pair with nothing.
  * 2. [proposal], with the account's profile records, then [pair] with the person's choices.
- * 3. The device's existing database rows are recorded, unstamped, so they merge with the account's rows (unit 8).
+ * 3. The device's existing database rows are recorded, unstamped, so they merge with the account's rows
+ *    ([ExistingRows]).
  * 4. The account's records are applied, which writes the account's settings over this device's in paired profiles.
  * 5. The device's existing preferences are recorded, unstamped: keys the account had now hold its values and change
- *    nothing, and keys only this device set reach the account.
+ *    nothing, and keys only this device set reach the account ([ExistingSettings]).
+ *
+ * [FirstSyncSteps] runs these steps in this order.
  *
  * Settings a profile keeps from the device are recorded by [pair] as edits made then, so they win over the account's
  * in step 4 and on every other device. Device-level settings are never synced, so neither side's are replaced.
@@ -86,22 +84,9 @@ class FirstSync(
                 sync_applyQueries.setProfileUuid(uuid = checkNotNull(choice.accountUuid), profileId = choice.profileId)
             }
         }
-        val kept = paired.filter { it.settings == SettingsWinner.DEVICE }
-        val edits = kept.flatMap { choice ->
+        val edits = paired.filter { it.settings == SettingsWinner.DEVICE }.flatMap { choice ->
             val profile = local.getValue(choice.profileId)
-            buildList {
-                settings.profileKeys(profile.id).filter { it.isPersonLevel() }.forEach { key ->
-                    add(ProfileSettingKind.name to ProfileSettingKind.ref(profile.id, key))
-                }
-                settings.sourceKeys(profile.id).forEach { (sourceId, keys) ->
-                    keys.forEach { add(SourceSettingKind.name to SourceSettingKind.ref(profile.id, sourceId, it)) }
-                }
-                if (profile.uuid == ProfileKind.DEFAULT_UUID) {
-                    settings.sharedKeys().filter { it.isPersonLevel() && !settings.isProfileKey(it) }.forEach { key ->
-                        add(SharedSettingKind.name to SharedSettingKind.ref(key))
-                    }
-                }
-            }
+            settings.personLevelSettings(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
         }
         recordEdits(edits)
     }
@@ -120,6 +105,4 @@ class FirstSync(
     private suspend fun localProfiles(): List<LocalProfile> = handler.await {
         sync_local_rowsQueries.profiles().awaitAsList().map { LocalProfile(it._id, it.uuid, it.name) }
     }
-
-    private fun String.isPersonLevel() = PreferenceScopes.of(this) == PreferenceScope.PERSON
 }

@@ -53,11 +53,13 @@ ON CONFLICT(record_key) DO UPDATE SET
     change_id = excluded.change_id;
 
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
--- format over the newer one. It waits in sync_pending until an update can read it.
-pending:
+-- format over the newer one. It waits in sync_pending until an update can read it. Changes come a page at a time in
+-- key order, so a push reaches every one even when the first are refused.
+pendingAfter:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
 FROM sync_records
 WHERE change_id IS NOT NULL
+AND record_key > :afterKey
 AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason = 'unreadable')
 ORDER BY record_key
 LIMIT :limit;
@@ -110,3 +112,36 @@ SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, sy
 FROM sync_records
 WHERE kind IN :kinds
 ORDER BY kind, record_key;
+
+-- The server holds no copy of the record, as after retention dropped its deletion marker: the next push makes one.
+rebase:
+UPDATE sync_records
+SET based_on = 0
+WHERE record_key = :recordKey;
+
+-- A full resync starts: no copy is known to be on the server until the resync's pull brings it again.
+forgetBases:
+UPDATE sync_records
+SET based_on = 0;
+
+-- The newest server sequence this device holds a copy of, by pushing it or pulling it; often past the position, since a
+-- device's own pushes come back only with its next pull. A server whose sequence is below it lost what it acknowledged.
+newestBase:
+SELECT coalesce(max(based_on), 0) FROM sync_records;
+
+-- After a full resync from a lost or restored server, every record its pull didn't bring is pushed again.
+pushUnseen:
+UPDATE sync_records
+SET change_id = lower(hex(randomblob(16)))
+WHERE based_on = 0 AND change_id IS NULL AND synced = 1;
+
+-- After a full resync that left deletions out, the live records its pull didn't bring that this device had synced
+-- and hasn't changed since: the server dropped their deletion markers, so they were deleted elsewhere.
+deletedElsewhere:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE based_on = 0 AND change_id IS NULL AND synced = 1 AND deleted = 0
+ORDER BY record_key;
+
+clear:
+DELETE FROM sync_records;

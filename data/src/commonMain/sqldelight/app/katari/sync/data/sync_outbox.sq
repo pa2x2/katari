@@ -65,3 +65,11 @@ SELECT seq, kind, local_ref, fields, record_key, changed_at, seen_physical, seen
 FROM sync_outbox
 WHERE seq > :seq
 ORDER BY seq;
+
+-- A value this device held before sync started, recorded with no edit time: it fills in what the account lacks and
+-- gives way to every edit made anywhere ([app.katari.sync.client.payload.Stamped.UNKNOWN_EDIT]).
+recordUnstamped:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT :kind, :localRef, 0, NULL, 0, C.seen_physical, C.seen_counter
+FROM sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1;
