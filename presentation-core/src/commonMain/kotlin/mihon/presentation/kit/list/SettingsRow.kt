@@ -33,6 +33,8 @@ import mihon.presentation.kit.theme.TextRole
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
  * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
  *
+ * [subtitleTone] marks a subtitle that reports a state by its colour role, such as a warning.
+ *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
  */
@@ -46,6 +48,7 @@ fun SettingsRow(
     trailing: (@Composable () -> Unit)? = null,
     titleSuffix: (@Composable () -> Unit)? = null,
     subtitleMaxLines: Int = Int.MAX_VALUE,
+    subtitleTone: ContentTone = ContentTone.Inherit,
     enabled: Boolean = true,
     role: Role? = null,
     onClick: (() -> Unit)? = null,
@@ -75,6 +78,7 @@ fun SettingsRow(
                     Text(
                         subtitle,
                         role = TextRole.Supporting,
+                        tone = subtitleTone,
                         maxLines = subtitleMaxLines,
                         overflow = TextOverflow.Ellipsis,
                     )

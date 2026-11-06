@@ -51,6 +51,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                     tone = action.tone,
                     enabled = action.enabled,
                     badgeCount = action.badgeCount,
+                    spinning = action.spinning,
                 )
             }
             action.menu?.invoke()
@@ -96,6 +97,8 @@ sealed interface AppBar {
         val tone: ContentTone = ContentTone.Inherit,
         val enabled: Boolean = true,
         val badgeCount: Int? = null,
+        /** Turns the icon while the work it stands for runs. */
+        val spinning: Boolean = false,
         /** A dropdown anchored to this action's button; the caller owns its expanded state. */
         val menu: (@Composable () -> Unit)? = null,
         val shortcut: KeyboardShortcut? = null,
