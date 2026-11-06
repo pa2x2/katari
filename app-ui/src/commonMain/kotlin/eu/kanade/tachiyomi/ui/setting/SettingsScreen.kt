@@ -73,6 +73,7 @@ class SettingsScreen(
             Destination.TextRecognition.id -> Destination.TextRecognition
             Destination.LibraryUpdates.id -> Destination.LibraryUpdates
             Destination.Profiles.id -> Destination.Profiles
+            Destination.Sync.id -> Destination.Sync
             else -> null
         }.let {
             resolveSettingsStartScreen(
@@ -128,5 +129,6 @@ class SettingsScreen(
         data object TextRecognition : Destination(5)
         data object LibraryUpdates : Destination(6)
         data object Profiles : Destination(7)
+        data object Sync : Destination(8)
     }
 }

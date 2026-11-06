@@ -1,0 +1,97 @@
+package app.katari.sync.ui.page
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import app.katari.sync.client.account.AccountCall
+import app.katari.sync.client.account.AccountDevice
+import app.katari.sync.client.account.SyncAccount
+import app.katari.sync.client.connection.DeviceTokenStore
+import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.status.SyncStatusState
+import dev.zacsweers.metro.ContributesIntoMap
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
+import mihon.app.di.AppUiScope
+import tachiyomi.core.common.util.lang.launchIO
+
+/** The Sync page (D050): the status, the account's devices, the options, and leaving. */
+@Inject
+@ViewModelKey
+@ContributesIntoMap(AppUiScope::class)
+class SyncViewModel(
+    private val account: SyncAccount,
+    private val tokens: DeviceTokenStore,
+    statusState: SyncStatusState,
+    val preferences: SyncPreferences,
+) : ViewModel() {
+    val status: StateFlow<SyncStatus?> = statusState.status
+
+    val devices: StateFlow<DevicesState>
+        field = MutableStateFlow<DevicesState>(DevicesState.Loading)
+
+    /** Whether this device has somewhere to keep its sign-in; false on a desktop without a keyring (D061). */
+    val canKeepSignIn: StateFlow<Boolean?>
+        field = MutableStateFlow<Boolean?>(null)
+
+    private val removeFailures = MutableStateFlow(0)
+
+    /** Counts removals that failed, so each one shows its message once. */
+    val removeFailed: StateFlow<Int> = removeFailures.asStateFlow()
+
+    init {
+        viewModelScope.launchIO { canKeepSignIn.value = tokens.isAvailable }
+        // The list follows the account the device is linked to, and is listed again when it links to another.
+        viewModelScope.launch {
+            status.filterNotNull().distinctUntilChangedBy { (it.link as? SyncStatus.Link.Linked)?.server }
+                .collect { refreshDevices() }
+        }
+    }
+
+    fun refreshDevices() {
+        viewModelScope.launchIO {
+            devices.value = when (val call = account.devices()) {
+                is AccountCall.Done -> DevicesState.Listed(call.value.sortedByDescending { it.isThisDevice })
+                AccountCall.NotLinked -> DevicesState.Loading
+                AccountCall.Unreachable, is AccountCall.Refused -> DevicesState.Unavailable
+            }
+        }
+    }
+
+    fun syncNow() {
+        viewModelScope.launchIO { account.syncNow() }
+    }
+
+    fun removeDevice(device: AccountDevice) {
+        viewModelScope.launchIO {
+            val removed = account.removeDevice(device.id)
+            if (removed !is AccountCall.Done) removeFailures.value++
+            refreshDevices()
+        }
+    }
+
+    fun disconnect() {
+        viewModelScope.launchIO {
+            account.disconnect()
+            devices.value = DevicesState.Loading
+        }
+    }
+
+    fun dismissEnded() {
+        viewModelScope.launchIO { account.dismissNotice() }
+    }
+
+    sealed interface DevicesState {
+        data object Loading : DevicesState
+
+        data class Listed(val devices: List<AccountDevice>) : DevicesState
+
+        data object Unavailable : DevicesState
+    }
+}

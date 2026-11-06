@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
+import app.katari.sync.ui.page.SyncScreen
 import cafe.adriel.voyager.core.screen.Screen
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
@@ -18,6 +19,7 @@ internal fun resolveSettingsStartScreen(
         SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen
         SettingsScreen.Destination.LibraryUpdates -> SettingsLibraryUpdatesScreen
         SettingsScreen.Destination.Profiles -> SettingsProfilesScreen
+        SettingsScreen.Destination.Sync -> SyncScreen
         null -> if (twoPane) SettingsAppearanceScreen else SettingsMainScreen
     }
 

@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import app.katari.sync.ui.status.rememberSyncToolbarAction
 import kotlinx.collections.immutable.toPersistentList
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -37,6 +38,7 @@ fun LibraryToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
+    onClickSync: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
@@ -57,6 +59,7 @@ fun LibraryToolbar(
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
         onClickOpenRandomEntry = onClickOpenRandomEntry,
+        onClickSync = onClickSync,
         scrollBehavior = scrollBehavior,
     )
 }
@@ -72,8 +75,10 @@ private fun LibraryRegularToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
+    onClickSync: () -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
 ) {
+    val syncAction = rememberSyncToolbarAction(onClickSync)
     val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
         LibraryGroupingDimension.Category -> stringResource(MR.strings.action_update_category)
         LibraryGroupingDimension.EntryType -> stringResource(MR.strings.action_update_type)
@@ -97,6 +102,7 @@ private fun LibraryRegularToolbar(
             val filterTone = if (hasFilters) ContentTone.Active else ContentTone.Inherit
             AppBarActions(
                 buildList<AppBar.AppBarAction> {
+                    syncAction?.let(::add)
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),

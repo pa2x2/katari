@@ -1,5 +1,6 @@
 package mihon.app.ui.di
 
+import app.katari.sync.ui.SyncUiGraph
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.browse.BrowsePresentationGraph
@@ -80,7 +81,8 @@ interface AppUiGraph :
     BrowseGraph,
     BrowsePresentationGraph,
     SourcePreferencesGraph,
-    WebViewGraph {
+    WebViewGraph,
+    SyncUiGraph {
     val viewModelFactory: MetroViewModelFactory
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard

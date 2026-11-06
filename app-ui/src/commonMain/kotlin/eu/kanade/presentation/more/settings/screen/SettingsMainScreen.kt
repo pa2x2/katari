@@ -7,6 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.sync.ui.page.SyncScreen
+import app.katari.sync.ui.status.rememberSyncHeadline
+import app.katari.sync.ui.status.syncHeadlineText
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -20,6 +23,7 @@ import mihon.app.ui.di.LocalAppUiGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ChromeReaderMode
 import mihon.icons.materialsymbols.rounded.AccountCircle
+import mihon.icons.materialsymbols.rounded.CloudSync
 import mihon.icons.materialsymbols.rounded.Code
 import mihon.icons.materialsymbols.rounded.CollectionsBookmark
 import mihon.icons.materialsymbols.rounded.DocumentScanner
@@ -240,6 +244,12 @@ object SettingsMainScreen : Screen() {
                 subtitleRes = MR.strings.pref_backup_summary,
                 icon = MaterialSymbols.Rounded.Storage,
                 screen = SettingsDataScreen,
+            ),
+            Item(
+                titleRes = MR.strings.sync_title,
+                formatSubtitle = { rememberSyncHeadline()?.let { syncHeadlineText(it) } },
+                icon = MaterialSymbols.Rounded.CloudSync,
+                screen = SyncScreen,
             ),
             Item(
                 titleRes = MR.strings.pref_category_security,
