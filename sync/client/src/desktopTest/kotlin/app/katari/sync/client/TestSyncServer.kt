@@ -3,8 +3,11 @@ package app.katari.sync.client
 import app.katari.sync.server.SyncServer
 import app.katari.sync.server.account.FirstAdminOutcome
 import app.katari.sync.server.config.ServerConfig
+import app.katari.sync.server.retention.UnreferencedFileRetention
 import java.io.File
 import java.net.ServerSocket
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * A real sync server in the test's process, over SQLite in [directory], always on one address: restarting it over a
@@ -36,6 +39,19 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
     }
 
     fun linkCode(accountId: Long): String = running().services.devices.issueLinkCode(accountId).code
+
+    /** The names of the files the server stores, which are their contents' hashes. */
+    fun storedFiles(): List<String> =
+        data.resolve("files").walk().filter { it.isFile }.map { it.name }.sorted().toList()
+
+    /** Removes the files no record lists, as the server does once their day of grace has passed. */
+    fun removeUnreferencedFilesAfterGrace() {
+        val services = running().services
+        val later = object : Clock {
+            override fun now(): Instant = Clock.System.now() + UnreferencedFileRetention.GRACE * 2
+        }
+        UnreferencedFileRetention(services.storage, services.content, later).sweep()
+    }
 
     /** A copy of the server's data as it is now, to [restoreFrom] later. */
     fun backUp(): File {

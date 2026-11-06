@@ -112,6 +112,13 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         statements.forEach { driver.await(null, it, 0) }
     }
 
+    suspend fun entryId(url: String): Long = rows("SELECT _id FROM entries WHERE url = '$url'").single().toLong()
+
+    /** Sets the entry's custom cover as the person does from the entry's cover screen. */
+    suspend fun setCustomCover(url: String, bytes: ByteArray) = files.setCover(entryId(url), bytes)
+
+    suspend fun customCover(url: String): ByteArray? = files.cover(entryId(url))
+
     suspend fun outboxKinds(): List<String> =
         handler.await { sync_outboxQueries.batch(Long.MAX_VALUE).awaitAsList().map { it.kind } }
 
