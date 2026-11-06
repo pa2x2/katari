@@ -1,5 +1,6 @@
 package mihon.desktop.home
 
+import app.katari.sync.ui.question.SyncQuestionsScreen
 import cafe.adriel.voyager.navigator.Navigator
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -98,7 +99,12 @@ class HomeDestinations(
         is HomeDestination.SourceMigrationReview -> migrationSessions.get(destination.sessionId)
             ?.takeUnless { it.stage.isTerminal }
             ?.let { DestinationProfile.Of(it.profileId) }
-        HomeDestination.Extensions, HomeDestination.DownloadQueue, is HomeDestination.Link -> DestinationProfile.Any
+        HomeDestination.Extensions,
+        HomeDestination.DownloadQueue,
+        HomeDestination.SyncPage,
+        HomeDestination.SyncQuestions,
+        is HomeDestination.Link,
+        -> DestinationProfile.Any
     }
 
     private suspend fun navigate(navigator: Navigator, destination: HomeDestination) {
@@ -117,6 +123,8 @@ class HomeDestinations(
                 navigator.push(SourceMigrationReviewScreen(destination.sessionId))
             HomeDestination.Extensions -> HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Extensions))
             is HomeDestination.Link -> navigator.openAppLink(destination.link)
+            HomeDestination.SyncPage -> navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
+            HomeDestination.SyncQuestions -> navigator.push(SyncQuestionsScreen)
         }
     }
 

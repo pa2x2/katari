@@ -65,7 +65,7 @@ class MigrationQuestionTest {
                     a.library() shouldBe b.library()
 
                     // The earlier migration, which neither device follows yet
-                    val kept = question.targets.first { it != question.provisional }
+                    val kept = question.targets.map { it.value }.first { it != question.provisional }
                     b.questions.keepMigration(question.from, kept)
                     exchange.settle(listOf(a, b))
 
@@ -83,7 +83,8 @@ class MigrationQuestionTest {
                     b.migrate(from = "/old2", source = -4, url = "/there2")
                     exchange.settle(listOf(a, b))
                     val second = a.questions.open().first().single().shouldBeInstanceOf<Question.Migration>()
-                    a.questions.keepMigration(second.from, second.targets.first { it != second.provisional })
+                    val turnedDown = second.targets.map { it.value }.first { it != second.provisional }
+                    a.questions.keepMigration(second.from, turnedDown)
                     exchange.settle(listOf(a, b))
 
                     a.library() shouldBe b.library()

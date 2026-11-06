@@ -28,6 +28,12 @@ sealed interface HomeDestination {
     /** The review of a migration session, in the session's profile, while the session hasn't ended. */
     data class SourceMigrationReview(val sessionId: SourceMigrationSessionId) : HomeDestination
 
+    /** The Sync page, in whichever profile the home shows: sync is the device's, for every profile. */
+    data object SyncPage : HomeDestination
+
+    /** The sync questions waiting for an answer, in whichever profile the home shows. */
+    data object SyncQuestions : HomeDestination
+
     /** The extensions page, in whichever profile the home shows: extensions are installed for every profile. */
     data object Extensions : HomeDestination
 

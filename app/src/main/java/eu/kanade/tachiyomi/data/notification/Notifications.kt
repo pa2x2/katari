@@ -88,6 +88,11 @@ object Notifications {
     const val ID_STATISTICS_RECAP = -801
     const val ID_STATISTICS_YEAR_RECAP = -802
 
+    /** Sync's notifications: questions waiting for an answer, and sync having stopped (D028). */
+    const val CHANNEL_SYNC = "sync_channel"
+    const val ID_SYNC_QUESTIONS = -901
+    const val ID_SYNC_STOPPED = -902
+
     /**
      * Notification channel used for Incognito Mode
      */
@@ -236,6 +241,9 @@ object Notifications {
                 buildNotificationChannel(VideoPlaybackNotifications.CHANNEL, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_video_playback))
                     setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_SYNC, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(MR.strings.sync_title))
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))

@@ -48,8 +48,9 @@ class ProfileDeletionQuestionTest {
                     val entry = """["entry","work","aniyomi",777,"/show","anime",1,0,null,"Kept for later",0,0,0]"""
                     a.library() shouldBe b.library()
                     a.library() shouldContain entry
-                    a.questions.open().first() shouldBe listOf(Question.ProfileDeletion("work"))
-                    b.questions.open().first() shouldBe listOf(Question.ProfileDeletion("work"))
+                    val asked = a.questions.open().first().map { (it as Question.ProfileDeletion).profileUuid }
+                    asked shouldBe listOf("work")
+                    b.questions.open().first() shouldBe a.questions.open().first()
 
                     b.questions.answerProfileDeletion("work", ProfileDeletionAnswer.DELETE)
                     exchange.settle(listOf(a, b))

@@ -2,9 +2,11 @@ package mihon.desktop.di
 
 import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.trigger.SyncBackgroundWork
+import app.katari.sync.ui.notice.SyncNotifications
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.IntoSet
+import mihon.desktop.sync.DesktopSyncNotifications
 import mihon.desktop.sync.DesktopThisDevice
 import mihon.desktop.sync.InProcessSyncBackgroundWork
 import mihon.desktop.work.ResumableWork
@@ -20,4 +22,7 @@ interface SyncBindings {
 
     @Binds
     val DesktopThisDevice.thisDevice: ThisDevice
+
+    @Binds
+    val DesktopSyncNotifications.syncNotifications: SyncNotifications
 }

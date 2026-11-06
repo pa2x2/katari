@@ -14,6 +14,8 @@ import app.katari.sync.client.kind.replacement.EntryReplacementKind
 import app.katari.sync.client.kind.replacement.withoutMigration
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.payload.Stamped
+import app.katari.sync.protocol.clock.HybridTimestamp
+import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,13 +27,19 @@ sealed interface Question {
      * The entry [from] migrated to different entries on two devices. Until answered, every device follows
      * [provisional], the later migration.
      */
-    data class Migration(val from: String, val targets: List<String>, val provisional: String) : Question
+    data class Migration(val from: String, val targets: List<Made<String>>, val provisional: String) : Question
 
-    /** Notes on [entryKey] written on two devices at once; until answered the later [versions] are shown. */
-    data class Notes(val entryKey: String, val versions: List<String>) : Question
+    /** Notes on [entryKey] written on two devices at once; until answered the later of [versions] is shown. */
+    data class Notes(val entryKey: String, val versions: List<Made<String>>) : Question
 
-    /** A profile deleted on one device while another device changed things in it; it stays until answered. */
-    data class ProfileDeletion(val profileUuid: String) : Question
+    /**
+     * A profile deleted on one device while another device changed things in it; it stays until answered. [deleted]
+     * and [changed] say where and when each happened.
+     */
+    data class ProfileDeletion(val profileUuid: String, val deleted: Made<Unit>, val changed: Made<Unit>) : Question
+
+    /** [value] as one device made it, at [atMillis] (epoch milliseconds). */
+    data class Made<T>(val value: T, val device: DeviceId, val atMillis: Long)
 }
 
 /**
@@ -113,19 +121,30 @@ class Questions(
         live(key)?.let(kind::decode)
 
     private companion object {
+        fun <T> HybridTimestamp.made(value: T) = Question.Made(value, device, physicalMillis)
+
         val kinds: List<QuestionKind<*>> = listOf(MigrationQuestionKind, NotesQuestionKind, ProfileDeletionQuestionKind)
 
         fun question(kind: String, payload: ByteArray): Question? = when (kind) {
             MigrationQuestionKind.name -> MigrationQuestionKind.decode(payload).takeIf(MigrationQuestionKind::isOpen)
                 ?.let { question ->
                     val targets = question.targets.value.sortedBy { it.at }
-                    Question.Migration(question.from, targets.map { it.to }, targets.last().to)
+                    Question.Migration(question.from, targets.map { it.at.made(it.to) }, targets.last().to)
                 }
             NotesQuestionKind.name -> NotesQuestionKind.decode(payload).takeIf(NotesQuestionKind::isOpen)
-                ?.let { question -> Question.Notes(question.entryKey, question.versions.value.map { it.notes }) }
+                ?.let { question ->
+                    Question.Notes(question.entryKey, question.versions.value.map { it.at.made(it.notes) })
+                }
             ProfileDeletionQuestionKind.name -> ProfileDeletionQuestionKind.decode(payload)
                 .takeIf(ProfileDeletionQuestionKind::isOpen)
-                ?.let { question -> Question.ProfileDeletion(question.profileUuid) }
+                ?.let { question ->
+                    val conflict = question.conflict.value
+                    Question.ProfileDeletion(
+                        question.profileUuid,
+                        conflict.deletedAt.made(Unit),
+                        conflict.editedAt.made(Unit),
+                    )
+                }
             else -> null
         }
     }
