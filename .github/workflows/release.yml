@@ -3,7 +3,9 @@ name: Release
 # A push to main releases each app whose version has notes in its changelog and no tag holding it yet: the Android app
 # from versionName in app/build.gradle.kts and CHANGELOG.md, tagged v<version>, and the desktop app from version in
 # desktop/build.gradle.kts and DESKTOP-CHANGELOG.md, tagged desktop-v<version>. One push can release either or both.
-# Each release is a draft, to try it before anyone is offered it, and its commit is tagged along with it.
+# Each release is a draft, to try it before anyone is offered it, and its commit is tagged along with it. The sync
+# server needs no notes and gets no release: its version in sync/server/build.gradle.kts, once it has no
+# sync-server-v<version> tag, publishes its image to this repository's packages and tags the commit.
 on:
   push:
     branches:
@@ -24,20 +26,22 @@ jobs:
       desktop_tag: ${{ steps.decide.outputs.desktop_tag }}
       desktop_version: ${{ steps.decide.outputs.desktop_version }}
       desktop_notes: ${{ steps.decide.outputs.desktop_notes }}
+      server_version: ${{ steps.decide.outputs.server_version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Get each app's tag name and release notes
+      - name: Get each app's tag name and release notes, and the sync server's version
         id: decide
         shell: bash
         run: |
           set -euo pipefail
 
-          # release_of APP VERSION_FILE VERSION_PATTERN TAG_PREFIX CHANGELOG
+          # release_of APP VERSION_FILE VERSION_PATTERN TAG_PREFIX [CHANGELOG]
+          # Without a changelog, an untagged version is released without notes.
           release_of() {
-            local app="$1" file="$2" pattern="$3" prefix="$4" changelog="$5"
+            local app="$1" file="$2" pattern="$3" prefix="$4" changelog="${5:-}"
 
             local version
             version="$(sed -n "s/$pattern/\1/p" "$file")"
@@ -53,28 +57,33 @@ jobs:
               return
             fi
 
-            # The version's section without its heading: the release is already named after it.
-            local notes
-            notes="$(awk -v heading="## [$version]" '
-              /^## \[/ { inside = index($0, heading) == 1; next }
-              inside && (seen || NF) { seen = 1; print }
-            ' "$changelog")"
-            if [[ -z "$notes" ]]; then
-              echo "::notice::$changelog has no notes for $version, so this push releases no $tag."
-              return
+            local notes=""
+            if [[ -n "$changelog" ]]; then
+              # The version's section without its heading: the release is already named after it.
+              notes="$(awk -v heading="## [$version]" '
+                /^## \[/ { inside = index($0, heading) == 1; next }
+                inside && (seen || NF) { seen = 1; print }
+              ' "$changelog")"
+              if [[ -z "$notes" ]]; then
+                echo "::notice::$changelog has no notes for $version, so this push releases no $tag."
+                return
+              fi
             fi
 
             {
               echo "${app}_tag=$tag"
               echo "${app}_version=$version"
-              echo "${app}_notes<<END_OF_NOTES"
-              echo "$notes"
-              echo "END_OF_NOTES"
+              if [[ -n "$notes" ]]; then
+                echo "${app}_notes<<END_OF_NOTES"
+                echo "$notes"
+                echo "END_OF_NOTES"
+              fi
             } >> "$GITHUB_OUTPUT"
           }
 
           release_of android app/build.gradle.kts '^ *versionName = "\(.*\)"$' v CHANGELOG.md
           release_of desktop desktop/build.gradle.kts '^version = "\(.*\)"$' desktop-v DESKTOP-CHANGELOG.md
+          release_of server sync/server/build.gradle.kts '^version = "\(.*\)"$' sync-server-v
 
   build:
     name: Build
@@ -328,3 +337,86 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.get_tag.outputs.desktop_tag }}
         run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA"
+
+  server_image:
+    name: Publish the sync server image
+    runs-on: ubuntu-26.04
+    needs: get_tag
+    if: needs.get_tag.outputs.server_version != ''
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.get_tag.outputs.server_version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-read-only: true
+
+      - name: Build and test the server
+        run: ./gradlew :sync:server:test :sync:server:installDist
+
+      - name: Name the image and its tags
+        id: names
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Registry names must be lowercase; owners may not be.
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/katari-sync-server"
+          tags="$image:$VERSION"
+          if [[ "$VERSION" != *-* ]]; then
+            tags+=",$image:${VERSION%.*},$image:latest"
+          fi
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+
+      # Emulation runs the Dockerfile's one RUN step for arm64.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Sign in to GitHub Packages
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: sync/server/build/install/katari-sync-server
+          file: sync/server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.names.outputs.tags }}
+          # The source label links the package to this repository on GitHub.
+          labels: |
+            org.opencontainers.image.title=Katari sync server
+            org.opencontainers.image.description=Self-hosted synchronization server for Katari
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.licenses=Apache-2.0
+          # Without this, the package page lists an extra unknown/unknown platform per architecture.
+          provenance: false
+
+      # The tag goes in last: it is what tells later pushes to main that this version is published.
+      - name: Tag the published commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/sync-server-v$VERSION" -f "sha=$GITHUB_SHA"
