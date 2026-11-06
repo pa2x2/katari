@@ -3326,6 +3326,11 @@
     <string name="sync_question_migration_kept">Both are kept until you choose.</string>
     <!-- %1$s is a source's name -->
     <string name="sync_action_keep_source">Keep %1$s</string>
+    <!-- %1$s is the name of the device that made one of the two migrations, when both went to sources of the same name -->
+    <string name="sync_action_keep_device">Keep %1$s\'s choice</string>
+    <!-- Answers of a migration question whose two migrations can't be told apart by source or device -->
+    <string name="sync_action_keep_earlier">Keep the earlier one</string>
+    <string name="sync_action_keep_later">Keep the later one</string>
     <!-- %1$s is the profile's name -->
     <string name="sync_question_profile_title">%1$s was deleted</string>
     <!-- %1$s is the device that deleted it, %2$s the device that changed it since -->

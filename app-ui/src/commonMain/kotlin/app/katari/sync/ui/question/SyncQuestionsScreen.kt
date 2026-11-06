@@ -115,13 +115,19 @@ private fun QuestionCard(
                 subtitle = moves.joinToString(", ") + ". " + stringResource(MR.strings.sync_question_migration_kept),
                 icon = MaterialSymbols.Rounded.SwapHoriz,
             )
-            // The one followed for now is the proposed answer, last
-            RowActions(
-                question.targets.sortedBy { it.key == question.question.provisional }.map { target ->
-                    RowAction(
-                        label = stringResource(MR.strings.sync_action_keep_source, target.source ?: title),
-                        onClick = { onKeepMigration(question, target.key) },
+            val labels = question.targets.zip(question.keepLabels(title)) { target, label ->
+                target to when (label) {
+                    is KeepLabel.Source -> stringResource(MR.strings.sync_action_keep_source, label.name)
+                    is KeepLabel.Device -> stringResource(MR.strings.sync_action_keep_device, label.name)
+                    is KeepLabel.Order -> stringResource(
+                        if (label.later) MR.strings.sync_action_keep_later else MR.strings.sync_action_keep_earlier,
                     )
+                }
+            }
+            // The one later edits follow for now is the proposed answer, last
+            RowActions(
+                labels.sortedBy { (target, _) -> target.key == question.question.provisional }.map { (target, label) ->
+                    RowAction(label = label, onClick = { onKeepMigration(question, target.key) })
                 },
             )
         }
