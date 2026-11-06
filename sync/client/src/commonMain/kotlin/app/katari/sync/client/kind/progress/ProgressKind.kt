@@ -102,6 +102,8 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             totalProgression = locator.totalProgression,
             extensions = locator.extensions,
             completed = payload.completed.value,
+            locatorUpdatedAt = payload.locator.at.physicalMillis,
+            completionUpdatedAt = payload.completed.at.physicalMillis,
         )
         val id = queries.progressId(entryId, payload.contentKey, payload.resourceKey).awaitAsOne()
         return ApplyOutcome.Applied(LocalRef.of(id))

@@ -110,16 +110,17 @@ UPDATE chapters
 SET read = :read, bookmark = :bookmark
 WHERE _id = :chapterId;
 
--- Reading and playback positions
+-- Reading and playback positions. The update times are when the device that made them did, so the newest
+-- position is the same one on every device.
 
 upsertProgress:
 INSERT INTO entry_progress_state(
     entry_id, chapter_id, content_key, resource_key, resource_revision, locator_kind, position, extent, progression,
-    total_progression, extensions, completed
+    total_progression, extensions, completed, locator_updated_at, completion_updated_at
 )
 VALUES (
     :entryId, :chapterId, :contentKey, :resourceKey, :resourceRevision, :locatorKind, :position, :extent,
-    :progression, :totalProgression, :extensions, :completed
+    :progression, :totalProgression, :extensions, :completed, :locatorUpdatedAt, :completionUpdatedAt
 )
 ON CONFLICT(entry_id, content_key, resource_key) DO UPDATE SET
     chapter_id = excluded.chapter_id,
@@ -130,7 +131,9 @@ ON CONFLICT(entry_id, content_key, resource_key) DO UPDATE SET
     progression = excluded.progression,
     total_progression = excluded.total_progression,
     extensions = excluded.extensions,
-    completed = excluded.completed;
+    completed = excluded.completed,
+    locator_updated_at = excluded.locator_updated_at,
+    completion_updated_at = excluded.completion_updated_at;
 
 progressId:
 SELECT _id
