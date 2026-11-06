@@ -2,6 +2,7 @@ package mihon.entry.interactions.reader.settings
 
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
+import java.io.File
 
 /** The face the book reader draws body text in, stored by [id]. [Book] keeps the faces the book asks for. */
 sealed interface BookDocumentReaderFont {
@@ -54,10 +55,24 @@ val BookDocumentReaderFont.systemNameRes: StringResource?
         is BookDocumentReaderFont.Imported -> null
     }
 
-/** The fonts a profile has imported for the book reader. */
+/**
+ * The fonts each profile has imported for the book reader. Sync carries them to the account's other devices: it hears
+ * every import and deletion through [watch], and places fonts imported elsewhere with [place].
+ */
 interface BookDocumentReaderFontLibrary {
     fun importedFonts(profileId: Long): List<BookDocumentReaderFont.Imported>
 
+    /** The font's file, or null once it is gone, such as after a restore, since imported files aren't backed up. */
+    fun file(profileId: Long, font: BookDocumentReaderFont.Imported): File?
+
+    /** Puts a copy of [source] in place as the profile's [font], replacing a file of that name in one step. */
+    fun place(profileId: Long, font: BookDocumentReaderFont.Imported, source: File)
+
+    fun delete(profileId: Long, font: BookDocumentReaderFont.Imported)
+
     /** Removes every font of a profile that is being deleted, or whose id is being reused. */
     fun deleteProfile(profileId: Long)
+
+    /** Calls [onChange] after each font a profile gains, has replaced or loses, until closed. */
+    fun watch(onChange: (profileId: Long, font: BookDocumentReaderFont.Imported) -> Unit): AutoCloseable
 }

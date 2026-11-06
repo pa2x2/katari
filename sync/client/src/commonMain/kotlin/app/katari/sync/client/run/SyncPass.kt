@@ -6,6 +6,7 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.outbox.OutboxDrain
@@ -35,7 +36,8 @@ import tachiyomi.core.common.util.system.logcat
  * A device that is ready runs, in this order:
  * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else.
  * 2. Every page after its position, then the records held for later, which those pages may have made applicable.
- * 3. The settings heard but not recorded yet ([SettingsCapture.flush]), the outbox drained, and every change pushed.
+ * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
+ *    drained, and every change pushed.
  *    Pulling first (D021) means the push is based on the newest copies, so it is rarely refused as stale; one that is
  *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run.
  *
@@ -57,6 +59,7 @@ class SyncPass(
     private val incoming: IncomingRecords,
     private val pending: PendingChanges,
     private val settings: SettingsCapture,
+    private val fileCapture: FileCapture,
     private val drain: OutboxDrain,
     private val handOff: EntryHandOff,
     private val disconnection: Disconnection,
@@ -148,6 +151,7 @@ class SyncPass(
         incoming.retryHeld()
         repeat(PUSH_ROUNDS) { round ->
             settings.flush()
+            fileCapture.flush()
             drainAll()
             if (!push.pushAll(client, afterPull = round > 0)) return SyncOutcome.SYNCED
             pull.pullAll(client, device, liveOnly = false)
@@ -185,6 +189,7 @@ class SyncPass(
 
     private suspend fun hasChanges(): Boolean {
         settings.flush()
+        fileCapture.flush()
         drainAll()
         return pending.count() > 0
     }

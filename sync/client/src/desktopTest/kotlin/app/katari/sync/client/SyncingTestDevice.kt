@@ -8,6 +8,7 @@ import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
+import app.katari.sync.client.firstsync.ExistingFiles
 import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
@@ -46,7 +47,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     val work = RecordedBackgroundWork()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
-    private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture)
+    private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
     private val directory = DeviceDirectory()
     private val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff)
@@ -54,6 +55,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.firstSync,
         connection,
         ExistingRows(local.driver, local.drain),
+        ExistingFiles(local.handler, local.ownedFiles),
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
     )
     private val resync = FullResync(local.handler, local.writing)
@@ -63,7 +65,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
             PullChanges(connection, continuity, local.incoming, handOff), PushChanges(continuity, local.pending),
-            local.incoming, local.pending, local.settingsCapture, local.drain, handOff, disconnection,
+            local.incoming, local.pending, local.settingsCapture, local.fileCapture, local.drain, handOff,
+            disconnection,
         ),
     )
     private val thisDevice = object : ThisDevice {

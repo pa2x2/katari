@@ -7,6 +7,8 @@ import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.file.capture.FileCapture
+import app.katari.sync.client.file.local.OwnedFiles
 import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
@@ -42,7 +44,7 @@ import java.io.File
 
 /**
  * One device's database file, opened with the driver, adapters and capture wiring the app uses, and its preferences
- * in files beside it.
+ * and files beside it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncTestDevice(file: File) : AutoCloseable {
@@ -72,6 +74,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         TestPreferenceStores(file.resolveSibling("${file.nameWithoutExtension}-preferences"), handler, scope)
     val settingsCapture =
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
+    val files = TestFileStore(file.resolveSibling("${file.nameWithoutExtension}-files"), scope)
+    val ownedFiles = OwnedFiles(files)
+    val fileCapture = FileCapture(handler, ownedFiles)
     val drain = OutboxDrain(handler, preferences.reads)
 
     // What the app's deletion does to the database and preferences; the test devices own no files
@@ -100,7 +105,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }
-        SyncCapture(handler, temporarySchema, settingsCapture).start()
+        SyncCapture(handler, temporarySchema, settingsCapture, fileCapture).start()
     }
 
     suspend fun sql(vararg statements: String) {
@@ -121,6 +126,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     }
 
     override fun close() {
+        fileCapture.stop()
         settingsCapture.stop()
         scope.cancel()
         driver.close()

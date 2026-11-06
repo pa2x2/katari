@@ -13,7 +13,7 @@ import dev.zacsweers.metro.Inject
  *
  * - [join]: the first device of an empty account, and a device with no data of its own (D047), pair as proposed and
  *   take the account's settings without asking; any other device waits at [SyncStage.CHOOSING] for [choose].
- * - [recordRows]: the device's rows, before anything of the account's is applied.
+ * - [recordRows]: the device's rows, custom covers and fonts, before anything of the account's is applied.
  * - The account's records come by the run's pull, a page at a time, each committed with the position.
  * - [recordSettings]: the device's preferences, after the account's settings are in place.
  */
@@ -22,6 +22,7 @@ class FirstSyncSteps(
     private val firstSync: FirstSync,
     private val connection: SyncConnection,
     private val rows: ExistingRows,
+    private val existingFiles: ExistingFiles,
     private val existingSettings: ExistingSettings,
 ) {
     suspend fun join(client: SyncServerClient) {
@@ -48,6 +49,7 @@ class FirstSyncSteps(
     }
 
     suspend fun recordRows() {
+        existingFiles.record()
         rows.record()
         connection.setStage(SyncStage.DOWNLOADING, target = connection.state().stageTarget)
     }
