@@ -42,7 +42,7 @@ class SyncServices(
     val passwordCheck = PasswordCheck(storage, passwords, attempts)
 
     val firstAdminSetup = FirstAdminSetup(storage, passwords, clock, random, attempts)
-    val registration = DeviceRegistration(storage, passwordCheck, clock, random, attempts)
+    val registration = DeviceRegistration(storage, changes, passwordCheck, clock, random, attempts)
     val invites = Invites(storage, passwords, registration, clock, random, attempts)
     val administration = AccountAdministration(storage, passwords, content, changes, clock, random)
     val passwordChange = PasswordChange(storage, passwords, passwordCheck)

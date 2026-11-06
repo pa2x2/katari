@@ -11,6 +11,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -31,12 +32,17 @@ internal fun Route.liveRoute(services: SyncServices) {
             close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, reason))
         }
         val notices = launch {
+            val devices = services.changes.devices(device.accountId)
             var sent = withContext(Dispatchers.IO) { services.storage.identityOf(device.accountId) }
-            send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent))))
-            services.changes.sequence(device.accountId).collect { sequence ->
-                if (sequence > sent.sequence) {
-                    sent = withContext(Dispatchers.IO) { services.storage.identityOf(device.accountId) }
-                    send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent))))
+            var sentDevices = devices.value
+            send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent, sentDevices))))
+            combine(services.changes.sequence(device.accountId), devices, ::Pair).collect { (sequence, deviceCount) ->
+                if (sequence > sent.sequence || deviceCount != sentDevices) {
+                    if (sequence > sent.sequence) {
+                        sent = withContext(Dispatchers.IO) { services.storage.identityOf(device.accountId) }
+                    }
+                    sentDevices = deviceCount
+                    send(Frame.Binary(true, ProtoBuf.encodeToByteArray(ChangesAvailable(sent, sentDevices))))
                 }
             }
         }

@@ -11,16 +11,20 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * What the live channel tells connected devices: an account's sequence moving on, and devices being revoked or their
- * account disabled, either of which closes their connection.
+ * What the live channel tells connected devices: an account's sequence moving on, a device joining or leaving the
+ * account, and devices being revoked or their account disabled, either of which closes their connection.
  */
 class AccountChanges {
     private val sequences = ConcurrentHashMap<Long, MutableStateFlow<Long>>()
+    private val deviceCounts = ConcurrentHashMap<Long, MutableStateFlow<Long>>()
     private val revoked = MutableSharedFlow<DeviceId>(extraBufferCapacity = 64)
     private val disabled = MutableSharedFlow<Long>(extraBufferCapacity = 64)
 
     /** Holds 0 until the first [announce] for the account, not its stored sequence. */
     fun sequence(accountId: Long): StateFlow<Long> = flowOf(accountId).asStateFlow()
+
+    /** How many times a device joined or left the account since the server started. */
+    fun devices(accountId: Long): StateFlow<Long> = deviceCountOf(accountId).asStateFlow()
 
     val revocations: SharedFlow<DeviceId> = revoked.asSharedFlow()
 
@@ -32,6 +36,11 @@ class AccountChanges {
         flowOf(accountId).update { maxOf(it, sequence) }
     }
 
+    /** Called once a device joining or leaving the account has committed. */
+    fun announceDevicesChanged(accountId: Long) {
+        deviceCountOf(accountId).update { it + 1 }
+    }
+
     fun announceRevoked(device: DeviceId) {
         revoked.tryEmit(device)
     }
@@ -41,4 +50,6 @@ class AccountChanges {
     }
 
     private fun flowOf(accountId: Long) = sequences.computeIfAbsent(accountId) { MutableStateFlow(0) }
+
+    private fun deviceCountOf(accountId: Long) = deviceCounts.computeIfAbsent(accountId) { MutableStateFlow(0) }
 }

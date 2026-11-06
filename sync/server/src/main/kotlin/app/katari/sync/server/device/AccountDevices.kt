@@ -35,7 +35,10 @@ class AccountDevices(
             val device = storage.devices.byId(id)?.takeIf { it.accountId == accountId && !it.isRevoked }
             device?.also { storage.devices.revoke(it.id) } != null
         }
-        if (revoked) changes.announceRevoked(id)
+        if (revoked) {
+            changes.announceRevoked(id)
+            changes.announceDevicesChanged(accountId)
+        }
         return revoked
     }
 

@@ -1,5 +1,6 @@
 package app.katari.sync.client.trigger
 
+import app.katari.sync.client.account.DeviceListChanges
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
@@ -25,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * The live channel while the app is open (D021): an announcement of a position past this device's starts a run, so
- * another device's change shows within seconds. A channel that ends is opened again after a backoff that grows to
+ * another device's change shows within seconds, and its count of the account's devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
  * [MAX_BACKOFF] and starts over once the channel works; each end also starts a run, which finds out why when the
  * server refused it, as for a removed device.
  */
@@ -35,6 +36,7 @@ class LiveUpdates(
     private val clients: SyncServerClients,
     private val network: NetworkConnectivity,
     private val runs: SyncRuns,
+    private val deviceChanges: DeviceListChanges,
 ) {
     /** Whether the channel should be open: the app is in front, the device syncs, and there is a network. */
     fun wanted(foreground: Flow<Boolean>): Flow<Boolean> = combine(
@@ -68,6 +70,7 @@ class LiveUpdates(
                 object : LiveChannel.Listener {
                     override fun onAnnouncement(changes: ChangesAvailable) {
                         heard.set(true)
+                        deviceChanges.hear(changes.devices)
                         val state = latest.get()
                         if (changes.server.sequence > state.position || changes.server.instanceId != state.instanceId) {
                             runs.request(SyncRequest())

@@ -22,6 +22,7 @@ import app.katari.sync.protocol.device.RegisterDeviceResponse
 import app.katari.sync.protocol.version.ProtocolCompatibility
 import app.katari.sync.protocol.version.SyncProtocolVersion
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import okhttp3.HttpUrl
@@ -48,7 +49,11 @@ class SyncAccount(
     private val firstSync: FirstSyncSteps,
     private val devices: DeviceDirectory,
     private val disconnection: Disconnection,
+    private val deviceChanges: DeviceListChanges,
 ) {
+    /** Changes whenever the server says a device joined or left the account, while the app listens live. */
+    val deviceListChanges: Flow<Long> get() = deviceChanges.heard
+
     suspend fun checkServer(address: String): ServerCheck {
         val url = when (val parsed = ServerAddress.parse(address)) {
             is ServerAddress.Accepted -> parsed.url

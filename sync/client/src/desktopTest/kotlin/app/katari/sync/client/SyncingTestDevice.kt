@@ -1,6 +1,7 @@
 package app.katari.sync.client
 
 import app.katari.sync.client.account.DeviceDirectory
+import app.katari.sync.client.account.DeviceListChanges
 import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.SyncAccount
@@ -79,11 +80,14 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val thisDevice = object : ThisDevice {
         override fun description() = DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", "test")
     }
-    val account =
-        SyncAccount(clients, connection, tokens, thisDevice, capture, runs, resync, firstSync, directory, disconnection)
+    private val deviceChanges = DeviceListChanges()
+    val account = SyncAccount(
+        clients, connection, tokens, thisDevice, capture, runs, resync, firstSync, directory, disconnection,
+        deviceChanges,
+    )
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs),
+        LiveUpdates(connection, clients, network, runs, deviceChanges),
         LocalChanges(local.driver),
         work,
         connection,

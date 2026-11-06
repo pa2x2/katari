@@ -9,6 +9,7 @@ import app.katari.sync.server.account.Account
 import app.katari.sync.server.account.PasswordCheck
 import app.katari.sync.server.account.PasswordCheckOutcome
 import app.katari.sync.server.attemptlimit.AttemptLimiter
+import app.katari.sync.server.live.AccountChanges
 import app.katari.sync.server.onetimecode.OneTimeCode
 import app.katari.sync.server.record.identityOf
 import app.katari.sync.server.storage.ServerStorage
@@ -28,12 +29,18 @@ import kotlin.time.Duration
  */
 class DeviceRegistration(
     private val storage: ServerStorage,
+    private val changes: AccountChanges,
     private val passwordCheck: PasswordCheck,
     private val clock: Clock,
     private val random: SecureRandom,
     private val attempts: AttemptLimiter,
 ) {
-    fun register(request: RegisterDeviceRequest, remoteAddress: String): RegistrationOutcome {
+    fun register(request: RegisterDeviceRequest, remoteAddress: String): RegistrationOutcome =
+        joinAccount(request, remoteAddress).also { outcome ->
+            if (outcome is RegistrationOutcome.Registered) changes.announceDevicesChanged(outcome.accountId)
+        }
+
+    private fun joinAccount(request: RegisterDeviceRequest, remoteAddress: String): RegistrationOutcome {
         val signIn = request.password
         if (signIn != null) {
             return when (val check = passwordCheck.check(signIn.username, signIn.password, remoteAddress)) {
@@ -94,7 +101,7 @@ class DeviceRegistration(
         if (account.isDisabled) {
             RegistrationOutcome.Disabled
         } else {
-            RegistrationOutcome.Registered(link(account, description))
+            RegistrationOutcome.Registered(link(account, description), account.id)
         }
 
     private fun newDeviceId(): DeviceId = generateSequence { DeviceId(random.nextLong()) }
@@ -105,7 +112,7 @@ class DeviceRegistration(
 }
 
 sealed interface RegistrationOutcome {
-    data class Registered(val response: RegisterDeviceResponse) : RegistrationOutcome
+    data class Registered(val response: RegisterDeviceResponse, val accountId: Long) : RegistrationOutcome
 
     data object Refused : RegistrationOutcome
 
