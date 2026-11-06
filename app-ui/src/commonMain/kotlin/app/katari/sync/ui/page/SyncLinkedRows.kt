@@ -5,6 +5,7 @@ import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
+import app.katari.sync.ui.status.stopsSync
 import app.katari.sync.ui.status.syncHeadlineText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
@@ -61,6 +62,7 @@ private fun statusCard(
             // The headline says when it last synced
             subtitle = account,
             icon = headline?.icon(),
+            iconAlert = headline?.stopsSync() == true,
             widget = {
                 Button(
                     label = stringResource(MR.strings.sync_action_sync_now),

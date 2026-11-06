@@ -82,6 +82,14 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     else -> ContentTone.Inherit
 }
 
+/** Whether sync is stopped until the person, an update or time does something, which the status card's icon marks. */
+fun SyncHeadline.stopsSync(): Boolean = when (this) {
+    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, SyncHeadline.SignInAgain,
+    SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
+    -> true
+    else -> false
+}
+
 fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase

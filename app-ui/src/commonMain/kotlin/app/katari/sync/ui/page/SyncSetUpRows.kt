@@ -19,7 +19,6 @@ import mihon.presentation.kit.button.PageActions
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.surface.WarningCard
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -78,8 +77,8 @@ internal fun endedPreferences(link: SyncStatus.Link.Ended, actions: SyncPageActi
                 },
             ),
             subtitle = stringResource(MR.strings.sync_ended_text, link.server?.host.orEmpty()),
-            subtitleTone = ContentTone.Error,
             icon = MaterialSymbols.Rounded.PhonelinkErase,
+            iconAlert = true,
         )
     },
     Preference.PreferenceItem.CustomPreference(title = "ways-in", framed = false) {

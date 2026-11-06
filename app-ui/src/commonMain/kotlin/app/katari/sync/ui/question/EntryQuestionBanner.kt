@@ -8,7 +8,6 @@ import mihon.presentation.kit.button.ButtonSize
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -30,7 +29,6 @@ fun EntryQuestionBanner(question: EntryQuestion, onChoose: () -> Unit) {
                         EntryQuestion.NOTES -> MR.strings.sync_banner_notes_text
                     },
                 ),
-                subtitleTone = ContentTone.Warning,
                 icon = MaterialSymbols.Rounded.SyncProblem,
                 trailing = {
                     Button(
