@@ -1,16 +1,13 @@
 package mihon.data.database
 
 import app.cash.sqldelight.async.coroutines.await
-import app.cash.sqldelight.db.AfterVersion
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.db.SqlSchema
 import com.eygraber.sqldelight.androidx.driver.AndroidxSqliteDatabaseType
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import tachiyomi.data.Database
 import java.io.File
 
 class TemporarySchemaTest {
@@ -19,33 +16,18 @@ class TemporarySchemaTest {
     lateinit var directory: File
 
     @Test
-    fun `temporary statements never run during a migration and reach writer and readers after it`() = runTest {
-        val file = directory.resolve("test.db")
-        open(file, TemporarySchema { _ -> emptyList() }).use { driver ->
+    fun `published statements reach the writer and readers, and a later publication replaces them`() = runTest {
+        val schema = TemporarySchema()
+        open(directory.resolve("test.db"), schema).use { driver ->
             driver.await(
                 null,
                 "INSERT INTO entries(_id, profile_id, source, url, title) VALUES (1, 1, 1, '/entry', 'Entry')",
                 0,
             )
-        }
-
-        val schema = TemporarySchema { _ -> listOf(DROP_MARKER, CREATE_MARKER) }
-        val migrating = object : SqlSchema<QueryResult.AsyncValue<Unit>> by Database.Schema {
-            override val version = Database.Schema.version + 1
-
-            override fun migrate(
-                driver: SqlDriver,
-                oldVersion: Long,
-                newVersion: Long,
-                vararg callbacks: AfterVersion,
-            ) = QueryResult.AsyncValue {
-                driver.await(null, "UPDATE entries SET title = 'Migrated'", 0)
-                Unit
-            }
-        }
-        open(file, schema, migrating).use { driver ->
+            driver.await(null, "UPDATE entries SET title = 'Before publishing'", 0)
             driver.markers() shouldBe 0
 
+            schema.publish(listOf(DROP_MARKER, CREATE_MARKER))
             driver.await(null, "UPDATE entries SET title = 'By the writer'", 0)
             // Outside a transaction a query runs on a reader connection, writes included.
             driver.writeThroughReader("UPDATE entries SET title = 'By a reader' RETURNING _id")
@@ -58,18 +40,13 @@ class TemporarySchemaTest {
         }
     }
 
-    private fun open(
-        file: File,
-        temporarySchema: TemporarySchema,
-        schema: SqlSchema<QueryResult.AsyncValue<Unit>> = Database.Schema,
-    ): SqlDriver {
+    private fun open(file: File, temporarySchema: TemporarySchema): SqlDriver {
         lateinit var driver: SqlDriver
         driver = configuredSqlDriver(
             databaseType = AndroidxSqliteDatabaseType.File(file.path),
             readerCount = 2,
             databaseRepository = DatabaseRepositoryImpl(lazy { driver }),
             temporarySchema = temporarySchema,
-            schema = schema,
         )
         return driver
     }

@@ -84,7 +84,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     AppProcessStart.installLogging(graph)
     launch.logIgnored()
     AppProcessStart.runAppUpgradeMigrations(graph)
-    AppProcessStart.resumeSettingsCapture(graph)
+    AppProcessStart.resumeSyncCapture(graph)
     // Before anything starts AWT, which fixes the window toolkit for the run
     graph.startDisplayBackend()
     SingletonImageLoader.setSafe { graph.imageLoader }

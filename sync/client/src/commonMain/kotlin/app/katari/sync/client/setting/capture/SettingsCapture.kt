@@ -1,6 +1,5 @@
 package app.katari.sync.client.setting.capture
 
-import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
 import app.katari.sync.client.kind.setting.SourceSettingKind
@@ -28,8 +27,8 @@ import kotlin.time.Clock
  * triggers do for the database, which never sees preferences. It listens to the stores themselves, so every writer is
  * heard; with sync off nothing listens. Each edit carries the time it was made.
  *
- * Writes that are no one's edit never reach it: it starts at process start only once the app's upgrade migrations
- * have run ([resume]); a source's settings file from before profiles is moved before it is watched
+ * Writes that are no one's edit never reach it: at process start it starts only once the app's upgrade migrations
+ * have run ([app.katari.sync.client.capture.SyncCapture.resume]); a source's settings file from before profiles is moved before it is watched
  * ([SourcePreferenceFiles]); and when restore writes the default profile's preferences into the shared store as
  * well, those keys belong to the profile, which no shared setting does.
  */
@@ -66,11 +65,6 @@ class SettingsCapture(
         val stopped = synchronized(this) { running.also { running = null } } ?: return
         stopped.watches.forEach(AutoCloseable::close)
         stopped.recording.cancel()
-    }
-
-    /** Starts listening when sync is on; for process start, once the upgrade migrations have run. */
-    suspend fun resume() {
-        if (handler.await { sync_stateQueries.get().awaitAsOne().enabled }) start()
     }
 
     private fun edit(write: PreferenceWrite): Edit? {

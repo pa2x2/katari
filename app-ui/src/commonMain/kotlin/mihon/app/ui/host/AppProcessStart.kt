@@ -83,15 +83,12 @@ object AppProcessStart {
         )
     }
 
-    /**
-     * Resumes recording preference edits for sync, when sync is on, once the upgrade migrations have run, so their
-     * rewrites of preferences are never edits. The database's capture resumes by itself when it opens.
-     */
+    /** Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits. */
     @HostEntryPoint
-    fun resumeSettingsCapture(graph: AppProcessGraph) {
+    fun resumeSyncCapture(graph: AppProcessGraph) {
         Migrator.scope.launch {
             Migrator.await()
-            graph.settingsCapture.resume()
+            graph.syncCapture.resume()
         }
     }
 

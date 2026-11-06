@@ -1,5 +1,6 @@
 package app.katari.sync.client.capture
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.setting.capture.SettingsCapture
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -9,8 +10,7 @@ import tachiyomi.data.DatabaseHandler
 
 /**
  * Turns change capture on and off with sync, of the database and of preferences ([SettingsCapture]). The state is kept
- * in `sync_state`, so database capture comes back on by itself when the database next opens
- * ([SyncCaptureSchemaSource]), and preference capture when the process starts ([SettingsCapture.resume]).
+ * in `sync_state`, and a process that starts with sync on captures again from [resume].
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -28,6 +28,16 @@ class SyncCapture(
             sync_outboxQueries.clear()
             sync_stateQueries.setEnabled(true)
         }
+        temporarySchema.publish(CaptureTriggers.install)
+        settings.start()
+    }
+
+    /**
+     * Captures again after a process start when sync is on. It runs once the app's upgrade migrations are done, so
+     * their writes to the database and preferences are never edits; writes before it returns are not captured.
+     */
+    suspend fun resume() {
+        if (!handler.await { sync_stateQueries.get().awaitAsOne().enabled }) return
         temporarySchema.publish(CaptureTriggers.install)
         settings.start()
     }

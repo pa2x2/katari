@@ -164,7 +164,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         AppProcessStart.installLogging(graph)
 
         AppProcessStart.runAppUpgradeMigrations(graph)
-        AppProcessStart.resumeSettingsCapture(graph)
+        AppProcessStart.resumeSyncCapture(graph)
     }
 
     private fun onCreateCrashProcess(process: String) {

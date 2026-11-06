@@ -4,7 +4,6 @@ import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.SqlDriver
 import app.katari.sync.client.capture.SyncCapture
-import app.katari.sync.client.capture.SyncCaptureSchemaSource
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.setting.capture.SettingsCapture
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +34,7 @@ import java.io.File
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncTestDevice(file: File) : AutoCloseable {
-    private val temporarySchema = TemporarySchema(SyncCaptureSchemaSource())
+    private val temporarySchema = TemporarySchema()
     val driver: SqlDriver = createSqlDriver(file, DatabaseRepositoryImpl(lazy { driver }), temporarySchema)
     val database = Database(
         driver = driver,

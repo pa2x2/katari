@@ -8,7 +8,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.TemporarySchema
-import mihon.data.database.TemporarySchemaSource
 import mihon.domain.database.repository.DatabaseRepository
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
@@ -41,7 +40,7 @@ interface DatabaseBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun temporarySchema(source: TemporarySchemaSource): TemporarySchema = TemporarySchema(source)
+        fun temporarySchema(): TemporarySchema = TemporarySchema()
 
         @Provides
         @SingleIn(AppScope::class)
