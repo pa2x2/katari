@@ -44,7 +44,7 @@ internal class DefaultEntryMediaSessionFeature(
         if (progressed != null && recording && type in types.progress) synchronizeTracking(progressed, recorded)
         if (progressed != null && type in types.translateAhead) translateAhead(progressed)
         val settled = event is EntryMediaSessionEvent.ActivityRecorded || progressed?.settled == true
-        if (recording && settled) settledListeners().forEach(EntryMediaSessionSettledListener::onSettled)
+        if (recording && settled) settledListeners().forEach { it.onSettled(event.visibleEntry.id) }
         return EntryMediaSessionResult.Handled
     }
 

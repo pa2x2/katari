@@ -11,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.sync.ui.entry.rememberEntrySync
+import app.katari.sync.ui.question.SyncQuestionsScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -124,6 +126,8 @@ class EntryScreen(
             create(entryId)
         }
 
+        // Before the entry loads, so its progress is asked of the other devices at once
+        val sync = rememberEntrySync(entryId) { navigator.push(SyncQuestionsScreen) }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         if (state is EntryViewModel.State.Loading) {
@@ -293,6 +297,7 @@ class EntryScreen(
             updatesLabel = updatesLabel,
             activity = activityState,
             onActivityClicked = { showActivitySheet = true },
+            sync = sync,
             chapterSwipeStartAction = viewModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,

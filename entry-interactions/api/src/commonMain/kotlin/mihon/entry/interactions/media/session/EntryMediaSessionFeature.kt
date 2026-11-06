@@ -67,7 +67,8 @@ sealed interface EntryMediaSessionEvent {
  * the person's other devices.
  */
 fun interface EntryMediaSessionSettledListener {
-    fun onSettled()
+    /** [entryId] is the entry the reader or player was opened from. */
+    fun onSettled(entryId: Long)
 }
 
 data class EntryMediaSessionActivity(

@@ -80,13 +80,19 @@ internal fun BookDocumentReaderContent(
                         },
                         onChromeToggle = controller::toggleChrome,
                         onChromeHide = { controller.setChromeVisible(false) },
-                        onUserScrollStarted = coordinator::onUserScrollStarted,
+                        onUserScrollStarted = {
+                            controller.dismissProgressOffer()
+                            coordinator.onUserScrollStarted()
+                        },
                         onNavigationVisibilityChange = controller::setNavigationVisible,
                         onSettingsVisibilityChange = controller::setSettingsVisible,
                         onChildWebViewAction = controller::launchChildWebViewAction,
                         onToggleBookmark = controller::toggleCurrentChapterBookmark,
                         onHideText = controller::requestHideText,
                         snackbarHostState = controller.snackbarHostState,
+                        progressOffer = controller.progressOffer,
+                        onGoToProgressOffer = controller::goToProgressOffer,
+                        onDismissProgressOffer = controller::dismissProgressOffer,
                         onAnchorMissing = { controller.showReaderFeedback(MR.strings.book_document_anchor_missing) },
                         onInternalLinkClick = coordinator::navigateLink,
                         onExternalLinkClick = controller::confirmExternalLink,

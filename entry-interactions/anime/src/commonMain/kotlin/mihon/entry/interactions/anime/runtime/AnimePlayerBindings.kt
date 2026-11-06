@@ -27,6 +27,7 @@ import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.runtime.EntryTypeKey
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -114,6 +115,7 @@ object AnimePlayerBindings {
         downloadRuntime: EntryDownloadRuntimeFeature,
         libraryPreferences: LibraryPreferences,
         introTimesLookup: IntroTimesLookup,
+        progressOffers: EntryProgressOffers,
         @AppCoroutineScope appScope: CoroutineScope,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = VideoPlayerViewModel(
@@ -135,6 +137,7 @@ object AnimePlayerBindings {
             downloadRuntime = downloadRuntime,
             libraryPreferences = libraryPreferences,
             introTimesLookup = introTimesLookup,
+            progressOffers = progressOffers,
             persistenceScope = appScope,
         )
     }

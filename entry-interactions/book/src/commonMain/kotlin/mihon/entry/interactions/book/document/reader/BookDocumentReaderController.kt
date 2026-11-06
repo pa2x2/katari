@@ -17,6 +17,8 @@ import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
+import mihon.entry.interactions.book.document.reader.handoff.BookProgressOffer
+import mihon.entry.interactions.book.document.reader.handoff.bookProgressOffer
 import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
@@ -103,6 +105,10 @@ internal class BookDocumentReaderController(
     var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
         private set
 
+    /** Where another device got to, offered until it is taken, dismissed or the page moves (D053). */
+    var progressOffer by mutableStateOf<BookProgressOffer?>(null)
+        private set
+
     val snackbarHostState = SnackbarHostState()
     val keys = BookDocumentReaderKeys()
     val jumpHistory get() = retainedSessions.jumpHistory
@@ -164,7 +170,34 @@ internal class BookDocumentReaderController(
         },
     )
 
+    private fun watchProgressOffers() {
+        scope.launch {
+            dependencies.progressOffers.offers(setOf(startupRequest.entryId)).collect { offer ->
+                val state = readerState ?: return@collect
+                bookProgressOffer(
+                    offer = offer,
+                    chapters = state.readingOrder.chapters,
+                    currentChapterId = state.currentChapterId,
+                    progression = visualChapterProgression.floatValue.toDouble(),
+                )?.let { progressOffer = it }
+            }
+        }
+    }
+
+    fun goToProgressOffer() {
+        val offer = progressOffer ?: return
+        progressOffer = null
+        chapterCoordinator.selectNavigationTarget(
+            BookDocumentNavigationTarget(offer.chapter, offer.locator, restorePosition = true),
+        )
+    }
+
+    fun dismissProgressOffer() {
+        progressOffer = null
+    }
+
     fun start() {
+        watchProgressOffers()
         if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
             showError(host.context.stringResource(MR.strings.book_reader_invalid_request))
         } else {
