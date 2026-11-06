@@ -99,6 +99,9 @@ internal class DefaultEntryTrackingAutomation(
         }
     }
 
+    override fun copiesBindingOnMigration(service: EntryTrackingServiceId): Boolean =
+        host.automation.copiesBindingOnMigration(service.value)
+
     private suspend fun resolveSynchronization(entry: Entry): SynchronizationServices {
         val services = host.observeEntry(entry).first().services
         val supported = services.filter { entry.type in it.service.supportedEntryTypes }

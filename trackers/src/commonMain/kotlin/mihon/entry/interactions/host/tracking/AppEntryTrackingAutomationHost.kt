@@ -94,4 +94,7 @@ internal class AppEntryTrackingAutomationHost(
             }
         }
     }
+
+    /** Only an [EnhancedTracker], which follows the entry's source, may look the new entry up instead. */
+    override fun copiesBindingOnMigration(serviceId: Long): Boolean = trackerManager.get(serviceId) !is EnhancedTracker
 }

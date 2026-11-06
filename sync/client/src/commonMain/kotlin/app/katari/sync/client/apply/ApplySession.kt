@@ -10,7 +10,9 @@ import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.question.QuestionDetection
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
-import app.katari.sync.client.kind.replacement.ReplacedEntryEdits
+import app.katari.sync.client.kind.replacement.Replacement
+import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
+import app.katari.sync.client.kind.replacement.carry.ReplacedEntryEdits
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.merge.merge
 import app.katari.sync.client.merge.newestEdit
@@ -47,6 +49,7 @@ internal class ApplySession(
     override val database: Database,
     override val settings: SettingWrites,
     override val profileDeletion: LocalProfileDeletion,
+    override val migrationRules: MigrationCarryRules,
     override val activeProfileId: Long,
     private val device: DeviceId,
     private val now: () -> Long,
@@ -183,9 +186,22 @@ internal class ApplySession(
         key: String,
         state: RecordState,
         storedRef: String?,
-    ): ApplyOutcome = when (state) {
-        is RecordState.Live -> kind.apply(this, key, kind.decode(state.bytes))
-        is RecordState.Deleted -> kind.applyDeletion(this, key, storedRef?.let(::LocalRef))
+    ): ApplyOutcome {
+        val moved = ReplacedEntryEdits(this)
+        return when (state) {
+            is RecordState.Live -> {
+                val payload = kind.decode(state.bytes)
+                if (moved.movedAway(kind, payload)) ApplyOutcome.Applied(null) else kind.apply(this, key, payload)
+            }
+            is RecordState.Deleted -> {
+                val last = state.tombstone.last.takeIf { it.isNotEmpty() }?.let(kind::decode)
+                if (last != null && moved.movedAway(kind, last)) {
+                    ApplyOutcome.Applied(null)
+                } else {
+                    kind.applyDeletion(this, key, storedRef?.let(::LocalRef))
+                }
+            }
+        }
     }
 
     private suspend fun hold(record: SequencedRecord, reason: HoldReason, waitsFor: String? = null) {
@@ -254,10 +270,15 @@ internal class ApplySession(
         return checkNotNull(find())
     }
 
-    override suspend fun replacementOf(entryKey: String): String? {
+    override suspend fun replacementOf(entryKey: String): String? = replacement(entryKey)?.to
+
+    override suspend fun movedTo(entryKey: String): String? =
+        replacement(entryKey)?.takeIf { it.cause == Replacement.Cause.PROFILE_MOVE }?.to
+
+    private suspend fun replacement(entryKey: String): Replacement? {
         val stored = database.sync_recordsQueries.getByKey(EntryReplacementKind.key(entryKey)).awaitAsOneOrNull()
         if (stored == null || stored.deleted) return null
-        return EntryReplacementKind.decode(stored.payload).replacement.value.to
+        return EntryReplacementKind.decode(stored.payload).replacement.value
     }
 
     override suspend fun newEdit(): HybridTimestamp {

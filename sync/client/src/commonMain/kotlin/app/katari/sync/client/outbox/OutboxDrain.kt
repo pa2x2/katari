@@ -90,17 +90,30 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
             }
         }
 
+        /**
+         * Stores the parents of the records drained that have no record of their own yet. A parent's row can be held by
+         * a record under another key, as a chapter's is by its entry's old key once the entry moved to another
+         * profile; that record no longer stands for the row, so the parent is stored under the key it has now.
+         */
         suspend fun addUnsyncedParents() {
             val queue = ArrayDeque(records.values.mapNotNull { it.present })
             while (queue.isNotEmpty()) {
                 queue.removeFirst().found.parents.forEach { parent ->
                     if (!read.add(parent.kind.name to parent.ref)) return@forEach
-                    database.sync_recordsQueries.getByLocalRef(parent.kind.name, parent.ref.json).awaitAsOneOrNull()
-                        ?: touch(parent.kind, parent.ref, deletedRecordKey = null, fields = 0, stamp = null)
-                            ?.let(queue::addLast)
+                    val held = database.sync_recordsQueries.getByLocalRef(parent.kind.name, parent.ref.json)
+                        .awaitAsOneOrNull()
+                    if (held != null) {
+                        val current = currentKey(parent.kind, parent.ref)
+                        if (current == null || current == held.record_key) return@forEach
+                    }
+                    touch(parent.kind, parent.ref, deletedRecordKey = null, fields = 0, stamp = null)
+                        ?.let(queue::addLast)
                 }
             }
         }
+
+        private suspend fun currentKey(kind: SyncedKind<*>, ref: LocalRef): String? =
+            (kind.read(reads, ref) as? LocalRead.Found)?.key
 
         suspend fun store() {
             records.forEach { (key, record) ->

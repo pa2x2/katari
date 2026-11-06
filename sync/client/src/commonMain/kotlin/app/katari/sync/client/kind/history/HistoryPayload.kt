@@ -11,7 +11,8 @@ import kotlinx.serialization.protobuf.ProtoType
 /**
  * When a chapter was last read and for how long. Time read is a running total, so each device keeps its own share
  * and a device's total is the sum of every share: time read on two devices adds up instead of one overwriting the
- * other.
+ * other. Time read on a chapter of an entry that moved to another profile before the device heard of it is carried to
+ * the chapter's new record as a share of its own, so it adds to the time read there.
  */
 @Serializable
 data class HistoryPayload(
@@ -29,4 +30,6 @@ data class TimeReadShare(
     @ProtoNumber(2) val millis: Long,
     /** When [device] last changed its share; only that device ever does. */
     @ProtoNumber(3) val at: HybridTimestamp,
+    /** The chapter record the time was read on, when it was carried over from another; null for this chapter's own. */
+    @ProtoNumber(4) val from: String? = null,
 )

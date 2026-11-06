@@ -9,11 +9,13 @@ import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
+import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,6 +37,7 @@ import tachiyomi.data.History
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
+import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
 import java.io.File
 
 /**
@@ -79,7 +82,15 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
             preferences.sourceFiles.deleteProfile(profileId)
         }
     }
-    val writing = SyncWriting(handler, drain, preferences.writes, profileDeletion, preferences.profiles)
+
+    // Migration as the app does it for a type whose read and bookmark marks both carry, copying trackers as they are
+    private val migrationRules = object : MigrationCarryRules {
+        override fun chapterMarks(type: EntryType) = MigrationChildStateTransfer(read = true, bookmarks = true)
+
+        override fun copiesTrackerBinding(trackerId: Long) = true
+    }
+    val writing =
+        SyncWriting(handler, drain, preferences.writes, profileDeletion, migrationRules, preferences.profiles)
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)

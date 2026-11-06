@@ -47,14 +47,8 @@ data class EntryMigrationTargetRefreshIntent(
     val fetchChildren: Boolean,
 )
 
-/** User-selectable transfer options captured before execution. */
-enum class EntryMigrationOption {
-    CHILD_STATE,
-    CATEGORIES,
-    NOTES,
-    CUSTOM_COVER,
-    REMOVE_SOURCE_DOWNLOADS,
-}
+/** User-selectable transfer options captured before execution; shared with sync, which reads them back. */
+typealias EntryMigrationOption = tachiyomi.domain.entry.migration.EntryMigrationOption
 
 enum class EntryMigrationMode {
     COPY,

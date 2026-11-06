@@ -27,6 +27,7 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.data)
                 implementation(projects.domain)
+                implementation(projects.entrySourceApi)
                 implementation(projects.extensionRuntime)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.serialization.protobuf)
@@ -48,7 +49,6 @@ kotlin {
         }
         getByName("desktopTest") {
             dependencies {
-                implementation(projects.entrySourceApi)
                 implementation(projects.extensionRuntime.jvmHost)
             }
         }

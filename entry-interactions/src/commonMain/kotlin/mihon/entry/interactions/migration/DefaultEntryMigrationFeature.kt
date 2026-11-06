@@ -29,6 +29,10 @@ import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
 import mihon.entry.interactions.tracking.toDomainTrack
 import mihon.entry.interactions.tracking.toTrackingRecord
+import tachiyomi.domain.entry.migration.EntryMigrationFingerprint
+import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
+import tachiyomi.domain.entry.migration.MigrationLibraryFields
+import tachiyomi.domain.entry.migration.migratedLibraryFields
 import tachiyomi.domain.entry.model.Entry
 
 internal class DefaultEntryMigrationFeature(
@@ -45,6 +49,11 @@ internal class DefaultEntryMigrationFeature(
     private val clockMillis: () -> Long = System::currentTimeMillis,
 ) : EntryMigrationFeature {
     private val migrationTypes = types.migration
+    override fun childStateTransfer(type: EntryType) = MigrationChildStateTransfer(
+        read = type in types.consumption,
+        bookmarks = type in types.bookmark,
+    )
+
     override fun availability(entry: Entry): EntryMigrationAvailability {
         val rejection = entry.sourceRejection()
         return if (rejection == null) {
@@ -421,8 +430,7 @@ internal class DefaultEntryMigrationFeature(
             prepareMigrationChildUpdates(
                 sourceChildren = inspected.sourceChildren,
                 childMatches = durableEvent.childMatches,
-                transferConsumption = inspected.source.type in types.consumption,
-                transferBookmarks = inspected.source.type in types.bookmark,
+                transfer = childStateTransfer(inspected.source.type),
             )
         } else {
             emptyList()
@@ -442,16 +450,19 @@ internal class DefaultEntryMigrationFeature(
                 payload = record.payload.value,
             )
         }
+        val libraryFields = migratedLibraryFields(
+            source = inspected.source.libraryFields(),
+            target = inspected.target.libraryFields(),
+            replace = replace,
+            carryNotes = EntryMigrationOption.NOTES in selectedOptions,
+            now = clockMillis(),
+        )
         val targetUpdate = inspected.target.copy(
-            favorite = true,
-            libraryPinned = inspected.source.libraryPinned || inspected.target.libraryPinned,
-            chapterFlags = inspected.source.chapterFlags,
-            dateAdded = if (replace) inspected.source.dateAdded else clockMillis(),
-            notes = if (EntryMigrationOption.NOTES in selectedOptions) {
-                inspected.source.notes
-            } else {
-                inspected.target.notes
-            },
+            favorite = libraryFields.favorite,
+            libraryPinned = libraryFields.libraryPinned,
+            chapterFlags = libraryFields.chapterFlags,
+            dateAdded = libraryFields.dateAdded,
+            notes = libraryFields.notes,
         )
         val transition = EntryMigrationHostTransition(
             operationId = operationId,
@@ -574,6 +585,8 @@ internal class DefaultEntryMigrationFeature(
         return null
     }
 
+    private fun Entry.libraryFields() = MigrationLibraryFields(favorite, libraryPinned, chapterFlags, dateAdded, notes)
+
     private fun Entry.isPersisted(): Boolean = id > 0L && profileId > 0L
 
     private fun Entry.subject() = EntryMigrationSubject(profileId, id)
@@ -581,13 +594,7 @@ internal class DefaultEntryMigrationFeature(
     private fun migrationFingerprint(
         mode: EntryMigrationMode,
         selectedOptions: Set<EntryMigrationOption>,
-    ): String {
-        return buildString {
-            append(mode.name)
-            append(':')
-            append(selectedOptions.map(EntryMigrationOption::name).sorted().joinToString(","))
-        }
-    }
+    ): String = EntryMigrationFingerprint.of(mode.name, selectedOptions)
 
     private fun selectionRejected(reason: EntryMigrationRejection) = EntryMigrationSelectionResult.Rejected(reason)
 

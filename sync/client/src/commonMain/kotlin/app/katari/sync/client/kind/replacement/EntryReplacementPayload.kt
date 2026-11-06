@@ -18,6 +18,11 @@ data class EntryReplacementPayload(
 data class Replacement(
     @ProtoNumber(1) val to: String,
     @ProtoNumber(2) val cause: Cause,
+    /**
+     * For a migration, the options the person chose, by [tachiyomi.domain.entry.migration.EntryMigrationOption] name,
+     * so other devices carry later edits over as the migration did; a name this version doesn't know is ignored.
+     */
+    @ProtoNumber(3) val options: List<String> = emptyList(),
 ) {
     @Serializable
     enum class Cause {

@@ -10,12 +10,14 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.kind.replacement.carry.ReplacedEntryEdits
 import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import tachiyomi.domain.entry.migration.EntryMigrationFingerprint
 
 /**
  * Entry replacements, keyed by the replaced entry's key. Local ref: `["migration", operation_id]` for a source
@@ -64,6 +66,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
                     toEntryId = operation.target_entry_id,
                     cause = Replacement.Cause.MIGRATION,
                     parents = listOf(operation.source_entry_id, operation.target_entry_id),
+                    options = EntryMigrationFingerprint.options(operation.intent_fingerprint).map { it.name }.sorted(),
                 )
             }
         }
@@ -90,6 +93,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         toEntryId: Long,
         cause: Replacement.Cause,
         parents: List<Long>,
+        options: List<String> = emptyList(),
     ): LocalRead<EntryReplacementPayload> {
         val to = reads.entryKey(toEntryId)
         if (from == null || to == null) return LocalRead.NotSynced
@@ -97,7 +101,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             key = key(from),
             parents = parents.map { RecordRef(EntryKind, EntryKind.ref(it)) },
         ) { previous, stamps ->
-            EntryReplacementPayload(from, stamps.field(2, Replacement(to, cause), previous?.replacement))
+            EntryReplacementPayload(from, stamps.field(2, Replacement(to, cause, options), previous?.replacement))
         }
     }
     override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =

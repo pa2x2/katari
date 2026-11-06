@@ -43,29 +43,43 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
             ?: return LocalRead.Missing
         val entryKey = reads.entryKey(row.entry_id) ?: return LocalRead.NotSynced
         val chapterKey = reads.chapterKey(row.chapter_id) ?: return LocalRead.NotSynced
+        val key = RecordKeys.derive(name, chapterKey)
+        val movedFrom = movedFrom(reads, ref, key)
         return LocalRead.Found(
-            key = RecordKeys.derive(name, chapterKey),
+            key = key,
             parents = listOf(RecordRef(ChapterKind, ChapterKind.ref(row.chapter_id))),
         ) { previous, stamps ->
             val device = reads.device
-            val others = previous?.timeRead.orEmpty().filter { it.device != device }
+            val others = (previous?.timeRead ?: movedFrom).orEmpty().filter { it.device != device || it.from != null }
             val ownMillis = (row.time_read - others.sumOf { it.millis }).coerceAtLeast(0)
-            val ownPrevious = previous?.timeRead?.firstOrNull { it.device == device }
+            val ownPrevious = previous?.timeRead?.firstOrNull { it.device == device && it.from == null }
             val own = stamps.field(4, ownMillis, ownPrevious?.let { Stamped(it.millis, it.at) })
             HistoryPayload(
                 entryKey = entryKey,
                 chapterKey = chapterKey,
                 lastRead = stamps.field(3, row.last_read?.time, previous?.lastRead),
-                timeRead = (others + TimeReadShare(device, own.value, own.at)).sortedBy { it.device.value },
+                timeRead = (others + TimeReadShare(device, own.value, own.at)).sorted(),
             )
         }
+    }
+
+    /**
+     * The shares of the record the row held before its chapter moved to another profile with its entry, each carried as
+     * read on that chapter, so the new record starts from them rather than taking all of the row's time as this
+     * device's own: a device that reads the old chapter before it hears of the move changes only its carried share.
+     */
+    private suspend fun movedFrom(reads: LocalReads, ref: LocalRef, key: String): List<TimeReadShare>? {
+        val held = reads.database.sync_recordsQueries.getByLocalRef(name, ref.json).awaitAsOneOrNull()
+        if (held == null || held.deleted || held.record_key == key) return null
+        val old = decode(held.payload)
+        return old.timeRead.map { it.copy(from = it.from ?: old.chapterKey) }
     }
 
     /** Each device's share is written only by that device, so the share it changed last is its current one. */
     override fun merge(local: HistoryPayload, incoming: HistoryPayload) = local.copy(
         lastRead = latest(local.lastRead, incoming.lastRead),
         timeRead = (local.timeRead + incoming.timeRead)
-            .groupBy { it.device }
+            .groupBy { it.device to it.from }
             .map { (_, shares) ->
                 shares.reduce { a, b ->
                     latest(Stamped(a.millis, a.at), Stamped(b.millis, b.at)).let {
@@ -73,7 +87,7 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
                     }
                 }
             }
-            .sortedBy { it.device.value },
+            .sorted(),
     )
 
     /** The row holds the sum of every device's share, this device's own included. */
@@ -96,3 +110,5 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
 
     override fun entryKeyOf(payload: HistoryPayload) = payload.entryKey
 }
+
+private fun List<TimeReadShare>.sorted() = sortedWith(compareBy({ it.device.value }, { it.from.orEmpty() }))

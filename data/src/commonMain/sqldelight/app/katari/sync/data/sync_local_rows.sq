@@ -211,7 +211,7 @@ AND M.entry_id = :entryId
 AND T.merged_by_source = 0;
 
 entryMigrationRow:
-SELECT source_entry_id, target_entry_id
+SELECT source_entry_id, target_entry_id, intent_fingerprint
 FROM entry_migration_operations
 WHERE operation_id = :operationId
 AND mode = 'REPLACE';

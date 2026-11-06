@@ -96,10 +96,12 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
     /**
      * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
      * keeps the metadata of its own refreshes. An entry another one replaced stays out of the library; its changes
-     * carry over to the replacement instead. Local-source entries never sync.
+     * carry over to the replacement instead. An entry moved to another profile has no row of its own any more, as
+     * after moving it here, so its record makes none. Local-source entries never sync.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: EntryPayload): ApplyOutcome {
         if (payload.source.idScheme == SourceIdScheme.LOCAL.key) return ApplyOutcome.Applied(null)
+        if (writes.movedTo(key) != null) return ApplyOutcome.Applied(null)
         val profileId = writes.profileId(payload.profileUuid).idOr { return it }
         val source = writes.sourceKey(payload.source)
         val favorite = payload.favorite.value && writes.replacementOf(key) == null

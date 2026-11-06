@@ -1,6 +1,7 @@
 package app.katari.sync.client.apply
 
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
+import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.setting.apply.SettingWrites
@@ -19,6 +20,7 @@ internal interface LocalWrites {
     val database: Database
     val settings: SettingWrites
     val profileDeletion: LocalProfileDeletion
+    val migrationRules: MigrationCarryRules
 
     /** The profile open on this device, which sync never deletes from under the person. */
     val activeProfileId: Long
@@ -40,6 +42,9 @@ internal interface LocalWrites {
 
     /** The record key of the entry that replaced [entryKey], when one did. */
     suspend fun replacementOf(entryKey: String): String?
+
+    /** The record key of the entry [entryKey] became by moving to another profile, when it did. */
+    suspend fun movedTo(entryKey: String): String?
 
     /**
      * A timestamp for a change sync makes on this device's behalf, such as merging two categories into one: after
