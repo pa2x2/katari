@@ -9,6 +9,7 @@ import app.katari.sync.client.setting.scope.PreferenceScopes
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,15 +50,30 @@ class SettingsCapture(
     }
 
     private fun listen(): Running {
-        val edits = Channel<Edit>(Channel.UNLIMITED)
+        val heard = Channel<Heard>(Channel.UNLIMITED)
         val watches = listOf(
-            profileStore.watchPreferenceWrites { write -> edit(write)?.let(edits::trySend) },
-            sourceFiles.watchWrites { write -> edits.trySend(edit(write)) },
+            profileStore.watchPreferenceWrites { write -> edit(write)?.let(heard::trySend) },
+            sourceFiles.watchWrites { write -> heard.trySend(edit(write)) },
         )
         val recording = scope.launch {
-            for (edit in edits) record(edit)
+            for (next in heard) {
+                when (next) {
+                    is Edit -> record(next)
+                    is Flush -> next.done.complete(Unit)
+                }
+            }
         }
-        return Running(watches, recording)
+        return Running(watches, heard, recording)
+    }
+
+    /**
+     * Returns once every edit heard so far is in the outbox, so a drain after it sees them; at once when not
+     * listening. Edits a store's listeners deliver later, such as Android's on the main thread, are not waited for.
+     */
+    suspend fun flush() {
+        val flush = Flush()
+        val queued = synchronized(this) { running?.heard?.trySend(flush)?.isSuccess == true }
+        if (queued) flush.done.await()
     }
 
     /** Stops listening; edits heard but not recorded yet are dropped, as sync is off. */
@@ -96,10 +112,16 @@ class SettingsCapture(
         }
     }
 
+    private sealed interface Heard
+
     /** An edit of the record [localRef] locates, or, when [all], of every record whose local ref starts with it. */
-    private class Edit(val kind: String, val localRef: String, val all: Boolean = false) {
+    private class Edit(val kind: String, val localRef: String, val all: Boolean = false) : Heard {
         val changedAt: Long = Clock.System.now().toEpochMilliseconds()
     }
 
-    private class Running(val watches: List<AutoCloseable>, val recording: Job)
+    private class Flush : Heard {
+        val done = CompletableDeferred<Unit>()
+    }
+
+    private class Running(val watches: List<AutoCloseable>, val heard: Channel<Heard>, val recording: Job)
 }

@@ -16,6 +16,7 @@ internal class RecordExchange {
 
     /** Everything [device] has to push, taken as the server takes it. */
     suspend fun pushFrom(device: SyncTestDevice): List<SequencedRecord> {
+        device.settingsCapture.flush()
         device.drainAll()
         return device.pending.next(Long.MAX_VALUE).map { envelope ->
             SequencedRecord(++sequence, envelope).also {

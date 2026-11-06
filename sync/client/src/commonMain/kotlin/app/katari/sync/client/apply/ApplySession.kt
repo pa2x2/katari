@@ -286,6 +286,32 @@ internal class ApplySession(
     }
 
     /**
+     * Merges [restored], the record [key] as a restore left its row at [localRef], into this device's copy, and writes
+     * the result back to the row: what changed elsewhere since the backup stays, and what the backup brings that is
+     * newer than this device's copy is pushed.
+     */
+    suspend fun <P : Any> restored(kind: SyncedKind<P>, key: String, localRef: String?, restored: RecordState) {
+        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull()
+        val storedState = stored?.let { RecordState.of(it.deleted, it.payload) }
+        val merged = storedState?.let { kind.merge(it, restored) } ?: restored
+        val changed = storedState == null || !kind.sameRecord(merged, storedState)
+        if (!changed && kind.sameRecord(merged, restored)) return
+        val ref = stored?.local_ref ?: localRef
+        if (changed) {
+            database.sync_recordsQueries.storeLocalChange(
+                recordKey = key,
+                kind = kind.name,
+                localRef = ref,
+                kindVersion = kind.version.toLong(),
+                payload = merged.bytes,
+                deleted = merged.deleted,
+                changeId = newChangeId(),
+            )
+        }
+        settle(kind, key, write(kind, key, merged, ref), ref, record = null)
+    }
+
+    /**
      * The local ID of the record [key]: of the row it is stored as holding, or else of the row written from the
      * stored record now. Missing when no record is stored, or when the record itself waits for its own parent.
      */

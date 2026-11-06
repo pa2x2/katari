@@ -7,8 +7,3 @@ SELECT EXISTS(SELECT 1 FROM profiles WHERE uuid != 'default')
     OR EXISTS(SELECT 1 FROM activity_sessions)
     OR EXISTS(SELECT 1 FROM categories WHERE _id != 0)
     OR EXISTS(SELECT 1 FROM entry_sync);
-
-profiles:
-SELECT _id, uuid, name
-FROM profiles
-ORDER BY position, _id;

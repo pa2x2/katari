@@ -113,7 +113,7 @@ class FirstSync(
     }
 
     private suspend fun localProfiles(): List<LocalProfile> = handler.await {
-        sync_first_syncQueries.profiles().awaitAsList().map { LocalProfile(it._id, it.uuid, it.name) }
+        sync_local_rowsQueries.profiles().awaitAsList().map { LocalProfile(it._id, it.uuid, it.name) }
     }
 
     private fun String.isPersonLevel() = PreferenceScopes.of(this) == PreferenceScope.PERSON

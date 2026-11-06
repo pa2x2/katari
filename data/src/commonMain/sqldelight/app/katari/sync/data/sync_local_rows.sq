@@ -6,6 +6,11 @@ SELECT uuid, name, color_seed, position, is_archived
 FROM profiles
 WHERE uuid = :uuid;
 
+profiles:
+SELECT _id, uuid, name
+FROM profiles
+ORDER BY position, _id;
+
 profileUuid:
 SELECT uuid
 FROM profiles

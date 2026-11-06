@@ -59,3 +59,9 @@ FROM sync_outbox;
 deleteAfter:
 DELETE FROM sync_outbox
 WHERE seq > :seq;
+
+after:
+SELECT seq, kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter
+FROM sync_outbox
+WHERE seq > :seq
+ORDER BY seq;

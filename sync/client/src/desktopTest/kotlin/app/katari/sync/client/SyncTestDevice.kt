@@ -11,6 +11,7 @@ import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
+import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +65,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     }
     val preferences =
         TestPreferenceStores(file.resolveSibling("${file.nameWithoutExtension}-preferences"), handler, scope)
-    private val settingsCapture =
+    val settingsCapture =
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
     val drain = OutboxDrain(handler, preferences.reads)
     val writing = SyncWriting(handler, drain, preferences.writes, preferences.profiles)
@@ -73,6 +74,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val questions = Questions(handler, writing)
     val held = HeldRecords(handler)
     val firstSync = FirstSync(handler, writing, preferences.reads)
+    val restoreStamping = RestoreStamping(handler, writing, settingsCapture, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }
