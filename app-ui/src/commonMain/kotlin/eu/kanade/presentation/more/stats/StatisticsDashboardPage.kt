@@ -97,6 +97,8 @@ internal fun StatisticsDashboardPage(
     CardFlow(
         state = gridState,
         contentPadding = PaddingValues(bottom = bottomPadding + KatariTheme.spacing.xl),
+        // Sections hold two or three cards, so a third column would sit empty beside them.
+        maxColumns = 2,
     ) {
         item(key = "activity-header", span = StaggeredGridItemSpan.FullLine) {
             DashboardGroupHeader(stringResource(StatisticsCardGroup.ACTIVITY.label))
