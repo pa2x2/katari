@@ -17,6 +17,7 @@ import mihon.presentation.kit.content.QrCode
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.layout.FigureWithText
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -64,22 +65,27 @@ internal fun LinkDeviceDialog(onDismissRequest: () -> Unit) {
                 is LinkDeviceViewModel.LinkCodeState.Shown -> if (expired) {
                     Text(stringResource(MR.strings.sync_link_expired), textAlign = TextAlign.Center)
                 } else {
-                    QrCode(
-                        text = code.offer.link.encode(),
-                        contentDescription = stringResource(MR.strings.sync_link_qr_description),
-                    )
-                    Text(code.offer.code, role = TextRole.TypedCode, textAlign = TextAlign.Center)
-                    Text(code.offer.server.toString(), role = TextRole.Body, textAlign = TextAlign.Center)
-                    Text(
-                        stringResource(MR.strings.sync_link_instructions),
-                        role = TextRole.Supporting,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        stringResource(MR.strings.sync_link_expires, timeLeft(code.expiresAtMillis - now)),
-                        role = TextRole.Supporting,
-                        textAlign = TextAlign.Center,
-                    )
+                    FigureWithText(
+                        figure = {
+                            QrCode(
+                                text = code.offer.link.encode(),
+                                contentDescription = stringResource(MR.strings.sync_link_qr_description),
+                            )
+                        },
+                    ) {
+                        Text(code.offer.code, role = TextRole.TypedCode, textAlign = TextAlign.Center)
+                        Text(code.offer.server.toString(), role = TextRole.Body, textAlign = TextAlign.Center)
+                        Text(
+                            stringResource(MR.strings.sync_link_instructions),
+                            role = TextRole.Supporting,
+                            textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            stringResource(MR.strings.sync_link_expires, timeLeft(code.expiresAtMillis - now)),
+                            role = TextRole.Supporting,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }
