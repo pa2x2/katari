@@ -6,6 +6,7 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.data.database.DatabaseRepositoryImpl
+import mihon.data.database.TemporarySchema
 import mihon.data.database.createSqlDriver
 import mihon.desktop.storage.DesktopDirectories
 
@@ -13,6 +14,9 @@ import mihon.desktop.storage.DesktopDirectories
 object DatabaseDriverBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun sqlDriver(directories: DesktopDirectories, databaseRepository: DatabaseRepositoryImpl): SqlDriver =
-        createSqlDriver(directories.data.resolve("katari.db").toFile(), databaseRepository)
+    fun sqlDriver(
+        directories: DesktopDirectories,
+        databaseRepository: DatabaseRepositoryImpl,
+        temporarySchema: TemporarySchema,
+    ): SqlDriver = createSqlDriver(directories.data.resolve("katari.db").toFile(), databaseRepository, temporarySchema)
 }

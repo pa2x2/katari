@@ -1,0 +1,76 @@
+package app.katari.sync.client.kind.progress
+
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.capture.CaptureTrigger
+import app.katari.sync.client.capture.CaptureTrigger.Event
+import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.kind.chapter.ChapterKind
+import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.record.LocalRead
+import app.katari.sync.client.record.LocalReads
+import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.record.RecordRef
+import app.katari.sync.client.record.SyncedKind
+
+/**
+ * Reading and playback positions, keyed by entry key, content key and resource key. Local ref:
+ * `[entry_progress_state._id]`.
+ */
+object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload.serializer(), Absence.TOMBSTONE) {
+    private val locatorColumns = arrayOf(
+        "locator_kind",
+        "position",
+        "extent",
+        "progression",
+        "total_progression",
+        "extensions",
+        "resource_revision",
+    )
+
+    override val capture = listOf(
+        CaptureTrigger("entry_progress_state", Event.INSERT, listOf("NEW._id")),
+        CaptureTrigger(
+            "entry_progress_state",
+            Event.UPDATE,
+            listOf("NEW._id"),
+            fields = listOf(Field(5, *locatorColumns), Field(6, "completed")),
+        ),
+        CaptureTrigger("entry_progress_state", Event.DELETE, listOf("OLD._id")),
+    )
+
+    override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ProgressPayload> {
+        val row = reads.database.sync_local_rowsQueries.progressRow(ref.long(0)).awaitAsOneOrNull()
+            ?: return LocalRead.Missing
+        val entryKey = reads.entryKey(row.entry_id) ?: return LocalRead.NotSynced
+        val chapterKey = row.chapter_id?.let { reads.chapterKey(it) }
+        return LocalRead.Found(
+            key = RecordKeys.derive(name, entryKey, row.content_key, row.resource_key),
+            parents = listOfNotNull(
+                RecordRef(EntryKind, EntryKind.ref(row.entry_id)),
+                row.chapter_id?.let { RecordRef(ChapterKind, ChapterKind.ref(it)) },
+            ),
+        ) { previous, stamps ->
+            ProgressPayload(
+                entryKey = entryKey,
+                contentKey = row.content_key,
+                resourceKey = row.resource_key,
+                chapterKey = chapterKey,
+                locator = stamps.field(
+                    5,
+                    ProgressLocator(
+                        kind = row.locator_kind,
+                        position = row.position,
+                        extent = row.extent,
+                        progression = row.progression,
+                        totalProgression = row.total_progression,
+                        extensions = row.extensions,
+                        resourceRevision = row.resource_revision,
+                    ),
+                    previous?.locator,
+                ),
+                completed = stamps.field(6, row.completed, previous?.completed),
+            )
+        }
+    }
+}

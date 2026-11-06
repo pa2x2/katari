@@ -35,6 +35,7 @@ import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.power.PowerSource
 import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.data.database.DatabaseRepositoryImpl
+import mihon.data.database.TemporarySchema
 import mihon.data.database.createSqlDriver
 import mihon.domain.app.AppIdentity
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
@@ -109,8 +110,11 @@ interface AppBindings {
     companion object {
         @Provides
         @SingleIn(AppScope::class)
-        fun sqlDriver(context: Context, databaseRepository: DatabaseRepositoryImpl): SqlDriver =
-            createSqlDriver(context, databaseRepository)
+        fun sqlDriver(
+            context: Context,
+            databaseRepository: DatabaseRepositoryImpl,
+            temporarySchema: TemporarySchema,
+        ): SqlDriver = createSqlDriver(context, databaseRepository, temporarySchema)
 
         @Provides
         @IntoSet

@@ -83,6 +83,7 @@ dependencies {
     implementation(projects.core.platform)
     implementation(projects.i18n)
     implementation(projects.libraryUpdate)
+    implementation(projects.sync.client)
     implementation(projects.icons.materialSymbols)
     implementation(projects.scriptRuntime)
     implementation(projects.sourceCompat)
