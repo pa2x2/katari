@@ -1,6 +1,8 @@
 package mihon.entry.interactions.migration
 
 import mihon.entry.interactions.migration.host.EntryMigrationHostChildUpdate
+import tachiyomi.domain.entry.migration.MigrationChapterMatch
+import tachiyomi.domain.entry.migration.matchMigrationChapters
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal fun prepareMigrationChildUpdates(
@@ -38,34 +40,10 @@ internal fun prepareMigrationChildUpdates(
     }
 }
 
-internal data class EntryMigrationChildMatch(
-    val source: EntryChapter?,
-    val target: EntryChapter,
-)
+internal typealias EntryMigrationChildMatch = MigrationChapterMatch<EntryChapter>
 
 internal fun matchMigrationChildren(
     sourceChildren: List<EntryChapter>,
     targetChildren: List<EntryChapter>,
-): List<EntryMigrationChildMatch> {
-    val sourceByNumber = buildMap {
-        sourceChildren.forEach { source ->
-            if (source.chapterNumber >= 0.0) {
-                putIfAbsent(source.chapterNumber.normalizedMigrationNumber(), source)
-            }
-        }
-    }
-    val sourceByName = buildMap {
-        sourceChildren.forEach { source -> putIfAbsent(source.name, source) }
-    }
-
-    return targetChildren.map { target ->
-        val source = if (target.chapterNumber >= 0.0) {
-            sourceByNumber[target.chapterNumber.normalizedMigrationNumber()]
-        } else {
-            sourceByName[target.name]
-        }
-        EntryMigrationChildMatch(source = source, target = target)
-    }
-}
-
-private fun Double.normalizedMigrationNumber(): Double = if (this == 0.0) 0.0 else this
+): List<EntryMigrationChildMatch> =
+    matchMigrationChapters(sourceChildren, targetChildren, EntryChapter::chapterNumber, EntryChapter::name)

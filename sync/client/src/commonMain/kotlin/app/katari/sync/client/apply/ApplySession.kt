@@ -8,6 +8,7 @@ import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.replacement.ReplacedEntryEdits
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.merge.merge
 import app.katari.sync.client.merge.newestEdit
@@ -81,48 +82,35 @@ internal class ApplySession(
         val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
         val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
         val holdsLocalEdits = !kind.sameRecord(merged, incoming)
-        val outcome = write(kind, envelope.key, merged, stored?.local_ref)
-        val kept = (outcome as? ApplyOutcome.Superseded)?.let { RecordState.Deleted(it.tombstone) }
-        val payload = kept?.bytes ?: if (holdsLocalEdits) merged.bytes else envelope.payload
         database.sync_recordsQueries.storeMerged(
             recordKey = envelope.key,
             kind = kind.name,
-            localRef = null,
+            localRef = stored?.local_ref,
             kindVersion = kind.version.toLong(),
-            payload = payload,
-            deleted = kept?.deleted ?: merged.deleted,
+            payload = if (holdsLocalEdits) merged.bytes else envelope.payload,
+            deleted = merged.deleted,
             basedOn = record.sequence,
-            changeId = if (kept != null || holdsLocalEdits) newChangeId() else null,
+            changeId = if (holdsLocalEdits) newChangeId() else null,
             basePayload = envelope.payload,
         )
+        val outcome = write(kind, envelope.key, merged, stored?.local_ref)
         settle(kind, envelope.key, outcome, stored?.local_ref, record)
+        if (outcome is ApplyOutcome.Applied && merged is RecordState.Live) carry(kind, envelope.key, merged)
+    }
+
+    private suspend fun <P : Any> carry(kind: SyncedKind<P>, key: String, state: RecordState.Live) {
+        ReplacedEntryEdits(this).carry(kind, key, kind.decode(state.bytes))
     }
 
     /** Writes the record [key] as this device stores it again, once what it waited for is here. */
     private suspend fun reapply(key: String, held: Sync_pending?): ApplyOutcome? {
         val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return null
         val kind = SyncKinds.named(stored.kind) ?: return null
-        val outcome = write(kind, key, RecordState.of(stored.deleted, stored.payload), stored.local_ref)
-        if (outcome is ApplyOutcome.Superseded) {
-            database.sync_recordsQueries.storeLocalChange(
-                recordKey = key,
-                kind = kind.name,
-                localRef = null,
-                kindVersion = kind.version.toLong(),
-                payload = RecordState.Deleted(outcome.tombstone).bytes,
-                deleted = true,
-                changeId = newChangeId(),
-            )
-        }
-        settle(
-            kind,
-            key,
-            outcome,
-            stored.local_ref,
-            held?.let {
-                ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record)
-            },
-        )
+        val state = RecordState.of(stored.deleted, stored.payload)
+        val outcome = write(kind, key, state, stored.local_ref)
+        val record = held?.let { ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record) }
+        settle(kind, key, outcome, stored.local_ref, record)
+        if (outcome is ApplyOutcome.Applied && state is RecordState.Live) carry(kind, key, state)
         return outcome
     }
 
@@ -140,6 +128,15 @@ internal class ApplySession(
                 retryWaitingFor(key)
             }
             is ApplyOutcome.Superseded -> {
+                database.sync_recordsQueries.storeLocalChange(
+                    recordKey = key,
+                    kind = kind.name,
+                    localRef = null,
+                    kindVersion = kind.version.toLong(),
+                    payload = RecordState.Deleted(outcome.tombstone).bytes,
+                    deleted = true,
+                    changeId = newChangeId(),
+                )
                 link(kind, key, null)
                 database.sync_pendingQueries.release(key)
                 retryWaitingFor(key)
@@ -257,6 +254,23 @@ internal class ApplySession(
         val stamp = stamper.stamp(now(), seen.physicalMillis, seen.counter)
         database.sync_clockQueries.setIssued(stamper.issuedPhysical, stamper.issuedCounter.toLong())
         return stamp
+    }
+
+    override suspend fun <P : Any> change(kind: SyncedKind<P>, key: String, payload: P) {
+        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull()
+        val changed = RecordState.Live(kind.encode(payload, stored?.payload))
+        val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), changed) } ?: changed
+        if (stored != null && kind.sameRecord(merged, RecordState.of(stored.deleted, stored.payload))) return
+        database.sync_recordsQueries.storeLocalChange(
+            recordKey = key,
+            kind = kind.name,
+            localRef = stored?.local_ref,
+            kindVersion = kind.version.toLong(),
+            payload = merged.bytes,
+            deleted = merged.deleted,
+            changeId = newChangeId(),
+        )
+        settle(kind, key, write(kind, key, merged, stored?.local_ref), stored?.local_ref, record = null)
     }
 
     /**

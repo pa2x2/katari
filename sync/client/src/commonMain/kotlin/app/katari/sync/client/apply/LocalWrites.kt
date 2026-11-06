@@ -1,6 +1,7 @@
 package app.katari.sync.client.apply
 
 import app.katari.sync.client.payload.SourceReference
+import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.setting.apply.SettingWrites
 import app.katari.sync.protocol.clock.HybridTimestamp
 import tachiyomi.data.Database
@@ -43,4 +44,10 @@ internal interface LocalWrites {
      * every edit this device has made or seen, as a person's edit made now would be.
      */
     suspend fun newEdit(): HybridTimestamp
+
+    /**
+     * Merges [payload] into the record [key] as a change of this device's, pushed like a person's edit, and writes the
+     * result to the rows. Nothing changes when the record already holds every edit in [payload].
+     */
+    suspend fun <P : Any> change(kind: SyncedKind<P>, key: String, payload: P)
 }

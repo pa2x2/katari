@@ -1,10 +1,10 @@
-package mihon.entry.interactions.migration
+package tachiyomi.domain.entry.migration
 
 import io.kotest.matchers.collections.shouldContainExactly
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryChapter
 
-class EntryMigrationChildMatchingTest {
+class MigrationChapterMatchTest {
     @Test
     fun `matching preserves source precedence and number versus name rules`() {
         val sourceChildren = listOf(
@@ -29,7 +29,8 @@ class EntryMigrationChildMatchingTest {
             child(id = 109, chapterNumber = -1.0, name = "numeric-name"),
         )
 
-        val matches = matchMigrationChildren(sourceChildren, targetChildren)
+        val matches =
+            matchMigrationChapters(sourceChildren, targetChildren, EntryChapter::chapterNumber, EntryChapter::name)
 
         matches.map { it.target.id }.shouldContainExactly(101L, 102L, 103L, 104L, 105L, 106L, 107L, 108L, 109L)
         matches.map { it.source?.id }.shouldContainExactly(1L, null, 3L, null, 5L, 3L, 6L, 7L, 8L)

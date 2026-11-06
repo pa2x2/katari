@@ -1,8 +1,10 @@
 package app.katari.sync.client.kind.replacement
 
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
@@ -101,6 +103,34 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
     override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =
         local.copy(replacement = latest(local.replacement, incoming.replacement))
 
-    override suspend fun apply(writes: LocalWrites, key: String, payload: EntryReplacementPayload): ApplyOutcome =
-        ApplyOutcome.Applied(null)
+    /**
+     * The replacement's own changes arrive as records of the new entry, made by the device that replaced it; here the
+     * old entry's rows follow a move to another profile, and its edits made since carry over ([ReplacedEntryEdits]).
+     * The old entry never returns to the library: its record no longer sets it as a favorite ([EntryKind.apply]).
+     */
+    override suspend fun apply(writes: LocalWrites, key: String, payload: EntryReplacementPayload): ApplyOutcome {
+        val replacement = payload.replacement.value
+        val toId = writes.entryId(replacement.to).idOr { return it }
+        if (replacement.cause == Replacement.Cause.PROFILE_MOVE) moveRows(writes, payload.from, toId)
+        ReplacedEntryEdits(writes).carryAll(payload.from)
+        return ApplyOutcome.Applied(null)
+    }
+
+    /**
+     * Moves the old entry's chapters, history, positions and activity to the entry it became in the other profile,
+     * then deletes the old row with what didn't move: its category links, as a local move drops them, and what the
+     * new entry already had, which its own records hold.
+     */
+    private suspend fun moveRows(writes: LocalWrites, from: String, toId: Long) {
+        val ref = writes.database.sync_recordsQueries.getByKey(from).awaitAsOneOrNull()?.local_ref ?: return
+        val fromId = LocalRef(ref).long(0)
+        val queries = writes.database.sync_applyQueries
+        if (fromId == toId || !queries.entryExists(fromId).awaitAsOne()) return
+        queries.moveChapters(toEntryId = toId, fromEntryId = fromId)
+        queries.moveProgress(toEntryId = toId, fromEntryId = fromId)
+        queries.moveHistory(toEntryId = toId, fromEntryId = fromId)
+        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
+        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
+        queries.deleteEntry(fromId)
+    }
 }
