@@ -5,6 +5,7 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -45,4 +46,11 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
             )
         }
     }
+
+    override fun merge(local: ProfilePayload, incoming: ProfilePayload) = local.copy(
+        name = latest(local.name, incoming.name),
+        colorSeed = latest(local.colorSeed, incoming.colorSeed),
+        position = latest(local.position, incoming.position),
+        archived = latest(local.archived, incoming.archived),
+    )
 }

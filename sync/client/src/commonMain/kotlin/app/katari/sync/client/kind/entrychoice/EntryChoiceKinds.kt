@@ -6,6 +6,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -70,6 +71,10 @@ object EntryUpdateModeKind : SyncedKind<EntryUpdateModePayload>(
             EntryUpdateModePayload(entryKey, stamps.field(2, row.mode, previous?.mode))
         }
     }
+
+    override fun merge(local: EntryUpdateModePayload, incoming: EntryUpdateModePayload) = local.copy(
+        mode = latest(local.mode, incoming.mode),
+    )
 }
 
 /** Local ref: `[entry_id, scanlator]`. */
@@ -94,6 +99,10 @@ object ExcludedScanlatorKind : SyncedKind<ExcludedScanlatorPayload>(
 
     override fun removed(previous: ExcludedScanlatorPayload, stamps: FieldStamps) =
         previous.copy(removed = stamps.field(3, true, previous.removed))
+
+    override fun merge(local: ExcludedScanlatorPayload, incoming: ExcludedScanlatorPayload) = local.copy(
+        removed = latest(local.removed, incoming.removed),
+    )
 }
 
 /** Local ref: `[entry_id, provider_id, setting_key]`. */
@@ -122,6 +131,10 @@ object ViewerSettingKind : SyncedKind<ViewerSettingPayload>(
             )
         }
     }
+
+    override fun merge(local: ViewerSettingPayload, incoming: ViewerSettingPayload) = local.copy(
+        encodedValue = latest(local.encodedValue, incoming.encodedValue),
+    )
 }
 
 /** Local ref: `[entry_id]`. */
@@ -158,6 +171,15 @@ object DownloadPreferencesKind : SyncedKind<DownloadPreferencesPayload>(
             )
         }
     }
+
+    override fun merge(local: DownloadPreferencesPayload, incoming: DownloadPreferencesPayload) = local.copy(
+        dubKey = latest(local.dubKey, incoming.dubKey),
+        streamKey = latest(local.streamKey, incoming.streamKey),
+        subtitleKey = latest(local.subtitleKey, incoming.subtitleKey),
+        qualityMode = latest(local.qualityMode, incoming.qualityMode),
+        serverKey = latest(local.serverKey, incoming.serverKey),
+        audioKey = latest(local.audioKey, incoming.audioKey),
+    )
 }
 
 /** Local ref: `[entry_id]`. */
@@ -184,6 +206,12 @@ object TranslationLanguagesKind : SyncedKind<TranslationLanguagesPayload>(
             )
         }
     }
+
+    override fun merge(local: TranslationLanguagesPayload, incoming: TranslationLanguagesPayload) = local.copy(
+        contentLanguage = latest(local.contentLanguage, incoming.contentLanguage),
+        targetLanguage = latest(local.targetLanguage, incoming.targetLanguage),
+        translateDownloads = latest(local.translateDownloads, incoming.translateDownloads),
+    )
 }
 
 /**
@@ -217,6 +245,10 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
             )
         }
     }
+
+    override fun merge(local: IntroTimesPickPayload, incoming: IntroTimesPickPayload) = local.copy(
+        match = latest(local.match, incoming.match),
+    )
 }
 
 /** Local ref: `[entry_id]`. */
@@ -279,4 +311,22 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
             )
         }
     }
+
+    override fun merge(local: PlaybackPreferencesPayload, incoming: PlaybackPreferencesPayload) = local.copy(
+        dubKey = latest(local.dubKey, incoming.dubKey),
+        streamKey = latest(local.streamKey, incoming.streamKey),
+        sourceQualityKey = latest(local.sourceQualityKey, incoming.sourceQualityKey),
+        subtitleKey = latest(local.subtitleKey, incoming.subtitleKey),
+        playerQualityMode = latest(local.playerQualityMode, incoming.playerQualityMode),
+        playerQualityHeight = latest(local.playerQualityHeight, incoming.playerQualityHeight),
+        subtitleOffsetX = latest(local.subtitleOffsetX, incoming.subtitleOffsetX),
+        subtitleOffsetY = latest(local.subtitleOffsetY, incoming.subtitleOffsetY),
+        subtitleTextSize = latest(local.subtitleTextSize, incoming.subtitleTextSize),
+        subtitleTextColor = latest(local.subtitleTextColor, incoming.subtitleTextColor),
+        subtitleBackgroundColor = latest(local.subtitleBackgroundColor, incoming.subtitleBackgroundColor),
+        subtitleBackgroundOpacity = latest(local.subtitleBackgroundOpacity, incoming.subtitleBackgroundOpacity),
+        subtitleTextEdge = latest(local.subtitleTextEdge, incoming.subtitleTextEdge),
+        playerEngine = latest(local.playerEngine, incoming.playerEngine),
+        serverKey = latest(local.serverKey, incoming.serverKey),
+    )
 }

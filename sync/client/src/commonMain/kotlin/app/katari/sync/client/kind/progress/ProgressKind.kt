@@ -7,6 +7,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -73,4 +74,9 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             )
         }
     }
+    override fun merge(local: ProgressPayload, incoming: ProgressPayload) = local.copy(
+        chapterKey = local.chapterKey ?: incoming.chapterKey,
+        locator = latest(local.locator, incoming.locator),
+        completed = latest(local.completed, incoming.completed),
+    )
 }

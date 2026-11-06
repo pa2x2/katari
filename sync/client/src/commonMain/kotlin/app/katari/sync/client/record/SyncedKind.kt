@@ -23,6 +23,13 @@ abstract class SyncedKind<P : Any>(
 
     internal abstract suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<P>
 
+    /**
+     * The payload holding both [local]'s and [incoming]'s edits of one record (D017). Every device must reach the same
+     * payload from the same edits whatever order they come in, so it is commutative, associative and idempotent. The
+     * fields a key is computed from are equal in both.
+     */
+    internal abstract fun merge(local: P, incoming: P): P
+
     /** For [Absence.REMOVED_FLAG]: [previous] marked removed. */
     internal open fun removed(previous: P, stamps: FieldStamps): P =
         throw UnsupportedOperationException("$name records are not memberships")

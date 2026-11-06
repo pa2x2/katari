@@ -166,7 +166,7 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
             kindVersion = kind.version.toLong(),
             payload = ProtoBuf.encodeToByteArray(
                 Tombstone.serializer(),
-                Tombstone(stamps.latest ?: Stamped.UNKNOWN_EDIT),
+                Tombstone(stamps.latest ?: Stamped.UNKNOWN_EDIT, last = stored.payload),
             ),
             deleted = true,
             changeId = newChangeId(),

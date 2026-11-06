@@ -6,6 +6,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -54,4 +55,19 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
             )
         }
     }
+
+    /** Each device's share is written only by that device, so the share it changed last is its current one. */
+    override fun merge(local: HistoryPayload, incoming: HistoryPayload) = local.copy(
+        lastRead = latest(local.lastRead, incoming.lastRead),
+        timeRead = (local.timeRead + incoming.timeRead)
+            .groupBy { it.device }
+            .map { (_, shares) ->
+                shares.reduce { a, b ->
+                    latest(Stamped(a.millis, a.at), Stamped(b.millis, b.at)).let {
+                        a.copy(millis = it.value, at = it.at)
+                    }
+                }
+            }
+            .sortedBy { it.device.value },
+    )
 }

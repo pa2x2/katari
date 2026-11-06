@@ -6,6 +6,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -70,4 +71,17 @@ object TrackerBindingKind : SyncedKind<TrackerBindingPayload>(
             )
         }
     }
+    override fun merge(local: TrackerBindingPayload, incoming: TrackerBindingPayload) = local.copy(
+        remoteId = latest(local.remoteId, incoming.remoteId),
+        libraryId = latest(local.libraryId, incoming.libraryId),
+        remoteUrl = latest(local.remoteUrl, incoming.remoteUrl),
+        title = latest(local.title, incoming.title),
+        lastChapterRead = latest(local.lastChapterRead, incoming.lastChapterRead),
+        totalChapters = latest(local.totalChapters, incoming.totalChapters),
+        status = latest(local.status, incoming.status),
+        score = latest(local.score, incoming.score),
+        startDate = latest(local.startDate, incoming.startDate),
+        finishDate = latest(local.finishDate, incoming.finishDate),
+        private = latest(local.private, incoming.private),
+    )
 }

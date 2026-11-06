@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.merge.larger
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -40,4 +41,8 @@ object ExtensionRepositoryKind : SyncedKind<ExtensionRepositoryPayload>(
             )
         }
     }
+
+    /** Everything but the URL comes from the repository's index, which each device fetches; any copy will do. */
+    override fun merge(local: ExtensionRepositoryPayload, incoming: ExtensionRepositoryPayload) =
+        larger(local, incoming)
 }

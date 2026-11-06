@@ -4,6 +4,8 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.merge.fieldOfNewer
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -74,4 +76,14 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
             )
         }
     }
+    override fun merge(local: EntryPayload, incoming: EntryPayload) = local.copy(
+        favorite = latest(local.favorite, incoming.favorite),
+        dateAdded = latest(local.dateAdded, incoming.dateAdded),
+        displayName = latest(local.displayName, incoming.displayName),
+        notes = latest(local.notes, incoming.notes),
+        libraryPinned = latest(local.libraryPinned, incoming.libraryPinned),
+        viewerFlags = latest(local.viewerFlags, incoming.viewerFlags),
+        chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
+        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+    )
 }

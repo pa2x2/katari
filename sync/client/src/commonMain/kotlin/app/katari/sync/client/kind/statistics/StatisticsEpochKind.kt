@@ -6,6 +6,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -40,4 +41,6 @@ object StatisticsEpochKind : SyncedKind<StatisticsEpochPayload>(
             StatisticsEpochPayload(profileUuid, stamps.field(2, row.started_at, previous?.startedAt))
         }
     }
+    override fun merge(local: StatisticsEpochPayload, incoming: StatisticsEpochPayload) =
+        local.copy(startedAt = latest(local.startedAt, incoming.startedAt))
 }

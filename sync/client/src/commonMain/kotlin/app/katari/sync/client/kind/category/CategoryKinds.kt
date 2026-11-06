@@ -7,6 +7,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -54,6 +55,12 @@ object CategoryKind : SyncedKind<CategoryPayload>(
             )
         }
     }
+
+    override fun merge(local: CategoryPayload, incoming: CategoryPayload) = local.copy(
+        name = latest(local.name, incoming.name),
+        order = latest(local.order, incoming.order),
+        flags = latest(local.flags, incoming.flags),
+    )
 }
 
 /** Entry–category links, keyed by entry key and category key. Local ref: `[entry_id, category_id]`. */
@@ -89,6 +96,9 @@ object CategoryMembershipKind : SyncedKind<CategoryMembershipPayload>(
 
     override fun removed(previous: CategoryMembershipPayload, stamps: FieldStamps) =
         previous.copy(removed = stamps.field(3, true, previous.removed))
+
+    override fun merge(local: CategoryMembershipPayload, incoming: CategoryMembershipPayload) =
+        local.copy(removed = latest(local.removed, incoming.removed))
 }
 
 /**
@@ -150,4 +160,14 @@ object CategoryUpdateRulesKind : SyncedKind<CategoryUpdateRulesPayload>(
             )
         }
     }
+
+    override fun merge(local: CategoryUpdateRulesPayload, incoming: CategoryUpdateRulesPayload) = local.copy(
+        autoUpdate = latest(local.autoUpdate, incoming.autoUpdate),
+        customRules = latest(local.customRules, incoming.customRules),
+        skipCompleted = latest(local.skipCompleted, incoming.skipCompleted),
+        skipUnseen = latest(local.skipUnseen, incoming.skipUnseen),
+        skipNotStarted = latest(local.skipNotStarted, incoming.skipNotStarted),
+        skipOutsideReleasePeriod = latest(local.skipOutsideReleasePeriod, incoming.skipOutsideReleasePeriod),
+        intervalHours = latest(local.intervalHours, incoming.intervalHours),
+    )
 }

@@ -41,6 +41,10 @@ object ActivitySessionKind : SyncedKind<ActivitySessionPayload>(
             ActivitySessionPayload(row.session_id, entryKey, row.started_at, row.ended_at, row.duration)
         }
     }
+
+    /** A session only grows while it lasts, so the copy that ends later holds all of the other. */
+    override fun merge(local: ActivitySessionPayload, incoming: ActivitySessionPayload) =
+        maxOf(local, incoming, compareBy<ActivitySessionPayload>({ it.endedAt }, { it.duration }, { it.startedAt }))
 }
 
 /**
@@ -92,6 +96,9 @@ object ActivitySegmentKind : SyncedKind<ActivitySegmentPayload>(
             )
         }
     }
+
+    override fun merge(local: ActivitySegmentPayload, incoming: ActivitySegmentPayload) =
+        maxOf(local, incoming, compareBy<ActivitySegmentPayload>({ it.endedAt }, { it.duration }, { it.startedAt }))
 }
 
 /**
@@ -130,4 +137,7 @@ object ActivityCompletionKind : SyncedKind<ActivityCompletionPayload>(
             )
         }
     }
+
+    /** An event never changes once it happened. */
+    override fun merge(local: ActivityCompletionPayload, incoming: ActivityCompletionPayload) = local
 }

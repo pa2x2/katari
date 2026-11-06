@@ -5,6 +5,8 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.fieldOfNewer
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -53,4 +55,9 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             )
         }
     }
+    override fun merge(local: ChapterPayload, incoming: ChapterPayload) = local.copy(
+        read = latest(local.read, incoming.read),
+        bookmark = latest(local.bookmark, incoming.bookmark),
+        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+    )
 }

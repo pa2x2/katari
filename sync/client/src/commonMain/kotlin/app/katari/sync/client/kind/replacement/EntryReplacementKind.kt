@@ -6,6 +6,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -93,4 +94,6 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             EntryReplacementPayload(from, stamps.field(2, Replacement(to, cause), previous?.replacement))
         }
     }
+    override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =
+        local.copy(replacement = latest(local.replacement, incoming.replacement))
 }

@@ -3,6 +3,7 @@ package app.katari.sync.client.kind.setting
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.merge.latest
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -47,4 +48,6 @@ object SourceSettingKind : SyncedKind<SourceSettingPayload>(
             )
         }
     }
+    override fun merge(local: SourceSettingPayload, incoming: SourceSettingPayload) =
+        local.copy(value = latest(local.value, incoming.value))
 }
