@@ -1,8 +1,10 @@
 import mihon.gradle.extensions.desktop
 
-// The app's half of sync, the same on every platform: record keys, capture of local edits to rows and preferences into the outbox while sync
-// is on, the outbox drain that stamps them with hybrid timestamps, and the payload of every synced kind. The tables
-// it keeps its state in are part of the app database in :data.
+// The app's half of sync, the same on every platform: record keys, capture of local edits to rows and preferences into
+// the outbox while sync is on, the outbox drain that stamps them with hybrid timestamps, the payload of every synced
+// kind, merging and applying other devices' records, and talking to the server: the connection, the runs and when
+// they happen. Platforms supply only their facilities (background work, the device's name). The tables it keeps its
+// state in are part of the app database in :data.
 plugins {
     alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
@@ -25,6 +27,8 @@ kotlin {
                 api(projects.sync.protocol)
 
                 implementation(projects.core.common)
+                // Sync waits for networks and Wi-Fi as the platform reports them.
+                implementation(projects.core.platform)
                 implementation(projects.data)
                 implementation(projects.domain)
                 implementation(projects.entrySourceApi)
@@ -50,6 +54,8 @@ kotlin {
         getByName("desktopTest") {
             dependencies {
                 implementation(projects.extensionRuntime.jvmHost)
+                // Transport is tested against the real server, started in the test's process.
+                implementation(projects.sync.server)
             }
         }
     }
