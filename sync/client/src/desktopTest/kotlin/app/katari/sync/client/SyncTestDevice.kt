@@ -7,6 +7,7 @@ import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
@@ -71,6 +72,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)
     val held = HeldRecords(handler)
+    val firstSync = FirstSync(handler, writing, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }

@@ -30,11 +30,6 @@ deleteProfile:
 DELETE FROM profiles
 WHERE uuid = :uuid;
 
-profileNames:
-SELECT _id, uuid, name
-FROM profiles
-ORDER BY position, _id;
-
 -- Entries
 
 entryId:

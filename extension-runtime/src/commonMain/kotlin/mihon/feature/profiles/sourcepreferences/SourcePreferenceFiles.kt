@@ -103,6 +103,13 @@ class SourcePreferenceFiles(
         }
     }
 
+    /** The own IDs of the sources [profileId] has a settings file of. */
+    fun sourceIdsOf(profileId: Long): List<Long> = fileStore.names()
+        .mapNotNull(::sourcePreferenceFileOwner)
+        .filter { (owner, _) -> owner == profileId }
+        .map { (_, sourceId) -> sourceId }
+        .toList()
+
     /** Deletes [profileId]'s settings of the source with its own ID [sourceId]; other profiles keep theirs. */
     fun clear(profileId: Long, sourceId: Long) {
         open(profileId, sourceId).edit().clear().commit()

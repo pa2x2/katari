@@ -22,5 +22,13 @@ class StoreSettingReads(
     override fun sourceValue(profileId: Long, sourceId: Long, key: String): Any? =
         sourceFiles.open(profileId, sourceId).all[key]
 
+    override fun profileKeys(profileId: Long): Set<String> = profileStore.profileStore(profileId).getAll().keys
+
+    override fun sharedKeys(): Set<String> = profileStore.basePreferenceStore().getAll().keys
+
+    override fun sourceKeys(profileId: Long): Map<Long, Set<String>> = sourceFiles.sourceIdsOf(profileId)
+        .associateWith { sourceId -> sourceFiles.open(profileId, sourceId).all.keys }
+        .filterValues { it.isNotEmpty() }
+
     override fun isProfileKey(key: String): Boolean = key in owners.ownership(existingKeys = setOf(key)).profileKeys
 }
