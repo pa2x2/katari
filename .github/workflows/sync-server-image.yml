@@ -1,0 +1,131 @@
+name: Sync Server Image
+
+# A push to main publishes the sync server's image to this repository's packages when the version in
+# sync/server/build.gradle.kts has no sync-server-v<version> tag yet: ghcr.io/<owner>/katari-sync-server:<version> for
+# linux/amd64 and linux/arm64, plus <major>.<minor> and latest unless the version is a pre-release. The tag goes on the
+# commit last, once the image is pushed, so a failed run is simply retried by the next push or by hand.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  get_version:
+    name: Decide what to publish
+    runs-on: ubuntu-26.04
+    outputs:
+      # Empty when this version is already published, which skips the image job.
+      version: ${{ steps.decide.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Get the server's version
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(sed -n 's/^version = "\(.*\)"$/\1/p' sync/server/build.gradle.kts)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::sync/server/build.gradle.kts has no X.Y.Z or X.Y.Z-prerelease version, got '$version'"
+            exit 1
+          fi
+
+          # The checkout is shallow and has no tags.
+          if [[ -n "$(git ls-remote --tags origin "refs/tags/sync-server-v$version")" ]]; then
+            echo "::notice::Sync server $version is already published."
+            exit 0
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: Build and push the image
+    runs-on: ubuntu-26.04
+    needs: get_version
+    if: needs.get_version.outputs.version != ''
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-read-only: true
+
+      - name: Build and test the server
+        run: ./gradlew :sync:server:test :sync:server:installDist
+
+      - name: Name the image and its tags
+        id: names
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Registry names must be lowercase; owners may not be.
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/katari-sync-server"
+          tags="$image:$VERSION"
+          if [[ "$VERSION" != *-* ]]; then
+            tags+=",$image:${VERSION%.*},$image:latest"
+          fi
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+
+      # Emulation runs the Dockerfile's one RUN step for arm64.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Sign in to GitHub Packages
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: sync/server/build/install/katari-sync-server
+          file: sync/server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.names.outputs.tags }}
+          # The source label links the package to this repository on GitHub.
+          labels: |
+            org.opencontainers.image.title=Katari sync server
+            org.opencontainers.image.description=Self-hosted synchronization server for Katari
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.licenses=Apache-2.0
+          # Without this, the package page lists an extra unknown/unknown platform per architecture.
+          provenance: false
+
+      - name: Tag the published commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/sync-server-v$VERSION" -f "sha=$GITHUB_SHA"
