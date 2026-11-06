@@ -18,11 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.list.treeBranch
 import mihon.presentation.kit.list.treeStem
 import mihon.presentation.kit.theme.KatariTheme
@@ -88,6 +90,8 @@ fun MigrateEntrySelectionGroup(
         )
     }
     val rootCoverHalfHeight = migrationCoverHeight(itemOrientation) / 2
+    // The vertical line linking a merged group's members runs under the middle of the root's cover slot.
+    val treeConnectorX = KatariTheme.spacing.contentInset + BrowseMetrics.listCoverSlotWidth * entryCoverScale() / 2
 
     Column(modifier = modifier) {
         MigrateEntrySelectionItem(
@@ -104,7 +108,7 @@ fun MigrateEntrySelectionGroup(
             expanded = expanded,
             onToggleExpanded = { expanded = !expanded },
             modifier = if (expanded) {
-                Modifier.treeStem(x = TreeConnectorX, stemTop = rootCoverHalfHeight)
+                Modifier.treeStem(x = treeConnectorX, stemTop = rootCoverHalfHeight)
             } else {
                 Modifier
             },
@@ -113,7 +117,10 @@ fun MigrateEntrySelectionGroup(
         AnimatedVisibility(visible = expanded) {
             Column {
                 children.forEachIndexed { index, member ->
-                    MigrationEntryTreeChild(isLast = index == children.lastIndex) { childModifier ->
+                    MigrationEntryTreeChild(
+                        connectorX = treeConnectorX,
+                        isLast = index == children.lastIndex,
+                    ) { childModifier ->
                         when (member.availability) {
                             MigrationEntrySelectionAvailability.ELIGIBLE -> {
                                 MigrateEntrySelectionItem(
@@ -153,15 +160,16 @@ fun MigrateEntrySelectionGroup(
 
 @Composable
 private fun MigrationEntryTreeChild(
+    connectorX: Dp,
     isLast: Boolean,
     content: @Composable (Modifier) -> Unit,
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .treeBranch(x = TreeConnectorX, last = isLast),
+            .treeBranch(x = connectorX, last = isLast),
     ) {
-        content(Modifier.padding(start = TreeConnectorX))
+        content(Modifier.padding(start = connectorX))
     }
 }
 
@@ -178,7 +186,7 @@ private fun MigrationEntryMergeContextItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = BrowseMetrics.listCoverRowMinHeight)
+            .heightIn(min = BrowseMetrics.listCoverRowMinHeight * entryCoverScale())
             .clickable(onClick = onInspect)
             .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
@@ -216,6 +224,3 @@ private fun MigrationEntryMergeContextItem(
         }
     }
 }
-
-// The vertical line linking a merged group's members runs under the middle of the root's cover slot.
-private val TreeConnectorX = KatariTheme.spacing.contentInset + BrowseMetrics.listCoverSlotWidth / 2

@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -99,7 +100,7 @@ internal fun StatisticsTopTitleRow(
         rankText()
         EntryCover.Book(
             data = cover,
-            modifier = Modifier.width(StatisticsMetrics.rankedCoverWidth),
+            modifier = Modifier.width(StatisticsMetrics.rankedCoverWidth * entryCoverScale()),
             frame = CoverFrame.Thumbnail,
         )
         Column(Modifier.weight(1f)) {

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.DpSize
 import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
@@ -38,6 +40,8 @@ fun CoverRow(
 ) {
     val spacing = KatariTheme.spacing
     val nested = cover == null
+    val coverScale = entryCoverScale()
+    val coverSize = LibraryMetrics.rowCover.let { DpSize(it.width * coverScale, it.height * coverScale) }
     TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
@@ -49,7 +53,7 @@ fun CoverRow(
                 },
             )
             .padding(
-                start = if (nested) spacing.m + LibraryMetrics.rowCover.width + spacing.l else spacing.m,
+                start = if (nested) spacing.m + coverSize.width + spacing.l else spacing.m,
                 end = spacing.m,
                 top = if (nested) spacing.xs else spacing.s,
                 bottom = if (nested) spacing.xs else spacing.s,
@@ -62,7 +66,7 @@ fun CoverRow(
                         Spacer(Modifier.width(spacing.m))
                     }
                     if (cover != null) {
-                        Box(modifier = Modifier.size(LibraryMetrics.rowCover)) { cover() }
+                        Box(modifier = Modifier.size(coverSize)) { cover() }
                     }
                 }
             }
