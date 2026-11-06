@@ -1,0 +1,33 @@
+import kotlin.Boolean;
+
+-- Whether this device syncs, and with which server. One row. With enabled = 0 nothing else in the sync tables is
+-- read or written, and no change capture runs.
+CREATE TABLE sync_state(
+    id INTEGER NOT NULL PRIMARY KEY CHECK(id = 0),
+    enabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- The DeviceId the server gave this device when it registered; NULL before that.
+    device_id INTEGER,
+    server_url TEXT,
+    -- ServerIdentity.instanceId of the server the cursor belongs to.
+    server_instance_id TEXT,
+    -- The server sequence this device has pulled up to, and the history chain the server reported there.
+    cursor INTEGER NOT NULL DEFAULT 0,
+    chain TEXT NOT NULL DEFAULT ''
+);
+
+INSERT OR IGNORE INTO sync_state(id) VALUES (0);
+
+get:
+SELECT enabled, device_id, server_url, server_instance_id, cursor, chain
+FROM sync_state
+WHERE id = 0;
+
+setEnabled:
+UPDATE sync_state
+SET enabled = :enabled
+WHERE id = 0;
+
+setServer:
+UPDATE sync_state
+SET server_url = :serverUrl, device_id = :deviceId
+WHERE id = 0;

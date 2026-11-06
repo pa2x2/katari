@@ -1,0 +1,16 @@
+import kotlin.Boolean;
+
+-- Records pulled from the server that can't be applied yet: a kind or kind version this app doesn't read, a parent
+-- record not here yet, or a timestamp too far ahead of this device's clock. Kept as received and applied once what
+-- they wait for arrives.
+CREATE TABLE sync_pending(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    -- The protocol's SequencedRecord as pulled, envelope and payload unchanged.
+    record BLOB NOT NULL,
+    reason TEXT NOT NULL,
+    -- The record key it waits for, when it waits for a parent.
+    waits_for TEXT,
+    received_at INTEGER NOT NULL
+);
+
+CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;

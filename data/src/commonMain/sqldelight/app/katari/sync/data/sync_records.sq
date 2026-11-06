@@ -1,0 +1,70 @@
+import kotlin.Boolean;
+
+-- Every record this device has synced or is about to: its key, the local row that holds it, and the record as this
+-- device last pushed or merged it.
+CREATE TABLE sync_records(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    -- The JSON array that locates the local row, as in sync_outbox.local_ref; NULL once that row is gone.
+    local_ref TEXT,
+    kind_version INTEGER NOT NULL,
+    -- The payload with its field timestamps, including fields a newer app version added that this one doesn't know.
+    payload BLOB NOT NULL,
+    deleted INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- The server sequence of the copy this record was last pushed as or merged with; 0 before the server had it.
+    based_on INTEGER NOT NULL DEFAULT 0,
+    -- Set once the server has had this record, and kept through a full resync, so a record missing from the server
+    -- can be told apart as deleted elsewhere (set) or not uploaded yet (unset).
+    synced INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- Set while a local change waits to be pushed; a retried push sends the same id.
+    change_id TEXT
+);
+
+CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
+CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
+
+getByKey:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+FROM sync_records
+WHERE record_key = :recordKey;
+
+getByLocalRef:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef;
+
+-- Detaches whatever other record the local row held, so the row holds only the record it was last stored for.
+detachLocalRef:
+UPDATE sync_records
+SET local_ref = NULL
+WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+
+storeLocalChange:
+INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id)
+VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :changeId)
+ON CONFLICT(record_key) DO UPDATE SET
+    local_ref = excluded.local_ref,
+    kind_version = excluded.kind_version,
+    payload = excluded.payload,
+    deleted = excluded.deleted,
+    change_id = excluded.change_id;
+
+pending:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id
+FROM sync_records
+WHERE change_id IS NOT NULL
+ORDER BY record_key
+LIMIT :limit;
+
+pendingCount:
+SELECT count(*)
+FROM sync_records
+WHERE change_id IS NOT NULL;
+
+-- The server took the change as :sequence. A change made since keeps its own id and stays pending.
+markPushed:
+UPDATE sync_records
+SET based_on = :sequence,
+    synced = 1,
+    change_id = CASE WHEN change_id = :changeId THEN NULL ELSE change_id END
+WHERE record_key = :recordKey;

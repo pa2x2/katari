@@ -1,0 +1,34 @@
+-- Local edits to synced fields, written by the capture triggers while sync is on and turned into record changes when
+-- the outbox is drained.
+CREATE TABLE sync_outbox(
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    -- A JSON array of the values that locate the edited row, in the order the kind declares.
+    local_ref TEXT NOT NULL,
+    -- Bit n is set when payload field n may have changed; -1 for a row inserted or deleted.
+    fields INTEGER NOT NULL,
+    -- For a deleted row, the record it held, looked up when it was deleted; NULL if it never had one.
+    record_key TEXT,
+    -- Wall-clock milliseconds when the edit was made, read inside SQLite.
+    changed_at INTEGER NOT NULL,
+    -- sync_clock.seen when the edit was made.
+    seen_physical INTEGER NOT NULL,
+    seen_counter INTEGER NOT NULL
+);
+
+batch:
+SELECT seq, kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter
+FROM sync_outbox
+ORDER BY seq
+LIMIT :limit;
+
+deleteThrough:
+DELETE FROM sync_outbox
+WHERE seq <= :seq;
+
+count:
+SELECT count(*)
+FROM sync_outbox;
+
+clear:
+DELETE FROM sync_outbox;

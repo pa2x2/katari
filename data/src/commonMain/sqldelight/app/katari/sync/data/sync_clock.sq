@@ -1,0 +1,30 @@
+-- The hybrid logical clock's state, kept across restarts. One row.
+--
+-- seen is the newest timestamp taken in from other devices; capture copies it into every outbox row, so an edit is
+-- stamped after everything the device had seen when the edit was made, however long the outbox waits. issued is the
+-- newest timestamp this device has given its own edits, so they never repeat or go backwards. A clock started for
+-- the device begins after the later of the two.
+CREATE TABLE sync_clock(
+    id INTEGER NOT NULL PRIMARY KEY CHECK(id = 0),
+    seen_physical INTEGER NOT NULL DEFAULT 0,
+    seen_counter INTEGER NOT NULL DEFAULT 0,
+    issued_physical INTEGER NOT NULL DEFAULT 0,
+    issued_counter INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO sync_clock(id) VALUES (0);
+
+get:
+SELECT seen_physical, seen_counter, issued_physical, issued_counter
+FROM sync_clock
+WHERE id = 0;
+
+setSeen:
+UPDATE sync_clock
+SET seen_physical = :physical, seen_counter = :counter
+WHERE id = 0;
+
+setIssued:
+UPDATE sync_clock
+SET issued_physical = :physical, issued_counter = :counter
+WHERE id = 0;
