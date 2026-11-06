@@ -60,6 +60,11 @@ class SyncServerClient internal constructor(
     val server: HttpUrl,
     private val token: String?,
 ) {
+    /** Whether the server has answered any call made through this client, whatever it answered. */
+    @Volatile
+    var answered: Boolean = false
+        private set
+
     suspend fun info(): ServerInfo = call(get(SyncHttp.INFO, versioned = false))
 
     suspend fun signIn(device: DeviceDescription, username: String, password: String): RegisterDeviceResponse =
@@ -188,6 +193,7 @@ class SyncServerClient internal constructor(
         } catch (e: IOException) {
             throw SyncFailure.Unreachable(e)
         }
+        answered = true
         return withContext(Dispatchers.IO) {
             response.use {
                 try {

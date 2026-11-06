@@ -42,7 +42,10 @@ class SyncRuns(private val pass: SyncPass) {
     /** Whether a run is going now. */
     val running: StateFlow<Boolean> = runningState.asStateFlow()
 
-    /** How the last run ended; [SyncOutcome.IDLE] before the first. */
+    /**
+     * How the last run that had something to do ended; [SyncOutcome.IDLE] before the first. A run that found nothing
+     * to do leaves it, so a failure stays reported until a run gets through.
+     */
     val lastOutcome: StateFlow<SyncOutcome> = outcomes.asStateFlow()
 
     fun request(request: SyncRequest = SyncRequest()) {
@@ -86,7 +89,7 @@ class SyncRuns(private val pass: SyncPass) {
             } finally {
                 runningState.value = synchronized(lock) { waiting != null }
             }
-            outcomes.value = outcome
+            if (outcome != SyncOutcome.IDLE) outcomes.value = outcome
             finished.value = Finished(ticket, outcome)
         }
     }

@@ -24,6 +24,7 @@ import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.version.ProtocolCompatibility
 import app.katari.sync.protocol.version.SyncProtocolVersion
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import mihon.core.platform.network.NetworkConnectivity
 import tachiyomi.core.common.util.system.logcat
@@ -116,6 +117,13 @@ class SyncPass(
             handOff.unreachable(request.entriesFirst)
             connection.unreachable()
             SyncOutcome.UNREACHABLE
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A failure here, such as a change that can't be applied, is not the server's: one that answered is
+            // reachable, so the run is reported as failed rather than as an unreachable server.
+            if (client.answered) connection.reached(synced = false)
+            throw e
         }
     }
 

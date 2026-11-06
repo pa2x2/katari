@@ -102,6 +102,9 @@ private fun attentionRows(
             listOf(row(stringResource(MR.strings.sync_action_answer_questions), actions.openQuestions))
         SyncHeadline.SignInAgain ->
             listOf(row(stringResource(MR.strings.sync_action_sign_in_again)) { actions.signIn(server) })
+        is SyncHeadline.Failed -> listOf(
+            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
+        )
         else -> emptyList()
     }
 }

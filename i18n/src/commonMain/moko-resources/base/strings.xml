@@ -3163,6 +3163,10 @@
     <string name="sync_status_unreachable">Can\'t reach %1$s right now</string>
     <!-- %1$s is the server's address; %2$s says since when, such as "yesterday" -->
     <string name="sync_status_unreachable_long">Can\'t reach %1$s since %2$s</string>
+    <string name="sync_status_failed">Sync failed on this device</string>
+    <!-- %1$s says when it last synced, such as "2 minutes ago" -->
+    <string name="sync_status_failed_at">Sync failed · last synced %1$s</string>
+    <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>
     <string name="sync_status_choices">Choose how this device joins your account</string>
     <string name="sync_status_removed">This device was removed from the account · Sign in again</string>
     <!-- %1$s is the server's address -->

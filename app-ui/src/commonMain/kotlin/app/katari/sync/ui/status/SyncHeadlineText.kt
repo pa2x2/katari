@@ -51,6 +51,10 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     )
     SyncHeadline.Offline -> stringResource(MR.strings.sync_status_offline)
     is SyncHeadline.Unreachable -> stringResource(MR.strings.sync_status_unreachable, headline.server)
+    is SyncHeadline.Failed ->
+        headline.lastSyncedAtMillis
+            ?.let { stringResource(MR.strings.sync_status_failed_at, relativeTimeSpanString(it)) }
+            ?: stringResource(MR.strings.sync_status_failed)
     is SyncHeadline.UpToDate -> {
         val upToDate = headline.atMillis
             ?.let { stringResource(MR.strings.sync_status_up_to_date_at, relativeTimeSpanString(it)) }
@@ -73,7 +77,8 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
 
 /** The colour role of a Sync row's subtitle: only lasting trouble is coloured; being offline is normal. */
 fun SyncHeadline.tone(): ContentTone = when (this) {
-    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong -> ContentTone.Error
+    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
+    -> ContentTone.Error
     SyncHeadline.SignInAgain, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld, SyncHeadline.ChoicesWaiting,
     is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
     SyncHeadline.FirstDownloadWaitsForWifi,
@@ -94,7 +99,7 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase
     SyncHeadline.SignInAgain, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld, SyncHeadline.ChoicesWaiting,
-    is SyncHeadline.Questions, is SyncHeadline.HeldKinds,
+    is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Failed,
     -> MaterialSymbols.Rounded.SyncProblem
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff

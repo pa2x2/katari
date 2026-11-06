@@ -61,6 +61,12 @@ data class SyncStatus(
             fun isLong(nowMillis: Long): Boolean = nowMillis - sinceMillis > 1.days.inWholeMilliseconds
         }
 
+        /**
+         * The last run that had something to do failed on this device, not for want of an answer, such as on a
+         * change that couldn't be applied; it last synced at [lastSyncedAtMillis], null before the first sync.
+         */
+        data class Failed(val lastSyncedAtMillis: Long?) : Activity
+
         /** Last synced at [atMillis]; null when the first sync hasn't finished yet. */
         data class UpToDate(val atMillis: Long?) : Activity
     }

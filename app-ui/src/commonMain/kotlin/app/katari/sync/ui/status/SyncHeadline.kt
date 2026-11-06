@@ -44,6 +44,9 @@ sealed interface SyncHeadline {
 
     data class Unreachable(val server: String) : SyncHeadline
 
+    /** The last run failed on this device; [lastSyncedAtMillis] is null before the first sync finished. */
+    data class Failed(val lastSyncedAtMillis: Long?) : SyncHeadline
+
     /** [atMillis] is null before the first sync finished; [files] notes covers and fonts that haven't moved. */
     data class UpToDate(val atMillis: Long?, val files: FilesNote?) : SyncHeadline
 
@@ -57,7 +60,7 @@ sealed interface SyncHeadline {
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, AppTooOld, is ServerTooOld, ChoicesWaiting, is Questions,
-            is UnreachableLong,
+            is UnreachableLong, is Failed,
             -> true
             else -> false
         }
@@ -102,6 +105,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
         } else {
             SyncHeadline.Unreachable(server)
         }
+        is SyncStatus.Activity.Failed -> SyncHeadline.Failed(activity.lastSyncedAtMillis)
         is SyncStatus.Activity.UpToDate -> SyncHeadline.UpToDate(activity.atMillis, filesNote())
         // Already handled above, or not linked
         SyncStatus.Activity.WaitingForChoices, SyncStatus.Activity.Idle -> SyncHeadline.UpToDate(null, filesNote())
