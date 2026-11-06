@@ -12,13 +12,29 @@ CREATE TABLE sync_state(
     server_instance_id TEXT,
     -- The server sequence this device has pulled up to, and the history chain the server reported there.
     cursor INTEGER NOT NULL DEFAULT 0,
-    chain TEXT NOT NULL DEFAULT ''
+    chain TEXT NOT NULL DEFAULT '',
+    -- The account the device signed in to, as the server names it.
+    account_name TEXT,
+    -- Where the connection is (app.katari.sync.client.connection.SyncStage): joining an account, waiting for the
+    -- person's first-sync choices, taking the account's records, resyncing in full, or ready.
+    stage TEXT NOT NULL DEFAULT 'ready',
+    -- The server sequence a first download or full resync runs to, for its progress; 0 when none runs.
+    stage_target INTEGER NOT NULL DEFAULT 0,
+    -- Why syncing stopped (app.katari.sync.client.connection.SyncStop), NULL while it runs. Kept after the device was
+    -- removed, so the app can say so.
+    stopped TEXT,
+    -- SyncProtocolVersion.CURRENT when a protocol mismatch stopped syncing, so an updated app tries again.
+    stopped_protocol INTEGER NOT NULL DEFAULT 0,
+    -- Epoch milliseconds of the last sync that reached the server and finished.
+    last_synced_at INTEGER,
+    -- Epoch milliseconds of the first failure to reach the server since it was last reached; NULL while reachable.
+    unreachable_since INTEGER
 );
 
 INSERT OR IGNORE INTO sync_state(id) VALUES (0);
 
 get:
-SELECT enabled, device_id, server_url, server_instance_id, cursor, chain
+SELECT *
 FROM sync_state
 WHERE id = 0;
 
@@ -31,6 +47,71 @@ setServer:
 UPDATE sync_state
 SET server_url = :serverUrl, device_id = :deviceId
 WHERE id = 0;
+
+-- A device registered with a server: a connection that starts at :stage, with nothing pulled yet.
+connect:
+UPDATE sync_state
+SET server_url = :serverUrl,
+    device_id = :deviceId,
+    account_name = :accountName,
+    server_instance_id = :serverInstanceId,
+    cursor = 0,
+    chain = '',
+    stage = :stage,
+    stage_target = 0,
+    stopped = NULL,
+    stopped_protocol = 0,
+    last_synced_at = NULL,
+    unreachable_since = NULL
+WHERE id = 0;
+
+setStage:
+UPDATE sync_state
+SET stage = :stage, stage_target = :stageTarget
+WHERE id = 0;
+
+-- A full resync starts over from the server's first record.
+restartPosition:
+UPDATE sync_state
+SET stage = :stage, stage_target = :stageTarget, cursor = 0, chain = '', server_instance_id = :serverInstanceId
+WHERE id = 0;
+
+setStopped:
+UPDATE sync_state
+SET stopped = :stopped, stopped_protocol = :stoppedProtocol
+WHERE id = 0;
+
+reached:
+UPDATE sync_state
+SET unreachable_since = NULL, last_synced_at = coalesce(:syncedAt, last_synced_at)
+WHERE id = 0;
+
+unreachable:
+UPDATE sync_state
+SET unreachable_since = coalesce(unreachable_since, :since)
+WHERE id = 0;
+
+-- The device no longer belongs to an account; what the person may need to read about it stays.
+forget:
+UPDATE sync_state
+SET enabled = 0,
+    device_id = NULL,
+    server_instance_id = NULL,
+    cursor = 0,
+    chain = '',
+    stage = 'ready',
+    stage_target = 0,
+    stopped = :stopped,
+    stopped_protocol = 0,
+    last_synced_at = NULL,
+    unreachable_since = NULL
+WHERE id = 0;
+
+-- Clears what a removal left for the person to read.
+dismiss:
+UPDATE sync_state
+SET stopped = NULL, server_url = NULL, account_name = NULL
+WHERE id = 0 AND enabled = 0;
 
 -- A pulled page is applied: the device's position on the server it came from.
 setPosition:

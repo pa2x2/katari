@@ -20,6 +20,7 @@ object PreferenceScopes {
         TextRecognitionScopes,
         SecurityScopes,
         SystemScopes,
+        SyncScopes,
     )
 
     private val keys = merge { it.keys }
