@@ -73,13 +73,26 @@ class SyncPass(
     private val disconnection: Disconnection,
 ) {
     suspend fun run(request: SyncRequest): SyncOutcome {
+        var outcome = SyncOutcome.FAILED
+        try {
+            outcome = attempt(request)
+            return outcome
+        } finally {
+            // However the run ended, no entry it was asked to fetch first is left being checked (D052)
+            handOff.settle(request.entriesFirst, reached = outcome == SyncOutcome.SYNCED || outcome == SyncOutcome.IDLE)
+            if (outcome == SyncOutcome.SYNCED) handOff.pulled()
+        }
+    }
+
+    private suspend fun attempt(request: SyncRequest): SyncOutcome {
         val state = connection.state()
         if (!state.isLinked) return SyncOutcome.IDLE
         if (!resumes(state)) return SyncOutcome.IDLE
         if (request.onlyIfChanged && request.entriesFirst.isEmpty() && state.stage == SyncStage.READY) {
             if (!hasChanges()) return SyncOutcome.IDLE
         }
-        handOff.checking(request.entriesFirst)
+        // An entry asked for by opening it is being checked already, or was told unreachable while this run waited
+        handOff.checking(request.entriesFirst.filterNot { it in handOff.checks.value })
         if (!network.current().hasNetwork) {
             handOff.unreachable(request.entriesFirst)
             return SyncOutcome.OFFLINE

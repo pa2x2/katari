@@ -2,6 +2,7 @@ package app.katari.sync.client.trigger
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.connection.SyncConnection
+import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
@@ -52,6 +53,7 @@ class SyncTriggers(
     private val preferences: SyncPreferences,
     private val handler: DatabaseHandler,
     private val profileStore: ProfileStore,
+    private val handOff: EntryHandOff,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val foreground = MutableStateFlow(false)
@@ -96,7 +98,10 @@ class SyncTriggers(
     /** Fetches [entryId]'s changes ahead of everything else, as when it is opened (D052). */
     fun entryOpened(entryId: Long) {
         scope.launch {
-            if (connection.state().isLinked) runs.request(SyncRequest(entriesFirst = setOf(entryId)))
+            if (!connection.state().isLinked) return@launch
+            // Checking from now, while a run already going finishes before the one that fetches it
+            handOff.checking(setOf(entryId))
+            runs.request(SyncRequest(entriesFirst = setOf(entryId)))
         }
     }
 

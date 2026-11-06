@@ -53,7 +53,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     val connection = SyncConnection(local.handler, tokens)
     private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
     private val directory = DeviceDirectory()
-    private val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
+    val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff)
     private val firstSync = FirstSyncSteps(
         local.firstSync,
@@ -90,6 +90,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         preferences,
         local.handler,
         local.preferences.profiles,
+        handOff,
     )
     val status = SyncStatusFlow(
         connection,
