@@ -325,7 +325,9 @@ class EntryViewModel(
             val needRefreshChapter = if (mergePresentation.memberIds.size > 1) {
                 membersNeedingRefresh.isNotEmpty()
             } else {
-                chapters.isEmpty()
+                // An entry never fetched here, such as one that arrived by sync with only the chapters read elsewhere,
+                // lists its source's chapters as a merge member does
+                chapters.isEmpty() || !entry.initialized
             }
 
             // Show what we have earlier
