@@ -293,8 +293,11 @@ internal val LocalInDialog = staticCompositionLocalOf { false }
 internal val LocalInRowGroup = staticCompositionLocalOf { false }
 
 @Composable
-internal fun RowIconTile(icon: ImageVector) {
-    Surface(container = SurfaceContainer.SecondaryContainer, shape = KatariTheme.shapes.small) {
+internal fun RowIconTile(icon: ImageVector, alert: Boolean = false) {
+    Surface(
+        container = if (alert) SurfaceContainer.ErrorContainer else SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.small,
+    ) {
         Box(modifier = Modifier.size(IconTileSize), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null)
         }
