@@ -1,6 +1,7 @@
 package app.katari.sync.ui.firstsync
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,6 +21,7 @@ import mihon.feature.profiles.ui.components.ProfileAvatar
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
@@ -32,7 +34,6 @@ import mihon.presentation.kit.menu.MenuPill
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.AvatarSize
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
@@ -80,43 +81,43 @@ data object FirstSyncScreen : Screen() {
                 }
             },
         ) { contentPadding ->
-            RowList(contentPadding = contentPadding) {
-                when (val shown = state) {
-                    FirstSyncViewModel.State.Loading,
-                    FirstSyncViewModel.State.Starting,
-                    FirstSyncViewModel.State.Started,
-                    -> item { Box { LoadingIndicator() } }
-                    FirstSyncViewModel.State.Unavailable -> item {
+            when (val shown = state) {
+                FirstSyncViewModel.State.Loading,
+                FirstSyncViewModel.State.Starting,
+                FirstSyncViewModel.State.Started,
+                -> LoadingScreen(Modifier.padding(contentPadding))
+                FirstSyncViewModel.State.Unavailable -> RowList(contentPadding = contentPadding) {
+                    item {
                         RowGroupNote(stringResource(MR.strings.sync_first_sync_unavailable), tone = ContentTone.Error)
                     }
-                    is FirstSyncViewModel.State.Choosing -> {
-                        val byId = profiles.associateBy { it.id }
-                        item { RowGroupNote(stringResource(MR.strings.sync_first_sync_intro)) }
-                        item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_profiles)) }
-                        rowGroupItems(shown.pairings, key = { "profile-${it.profileId}" }) { pairing ->
-                            PairingRow(
-                                pairing = pairing,
-                                profile = byId[pairing.profileId],
-                                isDefault = shown.isDefault(pairing),
-                                paired = shown.choices.getValue(pairing.profileId).paired,
-                                onPairedChange = { model.setPaired(pairing.profileId, it) },
-                            )
-                        }
-                        val paired = shown.pairings.filter {
-                            shown.isDefault(it) || shown.choices.getValue(it.profileId).paired
-                        }
-                        item { RowGroupGap() }
-                        item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_settings)) }
-                        rowGroupItems(paired, key = { "settings-${it.profileId}" }) { pairing ->
-                            SettingsChoiceRow(
-                                name = pairing.name,
-                                winner = shown.choices.getValue(pairing.profileId).settings,
-                                onChange = { model.setSettings(pairing.profileId, it) },
-                            )
-                        }
-                        item {
-                            RowGroupNote(stringResource(MR.strings.sync_first_sync_device_settings), showIcon = true)
-                        }
+                }
+                is FirstSyncViewModel.State.Choosing -> RowList(contentPadding = contentPadding) {
+                    val byId = profiles.associateBy { it.id }
+                    item { RowGroupNote(stringResource(MR.strings.sync_first_sync_intro)) }
+                    item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_profiles)) }
+                    rowGroupItems(shown.pairings, key = { "profile-${it.profileId}" }) { pairing ->
+                        PairingRow(
+                            pairing = pairing,
+                            profile = byId[pairing.profileId],
+                            isDefault = shown.isDefault(pairing),
+                            paired = shown.choices.getValue(pairing.profileId).paired,
+                            onPairedChange = { model.setPaired(pairing.profileId, it) },
+                        )
+                    }
+                    val paired = shown.pairings.filter {
+                        shown.isDefault(it) || shown.choices.getValue(it.profileId).paired
+                    }
+                    item { RowGroupGap() }
+                    item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_settings)) }
+                    rowGroupItems(paired, key = { "settings-${it.profileId}" }) { pairing ->
+                        SettingsChoiceRow(
+                            name = pairing.name,
+                            winner = shown.choices.getValue(pairing.profileId).settings,
+                            onChange = { model.setSettings(pairing.profileId, it) },
+                        )
+                    }
+                    item {
+                        RowGroupNote(stringResource(MR.strings.sync_first_sync_device_settings), showIcon = true)
                     }
                 }
             }
