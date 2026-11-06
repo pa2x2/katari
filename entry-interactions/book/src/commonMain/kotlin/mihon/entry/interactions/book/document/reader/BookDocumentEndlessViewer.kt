@@ -249,8 +249,8 @@ internal fun BookDocumentEndlessViewer(
                 restoredNavigationId = request.id,
             ),
         )
-        // The target now starts the viewport, but a saved reading position is restored to the
-        // viewport centre. Persist what is at the centre so reopening shows this same view.
+        // A centred target doesn't start the viewport, and a saved reading position is restored to
+        // the top. Persist what is at the top so reopening shows this same view.
         withFrameNanos { }
         val info = listState.layoutInfo
         bookDocumentViewerLocation(

@@ -16,7 +16,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import tachiyomi.domain.entry.model.EntryChapter
 
-/** Actual visible text lines, independent of the center-based reading-progress estimator. */
+/** Actual visible text lines, measured where the block-based reading-progress estimator only interpolates. */
 internal class BookDocumentViewportGeometry {
     var viewport by mutableStateOf<LayoutCoordinates?>(null)
     val texts = mutableStateMapOf<String, BookDocumentViewportText>()
