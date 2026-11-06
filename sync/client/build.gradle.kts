@@ -24,6 +24,7 @@ kotlin {
             dependencies {
                 api(projects.sync.protocol)
 
+                implementation(projects.core.common)
                 implementation(projects.data)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.kotlinx.serialization.protobuf)
