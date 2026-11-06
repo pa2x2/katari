@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.ui.security.SecurityGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
 import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
+import mihon.app.sync.SyncWorkGraph
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
@@ -66,6 +67,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         AboutBindings::class,
         DataSettingsBindings::class,
         OnboardingBindings::class,
+        SyncBindings::class,
     ],
 )
 interface AppGraph :
@@ -87,6 +89,7 @@ interface AppGraph :
     SourceLoadGraph,
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,
+    SyncWorkGraph,
     TabletUiGraph,
     TrackLoginGraph,
     WidgetGraph {

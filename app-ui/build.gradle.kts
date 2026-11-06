@@ -56,6 +56,8 @@ kotlin {
                 // A source's settings screen shows the preference tree the source settings host reads.
                 implementation(projects.sourceCompat)
                 implementation(projects.sync.client)
+                // The sync device token is kept in the store for secrets that translation servers' keys use.
+                implementation(projects.translation.providers.serverConnection)
                 implementation(projects.textRecognition.ui)
                 implementation(projects.trackers)
                 implementation(projects.translation.ui)

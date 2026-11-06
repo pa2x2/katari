@@ -83,12 +83,16 @@ object AppProcessStart {
         )
     }
 
-    /** Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits. */
+    /**
+     * Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits, and
+     * then starts what makes sync run by itself. On a device that doesn't sync, neither does anything.
+     */
     @HostEntryPoint
-    fun resumeSyncCapture(graph: AppProcessGraph) {
+    fun startSync(graph: AppProcessGraph) {
         Migrator.scope.launch {
             Migrator.await()
             graph.syncCapture.resume()
+            graph.syncTriggers.start()
         }
     }
 

@@ -47,7 +47,7 @@ import javax.swing.JFrame
  * as the player enter, the desktop's file chooser, which the screens' document pickers open, and the density of the
  * session's scale and the interface size. While it is open, extensions find the activity that stands for it in the
  * foreground ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity
- * open in it.
+ * open in it. Its focus is the app's foreground for sync ([ReportsForeground]).
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -124,6 +124,7 @@ private fun WindowContent(
         graph.windowActivity.onWindowOpened()
         onDispose { graph.windowActivity.onWindowClosed() }
     }
+    ReportsForeground(window, graph)
     AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
