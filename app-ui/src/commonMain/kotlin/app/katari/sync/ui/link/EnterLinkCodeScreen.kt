@@ -9,9 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -20,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import app.katari.sync.client.account.LinkCodeLink
 import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.ui.page.SyncScreen
+import app.katari.sync.ui.signin.JoinPath
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
 import app.katari.sync.ui.signin.serverCheckProblemText
@@ -27,6 +25,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.util.Screen
+import kotlinx.coroutines.flow.drop
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.field.TextField
 import mihon.presentation.kit.layout.RowList
@@ -44,7 +43,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Typing a linked device's code (D027, D051): on desktop in place of scanning, and on a phone whose camera can't read
- * it. A typed code doesn't carry the server, so its address is typed beside it and checked like at sign-in.
+ * it. A typed code doesn't carry the server, so its address is typed beside it and checked like at sign-in, and
+ * doesn't carry the account, so Join looks the code up and asks about joining that account.
  */
 class EnterLinkCodeScreen : Screen() {
 
@@ -54,11 +54,15 @@ class EnterLinkCodeScreen : Screen() {
         val model = metroViewModel<SyncJoinViewModel>()
         val check by model.check.collectAsState()
         val join by model.join.collectAsState()
+        val lookUp by model.lookUp.collectAsState()
         val address = rememberTextFieldState()
         val code = rememberTextFieldState()
-        var confirming by rememberSaveable { mutableStateOf(false) }
-
         LaunchedEffect(address) { snapshotFlow { address.text.toString() }.collect(model::addressChanged) }
+        LaunchedEffect(address, code) {
+            snapshotFlow { address.text.toString() to code.text.toString() }
+                .drop(1)
+                .collect { model.forgetFailedLookUp() }
+        }
         LaunchedEffect(join) {
             if (join == SyncJoinViewModel.JoinState.Joined) navigator.popUntil { it == SyncScreen }
         }
@@ -74,14 +78,18 @@ class EnterLinkCodeScreen : Screen() {
             },
             bottomBar = {
                 BottomActionBar {
+                    val lookingUp = lookUp == SyncJoinViewModel.LookUpState.LookingUp
                     Button(
-                        label = stringResource(MR.strings.sync_action_join),
+                        label = stringResource(
+                            if (lookingUp) MR.strings.sync_link_code_checking else MR.strings.sync_action_join,
+                        ),
                         onClick = {
                             model.clearResult()
-                            confirming = true
+                            model.lookUpLinkCode(address.text.toString(), code.text.toString())
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = server != null && code.text.isNotBlank(),
+                        enabled = server != null && code.text.isNotBlank() && !lookingUp,
+                        loading = lookingUp,
                     )
                 }
             },
@@ -114,6 +122,13 @@ class EnterLinkCodeScreen : Screen() {
                         }
                     }
                 }
+                (lookUp as? SyncJoinViewModel.LookUpState.Failed)?.let { failed ->
+                    item {
+                        joinProblemText(failed.result, JoinPath.LINK_CODE)?.let {
+                            RowGroupNote(it, tone = ContentTone.Error)
+                        }
+                    }
+                }
                 item {
                     when (val shown = check) {
                         is SyncJoinViewModel.AddressCheck.Checked -> {
@@ -135,14 +150,15 @@ class EnterLinkCodeScreen : Screen() {
             }
         }
 
-        if (confirming && server != null) {
+        val found = lookUp as? SyncJoinViewModel.LookUpState.Found
+        if (found != null && server != null) {
             val failed = join as? SyncJoinViewModel.JoinState.Failed
             JoinConfirmDialog(
-                link = LinkCodeLink(server, code.text.toString().trim(), accountName = null, fromDevice = null),
+                link = LinkCodeLink(server, code.text.toString().trim(), found.accountName, fromDevice = null),
                 joining = join == SyncJoinViewModel.JoinState.Joining,
                 problem = failed?.let { joinProblemText(it.result, it.path) },
                 onJoin = { model.redeemLinkCode(address.text.toString(), code.text.toString()) },
-                onDismissRequest = { confirming = false },
+                onDismissRequest = model::forgetLookUp,
             )
         }
     }

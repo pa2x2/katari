@@ -73,6 +73,24 @@ class SyncAccount(
     suspend fun signIn(address: String, username: String, password: String): JoinResult =
         join(address) { client, device -> client.signIn(device, username.trim(), password) }
 
+    /**
+     * The account a link code joins, for asking before joining with it (D027); the code stays usable. Fails as joining
+     * with the code would.
+     */
+    suspend fun lookUpLinkCode(address: String, code: String): LinkCodeLookup {
+        val check = checkServer(address)
+        if (check !is ServerCheck.Ready) return LinkCodeLookup.Failed(JoinResult.ServerNotReady(check))
+        return try {
+            LinkCodeLookup.Found(clients.of(check.server).accountOfLinkCode(code.trim()).accountName)
+        } catch (e: SyncFailure.Refused) {
+            LinkCodeLookup.Failed(JoinResult.Refused(e.reason))
+        } catch (_: SyncFailure.Unreachable) {
+            LinkCodeLookup.Failed(JoinResult.Unreachable)
+        } catch (_: SyncFailure.NotASyncServer) {
+            LinkCodeLookup.Failed(JoinResult.ServerNotReady(ServerCheck.NotASyncServer))
+        }
+    }
+
     suspend fun redeemLinkCode(address: String, code: String): JoinResult =
         join(address) { client, device -> client.redeemLinkCode(device, code.trim()) }
 

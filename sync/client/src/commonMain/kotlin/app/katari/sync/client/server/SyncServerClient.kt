@@ -4,6 +4,8 @@ import app.katari.sync.protocol.account.RedeemInviteRequest
 import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.LinkCode
+import app.katari.sync.protocol.device.LinkCodeAccount
+import app.katari.sync.protocol.device.LinkCodeAccountRequest
 import app.katari.sync.protocol.device.LinkedDevices
 import app.katari.sync.protocol.device.PasswordSignIn
 import app.katari.sync.protocol.device.RegisterDeviceRequest
@@ -65,6 +67,10 @@ class SyncServerClient internal constructor(
 
     suspend fun redeemLinkCode(device: DeviceDescription, code: String): RegisterDeviceResponse =
         call(post(SyncHttp.REGISTER, RegisterDeviceRequest(device, linkCode = code)))
+
+    /** The account [code] joins, leaving the code to join with. */
+    suspend fun accountOfLinkCode(code: String): LinkCodeAccount =
+        call(post(SyncHttp.LINK_CODE_ACCOUNT, LinkCodeAccountRequest(code)))
 
     suspend fun redeemInvite(
         device: DeviceDescription,

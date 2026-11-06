@@ -13,8 +13,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Asks before joining with a linked device's code (D027): which server, and which account where the code says so. A
- * typed code says only the server; [problem] is why the last try failed, shown until the next.
+ * Asks before joining with a linked device's code (D027), naming the account and its server; a scanned code may name
+ * the device that showed it. [problem] is why the last try failed, shown until the next.
  */
 @Composable
 internal fun JoinConfirmDialog(
@@ -28,23 +28,23 @@ internal fun JoinConfirmDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = link.accountName
-            ?.let { stringResource(MR.strings.sync_join_title, it) }
-            ?: stringResource(MR.strings.sync_join_title_unnamed),
+            ?.let { stringResource(MR.strings.sync_join_title, it, server) }
+            ?: stringResource(MR.strings.sync_join_title_unnamed, server),
         confirm = DialogAction(
             label = stringResource(if (joining) MR.strings.sync_joining else MR.strings.sync_action_join),
             onClick = onJoin,
             enabled = !joining,
         ),
         dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
-            Text(
-                link.accountName
-                    ?.let { stringResource(MR.strings.sync_join_text, server, it) }
-                    ?: stringResource(MR.strings.sync_join_text_unnamed, server),
-            )
-            link.fromDevice?.let { Text(stringResource(MR.strings.sync_join_from, it)) }
-            problem?.let { Text(it, tone = ContentTone.Error) }
-        }
-    }
+        content = if (link.fromDevice == null && problem == null) {
+            null
+        } else {
+            {
+                Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+                    link.fromDevice?.let { Text(stringResource(MR.strings.sync_join_from, it)) }
+                    problem?.let { Text(it, tone = ContentTone.Error) }
+                }
+            }
+        },
+    )
 }

@@ -3245,13 +3245,11 @@
     <string name="sync_action_allow_camera">Allow camera</string>
     <string name="sync_camera_unavailable">No camera is available.</string>
     <string name="sync_not_a_link_code">This QR code isn\'t a Katari link code.</string>
-    <!-- %1$s is the account's name -->
-    <string name="sync_join_title">Join %1$s\'s account?</string>
-    <string name="sync_join_title_unnamed">Join this account?</string>
-    <!-- %1$s is the server's address, %2$s the account's name -->
-    <string name="sync_join_text">This device will sync with %1$s as %2$s.</string>
+    <!-- %1$s is the account's name, %2$s the server's address -->
+    <string name="sync_join_title">Join %1$s on %2$s?</string>
     <!-- %1$s is the server's address -->
-    <string name="sync_join_text_unnamed">This device will sync with %1$s.</string>
+    <string name="sync_join_title_unnamed">Join an account on %1$s?</string>
+    <string name="sync_link_code_checking">Checking the code…</string>
     <!-- %1$s is the name of the device that showed the code -->
     <string name="sync_join_from">The code came from %1$s.</string>
     <string name="sync_action_join">Join</string>

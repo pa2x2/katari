@@ -44,6 +44,14 @@ sealed interface JoinResult {
     data object NoSecretStore : JoinResult
 }
 
+/** What looking up a link code before joining with it found (D027). */
+sealed interface LinkCodeLookup {
+    data class Found(val accountName: String) : LinkCodeLookup
+
+    /** Why the code can't be joined with, as joining with it would have ended. */
+    data class Failed(val result: JoinResult) : LinkCodeLookup
+}
+
 /** A device of the account as the Sync page lists it (D050). */
 data class AccountDevice(val device: LinkedDevice, val isThisDevice: Boolean) {
     val id: DeviceId get() = device.id
