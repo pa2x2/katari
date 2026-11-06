@@ -3323,8 +3323,7 @@
     <string name="sync_question_migration_title">%1$s was migrated twice</string>
     <!-- %1$s is a device's name, %2$s the source it migrated the entry to -->
     <string name="sync_question_migration_move">%1$s moved it to %2$s</string>
-    <!-- %1$s is the source shown for now -->
-    <string name="sync_question_migration_now">Showing %1$s for now.</string>
+    <string name="sync_question_migration_kept">Both are kept until you choose.</string>
     <!-- %1$s is a source's name -->
     <string name="sync_action_keep_source">Keep %1$s</string>
     <!-- %1$s is the profile's name -->
@@ -3342,7 +3341,7 @@
     <string name="sync_unknown_entry">An entry</string>
     <string name="sync_unknown_profile">A profile</string>
     <string name="sync_banner_migration">Migrated on two devices</string>
-    <string name="sync_banner_migration_text">Choose which source to keep</string>
+    <string name="sync_banner_migration_text">Both are kept until you choose</string>
     <string name="sync_banner_notes">Notes edited on two devices</string>
     <string name="sync_banner_notes_text">Choose which notes to keep</string>
     <string name="sync_notification_channel">Sync</string>

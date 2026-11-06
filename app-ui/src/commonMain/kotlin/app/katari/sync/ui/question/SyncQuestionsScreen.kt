@@ -110,12 +110,9 @@ private fun QuestionCard(
                     it.source ?: title,
                 )
             }
-            val now = question.provisional?.let {
-                stringResource(MR.strings.sync_question_migration_now, it.source ?: title)
-            }
             SettingsRow(
                 title = stringResource(MR.strings.sync_question_migration_title, title),
-                subtitle = (moves.joinToString(", ") + ".").let { if (now != null) "$it $now" else it },
+                subtitle = moves.joinToString(", ") + ". " + stringResource(MR.strings.sync_question_migration_kept),
                 icon = MaterialSymbols.Rounded.SwapHoriz,
             )
             // The one followed for now is the proposed answer, last

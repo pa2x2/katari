@@ -12,12 +12,10 @@ sealed interface NamedQuestion {
     data class Migration(
         override val question: Question.Migration,
         val entryTitle: String?,
-        /** In the question's order, oldest first; the last is the one followed for now. */
+        /** In the question's order, oldest first; the last is the one later edits follow until answered. */
         val targets: List<Target>,
     ) : NamedQuestion {
         data class Target(val key: String, val source: String?, val device: String?)
-
-        val provisional: Target? get() = targets.firstOrNull { it.key == question.provisional }
     }
 
     data class Notes(
