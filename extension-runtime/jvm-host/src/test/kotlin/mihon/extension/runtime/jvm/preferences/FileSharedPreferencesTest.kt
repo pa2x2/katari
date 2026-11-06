@@ -1,5 +1,6 @@
 package mihon.extension.runtime.jvm.preferences
 
+import android.content.SharedPreferences
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -36,6 +37,25 @@ class FileSharedPreferencesTest {
         val restarted = FileSharedPreferences(DesktopPreferenceStore(file), listenerThread = Runnable::run)
         restarted.all.size shouldBe THREADS * KEYS_PER_THREAD
         restarted.getLong("${THREADS - 1}-${KEYS_PER_THREAD - 1}", -1) shouldBe KEYS_PER_THREAD - 1L
+    }
+
+    // Restoring a backup writes source settings to the store, not through an editor; sync captures source settings
+    // from these listeners, so a restore nobody heard would never reach other devices.
+    @Test
+    fun `listeners hear writes made to the store itself, and an editor's changes once`() {
+        val preferences = FileSharedPreferences(
+            DesktopPreferenceStore(directory.resolve("source_1.json")),
+            listenerThread = Runnable::run,
+        )
+        val heard = mutableListOf<String?>()
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key -> heard += key }
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+
+        preferences.store.getString("server").set("restored")
+        preferences.edit().putString("server", "edited").putBoolean("enabled", true).commit()
+
+        heard shouldBe listOf("server", "enabled", "server")
+        preferences.unregisterOnSharedPreferenceChangeListener(listener)
     }
 
     private companion object {
