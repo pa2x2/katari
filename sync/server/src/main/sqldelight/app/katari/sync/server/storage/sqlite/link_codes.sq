@@ -2,15 +2,17 @@ CREATE TABLE link_codes(
     -- SHA-256 of the code in its normalised form.
     code_hash BLOB NOT NULL PRIMARY KEY,
     account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
-    expires_at INTEGER NOT NULL
+    expires_at INTEGER NOT NULL,
+    -- The device that showed the code, named to the device that types it; null when no device asked for it.
+    device_id INTEGER
 );
 
 insert:
-INSERT INTO link_codes(code_hash, account_id, expires_at)
-VALUES (:codeHash, :accountId, :expiresAt);
+INSERT INTO link_codes(code_hash, account_id, expires_at, device_id)
+VALUES (:codeHash, :accountId, :expiresAt, :deviceId);
 
-unexpiredAccount:
-SELECT account_id
+unexpired:
+SELECT account_id, device_id
 FROM link_codes
 WHERE code_hash = :codeHash AND expires_at > :now;
 

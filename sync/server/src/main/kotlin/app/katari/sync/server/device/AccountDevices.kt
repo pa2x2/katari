@@ -42,11 +42,14 @@ class AccountDevices(
         return revoked
     }
 
-    /** A code that registers one device into the account without its password, for [LINK_CODE_LIFETIME]. */
-    fun issueLinkCode(accountId: Long): LinkCode {
+    /**
+     * A code that registers one device into the account without its password, for [LINK_CODE_LIFETIME]. [issuedBy] is
+     * the device that shows it, which a device looking the code up is told; null when no device asked for it.
+     */
+    fun issueLinkCode(accountId: Long, issuedBy: DeviceId?): LinkCode {
         val code = OneTimeCode.generate(LINK_CODE_LENGTH, random)
         val expiresAt = clock.now().plus(LINK_CODE_LIFETIME).toEpochMilliseconds()
-        storage.linkCodes.insert(OneTimeCode.hash(code), accountId, expiresAt)
+        storage.linkCodes.insert(OneTimeCode.hash(code), accountId, issuedBy, expiresAt)
         return LinkCode(code = code, expiresAtMillis = expiresAt)
     }
 

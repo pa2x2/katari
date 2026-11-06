@@ -154,7 +154,7 @@ class EnterLinkCodeScreen : Screen() {
         if (found != null && server != null) {
             val failed = join as? SyncJoinViewModel.JoinState.Failed
             JoinConfirmDialog(
-                link = LinkCodeLink(server, code.text.toString().trim(), found.accountName, fromDevice = null),
+                link = LinkCodeLink(server, code.text.toString().trim(), found.accountName, found.fromDevice),
                 joining = join == SyncJoinViewModel.JoinState.Joining,
                 problem = failed?.let { joinProblemText(it.result, it.path) },
                 onJoin = { model.redeemLinkCode(address.text.toString(), code.text.toString()) },

@@ -69,7 +69,7 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
         lookUp.value = LookUpState.LookingUp
         viewModelScope.launchIO {
             lookUp.value = when (val found = account.lookUpLinkCode(address, code)) {
-                is LinkCodeLookup.Found -> LookUpState.Found(found.accountName)
+                is LinkCodeLookup.Found -> LookUpState.Found(found.accountName, found.fromDevice)
                 is LinkCodeLookup.Failed -> LookUpState.Failed(found.result)
             }
         }
@@ -115,7 +115,7 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
 
         data object LookingUp : LookUpState
 
-        data class Found(val accountName: String) : LookUpState
+        data class Found(val accountName: String, val fromDevice: String?) : LookUpState
 
         data class Failed(val result: JoinResult) : LookUpState
     }

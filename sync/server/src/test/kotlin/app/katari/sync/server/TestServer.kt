@@ -46,7 +46,7 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
 
     /** Registers a device into [accountId] the way a new device joins with a link code. */
     fun device(accountId: Long): LinkedTestDevice {
-        val code = services.devices.issueLinkCode(accountId).code
+        val code = services.devices.issueLinkCode(accountId, issuedBy = null).code
         val outcome = services.registration.register(
             RegisterDeviceRequest(
                 DeviceDescription(name = "Device", platform = "Linux", appVersion = "1"),

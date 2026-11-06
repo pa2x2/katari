@@ -46,7 +46,8 @@ sealed interface JoinResult {
 
 /** What looking up a link code before joining with it found (D027). */
 sealed interface LinkCodeLookup {
-    data class Found(val accountName: String) : LinkCodeLookup
+    /** [fromDevice] names the device that shows the code; null when the server doesn't say. */
+    data class Found(val accountName: String, val fromDevice: String?) : LinkCodeLookup
 
     /** Why the code can't be joined with, as joining with it would have ended. */
     data class Failed(val result: JoinResult) : LinkCodeLookup

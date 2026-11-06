@@ -51,7 +51,7 @@ class DeviceRegistrationTest {
                 RegisterDeviceRequest(DeviceDescription("Laptop", "Linux", "1"), linkCode = code),
                 remoteAddress = from,
             )
-            val code = server.services.devices.issueLinkCode(account).code
+            val code = server.services.devices.issueLinkCode(account, issuedBy = null).code
 
             repeat(2) {
                 registration.accountOfLinkCode(code, "198.51.100.7") shouldBe
@@ -61,7 +61,7 @@ class DeviceRegistrationTest {
             registration.accountOfLinkCode(code, "198.51.100.7") shouldBe LinkCodeLookupOutcome.Refused
 
             // With the used code, six failed guesses: the sixth blocks the address for joining as well
-            val next = server.services.devices.issueLinkCode(account).code
+            val next = server.services.devices.issueLinkCode(account, issuedBy = null).code
             repeat(5) {
                 registration.accountOfLinkCode("WRONG-$it", "198.51.100.7") shouldBe
                     LinkCodeLookupOutcome.Refused

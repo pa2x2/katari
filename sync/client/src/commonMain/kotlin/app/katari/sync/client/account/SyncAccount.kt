@@ -86,7 +86,8 @@ class SyncAccount(
         val check = checkServer(address)
         if (check !is ServerCheck.Ready) return LinkCodeLookup.Failed(JoinResult.ServerNotReady(check))
         return try {
-            LinkCodeLookup.Found(clients.of(check.server).accountOfLinkCode(code.trim()).accountName)
+            val found = clients.of(check.server).accountOfLinkCode(code.trim())
+            LinkCodeLookup.Found(found.accountName, found.fromDevice)
         } catch (e: SyncFailure.Refused) {
             LinkCodeLookup.Failed(JoinResult.Refused(e.reason))
         } catch (_: SyncFailure.Unreachable) {

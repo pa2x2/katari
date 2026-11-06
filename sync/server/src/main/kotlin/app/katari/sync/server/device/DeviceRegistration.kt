@@ -62,19 +62,20 @@ class DeviceRegistration(
     }
 
     /**
-     * The account a link code joins, leaving the code to join with (D027). A wrong, expired or used code is refused
-     * as joining with it would be, and counts as a guess the same way.
+     * The account a link code joins and the device that shows it, leaving the code to join with (D027). A wrong,
+     * expired or used code is refused as joining with it would be, and counts as a guess the same way.
      */
     fun accountOfLinkCode(code: String, remoteAddress: String): LinkCodeLookupOutcome {
         val keys = listOf(AttemptLimiter.codesFrom(remoteAddress))
         attempts.blockedFor(keys)?.let { return LinkCodeLookupOutcome.Throttled(it) }
-        val account = storage.linkCodes.accountOf(OneTimeCode.hash(code), clock.now().toEpochMilliseconds())
-            ?.let(storage.accounts::byId)
-        if (account == null) {
+        val issued = storage.linkCodes.unexpired(OneTimeCode.hash(code), clock.now().toEpochMilliseconds())
+        val account = issued?.accountId?.let(storage.accounts::byId)
+        if (issued == null || account == null) {
             attempts.failed(keys)
             return LinkCodeLookupOutcome.Refused
         }
-        return LinkCodeLookupOutcome.Found(LinkCodeAccount(account.username))
+        val issuer = issued.issuedBy?.let(storage.devices::byId)?.takeUnless { it.isRevoked }
+        return LinkCodeLookupOutcome.Found(LinkCodeAccount(account.username, fromDevice = issuer?.description?.name))
     }
 
     /** Links a new device to [account]. Must run inside a transaction of [storage]. */

@@ -62,7 +62,11 @@ internal fun Route.deviceRoutes(services: SyncServices) {
         call.respondProto(withContext(Dispatchers.IO) { services.devices.list(call.device.accountId) })
     }
     post(SyncHttp.LINK_CODE) {
-        call.respondProto(withContext(Dispatchers.IO) { services.devices.issueLinkCode(call.device.accountId) })
+        call.respondProto(
+            withContext(Dispatchers.IO) {
+                services.devices.issueLinkCode(call.device.accountId, issuedBy = call.device.id)
+            },
+        )
     }
     post(SyncHttp.REVOKE) {
         val request = call.receiveProto<RevokeDeviceRequest>(services.config.maxRequestBytes)

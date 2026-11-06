@@ -13,8 +13,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Asks before joining with a linked device's code (D027), naming the account and its server; a scanned code may name
- * the device that showed it. [problem] is why the last try failed, shown until the next.
+ * Asks before joining with a linked device's code (D027), naming the account and its server, and the device that
+ * showed the code when the scanned code or the server names it. [problem] is why the last try failed, shown until the
+ * next.
  */
 @Composable
 internal fun JoinConfirmDialog(

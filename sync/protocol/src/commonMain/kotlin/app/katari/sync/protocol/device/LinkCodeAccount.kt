@@ -14,8 +14,12 @@ data class LinkCodeAccountRequest(
     @ProtoNumber(1) val code: String,
 )
 
-/** The account a link code joins, by the name it signs in with, and nothing else about it. */
+/**
+ * The account a link code joins, by the name it signs in with, and the name of the device that shows the code, as a
+ * scanned code names it; null from a server that doesn't keep it, or when that device has left.
+ */
 @Serializable
 data class LinkCodeAccount(
     @ProtoNumber(1) val accountName: String,
+    @ProtoNumber(2) val fromDevice: String? = null,
 )

@@ -38,7 +38,7 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
         }
     }
 
-    fun linkCode(accountId: Long): String = running().services.devices.issueLinkCode(accountId).code
+    fun linkCode(accountId: Long): String = running().services.devices.issueLinkCode(accountId, issuedBy = null).code
 
     /** The names of the files the server stores, which are their contents' hashes. */
     fun storedFiles(): List<String> =
