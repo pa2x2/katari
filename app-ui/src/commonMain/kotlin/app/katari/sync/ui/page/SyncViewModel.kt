@@ -50,12 +50,13 @@ class SyncViewModel(
 
     init {
         viewModelScope.launchIO { canKeepSignIn.value = tokens.isAvailable }
-        // Listed again when the device links to another account and after each sync, which is when devices join
-        // and when the server notes when each last synced; and once the server can't be reached, saying so
+        // Listed again when the device links to another account, stops or signs in again, and after each sync, which
+        // is when devices join and when the server notes when each last synced; and once the server can't be reached,
+        // saying so
         viewModelScope.launch {
             status.filterNotNull()
                 .filter { it.activity !is SyncStatus.Activity.Syncing }
-                .map { (it.link as? SyncStatus.Link.Linked)?.server to (it.activity as? SyncStatus.Activity.UpToDate) }
+                .map { (it.link as? SyncStatus.Link.Linked) to (it.activity as? SyncStatus.Activity.UpToDate) }
                 .distinctUntilChanged()
                 .collect { refreshDevices() }
         }

@@ -1,6 +1,7 @@
 package app.katari.sync.ui.page
 
 import androidx.compose.runtime.Composable
+import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncHeadline
@@ -34,7 +35,8 @@ internal fun linkedPreferences(
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link.server.toString(), actions))
-    add(devicesGroup(devices, actions))
+    // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
+    if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
     add(syncOptionsGroup(preferences))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
