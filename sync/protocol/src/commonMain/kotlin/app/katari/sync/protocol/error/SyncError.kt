@@ -61,4 +61,11 @@ enum class SyncErrorCode {
     /** An invite was right but another account already has the username asked for; the invite is still unused. */
     @ProtoNumber(6)
     USERNAME_TAKEN,
+
+    /**
+     * The account was disabled on the server's web page. Its devices stop syncing and keep their data; signing in
+     * again works once an admin enables it.
+     */
+    @ProtoNumber(7)
+    ACCOUNT_DISABLED,
 }

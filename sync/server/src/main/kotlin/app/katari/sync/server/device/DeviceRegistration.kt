@@ -71,9 +71,10 @@ class DeviceRegistration(
         )
     }
 
+    // Only a right password or link code gets this far, so saying the account is disabled gives nothing away.
     private fun linkEnabled(account: Account, description: DeviceDescription): RegistrationOutcome =
         if (account.isDisabled) {
-            RegistrationOutcome.Refused
+            RegistrationOutcome.Disabled
         } else {
             RegistrationOutcome.Registered(link(account, description))
         }
@@ -89,6 +90,9 @@ sealed interface RegistrationOutcome {
     data class Registered(val response: RegisterDeviceResponse) : RegistrationOutcome
 
     data object Refused : RegistrationOutcome
+
+    /** The sign-in was right, but the account is disabled. */
+    data object Disabled : RegistrationOutcome
 
     /** Too many failed attempts; the sign-in was not checked. */
     data class Throttled(val retryAfter: Duration) : RegistrationOutcome

@@ -38,4 +38,5 @@ private val SyncErrorCode.httpStatus: HttpStatusCode
         SyncErrorCode.CURSOR_UNKNOWN -> HttpStatusCode.Conflict
         SyncErrorCode.PROTOCOL_VERSION_UNSUPPORTED -> HttpStatusCode.BadRequest
         SyncErrorCode.USERNAME_TAKEN -> HttpStatusCode.Conflict
+        SyncErrorCode.ACCOUNT_DISABLED -> HttpStatusCode.Forbidden
     }

@@ -25,7 +25,8 @@ class DeviceAuthentication(
         }
         if (device.isRevoked) return AuthenticationOutcome.Refused(SyncErrorCode.DEVICE_REVOKED)
         val account = storage.accounts.byId(device.accountId)
-        if (account == null || account.isDisabled) return AuthenticationOutcome.Refused(SyncErrorCode.UNAUTHORIZED)
+        if (account == null) return AuthenticationOutcome.Refused(SyncErrorCode.UNAUTHORIZED)
+        if (account.isDisabled) return AuthenticationOutcome.Refused(SyncErrorCode.ACCOUNT_DISABLED)
         val now = clock.now().toEpochMilliseconds()
         if (now - device.lastSeenMillis >= LAST_SEEN_RESOLUTION_MILLIS) storage.devices.touch(device.id, now)
         return AuthenticationOutcome.Authenticated(device)

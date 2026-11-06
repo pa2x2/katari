@@ -26,6 +26,7 @@ internal fun Route.registrationRoutes(services: SyncServices) {
         when (val outcome = withContext(Dispatchers.IO) { services.registration.register(request, from) }) {
             is RegistrationOutcome.Registered -> call.respondProto(outcome.response)
             RegistrationOutcome.Refused -> call.respondRefusal(SyncErrorCode.UNAUTHORIZED)
+            RegistrationOutcome.Disabled -> call.respondRefusal(SyncErrorCode.ACCOUNT_DISABLED)
             is RegistrationOutcome.Throttled -> call.respondThrottled(outcome.retryAfter)
         }
     }
