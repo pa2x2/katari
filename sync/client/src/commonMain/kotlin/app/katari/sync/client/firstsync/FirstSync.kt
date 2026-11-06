@@ -8,9 +8,11 @@ import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
+import logcat.LogPriority
 import mihon.domain.profile.ProfileSeedPreferences
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.core.common.util.system.logcat
 import kotlin.time.Clock
 
 /**
@@ -45,14 +47,24 @@ class FirstSync(
      * whole account without questions.
      */
     suspend fun hasOwnData(): Boolean {
-        if (handler.await { sync_first_syncQueries.hasOwnRows().awaitAsOne() }) return true
-        val profiles = localProfiles()
-        return settings.sharedKeys().any { it.isPersonLevel() && !settings.isProfileKey(it) } ||
-            profiles.any { profile ->
-                val seeded = ProfileSeedPreferences.untouched(profileStore.profileStore(profile.id))
-                settings.profileKeys(profile.id).any { it.isPersonLevel() && it !in seeded } ||
-                    settings.sourceKeys(profile.id).isNotEmpty()
-            }
+        val found = ownData() ?: return false
+        // Which data asks the person is what tells a device that should have been fresh apart
+        logcat(LogPriority.INFO) { "First sync: this device has data of its own ($found)" }
+        return true
+    }
+
+    /** What makes this device count as holding the person's data, or null when nothing does. */
+    private suspend fun ownData(): String? {
+        if (handler.await { sync_first_syncQueries.hasOwnRows().awaitAsOne() }) return "database rows"
+        settings.sharedKeys().firstOrNull { it.isPersonLevel() && !settings.isProfileKey(it) }
+            ?.let { return "setting $it" }
+        localProfiles().forEach { profile ->
+            val seeded = ProfileSeedPreferences.untouched(profileStore.profileStore(profile.id))
+            settings.profileKeys(profile.id).firstOrNull { it.isPersonLevel() && it !in seeded }
+                ?.let { return "profile ${profile.id} setting $it" }
+            settings.sourceKeys(profile.id).keys.firstOrNull()?.let { return "profile ${profile.id} source $it settings" }
+        }
+        return null
     }
 
     /** This device's profiles, each paired by name with one of the account's [records] where one matches. */
