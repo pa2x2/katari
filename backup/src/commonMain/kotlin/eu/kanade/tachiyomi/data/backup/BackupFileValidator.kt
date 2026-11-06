@@ -61,7 +61,7 @@ class BackupFileValidator(
             summary.trackingServiceIds.mapTo(mutableSetOf(), ::EntryTrackingServiceId),
         )
 
-        return Results(missingSources, missingTrackers, backup.backupProfiles.map { it.profile })
+        return Results(missingSources, missingTrackers, backup.backupProfiles.map { it.profile }, summary.createdAt)
     }
 
     /** [profiles] is empty for a backup made before profiles, which restores into the active profile. */
@@ -69,5 +69,7 @@ class BackupFileValidator(
         val missingSources: List<String>,
         val missingTrackers: List<String>,
         val profiles: List<ProfileBackup>,
+        /** When the backup was made, in epoch milliseconds, as restoring it on a synced device counts it. */
+        val createdAt: Long,
     )
 }

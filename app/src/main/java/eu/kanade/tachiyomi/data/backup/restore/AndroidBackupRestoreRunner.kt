@@ -23,6 +23,7 @@ class AndroidBackupRestoreRunner(private val application: Application) : BackupR
             BackupRestoreJob.SYNC_KEY to sync,
             BackupRestoreJob.OPTIONS_KEY to options.asBooleanArray(),
             BackupRestoreJob.PROFILES_KEY to options.profileUuids?.toTypedArray(),
+            BackupRestoreJob.ROLL_BACK_ACCOUNT_KEY to options.rollBackAccount,
         )
         val request = OneTimeWorkRequestBuilder<BackupRestoreJob>()
             .addTag(TAG)

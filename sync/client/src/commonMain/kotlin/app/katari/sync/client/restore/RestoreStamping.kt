@@ -36,7 +36,7 @@ import tachiyomi.data.DatabaseHandler
  * and then restores the backup, both with capture on and stamped now like any edit: every record the backup doesn't
  * have is deleted after every edit it holds, and every record it does have is written again after its own deletion,
  * so its values win everywhere. Devices apply both as they apply any change, and an edit one of them makes after
- * hearing of the rollback wins over it again. Emptying and the confirmation are the backup feature's and unit 10's.
+ * hearing of the rollback wins over it again. [AccountRollback] does the emptying.
  */
 @Inject
 class RestoreStamping(

@@ -26,4 +26,9 @@ data class Backup(
     @ProtoNumber(203) var backupEntries: List<BackupEntry> = emptyList(),
     /** Written since Kitsu scores moved to the native 2–20 scale; backups without it hold them halved. */
     @ProtoNumber(204) var kitsuScoresNative: Boolean = false,
+    /**
+     * When the backup started reading the data it holds, in epoch milliseconds; 0 in backups made before it was
+     * written ([eu.kanade.tachiyomi.data.backup.stream.BackupSummary.createdAt] says what stands in).
+     */
+    @ProtoNumber(205) var createdAt: Long = 0,
 )

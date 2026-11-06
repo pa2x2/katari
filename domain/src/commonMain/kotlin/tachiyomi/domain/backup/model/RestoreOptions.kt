@@ -11,6 +11,11 @@ data class RestoreOptions(
     val extensionStores: Boolean = true,
     val sourceSettings: Boolean = true,
     val profileUuids: Set<String>? = null,
+    /**
+     * Whether every device of the sync account returns to the backup (D046a), rather than this one filling in what
+     * is older or missing; only offered while the device syncs, with every part and profile restored.
+     */
+    val rollBackAccount: Boolean = false,
 ) {
 
     fun asBooleanArray() = booleanArrayOf(
@@ -52,14 +57,16 @@ data class RestoreOptions(
             ),
         )
 
-        fun fromBooleanArray(array: BooleanArray, profileUuids: Set<String>?) = RestoreOptions(
-            libraryEntries = array[0],
-            categories = array[1],
-            appSettings = array[2],
-            extensionStores = array[3],
-            sourceSettings = array[4],
-            profileUuids = profileUuids,
-        )
+        fun fromBooleanArray(array: BooleanArray, profileUuids: Set<String>?, rollBackAccount: Boolean) =
+            RestoreOptions(
+                libraryEntries = array[0],
+                categories = array[1],
+                appSettings = array[2],
+                extensionStores = array[3],
+                sourceSettings = array[4],
+                profileUuids = profileUuids,
+                rollBackAccount = rollBackAccount,
+            )
     }
 
     data class Entry(
