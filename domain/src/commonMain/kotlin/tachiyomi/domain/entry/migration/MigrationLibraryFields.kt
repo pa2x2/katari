@@ -7,7 +7,10 @@ data class MigrationLibraryFields(
     val chapterFlags: Long,
     val dateAdded: Long,
     val notes: String,
-)
+) {
+    /** How a migration that replaces this entry leaves it: out of the library, unpinned, as if never added. */
+    fun replaced(): MigrationLibraryFields = copy(favorite = false, libraryPinned = false, dateAdded = 0L)
+}
 
 /**
  * What [target] holds after [source] migrated to it: in the library, pinned if either was, with the source's chapter

@@ -58,7 +58,7 @@ internal class QuestionDetection(private val writes: LocalWrites) {
         val key = MigrationQuestionKind.key(local.from)
         val existing = stored(MigrationQuestionKind, key)
         if (existing != null && existing.answer.at > maxOf(a.at, b.at)) return
-        val targets = listOf(MigrationTarget(a.value.to, a.at), MigrationTarget(b.value.to, b.at)).sortedBy { it.to }
+        val targets = listOf(MigrationTarget(a), MigrationTarget(b)).sortedBy { it.to }
         if (existing != null && MigrationQuestionKind.isOpen(existing) && existing.targets.value == targets) return
         writes.change(
             MigrationQuestionKind,

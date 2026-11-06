@@ -25,6 +25,8 @@ value class LocalRef(val json: String) {
 
     fun text(index: Int): String = values[index].jsonPrimitive.content
 
+    val size: Int get() = values.size
+
     companion object {
         fun of(vararg values: Any?): LocalRef = LocalRef(
             JsonArray(

@@ -11,6 +11,7 @@ import app.katari.sync.client.kind.question.ProfileDeletionAnswer
 import app.katari.sync.client.kind.question.ProfileDeletionQuestionKind
 import app.katari.sync.client.kind.question.QuestionKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.replacement.withoutMigration
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.payload.Stamped
 import dev.zacsweers.metro.Inject
@@ -47,19 +48,28 @@ class Questions(
         .subscribeToList { sync_recordsQueries.byKinds(kinds.map { it.name }) }
         .map { records -> records.mapNotNull { record -> question(record.kind, record.payload) } }
 
-    /** Keeps the migration of [from] to [target], one of the question's targets. */
+    /**
+     * Keeps the migration of [from] to [target], one of the question's targets. Each other target is left in the
+     * library as if its migration had never been made ([withoutMigration]).
+     */
     suspend fun keepMigration(from: String, target: String) = writing.write { session ->
         val key = EntryReplacementKind.key(from)
         val stored = session.live(key)?.let(EntryReplacementKind::decode) ?: return@write
         val question = session.stored(MigrationQuestionKind, MigrationQuestionKind.key(from)) ?: return@write
-        require(question.targets.value.any { it.to == target }) { "Not one of the question's targets" }
-        if (stored.replacement.value.to != target) {
-            val replacement = stored.replacement.value.copy(to = target)
+        val kept = question.targets.value.firstOrNull { it.to == target }
+        require(kept != null) { "Not one of the question's targets" }
+        if (stored.replacement.value != kept.replacement()) {
             session.change(
                 EntryReplacementKind,
                 key,
-                stored.copy(replacement = Stamped(replacement, session.newEdit())),
+                stored.copy(replacement = Stamped(kept.replacement(), session.newEdit())),
             )
+        }
+        question.targets.value.filter { it.to != target }.forEach { turnedDown ->
+            val before = turnedDown.targetBefore ?: return@forEach
+            val entry = session.live(turnedDown.to)?.let(EntryKind::decode) ?: return@forEach
+            val restored = entry.withoutMigration(before, session.newEdit())
+            if (restored != entry) session.change(EntryKind, turnedDown.to, restored)
         }
         val answer = question.copy(answer = Stamped(target, session.newEdit()))
         session.change(MigrationQuestionKind, MigrationQuestionKind.key(from), answer)

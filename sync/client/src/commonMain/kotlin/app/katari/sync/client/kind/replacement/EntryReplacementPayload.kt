@@ -23,6 +23,11 @@ data class Replacement(
      * so other devices carry later edits over as the migration did; a name this version doesn't know is ignored.
      */
     @ProtoNumber(3) val options: List<String> = emptyList(),
+    /**
+     * For a migration, the target's library state just before it, so a migration a question later turns down leaves
+     * the target as it found it; null when the device that migrated didn't record it.
+     */
+    @ProtoNumber(4) val targetBefore: LibraryState? = null,
 ) {
     @Serializable
     enum class Cause {
@@ -35,3 +40,14 @@ data class Replacement(
         PROFILE_MOVE,
     }
 }
+
+/** An entry's place in the library, as [tachiyomi.domain.entry.migration.MigrationLibraryFields] names it. */
+@Serializable
+data class LibraryState(
+    @ProtoNumber(1) val favorite: Boolean,
+    @ProtoNumber(2) val libraryPinned: Boolean,
+    @ProtoNumber(3) val chapterFlags: Long,
+    /** Epoch milliseconds. */
+    @ProtoNumber(4) val dateAdded: Long,
+    @ProtoNumber(5) val notes: String,
+)

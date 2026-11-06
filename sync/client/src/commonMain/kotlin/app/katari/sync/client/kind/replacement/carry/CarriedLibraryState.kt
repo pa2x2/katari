@@ -19,7 +19,8 @@ internal class CarriedLibraryState(private val carry: ReplacementCarry) {
      * A move carries every field. A migration carries what [migratedLibraryFields] derives from the old entry: pinning,
      * chapter display and filters, the date added, and the notes when the person kept them; and the viewer flags, which
      * migration copies with the viewer settings. Being in the library is the migration's own doing, not the old
-     * entry's, and the display name stays with the entry it was given to.
+     * entry's, and the display name stays with the entry it was given to. An old entry out of the library, as another
+     * migration of it leaves it, no longer has a date added or pin to give.
      */
     suspend fun entry(from: EntryPayload) {
         val to = carry.stored(EntryKind, carry.to) ?: return
@@ -41,10 +42,23 @@ internal class CarriedLibraryState(private val carry: ReplacementCarry) {
                 carryNotes = carry.carries(EntryMigrationOption.NOTES),
                 now = to.dateAdded.value,
             )
+            val inLibrary = from.favorite.value
             to.copy(
-                dateAdded = carry.ruled(fields.dateAdded, from.dateAdded, to.dateAdded),
+                dateAdded = if (inLibrary) {
+                    carry.ruled(
+                        fields.dateAdded,
+                        from.dateAdded,
+                        to.dateAdded,
+                    )
+                } else {
+                    to.dateAdded
+                },
                 notes = carry.ruled(fields.notes, from.notes, to.notes),
-                libraryPinned = carry.ruled(fields.libraryPinned, from.libraryPinned, to.libraryPinned),
+                libraryPinned = if (inLibrary) {
+                    carry.ruled(fields.libraryPinned, from.libraryPinned, to.libraryPinned)
+                } else {
+                    to.libraryPinned
+                },
                 viewerFlags = carry.pick(from.viewerFlags, to.viewerFlags),
                 chapterFlags = carry.ruled(fields.chapterFlags, from.chapterFlags, to.chapterFlags),
             )

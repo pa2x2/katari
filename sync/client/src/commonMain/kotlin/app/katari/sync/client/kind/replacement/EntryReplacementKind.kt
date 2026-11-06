@@ -20,9 +20,9 @@ import app.katari.sync.client.record.SyncedKind
 import tachiyomi.domain.entry.migration.EntryMigrationFingerprint
 
 /**
- * Entry replacements, keyed by the replaced entry's key. Local ref: `["migration", operation_id]` for a source
- * migration in replace mode, or `["move", entry_id, old profile uuid]` for a move to another profile, which keeps the
- * row and changes its profile.
+ * Entry replacements, keyed by the replaced entry's key. Local ref: `["migration", operation_id, ...]` for a source
+ * migration in replace mode, followed by the target's library state when the operation was recorded, or
+ * `["move", entry_id, old profile uuid]` for a move to another profile, which keeps the row and changes its profile.
  */
 object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
     "entry.replacement",
@@ -33,13 +33,31 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
     private const val MIGRATION = "migration"
     private const val MOVE = "move"
 
+    /** The target's columns a migration's local ref ends with, in [LibraryState]'s order. */
+    private val TARGET_STATE = listOf("favorite", "library_pinned", "chapter_flags", "date_added", "notes")
+
+    private fun targetBefore(ref: LocalRef): LibraryState? {
+        if (ref.size < 2 + TARGET_STATE.size) return null
+        val favorite = ref.longOrNull(2) ?: return null
+        return LibraryState(
+            favorite = favorite == 1L,
+            libraryPinned = ref.longOrNull(3) == 1L,
+            chapterFlags = ref.longOrNull(4) ?: 0L,
+            dateAdded = ref.longOrNull(5) ?: 0L,
+            notes = ref.text(6),
+        )
+    }
+
     fun key(from: String): String = RecordKeys.derive(name, from)
 
     override val capture = listOf(
+        // The target's library state as the migration found it: the app records the operation before changing entries
         CaptureTrigger(
             "entry_migration_operations",
             Event.INSERT,
-            listOf("'$MIGRATION'", "NEW.operation_id"),
+            listOf("'$MIGRATION'", "NEW.operation_id") + TARGET_STATE.map { column ->
+                "(SELECT $column FROM entries WHERE _id = NEW.target_entry_id)"
+            },
             condition = "NEW.mode = 'REPLACE'",
         ),
         CaptureTrigger(
@@ -67,6 +85,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
                     cause = Replacement.Cause.MIGRATION,
                     parents = listOf(operation.source_entry_id, operation.target_entry_id),
                     options = EntryMigrationFingerprint.options(operation.intent_fingerprint).map { it.name }.sorted(),
+                    targetBefore = targetBefore(ref),
                 )
             }
         }
@@ -94,6 +113,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         cause: Replacement.Cause,
         parents: List<Long>,
         options: List<String> = emptyList(),
+        targetBefore: LibraryState? = null,
     ): LocalRead<EntryReplacementPayload> {
         val to = reads.entryKey(toEntryId)
         if (from == null || to == null) return LocalRead.NotSynced
@@ -101,7 +121,10 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             key = key(from),
             parents = parents.map { RecordRef(EntryKind, EntryKind.ref(it)) },
         ) { previous, stamps ->
-            EntryReplacementPayload(from, stamps.field(2, Replacement(to, cause, options), previous?.replacement))
+            EntryReplacementPayload(
+                from,
+                stamps.field(2, Replacement(to, cause, options, targetBefore), previous?.replacement),
+            )
         }
     }
     override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =

@@ -457,13 +457,7 @@ internal class DefaultEntryMigrationFeature(
             carryNotes = EntryMigrationOption.NOTES in selectedOptions,
             now = clockMillis(),
         )
-        val targetUpdate = inspected.target.copy(
-            favorite = libraryFields.favorite,
-            libraryPinned = libraryFields.libraryPinned,
-            chapterFlags = libraryFields.chapterFlags,
-            dateAdded = libraryFields.dateAdded,
-            notes = libraryFields.notes,
-        )
+        val targetUpdate = inspected.target.withLibraryFields(libraryFields)
         val transition = EntryMigrationHostTransition(
             operationId = operationId,
             intentFingerprint = fingerprint,
@@ -474,11 +468,8 @@ internal class DefaultEntryMigrationFeature(
             expectedSourceCategoryIds = inspected.sourceCategoryIds
                 .takeIf { EntryMigrationOption.CATEGORIES in selectedOptions },
             expectedTargetChildren = inspected.targetChildren.takeIf { transferChildren },
-            sourceUpdate = inspected.source.copy(
-                favorite = false,
-                libraryPinned = false,
-                dateAdded = 0L,
-            ).takeIf { replace },
+            sourceUpdate = inspected.source.withLibraryFields(inspected.source.libraryFields().replaced())
+                .takeIf { replace },
             targetUpdate = targetUpdate,
             targetCategoryIds = inspected.sourceCategoryIds
                 .takeIf { EntryMigrationOption.CATEGORIES in selectedOptions },
@@ -586,6 +577,14 @@ internal class DefaultEntryMigrationFeature(
     }
 
     private fun Entry.libraryFields() = MigrationLibraryFields(favorite, libraryPinned, chapterFlags, dateAdded, notes)
+
+    private fun Entry.withLibraryFields(fields: MigrationLibraryFields) = copy(
+        favorite = fields.favorite,
+        libraryPinned = fields.libraryPinned,
+        chapterFlags = fields.chapterFlags,
+        dateAdded = fields.dateAdded,
+        notes = fields.notes,
+    )
 
     private fun Entry.isPersisted(): Boolean = id > 0L && profileId > 0L
 

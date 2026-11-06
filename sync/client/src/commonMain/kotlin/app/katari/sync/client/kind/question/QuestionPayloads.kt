@@ -1,5 +1,7 @@
 package app.katari.sync.client.kind.question
 
+import app.katari.sync.client.kind.replacement.LibraryState
+import app.katari.sync.client.kind.replacement.Replacement
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.protocol.clock.HybridTimestamp
 import kotlinx.serialization.Serializable
@@ -26,7 +28,21 @@ data class MigrationTarget(
     @ProtoNumber(1) val to: String,
     /** When the entry was migrated there, which names the device that did. */
     @ProtoNumber(2) val at: HybridTimestamp,
-)
+    /** That migration's [Replacement.options]. */
+    @ProtoNumber(3) val options: List<String> = emptyList(),
+    /** That migration's [Replacement.targetBefore], which an answer that turns it down puts back. */
+    @ProtoNumber(4) val targetBefore: LibraryState? = null,
+) {
+    constructor(replacement: Stamped<Replacement>) : this(
+        to = replacement.value.to,
+        at = replacement.at,
+        options = replacement.value.options,
+        targetBefore = replacement.value.targetBefore,
+    )
+
+    /** The replacement this migration made, which keeping it restores. */
+    fun replacement() = Replacement(to, Replacement.Cause.MIGRATION, options, targetBefore)
+}
 
 @Serializable
 data class NotesQuestionPayload(
