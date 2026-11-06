@@ -61,10 +61,13 @@ object StatisticsMetrics {
     /** The least a rhythm bar with any value shows. */
     val rhythmBarMinHeight: Dp = 2.dp
 
-    /** One day of the reading calendar. */
+    /** One day of the reading calendar, at its narrowest. Wider cards grow the days to fill their width. */
     val calendarCell: Dp = 14.dp
     val calendarCellGap: Dp = 3.dp
     val calendarLegendCell: Dp = 10.dp
+
+    /** Width of the weekday labels beside the reading calendar. */
+    val calendarDayLabelWidth: Dp = 32.dp
 
     /** Room above the calendar's weeks for month names. */
     val calendarMonthLabelHeight: Dp = 18.dp
