@@ -746,14 +746,19 @@ private suspend fun Database.loadMemberships(profileId: Long): List<EntryMergeMe
         .toMemberships(profileId)
 }
 
+/**
+ * The merge these rows hold, or null when they hold none. One member left is no merge either: sync writes a merge's
+ * members one record at a time, and a member that never syncs, such as a local-source entry, leaves other devices
+ * with the rest alone.
+ */
 private fun List<Pair<Long, Long>>.toMembership(profileId: Long): EntryMergeMembershipSnapshot? {
-    if (isEmpty()) return null
+    if (size < 2) return null
     val targetId = first().first
     if (any { it.first != targetId }) conflict()
     return EntryMergeMembershipSnapshot(profileId, targetId, map { it.second })
 }
 
-private fun List<Pair<Long, Long>>.toMemberships(profileId: Long): List<EntryMergeMembershipSnapshot> {
+internal fun List<Pair<Long, Long>>.toMemberships(profileId: Long): List<EntryMergeMembershipSnapshot> {
     return groupBy { it.first }.values.mapNotNull { it.toMembership(profileId) }
 }
 
