@@ -50,4 +50,7 @@ internal interface LocalWrites {
      * result to the rows. Nothing changes when the record already holds every edit in [payload].
      */
     suspend fun <P : Any> change(kind: SyncedKind<P>, key: String, payload: P)
+
+    /** Writes the record [key] to the rows again as this device stores it, such as after its profile came back. */
+    suspend fun reapply(key: String)
 }

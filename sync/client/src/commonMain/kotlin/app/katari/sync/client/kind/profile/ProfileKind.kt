@@ -8,11 +8,14 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
 import app.katari.sync.client.identity.RecordKeys
+import app.katari.sync.client.kind.question.ProfileDeletionQuestionKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.protocol.clock.HybridTimestamp
 
 /** Profiles, keyed by their uuid, which is random for every profile but `default`. Local ref: `[uuid]`. */
 object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.serializer(), Absence.TOMBSTONE) {
@@ -81,8 +84,9 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
 
     /**
      * Deletes the profile with everything in it, as deleting it here does, but for its files: downloads of its
-     * entries stay until they are cleaned up. The default profile is never deleted, and the profile open here waits
-     * until another one is.
+     * entries stay until they are cleaned up. The default profile is never deleted, the profile open here waits
+     * until another one is, and a profile something was changed in after its deletion stays until the question about
+     * it is answered.
      */
     override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
         val uuid = ref?.text(0) ?: return ApplyOutcome.Applied(null)
@@ -90,9 +94,24 @@ object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.ser
         val queries = writes.database.sync_applyQueries
         val profileId = queries.profileId(uuid).awaitAsOneOrNull() ?: return ApplyOutcome.Applied(null)
         if (profileId == writes.activeProfileId) return ApplyOutcome.Held(HoldReason.PROFILE_OPEN)
+        if (deletionInQuestion(writes, uuid)) return ApplyOutcome.Applied(ref)
         queries.deleteProfile(uuid)
         writes.settings.deleteProfile(profileId)
         return ApplyOutcome.Applied(null)
+    }
+
+    /** [payload] edited now in every field, so it outweighs the deletion it was kept from. */
+    internal fun kept(payload: ProfilePayload, at: HybridTimestamp) = payload.copy(
+        name = Stamped(payload.name.value, at),
+        colorSeed = Stamped(payload.colorSeed.value, at),
+        position = Stamped(payload.position.value, at),
+        archived = Stamped(payload.archived.value, at),
+    )
+
+    private suspend fun deletionInQuestion(writes: LocalWrites, uuid: String): Boolean {
+        val key = ProfileDeletionQuestionKind.key(uuid)
+        val stored = writes.database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return false
+        return ProfileDeletionQuestionKind.isOpen(ProfileDeletionQuestionKind.decode(stored.payload))
     }
 
     const val DEFAULT_UUID = "default"

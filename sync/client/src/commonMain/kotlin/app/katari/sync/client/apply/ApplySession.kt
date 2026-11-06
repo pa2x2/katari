@@ -7,6 +7,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.kind.question.QuestionDetection
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
 import app.katari.sync.client.kind.replacement.ReplacedEntryEdits
 import app.katari.sync.client.merge.RecordState
@@ -49,6 +50,7 @@ internal class ApplySession(
     private val now: () -> Long,
 ) : LocalWrites {
     private val resolving = HashSet<String>()
+    private val questions = QuestionDetection(this)
 
     /** The newest edit taken in, which this device's later edits must be stamped after. */
     var newestSeen: HybridTimestamp? = null
@@ -79,6 +81,12 @@ internal class ApplySession(
         edited?.let(::see)
         database.sync_pendingQueries.release(envelope.key)
 
+        questions.detect(
+            kind,
+            envelope.key,
+            database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull(),
+            incoming,
+        )
         val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
         val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
         val holdsLocalEdits = !kind.sameRecord(merged, incoming)
@@ -100,6 +108,10 @@ internal class ApplySession(
 
     private suspend fun <P : Any> carry(kind: SyncedKind<P>, key: String, state: RecordState.Live) {
         ReplacedEntryEdits(this).carry(kind, key, kind.decode(state.bytes))
+    }
+
+    override suspend fun reapply(key: String) {
+        reapply(key, database.sync_pendingQueries.get(key).awaitAsOneOrNull())
     }
 
     /** Writes the record [key] as this device stores it again, once what it waited for is here. */

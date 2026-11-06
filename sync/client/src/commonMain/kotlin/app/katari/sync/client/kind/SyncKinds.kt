@@ -20,6 +20,9 @@ import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.merge.MergeMemberKind
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.progress.ProgressKind
+import app.katari.sync.client.kind.question.MigrationQuestionKind
+import app.katari.sync.client.kind.question.NotesQuestionKind
+import app.katari.sync.client.kind.question.ProfileDeletionQuestionKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
 import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
@@ -57,6 +60,9 @@ object SyncKinds {
         ProfileSettingKind,
         SharedSettingKind,
         SourceSettingKind,
+        MigrationQuestionKind,
+        NotesQuestionKind,
+        ProfileDeletionQuestionKind,
     )
 
     private val byName = all.associateBy { it.name }

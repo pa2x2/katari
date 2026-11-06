@@ -84,7 +84,10 @@ internal class FileProfileStore(private val directory: File) : ProfileStore {
         return AutoCloseable { listeners -= listener }
     }
 
-    override fun deleteProfileState(profileId: Long) = throw UnsupportedOperationException()
+    override fun deleteProfileState(profileId: Long) {
+        stores.remove("$profileId")
+        directory.resolve("$profileId.json").delete()
+    }
 
     private fun store(name: String, profileId: Long?): DesktopPreferenceStore = stores.computeIfAbsent(name) {
         DesktopPreferenceStore(directory.resolve("$name.json").toPath()).apply {

@@ -104,3 +104,9 @@ SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, sy
 FROM sync_records
 WHERE kind = :kind
 ORDER BY record_key;
+
+byKinds:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE kind IN :kinds
+ORDER BY kind, record_key;

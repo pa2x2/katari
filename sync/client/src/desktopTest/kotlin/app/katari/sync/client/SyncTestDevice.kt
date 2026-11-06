@@ -3,9 +3,12 @@ package app.katari.sync.client
 import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.SqlDriver
+import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
+import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.setting.capture.SettingsCapture
 import kotlinx.coroutines.CoroutineScope
@@ -63,8 +66,11 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     private val settingsCapture =
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
     val drain = OutboxDrain(handler, preferences.reads)
-    val incoming = IncomingRecords(handler, drain, preferences.writes, preferences.profiles)
+    val writing = SyncWriting(handler, drain, preferences.writes, preferences.profiles)
+    val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
+    val questions = Questions(handler, writing)
+    val held = HeldRecords(handler)
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }
