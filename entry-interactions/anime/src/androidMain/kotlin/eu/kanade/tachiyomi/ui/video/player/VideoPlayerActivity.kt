@@ -69,11 +69,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         )
     }
     private val playback by lazy {
-        VideoPlayerPlaybackController(lifecycleScope) { positionMs, durationMs, activeDurationMs ->
+        VideoPlayerPlaybackController(lifecycleScope) { positionMs, durationMs, activeDurationMs, settled ->
             viewModel.persistPlayback(
                 positionMs = positionMs,
                 durationMs = durationMs,
                 activeDurationMs = activeDurationMs,
+                settled = settled,
             )
         }
     }

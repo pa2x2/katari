@@ -622,7 +622,8 @@ internal class VideoPlayerViewModel(
         )
     }
 
-    fun persistPlayback(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L) {
+    /** [settled] when the player paused or is being left rather than saving as it plays. */
+    fun persistPlayback(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L, settled: Boolean = false) {
         val current = mutableState.value as? State.Ready ?: return
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
@@ -657,6 +658,7 @@ internal class VideoPlayerViewModel(
                             0.0
                         },
                         activity = snapshot.activity,
+                        settled = settled,
                     ),
                 )
             }

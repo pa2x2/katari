@@ -45,6 +45,11 @@ sealed interface EntryMediaSessionEvent {
         val deduplicateDownloadByNumber: Boolean = false,
         val preserveLocatorExtensions: Boolean = false,
         val activity: EntryMediaSessionActivity? = null,
+        /**
+         * The runtime paused, stopped or was left, so this is where the person put the media down, rather than a
+         * save while it plays.
+         */
+        val settled: Boolean = false,
     ) : EntryMediaSessionEvent
 
     /** A completed period of active reading or playback that is independent of a position update. */
@@ -53,6 +58,16 @@ sealed interface EntryMediaSessionEvent {
         override val child: EntryChapter,
         val activity: EntryMediaSessionActivity,
     ) : EntryMediaSessionEvent
+}
+
+/**
+ * Told when a reader or player put its media down: a period of reading was recorded
+ * ([EntryMediaSessionEvent.ActivityRecorded], which readers do on leaving, pausing and at checkpoints), or progress
+ * came [EntryMediaSessionEvent.Progressed.settled]. What was read or watched should leave the device then, such as for
+ * the person's other devices.
+ */
+fun interface EntryMediaSessionSettledListener {
+    fun onSettled()
 }
 
 data class EntryMediaSessionActivity(
