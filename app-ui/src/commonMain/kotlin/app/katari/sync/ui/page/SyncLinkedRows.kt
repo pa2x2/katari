@@ -69,7 +69,10 @@ private fun statusCard(
                     onClick = actions.syncNow,
                     style = ButtonStyle.Tonal,
                     size = ButtonSize.Small,
-                    enabled = link.stopped == null && status.activity !is SyncStatus.Activity.Syncing,
+                    // A run does nothing while the first-sync choices wait, as while syncing is stopped
+                    enabled = link.stopped == null &&
+                        status.activity !is SyncStatus.Activity.Syncing &&
+                        status.activity != SyncStatus.Activity.WaitingForChoices,
                 )
             },
         )
