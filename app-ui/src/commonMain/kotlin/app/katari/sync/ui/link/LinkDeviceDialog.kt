@@ -30,7 +30,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Link a device (D027): a QR code for a phone to scan and the same code with the server's address for typing on a
- * desktop, valid once for two minutes, with the time left. An expired code is replaced on request.
+ * desktop, valid once for two minutes, with the time left. An expired code is replaced on request; once a device used
+ * the code, the dialog names it instead.
  */
 @Composable
 internal fun LinkDeviceDialog(onDismissRequest: () -> Unit) {
@@ -62,6 +63,8 @@ internal fun LinkDeviceDialog(onDismissRequest: () -> Unit) {
                 LinkDeviceViewModel.LinkCodeState.Loading -> LoadingIndicator()
                 LinkDeviceViewModel.LinkCodeState.Unavailable ->
                     Text(stringResource(MR.strings.sync_link_unavailable), tone = ContentTone.Error)
+                is LinkDeviceViewModel.LinkCodeState.Used ->
+                    Text(stringResource(MR.strings.sync_link_used, code.deviceName), textAlign = TextAlign.Center)
                 is LinkDeviceViewModel.LinkCodeState.Shown -> if (expired) {
                     Text(stringResource(MR.strings.sync_link_expired), textAlign = TextAlign.Center)
                 } else {

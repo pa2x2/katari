@@ -3262,6 +3262,7 @@
     <!-- %1$s is the time left, such as 1:41 -->
     <string name="sync_link_expires">Expires in %1$s.</string>
     <string name="sync_link_expired">This code expired.</string>
+    <string name="sync_link_used">%1$s is linked now.</string>
     <string name="sync_action_new_code">New code</string>
     <string name="sync_link_unavailable">Can\'t get a code from the server right now.</string>
     <string name="sync_link_qr_description">QR code for linking a new device</string>
