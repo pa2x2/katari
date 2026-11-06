@@ -74,7 +74,13 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
             PullChanges(connection, continuity, local.incoming, handOff),
-            PushChanges(continuity, local.pending, uploads), local.incoming, local.pending, local.settingsCapture,
+            PushChanges(
+                connection,
+                continuity,
+                local.pending,
+                uploads,
+            ),
+            local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,
             FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
         ),

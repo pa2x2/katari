@@ -62,9 +62,9 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
         val device: Device
             get() = (services.authentication.authenticate(token) as AuthenticationOutcome.Authenticated).device
 
-        fun push(vararg records: RecordEnvelope): PushResponse = services.push.push(
+        fun push(vararg records: RecordEnvelope, after: Long? = null): PushResponse = services.push.push(
             device,
-            PushRequest(records.toList()),
+            PushRequest(records.toList(), after = after),
         )
 
         fun pull(after: Long, liveOnly: Boolean = false, afterChain: String = "", limit: Int = 0): PullOutcome =

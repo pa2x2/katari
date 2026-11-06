@@ -12,11 +12,15 @@ import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRuns
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions, held records and the
@@ -34,7 +38,7 @@ class SyncStatusFlow(
     private val fileRule: FileTransferRule,
 ) {
     fun status(): Flow<SyncStatus> {
-        val activity = combine(connection.states(), runs.running, runs.lastOutcome, network.state(), ::Inputs)
+        val activity = combine(connection.states(), runs.running.settled(), runs.lastOutcome, network.state(), ::Inputs)
         return combine(activity, pending.counts(), questions.open(), held.unreadableKinds(), files()) {
                 inputs,
                 unsent,
@@ -54,6 +58,19 @@ class SyncStatusFlow(
                 files = if (state.isLinked) files else SyncStatus.Files.NONE,
             )
         }.distinctUntilChanged()
+    }
+
+    /**
+     * Whether runs are going, kept true for [RUNS_SETTLE] after one ends, so runs that follow each other read as one
+     * and the status doesn't flicker to up to date between them (D064). A new collector sees the current value at once.
+     */
+    private fun Flow<Boolean>.settled(): Flow<Boolean> = channelFlow {
+        var shown: Boolean? = null
+        collectLatest { running ->
+            if (!running && shown == true) delay(RUNS_SETTLE)
+            shown = running
+            send(running)
+        }
     }
 
     private fun files(): Flow<SyncStatus.Files> = combine(
@@ -116,4 +133,8 @@ class SyncStatusFlow(
             activity is SyncStatus.Activity.Unreachable -> SyncStatus.UnsentReason.SERVER_UNREACHABLE
             else -> null
         }
+
+    private companion object {
+        val RUNS_SETTLE = 3.seconds
+    }
 }

@@ -39,4 +39,21 @@ class RecordPushTest {
             page.records.single().record.device shouldBe desktop.device.id
         }
     }
+
+    @Test
+    fun `a push is answered as all the device missed only when nothing else was written since its position`(
+        @TempDir dataDirectory: Path,
+    ) {
+        TestServer(dataDirectory).use { server ->
+            val account = server.account()
+            val phone = server.device(account)
+            val desktop = server.device(account)
+
+            phone.push(record("entry:1", basedOn = 0), after = 0).caughtUp shouldBe true
+            // The phone is at 1; the desktop, still at 0, would skip the phone's record if it moved to 2
+            desktop.push(record("entry:2", basedOn = 0), after = 0).caughtUp shouldBe false
+            phone.push(record("entry:3", basedOn = 0), after = 1).caughtUp shouldBe false
+            desktop.push(record("entry:4", basedOn = 0), after = 3).caughtUp shouldBe true
+        }
+    }
 }

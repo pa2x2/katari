@@ -9,6 +9,12 @@ import kotlinx.serialization.protobuf.ProtoNumber
 data class PushResponse(
     @ProtoNumber(1) val results: List<PushResult> = emptyList(),
     @ProtoNumber(2) val server: ServerIdentity,
+    /**
+     * Nothing but this push was written since the request's [PushRequest.after], so the device holds everything up to
+     * [server]'s sequence and moves its position there, with that chain, instead of pulling its own records back.
+     * Always false from a server that predates it.
+     */
+    @ProtoNumber(3) val caughtUp: Boolean = false,
 )
 
 @Serializable

@@ -21,6 +21,9 @@ import app.katari.sync.server.storage.ServerStorage
  *
  * A change the account has already applied is answered as accepted with the sequence it got then, so a push retried
  * after its answer was lost changes nothing.
+ *
+ * A push from a device at the account's newest position is answered as [PushResponse.caughtUp]: the writes are one
+ * transaction, so every sequence past that position is one of its own records.
  */
 class RecordPush(
     private val storage: ServerStorage,
@@ -30,6 +33,9 @@ class RecordPush(
         val accountId = device.accountId
         var wrote = false
         val response = storage.transaction {
+            val before = storage.identityOf(accountId)
+            val caughtUp = request.after == before.sequence &&
+                (request.afterChain.isEmpty() || request.afterChain == before.chain)
             val results = request.records.map { record ->
                 val applied = storage.records.appliedChange(accountId, record.changeId)
                 if (applied != null) return@map PushResult(record.changeId, PushOutcome.ACCEPTED, applied)
@@ -43,7 +49,7 @@ class RecordPush(
                 wrote = true
                 PushResult(record.changeId, PushOutcome.ACCEPTED, sequence)
             }
-            PushResponse(results = results, server = storage.identityOf(accountId))
+            PushResponse(results = results, server = storage.identityOf(accountId), caughtUp = caughtUp)
         }
         if (wrote) changes.announce(accountId, response.server.sequence)
         return response

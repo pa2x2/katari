@@ -1,5 +1,6 @@
 package app.katari.sync.client.run
 
+import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.server.SyncServerClient
@@ -15,9 +16,13 @@ import dev.zacsweers.metro.Inject
  *
  * Records naming custom covers or fonts go after the rest of their chunk, once the server has their files
  * ([FileUploads]); a record whose file waits for Wi-Fi stays unsent with it, holding back nothing else.
+ *
+ * A push the server says was all it took since the device's position moves the device past it (D064), so a device
+ * doesn't pull back what it just sent, such as its whole library after its first sync.
  */
 @Inject
 class PushChanges(
+    private val connection: SyncConnection,
     private val continuity: ServerContinuity,
     private val pending: PendingChanges,
     private val uploads: FileUploads,
@@ -50,7 +55,8 @@ class PushChanges(
     private suspend fun push(client: SyncServerClient, records: List<RecordEnvelope>, afterPull: Boolean): Boolean {
         if (records.isEmpty()) return false
         var stale = false
-        val response = client.push(PushRequest(records))
+        val state = connection.state()
+        val response = client.push(PushRequest(records, after = state.position, afterChain = state.chain))
         continuity.check(response.server)
         val sent = records.associateBy { it.changeId }
         response.results.forEach { result ->
@@ -63,6 +69,7 @@ class PushChanges(
                 }
             }
         }
+        if (response.caughtUp) connection.passOwnPush(response.server)
         return stale
     }
 

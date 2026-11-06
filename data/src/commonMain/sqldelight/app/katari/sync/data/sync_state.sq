@@ -118,3 +118,9 @@ setPosition:
 UPDATE sync_state
 SET server_instance_id = :serverInstanceId, cursor = :cursor, chain = :chain
 WHERE id = 0;
+
+-- A push was all the server took since the device's position: past it on that server, unless it moved on meanwhile.
+passOwnPush:
+UPDATE sync_state
+SET cursor = :cursor, chain = :chain
+WHERE id = 0 AND server_instance_id = :serverInstanceId AND cursor < :cursor;

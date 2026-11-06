@@ -66,6 +66,20 @@ class SyncConnection(
         handler.await { sync_stateQueries.setStage(stage.stored, target) }
     }
 
+    /**
+     * Moves the device's position to [server]'s after a push the server says was all it took since, so the device
+     * doesn't pull its own records back (D064).
+     */
+    suspend fun passOwnPush(server: ServerIdentity) {
+        handler.await {
+            sync_stateQueries.passOwnPush(
+                cursor = server.sequence,
+                chain = server.chain,
+                serverInstanceId = server.instanceId,
+            )
+        }
+    }
+
     /** Starts a full resync at [stage] from [server]'s first record. */
     suspend fun restart(stage: SyncStage, server: ServerIdentity) {
         handler.await { sync_stateQueries.restartPosition(stage.stored, server.sequence, server.instanceId) }

@@ -25,8 +25,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The live channel while the app is open (D021): an announcement of a position past this device's starts a run, so
- * another device's change shows within seconds, and its count of the account's devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
+ * The live channel while the app is open (D021): announcements of a position past this device's start a run once they
+ * pause ([PullBatching], D064), so another device's change shows within seconds, and its count of the account's
+ * devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
  * [MAX_BACKOFF] and starts over once the channel works; each end also starts a run, which finds out why when the
  * server refused it, as for a removed device.
  */
@@ -51,14 +52,17 @@ class LiveUpdates(
         // Announcements arrive on OkHttp's thread; the position they are compared with is the newest one.
         val latest = AtomicReference(connection.state())
         val following = launch { connection.states().collect(latest::set) }
+        val batching = PullBatching()
+        val pulling = launch { batching.pulls { runs.request(SyncRequest()) } }
         try {
-            keepOpen(latest)
+            keepOpen(latest, batching)
         } finally {
             following.cancel()
+            pulling.cancel()
         }
     }
 
-    private suspend fun keepOpen(latest: AtomicReference<SyncConnectionState>) {
+    private suspend fun keepOpen(latest: AtomicReference<SyncConnectionState>, batching: PullBatching) {
         var backoff = FIRST_BACKOFF
         while (true) {
             val server = latest.get().server
@@ -73,7 +77,7 @@ class LiveUpdates(
                         deviceChanges.hear(changes.devices)
                         val state = latest.get()
                         if (changes.server.sequence > state.position || changes.server.instanceId != state.instanceId) {
-                            runs.request(SyncRequest())
+                            batching.hear()
                         }
                     }
 
