@@ -46,7 +46,7 @@ import java.io.File
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncTestDevice(file: File) : AutoCloseable {
-    private val temporarySchema = TemporarySchema()
+    val temporarySchema = TemporarySchema()
     val driver: SqlDriver = createSqlDriver(file, DatabaseRepositoryImpl(lazy { driver }), temporarySchema)
     val database = Database(
         driver = driver,
