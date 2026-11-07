@@ -1,5 +1,6 @@
 package eu.kanade.domain.base
 
+import eu.kanade.domain.ui.UiPreferences
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
@@ -15,4 +16,15 @@ class OnboardingPreferences(preferenceStore: PreferenceStore) {
         Preference.appStateKey("mihon_migration_prompt_handled"),
         false,
     )
+
+    /**
+     * The person-level settings the guide's own pages set, as the app names them, while it hasn't finished. Sync's first
+     * sync doesn't count them as the person's data, so picking light or dark on the way to linking doesn't stop the join
+     * to ask whose settings win; the account's then replace them.
+     */
+    fun settingsChosenInGuide(): Set<String> = if (shownOnboardingFlow.get()) emptySet() else GUIDE_SETTING_KEYS
+
+    private companion object {
+        val GUIDE_SETTING_KEYS = setOf(UiPreferences.THEME_MODE_KEY)
+    }
 }
