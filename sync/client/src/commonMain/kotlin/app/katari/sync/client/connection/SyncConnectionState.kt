@@ -17,7 +17,7 @@ data class SyncConnectionState(
     val position: Long,
     val chain: String,
     val stage: SyncStage,
-    /** The server sequence a download or resync runs to; 0 when none runs. */
+    /** The server sequence a download or resync runs to, as the server last reported it; 0 when none runs. */
     val stageTarget: Long,
     val stopped: SyncStop?,
     /** The protocol version the app had when [stopped] for a version mismatch. */

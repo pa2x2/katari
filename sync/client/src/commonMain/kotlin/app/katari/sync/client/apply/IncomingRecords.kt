@@ -1,5 +1,6 @@
 package app.katari.sync.client.apply
 
+import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.protocol.pull.PullPage
@@ -32,6 +33,8 @@ class IncomingRecords(private val writing: SyncWriting) {
             serverInstanceId = page.server.instanceId,
             cursor = page.nextCursor,
             chain = page.nextChain,
+            downloadingStages = DOWNLOADING_STAGES,
+            serverSequence = page.server.sequence,
         )
     }
 
@@ -51,5 +54,6 @@ class IncomingRecords(private val writing: SyncWriting) {
 
     private companion object {
         val kindOrder = SyncKinds.all.withIndex().associate { (index, kind) -> kind.name to index }
+        val DOWNLOADING_STAGES = SyncStage.entries.filter { it.isDownloading }.map { it.stored }
     }
 }

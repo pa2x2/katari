@@ -18,7 +18,8 @@ CREATE TABLE sync_state(
     -- Where the connection is (app.katari.sync.client.connection.SyncStage): joining an account, waiting for the
     -- person's first-sync choices, taking the account's records, resyncing in full, or ready.
     stage TEXT NOT NULL DEFAULT 'ready',
-    -- The server sequence a first download or full resync runs to, for its progress; 0 when none runs.
+    -- The server sequence a first download or full resync runs to, for its progress, as the server last reported it;
+    -- 0 when none runs.
     stage_target INTEGER NOT NULL DEFAULT 0,
     -- Why syncing stopped (app.katari.sync.client.connection.SyncStop), NULL while it runs. Kept after the device was
     -- removed, so the app can say so.
@@ -113,10 +114,13 @@ UPDATE sync_state
 SET stopped = NULL, server_url = NULL, account_name = NULL
 WHERE id = 0 AND enabled = 0;
 
--- A pulled page is applied: the device's position on the server it came from.
+-- A pulled page is applied: the device's position on the server it came from. A first download or full resync
+-- (:downloadingStages) runs to the account's sequence as each page reports it, since devices that push meanwhile
+-- move it on.
 setPosition:
 UPDATE sync_state
-SET server_instance_id = :serverInstanceId, cursor = :cursor, chain = :chain
+SET server_instance_id = :serverInstanceId, cursor = :cursor, chain = :chain,
+    stage_target = CASE WHEN stage IN :downloadingStages THEN :serverSequence ELSE stage_target END
 WHERE id = 0;
 
 -- A push was all the server took since the device's position: past it on that server, unless it moved on meanwhile.
