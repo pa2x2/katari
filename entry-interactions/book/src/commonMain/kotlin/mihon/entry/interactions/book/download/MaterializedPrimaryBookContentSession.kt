@@ -44,11 +44,14 @@ internal class MaterializedPrimaryBookContentSession(
         }
     }
 
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> =
+    override suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit,
+    ): Result<MaterializedBookResource> =
         if (resourceId == primaryResourceId) {
             Result.success(BorrowedMaterializedBookResource(primaryResource))
         } else {
-            delegate.materializeResource(resourceId)
+            delegate.materializeResource(resourceId, onProgress)
         }
 
     override fun close() = Unit

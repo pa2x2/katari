@@ -41,8 +41,6 @@ import mihon.presentation.kit.refresh.refreshAppBarAction
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
 import mihon.presentation.kit.selection.SelectionActions
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -92,12 +90,7 @@ fun <T> UpdatesScreen(
                     scrollBehavior = scrollBehavior,
                 )
                 if (filterSummary != null) {
-                    // The feed scrolls under the bar, so it takes the app bar's colour, raised in action mode.
-                    Surface(
-                        container = if (state.selectionMode) SurfaceContainer.Default else SurfaceContainer.Surface,
-                    ) {
-                        AppBarExtension { filterSummary() }
-                    }
+                    AppBarExtension(actionMode = state.selectionMode) { filterSummary() }
                 }
             }
         },

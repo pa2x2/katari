@@ -1,21 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.IntrinsicMeasurable
-import androidx.compose.ui.layout.IntrinsicMeasureScope
-import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.Measurable
-import androidx.compose.ui.layout.MeasurePolicy
-import androidx.compose.ui.layout.MeasureResult
-import androidx.compose.ui.layout.MeasureScope
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import eu.kanade.tachiyomi.ui.video.player.picture.icon
 import eu.kanade.tachiyomi.ui.video.player.picture.label
@@ -28,14 +15,12 @@ import mihon.icons.materialsymbols.rounded.Speed
 import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
 import mihon.icons.materialsymbols.roundedfilled.SkipPrevious
-import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.navigation.MediaToolbar
+import mihon.presentation.kit.navigation.MediaToolbarButton
+import mihon.presentation.kit.navigation.mediaToolbarSlot
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -67,7 +52,7 @@ internal fun VideoPlayerTimelineToolbar(
     onToggleFullScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerToolbarRow(gap = KatariTheme.spacing.xs, modifier = modifier) {
+    MediaToolbar(modifier = modifier) {
         if (hasPreviousEpisode) {
             IconButton(
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
@@ -88,12 +73,12 @@ internal fun VideoPlayerTimelineToolbar(
                 shortcut = VideoPlayerShortcuts.NextEpisode,
             )
         }
-        ToolbarLabelButton(
+        MediaToolbarButton(
             icon = MaterialSymbols.Rounded.Speed,
             label = playbackSpeedLabel,
             onClick = onOpenSpeed,
             iconDescription = stringResource(MR.strings.anime_playback_speed),
-            modifier = Modifier.toolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER),
         )
         if (showSubtitles) {
             IconButton(
@@ -113,24 +98,23 @@ internal fun VideoPlayerTimelineToolbar(
                 tone = ContentTone.OnMedia,
             )
         }
-        ToolbarLabelButton(
+        MediaToolbarButton(
             icon = picture.icon,
             label = picture.label(),
             onClick = onTogglePicture,
             iconDescription = stringResource(MR.strings.anime_playback_picture),
-            modifier = Modifier.toolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER),
         )
         volume?.invoke()
-        ToolbarLabelButton(
+        MediaToolbarButton(
             icon = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,
             label = stringResource(MR.strings.episodes),
             onClick = onOpenEpisodes,
             iconDescription = stringResource(MR.strings.action_view_episodes),
-            modifier = Modifier.toolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER),
         )
         if (fullScreen != null) {
-            // The kit button wraps itself, so the row reads the slot off this box
-            Box(modifier = Modifier.toolbarSlot(trailing = true)) {
+            Box(modifier = Modifier.mediaToolbarSlot(trailing = true)) {
                 IconButton(
                     icon = if (fullScreen) {
                         MaterialSymbols.Rounded.FullscreenExit
@@ -152,58 +136,6 @@ internal fun VideoPlayerTimelineToolbar(
             }
         }
     }
-}
-
-/**
- * An icon with a label after it. Its minimum intrinsic width is the icon's alone, and measured narrower than the whole
- * it leaves the label out, keeping its icon and description rather than an ellipsis.
- */
-@Composable
-private fun ToolbarLabelButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    iconDescription: String,
-    modifier: Modifier = Modifier,
-) {
-    val spacing = KatariTheme.spacing
-    val gap = spacing.s
-    ContentButton(onClick = onClick, modifier = modifier.heightIn(min = KatariTheme.sizes.touchTargetLarge)) {
-        Layout(
-            modifier = Modifier.padding(horizontal = spacing.m),
-            content = {
-                Icon(imageVector = icon, contentDescription = iconDescription, tone = ContentTone.OnMedia)
-                Text(text = label, role = TextRole.Label, tone = ContentTone.OnMedia, maxLines = 1)
-            },
-            measurePolicy = remember(gap) { IconLabelMeasurePolicy(gap) },
-        )
-    }
-}
-
-private class IconLabelMeasurePolicy(private val gap: Dp) : MeasurePolicy {
-    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
-        val gapPx = gap.roundToPx()
-        val iconPlaceable = measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
-        val labelWidth = measurables[1].maxIntrinsicWidth(constraints.maxHeight)
-        val labelPlaceable = measurables[1]
-            .takeIf { iconPlaceable.width + gapPx + labelWidth <= constraints.maxWidth }
-            ?.measure(Constraints(maxWidth = labelWidth, maxHeight = constraints.maxHeight))
-        val contentWidth = iconPlaceable.width + (labelPlaceable?.let { gapPx + it.width } ?: 0)
-        val width = contentWidth.coerceIn(constraints.minWidth, constraints.maxWidth)
-        val height = maxOf(iconPlaceable.height, labelPlaceable?.height ?: 0)
-            .coerceIn(constraints.minHeight, constraints.maxHeight)
-        return layout(width, height) {
-            val start = (width - contentWidth) / 2
-            iconPlaceable.placeRelative(start, (height - iconPlaceable.height) / 2)
-            labelPlaceable?.placeRelative(start + iconPlaceable.width + gapPx, (height - labelPlaceable.height) / 2)
-        }
-    }
-
-    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int =
-        measurables[0].minIntrinsicWidth(height)
-
-    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int =
-        measurables[0].maxIntrinsicWidth(height) + gap.roundToPx() + measurables[1].maxIntrinsicWidth(height)
 }
 
 // When the row is short of room, the episode list's label goes first, then the picture's, then the speed's.

@@ -37,9 +37,9 @@ import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
-import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
-import eu.kanade.presentation.components.IncognitoModeBannerContainer
-import eu.kanade.presentation.components.IndexingBannerContainer
+import eu.kanade.presentation.components.DownloadedOnlyBannerTone
+import eu.kanade.presentation.components.IncognitoModeBannerTone
+import eu.kanade.presentation.components.IndexingBannerTone
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -77,6 +77,7 @@ import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
+import mihon.presentation.kit.feedback.isLight
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.surface.isLight
@@ -226,13 +227,13 @@ class MainActivity : BaseActivity() {
         }
 
         val isSystemInDarkTheme = isSystemInDarkTheme()
-        val statusBarContainer = when {
-            banners.indexing -> IndexingBannerContainer
-            banners.downloadedOnly -> DownloadedOnlyBannerContainer
-            banners.incognito -> IncognitoModeBannerContainer
-            else -> SurfaceContainer.Surface
+        val statusBarStrip = when {
+            banners.indexing -> IndexingBannerTone
+            banners.downloadedOnly -> DownloadedOnlyBannerTone
+            banners.incognito -> IncognitoModeBannerTone
+            else -> null
         }
-        val lightStatusBar = statusBarContainer.isLight()
+        val lightStatusBar = statusBarStrip?.isLight() ?: SurfaceContainer.Surface.isLight()
         LaunchedEffect(isSystemInDarkTheme, lightStatusBar) {
             applyMainSystemBarStyle(
                 lightStatusBar = lightStatusBar,

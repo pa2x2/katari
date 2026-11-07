@@ -5,7 +5,7 @@ description: Rules every Katari screen follows so it works at any window size an
 
 # Adaptive layout rules
 
-Katari runs on phones, tablets, foldables, resizable windows and desktop windows. A book-style foldable shows a narrow portrait screen folded and a wide, nearly square one unfolded, both portrait, and switches between them while a screen is open. These rules let one screen work in all of them without per-screen fixes. The UI kit (`presentation-core`, `mihon.presentation.kit`) owns every decision below; a screen supplies content and behaviour. They extend the UI kit rules in `AGENTS.md`.
+Katari runs on phones, tablets, foldables, resizable windows and desktop windows. A book-style foldable shows a narrow portrait screen folded and a wide, nearly square one unfolded, both portrait, and switches between them while a screen is open. These rules let one screen work in all of them without per-screen fixes. The UI kit (`presentation-core`, `mihon.presentation.kit`) owns every decision below; a screen supplies content and behaviour. They extend the `ui-kit` skill, which says how to find and use the kit's components.
 
 ## 1. Window facts come from the kit only
 

@@ -840,6 +840,11 @@
     <string name="book_reader_text_rule_this_source">This source</string>
     <string name="book_reader_host_title">Book reader</string>
     <string name="book_reader_loading">Checking book reader compatibility…</string>
+    <string name="book_opening_requesting">Asking the source for the book…</string>
+    <string name="book_opening_downloading">Downloading the book…</string>
+    <string name="book_opening_restoring">Opening the book…</string>
+    <string name="book_opening_preparing">Preparing the book for reading…</string>
+    <string name="book_opening_saving">Saving the prepared book so it opens faster next time…</string>
     <string name="book_reader_failure_book">Katari can\'t open this book</string>
     <string name="book_reader_failure_source_message">Message from %1$s</string>
     <string name="book_reader_back_to_book">Back to book</string>
@@ -1859,7 +1864,7 @@
     <string name="anime_playback_asking_source">Asking %1$s for streams…</string>
     <string name="anime_playback_opening_stream">Opening the stream…</string>
     <string name="anime_playback_opening_server">Opening %1$s…</string>
-    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s</string>
+    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s (%3$d of %4$d)</string>
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="anime_playback_details">Details</string>
@@ -2453,6 +2458,9 @@
     <!-- Full-screen viewers such as the reader and the player -->
     <string name="viewer_full_screen_hint">Press Esc to leave full screen</string>
     <string name="page_list_empty_error">No pages found</string>
+    <string name="reader_startup_loading_extensions">Loading extensions…</string>
+    <string name="reader_startup_opening_file">Opening the chapter…</string>
+    <string name="reader_startup_asking_source">Asking %1$s for the pages…</string>
     <string name="loader_not_implemented_error">Source not found</string>
 
     <!-- Updates -->

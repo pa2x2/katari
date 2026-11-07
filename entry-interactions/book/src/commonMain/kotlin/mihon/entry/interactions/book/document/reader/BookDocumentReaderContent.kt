@@ -38,9 +38,7 @@ internal fun BookDocumentReaderContent(
         onBackCompleted = { controller.handleBack() },
     )
     when (val surface = controller.surfaceState) {
-        BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(
-            contentDescription = stringResource(MR.strings.book_reader_loading),
-        )
+        BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(controller.openingProgress)
         is BookDocumentReaderSurfaceState.Error -> BookDocumentReaderFailure(controller, host, surface)
         BookDocumentReaderSurfaceState.Ready -> {
             val state = controller.readerState

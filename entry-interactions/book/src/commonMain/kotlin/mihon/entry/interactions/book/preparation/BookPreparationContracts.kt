@@ -18,7 +18,10 @@ internal interface BookContentPreparer {
 
     fun supports(descriptor: BookContentDescriptor): Boolean
 
-    suspend fun prepare(content: BookContentSession): BookPreparationResult
+    suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit = {},
+    ): BookPreparationResult
 }
 
 internal sealed interface BookPreparationResult {

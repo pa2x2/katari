@@ -5,7 +5,8 @@ import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
 
 @Immutable
 internal sealed interface ReaderStartupState {
-    data object Loading : ReaderStartupState
+    /** [step] is null until opening reports what it is doing. */
+    data class Loading(val step: ReaderStartupStep? = null) : ReaderStartupState
     data object Ready : ReaderStartupState
 
     data class Failed(

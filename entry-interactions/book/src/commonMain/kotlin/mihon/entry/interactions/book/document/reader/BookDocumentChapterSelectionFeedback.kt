@@ -8,16 +8,14 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.entry.interactions.book.reader.BookOpeningLoadingScreen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.ProblemAction
 import mihon.presentation.kit.feedback.ProblemCard
 import mihon.presentation.kit.theme.KatariTheme
@@ -39,10 +37,11 @@ internal fun BookDocumentChapterSelectionFeedback(
         .fillMaxSize()
         .background(LocalBookDocumentReaderPalette.current.background)
     when (val loadState = selection.loadState) {
-        BookDocumentChapterLoadState.Loading -> {
-            val description = stringResource(MR.strings.loading)
-            LoadingScreen(modifier = background.semantics { contentDescription = description })
-        }
+        BookDocumentChapterLoadState.Loading -> BookOpeningLoadingScreen(
+            progress = selection.progress,
+            description = stringResource(MR.strings.loading),
+            modifier = background,
+        )
         is BookDocumentChapterLoadState.Failed -> {
             NavigationBackHandler(
                 state = rememberNavigationEventState(NavigationEventInfo.None),

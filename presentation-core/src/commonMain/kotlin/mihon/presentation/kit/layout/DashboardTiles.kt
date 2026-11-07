@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -29,7 +30,7 @@ fun DashboardTiles(tiles: List<@Composable (Modifier) -> Unit>, modifier: Modifi
                     Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(gap),
                 ) {
-                    line.forEach { tile -> tile(Modifier.weight(1f)) }
+                    line.forEach { tile -> tile(Modifier.weight(1f).fillMaxHeight()) }
                 }
             }
         }

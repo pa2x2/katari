@@ -1,5 +1,6 @@
 package mihon.presentation.kit.sheet
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -20,7 +21,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A sheet's title row, with optional [actions] such as a guide button and an overflow [menu] at its end. A page opened
- * inside the sheet passes [onBack], which leads the row with a back button.
+ * inside the sheet passes [onBack], which leads the row with a back button. [subtitle] sums up the page under the
+ * title, such as how many of its items are selected.
  */
 @Composable
 fun SheetHeader(
@@ -29,6 +31,7 @@ fun SheetHeader(
     actions: (@Composable RowScope.() -> Unit)? = null,
     menu: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
     onBack: (() -> Unit)? = null,
+    subtitle: String? = null,
 ) {
     Row(
         modifier = modifier
@@ -46,13 +49,14 @@ fun SheetHeader(
                 onClick = onBack,
             )
         }
-        Text(
-            text = title,
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(vertical = KatariTheme.spacing.l),
-            role = TextRole.SheetTitle,
-        )
+        ) {
+            Text(text = title, role = TextRole.SheetTitle)
+            subtitle?.let { Text(text = it, role = TextRole.Supporting) }
+        }
         actions?.invoke(this)
         menu?.let { OverflowMenu(content = it) }
     }

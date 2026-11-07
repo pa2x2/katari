@@ -26,10 +26,23 @@ internal data class ServerFallback(
         if (tried.size >= MAX_SERVER_ATTEMPTS) return null
         val start = servers.indexOfFirst { it.key == failed.key } + 1
         val next = (servers.drop(start) + servers.take(start)).firstOrNull { it.key !in tried } ?: return null
-        return Step(ServerFallback(tried), failed = failed, next = next)
+        return Step(
+            fallback = ServerFallback(tried),
+            failed = failed,
+            next = next,
+            attempt = tried.size + 1,
+            attempts = minOf(servers.size, MAX_SERVER_ATTEMPTS),
+        )
     }
 
-    data class Step(val fallback: ServerFallback, val failed: VideoPlaybackOption, val next: VideoPlaybackOption)
+    /** [next] is the [attempt]th server of the [attempts] this episode may try, counting from 1. */
+    data class Step(
+        val fallback: ServerFallback,
+        val failed: VideoPlaybackOption,
+        val next: VideoPlaybackOption,
+        val attempt: Int,
+        val attempts: Int,
+    )
 }
 
 /** The server [playbackData] played from: the selected one, else the first, which sources play by default. */
@@ -81,8 +94,13 @@ internal fun EngineFailureOutcome.allowsServerFallback(category: VideoPlayerErro
     }
 }
 
-/** What the player says after moving to another server by itself. */
-internal data class ServerFallbackNotice(val failedServer: String, val playingServer: String)
+/** What the player says after moving to another server by itself; [attempt] of [attempts] as in [ServerFallback.Step]. */
+internal data class ServerFallbackNotice(
+    val failedServer: String,
+    val playingServer: String,
+    val attempt: Int,
+    val attempts: Int,
+)
 
 private const val MAX_SERVER_ATTEMPTS = 3
 private val LOAD_FAILURES = setOf(

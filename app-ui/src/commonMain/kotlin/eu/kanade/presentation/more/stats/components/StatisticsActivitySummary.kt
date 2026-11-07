@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -156,7 +155,7 @@ internal fun StatisticsActivitySummaryCards(
 @Composable
 private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String, modifier: Modifier = Modifier) {
     val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
-    DashboardTile(modifier = modifier.fillMaxHeight()) {
+    DashboardTile(modifier = modifier) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
@@ -258,7 +257,7 @@ private fun SummaryTile(
     modifier: Modifier = Modifier,
     detail: @Composable () -> Unit = {},
 ) {
-    DashboardTile(modifier = modifier.fillMaxHeight()) {
+    DashboardTile(modifier = modifier) {
         Text(text = label, role = TextRole.Supporting)
         Spacer(Modifier.height(KatariTheme.spacing.xs))
         Text(text = value, role = TextRole.Metric, maxLines = 1)

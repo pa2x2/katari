@@ -64,8 +64,6 @@ import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -205,54 +203,52 @@ data class CatalogScreen(
             Scaffold(
                 frame = ScreenFrame.Wide,
                 topBar = { scrollBehavior ->
-                    Surface(container = SurfaceContainer.Surface) {
-                        Column {
-                            CatalogToolbar(
-                                title = viewModel.sourceName,
-                                searchQuery = state.toolbarQuery,
-                                onSearchQueryChange = viewModel::setToolbarQuery,
-                                displayMode = viewModel.displayMode,
-                                onDisplayModeChange = { viewModel.displayMode = it },
-                                navigateUp = navigateUp,
-                                onWebViewClick = onWebViewClick,
-                                onSettingsClick = onSettingsClick,
-                                onLongPressActionsClick = {
-                                    navigator.push(BrowseLongPressActionsScreen(sourceId))
-                                },
-                                onSearch = viewModel::search,
-                                onEnterImmersive = if (immersiveAvailable) {
-                                    { immersiveMode = true }
-                                } else {
-                                    null
-                                },
-                                onRefresh = catalogList::refresh,
-                                refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
-                                scrollBehavior = scrollBehavior,
-                            )
+                    Column {
+                        CatalogToolbar(
+                            title = viewModel.sourceName,
+                            searchQuery = state.toolbarQuery,
+                            onSearchQueryChange = viewModel::setToolbarQuery,
+                            displayMode = viewModel.displayMode,
+                            onDisplayModeChange = { viewModel.displayMode = it },
+                            navigateUp = navigateUp,
+                            onWebViewClick = onWebViewClick,
+                            onSettingsClick = onSettingsClick,
+                            onLongPressActionsClick = {
+                                navigator.push(BrowseLongPressActionsScreen(sourceId))
+                            },
+                            onSearch = viewModel::search,
+                            onEnterImmersive = if (immersiveAvailable) {
+                                { immersiveMode = true }
+                            } else {
+                                null
+                            },
+                            onRefresh = catalogList::refresh,
+                            refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
+                            scrollBehavior = scrollBehavior,
+                        )
 
+                        AppBarExtension {
+                            CatalogListingControls(
+                                listing = state.listing,
+                                supportsLatest = viewModel.supportsLatest,
+                                showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                changedFilterCount = appliedFilterChanges.total.changed,
+                                onListingChange = viewModel::setListing,
+                                onFilterClick = viewModel::onFilterClick,
+                            )
+                        }
+                        if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                             AppBarExtension {
-                                CatalogListingControls(
-                                    listing = state.listing,
-                                    supportsLatest = viewModel.supportsLatest,
-                                    showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
-                                    changedFilterCount = appliedFilterChanges.total.changed,
-                                    onListingChange = viewModel::setListing,
-                                    onFilterClick = viewModel::onFilterClick,
+                                CatalogAppliedFilterChips(
+                                    labels = appliedFilterLabels,
+                                    unused = !viewModel.textSearchUsesFilters &&
+                                        !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
+                                    onOpenFilters = {
+                                        filterFocusPath = it.path
+                                        viewModel.openFilterSheet()
+                                    },
+                                    onRemove = { viewModel.removeAppliedFilter(it.path) },
                                 )
-                            }
-                            if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
-                                AppBarExtension {
-                                    CatalogAppliedFilterChips(
-                                        labels = appliedFilterLabels,
-                                        unused = !viewModel.textSearchUsesFilters &&
-                                            !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
-                                        onOpenFilters = {
-                                            filterFocusPath = it.path
-                                            viewModel.openFilterSheet()
-                                        },
-                                        onRemove = { viewModel.removeAppliedFilter(it.path) },
-                                    )
-                                }
                             }
                         }
                     }
