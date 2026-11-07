@@ -3217,7 +3217,7 @@
     <string name="sync_server_address">Server address</string>
     <string name="sync_action_sign_in">Sign in</string>
     <string name="sync_server_checking">Checking the server…</string>
-    <string name="sync_server_plain_http_local">Not encrypted. Allowed because this address is on your local network.</string>
+    <string name="sync_server_plain_http_local">Not encrypted.</string>
     <string name="sync_server_plain_http_refused">Plain http:// works only for addresses on your local network. Use the server\'s https:// address.</string>
     <!-- %1$s is the server's address -->
     <string name="sync_server_needs_setup">This server has no accounts yet. Open %1$s in a browser to create the admin account, then sign in here.</string>
