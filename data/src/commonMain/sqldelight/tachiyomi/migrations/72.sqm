@@ -7,3 +7,7 @@ CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_k
 -- A record this app can't read waits for an update, as one that failed to apply does, so both note the app version
 -- that held them (app/katari/sync/data/sync_pending.sq).
 ALTER TABLE sync_pending RENAME COLUMN failed_on TO held_on;
+
+-- The open questions are read by kind, and the newest server copy held by based_on, whenever sync's records change.
+CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
+CREATE INDEX idx_sync_records_based_on ON sync_records(based_on);

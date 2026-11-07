@@ -29,6 +29,10 @@ CREATE TABLE sync_records(
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
 CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
 CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);
+-- The records of a kind in key order, such as the open questions the status shows.
+CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
+-- The newest server copy held, which every page pulled and every push checks the server against.
+CREATE INDEX idx_sync_records_based_on ON sync_records(based_on);
 
 getByKey:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
