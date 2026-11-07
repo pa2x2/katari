@@ -28,12 +28,18 @@ import mihon.entry.interactions.manga.reader.text.surface.PageTextLayer
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 
 /**
- * One page of the long strip at the strip's width: as tall as the page once its size is known, and as tall as
+ * One page of the long strip, [width] pixels wide: as tall as the page once its size is known, and as tall as
  * [placeholderHeight] before, with its download progress a quarter of the way down; the progressive preview while it
  * arrives; the page itself; or why it failed with a retry.
  */
 @Composable
-internal fun StripPage(page: ReaderPage, viewer: StripViewer, placeholderHeight: Dp, modifier: Modifier = Modifier) {
+internal fun StripPage(
+    page: ReaderPage,
+    viewer: StripViewer,
+    width: Int,
+    placeholderHeight: Dp,
+    modifier: Modifier = Modifier,
+) {
     val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
@@ -67,6 +73,7 @@ internal fun StripPage(page: ReaderPage, viewer: StripViewer, placeholderHeight:
                     StripPageImage(
                         image = image,
                         layout = shown.layout,
+                        width = width,
                         onFailed = contentState::fail,
                         modifier = Modifier.fillMaxSize(),
                     )
