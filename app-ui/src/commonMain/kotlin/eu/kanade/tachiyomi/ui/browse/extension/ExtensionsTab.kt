@@ -21,6 +21,7 @@ import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import mihon.app.ui.di.LocalAppUiGraph
+import mihon.feature.missingextensions.ui.MissingExtensionsSheet
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.FilterList
@@ -47,6 +48,7 @@ fun extensionsTab(
     var privateExtensionToUninstall by remember { mutableStateOf<Extension.Installed?>(null) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
     var showCompatibility by rememberSaveable { mutableStateOf(false) }
+    var showMissingExtensions by rememberSaveable { mutableStateOf(false) }
     val state by extensionsViewModel.state.collectAsStateWithLifecycle()
 
     return TabContent(
@@ -126,8 +128,19 @@ fun extensionsTab(
                     extensionsViewModel.updateExtension(extension)
                 },
                 onShowCompatibility = { showCompatibility = true },
+                onReviewMissingExtensions = { showMissingExtensions = true },
                 onRefresh = extensionsViewModel::findAvailableExtensions,
             )
+
+            if (showMissingExtensions) {
+                MissingExtensionsSheet(
+                    onDismissRequest = { showMissingExtensions = false },
+                    onOpenStores = {
+                        showMissingExtensions = false
+                        navigator.push(ExtensionStoresScreen())
+                    },
+                )
+            }
 
             if (showCompatibility) {
                 ExtensionCompatibilityDialog(

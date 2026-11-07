@@ -10,7 +10,10 @@ import app.katari.sync.ui.status.stopsSync
 import app.katari.sync.ui.status.syncHeadlineText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
+import mihon.feature.missingextensions.model.MissingExtension
+import mihon.feature.missingextensions.ui.noticeText
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Extension
 import mihon.icons.materialsymbols.rounded.Logout
 import mihon.icons.materialsymbols.rounded.SyncProblem
 import mihon.presentation.kit.button.Button
@@ -32,11 +35,13 @@ internal fun linkedPreferences(
     devices: SyncViewModel.DevicesState,
     preferences: SyncPreferences,
     knowsWifi: Boolean,
+    missingExtensions: List<MissingExtension>,
     actions: SyncPageActions,
 ): List<Preference> = buildList {
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
+    if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
         val count = status.heldAside.toInt()
         add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
@@ -83,6 +88,23 @@ private fun statusCard(
                         status.activity != SyncStatus.Activity.WaitingForChoices,
                 )
             },
+        )
+    }
+}
+
+/** Library titles whose extensions this device lacks, opening the sheet that installs them. */
+@Composable
+private fun missingExtensionsRow(
+    extensions: List<MissingExtension>,
+    actions: SyncPageActions,
+): Preference.PreferenceItem<*, *> {
+    val title = stringResource(MR.strings.missing_extensions_entry)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = noticeText(extensions),
+            icon = MaterialSymbols.Rounded.Extension,
+            onPreferenceClick = actions.openMissingExtensions,
         )
     }
 }

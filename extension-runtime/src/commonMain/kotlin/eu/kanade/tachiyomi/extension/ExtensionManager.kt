@@ -191,6 +191,16 @@ class ExtensionManager(
             isInitialized.first { it }
             extensionStoreRepository.getAllAsFlow().collect(::assignStores)
         }
+
+        // Stores are added and removed by sync and restore as well as on their screen, and what they list is what
+        // missing sources are installed from, so the listings follow the stores whoever changed them
+        scope.launch {
+            extensionStoreRepository.getAllAsFlow()
+                .map { stores -> stores.mapTo(HashSet()) { it.indexUrl } }
+                .distinctUntilChanged()
+                .drop(1)
+                .collectLatest { findAvailableExtensions() }
+        }
     }
 
     private var subLanguagesEnabledOnFirstRun = preferences.enabledLanguages.isSet()
@@ -225,17 +235,27 @@ class ExtensionManager(
         }
     }
 
-    private var availableExtensionsSourcesData: Map<Long, ListedSource> = emptyMap()
+    private val listedSources = MutableStateFlow<Map<Long, ListedSource>>(emptyMap())
+
+    /** A store's listing of the extension that provides each source the stores list, by the source's key. */
+    val listingsBySource: Flow<Map<Long, Extension.Available>> =
+        listedSources.map { sources -> sources.mapValues { it.value.listing } }
 
     private suspend fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
         if (extensions.isEmpty()) return
-        availableExtensionsSourcesData = listedSourcesByKey(extensions, sourceIdentities.findAll())
+        listedSources.value = listedSourcesByKey(extensions, sourceIdentities.findAll())
     }
 
-    fun getSourceData(id: Long): StubSource? = availableExtensionsSourcesData[id]?.stub
+    fun getSourceData(id: Long): StubSource? = listedSources.value[id]?.stub
 
-    /** A store's listing of the extension that provides the source with key [id], for a source that isn't installed. */
-    fun getListingOfSource(id: Long): Extension.Available? = availableExtensionsSourcesData[id]?.listing
+    private val firstFetch = Mutex()
+
+    /** Reads what the stores list, unless it was read since the app started. */
+    suspend fun fetchListingsOnce() {
+        firstFetch.withLock {
+            if (!hasFetchedListings) findAvailableExtensions()
+        }
+    }
 
     /**
      * Loads and registers the installed extensions. Safe to call again: every extension is judged

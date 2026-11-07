@@ -44,6 +44,7 @@ fun SharedLibraryContent(
     onRefresh: (suspend () -> Boolean)?,
     updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
+    notice: @Composable () -> Unit,
     scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
@@ -110,6 +111,7 @@ fun SharedLibraryContent(
         }
 
         LibraryUpdateStrip(state = updateState, onCancel = onCancelUpdate)
+        notice()
 
         PullRefresh(
             refreshing = awaitingUpdate,
@@ -223,6 +225,7 @@ fun LibraryContent(
     onRefresh: (suspend () -> Boolean)?,
     updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
+    notice: @Composable () -> Unit,
     onGlobalSearchClicked: (() -> Unit)?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     coverSize: CoverSize,
@@ -286,6 +289,7 @@ fun LibraryContent(
             onRefresh = onRefresh,
             updateState = updateState,
             onCancelUpdate = onCancelUpdate,
+            notice = notice,
             scrollToTopTarget = scrollToTopTarget,
         ) { pagerState, _, _ ->
             LibraryPager(

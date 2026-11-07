@@ -21,8 +21,11 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
+import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.LocalBackPress
 import mihon.app.ui.di.LocalAppUiGraph
+import mihon.feature.missingextensions.ui.MissingExtensionsNoticeViewModel
+import mihon.feature.missingextensions.ui.MissingExtensionsSheet
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
@@ -73,7 +76,9 @@ object SyncScreen : SearchableSettings {
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
             disconnect = { dialog = SyncPageDialog.Disconnect },
             dismissEnded = model::dismissEnded,
+            openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
         )
+        val missingExtensions by metroViewModel<MissingExtensionsNoticeViewModel>().installable.collectAsState()
 
         PreferenceScaffold(
             titleRes = getTitleRes(),
@@ -90,6 +95,7 @@ object SyncScreen : SearchableSettings {
                         devices = devices,
                         preferences = model.preferences,
                         knowsWifi = knowsWifi,
+                        missingExtensions = missingExtensions,
                         actions = actions,
                     )
                 }
@@ -111,6 +117,13 @@ object SyncScreen : SearchableSettings {
                     dialog = null
                 },
                 onDismissRequest = { dialog = null },
+            )
+            SyncPageDialog.MissingExtensions -> MissingExtensionsSheet(
+                onDismissRequest = { dialog = null },
+                onOpenStores = {
+                    dialog = null
+                    navigator.push(ExtensionStoresScreen())
+                },
             )
             SyncPageDialog.Disconnect -> ConfirmDialog(
                 title = stringResource(MR.strings.sync_disconnect_title),
@@ -142,4 +155,5 @@ internal class SyncPageActions(
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
     val disconnect: () -> Unit,
     val dismissEnded: () -> Unit,
+    val openMissingExtensions: () -> Unit,
 )

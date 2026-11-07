@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
+import mihon.feature.missingextensions.ui.MissingExtensionsNotice
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.Button
@@ -59,6 +60,7 @@ fun ExtensionScreen(
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
+    onReviewMissingExtensions: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -103,6 +105,7 @@ fun ExtensionScreen(
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
                     onShowCompatibility = onShowCompatibility,
+                    onReviewMissingExtensions = onReviewMissingExtensions,
                 )
             }
         }
@@ -124,6 +127,7 @@ private fun ExtensionContent(
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
+    onReviewMissingExtensions: () -> Unit,
 ) {
     val context = currentPlatformContext()
     val graph = LocalAppUiGraph.current
@@ -162,6 +166,13 @@ private fun ExtensionContent(
                     onClick = { systemPackages.requestInstallPermission(context) },
                 )
             }
+        }
+
+        item(key = "missing-extensions") {
+            MissingExtensionsNotice(
+                onReview = onReviewMissingExtensions,
+                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+            )
         }
 
         state.items.forEach { (header, items) ->

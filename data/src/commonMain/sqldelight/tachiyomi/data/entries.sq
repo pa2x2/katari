@@ -115,6 +115,15 @@ WHERE profile_id = :profileId
 AND favorite = 1
 GROUP BY source;
 
+getFavoriteCountsBySourceAndProfile:
+SELECT
+    profile_id,
+    source,
+    count(*)
+FROM entries
+WHERE favorite = 1
+GROUP BY profile_id, source;
+
 getSourcesWithEntries:
 SELECT DISTINCT source
 FROM entries

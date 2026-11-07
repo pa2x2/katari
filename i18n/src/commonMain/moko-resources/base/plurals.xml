@@ -489,4 +489,16 @@
         <item quantity="one">%d minute</item>
         <item quantity="other">%d minutes</item>
     </plurals>
+    <plurals name="missing_extensions_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
+    <plurals name="missing_extensions_notice">
+        <item quantity="one">%d title in your library needs an extension that isn\'t installed here</item>
+        <item quantity="other">%d titles in your library need extensions that aren\'t installed here</item>
+    </plurals>
+    <plurals name="missing_extensions_install">
+        <item quantity="one">Install %d</item>
+        <item quantity="other">Install %d</item>
+    </plurals>
 </resources>

@@ -7,7 +7,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.extension.ExtensionManagement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,7 +34,6 @@ class ExtensionStoresViewModel(
     private val addExtensionStore: AddExtensionStore,
     private val removeExtensionStore: RemoveExtensionStore,
     private val updateExtensionStores: UpdateExtensionStores,
-    private val extensions: ExtensionManagement,
 ) : ViewModel() {
 
     private val dialog = MutableStateFlow<ExtensionStoreDialog?>(null)
@@ -93,7 +91,6 @@ class ExtensionStoresViewModel(
 
     private suspend fun add(store: ExtensionStore) {
         addExtensionStore.add(store)
-        extensions.refreshAvailable()
         dismissDialog()
     }
 
@@ -112,7 +109,6 @@ class ExtensionStoresViewModel(
     fun deleteRepo(baseUrl: String) {
         viewModelScope.launchIO {
             removeExtensionStore(baseUrl)
-            extensions.refreshAvailable()
         }
     }
 

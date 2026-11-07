@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -36,6 +39,7 @@ import eu.kanade.presentation.library.components.librarySelectionActions
 import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -55,6 +59,8 @@ import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.feature.missingextensions.ui.MissingExtensionsLibraryNotice
+import mihon.feature.missingextensions.ui.MissingExtensionsSheet
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.layout.ScreenFrame
@@ -62,6 +68,7 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.library.model.LibraryItem
@@ -105,6 +112,7 @@ data object LibraryTab : Tab {
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
+        var showMissingExtensions by rememberSaveable { mutableStateOf(false) }
 
         // A started update also reports its progress on the library's progress strip.
         val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
@@ -279,6 +287,12 @@ data object LibraryTab : Tab {
                         onRefresh = suspend { onClickRefresh(state) }.takeIf { updateQueue.isOffered },
                         updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
+                        notice = {
+                            MissingExtensionsLibraryNotice(
+                                onReview = { showMissingExtensions = true },
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
+                        },
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
@@ -296,6 +310,16 @@ data object LibraryTab : Tab {
                     )
                 }
             }
+        }
+
+        if (showMissingExtensions) {
+            MissingExtensionsSheet(
+                onDismissRequest = { showMissingExtensions = false },
+                onOpenStores = {
+                    showMissingExtensions = false
+                    navigator.push(ExtensionStoresScreen())
+                },
+            )
         }
 
         val onDismissRequest = viewModel::closeDialog
