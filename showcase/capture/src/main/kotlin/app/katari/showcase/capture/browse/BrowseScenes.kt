@@ -6,6 +6,7 @@ import androidx.test.uiautomator.Direction
 import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
+import app.katari.showcase.capture.ShowcaseDevice.enterText
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.list
 import app.katari.showcase.capture.ShowcaseDevice.scrollTo
@@ -26,7 +27,7 @@ class BrowseScenes {
         openTab(HomeTab.Browse)
         tap(By.text("Sources"))
         tapAction("Global search")
-        find(By.clazz("android.widget.EditText")).text = "Fantasy"
+        enterText(By.clazz("android.widget.EditText"), "Fantasy")
         device.pressEnter()
         device.pressBack()
         tap(By.text("All"))

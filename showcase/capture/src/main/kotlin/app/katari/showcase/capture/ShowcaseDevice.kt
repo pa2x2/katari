@@ -161,6 +161,15 @@ internal object ShowcaseDevice {
         fail("Nothing on screen matches $selector, nor under the dock")
     }
 
+    fun enterText(selector: BySelector, text: String) {
+        try {
+            find(selector).text = text
+        } catch (_: StaleObjectException) {
+            // Redrawn between finding and typing into it, as a field on a screen still sliding in is.
+            find(selector).text = text
+        }
+    }
+
     /** Taps the last view matching [selector], such as a dialog's button named like the one that opened the dialog. */
     fun tapLast(selector: BySelector) {
         try {

@@ -6,6 +6,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.device
+import app.katari.showcase.capture.ShowcaseDevice.enterText
 import app.katari.showcase.capture.ShowcaseDevice.fail
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.tap
@@ -34,7 +35,7 @@ class TranslationSetup {
         // The merged entry reads its pages in the language of its English root.
         tap(By.text(Pattern.compile(".* → .*")))
         tap(By.text("Page language"))
-        find(By.clazz("android.widget.EditText")).text = "Japanese"
+        enterText(By.clazz("android.widget.EditText"), "Japanese")
         // The search field holds the same word as the result, so the result is picked by its native name.
         tapUntil(By.text("日本語 · ja"), Until.hasObject(By.text("Download")))
 

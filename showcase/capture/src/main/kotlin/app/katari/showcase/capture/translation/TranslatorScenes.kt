@@ -4,6 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
+import app.katari.showcase.capture.ShowcaseDevice.enterText
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.openProfile
@@ -20,7 +21,7 @@ class TranslatorScenes {
         // A tap while the library is still loading after the profile picker is lost.
         settle()
         openTab(HomeTab.Translator)
-        find(By.clazz("android.widget.EditText")).text = RASHOMON_OPENING
+        enterText(By.clazz("android.widget.EditText"), RASHOMON_OPENING)
         // Its read-aloud button appears with the translation.
         find(By.desc("Listen to translation"))
         capture("translator")
