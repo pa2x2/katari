@@ -14,6 +14,7 @@ import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -48,7 +49,8 @@ class DownloadProgressTest {
                     b.account.answerFirstSync(
                         proposal.map { ProfileChoice(it.profileId, it.pairedWith?.uuid, SettingsWinner.ACCOUNT) },
                     )
-                    b.sync() shouldBe SyncOutcome.UNREACHABLE
+                    // Answering starts the download; a run requested now could follow it and finish the download
+                    b.runs.lastOutcome.first { it != SyncOutcome.IDLE } shouldBe SyncOutcome.UNREACHABLE
 
                     b.connection.state().let { state ->
                         state.stage shouldBe SyncStage.DOWNLOADING
