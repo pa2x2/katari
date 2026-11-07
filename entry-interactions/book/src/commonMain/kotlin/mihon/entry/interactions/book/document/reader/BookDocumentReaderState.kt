@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import mihon.book.api.BookLocator
 import mihon.book.api.BookNavigationItem
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -45,4 +46,6 @@ internal sealed interface BookDocumentChapterLoadState {
 internal data class BookDocumentChapterSelectionLoad(
     val chapter: EntryChapter,
     val loadState: BookDocumentChapterLoadState,
+    /** The step a loading chapter's opening is on; null until it reports one. */
+    val progress: BookOpeningProgress? = null,
 )

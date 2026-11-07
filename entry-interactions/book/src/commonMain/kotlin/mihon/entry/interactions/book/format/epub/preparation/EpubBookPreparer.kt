@@ -10,6 +10,7 @@ import mihon.book.api.BookPublication
 import mihon.book.api.BookReadingDirection
 import mihon.book.api.BookResource
 import mihon.book.api.BookResourceAvailability
+import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentPublicationModel
@@ -32,6 +33,7 @@ import mihon.entry.interactions.book.format.epub.resource.EpubArchiveResourceLoa
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
 import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookRemoteResourceReference
@@ -52,7 +54,10 @@ internal class EpubBookPreparer(
         descriptor.format.substringBefore(';').trim().equals(EpubContract.FORMAT, true) &&
             descriptor.protection.equals("none", true)
 
-    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
         if (!supports(
                 content.descriptor,
             )
@@ -77,7 +82,16 @@ internal class EpubBookPreparer(
             require(resource.mediaType.normalizedBookMediaType()?.let { it == EpubContract.FORMAT } != false) {
                 "The primary resource is not an EPUB"
             }
-            val materialized = content.materializeResource(resourceId).getOrThrow()
+            val fetched = resource.cacheState != BookResourceCacheState.CACHED
+            val materialized = content.materializeResource(resourceId) { bytesRead, totalBytes ->
+                if (fetched) {
+                    onProgress(
+                        BookOpeningProgress.Downloading(
+                            totalBytes?.takeIf { it > 0 }?.let { (bytesRead.toFloat() / it).coerceIn(0f, 1f) },
+                        ),
+                    )
+                }
+            }.getOrThrow()
             ownedMaterialization = materialized
             val contentDigest = withContext(Dispatchers.IO) { materialized.file.sha256() }
             val archive = withContext(Dispatchers.IO) { EpubArchive(materialized.file) }
@@ -89,7 +103,9 @@ internal class EpubBookPreparer(
                 revision = contentDigest,
                 viewportWidth = pageViewport.widthPx.toInt(),
             )
-            val cached = withContext(Dispatchers.IO) { preparedCache?.read(cacheKey) }
+            val cached = withContext(Dispatchers.IO) {
+                preparedCache?.read(cacheKey) { fraction -> onProgress(BookOpeningProgress.Restoring(fraction)) }
+            }
             val derivedResources = cached?.derivedResources
                 ?.associateTo(linkedMapOf()) { resource ->
                     resource.resourceId to BookPublicationResource(
@@ -114,7 +130,8 @@ internal class EpubBookPreparer(
                     title = cached.documentTitles[document.resourceId],
                     hasReadableContent = document.blocks.any { it.content !is BookDocumentBlockContent.Unsupported },
                 )
-            } ?: packageInfo.documents.map { item ->
+            } ?: packageInfo.documents.mapIndexed { index, item ->
+                onProgress(BookOpeningProgress.Preparing(index.toFloat() / packageInfo.documents.size))
                 if (!item.isRemote && documentPreparer.supports(item.mediaType)) {
                     documentPreparer.prepare(
                         archive,
@@ -133,6 +150,7 @@ internal class EpubBookPreparer(
                     )
                 }
             }.also { generated ->
+                if (preparedCache != null) onProgress(BookOpeningProgress.Saving)
                 withContext(Dispatchers.IO) {
                     preparedCache?.write(
                         cacheKey,

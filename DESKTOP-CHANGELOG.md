@@ -1,5 +1,27 @@
 # Desktop Changelog
 
+## [1.0.0-beta.2] - 2026-11-06
+
+### 🧩 Improved
+
+- On wide windows, entry covers in the library, browse, history and statistics grow, so the window shows bigger covers rather than more small ones.
+- On wide windows, the statistics reading calendar's days grow to fill its card instead of leaving empty space on the right.
+
+### 🔄 Changed
+
+- On wide windows, the statistics dashboard stays at two columns of cards, which widen to fill the width, so a section with two or three cards no longer leaves an empty column.
+
+## [1.0.0-beta.1] - 2026-11-06
+
+### 🔄 Changed
+
+- On wide windows, screens hold their content in a centred frame. The title, tabs, list and main button share one edge, and a wider window adds columns or panes rather than longer rows.
+
+### 🧩 Improved
+
+- On wide windows, the sources and extensions lists wrap their rows into columns.
+- On wide windows, global search and the statistics dashboard show more cards in columns, and the dashboard's headline figures sit in one line when there is room.
+
 ## [0.1.0-alpha.4] - 2026-11-05
 
 ### ✨ Added
@@ -61,7 +83,9 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v0.1.0-alpha.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.2...HEAD
+[1.0.0-beta.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.2
+[1.0.0-beta.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.1
 [0.1.0-alpha.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.4
 [0.1.0-alpha.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v0.1.0-alpha.2

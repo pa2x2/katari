@@ -1,12 +1,8 @@
 package mihon.feature.migration.review.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,7 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.currentRowInset
+import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -35,50 +31,40 @@ internal fun SourceMigrationEntryListItem(
     supportingTrailing: (@Composable () -> Unit)? = null,
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
-    Row(
-        modifier = modifier
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(enabled = enabled, onClick = onClick)
-                } else {
-                    Modifier
-                },
+    CoverRow(
+        cover = {
+            EntryCover.Book(
+                data = thumbnailUrl,
+                modifier = Modifier.fillMaxSize(),
+                frame = CoverFrame.Thumbnail,
             )
-            .fillMaxWidth()
-            .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+        },
+        modifier = modifier,
+        onClick = onClick?.takeIf { enabled },
+        trailing = trailingContent,
     ) {
-        EntryCover.Book(
-            data = thumbnailUrl,
-            modifier = Modifier.height(KatariTheme.sizes.artworkLarge),
-            frame = CoverFrame.Thumbnail,
+        Text(
+            text = title,
+            role = TextRole.ItemTitle,
+            tone = if (dimmed) ContentTone.Secondary else ContentTone.Inherit,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                role = TextRole.ItemTitle,
-                tone = if (dimmed) ContentTone.Secondary else ContentTone.Inherit,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (supportingText != null || supportingTrailing != null) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = supportingText.orEmpty(),
-                        modifier = Modifier.weight(1f),
-                        role = TextRole.Body,
-                        tone = ContentTone.Secondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    supportingTrailing?.invoke()
-                }
+        if (supportingText != null || supportingTrailing != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = supportingText.orEmpty(),
+                    modifier = Modifier.weight(1f),
+                    role = TextRole.Body,
+                    tone = ContentTone.Secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                supportingTrailing?.invoke()
             }
         }
-        trailingContent?.invoke()
     }
 }

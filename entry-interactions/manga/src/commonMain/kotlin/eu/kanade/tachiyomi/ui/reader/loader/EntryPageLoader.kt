@@ -39,6 +39,8 @@ internal class EntryPageLoader(
     private val chapterCache: MangaPageStore,
     private val pageAcquirer: MangaPageAcquirer,
     private val appScope: CoroutineScope,
+    /** Called when the page list isn't cached and the source is asked for it. */
+    private val onRequestPageList: () -> Unit,
 ) : PageLoader() {
 
     private val imageSource = source as EntryImageSource
@@ -80,6 +82,7 @@ internal class EntryPageLoader(
     override suspend fun getPages(): List<ReaderPage> {
         val domainChapter = chapter.chapter.toDomainChapter()!!
         val pages = chapterCache.getOrPutPageList(domainChapter) {
+            onRequestPageList()
             val media = source.getMedia(domainChapter.toEntryChapter().toSEntryChapter())
             if (media !is EntryMedia.ImagePages) {
                 throw ReaderLoadException(

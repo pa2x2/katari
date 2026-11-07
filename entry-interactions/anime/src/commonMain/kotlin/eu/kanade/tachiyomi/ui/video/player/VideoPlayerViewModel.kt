@@ -779,10 +779,8 @@ internal class VideoPlayerViewModel(
     private fun showListed(playbackData: PlaybackDescriptor, serverNotice: ServerFallbackNotice?) {
         if (mutableState.value !is State.Loading) return
         loadingState = loadingState.copy(
-            step = LoadingStep.Opening(
-                server = playingServer(playbackData)?.label,
-                failedServer = serverNotice?.failedServer,
-            ),
+            step = serverNotice?.let(LoadingStep::FallingBack)
+                ?: LoadingStep.Opening(server = playingServer(playbackData)?.label),
             choices = playbackData.takeIf { it.sourceChoice() != null },
             failedServerKeys = serverFallback.tried,
         )
@@ -810,7 +808,7 @@ internal class VideoPlayerViewModel(
         serverFallback = step.fallback
         return ServerFallbackRetry(
             selection = playbackData.selection.copy(serverKey = step.next.key, streamKey = null),
-            notice = ServerFallbackNotice(step.failed.label, step.next.label),
+            notice = ServerFallbackNotice(step.failed.label, step.next.label, step.attempt, step.attempts),
         )
     }
 
@@ -897,8 +895,7 @@ internal class VideoPlayerViewModel(
         nextChapterPreloadJob?.cancel()
         // A move to another server lists that server's streams again, so it says where it goes instead.
         loadingState = loadingState.copy(
-            step = serverNotice
-                ?.let { LoadingStep.Opening(server = it.playingServer, failedServer = it.failedServer) }
+            step = serverNotice?.let(LoadingStep::FallingBack)
                 ?: loadingSourceName?.let(LoadingStep::AskingSource),
             preview = VideoPlaybackPreviewState(),
         )
@@ -1535,8 +1532,11 @@ internal class VideoPlayerViewModel(
     sealed interface LoadingStep {
         data class AskingSource(val sourceName: String) : LoadingStep
 
-        /** [server] is null when the source lists none; [failedServer] is the one fallback moved away from. */
-        data class Opening(val server: String?, val failedServer: String?) : LoadingStep
+        /** [server] is null when the source lists none. */
+        data class Opening(val server: String?) : LoadingStep
+
+        /** Opening the server fallback moved to after the one before failed. */
+        data class FallingBack(val notice: ServerFallbackNotice) : LoadingStep
     }
 
     /** Another episode being opened, or one that couldn't be, over the episode still on screen. */

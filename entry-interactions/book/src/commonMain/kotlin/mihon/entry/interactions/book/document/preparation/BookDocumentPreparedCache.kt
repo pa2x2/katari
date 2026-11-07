@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.document.preparation
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.io.IOException
@@ -17,13 +19,20 @@ internal class BookDocumentPreparedCache(
 ) {
     constructor(directories: AppPrivateDirectories) : this(directories.noBackupFiles.resolve(CACHE_DIRECTORY_NAME))
 
+    /** [onProgress] gets the share of the entry read so far, 0..1; a large book's entry takes seconds to decode. */
+    @OptIn(ExperimentalSerializationApi::class)
     @Synchronized
-    fun read(key: BookDocumentPreparedCacheKey): BookDocumentPreparedCacheValue? {
+    fun read(
+        key: BookDocumentPreparedCacheKey,
+        onProgress: (Float) -> Unit = {},
+    ): BookDocumentPreparedCacheValue? {
         val file = directory.resolve("${key.diskKey()}.json")
         return runCatching {
             ensureDirectory()
-            if (!file.isFile || file.length() !in 1..maxEntryBytes) return null
-            JSON.decodeFromString<BookDocumentPreparedCacheEntry>(file.readText())
+            val length = file.length()
+            if (!file.isFile || length !in 1..maxEntryBytes) return null
+            ReadProgressInputStream(file.inputStream().buffered(), length, onProgress)
+                .use { input -> JSON.decodeFromStream<BookDocumentPreparedCacheEntry>(input) }
                 .takeIf { entry -> entry.schemaVersion == SCHEMA_VERSION && entry.key == key }
                 ?.value
                 ?.also { file.setLastModified(System.currentTimeMillis()) }

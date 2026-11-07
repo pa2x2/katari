@@ -66,8 +66,8 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
         controller.notices.collect { messages.show(it) }
     }
     when (val startup = state.startupState) {
-        ReaderStartupState.Loading -> {
-            ReaderStartupLoadingScreen()
+        is ReaderStartupState.Loading -> {
+            ReaderStartupLoadingScreen(startup.step)
             return
         }
         is ReaderStartupState.Failed -> {

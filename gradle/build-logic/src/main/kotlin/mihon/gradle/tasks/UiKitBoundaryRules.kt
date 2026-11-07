@@ -8,7 +8,8 @@ package mihon.gradle.tasks
  * role, content by ContentTone, and a rounded or raised container by the kit component that names its job.
  * Pagers are the kit's too, so every pager turns one page for a wheel notch or a touchpad swipe; only the readers in
  * entry-interactions, which turn their own pages from the wheel, use Compose's pagers directly.
- * Generated icon modules are not UI code, and tests may build whatever harness they need.
+ * Generated icon modules are not UI code, and tests may build whatever harness they need. Every message points to the
+ * skill that explains its rule: .agents/skills/ui-kit, or .agents/skills/adaptive-layout for the window rules below.
  *
  * The kit also owns how a screen adapts to the window (.agents/skills/adaptive-layout): outside it, nothing reads the
  * window's size or orientation, builds a raw vertical lazy list or picks a grid's columns.
@@ -31,7 +32,8 @@ internal fun checkUiKitBoundaries(
                     findings += UiKitBoundaryFinding(
                         script.relativePath,
                         index + 1,
-                        "Only presentation-core may depend on or opt into Compose Material; use the kit instead",
+                        "Only presentation-core may depend on or opt into Compose Material; use the kit instead; " +
+                            UI_KIT_SKILL,
                     )
                 }
             }
@@ -68,52 +70,58 @@ private class UiKitRule(
 /** What a rule may need to know about the whole file, beyond the line it matches. */
 private class SourceFacts(val relativePath: String, val configurationNames: Set<String>)
 
+private const val UI_KIT_SKILL = "see .agents/skills/ui-kit"
+
 private val UI_KIT_RULES = listOf(
     UiKitRule(
-        "Material components are only used inside presentation-core; use the kit component",
+        "Material components are only used inside presentation-core; use the kit component; $UI_KIT_SKILL",
         Regex("""\bandroidx\.compose\.material3?\."""),
         composeOnly = false,
     ),
     UiKitRule(
-        "Raw dialogs and popups bypass the kit; use the kit's Dialog, Sheet or menu",
+        "Raw dialogs and popups bypass the kit; use the kit's Dialog, Sheet or menu; $UI_KIT_SKILL",
         Regex("""^\s*import\s+androidx\.compose\.ui\.window\.(Dialog|Popup)\b"""),
         composeOnly = false,
     ),
     UiKitRule(
-        "Dimensions come from kit tokens (KatariTheme.spacing, sizes) or kit component parameters",
+        "Dimensions come from kit tokens (KatariTheme.spacing, sizes) or kit component parameters; $UI_KIT_SKILL",
         Regex("""(?<![\w.])(\d+(?:\.\d+)?)f?\.(dp|sp)\b"""),
         accept = { match, _ -> match.groupValues[1].toDouble() != 0.0 },
     ),
     UiKitRule(
-        "Colours are picked by role: SurfaceContainer for fills, ContentTone for content",
+        "Colours are picked by role: SurfaceContainer for fills, ContentTone for content; $UI_KIT_SKILL",
         Regex("""\bColor\s*\(|\bColor\.(?!Transparent\b|Unspecified\b)\w+"""),
     ),
     UiKitRule(
-        "Text styling comes from kit text roles",
+        "Text styling comes from kit text roles; $UI_KIT_SKILL",
         Regex("""\b(TextStyle|SpanStyle|ParagraphStyle)\s*\(|\b(FontWeight|FontStyle)\.|\bfontWeight\s*="""),
     ),
     UiKitRule(
-        "Rounded containers come from kit components, such as Card, GroupCard or OverlayPill",
+        "Rounded containers come from kit components, such as Card, GroupCard or OverlayPill; $UI_KIT_SKILL",
         Regex("""\b(RoundedCornerShape|AbsoluteRoundedCornerShape|CutCornerShape)\s*\(|\bCircleShape\b"""),
     ),
     UiKitRule(
-        "Scheme colours stay in the kit; use SurfaceContainer, ContentTone, KatariTheme.chart or KatariTheme.markup",
+        "Scheme colours stay in the kit; use SurfaceContainer, ContentTone, KatariTheme.chart or KatariTheme.markup; " +
+            UI_KIT_SKILL,
         Regex("""\bKatariTheme\.colors\b"""),
     ),
     UiKitRule(
-        "Shapes are the kit's; use the kit component for the container, such as Card, OverlayPanel or ArtworkTile",
+        "Shapes are the kit's; use the kit component for the container, such as Card, OverlayPanel or ArtworkTile; " +
+            UI_KIT_SKILL,
         Regex("""\bKatariTheme\.shapes\b"""),
     ),
     UiKitRule(
-        "Shadows come with raised kit components, such as GroupCard(raised = true) or OverlayStyle.Raised",
+        "Shadows come with raised kit components, such as GroupCard(raised = true) or OverlayStyle.Raised; " +
+            UI_KIT_SKILL,
         Regex("""\.shadow\s*\("""),
     ),
     UiKitRule(
-        "Emphasis comes from colour roles and enabled states, not alpha",
+        "Emphasis comes from colour roles and enabled states, not alpha; $UI_KIT_SKILL",
         Regex("""\.copy\(\s*alpha\s*=|\balpha\s*\(\s*0?\.\d|\balpha\s*=\s*0?\.\d"""),
     ),
     UiKitRule(
-        "Pagers come from mihon.presentation.kit.pager, which turns one page for a wheel notch or a touchpad swipe",
+        "Pagers come from mihon.presentation.kit.pager, which turns one page for a wheel notch or a touchpad swipe; " +
+            UI_KIT_SKILL,
         Regex("""\bandroidx\.compose\.foundation\.pager\.(HorizontalPager|VerticalPager)\b"""),
         // Readers turn their own pages from the wheel, through zoom and across chapters
         accept = { _, facts -> !facts.relativePath.startsWith("entry-interactions/") },
@@ -144,8 +152,8 @@ private val ADAPTIVE_LAYOUT_RULES = listOf(
         Regex("""\b(LazyColumn|FastScrollLazyColumn|ScrollbarLazyColumn)\s*[({]"""),
     ),
     UiKitRule(
-        "Grid columns come from the kit: coverGridCells for covers, RowGridColumn for entries shown as rows, " +
-            "CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
+        "Grid columns come from the kit: coverGridCells for covers, coverListCells for covers one to a line, " +
+            "RowGridColumn for entries shown as rows, CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
         Regex("""\b(GridCells|StaggeredGridCells)\s*\.\s*(Fixed|Adaptive|FixedSize)\b"""),
     ),
 )

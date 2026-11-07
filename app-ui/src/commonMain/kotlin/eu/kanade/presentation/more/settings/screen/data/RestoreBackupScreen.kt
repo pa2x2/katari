@@ -29,7 +29,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +50,8 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.surface.GroupCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
@@ -107,7 +108,7 @@ class RestoreBackupScreen(
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {
                     item {
-                        WarningBanner(MR.strings.restore_miui_warning)
+                        NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
                 }
 

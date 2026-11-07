@@ -103,7 +103,9 @@ class PluginSpotless : Plugin<Project> {
                 repositoryRoot.set(layout.projectDirectory)
             }
             val uiKitBoundaryCheck = tasks.register<UiKitBoundaryCheckTask>("checkUiKitBoundaries") {
-                description = "Checks that UI is built only from presentation-core kit components and tokens."
+                description =
+                    "Checks that UI is built only from presentation-core kit components and tokens, " +
+                    "and that the ui-kit skill's index names every kit component."
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
                 report.set(layout.buildDirectory.file("reports/ui-kit-boundaries.txt"))

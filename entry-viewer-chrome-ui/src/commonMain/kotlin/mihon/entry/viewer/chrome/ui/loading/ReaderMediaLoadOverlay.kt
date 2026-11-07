@@ -7,14 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.delay
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
@@ -42,17 +37,6 @@ fun ReaderMediaLoadOverlay(
 ) {
     if (state == ReaderMediaLoadState.Ready) return
 
-    val loading = state is ReaderMediaLoadState.Loading
-    var showLoadingIndicator by remember { mutableStateOf(false) }
-    LaunchedEffect(loading) {
-        if (loading) {
-            delay(LOADING_INDICATOR_DELAY_MS)
-            showLoadingIndicator = true
-        } else {
-            showLoadingIndicator = false
-        }
-    }
-
     Box(modifier = modifier) {
         if (showBackground) {
             ReaderMediaLoadingBackground(
@@ -73,14 +57,10 @@ fun ReaderMediaLoadOverlay(
         }
         when (state) {
             ReaderMediaLoadState.Ready -> Unit
-            is ReaderMediaLoadState.Loading -> {
-                if (showLoadingIndicator) {
-                    CombinedCircularProgressIndicator(
-                        progress = { state.progress ?: 0f },
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
-            }
+            is ReaderMediaLoadState.Loading -> CombinedCircularProgressIndicator(
+                progress = { state.progress ?: 0f },
+                modifier = Modifier.align(Alignment.Center),
+            )
             is ReaderMediaLoadState.Failed -> {
                 OverlayPanel(
                     modifier = Modifier.align(Alignment.Center).padding(KatariTheme.spacing.xl),
@@ -104,5 +84,3 @@ fun ReaderMediaLoadOverlay(
         }
     }
 }
-
-private const val LOADING_INDICATOR_DELAY_MS = 250L

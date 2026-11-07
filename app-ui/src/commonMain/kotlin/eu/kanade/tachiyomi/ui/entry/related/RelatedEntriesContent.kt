@@ -21,6 +21,7 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.entry.interactions.child.EntryRelatedEntryGroup
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.ScrollbarFrame
 import mihon.presentation.kit.layout.coverGridCells
@@ -91,7 +92,7 @@ internal fun RelatedEntryShelves(
                         key = { "${it.type}:${it.id}" },
                     ) { initialEntry ->
                         val entry by entryState(initialEntry)
-                        Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth)) {
+                        Box(modifier = Modifier.width(BrowseMetrics.searchResultCoverWidth * entryCoverScale())) {
                             RelatedEntryItem(entry, sourceItemOrientation, onClick = { onEntryClick(entry) })
                         }
                     }

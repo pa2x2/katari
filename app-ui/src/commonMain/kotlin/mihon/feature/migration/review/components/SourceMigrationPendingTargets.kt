@@ -5,27 +5,22 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import eu.kanade.presentation.entry.components.EntryCover
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.presentation.kit.content.CoverBacking
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.coverFrame
 import mihon.presentation.kit.content.skeleton
+import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -33,7 +28,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /*
  * What stands where an entry's replacement goes before there is one: a pulsing outline of an entry while the search
- * runs or waits, and a prompt to choose one by hand once the search found nothing. Both keep the cover slot of a found
+ * runs or waits, and a prompt to choose one by hand once the search found nothing. Both are cover rows like a found
  * replacement, so the row does not jump when the result arrives.
  */
 
@@ -51,57 +46,40 @@ internal fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState, m
     )
     val skeleton = Modifier.graphicsLayer { alpha = pulse }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.s),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+    CoverRow(
+        cover = { SkeletonBlock(skeleton.fillMaxSize()) },
+        modifier = modifier,
+        trailing = { SourceMigrationSearchStatusPill(state) },
     ) {
-        SkeletonBlock(skeleton.then(CoverSlot))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            SkeletonBlock(
-                skeleton
-                    .fillMaxWidth(SKELETON_TITLE_FRACTION)
-                    .height(KatariTheme.spacing.m),
-            )
-            SkeletonBlock(
-                skeleton
-                    .fillMaxWidth(SKELETON_SUBTITLE_FRACTION)
-                    .height(KatariTheme.spacing.m),
-            )
-        }
-        SourceMigrationSearchStatusPill(state)
+        SkeletonBlock(
+            skeleton
+                .fillMaxWidth(SKELETON_TITLE_FRACTION)
+                .height(KatariTheme.spacing.m),
+        )
+        Spacer(Modifier.height(KatariTheme.spacing.s))
+        SkeletonBlock(
+            skeleton
+                .fillMaxWidth(SKELETON_SUBTITLE_FRACTION)
+                .height(KatariTheme.spacing.m),
+        )
     }
 }
 
 @Composable
 internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.s),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+    CoverRow(
+        cover = { Box(Modifier.fillMaxSize().coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty)) },
+        modifier = modifier,
+        onClick = onClick,
     ) {
-        Box(
-            modifier = CoverSlot
-                .coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty),
+        Text(
+            text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
+            role = TextRole.ItemTitle,
         )
-        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
-            Text(
-                text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
-                role = TextRole.ItemTitle,
-            )
-            Text(
-                text = stringResource(MR.strings.sourceMigrationReview_noAutomaticMatch),
-                role = TextRole.Supporting,
-            )
-        }
+        Text(
+            text = stringResource(MR.strings.sourceMigrationReview_noAutomaticMatch),
+            role = TextRole.Supporting,
+        )
     }
 }
 
@@ -109,12 +87,6 @@ internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifie
 private fun SkeletonBlock(modifier: Modifier) {
     Box(modifier = modifier.skeleton())
 }
-
-/** The cover slot of [SourceMigrationEntryListItem], kept empty. */
-private val CoverSlot: Modifier
-    @Composable get() = Modifier
-        .height(KatariTheme.sizes.artworkLarge)
-        .aspectRatio(EntryCover.Book.ratio)
 
 private const val SKELETON_PULSE_FROM = 0.4f
 private const val SKELETON_PULSE_TO = 1f

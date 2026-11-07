@@ -29,6 +29,7 @@ import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.coverFrame
+import mihon.presentation.kit.content.entryCoverScale
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.CoverCell
 import mihon.presentation.kit.surface.MediaScrim
@@ -55,7 +56,7 @@ fun MigrationListItem(
     CoverCell(
         onClick = onClick,
         modifier = modifier
-            .widthIn(max = BrowseMetrics.migrationCoverMaxWidth)
+            .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
             .fillMaxWidth(),
     ) {
         Column {
@@ -139,7 +140,7 @@ fun MigrationListItemResult(
             MigratingEntry.SearchResult.Searching -> {
                 Box(
                     modifier = Modifier
-                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth)
+                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
                         .fillMaxSize()
                         .aspectRatio(EntryCover.Book.ratio),
                     contentAlignment = Alignment.Center,
@@ -150,7 +151,7 @@ fun MigrationListItemResult(
             MigratingEntry.SearchResult.NotFound -> {
                 Column(
                     Modifier
-                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth)
+                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
                         .fillMaxSize()
                         .padding(KatariTheme.spacing.xs),
                 ) {

@@ -38,8 +38,8 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
-import mihon.presentation.kit.layout.RowGridColumn
 import mihon.presentation.kit.layout.coverGridCells
+import mihon.presentation.kit.layout.coverListCells
 import mihon.presentation.kit.navigation.rememberAppBarExpander
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
@@ -294,17 +294,15 @@ fun CatalogFeedBrowseContent(
                 rowContent = comfortableRowContent,
                 footer = footer,
             )
-            LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
-                FeedLazyGrid(
-                    rows = rows,
-                    columns = rowColumns,
-                    gridState = gridState,
-                    contentPadding = rowPadding,
-                    showFooter = showFooter,
-                    rowContent = comfortableRowContent,
-                    footer = footer,
-                )
-            }
+            LibraryDisplayMode.ComfortableList -> FeedLazyGrid(
+                rows = rows,
+                columns = coverListCells(),
+                gridState = gridState,
+                contentPadding = contentPadding,
+                showFooter = showFooter,
+                rowContent = comfortableRowContent,
+                footer = footer,
+            )
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> FeedLazyGrid(
                 rows = rows,
                 columns = columns,

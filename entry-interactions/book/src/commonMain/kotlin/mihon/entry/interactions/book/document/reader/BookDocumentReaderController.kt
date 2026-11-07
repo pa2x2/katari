@@ -26,6 +26,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
 import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
@@ -79,6 +80,10 @@ internal class BookDocumentReaderController(
     )
 
     var surfaceState by mutableStateOf<BookDocumentReaderSurfaceState>(BookDocumentReaderSurfaceState.Loading)
+        private set
+
+    /** The step opening is on while [surfaceState] is loading; null until the first step reports. */
+    var openingProgress by mutableStateOf<BookOpeningProgress?>(null)
         private set
     var readerState by mutableStateOf<BookDocumentReaderState?>(null)
         private set
@@ -406,6 +411,7 @@ internal class BookDocumentReaderController(
         startupJob?.cancel()
         navigationPresentationJob?.cancel()
         surfaceState = BookDocumentReaderSurfaceState.Loading
+        openingProgress = null
         startupJob = scope.launch {
             try {
                 open()
@@ -430,7 +436,7 @@ internal class BookDocumentReaderController(
             null -> dependencies.sessionFactory.open(
                 startupRequest,
                 BookDocumentReaderProcessor.PROCESSOR_ID,
-            )
+            ) { openingProgress = it }
             else -> BookReaderOpenResult.Success(existing)
         }
         when (result) {

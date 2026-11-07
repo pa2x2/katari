@@ -28,13 +28,13 @@ fun Modifier.treeStem(x: Dp, stemTop: Dp): Modifier {
 
 /**
  * A child's branch of a tree: the stem carried on at [x], stopping at this child when it is the [last], and a line
- * across to the child.
+ * across to the child, reaching the cover of a [CoverRow] that starts at [x].
  */
 @Composable
 fun Modifier.treeBranch(x: Dp, last: Boolean): Modifier {
     val color = KatariTheme.colors.outlineVariant
     val stroke = KatariTheme.sizes.border
-    val reach = KatariTheme.spacing.l
+    val reach = KatariTheme.spacing.m
     return drawWithContent {
         drawContent()
         val branchX = x.toPx()

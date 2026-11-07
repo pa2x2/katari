@@ -23,19 +23,24 @@ import kotlin.math.min
  * different heights leave no gaps; one that needs the width, such as a wide chart, spans every column with
  * `StaggeredGridItemSpan.FullLine`. The flow adds no space of its own: row group and dashboard cards already keep
  * their side margin and the gap below them, so one column looks as it does in a [RowList].
+ *
+ * [maxColumns] caps the columns for content whose sections are too short to fill them; the cards then widen to share
+ * the width, past [CardMaxWidth].
  */
 @Composable
 fun CardFlow(
     modifier: Modifier = Modifier,
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    maxColumns: Int? = null,
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
     val direction = LocalLayoutDirection.current
     BoxWithConstraints(modifier = modifier) {
         val width = maxWidth - contentPadding.calculateStartPadding(direction) -
             contentPadding.calculateEndPadding(direction)
-        val columns = min((width / CardMinWidth).toInt(), ceil(width / CardMaxWidth).toInt()).coerceAtLeast(1)
+        val fitted = min((width / CardMinWidth).toInt(), ceil(width / CardMaxWidth).toInt())
+        val columns = min(fitted, maxColumns ?: fitted).coerceAtLeast(1)
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(columns),
             state = state,

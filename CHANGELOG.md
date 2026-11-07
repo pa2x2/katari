@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.0.6] - 2026-11-06
+
+### 🔄 Changed
+
+- On wide windows, screens hold their content in a centred frame. The title, tabs, list and main button share one edge, and a wider window adds columns or panes rather than longer rows.
+
+### 🧩 Improved
+
+- On wide windows, the sources, extensions and migration source lists wrap their rows into columns.
+- On wide windows, global search and the statistics dashboard show more cards in columns, and the dashboard's headline figures sit in one line when there is room.
+
+### 🐛 Fixed
+
+- In the manga reader's two-page spreads on wide windows, the page numbers no longer jump.
+
 ## [2.0.5] - 2026-11-05
 
 ### 🔄 Changed
@@ -1043,7 +1058,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.5...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.6...HEAD
+[2.0.6]: https://github.com/pa2x2/katari/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pa2x2/katari/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pa2x2/katari/releases/tag/v2.0.4
 [2.0.3]: https://github.com/pa2x2/katari/releases/tag/v2.0.3

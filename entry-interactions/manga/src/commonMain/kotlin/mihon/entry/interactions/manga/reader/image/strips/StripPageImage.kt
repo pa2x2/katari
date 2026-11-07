@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -13,25 +12,27 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.layout.onSizeChanged
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.tiles.drawTiles
 import mihon.entry.interactions.manga.reader.image.tiles.rememberTilePaint
 
 /**
- * Draws a still page [image] in [layout], stretched over the composable's size, from strips decoded once for its
- * width. [onFailed] is told when the image can't be decoded. The caller sizes the composable to the displayed page's
- * aspect ratio.
+ * Draws a still page [image] in [layout], stretched over the composable's size, from strips decoded once for [width],
+ * the page's width on screen in pixels. [onFailed] is told when the image can't be decoded. The caller sizes the
+ * composable to the displayed page's aspect ratio.
+ *
+ * The width comes from the caller rather than from measuring: a page composed ahead of the screen is not measured
+ * again until it scrolls in, so a decode waiting for its size would start only once the page is already in view.
  */
 @Composable
 internal fun StripPageImage(
     image: PageImage.Still,
     layout: PageImageLayout,
+    width: Int,
     onFailed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var width by remember { mutableIntStateOf(0) }
     var strips by remember(image, layout) { mutableStateOf<PageStrips?>(null) }
     LaunchedEffect(image, layout, width) {
         if (width <= 0) return@LaunchedEffect
@@ -54,7 +55,7 @@ internal fun StripPageImage(
     }
     DisposableEffect(image, layout) { onDispose { strips?.release() } }
     val paint = rememberTilePaint()
-    Canvas(modifier.onSizeChanged { width = it.width }) {
+    Canvas(modifier) {
         val shown = strips ?: return@Canvas
         if (shown.displayedSize.width <= 0) return@Canvas
         scale(size.width / shown.displayedSize.width, pivot = Offset.Zero) {

@@ -33,7 +33,8 @@ import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -174,8 +175,9 @@ private fun ExtensionDetails(
     ) {
         if (extension.isObsolete) {
             item {
-                WarningCard(
+                NoticeCard(
                     text = stringResource(MR.strings.obsolete_extension_message),
+                    tone = NoticeTone.Warning,
                     modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
                 )
             }

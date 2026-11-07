@@ -11,7 +11,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +31,8 @@ import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.storage.DocumentUri
@@ -97,7 +98,7 @@ class CreateBackupScreen : Screen() {
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {
                     item {
-                        WarningBanner(MR.strings.restore_miui_warning)
+                        NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
                 }
 

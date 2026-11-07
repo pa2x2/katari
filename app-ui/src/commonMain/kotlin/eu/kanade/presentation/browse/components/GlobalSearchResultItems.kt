@@ -20,7 +20,6 @@ import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -87,14 +86,4 @@ fun GlobalSearchErrorResultItem(message: String?) {
             textAlign = TextAlign.Center,
         )
     }
-}
-
-@Composable
-fun GlobalSearchEmptyResultItem() {
-    Text(
-        text = stringResource(MR.strings.no_results_found),
-        modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
-        role = TextRole.Body,
-        tone = ContentTone.Secondary,
-    )
 }

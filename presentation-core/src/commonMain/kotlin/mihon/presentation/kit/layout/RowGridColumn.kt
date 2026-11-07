@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 
 /**
- * Entries shown as rows by a lazy grid, such as the list display modes of the library or a catalogue, which share
- * the grid's items, headers and scroll state with its cover modes. [grid] lays out the grid with the [GridCells] and
+ * Entries shown as rows by a lazy grid, such as the list display mode of library search results, which shares the
+ * grid's items, headers and scroll state with its cover modes. [grid] lays out the grid with the [GridCells] and
  * content padding it is given: one column at most [RowListMaxWidth] wide, at the frame's start edge, as in a [RowList].
  */
 @Composable

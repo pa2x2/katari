@@ -25,6 +25,7 @@ import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
@@ -140,7 +141,10 @@ internal class ValidatingPreparer(
 
     override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor == this.descriptor
 
-    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
         content.openResource("chapter").getOrThrow().use { resource ->
             check(resource.stream.reader().readText() == expectedContent)
         }

@@ -142,8 +142,10 @@ internal class SourceBookContentSession(
         lease
     }
 
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> =
-        materializeResource(resourceId, MAX_MATERIALIZED_BYTES)
+    override suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit,
+    ): Result<MaterializedBookResource> = materializeResource(resourceId, MAX_MATERIALIZED_BYTES, onProgress)
 
     internal suspend fun materializeResource(
         resourceId: String,

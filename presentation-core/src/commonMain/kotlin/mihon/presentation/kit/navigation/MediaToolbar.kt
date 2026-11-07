@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.video.player.components
+package mihon.presentation.kit.navigation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -7,17 +7,18 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
+import mihon.presentation.kit.theme.KatariTheme
 
 /**
- * Lays the toolbar's buttons out in one row: the leading ones from the start, the [trailing][toolbarSlot] ones against
- * the end. When the row runs out of room, labelled buttons show only their icon, the lowest `labelDropOrder` first,
- * and the trailing buttons are kept whole before the leading ones share what is left, so the episode list and the
- * window's full screen stay reachable in a narrow window; leading buttons left no room are left out. A labelled button tells its icon-only width as its minimum
- * intrinsic width and leaves its label out itself when measured narrower than its maximum.
+ * A row of tool buttons laid over media, such as a player's controls under its timeline: the leading ones from the
+ * start, the [trailing][mediaToolbarSlot] ones against the end. When the row runs out of room, [MediaToolbarButton]s
+ * show only their icon, the lowest `labelDropOrder` first, and the trailing buttons are kept whole before the leading
+ * ones share what is left, so the actions at the end stay reachable in a narrow window; leading buttons left no room
+ * are left out.
  */
 @Composable
-internal fun VideoPlayerToolbarRow(gap: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun MediaToolbar(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val gap = KatariTheme.spacing.xs
     Layout(content = content, modifier = modifier.fillMaxWidth()) { measurables, constraints ->
         val gapPx = gap.roundToPx()
         val slots = measurables.map { it.layoutId as? ToolbarSlot ?: ToolbarSlot.Leading }
@@ -66,10 +67,11 @@ internal fun VideoPlayerToolbarRow(gap: Dp, modifier: Modifier = Modifier, conte
 }
 
 /**
- * Where a button of a [VideoPlayerToolbarRow] goes: against the end when [trailing], and, for a labelled button, how
- * early its label goes when the row is short of room, lowest first; null keeps the button whole.
+ * Where a button of a [MediaToolbar] goes: against the end when [trailing], and, for a [MediaToolbarButton], how early
+ * its label goes when the row is short of room, lowest first; null keeps the button whole. A kit button that wraps
+ * itself takes the slot from a box around it.
  */
-internal fun Modifier.toolbarSlot(trailing: Boolean = false, labelDropOrder: Int? = null): Modifier =
+fun Modifier.mediaToolbarSlot(trailing: Boolean = false, labelDropOrder: Int? = null): Modifier =
     layoutId(ToolbarSlot(trailing, labelDropOrder))
 
 private data class ToolbarSlot(val trailing: Boolean, val labelDropOrder: Int?) {

@@ -2,6 +2,7 @@ package mihon.presentation.kit.control
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.width
@@ -16,6 +17,7 @@ import androidx.compose.ui.semantics.semantics
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.presentation.kit.layout.RowListMaxWidth
+import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * A row of mutually exclusive options, drawn as one connected group of equally wide toggle buttons like
@@ -36,18 +38,23 @@ fun <T> SegmentedButtons(
     description: (@Composable (T) -> String)? = null,
 ) {
     val showCheck = options.size <= MAX_CHECKED_OPTIONS
+    // A segment with no icon is just its label, so it doesn't reserve the inset an icon needs: split six ways, that inset
+    // leaves three-character labels no room and they vanish.
+    val labelInset = PaddingValues(horizontal = KatariTheme.spacing.xs)
     ConnectedRow(modifier) {
         options.forEachIndexed { index, option ->
             val isSelected = option == selected
             val spoken = description?.invoke(option)
+            val optionIcon = icon?.invoke(option) ?: MaterialSymbols.Rounded.Check.takeIf { isSelected && showCheck }
             ConnectedToggle(
                 checked = isSelected,
                 onCheckedChange = { onSelect(option) },
                 index = index,
                 count = options.size,
                 label = label(option),
-                icon = icon?.invoke(option) ?: MaterialSymbols.Rounded.Check.takeIf { isSelected && showCheck },
+                icon = optionIcon,
                 enabled = enabled,
+                contentPadding = if (optionIcon == null) labelInset else null,
                 modifier = Modifier
                     .weight(1f)
                     .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),

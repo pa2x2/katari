@@ -32,6 +32,8 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.refresh.RefreshButton
+import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -147,12 +149,16 @@ internal fun PagedGroupFilterContent(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        PagedGroupFilterHeader(
+        SheetHeader(
             title = filter.name,
-            selectedCount = filter.currentSelectedItemCount(),
+            subtitle = stringResource(MR.strings.browse_filter_selected_count, filter.currentSelectedItemCount()),
             onBack = onBack,
-            onRefresh = { browseSession.refresh(viewKey) },
-            refreshEnabled = !queryTooShort && items.loadState.refresh !is LoadState.Loading,
+            actions = {
+                RefreshButton(
+                    onClick = { browseSession.refresh(viewKey) },
+                    enabled = !queryTooShort && items.loadState.refresh !is LoadState.Loading,
+                )
+            },
         )
         banner()
 
