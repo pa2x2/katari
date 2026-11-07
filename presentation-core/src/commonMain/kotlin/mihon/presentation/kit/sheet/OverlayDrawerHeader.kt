@@ -1,4 +1,4 @@
-package mihon.entry.viewer.chrome.ui.drawer
+package mihon.presentation.kit.sheet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope

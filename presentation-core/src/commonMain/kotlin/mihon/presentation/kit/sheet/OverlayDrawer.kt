@@ -1,4 +1,4 @@
-package mihon.entry.viewer.chrome.ui.drawer
+package mihon.presentation.kit.sheet
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.surface.SidePanel
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background

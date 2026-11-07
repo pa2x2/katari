@@ -211,7 +211,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A pill or panel floating over a full-screen view or media | `OverlayPill`, `OverlayPanel` | |
 | A pill for an action that runs by itself once it fills | `OverlayCountdownPill` | |
 | A card floating where a provider places it, non-modal | `FloatingPanel` | |
-| A card docked to the side over video or pages | `SidePanel` | |
+| A card docked to the side over video or pages | `SidePanel` | Modal, with a scrim and a title row: `OverlayDrawer` |
+| A modal side drawer over a reader or player, such as its episode list or settings | `OverlayDrawer`, `OverlayListDrawer`, `OverlayDrawerHeader` | `OverlayListDrawer` adds the title row for a list |
 | A tab tucked into a screen edge bringing hidden controls back | `EdgeTab` | |
 | The background where media is loading or failed | `MediaBackdrop` | |
 | A shade behind controls along an edge of media | `MediaScrim` | |

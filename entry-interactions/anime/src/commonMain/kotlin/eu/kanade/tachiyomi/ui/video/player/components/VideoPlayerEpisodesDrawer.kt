@@ -20,7 +20,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
-import mihon.entry.viewer.chrome.ui.drawer.OverlayListDrawer
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
@@ -36,6 +35,7 @@ import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.sheet.OverlayListDrawer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
