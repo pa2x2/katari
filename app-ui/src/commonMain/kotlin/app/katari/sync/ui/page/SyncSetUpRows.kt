@@ -18,7 +18,8 @@ import mihon.presentation.kit.button.PageAction
 import mihon.presentation.kit.button.PageActions
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -56,7 +57,7 @@ internal fun setUpPreferences(canKeepSignIn: Boolean, actions: SyncPageActions):
             Preference.PreferenceItem.CustomPreference(title = "keyring", framed = false) {
                 Column {
                     RowGroupGap()
-                    WarningCard(stringResource(MR.strings.sync_no_keyring))
+                    NoticeCard(stringResource(MR.strings.sync_no_keyring), NoticeTone.Warning)
                 }
             },
         )

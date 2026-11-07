@@ -1,10 +1,8 @@
 package app.katari.sync.ui.signin
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -32,12 +30,12 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Visibility
 import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.field.SecureTextField
 import mihon.presentation.kit.field.TextField
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ControlRow
+import mihon.presentation.kit.list.RowGroupAction
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
@@ -152,20 +150,17 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
                     }
                 }
                 item {
-                    Box(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
-                        Button(
-                            label = if (withInvite) {
-                                stringResource(MR.strings.sync_action_use_account)
-                            } else {
-                                stringResource(MR.strings.sync_action_use_invite)
-                            },
-                            onClick = {
-                                withInvite = !withInvite
-                                model.clearResult()
-                            },
-                            style = ButtonStyle.Text,
-                        )
-                    }
+                    RowGroupAction(
+                        label = if (withInvite) {
+                            stringResource(MR.strings.sync_action_use_account)
+                        } else {
+                            stringResource(MR.strings.sync_action_use_invite)
+                        },
+                        onClick = {
+                            withInvite = !withInvite
+                            model.clearResult()
+                        },
+                    )
                 }
             }
         }
@@ -188,13 +183,10 @@ private fun AddressNote(check: SyncJoinViewModel.AddressCheck) {
                     RowGroupNote(stringResource(MR.strings.sync_server_plain_http_local), tone = ContentTone.Warning)
                 }
                 serverCheckProblemText(result)?.let { RowGroupNote(it, showIcon = true) }
-                Box(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
-                    Button(
-                        label = stringResource(MR.strings.action_open_in_browser),
-                        onClick = { uriHandler.openUri(result.webPage.toString()) },
-                        style = ButtonStyle.Text,
-                    )
-                }
+                RowGroupAction(
+                    label = stringResource(MR.strings.action_open_in_browser),
+                    onClick = { uriHandler.openUri(result.webPage.toString()) },
+                )
             }
             else -> serverCheckProblemText(result)?.let { RowGroupNote(it, tone = ContentTone.Error) }
         }

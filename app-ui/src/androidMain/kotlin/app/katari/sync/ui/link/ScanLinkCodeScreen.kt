@@ -4,11 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,7 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -31,18 +26,14 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.util.Screen
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.ScanFrame
-import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.ScanFrameNote
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.list.RowGroupAction
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -91,39 +82,39 @@ class ScanLinkCodeScreen : Screen() {
         ) { contentPadding ->
             RowList(contentPadding = contentPadding) {
                 item {
-                    ScanFrame(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
-                        when {
-                            unavailable -> CameraNote(stringResource(MR.strings.sync_camera_unavailable), null)
-                            !granted -> CameraNote(stringResource(MR.strings.sync_camera_needed)) {
+                    val allowCamera = stringResource(MR.strings.sync_action_allow_camera)
+                    ScanFrame(
+                        note = when {
+                            unavailable -> ScanFrameNote(stringResource(MR.strings.sync_camera_unavailable))
+                            !granted -> ScanFrameNote(stringResource(MR.strings.sync_camera_needed), allowCamera) {
                                 permission.launch(Manifest.permission.CAMERA)
                             }
-                            else -> LinkCodeCamera(
-                                scanning = link == null,
-                                onText = { text ->
-                                    if (LinkCodeLink.parse(text) != null) {
-                                        model.clearResult()
-                                        scanned = text
-                                    } else if (text != lastRefused) {
-                                        lastRefused = text
-                                        messages.show(notALinkCode)
-                                    }
-                                },
-                                onUnavailable = { unavailable = true },
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
+                            else -> null
+                        },
+                    ) {
+                        LinkCodeCamera(
+                            scanning = link == null,
+                            onText = { text ->
+                                if (LinkCodeLink.parse(text) != null) {
+                                    model.clearResult()
+                                    scanned = text
+                                } else if (text != lastRefused) {
+                                    lastRefused = text
+                                    messages.show(notALinkCode)
+                                }
+                            },
+                            onUnavailable = { unavailable = true },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                 }
                 item { RowGroupNote(stringResource(MR.strings.sync_scan_hint)) }
                 item {
-                    Box(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
-                        Button(
-                            label = stringResource(MR.strings.sync_action_enter_code_instead),
-                            onClick = { navigator.push(EnterLinkCodeScreen()) },
-                            style = ButtonStyle.Text,
-                            icon = MaterialSymbols.Rounded.Keyboard,
-                        )
-                    }
+                    RowGroupAction(
+                        label = stringResource(MR.strings.sync_action_enter_code_instead),
+                        onClick = { navigator.push(EnterLinkCodeScreen()) },
+                        icon = MaterialSymbols.Rounded.Keyboard,
+                    )
                 }
             }
         }
@@ -138,20 +129,5 @@ class ScanLinkCodeScreen : Screen() {
                 onDismissRequest = { scanned = null },
             )
         }
-    }
-}
-
-/** Stands in for the camera's picture while there is none, with the way to get it where there is one. */
-@Composable
-private fun CameraNote(text: String, onAllow: (() -> Unit)?) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(KatariTheme.spacing.l),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(text, role = TextRole.Body, tone = ContentTone.OnMedia)
-        onAllow?.let { Button(stringResource(MR.strings.sync_action_allow_camera), it) }
     }
 }
