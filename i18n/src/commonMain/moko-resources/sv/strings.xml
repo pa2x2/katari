@@ -696,14 +696,10 @@
     <string name="action_bar_up_description">Navigera upp</string>
     <string name="onboarding_storage_action_select">Välj en mapp</string>
     <string name="pref_onboarding_guide">Introduktionsguide</string>
-    <string name="onboarding_guides_new_user">Ny till %s? Vi rekommenderar att du tar en titt på komma igång guiden.</string>
     <string name="onboarding_action_finish">Kom igång</string>
     <string name="onboarding_storage_selection_required">En mapp måste väljas</string>
-    <string name="onboarding_heading">Välkommen!</string>
-    <string name="onboarding_guides_returning_user">Ominstalleras %s?</string>
     <string name="onboarding_action_skip">Hoppa över</string>
     <string name="onboarding_action_next">Nästa</string>
-    <string name="onboarding_description">Låt oss ställa in några saker först. Du kan alltid ändra dessa i inställningarna senare.</string>
     <string name="no_location_set">Ingen lagringsplats inställd</string>
     <string name="onboarding_storage_folder_info">Välj en mapp där %1$s lagrar kapitelnedladdningar, säkerhetskopior och mer. \n \nEn dedikerad mapp rekommenderas.</string>
     <string name="onboarding_storage_selected_folder">Vald mapp: %s</string>

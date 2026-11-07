@@ -710,14 +710,10 @@
     <string name="action_bar_up_description">Navega cap amunt</string>
     <string name="onboarding_storage_action_select">Selecciona una carpeta</string>
     <string name="pref_onboarding_guide">Guia de benvinguda</string>
-    <string name="onboarding_guides_new_user">No heu fet servir mai el %s? Us recomanem que reviseu la guia de benvinguda.</string>
     <string name="onboarding_action_finish">Comença</string>
     <string name="onboarding_storage_selection_required">Cal que seleccioneu una carpeta</string>
-    <string name="onboarding_heading">Et donem la benvinguda!</string>
-    <string name="onboarding_guides_returning_user">Heu reinstal·lat %s?</string>
     <string name="onboarding_action_skip">Omet</string>
     <string name="onboarding_action_next">Següent</string>
-    <string name="onboarding_description">Primer cal configurar unes quantes coses. Sempre podràs canviar aquestes opcions a la configuració.</string>
     <string name="no_location_set">No s’ha definit una ubicació d’emmagatzematge</string>
     <string name="onboarding_storage_folder_info">Seleccioneu una carpeta on el %1$s emmagatzemarà les baixades dels capítols, les còpies de seguretat i més.\n\nÉs recomanable fer servir una carpeta dedicada.</string>
     <string name="onboarding_storage_selected_folder">Carpeta seleccionada: %s</string>

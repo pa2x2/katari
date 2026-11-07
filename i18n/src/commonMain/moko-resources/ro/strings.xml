@@ -691,7 +691,6 @@
     <string name="label_tracked_titles">Înregistrări monitorizate</string>
     <string name="exclude_scanlators">Exclude scanlator</string>
     <string name="pref_onboarding_guide">Ghid de îmbarcare</string>
-    <string name="onboarding_heading">Bine ați venit!</string>
     <string name="onboarding_action_next">Următorul</string>
     <string name="onboarding_action_skip">Omite</string>
     <string name="onboarding_storage_action_select">Selectează un folder</string>
@@ -703,7 +702,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Utilizarea bateriei în fundal</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Evitați întreruperile actualizărilor bibliotecii, descărcărilor, și restaurărilor de lungă durată.</string>
     <string name="onboarding_permission_action_grant">Acordă</string>
-    <string name="onboarding_guides_returning_user">Reinstalare %s?</string>
     <string name="no_location_set">Nici o locație pentru stocare nu a fost setată</string>
     <string name="invalid_backup_file_error">Eroarea completă:</string>
     <string name="private_settings">Includeți setări sensibile (ex. token-ul serviciilor de urmărire al logări)</string>
@@ -713,13 +711,11 @@
     <string name="manga_interval_expected_update">Se preconizează că vor fi lansate noi capitole în aproximativ %1$s, verifică la fiecare %2$s.</string>
     <string name="manga_interval_expected_update_soon">În curând</string>
     <string name="manga_interval_custom_amount">Frecvența personalizată de actualizare:</string>
-    <string name="onboarding_description">Să configurăm câteva lucruri mai întâi. Le puteți schimba oricând în setări și mai târziu.</string>
     <string name="onboarding_action_finish">Începe</string>
     <string name="onboarding_storage_folder_info">Selectează un folder unde %1$s va păstra capitolele descărcate, copiile de rezervă, și altele. \n \nSe recomanda folosirea unui folder dedicat.</string>
     <string name="onboarding_storage_selected_folder">Folder-ul selectat: %s</string>
     <string name="onboarding_permission_notifications">Permisiune de notificare</string>
     <string name="onboarding_permission_notifications_description">Primiți notificări pentru actualizările bibliotecii și altele.</string>
-    <string name="onboarding_guides_new_user">Nou pe %s? Vă recomandăm să consultați ghidul introductiv.</string>
     <string name="ext_permission_install_apps_warning">Sunt necesare permisiuni pentru instalarea de extensii. Atingeți aici pentru a permite.</string>
     <string name="ext_revoke_trust">Revocați încrederea extensiilor necunoscute</string>
     <string name="label_upcoming">Viitoare</string>

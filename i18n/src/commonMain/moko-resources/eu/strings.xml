@@ -547,10 +547,8 @@
     <string name="onboarding_storage_selection_required">Karpeta bat aukeratu behar da</string>
     <string name="onboarding_permission_notifications">Notifikazioetarako baimena</string>
     <string name="onboarding_permission_install_apps">Aplikazioak instalatzeko baimena</string>
-    <string name="onboarding_heading">Ongi etorri!</string>
     <string name="action_update_category">Kategoria eguneratu</string>
     <string name="action_menu_overflow_description">Aukera gehiago</string>
-    <string name="onboarding_guides_returning_user">%s erabili duzu dagoeneko?</string>
     <string name="selected">Aukeratuak</string>
     <string name="not_selected">Aukeratu gabeak</string>
     <string name="onboarding_action_next">Hurrengoa</string>

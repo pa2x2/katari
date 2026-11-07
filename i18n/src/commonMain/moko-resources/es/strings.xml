@@ -696,14 +696,10 @@
     <string name="pref_storage_location_info">Se utiliza para las copias de seguridad automáticas, poder descargar capítulos y abrir los que ya tengas en tu dispositivo.</string>
     <string name="onboarding_storage_action_select">Elige una carpeta</string>
     <string name="pref_onboarding_guide">Guía para principiantes</string>
-    <string name="onboarding_guides_new_user">¿Es la primera vez que instalas %s? Te recomendamos leer la guía de principiantes.</string>
     <string name="onboarding_action_finish">Comenzar</string>
     <string name="onboarding_storage_selection_required">Tienes que elegir una carpeta</string>
-    <string name="onboarding_heading">¡Hola!</string>
-    <string name="onboarding_guides_returning_user">¿No es la primera vez que instalas %s?</string>
     <string name="onboarding_action_skip">Saltar</string>
     <string name="onboarding_action_next">Siguiente</string>
-    <string name="onboarding_description">Lo primero de todo es dejar las cosas a tu gusto. Siempre puedes volver a cambiarlas más tarde en los ajustes.</string>
     <string name="no_location_set">Todavía no has proporcionado ninguna carpeta</string>
     <string name="onboarding_storage_folder_info">Elige una carpeta donde %1$s pueda guardar capítulos descargados, copias de seguridad y otras cosas.\n\nTe recomendamos que sea solo y exclusivamente para %1$s.</string>
     <string name="onboarding_storage_selected_folder">Carpeta seleccionada: %s</string>

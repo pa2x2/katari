@@ -313,8 +313,6 @@
     <string name="action_not_now">Ora saiki</string>
     <string name="action_add_anyway">Tambahaken mawon</string>
     <string name="pref_onboarding_guide">Panuntun wiwitan</string>
-    <string name="onboarding_heading">Sugeng rawuh!</string>
-    <string name="onboarding_description">Ayo awakdewe atur sawetara perkara ndhisik. Sampeyan uga mesthi isa ngowahi ing menu setelan mengko.</string>
     <string name="onboarding_action_next">Terusane</string>
     <string name="onboarding_action_finish">Rampung</string>
     <string name="onboarding_action_skip">Nglangkungi</string>

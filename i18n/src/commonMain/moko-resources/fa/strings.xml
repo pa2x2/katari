@@ -572,8 +572,6 @@
     <string name="updates_last_update_info">آخرین به روز رسانی کتابخانه: %s</string>
     <string name="pref_double_tap_zoom">برای بزرگ نمایی دوبار ضربه بزنید</string>
     <string name="action_filter_interval_custom">تناوب به روز رسانی شخسی سازی شده</string>
-    <string name="onboarding_heading">خوش آمدید!</string>
-    <string name="onboarding_description">بیاید برخی چیز ها را تنظیم کنیم. شما همیشه میتوانید این تنظیمات را در بخش تنظیمات تغییر دهید.</string>
     <string name="onboarding_action_next">بعدی</string>
     <string name="onboarding_permission_install_apps_description">برای نصب افزانه منبع.</string>
     <string name="onboarding_permission_notifications">دسترسی اعلان ها</string>
@@ -581,8 +579,6 @@
     <string name="onboarding_permission_ignore_battery_opts">استفاده از باطری</string>
     <string name="onboarding_permission_ignore_battery_opts_description">از وقفه در به روز رسانی های کتاب خانه، بارگیری و پشتیبان گیری های طولانی اجتناب کنید.</string>
     <string name="onboarding_permission_action_grant">اعطا کردن</string>
-    <string name="onboarding_guides_new_user">به %s نا آشنا هستید؟ ما پیشنهاد میکنیم تا یک سر به راهنمای شروع بزنید.</string>
-    <string name="onboarding_guides_returning_user">نصب مجدد %s؟</string>
     <string name="pref_relative_format">زمان بندی های نسبی</string>
     <string name="ext_revoke_trust">لغو اعتماد افزونه های ناشناخته</string>
     <string name="pref_page_rotate_invert">جهت چرخش صفحات گسترده را برعکس کن</string>

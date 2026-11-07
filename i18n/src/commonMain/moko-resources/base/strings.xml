@@ -733,12 +733,19 @@
 
     <!-- Onboarding -->
     <string name="pref_onboarding_guide">Onboarding guide</string>
-    <string name="onboarding_heading">Welcome!</string>
-    <string name="onboarding_description">Let\'s set some things up first. You can always change these in the settings later too.</string>
     <string name="onboarding_action_next">Next</string>
     <string name="onboarding_action_finish">Get started</string>
     <string name="onboarding_action_skip">Skip</string>
     <string name="guide_page_of">%1$d of %2$d</string>
+    <string name="onboarding_welcome_heading">Welcome to %1$s</string>
+    <string name="onboarding_welcome_subtitle">How are you starting?</string>
+    <string name="onboarding_start_new">I\'m new to %1$s</string>
+    <string name="onboarding_start_new_summary">Set it up from scratch</string>
+    <string name="onboarding_start_backup">I have a backup</string>
+    <string name="onboarding_start_backup_summary">Restore a %1$s or Mihon backup file</string>
+    <string name="onboarding_start_mihon_summary">Bring your library from the Mihon app on this device</string>
+    <string name="onboarding_restore_subtitle">Choose a %1$s or Mihon backup file. It is restored in the background while you finish setting up.</string>
+    <string name="onboarding_restore_choose">Choose a backup file</string>
     <string name="onboarding_appearance_heading">Appearance</string>
     <string name="onboarding_appearance_subtitle">Light or dark, and the colours %1$s uses.</string>
     <string name="onboarding_storage_heading">Storage</string>
@@ -766,8 +773,6 @@
     <string name="onboarding_permission_analytics">Allow analytics</string>
     <string name="onboarding_permission_analytics_description">Send anonymized usage data to improve app features.</string>
     <string name="onboarding_permission_action_grant">Grant</string>
-    <string name="onboarding_guides_new_user">New to %s? We recommend checking out the getting started guide.</string>
-    <string name="onboarding_guides_returning_user">Reinstalling %s?</string>
     <string name="onboarding_mihon_migration_title">Move from Mihon</string>
     <string name="onboarding_mihon_migration_description">In Mihon, create a backup containing everything you want to keep. Include private settings if you want to move source preferences and sign-in details. Then return here and choose that backup.</string>
     <string name="onboarding_mihon_migration_open">Open Mihon to create a backup</string>

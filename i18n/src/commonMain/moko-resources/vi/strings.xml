@@ -664,7 +664,6 @@
     <string name="pref_flash_page_summ">Giảm tình trạng bóng ma trên màn hình e-ink</string>
     <string name="pref_onboarding_guide">Hướng dẫn làm quen</string>
     <string name="pref_storage_location_info">Được sử dụng để sao lưu tự động, tải chương và nguồn cục bộ.</string>
-    <string name="onboarding_guides_new_user">Mới với %s sao? Chúng tôi khuyên bạn nên xem hướng dẫn bắt đầu.</string>
     <string name="onboarding_action_finish">Bắt đầu</string>
     <string name="action_apply">Áp dụng</string>
     <string name="manga_display_modified_interval_title">Đặt để cập nhật mỗi</string>
@@ -673,10 +672,8 @@
     <string name="intervals_header">Đoạn thời gian</string>
     <string name="action_revert_to_default">Đặt về mặc định</string>
     <string name="onboarding_permission_install_apps">Cài đặt quyền ứng dụng</string>
-    <string name="onboarding_heading">Xin chào!</string>
     <string name="action_menu_overflow_description">Thêm tùy chọn</string>
     <string name="last_auto_backup_info">Lần sao lưu tự động cuối cùng: %s</string>
-    <string name="onboarding_guides_returning_user">Đã sử dụng %s từ trước rồi sao?</string>
     <string name="selected">Đã chọn</string>
     <string name="no_scanlators_found">Không tìm thấy nhóm dịch nào</string>
     <string name="not_selected">Chưa chọn</string>
@@ -693,7 +690,6 @@
     <string name="notification_updating_progress">Đang cập nhật thư viện… (%s)</string>
     <string name="download_cache_invalidated">Tái tạo chỉ mục tải xuống</string>
     <string name="action_bar_up_description">Điều hướng trên</string>
-    <string name="onboarding_description">Trước tiên hãy thiết lập một số thứ nhé. Bạn có thể tùy ý chỉnh lại những cài đặt này lại sau.</string>
     <string name="action_sort_tracker_score">Điểm bộ theo dõi</string>
     <string name="no_location_set">Chưa đặt vị trí kho chứa</string>
     <string name="label_data_storage">Dữ liệu và kho chứa</string>

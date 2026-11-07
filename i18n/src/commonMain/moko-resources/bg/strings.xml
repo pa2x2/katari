@@ -613,8 +613,6 @@
     <string name="label_auto">Автоматично</string>
     <string name="label_local">Локален</string>
     <string name="action_sort_random">Случайно</string>
-    <string name="onboarding_heading">Добре дошли!</string>
-    <string name="onboarding_description">Първо хайде да настрим някои неща. Можеш по всяко време да ги промениш от настройките.</string>
     <string name="onboarding_action_finish">Започни</string>
     <string name="onboarding_action_skip">Пропусни</string>
     <string name="onboarding_storage_selection_required">Трябва да бъде избрана папка</string>
@@ -651,7 +649,6 @@
     <string name="action_notes">Бележки</string>
     <string name="action_edit_notes">Редактирай бележки</string>
     <string name="onboarding_action_next">Следващ</string>
-    <string name="onboarding_guides_returning_user">Преинсталираш %s?</string>
     <string name="pref_hide_in_library_items">Скрий манги, които са вече в библиотеката</string>
     <string name="source_settings">Настройки на източници</string>
     <string name="manga_interval_expected_update">Нови глави предвидени да бъдат качени след около %1$s, проверяване около всеки %2$s.</string>
@@ -738,7 +735,6 @@
     <string name="onboarding_permission_analytics">Разрешаване на анализи</string>
     <string name="onboarding_permission_analytics_description">Изпращайте анонимизирани данни за използването, за да подобрите функциите на приложението.</string>
     <string name="onboarding_permission_action_grant">Позволи</string>
-    <string name="onboarding_guides_new_user">Нови си в %s? Препоръчваме ти да разгледаш ръководството за начало.</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="theme_tokyonight">Токийска нощ</string>
     <string name="pref_relative_format">Относителни времеви отпечатъци</string>

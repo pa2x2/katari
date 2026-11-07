@@ -538,8 +538,6 @@
     <string name="action_apply">Кӳр</string>
     <string name="action_revert_to_default">Йаланхилле тавӑр</string>
     <string name="pref_onboarding_guide">Пуҫлама пӗлкӗч</string>
-    <string name="onboarding_heading">Килӗрех!</string>
-    <string name="onboarding_description">Айтӑр темиҫе йапала ӗнерӗпӗр. Есӗ вӗсене йаланах кайран ӗнерӳсенче улӑштарма пултаратӑн.</string>
     <string name="onboarding_action_next">Малалла</string>
     <string name="onboarding_action_finish">Пуҫла</string>
     <string name="onboarding_action_skip">Ирттер</string>
@@ -553,10 +551,8 @@
     <string name="onboarding_permission_ignore_battery_opts">Петтерейе хыҫра усӑ курма ирӗк</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Тӑсӑлакан вулавӑш ҫӗнелни, тийени тата йантӑ ӑтава тавӑрни чарӑнасран хӑтӑлтарӗ.</string>
     <string name="onboarding_permission_action_grant">Ирӗк пар</string>
-    <string name="onboarding_guides_new_user">%s апра ҫӗнни? Епӗр пуҫлав пӗлкӗчӗпе паллашма сӗнетпӗр.</string>
     <string name="theme_nord">Ҫур ҫӗр</string>
     <string name="onboarding_storage_help_info">Кивӗ верҫҫирен ҫӗнӗлетӗн те мӗн суламаллине пӗлместӗн? Нумайрах пӗлме усрав пӗлкӗчне кӗрсе пӑх.</string>
-    <string name="onboarding_guides_returning_user">%s ҫӗнӗрен лартатӑн?</string>
     <string name="pref_relative_format_summary">«%2$s» вырӑнне «%1$s»</string>
     <string name="label_upcoming">Пулас</string>
     <string name="action_menu_overflow_description">Ытти ӗнерӳсем</string>

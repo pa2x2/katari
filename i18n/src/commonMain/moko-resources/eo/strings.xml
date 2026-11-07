@@ -451,7 +451,6 @@
     <string name="action_close">Fermi</string>
     <string name="action_ok">Bone</string>
     <string name="action_remove_everything">Forigi ĉion</string>
-    <string name="onboarding_heading">Bonvenon!</string>
     <string name="onboarding_action_skip">Preterpasi</string>
     <string name="selected">Elektitaj</string>
     <string name="not_selected">Ne elektitaj</string>
@@ -494,7 +493,6 @@
     <string name="pref_advanced_summary">Deponi protokolojn, bateriaj optimumigoj</string>
     <string name="pref_security">Sekureco</string>
     <string name="action_copy_link">Kopii ligilon</string>
-    <string name="onboarding_guides_returning_user">Ĉu vi reinstalas %s?</string>
     <string name="action_sort_random">Hazarde</string>
     <string name="action_open_random_manga">Malfermi hazardan elementon</string>
     <string name="action_move_to_top_all_for_series">Movi serion al supro</string>
@@ -506,7 +504,6 @@
     <string name="onboarding_permission_crashlytics">Sendi prikolapsajn protokolojn</string>
     <string name="onboarding_permission_analytics_description">Sendi anonimigaj uzadaj datumoj por plibonigi funkciojn de apo.</string>
     <string name="onboarding_permission_action_grant">Permesi</string>
-    <string name="onboarding_guides_new_user">Ĉu vi estas en %s unua foje? Ni rekomendas kontroli komencantan gvidilon.</string>
     <string name="pref_backup_summary">Permanaj k aŭtomataj savkopioj, konserveja spaco</string>
     <string name="theme_lavender">Lavendo</string>
     <string name="pref_relative_format">Relativaj tempindikoj</string>
@@ -515,7 +512,6 @@
     <string name="pref_browse_summary">Fontoj, etendaĵoj, ĉiea serĉo</string>
     <string name="pref_downloads_summary">Aŭtomata elŝuto, elŝuti antaŭe</string>
     <string name="pref_tracking_summary">Unuvoja sinkroniga progreso, plibonigita sinkronigo</string>
-    <string name="onboarding_description">Komence ni agordu kelkajn aferojn. Vi ĉiam povas ŝanĝi ilin en la agordoj poste.</string>
     <string name="label_upcoming">Baldaŭa</string>
     <string name="onboarding_permission_install_apps_description">Por instali etendaĵojn de fontoj.</string>
     <string name="pref_library_summary">Kategorioj, ĉiea ĝisdatigo, ĉapitra ŝovumo</string>

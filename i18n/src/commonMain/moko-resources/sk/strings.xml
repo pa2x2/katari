@@ -615,7 +615,6 @@
     <string name="unlock_app_title">Odomknúť %s</string>
     <string name="action_set_interval">Nastaviť interval</string>
     <string name="action_sort_next_updated">Ďalšia očakávaná aktualizácia</string>
-    <string name="onboarding_heading">Vitajte!</string>
     <string name="label_upcoming">Nadchádzajúce</string>
     <string name="action_bar_up_description">Navigovať hore</string>
     <string name="label_auto">Auto</string>
@@ -630,7 +629,6 @@
     <string name="action_not_now">Nie teraz</string>
     <string name="action_add_anyway">Ajtak pridať</string>
     <string name="pref_onboarding_guide">Príručka na úvod</string>
-    <string name="onboarding_description">Poďme najprv nastaviť nejaké veci. Vždy ich môžete neskôr zmeniť.</string>
     <string name="onboarding_storage_folder_info">Vyberte priečinok, kde %1$s bude ukladať stiahnuté kapitoly, zálohy a ďalšie.\n\nOdporúčame použiť samostatný priečinok špecificky pre túto aplikáciu.</string>
     <string name="onboarding_storage_selected_folder">Vybraný priečinok: %s</string>
     <string name="onboarding_storage_help_info">Aktualizujete zo staršej verzie, a nie ste si istí, čo vybrať? Viac informácií nájdete v príručke úložiska.</string>
@@ -645,8 +643,6 @@
     <string name="onboarding_permission_analytics">Povoliť analytické dáta</string>
     <string name="onboarding_permission_analytics_description">Posielať anonymizované dáta o používaní aplikácie vývojárom pre zlepšenie zážitku.</string>
     <string name="onboarding_permission_action_grant">Povoliť</string>
-    <string name="onboarding_guides_new_user">Prvý krát používate %s? Odporúčame prečítať si príručku pre začiatočníkov.</string>
-    <string name="onboarding_guides_returning_user">Inštalujete %s znovu?</string>
     <string name="pref_appearance_summary">Téma, dátum a formát času</string>
     <string name="upcoming_guide">Príručka pre nadchádzajúce</string>
     <string name="track_activity_name">Prihlásenie do sledovača</string>

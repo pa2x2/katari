@@ -197,8 +197,6 @@
     <string name="internal_error">இன்டர்னெர்ர்: மேலும் தகவலுக்கு செயலிழப்பு பதிவுகளை சரிபார்க்கவும்</string>
     <string name="app_not_available">பயன்பாடு கிடைக்கவில்லை</string>
     <string name="pref_onboarding_guide">ஆன் போர்டிங் வழிகாட்டி</string>
-    <string name="onboarding_heading">வரவேற்கிறோம்!</string>
-    <string name="onboarding_description">முதலில் சில விசயங்களை அமைப்போம். நீங்கள் எப்போதும் அமைப்புகளில் இவற்றை மாற்றலாம்.</string>
     <string name="onboarding_action_next">அடுத்தது</string>
     <string name="onboarding_action_finish">தொடங்கவும்</string>
     <string name="onboarding_action_skip">தவிர்</string>
@@ -233,8 +231,6 @@
     <string name="theme_system">மண்டலம்</string>
     <string name="theme_light">ஒளி</string>
     <string name="theme_dark">இருண்ட</string>
-    <string name="onboarding_guides_new_user">%s க்கு புதியதா? தொடங்கும் வழிகாட்டியைப் பார்க்க பரிந்துரைக்கிறோம்.</string>
-    <string name="onboarding_guides_returning_user">%s ஐ மீண்டும் நிறுவுகிறீர்களா?</string>
     <string name="pref_category_general">பொது</string>
     <string name="pref_category_appearance">தோற்றம்</string>
     <string name="pref_category_library">நூலகம்</string>

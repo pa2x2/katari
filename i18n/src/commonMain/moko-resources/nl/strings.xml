@@ -689,12 +689,10 @@
     <string name="action_apply">Toepassen</string>
     <string name="action_revert_to_default">Naar standaard terugkeren</string>
     <string name="pref_onboarding_guide">Onboardinggids</string>
-    <string name="onboarding_heading">Welkom!</string>
     <string name="action_copy_link">Link kopiëren</string>
     <string name="ext_revoke_trust">Vertrouwde onbekende extensies intrekken</string>
     <string name="pref_flash_style_black">Zwart</string>
     <string name="action_sort_random">Willekeurig</string>
-    <string name="onboarding_description">Laten we eerst enkele dingen instellen. Je kunt deze later altijd wijzigen in de instellingen.</string>
     <string name="onboarding_storage_action_select">Selecteer een map</string>
     <string name="onboarding_permission_crashlytics_description">Stuur geanonimiseerde crashlogs naar de ontwikkelaars.</string>
     <string name="pref_security">Beveiliging</string>
@@ -706,9 +704,7 @@
     <string name="onboarding_permission_crashlytics">Crashlogs verzenden</string>
     <string name="onboarding_permission_analytics">Analytics toestaan</string>
     <string name="remove_private_extension_message">Weet je zeker dat je de extensie \"%s\" wil verwijderen?</string>
-    <string name="onboarding_guides_returning_user">%s aan het herinstalleren?</string>
     <string name="onboarding_permission_action_grant">Toestaan</string>
-    <string name="onboarding_guides_new_user">Nieuw bij %s? Wij raden je aan om de opstartgids te lezen.</string>
     <string name="pref_flash_duration">Flitsduur</string>
     <string name="ext_remove">Verwijderen</string>
     <string name="ext_confirm_remove">Extensie verwijderen?</string>

@@ -669,7 +669,6 @@
     <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
     <string name="action_add_anyway">Adicionar de qualquer maneira</string>
     <string name="onboarding_permission_notifications_description">Seja notificado para atualizações da biblioteca e mais.</string>
-    <string name="onboarding_guides_returning_user">A reinstalar o %s?</string>
     <string name="pref_relative_format">Datas relativas</string>
     <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
     <string name="pref_display_profile">Perfil de exibição personalizado</string>
@@ -685,7 +684,6 @@
     <string name="action_apply">Aplicar</string>
     <string name="action_ok">OK</string>
     <string name="action_revert_to_default">Reverter para predefinição</string>
-    <string name="onboarding_heading">Bem-vindo(a)!</string>
     <string name="onboarding_action_skip">Pular</string>
     <string name="onboarding_storage_action_select">Selecionar uma pasta</string>
     <string name="onboarding_storage_selection_required">Uma pasta deve ser selecionada</string>
@@ -697,7 +695,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Uso de pilha em plano de fundo</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Evite interrupções para tarefas longas como atualizações da biblioteca, descargas e restauração de backups.</string>
     <string name="onboarding_permission_action_grant">Conceder</string>
-    <string name="onboarding_guides_new_user">Novo no %s? Recomendamos dar uma olhada no guia de introdução.</string>
     <string name="theme_nord">Nord</string>
     <string name="pref_relative_format_summary">\"%1$s\" ao invés de \"%2$s\"</string>
     <string name="pref_flash_page_summ">Reduz o efeito fantasma em ecrãs de e-ink</string>
@@ -712,7 +709,6 @@
     <string name="upcoming_calendar_next">Próximo mês</string>
     <string name="upcoming_calendar_prev">Mês anterior</string>
     <string name="track_delete_remote_text">Também remover do %s</string>
-    <string name="onboarding_description">Vamos definir algumas coisas primeiro. Sempre pode fazer alterações nas configurações depois também.</string>
     <string name="onboarding_action_next">Próximo</string>
     <string name="onboarding_action_finish">Começar</string>
     <string name="onboarding_storage_folder_info">Escolha uma pasta onde o %1$s irá armazenar as descargas de capítulos, backups e mais. \n \nUma pasta dedicada é recomendada.</string>

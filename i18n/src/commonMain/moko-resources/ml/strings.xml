@@ -129,7 +129,6 @@
     <string name="action_share">പങ്കിടുക</string>
     <string name="action_display">പ്രദർശിപ്പിക്കുക</string>
     <string name="action_save">സേവ്</string>
-    <string name="onboarding_heading">സ്വാഗതം!</string>
     <string name="onboarding_permission_install_apps">ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യാനുള്ള അനുവാദം</string>
     <string name="action_start_downloading_now">ഡൌൺലോഡ് ചെയ്യാൻ തുടങ്ങുക</string>
     <string name="onboarding_storage_action_select">ഒരു ഫോൾഡർ സെലക്ട് ചെയുക</string>
@@ -170,9 +169,7 @@
     <string name="onboarding_permission_analytics">വിശകലനത്തിനുവഴി അനുവദിക്കുക</string>
     <string name="onboarding_permission_crashlytics">ക്രാഷ് ലോഗുകൾ അയയ്ക്കുക</string>
     <string name="pref_category_library">ലൈബ്രറി</string>
-    <string name="onboarding_guides_new_user">%s-ൽ പുതിയവനാവോ? ആരംഭിക്കാൻ മാർഗരേഖ കാണാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു.</string>
     <string name="onboarding_permission_action_grant">അനുവദിക്കുക</string>
-    <string name="onboarding_guides_returning_user">%s-നെ പുനഃസ്ഥാപിക്കുകയാണോ?</string>
     <string name="action_copy_link">ലിങ്ക് പകര്‍ത്തുക</string>
     <string name="ext_install_service_notif">വിപുലീകരണം ഇൻസ്റ്റാൾ ചെയ്യുന്നു…</string>
     <string name="ext_permission_install_apps_warning">വിപുലീകരണങ്ങൾ ഇൻസ്റ്റാൾ ചെയ്യാൻ അനുമതികൾ ആവശ്യമാണ്. അനുവദിക്കാൻ ഇവിടെ അടിക്കുക.</string>
@@ -188,7 +185,6 @@
     <string name="pref_app_language">ആപ്പ് ഭാഷ</string>
     <string name="pref_category_security">സുരക്ഷയും സ്വകാര്യതയും</string>
     <string name="relative_time_today">ഇന്ന്</string>
-    <string name="onboarding_description">ആദ്യമായി ചില ക്രമീകരണങ്ങൾ സജ്ജമാക്കാം. പിന്നീട് ഇവയെല്ലാം സെറ്റിംഗ്സിൽ നിന്ന് എപ്പോൾ വേണമെങ്കിലും മാറ്റാനാകും.</string>
     <string name="lock_always">എപ്പോഴും</string>
     <string name="pref_category_about">കുറിച്ച്</string>
     <string name="onboarding_action_next">അടുത്തത്</string>

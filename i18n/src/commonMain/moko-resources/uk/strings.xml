@@ -689,7 +689,6 @@
     <string name="file_null_uri_error">Файл не вибрано</string>
     <string name="exclude_scanlators">Виключити перекладачів</string>
     <string name="onboarding_permission_install_apps_description">Щоб встановити джерело розширеннь.</string>
-    <string name="onboarding_guides_returning_user">Перевстановлюєте %s?</string>
     <string name="onboarding_permission_install_apps">Встановити дозволи додатка</string>
     <string name="ext_permission_install_apps_warning">Потребуються дозволи для встановлення додатків. Натисніть сюди для отримання.</string>
     <string name="invalid_backup_file_error">Повна помилка:</string>
@@ -714,16 +713,13 @@
     <string name="not_selected">Не обрано</string>
     <string name="action_menu_overflow_description">Більше опцій</string>
     <string name="action_bar_up_description">Навігація вгору</string>
-    <string name="onboarding_guides_new_user">Новачки у %s? Ми рекомендуємо переглянути стартовий гайд.</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Уникати переривань для довготривалих оновлень бібліотек, завантажень, та бекапів.</string>
     <string name="onboarding_storage_action_select">Оберіть папку</string>
-    <string name="onboarding_heading">Вітаємо!</string>
     <string name="onboarding_action_next">Далі</string>
     <string name="onboarding_action_skip">Пропустити</string>
     <string name="onboarding_storage_folder_info">Оберіть папку де %1$s буде зберігати збережені розділи, бекапи, та інше. \n \nРекомендуємо обрати окрему папку.</string>
     <string name="onboarding_storage_selected_folder">Обрана папка: %s</string>
     <string name="onboarding_action_finish">Почнемо</string>
-    <string name="onboarding_description">Давайте для початку налаштуємо дещо. Ви завжди зможете змінити ці налаштування потім.</string>
     <string name="pref_onboarding_guide">Гайд новачка</string>
     <string name="action_add_anyway">Додати у будь-якому разі</string>
     <string name="action_view_upcoming">Переглянути майбутні оновлення</string>

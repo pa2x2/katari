@@ -719,14 +719,10 @@
     <string name="action_bar_up_description">Mag-navigate pataas</string>
     <string name="onboarding_storage_action_select">Pumili ng folder</string>
     <string name="pref_onboarding_guide">Gabay sa onboarding</string>
-    <string name="onboarding_guides_new_user">Bago sa %s? Inirerekomenda naming tingnan ang gabay sa pagsisimula.</string>
     <string name="onboarding_action_finish">Magsimula</string>
     <string name="onboarding_storage_selection_required">Dapat pumili ng isang folder</string>
-    <string name="onboarding_heading">Maligayang pagdating!</string>
-    <string name="onboarding_guides_returning_user">Muling pag-install ng %s?</string>
     <string name="onboarding_action_skip">Laktawan</string>
     <string name="onboarding_action_next">Susunod</string>
-    <string name="onboarding_description">Mag-set up muna tayo ng ilang bagay. Maaari mo ring baguhin ang mga ito anumang oras sa mga setting sa ibang pagkakataon.</string>
     <string name="no_location_set">Walang nakatakdang lokasyon ng storage</string>
     <string name="onboarding_storage_folder_info">Pumili ng folder kung saan mag-imbak ang %1$s ng mga na-download ng kabanata, mga backup, at higit pa. \n \nInirerekomenda ang isang nakalaang folder.</string>
     <string name="onboarding_storage_selected_folder">Napiling folder: %s</string>

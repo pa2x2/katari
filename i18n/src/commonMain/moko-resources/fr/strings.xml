@@ -683,7 +683,6 @@
     <string name="pref_storage_location_info">Utilisé pour les backups automatiques, téléchargements des chapitres et la source locale.</string>
     <string name="onboarding_storage_selection_required">Un dossier doit être sélectionné</string>
     <string name="available_disk_space_info">Disponible : %1$s / Total : %2$s</string>
-    <string name="onboarding_heading">Bienvenue !</string>
     <string name="onboarding_action_skip">Passer</string>
     <string name="pref_storage_usage">Utilisation du stockage</string>
     <string name="onboarding_action_next">Suivant</string>
@@ -700,18 +699,15 @@
     <string name="onboarding_storage_help_action">Guide de stockage</string>
     <string name="onboarding_permission_notifications_description">Soyez notifié des mises à jour de la bibliothèque et autre.</string>
     <string name="pref_onboarding_guide">Guide de premier lancement</string>
-    <string name="onboarding_description">Commençons par paramétrer certaines choses. Vous pouvez toujours changer ces paramètres plus tard.</string>
     <string name="onboarding_storage_folder_info">Sélectionnez un dossier où %1$s stockera les chapitres téléchargés, les sauvegardes et plus encore. \n \nUn dossier dédié est recommandé.</string>
     <string name="onboarding_storage_selected_folder">Dossier sélectionné : %s</string>
     <string name="onboarding_storage_action_select">Sélectionnez un dossier</string>
-    <string name="onboarding_guides_returning_user">De retour sur %s ?</string>
     <string name="track_delete_title">Annuler le suivi avec %s ?</string>
     <string name="private_settings">Inclure des informations sensible (ex : jetons de connexion)</string>
     <string name="manga_interval_expected_update">De nouveaux chapitres sont prédits dans environ %1$s, mise à jour prévu tous les %2$s.</string>
     <string name="exclude_scanlators">Exclure la team de scantrad</string>
     <string name="no_scanlators_found">Aucune team de scantrad trouvé</string>
     <string name="relative_time_span_never">Jamais</string>
-    <string name="onboarding_guides_new_user">Nouveau sur %s ? Nous vous recommandons de jeter un œil au guide de démarrage.</string>
     <string name="manga_interval_custom_amount">Fréquence de mise à jour personnalisé :</string>
     <string name="invalid_backup_file_error">Erreur complète :</string>
     <string name="ext_revoke_trust">Révoquer les extensions provenant d\'un répertoire additionnel</string>

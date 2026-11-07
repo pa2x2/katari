@@ -52,8 +52,6 @@
     <string name="onboarding_action_finish">စတင်မည်။</string>
     <string name="onboarding_storage_help_action">သိုလှောင်မှုလမ်းညွှန်</string>
     <string name="onboarding_permission_action_grant">ခွင့်ပြုခြင်း</string>
-    <string name="onboarding_guides_new_user">%s ကို ခုမှ စသုံးသူးလား? စတင်အသုံးပြုနည်းလမ်းညွှန်ကို ကြည့်ရှုရန် အကြံပြုပါတယ်။</string>
-    <string name="onboarding_guides_returning_user">ပြန်လည်အသုံးပြုသူများအတွက်လမ်းညွှန်</string>
     <string name="pref_category_general">ယေဘူယျ</string>
     <string name="pref_category_appearance">ပုံစံ</string>
     <string name="pref_category_library">စာကြည့်တိုက်</string>
@@ -165,8 +163,6 @@
     <string name="loading">ခဏစောင့်ပါ။ …</string>
     <string name="internal_error">InternalError: ပြဿနာဖြေရှင်းရန် အတွက် ခရပ်စ်လော့ဂ်များကို စစ်ဆေးပါ။</string>
     <string name="app_not_available">အက်ပလီကေးရှင်းရရှိနိုင်ခြင်းမရှိပါ</string>
-    <string name="onboarding_heading">ကြိုဆိုပါတယ်။</string>
-    <string name="onboarding_description">လိုအပ်တာတွေကို အရင်ဆုံး လုပ်ဆောင်ပါ။ နောက်မှ ဆက်တင်များကို ပြန်လည်သတ်မှတ်လို့ရပါတယ်။</string>
     <string name="onboarding_action_next">နောက်တစ်ဆင့်</string>
     <string name="onboarding_action_skip">ကျော်မည်။</string>
     <string name="pref_onboarding_guide">လမ်းညွှန်အကြောင်း</string>
