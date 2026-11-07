@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.date
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -44,7 +43,7 @@ internal fun PartialDateEditor(filter: EntryDateFilter, onCancel: () -> Unit, on
     var inputFocused by remember { mutableStateOf(false) }
     val scroll = rememberScrollState()
     LaunchedEffect(state.step, state.typing) { scroll.scrollTo(0) }
-    Column(Modifier.fillMaxHeight(0.9f)) {
+    Column {
         Column(
             Modifier
                 .weight(1f)

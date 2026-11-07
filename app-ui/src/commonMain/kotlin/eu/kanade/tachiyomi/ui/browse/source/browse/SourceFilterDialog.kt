@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -142,7 +141,7 @@ fun SourceFilterDialog(
     Sheet(
         onDismissRequest = dismissOrLeavePagedGroup,
         enableImplicitDismiss = dateEditor.editing == null && route is SourceFilterRoute.Root,
-        modifier = if (route is SourceFilterRoute.PagedGroup) Modifier.fillMaxHeight(0.9f) else Modifier,
+        capHeight = true,
     ) {
         DateFilterEditorHost(dateEditor) {
             CompositionLocalProvider(LocalFilterValidation provides filterValidation) {
@@ -183,7 +182,7 @@ fun SourceFilterDialog(
                                 if (row >= 0) rootListState.animateScrollToItem(row)
                                 pendingReveal = null
                             }
-                            Column(Modifier.fillMaxHeight(0.9f)) {
+                            Column {
                                 SourceFilterRootHeader(
                                     status = SourceFilterSheetStatus(
                                         changedCount = changes.total.changed,
