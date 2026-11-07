@@ -17,9 +17,12 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.entryCoverScale
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun GlobalSearchItemCardRow(
@@ -30,7 +33,7 @@ fun GlobalSearchItemCardRow(
     onLongClick: (GlobalSearchItem) -> Unit,
 ) {
     if (titles.isEmpty()) {
-        GlobalSearchEmptyResultItem()
+        RowGroupNote(stringResource(MR.strings.no_results_found))
         return
     }
 
