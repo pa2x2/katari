@@ -31,8 +31,8 @@ sealed interface SyncHeadline {
     /** Records of kinds a newer app version syncs wait here until this app is updated (D031). */
     data class HeldKinds(val kinds: List<String>) : SyncHeadline
 
-    /** A first download or full resync; [progress] from 0 to 1, or null when unknown. */
-    data class Downloading(val progress: Float?) : SyncHeadline
+    /** A first download or full resync; [percent] done, or null when unknown. */
+    data class Downloading(val percent: Int?) : SyncHeadline
 
     /** A step of a long run, named with how far it got. */
     data class Step(val step: SyncStep) : SyncHeadline
@@ -98,7 +98,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     if (heldKinds.isNotEmpty()) return SyncHeadline.HeldKinds(heldKinds)
     return when (activity) {
         is SyncStatus.Activity.Syncing -> when {
-            activity.progress != null -> SyncHeadline.Downloading(activity.progress)
+            activity.percent != null -> SyncHeadline.Downloading(activity.percent)
             else -> activity.step?.let(SyncHeadline::Step) ?: SyncHeadline.Syncing
         }
         SyncStatus.Activity.WaitingForWifi -> SyncHeadline.FirstDownloadWaitsForWifi

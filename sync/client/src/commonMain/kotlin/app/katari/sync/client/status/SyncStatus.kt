@@ -46,10 +46,11 @@ data class SyncStatus(
         data object Idle : Activity
 
         /**
-         * A run is going; during a first download or full resync, [progress] says how far it got, from 0 to 1, and is
-         * null otherwise. [step] is the step of a run long enough to name, with its own progress ([SyncSteps]).
+         * A run is going; during a first download or full resync, [percent] says how far it got, and is null
+         * otherwise. [step] is the step of a run long enough to name, with its own progress ([SyncSteps]). Both change
+         * only as what they show does, and at most every couple of seconds.
          */
-        data class Syncing(val progress: Float?, val step: SyncStep? = null) : Activity
+        data class Syncing(val percent: Int?, val step: SyncStep? = null) : Activity
 
         /** Waits for the person's first-sync choices ([app.katari.sync.client.account.SyncAccount.firstSyncProposal]). */
         data object WaitingForChoices : Activity

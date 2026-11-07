@@ -21,11 +21,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.transformLatest
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions, held records and the
@@ -49,7 +53,7 @@ class SyncStatusFlow(
             runs.running.settled(),
             runs.lastOutcome,
             network.state(),
-            namedStep(),
+            shownProgress(),
             ::Inputs,
         )
         val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
@@ -101,23 +105,47 @@ class SyncStatusFlow(
 
     private class Held(val kinds: List<String>, val failed: Long)
 
+    /**
+     * How far a download and the run's step got, as the status shows them, changing only as what is shown does and at
+     * most every [PROGRESS_EVERY]: a step can move hundreds of times a minute, and a screen showing every change never
+     * settles, which accessibility services and UI tests wait for.
+     */
+    private fun shownProgress(): Flow<ShownProgress> = combine(
+        connection.states().map(::downloadPercent).distinctUntilChanged(),
+        namedStep(),
+        ::ShownProgress,
+    )
+        .distinctUntilChanged()
+        .conflate()
+        .transform {
+            emit(it)
+            delay(PROGRESS_EVERY)
+        }
+        .distinctUntilChanged()
+
     /** The run's step, once the run has lasted long enough for it to be named ([SyncSteps.shownFrom]). */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun namedStep(): Flow<SyncStep?> = steps.step.transformLatest { step ->
-        val wait = steps.shownFrom - Clock.System.now().toEpochMilliseconds()
-        if (step != null && wait > 0) {
-            emit(null)
-            delay(wait)
+    private fun namedStep(): Flow<SyncStep?> = steps.step
+        .map { it?.shown() }
+        .distinctUntilChanged()
+        .transformLatest { step ->
+            val wait = steps.shownFrom - Clock.System.now().toEpochMilliseconds()
+            if (step != null && wait > 0) {
+                emit(null)
+                delay(wait)
+            }
+            emit(step)
         }
-        emit(step)
-    }.distinctUntilChanged()
+        .distinctUntilChanged()
+
+    private data class ShownProgress(val download: Int?, val step: SyncStep?)
 
     private class Inputs(
         val state: SyncConnectionState,
         val running: Boolean,
         val outcome: SyncOutcome,
         val network: NetworkState,
-        val step: SyncStep?,
+        val progress: ShownProgress,
     )
 
     private fun linkOf(state: SyncConnectionState): SyncStatus.Link {
@@ -137,20 +165,21 @@ class SyncStatusFlow(
             !state.isLinked || state.stopped != null -> SyncStatus.Activity.Idle
             state.stage == SyncStage.CHOOSING -> SyncStatus.Activity.WaitingForChoices
             // A run trying again doesn't make a server found unreachable any closer: that shows until one answers
-            inputs.running && unreachableSince == null -> SyncStatus.Activity.Syncing(progressOf(state), inputs.step)
+            inputs.running && unreachableSince == null ->
+                SyncStatus.Activity.Syncing(inputs.progress.download, inputs.progress.step)
             !inputs.network.hasNetwork -> SyncStatus.Activity.Offline
             inputs.outcome == SyncOutcome.FAILED -> SyncStatus.Activity.Failed(state.lastSyncedAt)
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)
             inputs.outcome == SyncOutcome.WAITING_FOR_WIFI && state.stage == SyncStage.DOWNLOADING ->
                 SyncStatus.Activity.WaitingForWifi
-            state.stage != SyncStage.READY -> SyncStatus.Activity.Syncing(progressOf(state))
+            state.stage != SyncStage.READY -> SyncStatus.Activity.Syncing(inputs.progress.download)
             else -> SyncStatus.Activity.UpToDate(state.lastSyncedAt)
         }
     }
 
-    private fun progressOf(state: SyncConnectionState): Float? {
+    private fun downloadPercent(state: SyncConnectionState): Int? {
         if (!state.stage.isDownloading || state.stageTarget <= 0) return null
-        return (state.position.toFloat() / state.stageTarget).coerceIn(0f, 1f)
+        return (state.position * 100 / state.stageTarget).coerceIn(0, 100).toInt()
     }
 
     private fun unsentReason(state: SyncConnectionState, activity: SyncStatus.Activity): SyncStatus.UnsentReason? =
@@ -160,4 +189,8 @@ class SyncStatusFlow(
             activity is SyncStatus.Activity.Unreachable -> SyncStatus.UnsentReason.SERVER_UNREACHABLE
             else -> null
         }
+
+    private companion object {
+        val PROGRESS_EVERY = 2.seconds
+    }
 }

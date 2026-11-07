@@ -39,8 +39,8 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     )
     is SyncHeadline.HeldKinds -> stringResource(MR.strings.sync_status_held_kinds, heldKindsText(headline.kinds))
     is SyncHeadline.Downloading ->
-        headline.progress
-            ?.let { stringResource(MR.strings.sync_status_downloading, (it * 100).toInt()) }
+        headline.percent
+            ?.let { stringResource(MR.strings.sync_status_downloading, it) }
             ?: stringResource(MR.strings.sync_status_downloading_unknown)
     is SyncHeadline.Step -> stepText(headline.step)
     SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
