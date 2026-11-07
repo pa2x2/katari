@@ -164,6 +164,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
+| A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
 | Messages and snackbars | `rememberScreenMessages`, `ScreenMessagesHost`, `ScreenMessagesOverlay`, `AppMessagesHost`, `SnackbarHost` | The overlay is for full-window screens without a `Scaffold` |
