@@ -16,15 +16,22 @@ object ProfileSeedPreferences {
         seeds(store).forEach(Seed<*>::seed)
     }
 
-    /** The keys of [store] that hold the value the app seeded, unchanged since. */
+    /**
+     * The keys of [store] that hold the value the app seeded, unchanged since, as the app names them: a platform's store
+     * may give a preference a key of its own, as Android's does one that carries the profile.
+     */
     fun untouched(store: PreferenceStore): Set<String> =
-        seeds(store).filter(Seed<*>::isUntouched).mapTo(HashSet()) { it.preference.key() }
+        seeds(store).filter(Seed<*>::isUntouched).mapTo(HashSet()) { it.key }
 
     private fun seeds(store: PreferenceStore): List<Seed<*>> = listOf(
-        Seed(DuplicatePreferences(store).titleExclusionPatterns, DuplicateTitleExclusions.defaultPatterns),
+        Seed(
+            DuplicatePreferences.TITLE_EXCLUSION_PATTERNS_KEY,
+            DuplicatePreferences(store).titleExclusionPatterns,
+            DuplicateTitleExclusions.defaultPatterns,
+        ),
     )
 
-    private class Seed<T>(val preference: Preference<T>, private val value: T) {
+    private class Seed<T>(val key: String, private val preference: Preference<T>, private val value: T) {
         fun seed() {
             if (!preference.isSet()) preference.set(value)
         }
