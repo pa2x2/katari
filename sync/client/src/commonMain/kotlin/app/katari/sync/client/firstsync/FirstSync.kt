@@ -69,13 +69,13 @@ class FirstSync(
         return null
     }
 
-    /** This device's profiles, each paired by name with one of the account's [records] where one matches. */
+    /** This device's profiles, each paired with the one of the account's [records] it is, or one of its name. */
     suspend fun proposal(records: List<RecordEnvelope>): List<ProfilePairing> {
         val account = records
             .filter { it.kind == ProfileKind.name && it.kindVersion == ProfileKind.version && !it.deleted }
             .map { ProfileKind.decode(it.payload) }
             .map { AccountProfile(it.uuid, it.name.value) }
-        return pairByName(localProfiles(), account)
+        return proposePairings(localProfiles(), account)
     }
 
     /**
@@ -87,10 +87,16 @@ class FirstSync(
         val local = localProfiles().associateBy { it.id }
         val paired = choices.filter { it.accountUuid != null }
         require(paired.map { it.accountUuid }.toSet().size == paired.size) { "An account profile is paired twice" }
+        val byIdentity = local.values.associateBy { it.uuid }
         paired.forEach { choice ->
             val uuid = checkNotNull(local[choice.profileId]) { "No profile ${choice.profileId}" }.uuid
             require((uuid == ProfileKind.DEFAULT_UUID) == (choice.accountUuid == ProfileKind.DEFAULT_UUID)) {
                 "The default profile pairs only with the account's default"
+            }
+            // Two profiles of this device can't become one account profile: the other one already is it
+            val holder = byIdentity[choice.accountUuid]
+            require(holder == null || holder.id == choice.profileId) {
+                "Profile ${holder?.id} already is the account profile paired with profile ${choice.profileId}"
             }
         }
         writing.write {

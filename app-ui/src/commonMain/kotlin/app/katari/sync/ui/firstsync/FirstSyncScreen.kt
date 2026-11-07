@@ -100,13 +100,11 @@ data object FirstSyncScreen : Screen() {
                             pairing = pairing,
                             profile = byId[pairing.profileId],
                             isDefault = shown.isDefault(pairing),
-                            paired = shown.choices.getValue(pairing.profileId).paired,
+                            paired = shown.isPaired(pairing),
                             onPairedChange = { model.setPaired(pairing.profileId, it) },
                         )
                     }
-                    val paired = shown.pairings.filter {
-                        shown.isDefault(it) || shown.choices.getValue(it.profileId).paired
-                    }
+                    val paired = shown.pairings.filter(shown::isPaired)
                     item { RowGroupGap() }
                     item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_settings)) }
                     rowGroupItems(paired, key = { "settings-${it.profileId}" }) { pairing ->
@@ -138,11 +136,12 @@ private fun PairingRow(
         title = pairing.name,
         subtitle = when {
             isDefault -> stringResource(MR.strings.sync_first_sync_default_paired)
+            pairing.sameProfile -> stringResource(MR.strings.sync_first_sync_same_profile)
             accountProfile == null -> stringResource(MR.strings.sync_first_sync_add_new)
             else -> null
         },
         leading = profile?.let { { ProfileAvatar(colorSeed = it.colorSeed, size = AvatarSize.Row) } },
-        trailing = if (accountProfile != null && !isDefault) {
+        trailing = if (accountProfile != null && !pairing.sameProfile) {
             {
                 ChoicePill(
                     selected = if (paired) 0 else 1,

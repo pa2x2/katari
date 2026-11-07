@@ -3310,6 +3310,7 @@
     <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged; nothing is deleted.</string>
     <string name="sync_first_sync_profiles">Profiles on this device</string>
     <string name="sync_first_sync_default_paired">Paired automatically (default profile)</string>
+    <string name="sync_first_sync_same_profile">Paired automatically (already in your account)</string>
     <!-- %1$s is the account profile's name -->
     <string name="sync_first_sync_same_as">Same as %1$s</string>
     <string name="sync_first_sync_add_new">Add as new</string>

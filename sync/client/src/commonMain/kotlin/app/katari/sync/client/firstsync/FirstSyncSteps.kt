@@ -37,7 +37,7 @@ class FirstSyncSteps(
         }
     }
 
-    /** This device's profiles, each paired by name with the account's where one matches, for the person to confirm. */
+    /** This device's profiles, each paired with the account profile it is or one of its name, to confirm. */
     suspend fun proposal(client: SyncServerClient): List<ProfilePairing> = firstSync.proposal(accountProfiles(client))
 
     /** Takes the person's [choices] for a device waiting at [SyncStage.CHOOSING]. */

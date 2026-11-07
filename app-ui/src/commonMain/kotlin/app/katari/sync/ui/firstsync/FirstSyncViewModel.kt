@@ -21,7 +21,8 @@ import tachiyomi.core.common.util.lang.launchIO
 /**
  * The first-sync choices of a device that has data joining an account that has too (D027, D047): each profile here is
  * proposed as the account profile of the same name, or added as new where none matches, and each paired profile takes
- * the account's settings unless the person says otherwise. The default profiles always pair.
+ * the account's settings unless the person says otherwise. The default profiles always pair, as does a profile that
+ * already is one of the account's.
  */
 @Inject
 @ViewModelKey
@@ -79,10 +80,11 @@ class FirstSyncViewModel(private val account: SyncAccount, profileManager: Profi
         data class Choosing(val pairings: List<ProfilePairing>, val choices: Map<Long, Choice>) : State {
             fun isDefault(pairing: ProfilePairing) = pairing.pairedWith?.uuid == ProfileKind.DEFAULT_UUID
 
+            fun isPaired(pairing: ProfilePairing) = pairing.sameProfile || choices.getValue(pairing.profileId).paired
+
             fun answer(): List<ProfileChoice> = pairings.map { pairing ->
-                val choice = choices.getValue(pairing.profileId)
-                val pairedWith = pairing.pairedWith?.takeIf { choice.paired || isDefault(pairing) }
-                ProfileChoice(pairing.profileId, pairedWith?.uuid, choice.settings)
+                val pairedWith = pairing.pairedWith?.takeIf { isPaired(pairing) }
+                ProfileChoice(pairing.profileId, pairedWith?.uuid, choices.getValue(pairing.profileId).settings)
             }
         }
 
