@@ -53,10 +53,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Signing in with a server address (D027): the address is checked as it is typed, then a username and password, or
- * an invite code with the username and password of the new account. [server] fills the address in, such as when
- * signing in again to the server the device was removed from.
+ * an invite code with the username and password of the new account. [server] and [account] fill the address and
+ * username in, such as when signing in again to the server the device was removed from.
  */
-class SyncSignInScreen(private val server: String? = null) : Screen() {
+class SyncSignInScreen(private val server: String? = null, private val account: String? = null) : Screen() {
 
     @Composable
     override fun Content() {
@@ -66,7 +66,7 @@ class SyncSignInScreen(private val server: String? = null) : Screen() {
         val join by model.join.collectAsState()
 
         val address = rememberTextFieldState(server.orEmpty())
-        val username = rememberTextFieldState()
+        val username = rememberTextFieldState(account.orEmpty())
         val password = rememberTextFieldState()
         val invite = rememberTextFieldState()
         var withInvite by rememberSaveable { mutableStateOf(false) }

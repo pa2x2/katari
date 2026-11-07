@@ -34,7 +34,7 @@ internal fun linkedPreferences(
 ): List<Preference> = buildList {
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
-    addAll(attentionRows(headline, link.server.toString(), actions))
+    addAll(attentionRows(headline, link, actions))
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
     if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
     add(syncOptionsGroup(preferences))
@@ -85,7 +85,7 @@ private fun statusCard(
 @Composable
 private fun attentionRows(
     headline: SyncHeadline?,
-    server: String,
+    link: SyncStatus.Link.Linked,
     actions: SyncPageActions,
 ): List<Preference.PreferenceItem<*, *>> {
     val row: @Composable (String, () -> Unit) -> Preference.PreferenceItem<*, *> = { title, onClick ->
@@ -103,7 +103,11 @@ private fun attentionRows(
         is SyncHeadline.Questions ->
             listOf(row(stringResource(MR.strings.sync_action_answer_questions), actions.openQuestions))
         SyncHeadline.SignInAgain ->
-            listOf(row(stringResource(MR.strings.sync_action_sign_in_again)) { actions.signIn(server) })
+            listOf(
+                row(stringResource(MR.strings.sync_action_sign_in_again)) {
+                    actions.signIn(link.server.toString(), link.accountName)
+                },
+            )
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
         )

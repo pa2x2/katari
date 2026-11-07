@@ -85,7 +85,7 @@ internal fun endedPreferences(link: SyncStatus.Link.Ended, actions: SyncPageActi
         PageActions(
             main = PageAction(
                 label = stringResource(MR.strings.sync_action_sign_in_again),
-                onClick = { actions.signIn(link.server?.toString()) },
+                onClick = { actions.signIn(link.server?.toString(), link.accountName) },
                 icon = MaterialSymbols.Rounded.Dns,
             ),
             others = listOf(PageAction(stringResource(MR.strings.action_close), actions.dismissEnded)),
@@ -98,7 +98,7 @@ private fun WaysIn(actions: SyncPageActions, server: String?) {
     PageActions(
         main = PageAction(
             label = stringResource(MR.strings.sync_action_sign_in_with_address),
-            onClick = { actions.signIn(server) },
+            onClick = { actions.signIn(server, null) },
             icon = MaterialSymbols.Rounded.Dns,
         ),
         others = listOf(

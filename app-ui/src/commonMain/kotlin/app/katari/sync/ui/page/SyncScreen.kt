@@ -72,7 +72,7 @@ object SyncScreen : SearchableSettings {
         LaunchedEffect(removeFailed) { if (removeFailed > 0) messages.show(removeFailedMessage) }
 
         val actions = SyncPageActions(
-            signIn = { server -> navigator.push(SyncSignInScreen(server)) },
+            signIn = { server, account -> navigator.push(SyncSignInScreen(server, account)) },
             enterCode = { navigator.push(linkCodeEntryScreen()) },
             syncNow = model::syncNow,
             openChoices = { navigator.push(FirstSyncScreen) },
@@ -139,8 +139,8 @@ object SyncScreen : SearchableSettings {
 
 /** What the page's rows do. */
 internal class SyncPageActions(
-    /** Opens sign-in, with the address of the server to sign in to again, if any. */
-    val signIn: (server: String?) -> Unit,
+    /** Opens sign-in, with the server address and account name to sign in to again, if any. */
+    val signIn: (server: String?, account: String?) -> Unit,
     val enterCode: () -> Unit,
     val syncNow: () -> Unit,
     val openChoices: () -> Unit,
