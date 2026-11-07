@@ -40,14 +40,14 @@
             <sha256 value="dec76c92ef2ee7dabb4c5c50d5316024167e701f343c25d50ebf9f69b3e128fe" origin="image-decoder-1.1.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.2">
-         <artifact name="quickjs-kt-android-1.0.15-fork.2.aar">
-            <sha256 value="1ed2fa754c5d3f22052a4f08c72b8da143de0158c23b0be074d3ca29e1d9b9c1" origin="quickjs-kt-1.0.15-fork.2-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.18-fork.1">
+         <artifact name="quickjs-kt-android-1.0.18-fork.1.aar">
+            <sha256 value="0f9e3c52bad6f3fda27a54330b4283a716f035e93a190aa0682c8ec71b5cc2f0" origin="quickjs-kt-1.0.18-fork.1-SHA256SUMS.txt"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="quickjs-kt-jvm" version="1.0.15-fork.2">
-         <artifact name="quickjs-kt-jvm-1.0.15-fork.2.jar">
-            <sha256 value="b94064f3ca40ea9bf16cbdd7995e78143a0610dfc9a7dd0f3e7993a33e6b74f6" origin="quickjs-kt-1.0.15-fork.2-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="quickjs-kt-jvm" version="1.0.18-fork.1">
+         <artifact name="quickjs-kt-jvm-1.0.18-fork.1.jar">
+            <sha256 value="6faf053dced02ad6fbbef74715047250673b6224a7c3e1d85f865a5f32a6c14f" origin="quickjs-kt-1.0.18-fork.1-SHA256SUMS.txt"/>
          </artifact>
       </component>
       <component group="app.katari.libmpv" name="libmpv-android" version="2026-10-23-3">
