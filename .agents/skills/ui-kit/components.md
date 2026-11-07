@@ -20,7 +20,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Actions on a selection | `SelectionActionBar`, `SelectionAction` | Raised from the bottom in narrow windows, floating from Medium |
 | A screen with no app bar names itself to the window | `ReportScreenTitle` | App bars report their own title |
 | A screen whose whole content is empty | `EmptyScreen` | A kaomoji, a message and optional actions |
-| A screen still loading | `LoadingScreen` | |
+| A screen still loading | `LoadingScreen` | `message` names the step it waits on, `progress` adds a bar, `action` offers a way past the wait; the indicator never moves. `onMedia` over video or artwork |
 | A full screen saying what was opened can't be shown | `ProblemScreen` | `ProblemCard` for a problem inside content that keeps showing |
 | A full screen that explains something and asks to accept it (onboarding, crash report) | `InfoScreen` | |
 
