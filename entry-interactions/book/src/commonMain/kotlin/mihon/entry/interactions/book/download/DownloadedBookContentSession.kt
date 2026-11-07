@@ -106,7 +106,10 @@ internal class DownloadedBookContentSession(
         DownloadedOpenedBookResource(metadata, sliced, ::unregisterLease).also(::registerLease)
     }
 
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> = resultOf {
+    override suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit,
+    ): Result<MaterializedBookResource> = resultOf {
         checkOpen()
         val metadata = metadata(resourceId)
         val downloadedResource = manifest.resources.first { it.id == resourceId }

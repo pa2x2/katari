@@ -39,7 +39,11 @@ internal interface BookContentSession : AutoCloseable {
 
     suspend fun openResource(resourceId: String, range: BookByteRange? = null): Result<OpenedBookResource>
 
-    suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource>
+    /** [onProgress] follows the bytes the session fetches; a session that already holds them may report nothing. */
+    suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit = { _, _ -> },
+    ): Result<MaterializedBookResource>
 
     companion object {
         const val DEFAULT_RESOURCE_PAGE_SIZE = 100

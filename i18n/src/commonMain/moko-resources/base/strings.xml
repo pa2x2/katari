@@ -840,6 +840,11 @@
     <string name="book_reader_text_rule_this_source">This source</string>
     <string name="book_reader_host_title">Book reader</string>
     <string name="book_reader_loading">Checking book reader compatibility…</string>
+    <string name="book_opening_requesting">Asking the source for the book…</string>
+    <string name="book_opening_downloading">Downloading the book…</string>
+    <string name="book_opening_restoring">Opening the book…</string>
+    <string name="book_opening_preparing">Preparing the book for reading…</string>
+    <string name="book_opening_saving">Saving the prepared book so it opens faster next time…</string>
     <string name="book_reader_failure_book">Katari can\'t open this book</string>
     <string name="book_reader_failure_source_message">Message from %1$s</string>
     <string name="book_reader_back_to_book">Back to book</string>

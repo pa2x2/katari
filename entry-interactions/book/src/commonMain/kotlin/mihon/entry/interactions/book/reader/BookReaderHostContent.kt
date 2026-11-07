@@ -7,8 +7,6 @@ import androidx.compose.runtime.remember
 import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
 import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
 import mihon.entry.interactions.source.EntryChildWebViewResolution
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
 /** What [controller] shows while a book opens: loading, the choice of reader, or why it couldn't open. */
 @Composable
@@ -18,9 +16,7 @@ internal fun BookReaderHostContent(
     onOpenWebView: (SourceChapter, EntryChildWebViewResolution.Available) -> Unit,
 ) {
     when (val state = controller.state) {
-        null -> BookReaderLoadingScreen(
-            contentDescription = stringResource(MR.strings.book_reader_loading),
-        )
+        null -> BookReaderLoadingScreen(controller.progress)
         is BookReaderHostState.Unavailable -> {
             val sourceChapter = state.sourceChapter
             val webView = remember(sourceChapter) { sourceChapter?.let(controller::resolveWebView) }

@@ -27,6 +27,7 @@ import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlP
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
 import mihon.entry.interactions.book.preparation.BookContentPreparer
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import java.net.ConnectException
 import java.net.NoRouteToHostException
@@ -43,7 +44,10 @@ internal class HtmlProseChapterPreparer(
     override fun supports(descriptor: mihon.book.api.BookContentDescriptor): Boolean =
         HtmlProseChapterContract.supports(descriptor)
 
-    override suspend fun prepare(content: BookContentSession): BookPreparationResult {
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
         if (!supports(content.descriptor)) {
             return failure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported prose chapter descriptor")
         }

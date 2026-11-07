@@ -6,6 +6,7 @@ import mihon.book.api.BookFailureReason
 import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.interactions.book.processor.BookReaderProcessorSelection
 import mihon.entry.interactions.book.processor.BookReaderProcessorSelectionCoordinator
@@ -16,9 +17,13 @@ internal class BookReaderHostResolver(
     private val preparerRegistry: BookContentPreparerRegistry,
     private val selectionCoordinator: BookReaderProcessorSelectionCoordinator,
 ) {
-    suspend fun resolve(entryId: Long, chapterId: Long): BookReaderHostState {
+    suspend fun resolve(
+        entryId: Long,
+        chapterId: Long,
+        onProgress: (BookOpeningProgress) -> Unit = {},
+    ): BookReaderHostState {
         val request = BookReaderRequest(entryId, chapterId)
-        val prepared = when (val result = sessionFactory.prepare(request)) {
+        val prepared = when (val result = sessionFactory.prepare(request, onProgress = onProgress)) {
             is BookReaderPrepareResult.Failure -> {
                 return BookReaderHostState.Unavailable(
                     failure = result.failure,
