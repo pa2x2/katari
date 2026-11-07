@@ -39,6 +39,8 @@ import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
+import mihon.feature.missingextensions.model.MissingExtension
+import mihon.feature.missingextensions.restore.BackupMissingExtensions
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.presentation.kit.button.Button
@@ -59,6 +61,7 @@ import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -200,11 +203,26 @@ class RestoreBackupScreen(
                     ) {
                         when (error) {
                             is MissingRestoreComponents -> {
-                                Text(stringResource(MR.strings.backup_restore_content_full))
-                                if (error.sources.isNotEmpty()) {
+                                val (installable, unavailable) = error.extensions.partition { it.cantInstall == null }
+                                Text(
+                                    stringResource(
+                                        if (error.extensions.isEmpty()) {
+                                            MR.strings.backup_restore_content_full
+                                        } else {
+                                            MR.strings.missing_extensions_restore_note
+                                        },
+                                    ),
+                                )
+                                if (installable.isNotEmpty()) {
                                     RestoreErrorSection(
-                                        title = stringResource(MR.strings.backup_restore_missing_sources),
-                                        body = error.sources.joinToString(separator = "\n- ", prefix = "- "),
+                                        title = stringResource(MR.strings.missing_extensions_restore_installable),
+                                        body = installable.lines(),
+                                    )
+                                }
+                                if (unavailable.isNotEmpty()) {
+                                    RestoreErrorSection(
+                                        title = stringResource(MR.strings.missing_extensions_unavailable),
+                                        body = unavailable.lines(),
                                     )
                                 }
                                 if (error.trackers.isNotEmpty()) {
@@ -235,6 +253,18 @@ class RestoreBackupScreen(
     }
 
     @Composable
+    private fun List<MissingExtension>.lines(): String = map {
+        val count = it.titleCount.toInt()
+        // Sources only entries outside the library come from have nothing to count
+        if (count == 0) return@map it.name
+        stringResource(
+            MR.strings.missing_extensions_restore_line,
+            it.name,
+            pluralStringResource(MR.plurals.missing_extensions_titles, count, count),
+        )
+    }.joinToString(separator = "\n")
+
+    @Composable
     private fun RestoreErrorSection(title: String, body: String) {
         Column {
             Text(title, role = TextRole.SectionTitle)
@@ -248,6 +278,7 @@ internal class RestoreBackupViewModel(
     @Assisted private val uri: DocumentUri,
     private val backupRestoreRunner: BackupRestoreRunner,
     private val backupFileValidator: BackupFileValidator,
+    private val backupMissingExtensions: BackupMissingExtensions,
     private val profileManager: ProfileManager,
     syncStatus: SyncStatusState,
 ) : ViewModel() {
@@ -295,7 +326,19 @@ internal class RestoreBackupViewModel(
                 options = setter(it.options, enabled),
             )
         }
+        showMissingComponents()
     }
+
+    private var missingComponents: MissingComponents? = null
+
+    /** What's missing, as restoring with the current options leaves it: the backup's stores may list extensions. */
+    private fun showMissingComponents() {
+        val missing = missingComponents ?: return
+        val extensions = missing.extensions?.extensions(withBackupStores = state.value.options.extensionStores)
+        setError(MissingRestoreComponents(uri, extensions.orEmpty(), missing.trackers), canRestore = true)
+    }
+
+    private class MissingComponents(val extensions: BackupMissingExtensions.Checked?, val trackers: List<String>)
 
     fun toggleProfile(uuid: String, selected: Boolean) {
         state.update {
@@ -355,10 +398,11 @@ internal class RestoreBackupViewModel(
         }
 
         if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
-            setError(
-                error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
-                canRestore = true,
-            )
+            val extensions = results.missingSources.takeIf { it.isNotEmpty() }?.let {
+                backupMissingExtensions.check(it, results.extensionStores)
+            }
+            missingComponents = MissingComponents(extensions, results.missingTrackers)
+            showMissingComponents()
             return
         }
 
@@ -406,7 +450,7 @@ internal enum class RestoreProfileTarget { New, Merge, Locked }
 
 private data class MissingRestoreComponents(
     val uri: DocumentUri,
-    val sources: List<String>,
+    val extensions: List<MissingExtension>,
     val trackers: List<String>,
 )
 

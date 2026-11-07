@@ -33,3 +33,17 @@ val backupExtensionStoreMapper = { store: ExtensionStore ->
         format = store.format.key,
     )
 }
+
+/** The store as restoring it adds it: a backup from before formats says only whether it was a legacy one. */
+fun BackupExtensionStore.toExtensionStore() = ExtensionStore(
+    indexUrl = indexUrl,
+    name = name,
+    badgeLabel = badgeLabel ?: name,
+    signingKey = signingKey,
+    contact = ExtensionStore.Contact(website = contactWebsite, discord = contactDiscord),
+    format = format?.let(::ExtensionStoreFormat) ?: when (isLegacy) {
+        false -> ExtensionStoreFormat.V2
+        else -> ExtensionStoreFormat.LEGACY
+    },
+    extensionListUrl = extensionListUrl,
+)

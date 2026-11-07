@@ -16,6 +16,7 @@ import kotlinx.serialization.protobuf.ProtoNumber
  * @property entrySources the source key of every entry.
  * @property entrySourceKeys every source key an entry refers to: its source, and the source of the entry it is merged
  * into.
+ * @property librarySourceCounts how many library entries come from each source, by source key.
  * @property mihonEntryHasNextUpdate whether a manga at the top level carries its next update, which only Mihon writes.
  * @property newestEntryTime the newest time any entry records: when it was added to the library or last favourited,
  * last read, or last updated, in epoch milliseconds; 0 when none records one.
@@ -26,6 +27,7 @@ internal class BackupSummary(
     val profileEntryCounts: List<Int>,
     val entrySources: Set<Long>,
     val entrySourceKeys: Set<Long>,
+    val librarySourceCounts: Map<Long, Int>,
     val trackingServiceIds: Set<Long>,
     val mihonEntryHasNextUpdate: Boolean,
     val newestEntryTime: Long,
@@ -44,6 +46,8 @@ internal class BackupSummaryBuilder {
     private val profileEntryCounts = mutableMapOf<Int, Int>()
     private val entrySources = hashSetOf<Long>()
     private val entrySourceKeys = hashSetOf<Long>()
+    private val topLevelLibrarySourceCounts = hashMapOf<Long, Int>()
+    private val profileLibrarySourceCounts = hashMapOf<Long, Int>()
     private val trackingServiceIds = linkedSetOf<Long>()
     private var mihonEntryHasNextUpdate = false
     private var newestEntryTime = 0L
@@ -56,23 +60,28 @@ internal class BackupSummaryBuilder {
             profileEntryCounts[profileIndex] = (profileEntryCounts[profileIndex] ?: 0) + 1
         }
 
-        val (source, mergeTargetSource, tracking) = when (entry.format) {
+        val summary = when (entry.format) {
             BackupEntryFormat.ENTRY -> entry.decode(EntrySummary.serializer()).let {
                 noteTimes(it.dateAdded, it.favoriteModifiedAt, it.lastUpdate, *it.history.lastRead())
-                Triple(it.source, it.mergeTargetSource, it.tracking)
+                SourceSummary(it.source, it.favorite, it.mergeTargetSource, it.tracking)
             }
             BackupEntryFormat.LEGACY_MANGA -> entry.decode(LegacyMangaSummary.serializer()).let {
                 if (profileIndex == null && it.nextUpdate != 0L) mihonEntryHasNextUpdate = true
                 noteTimes(it.dateAdded, it.favoriteModifiedAt, *it.history.lastRead())
-                Triple(it.source, it.mergeTargetSource, it.tracking)
+                SourceSummary(it.source, it.favorite, it.mergeTargetSource, it.tracking)
             }
             BackupEntryFormat.LEGACY_ANIME -> entry.decode(LegacyAnimeSummary.serializer()).let {
                 noteTimes(it.dateAdded, it.favoriteModifiedAt, it.lastUpdate, *it.history.lastRead())
-                Triple(it.source, it.mergeTargetSource, emptyList())
+                SourceSummary(it.source, it.favorite, it.mergeTargetSource, emptyList())
             }
         }
+        val (source, favorite, mergeTargetSource, tracking) = summary
         entrySources += source
         entrySourceKeys += source
+        if (favorite) {
+            val counts = if (profileIndex == null) topLevelLibrarySourceCounts else profileLibrarySourceCounts
+            counts[source] = (counts[source] ?: 0) + 1
+        }
         mergeTargetSource?.let(entrySourceKeys::add)
         tracking.mapTo(trackingServiceIds) { it.syncId.toLong() }
     }
@@ -89,6 +98,12 @@ internal class BackupSummaryBuilder {
         profileEntryCounts = metadata.backupProfiles.indices.map { profileEntryCounts[it] ?: 0 },
         entrySources = entrySources,
         entrySourceKeys = entrySourceKeys,
+        // Restore reads only the profiles when there are any, and older backups repeat a profile's entries at the top
+        librarySourceCounts = if (metadata.backupProfiles.isEmpty()) {
+            topLevelLibrarySourceCounts
+        } else {
+            profileLibrarySourceCounts
+        },
         trackingServiceIds = trackingServiceIds,
         mihonEntryHasNextUpdate = mihonEntryHasNextUpdate,
         newestEntryTime = newestEntryTime,
@@ -96,6 +111,13 @@ internal class BackupSummaryBuilder {
 }
 
 /* The fields of each entry format the summary reads, with the numbers of the full classes. */
+
+private data class SourceSummary(
+    val source: Long,
+    val favorite: Boolean,
+    val mergeTargetSource: Long?,
+    val tracking: List<TrackingSummary>,
+)
 
 @Serializable
 private class TrackingSummary(@ProtoNumber(1) val syncId: Int)
@@ -109,6 +131,7 @@ private class HistorySummary(@ProtoNumber(2) val lastRead: Long = 0)
 private class EntrySummary(
     @ProtoNumber(1) val source: Long,
     @ProtoNumber(10) val dateAdded: Long = 0,
+    @ProtoNumber(14) val favorite: Boolean = true,
     @ProtoNumber(13) val tracking: List<TrackingSummary> = emptyList(),
     @ProtoNumber(17) val history: List<HistorySummary> = emptyList(),
     @ProtoNumber(20) val favoriteModifiedAt: Long? = null,
@@ -122,6 +145,7 @@ private class LegacyMangaSummary(
     @ProtoNumber(1) val source: Long,
     @ProtoNumber(13) val dateAdded: Long = 0,
     @ProtoNumber(18) val tracking: List<TrackingSummary> = emptyList(),
+    @ProtoNumber(100) val favorite: Boolean = true,
     @ProtoNumber(104) val history: List<HistorySummary> = emptyList(),
     @ProtoNumber(107) val favoriteModifiedAt: Long? = null,
     @ProtoNumber(113) val mergeTargetSourceOrNextUpdate: Long? = null,
@@ -140,6 +164,7 @@ private class LegacyAnimeSummary(
     @ProtoNumber(1) val source: Long,
     @ProtoNumber(7) val dateAdded: Long = 0,
     @ProtoNumber(10) val history: List<HistorySummary> = emptyList(),
+    @ProtoNumber(12) val favorite: Boolean = true,
     @ProtoNumber(14) val lastUpdate: Long = 0,
     @ProtoNumber(17) val favoriteModifiedAt: Long? = null,
     @ProtoNumber(33) val mergeTargetSource: Long? = null,
