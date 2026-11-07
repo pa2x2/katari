@@ -14,7 +14,10 @@ internal sealed interface ApplyOutcome {
     /** The record it refers to by [key] isn't on this device yet; it is written once that one is. */
     data class WaitsFor(val key: String) : ApplyOutcome
 
-    /** Not written for now for a reason that passes ([HoldReason]); tried again with the next sync. */
+    /**
+     * Not written for now for a reason that passes ([HoldReason]); tried again with the next sync, or after an app
+     * update for [HoldReason.FAILED].
+     */
     data class Held(val reason: HoldReason) : ApplyOutcome
 
     /**

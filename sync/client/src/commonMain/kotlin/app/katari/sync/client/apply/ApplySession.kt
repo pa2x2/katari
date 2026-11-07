@@ -27,7 +27,9 @@ import app.katari.sync.data.Sync_pending
 import app.katari.sync.protocol.clock.HybridLogicalClock
 import app.katari.sync.protocol.clock.HybridTimestamp
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.record.RecordEnvelope
 import app.katari.sync.protocol.record.SequencedRecord
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.protobuf.ProtoBuf
 import tachiyomi.data.Database
 import tachiyomi.domain.source.identity.SourceIdScheme
@@ -44,6 +46,10 @@ import tachiyomi.domain.source.identity.SourceIdScheme
  *
  * The merged copy is pushed back only when it holds edits the incoming copy lacks; a record this device had no
  * unpushed edits of is stored exactly as received and produces nothing to push.
+ *
+ * Applying a record that throws fails as [RecordApplyFailure], naming that record even when it was written on behalf of
+ * another, as a parent is when its child resolves it. The transaction then runs again with the record in [failing],
+ * which holds it aside ([HoldReason.FAILED]) as far as the failure got, and every other record applies (D067).
  */
 internal class ApplySession(
     override val database: Database,
@@ -52,6 +58,8 @@ internal class ApplySession(
     override val migrationRules: MigrationCarryRules,
     override val activeProfileId: Long,
     private val device: DeviceId,
+    private val appVersion: String,
+    private val failing: Map<String, FailedStage>,
     private val now: () -> Long,
 ) : LocalWrites {
     private val resolving = HashSet<String>()
@@ -63,52 +71,73 @@ internal class ApplySession(
 
     suspend fun receive(record: SequencedRecord) {
         val envelope = record.record
+        if (failing[envelope.key] == FailedStage.STORING) return holdFailed(record)
         val kind = SyncKinds.named(envelope.kind)
         if (kind == null || envelope.kindVersion != kind.version) return hold(record, HoldReason.UNREADABLE)
         receive(kind, record)
     }
 
-    /** Applies again what waits for a reason that may have passed: an update, the clock, a reference, a profile. */
+    /**
+     * Applies again what waits for a reason that may have passed: an update, the clock, a reference, a profile. A
+     * record held aside after failing whose copy here already holds what was received is written from that copy,
+     * which keeps the edits it has waiting to be pushed; a newer one received is merged first.
+     */
     suspend fun retryHeld() {
-        database.sync_pendingQueries.retryable().awaitAsList().forEach { held ->
+        database.sync_pendingQueries.retryable(appVersion).awaitAsList().forEach { held ->
             database.sync_pendingQueries.release(held.record_key)
-            receive(ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record))
+            val record = ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record)
+            val stored = database.sync_recordsQueries.getByKey(held.record_key).awaitAsOneOrNull()
+            if (held.reason == HoldReason.FAILED.stored && stored != null && stored.based_on >= record.sequence) {
+                reapply(held.record_key, held)
+            } else {
+                receive(record)
+            }
         }
     }
 
     private suspend fun <P : Any> receive(kind: SyncedKind<P>, record: SequencedRecord) {
         val envelope = record.record
-        val incoming = RecordState.of(envelope.deleted, envelope.payload)
-        val edited = kind.newestEdit(incoming)
-        if (edited != null && edited.physicalMillis - now() > HybridLogicalClock.MAX_AHEAD.inWholeMilliseconds) {
-            return hold(record, HoldReason.AHEAD)
-        }
-        edited?.let(::see)
-        database.sync_pendingQueries.release(envelope.key)
+        var stage = FailedStage.STORING
+        try {
+            val incoming = RecordState.of(envelope.deleted, envelope.payload)
+            val edited = kind.newestEdit(incoming)
+            if (edited != null && edited.physicalMillis - now() > HybridLogicalClock.MAX_AHEAD.inWholeMilliseconds) {
+                return hold(record, HoldReason.AHEAD)
+            }
+            edited?.let(::see)
+            database.sync_pendingQueries.release(envelope.key)
 
-        questions.detect(
-            kind,
-            envelope.key,
-            database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull(),
-            incoming,
-        )
-        val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
-        val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
-        val holdsLocalEdits = !kind.sameRecord(merged, incoming)
-        database.sync_recordsQueries.storeMerged(
-            recordKey = envelope.key,
-            kind = kind.name,
-            localRef = stored?.local_ref,
-            kindVersion = kind.version.toLong(),
-            payload = if (holdsLocalEdits) merged.bytes else envelope.payload,
-            deleted = merged.deleted,
-            basedOn = record.sequence,
-            changeId = if (holdsLocalEdits) newChangeId() else null,
-            basePayload = envelope.payload,
-        )
-        val outcome = write(kind, envelope.key, merged, stored?.local_ref)
-        settle(kind, envelope.key, outcome, stored?.local_ref, record)
-        if (outcome is ApplyOutcome.Applied && merged is RecordState.Live) carry(kind, envelope.key, merged)
+            questions.detect(
+                kind,
+                envelope.key,
+                database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull(),
+                incoming,
+            )
+            val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
+            val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
+            val holdsLocalEdits = !kind.sameRecord(merged, incoming)
+            database.sync_recordsQueries.storeMerged(
+                recordKey = envelope.key,
+                kind = kind.name,
+                localRef = stored?.local_ref,
+                kindVersion = kind.version.toLong(),
+                payload = if (holdsLocalEdits) merged.bytes else envelope.payload,
+                deleted = merged.deleted,
+                basedOn = record.sequence,
+                changeId = if (holdsLocalEdits) newChangeId() else null,
+                basePayload = envelope.payload,
+            )
+            stage = FailedStage.WRITING
+            val outcome = if (envelope.key in failing) {
+                ApplyOutcome.Held(HoldReason.FAILED)
+            } else {
+                write(kind, envelope.key, merged, stored?.local_ref)
+            }
+            settle(kind, envelope.key, outcome, stored?.local_ref, record)
+            if (outcome is ApplyOutcome.Applied && merged is RecordState.Live) carry(kind, envelope.key, merged)
+        } catch (e: Exception) {
+            throw failure(envelope.key, stage, e)
+        }
     }
 
     private suspend fun <P : Any> carry(kind: SyncedKind<P>, key: String, state: RecordState.Live) {
@@ -123,12 +152,26 @@ internal class ApplySession(
     private suspend fun reapply(key: String, held: Sync_pending?): ApplyOutcome? {
         val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return null
         val kind = SyncKinds.named(stored.kind) ?: return null
-        val state = RecordState.of(stored.deleted, stored.payload)
-        val outcome = write(kind, key, state, stored.local_ref)
-        val record = held?.let { ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record) }
-        settle(kind, key, outcome, stored.local_ref, record)
-        if (outcome is ApplyOutcome.Applied && state is RecordState.Live) carry(kind, key, state)
-        return outcome
+        try {
+            val state = RecordState.of(stored.deleted, stored.payload)
+            val outcome = if (key in failing) {
+                ApplyOutcome.Held(HoldReason.FAILED)
+            } else {
+                write(kind, key, state, stored.local_ref)
+            }
+            val record = held?.let { ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record) }
+            settle(kind, key, outcome, stored.local_ref, record)
+            if (outcome is ApplyOutcome.Applied && state is RecordState.Live) carry(kind, key, state)
+            return outcome
+        } catch (e: Exception) {
+            throw failure(key, FailedStage.WRITING, e)
+        }
+    }
+
+    /** [e] as the failure of the record [key], unless it already is a record's own, or a cancellation. */
+    private fun failure(key: String, stage: FailedStage, e: Exception): Exception = when (e) {
+        is RecordApplyFailure, is CancellationException -> e
+        else -> RecordApplyFailure(key, stage, e)
     }
 
     private suspend fun settle(
@@ -164,7 +207,11 @@ internal class ApplySession(
             }
             is ApplyOutcome.Held -> {
                 link(kind, key, previousRef)
-                record?.let { hold(it, outcome.reason) }
+                if (outcome.reason == HoldReason.FAILED) {
+                    holdFailed(record ?: storedCopy(key))
+                } else {
+                    record?.let { hold(it, outcome.reason) }
+                }
             }
         }
     }
@@ -179,6 +226,31 @@ internal class ApplySession(
             database.sync_pendingQueries.release(held.record_key)
             reapply(held.record_key, held)
         }
+    }
+
+    private suspend fun holdFailed(record: SequencedRecord) {
+        hold(record, HoldReason.FAILED, failedOn = appVersion)
+    }
+
+    /**
+     * The record [key] as this device stores it, for holding aside one that failed when written for another record:
+     * as stored, at the server copy it is based on, so trying it again writes it from the store.
+     */
+    private suspend fun storedCopy(key: String): SequencedRecord {
+        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOne()
+        return SequencedRecord(
+            sequence = stored.based_on,
+            record = RecordEnvelope(
+                key = key,
+                kind = stored.kind,
+                kindVersion = stored.kind_version.toInt(),
+                basedOn = stored.based_on,
+                changeId = stored.change_id.orEmpty(),
+                device = device,
+                deleted = stored.deleted,
+                payload = stored.payload,
+            ),
+        )
     }
 
     private suspend fun <P : Any> write(
@@ -204,7 +276,12 @@ internal class ApplySession(
         }
     }
 
-    private suspend fun hold(record: SequencedRecord, reason: HoldReason, waitsFor: String? = null) {
+    private suspend fun hold(
+        record: SequencedRecord,
+        reason: HoldReason,
+        waitsFor: String? = null,
+        failedOn: String? = null,
+    ) {
         database.sync_pendingQueries.hold(
             recordKey = record.record.key,
             record = ProtoBuf.encodeToByteArray(SequencedRecord.serializer(), record),
@@ -212,6 +289,7 @@ internal class ApplySession(
             waitsFor = waitsFor,
             receivedAt = now(),
             kind = record.record.kind,
+            failedOn = failedOn,
         )
     }
 

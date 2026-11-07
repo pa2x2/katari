@@ -53,14 +53,15 @@ ON CONFLICT(record_key) DO UPDATE SET
     change_id = excluded.change_id;
 
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
--- format over the newer one. It waits in sync_pending until an update can read it. Changes come a page at a time in
+-- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
+-- whose copy here may lack what the server's holds. Changes come a page at a time in
 -- key order, so a push reaches every one even when the first are refused.
 pendingAfter:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
 FROM sync_records
 WHERE change_id IS NOT NULL
 AND record_key > :afterKey
-AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason = 'unreadable')
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'))
 ORDER BY record_key
 LIMIT :limit;
 
@@ -68,7 +69,7 @@ pendingCount:
 SELECT count(*)
 FROM sync_records
 WHERE change_id IS NOT NULL
-AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason = 'unreadable');
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'));
 
 -- The server took the change as :sequence. A change made since keeps its own id and stays pending.
 markPushed:

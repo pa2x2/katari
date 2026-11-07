@@ -7,6 +7,7 @@ import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.file.local.OwnedFiles
 import app.katari.sync.client.firstsync.FirstSync
@@ -17,6 +18,7 @@ import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
+import app.katari.sync.protocol.device.DeviceDescription
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,8 +96,26 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
 
         override fun copiesTrackerBinding(trackerId: Long) = true
     }
-    val writing =
-        SyncWriting(handler, drain, preferences.writes, profileDeletion, migrationRules, preferences.profiles)
+
+    /** The app version this device runs, which a test changes to stand for an update. */
+    @Volatile
+    var appVersion = "test"
+
+    private val thisDevice = object : ThisDevice {
+        override fun description() = DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", appVersion)
+
+        override val appVersion get() = this@SyncTestDevice.appVersion
+    }
+
+    val writing = SyncWriting(
+        handler,
+        drain,
+        preferences.writes,
+        profileDeletion,
+        migrationRules,
+        preferences.profiles,
+        thisDevice,
+    )
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)

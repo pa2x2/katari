@@ -88,7 +88,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         ),
     )
     private val thisDevice = object : ThisDevice {
-        override fun description() = DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", "test")
+        override fun description() =
+            DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", local.appVersion)
+
+        override val appVersion get() = local.appVersion
     }
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(

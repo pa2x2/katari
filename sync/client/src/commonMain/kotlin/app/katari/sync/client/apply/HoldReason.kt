@@ -16,4 +16,10 @@ internal enum class HoldReason(val stored: String) {
 
     /** The deletion of the profile open on this device; applied once another profile is open. */
     PROFILE_OPEN("profile-open"),
+
+    /**
+     * Applying it threw, as a bug in this app version or data it can't take does (D067); tried again once the app is
+     * updated, and meanwhile neither pushed nor stopping the records around it.
+     */
+    FAILED("failed"),
 }

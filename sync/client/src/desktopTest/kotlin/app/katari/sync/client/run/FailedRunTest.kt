@@ -34,10 +34,10 @@ class FailedRunTest {
 
                         cutter.pullsBeforeCut = 0
                         b.sync() shouldBe SyncOutcome.UNREACHABLE
-                        // B can no longer apply a change to its chapters, as a bug in applying one would leave it
+                        // B can no longer store how far it pulled, as a bug there would leave it; a record that fails
+                        // to apply would only be held aside
                         b.sql(
-                            "CREATE TRIGGER broken_insert BEFORE INSERT ON chapters BEGIN SELECT RAISE(ABORT, 'broken'); END",
-                            "CREATE TRIGGER broken_update BEFORE UPDATE ON chapters BEGIN SELECT RAISE(ABORT, 'broken'); END",
+                            "CREATE TRIGGER broken BEFORE UPDATE OF cursor ON sync_state BEGIN SELECT RAISE(ABORT, 'broken'); END",
                         )
                         a.sql("UPDATE chapters SET read = 1 WHERE url = '/show/2'")
                         a.sync() shouldBe SyncOutcome.SYNCED

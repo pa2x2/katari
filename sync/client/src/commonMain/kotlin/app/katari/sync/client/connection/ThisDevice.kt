@@ -7,4 +7,7 @@ import mihon.core.common.platform.PlatformFacility
 @PlatformFacility
 interface ThisDevice {
     fun description(): DeviceDescription
+
+    /** As [description] names it; cheap to read, where the device's name may not be. */
+    val appVersion: String
 }

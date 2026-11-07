@@ -28,7 +28,9 @@ class AndroidThisDevice(
         return DeviceDescription(
             name = named?.takeIf(String::isNotBlank) ?: model,
             platform = "Android",
-            appVersion = build.versionText(),
+            appVersion = appVersion,
         )
     }
+
+    override val appVersion: String get() = build.versionText()
 }

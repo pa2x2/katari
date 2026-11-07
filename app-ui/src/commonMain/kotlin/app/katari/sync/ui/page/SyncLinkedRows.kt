@@ -17,11 +17,12 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonSize
 import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The page of a linked device (D050): the status card, what waits for the person, the account's devices with Link a
- * device, the options, and Disconnect.
+ * The page of a linked device (D050): the status card, what waits for the person, how many records are held aside
+ * (D067), the account's devices with Link a device, the options, and Disconnect.
  */
 @Composable
 internal fun linkedPreferences(
@@ -35,6 +36,10 @@ internal fun linkedPreferences(
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
+    if (status.heldAside > 0) {
+        val count = status.heldAside.toInt()
+        add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
+    }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
     if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
     add(syncOptionsGroup(preferences))

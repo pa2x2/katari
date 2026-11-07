@@ -20,12 +20,14 @@ import dev.zacsweers.metro.Inject
  *   record whose parent comes in a later page waits for it.
  * - Edits on this device not drained into records yet are merged, not overwritten, and nothing applied is captured
  *   as a local edit ([SyncWriting]).
+ * - A record that fails to apply is held aside and the rest apply, page and position with them
+ *   ([SyncWriting.writeHoldingFailures]); it is tried again once the app is updated.
  * - What is left to push afterwards is in [app.katari.sync.client.record.PendingChanges]: records this device has
  *   edits of that the server's copy lacks, never records only applied here.
  */
 @Inject
 class IncomingRecords(private val writing: SyncWriting) {
-    suspend fun apply(page: PullPage) = writing.write { session ->
+    suspend fun apply(page: PullPage) = writing.writeHoldingFailures { session ->
         page.records
             .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
             .forEach { session.receive(it) }
@@ -43,14 +45,14 @@ class IncomingRecords(private val writing: SyncWriting) {
      * where it is. Merging is idempotent and order-free, and the server hands out only a record's newest copy, so
      * the pull that reaches them later applies the same copies again, or newer ones, and changes nothing else.
      */
-    suspend fun applyAhead(records: List<SequencedRecord>) = writing.write { session ->
+    suspend fun applyAhead(records: List<SequencedRecord>) = writing.writeHoldingFailures { session ->
         records
             .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
             .forEach { session.receive(it) }
     }
 
     /** Applies what was held for a reason that may have passed: an app update, the clock, a reference, a profile. */
-    suspend fun retryHeld() = writing.write { session -> session.retryHeld() }
+    suspend fun retryHeld() = writing.writeHoldingFailures { session -> session.retryHeld() }
 
     private companion object {
         val kindOrder = SyncKinds.all.withIndex().associate { (index, kind) -> kind.name to index }

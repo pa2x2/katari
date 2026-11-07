@@ -17,8 +17,10 @@ class DesktopThisDevice(private val build: AppBuild) : ThisDevice {
     override fun description(): DeviceDescription = DeviceDescription(
         name = hostName() ?: "Linux",
         platform = "Linux",
-        appVersion = build.versionText(),
+        appVersion = appVersion,
     )
+
+    override val appVersion: String get() = build.versionText()
 
     private fun hostName(): String? {
         System.getenv("HOSTNAME")?.takeIf(String::isNotBlank)?.let { return it }

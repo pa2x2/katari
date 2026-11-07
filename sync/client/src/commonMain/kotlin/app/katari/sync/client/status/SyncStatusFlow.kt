@@ -39,11 +39,12 @@ class SyncStatusFlow(
 ) {
     fun status(): Flow<SyncStatus> {
         val activity = combine(connection.states(), runs.running.settled(), runs.lastOutcome, network.state(), ::Inputs)
-        return combine(activity, pending.counts(), questions.open(), held.unreadableKinds(), files()) {
+        val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
+        return combine(activity, pending.counts(), questions.open(), waiting, files()) {
                 inputs,
                 unsent,
                 open,
-                kinds,
+                waiting,
                 files,
             ->
             val state = inputs.state
@@ -54,7 +55,8 @@ class SyncStatusFlow(
                 unsent = if (state.isLinked) unsent else 0,
                 unsentBecause = unsentReason(state, activityNow).takeIf { state.isLinked && unsent > 0 },
                 questions = if (state.isLinked) open else emptyList(),
-                heldKinds = if (state.isLinked) kinds else emptyList(),
+                heldKinds = if (state.isLinked) waiting.kinds else emptyList(),
+                heldAside = if (state.isLinked) waiting.failed else 0,
                 files = if (state.isLinked) files else SyncStatus.Files.NONE,
             )
         }.distinctUntilChanged()
@@ -86,6 +88,8 @@ class SyncStatusFlow(
             waitingForWifi = !allowed && uploads + downloads > 0,
         )
     }
+
+    private class Held(val kinds: List<String>, val failed: Long)
 
     private class Inputs(
         val state: SyncConnectionState,

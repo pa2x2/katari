@@ -21,6 +21,8 @@ data class SyncStatus(
     val questions: List<Question>,
     /** Kinds of records a newer app version synced, held until this one is updated (D031). */
     val heldKinds: List<String>,
+    /** Records that failed to apply here, held aside until the app is updated while the rest sync (D067). */
+    val heldAside: Long,
     /** Custom covers and fonts still to move; 0 everywhere while the device isn't linked. */
     val files: Files,
 ) {

@@ -1,8 +1,8 @@
 import kotlin.Boolean;
 
 -- Records pulled from the server that can't be applied yet: a kind or kind version this app doesn't read, a parent
--- record not here yet, or a timestamp too far ahead of this device's clock. Kept as received and applied once what
--- they wait for arrives.
+-- record not here yet, a timestamp too far ahead of this device's clock, or an apply that failed. Kept as received
+-- and applied once what they wait for arrives.
 CREATE TABLE sync_pending(
     record_key TEXT NOT NULL PRIMARY KEY,
     -- The protocol's SequencedRecord as pulled, envelope and payload unchanged.
@@ -11,42 +11,51 @@ CREATE TABLE sync_pending(
     -- The record key it waits for, when it waits for a parent.
     waits_for TEXT,
     received_at INTEGER NOT NULL,
-    kind TEXT NOT NULL DEFAULT ''
+    kind TEXT NOT NULL DEFAULT '',
+    -- The app version applying it failed on, for a record held for that ('failed'): retried once the app differs.
+    failed_on TEXT
 );
 
 CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;
 
 hold:
-INSERT INTO sync_pending(record_key, record, reason, waits_for, received_at, kind)
-VALUES (:recordKey, :record, :reason, :waitsFor, :receivedAt, :kind)
+INSERT INTO sync_pending(record_key, record, reason, waits_for, received_at, kind, failed_on)
+VALUES (:recordKey, :record, :reason, :waitsFor, :receivedAt, :kind, :failedOn)
 ON CONFLICT(record_key) DO UPDATE SET
     record = excluded.record,
     reason = excluded.reason,
     waits_for = excluded.waits_for,
     received_at = excluded.received_at,
-    kind = excluded.kind;
+    kind = excluded.kind,
+    failed_on = excluded.failed_on;
 
 get:
-SELECT record_key, record, reason, waits_for, received_at, kind
+SELECT record_key, record, reason, waits_for, received_at, kind, failed_on
 FROM sync_pending
 WHERE record_key = :recordKey;
 
 waitingFor:
-SELECT record_key, record, reason, waits_for, received_at, kind
+SELECT record_key, record, reason, waits_for, received_at, kind, failed_on
 FROM sync_pending
 WHERE waits_for = :recordKey
 ORDER BY received_at, record_key;
 
 -- Everything held for a reason that may have gone away since: a newer app, a clock caught up, a reference arrived.
+-- What failed to apply is tried again only by another app version than the one it failed on.
 retryable:
-SELECT record_key, record, reason, waits_for, received_at, kind
+SELECT record_key, record, reason, waits_for, received_at, kind, failed_on
 FROM sync_pending
-WHERE waits_for IS NULL
+WHERE waits_for IS NULL AND (reason != 'failed' OR failed_on IS NOT :appVersion)
 ORDER BY received_at, record_key;
 
 release:
 DELETE FROM sync_pending
 WHERE record_key = :recordKey;
+
+failedCount:
+SELECT count(*)
+FROM sync_pending
+WHERE reason = 'failed';
 
 unreadableKinds:
 SELECT DISTINCT kind
