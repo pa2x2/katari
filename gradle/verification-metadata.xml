@@ -6,7 +6,8 @@
   image-decoder as released from pa2x2/mpv-android, pa2x2/quickjs-kt and pa2x2/image-decoder (each release's
   SHA256SUMS). Also pins JCEF's API from
   JetBrains' intellij-dependencies repository (the .sha256 files it publishes beside each file). Every other
-  dependency comes from a repository Gradle already trusts and stays unchecked.
+  dependency comes from a repository Gradle already trusts and stays unchecked, and so do the sources and javadoc
+  jars an IDE downloads for display, since nothing builds or runs them.
 -->
 <verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -16,6 +17,8 @@
       <verify-signatures>false</verify-signatures>
       <trusted-artifacts>
          <trust group="^(?!app[.]katari[.](onnxruntime|libarchive|libmpv)$|io[.]github[.]pa2x2$|org[.]jetbrains[.]intellij[.]deps[.]jcef$).*$" regex="true"/>
+         <trust file=".*-sources[.]jar" regex="true"/>
+         <trust file=".*-javadoc[.]jar" regex="true"/>
       </trusted-artifacts>
    </configuration>
    <components>
