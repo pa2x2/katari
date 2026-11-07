@@ -31,6 +31,7 @@ internal fun linkedPreferences(
     headline: SyncHeadline?,
     devices: SyncViewModel.DevicesState,
     preferences: SyncPreferences,
+    knowsWifi: Boolean,
     actions: SyncPageActions,
 ): List<Preference> = buildList {
     add(statusCard(link, status, headline, actions))
@@ -42,7 +43,7 @@ internal fun linkedPreferences(
     }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
     if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
-    add(syncOptionsGroup(preferences))
+    add(syncOptionsGroup(preferences, knowsWifi))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
             TextPreferenceWidget(
@@ -120,15 +121,20 @@ private fun attentionRows(
     }
 }
 
-/** The device's own sync options, which every device sets for itself (D022, D050). */
+/**
+ * The device's own sync options, which every device sets for itself (D022, D050). Where the platform can't tell Wi-Fi
+ * ([knowsWifi] false), the mobile data switch holds files back on networks the system marks metered, and says so.
+ */
 @Composable
-internal fun syncOptionsGroup(preferences: SyncPreferences) = Preference.PreferenceGroup(
+internal fun syncOptionsGroup(preferences: SyncPreferences, knowsWifi: Boolean) = Preference.PreferenceGroup(
     title = stringResource(MR.strings.sync_options),
     preferenceItems = listOf(
         Preference.PreferenceItem.SwitchPreference(
             preference = preferences.useMobileData,
-            title = stringResource(MR.strings.sync_use_mobile_data),
-            subtitle = stringResource(MR.strings.sync_use_mobile_data_summary),
+            title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),
+            subtitle = stringResource(
+                if (knowsWifi) MR.strings.sync_use_mobile_data_summary else MR.strings.sync_use_metered_summary,
+            ),
         ),
         Preference.PreferenceItem.SwitchPreference(
             preference = preferences.syncInBackground,

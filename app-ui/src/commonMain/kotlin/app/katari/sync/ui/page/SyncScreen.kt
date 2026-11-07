@@ -42,8 +42,8 @@ object SyncScreen : SearchableSettings {
     /** What settings search finds here; the page itself shows more, which [Content] builds. */
     @Composable
     override fun getPreferences(): List<Preference> {
-        val preferences = LocalAppUiGraph.current.syncPreferences
-        return listOf(syncOptionsGroup(preferences))
+        val graph = LocalAppUiGraph.current
+        return listOf(syncOptionsGroup(graph.syncPreferences, graph.networkConnectivity.knowsWifi))
     }
 
     @Composable
@@ -51,6 +51,7 @@ object SyncScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.current
         val model = metroViewModel<SyncViewModel>()
+        val knowsWifi = LocalAppUiGraph.current.networkConnectivity.knowsWifi
         val status by model.status.collectAsState()
         val devices by model.devices.collectAsState()
         val canKeepSignIn by model.canKeepSignIn.collectAsState()
@@ -88,6 +89,7 @@ object SyncScreen : SearchableSettings {
                         headline = headline,
                         devices = devices,
                         preferences = model.preferences,
+                        knowsWifi = knowsWifi,
                         actions = actions,
                     )
                 }
