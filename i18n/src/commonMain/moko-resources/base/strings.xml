@@ -3363,10 +3363,8 @@
     <string name="sync_unknown_device">another device</string>
     <string name="sync_unknown_entry">An entry</string>
     <string name="sync_unknown_profile">A profile</string>
-    <string name="sync_banner_migration">Migrated on two devices</string>
-    <string name="sync_banner_migration_text">Both are kept until you choose</string>
-    <string name="sync_banner_notes">Notes edited on two devices</string>
-    <string name="sync_banner_notes_text">Choose which notes to keep</string>
+    <string name="sync_banner_migration">Migrated on two devices. Both are kept until you choose.</string>
+    <string name="sync_banner_notes">Notes edited on two devices. Choose which notes to keep.</string>
     <string name="sync_notification_channel">Sync</string>
     <string name="sync_notification_questions_text">Open Sync to choose.</string>
     <string name="sync_notification_removed">This device was removed from sync</string>
