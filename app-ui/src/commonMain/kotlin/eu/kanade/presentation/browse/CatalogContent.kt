@@ -42,10 +42,10 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
-import mihon.presentation.kit.layout.RowGridColumn
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.ScrollbarFrame
 import mihon.presentation.kit.layout.coverGridCells
+import mihon.presentation.kit.layout.coverListCells
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
@@ -151,18 +151,16 @@ fun CatalogContent(
             itemMenu = itemMenu,
             positionState = positionState,
         )
-        LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
-            CatalogComfortableGrid(
-                catalogList = catalogList,
-                columns = rowColumns,
-                contentPadding = rowPadding,
-                sourceItemOrientation = sourceItemOrientation,
-                onItemClick = onItemClick,
-                onItemLongClick = onItemLongClick,
-                itemMenu = itemMenu,
-                positionState = positionState,
-            )
-        }
+        LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
+            catalogList = catalogList,
+            columns = coverListCells(),
+            contentPadding = contentPadding,
+            sourceItemOrientation = sourceItemOrientation,
+            onItemClick = onItemClick,
+            onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
+            positionState = positionState,
+        )
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
             contentPadding = contentPadding,

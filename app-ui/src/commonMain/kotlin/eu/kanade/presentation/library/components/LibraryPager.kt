@@ -13,9 +13,9 @@ import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.NoResults
-import mihon.presentation.kit.layout.RowGridColumn
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.coverGridCells
+import mihon.presentation.kit.layout.coverListCells
 import mihon.presentation.kit.pager.HorizontalPager
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
@@ -107,19 +107,17 @@ fun LibraryPager(
                     scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
-            LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
-                LibraryComfortableGrid(
-                    items = items,
-                    columns = rowColumns,
-                    contentPadding = rowPadding,
-                    selection = selection,
-                    clicks = clicks,
-                    onClickContinueReading = onClickContinueReading,
-                    isContinueReadingAvailable = isContinueReadingAvailable,
-                    displaySettings = displaySettings,
-                    scrollToTopTarget = pageScrollToTopTarget,
-                )
-            }
+            LibraryDisplayMode.ComfortableList -> LibraryComfortableGrid(
+                items = items,
+                columns = coverListCells(),
+                contentPadding = contentPadding,
+                selection = selection,
+                clicks = clicks,
+                onClickContinueReading = onClickContinueReading,
+                isContinueReadingAvailable = isContinueReadingAvailable,
+                displaySettings = displaySettings,
+                scrollToTopTarget = pageScrollToTopTarget,
+            )
         }
     }
 }

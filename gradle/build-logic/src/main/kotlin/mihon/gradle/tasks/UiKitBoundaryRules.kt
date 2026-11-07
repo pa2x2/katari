@@ -144,8 +144,8 @@ private val ADAPTIVE_LAYOUT_RULES = listOf(
         Regex("""\b(LazyColumn|FastScrollLazyColumn|ScrollbarLazyColumn)\s*[({]"""),
     ),
     UiKitRule(
-        "Grid columns come from the kit: coverGridCells for covers, RowGridColumn for entries shown as rows, " +
-            "CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
+        "Grid columns come from the kit: coverGridCells for covers, coverListCells for covers one to a line, " +
+            "RowGridColumn for entries shown as rows, CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
         Regex("""\b(GridCells|StaggeredGridCells)\s*\.\s*(Fixed|Adaptive|FixedSize)\b"""),
     ),
 )

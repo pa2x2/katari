@@ -4,10 +4,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.entryCoverScale
 import tachiyomi.domain.library.model.CoverSize
+import kotlin.math.ceil
+import kotlin.math.min
 
 /**
  * Columns for a grid of entry covers: as many as fit the width at [size], with covers scaled up in the wide window
@@ -20,6 +23,24 @@ fun coverGridCells(size: CoverSize, wideCovers: Boolean = false): GridCells {
     val minCellWidth = size.minCellWidth() * entryCoverScale()
     return GridCells.Adaptive(if (wideCovers) minCellWidth * WIDE_COVER_SCALE else minCellWidth)
 }
+
+/**
+ * Columns for covers that a phone shows one to a line, such as the comfortable list display mode. Each cover stays
+ * between [CoverListMinWidth] and [CoverListMaxWidth] wide, about a phone's width, so a wider window lays covers side
+ * by side rather than stretching one until it is taller than the window.
+ */
+fun coverListCells(): GridCells = CoverListCells
+
+private object CoverListCells : GridCells {
+    override fun Density.calculateCrossAxisCellSizes(availableSize: Int, spacing: Int): List<Int> {
+        val width = availableSize.toDp()
+        val columns = min((width / CoverListMinWidth).toInt(), ceil(width / CoverListMaxWidth).toInt())
+        return with(GridCells.Fixed(columns.coerceAtLeast(1))) { calculateCrossAxisCellSizes(availableSize, spacing) }
+    }
+}
+
+private val CoverListMinWidth = 320.dp
+private val CoverListMaxWidth = 480.dp
 
 /** How many columns [this] lays out across [availableWidth], for content that has to know before the grid does. */
 @Composable
