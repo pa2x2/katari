@@ -1,5 +1,6 @@
 package app.katari.sync.server.device
 
+import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.LinkCode
 import app.katari.sync.protocol.device.LinkedDevice
@@ -28,6 +29,13 @@ class AccountDevices(
             )
         },
     )
+
+    /** Keeps how [device] presents itself now, when that changed since it registered or last said so. */
+    fun describe(device: Device, description: DeviceDescription) {
+        if (description == device.description) return
+        storage.devices.describe(device.id, description)
+        changes.announceDevicesChanged(device.accountId)
+    }
 
     /** False when the account has no such device that is not already revoked. */
     fun revoke(accountId: Long, id: DeviceId): Boolean {

@@ -22,6 +22,8 @@ interface DeviceStore {
     /** The account's devices that are not revoked, oldest first. */
     fun activeIn(accountId: Long): List<Device>
 
+    fun describe(id: DeviceId, description: DeviceDescription)
+
     /** Moves the device's last-seen time forward to [seenAtMillis]; it never moves back. */
     fun touch(id: DeviceId, seenAtMillis: Long)
 

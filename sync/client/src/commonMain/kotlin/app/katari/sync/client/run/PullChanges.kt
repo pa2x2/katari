@@ -3,6 +3,7 @@ package app.katari.sync.client.run
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncStage
+import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.server.Refusal
 import app.katari.sync.client.server.SyncFailure
@@ -27,11 +28,19 @@ class PullChanges(
     private val continuity: ServerContinuity,
     private val incoming: IncomingRecords,
     private val handOff: EntryHandOff,
+    private val thisDevice: ThisDevice,
 ) {
     suspend fun pullAll(client: SyncServerClient, device: DeviceId, liveOnly: Boolean) {
+        // Each pull says how this device presents itself, so its row in the device list follows app updates
+        val description = thisDevice.description()
         while (true) {
             val state = connection.state()
-            val request = PullRequest(after = state.position, liveOnly = liveOnly, afterChain = state.chain)
+            val request = PullRequest(
+                after = state.position,
+                liveOnly = liveOnly,
+                afterChain = state.chain,
+                device = description,
+            )
             val page = try {
                 client.pull(request)
             } catch (e: SyncFailure.Refused) {

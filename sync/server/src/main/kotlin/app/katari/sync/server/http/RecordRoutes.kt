@@ -21,7 +21,11 @@ internal fun Route.recordRoutes(services: SyncServices) {
     post(SyncHttp.PULL) {
         val request = call.receiveProto<PullRequest>(services.config.maxRequestBytes)
         RequestChecks.check(request)
-        when (val outcome = withContext(Dispatchers.IO) { services.pull.pull(call.device, request) }) {
+        val outcome = withContext(Dispatchers.IO) {
+            request.device?.let { services.devices.describe(call.device, it) }
+            services.pull.pull(call.device, request)
+        }
+        when (outcome) {
             is PullOutcome.Page -> call.respondProto(outcome.page)
             is PullOutcome.Refused -> call.respondRefusal(outcome.code)
         }

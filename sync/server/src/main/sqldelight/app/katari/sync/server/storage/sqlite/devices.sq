@@ -42,6 +42,11 @@ FROM devices
 WHERE account_id = :accountId AND is_revoked = 0
 ORDER BY registered_at, _id;
 
+describe:
+UPDATE devices
+SET name = :name, platform = :platform, app_version = :appVersion
+WHERE _id = :id;
+
 touch:
 UPDATE devices
 SET last_seen_at = max(last_seen_at, :seenAt)

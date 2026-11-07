@@ -37,6 +37,15 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
     override fun activeIn(accountId: Long): List<Device> =
         queries.activeInAccount(accountId).executeAsList().map { it.toDevice() }
 
+    override fun describe(id: DeviceId, description: DeviceDescription) {
+        queries.describe(
+            name = description.name,
+            platform = description.platform,
+            appVersion = description.appVersion,
+            id = id.value,
+        )
+    }
+
     override fun touch(id: DeviceId, seenAtMillis: Long) {
         queries.touch(seenAt = seenAtMillis, id = id.value)
     }

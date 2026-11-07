@@ -45,6 +45,7 @@ internal object RequestChecks {
 
     fun check(request: PullRequest) {
         require(request.after >= 0 && request.limit >= 0) { "Negative position or limit" }
+        request.device?.let(::check)
     }
 
     fun check(request: GroupRequest) {

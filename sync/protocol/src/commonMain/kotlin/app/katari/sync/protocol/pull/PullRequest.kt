@@ -1,5 +1,6 @@
 package app.katari.sync.protocol.pull
 
+import app.katari.sync.protocol.device.DeviceDescription
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -22,4 +23,9 @@ data class PullRequest(
      * to there is the one the device saw. Empty skips the check, which only a device at 0 has reason to do.
      */
     @ProtoNumber(4) val afterChain: String = "",
+    /**
+     * How the device presents itself now, for the account's device list to follow an app update or a renamed device
+     * instead of keeping what it registered with. A device that leaves it out keeps its description.
+     */
+    @ProtoNumber(5) val device: DeviceDescription? = null,
 )

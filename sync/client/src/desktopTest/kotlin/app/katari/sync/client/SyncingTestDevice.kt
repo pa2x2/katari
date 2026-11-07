@@ -72,10 +72,16 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
+    private val thisDevice = object : ThisDevice {
+        override fun description() =
+            DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", local.appVersion)
+
+        override val appVersion get() = local.appVersion
+    }
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
-            PullChanges(connection, continuity, local.incoming, handOff),
+            PullChanges(connection, continuity, local.incoming, handOff, thisDevice),
             PushChanges(
                 connection,
                 continuity,
@@ -87,12 +93,6 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
         ),
     )
-    private val thisDevice = object : ThisDevice {
-        override fun description() =
-            DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", local.appVersion)
-
-        override val appVersion get() = local.appVersion
-    }
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(
         clients, connection, tokens, thisDevice, capture, runs, resync, firstSync, directory, disconnection,
