@@ -46,6 +46,12 @@ SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, sy
 FROM sync_records
 WHERE kind = :kind AND local_ref = :localRef;
 
+-- The payloads of the live records among :recordKeys.
+livePayloads:
+SELECT record_key, payload
+FROM sync_records
+WHERE record_key IN :recordKeys AND deleted = 0;
+
 -- Detaches whatever other record the local row held, so the row holds only the record it was last stored for.
 detachLocalRef:
 UPDATE sync_records
