@@ -136,10 +136,12 @@ class SyncAccount(
             resync.start(SyncStage.RESYNC, registered.server)
             return
         }
-        // Whatever an earlier connection left meant something only on its own server.
-        if (previous.enabled) disconnection.leave(reason = null)
+        // The same account keeps what this device synced with it, and capture goes on with the edits made meanwhile
+        // (D066). Whatever a connection to another account left meant something only there.
+        val sameAccount = previous.enabled && previous.accountName == registered.accountName
+        if (previous.enabled && !sameAccount) disconnection.leave(reason = null)
         connection.connect(server, registered, SyncStage.JOINING)
-        capture.start()
+        if (!sameAccount) capture.start()
     }
 
     suspend fun devices(): AccountCall<List<AccountDevice>> = linked { client, device ->

@@ -58,14 +58,15 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val directory = DeviceDirectory()
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff)
+    private val resync = FullResync(local.handler, local.writing)
     private val firstSync = FirstSyncSteps(
         local.firstSync,
         connection,
         ExistingRows(local.driver, local.drain),
         ExistingFiles(local.handler, local.ownedFiles),
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
+        resync,
     )
-    private val resync = FullResync(local.handler, local.writing)
     val preferences = SyncPreferences(local.preferences.profiles)
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)

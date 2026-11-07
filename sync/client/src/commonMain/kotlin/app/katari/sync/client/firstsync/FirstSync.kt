@@ -69,6 +69,12 @@ class FirstSync(
         return null
     }
 
+    /**
+     * Whether this device synced with the account before and kept the records of that connection, as one signing in
+     * again after its server started over does (D066): it then resyncs them instead of recording its rows as new.
+     */
+    suspend fun keepsRecords(): Boolean = handler.await { sync_recordsQueries.hasSynced().awaitAsOne() }
+
     /** This device's profiles, each paired with the one of the account's [records] it is, or one of its name. */
     suspend fun proposal(records: List<RecordEnvelope>): List<ProfilePairing> {
         val account = records
@@ -99,9 +105,14 @@ class FirstSync(
                 "Profile ${holder?.id} already is the account profile paired with profile ${choice.profileId}"
             }
         }
+        val keeps = keepsRecords()
+        // Writing drains the edits not recorded yet first, under the identities they were made under
         writing.write {
             paired.filter { local.getValue(it.profileId).uuid != it.accountUuid }.forEach { choice ->
                 sync_applyQueries.setProfileUuid(uuid = checkNotNull(choice.accountUuid), profileId = choice.profileId)
+                // A kept record of the profile would bring its old identity back; its rows' records go when recorded
+                val previous = local.getValue(choice.profileId).uuid
+                if (keeps) sync_recordsQueries.deleteByLocalRef(ProfileKind.name, ProfileKind.ref(previous).json)
             }
         }
         val edits = paired.filter { it.settings == SettingsWinner.DEVICE }.flatMap { choice ->

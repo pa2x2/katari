@@ -156,6 +156,7 @@ class SyncPass(
                     SyncStage.JOINING -> firstSync.join(client)
                     SyncStage.CHOOSING -> return SyncOutcome.IDLE
                     SyncStage.RECORDING -> firstSync.recordRows()
+                    SyncStage.RECORDING_KEPT -> firstSync.recordKept()
                     SyncStage.DOWNLOADING -> {
                         if (waitsForWifi(state)) return SyncOutcome.WAITING_FOR_WIFI
                         pull.pullAll(client, device, liveOnly = true)

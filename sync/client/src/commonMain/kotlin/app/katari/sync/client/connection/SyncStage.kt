@@ -5,8 +5,9 @@ package app.katari.sync.client.connection
  * resync interrupted anywhere carries on from where it stopped.
  *
  * A device joining an account goes [JOINING], [CHOOSING] when it has to ask, [RECORDING], [DOWNLOADING], [SETTINGS]
- * and then [READY] ([app.katari.sync.client.firstsync.FirstSyncSteps]). A device that finds its server lost or
- * restored goes back through [RESYNC] or [RESYNC_WITHOUT_DELETIONS] ([app.katari.sync.client.resync.FullResync]).
+ * and then [READY] ([app.katari.sync.client.firstsync.FirstSyncSteps]); one that synced with the account before goes
+ * [RECORDING_KEPT] and [RESYNC] after the choices instead. A device that finds its server lost or restored goes back
+ * through [RESYNC] or [RESYNC_WITHOUT_DELETIONS] ([app.katari.sync.client.resync.FullResync]).
  */
 enum class SyncStage(internal val stored: String) {
     /** Registered and capturing; the account's profiles are compared with this device's next. */
@@ -17,6 +18,12 @@ enum class SyncStage(internal val stored: String) {
 
     /** Records the rows this device held before sync started, so they merge with the account's. */
     RECORDING("recording"),
+
+    /**
+     * As [RECORDING], for a device that synced with this account before and kept its records (D066): only the rows they
+     * don't stand for are recorded as new, then the device resyncs ([RESYNC]).
+     */
+    RECORDING_KEPT("recording-kept"),
 
     /** Takes the account's records, a page at a time. */
     DOWNLOADING("downloading"),

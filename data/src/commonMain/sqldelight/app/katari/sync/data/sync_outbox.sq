@@ -74,6 +74,13 @@ FROM sync_outbox
 WHERE seq > :seq
 ORDER BY seq;
 
+page:
+SELECT seq, kind, local_ref
+FROM sync_outbox
+WHERE seq > :seq
+ORDER BY seq
+LIMIT :limit;
+
 -- A value this device held before sync started, recorded with no edit time: it fills in what the account lacks and
 -- gives way to every edit made anywhere ([app.katari.sync.client.payload.Stamped.UNKNOWN_EDIT]).
 recordUnstamped:

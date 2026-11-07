@@ -12,6 +12,7 @@ import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.showRows
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -81,6 +82,53 @@ class ReplacedServerTest {
                         b.library() shouldBe a.library()
                         b.library() shouldContain """["chapter","/meanwhile","/meanwhile/1",1,0]"""
                         b.library() shouldContain """["chapter","/show","/show/3",1,0]"""
+                    }
+                }
+            }
+        }
+
+    @Test
+    fun `devices signing in again to a server that started over count the time read of each once`(): Unit =
+        runBlocking {
+            TestSyncServer(directory).use { server ->
+                SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.sql(
+                            *showRows("/show", read = 1),
+                            """
+                            INSERT INTO history(entry_id, chapter_id, last_read, time_read)
+                            SELECT entry_id, _id, 1000, 1000 FROM chapters WHERE url = '/show/1'
+                            """,
+                        )
+                        val account = server.account("reader")
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.sql("UPDATE history SET time_read = time_read + 500, last_read = 2000")
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        val before = a.library()
+                        before.single { it.startsWith("[\"history\"") } shouldEndWith ",1500]"
+
+                        server.replaceWithEmpty()
+                        a.sync() shouldBe SyncOutcome.IDLE
+                        b.sync() shouldBe SyncOutcome.IDLE
+                        val refilled = server.account("reader")
+                        a.join(server, refilled)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, refilled)
+                        b.sync() shouldBe SyncOutcome.IDLE
+                        val proposal = b.account.firstSyncProposal()
+                            .shouldBeInstanceOf<AccountCall.Done<List<ProfilePairing>>>().value
+                        b.account.answerFirstSync(
+                            proposal.map { ProfileChoice(it.profileId, it.pairedWith?.uuid, SettingsWinner.ACCOUNT) },
+                        )
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        a.sync() shouldBe SyncOutcome.SYNCED
+
+                        a.library() shouldBe before
+                        b.library() shouldBe before
                     }
                 }
             }

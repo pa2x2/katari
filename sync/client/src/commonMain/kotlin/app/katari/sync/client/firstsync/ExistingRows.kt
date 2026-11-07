@@ -19,11 +19,31 @@ import dev.zacsweers.metro.Inject
  * from this device; replayed on another device they would migrate entries the person kept there.
  *
  * Recording twice is harmless, as the drain finds the second time unchanged, so an interrupted step runs again whole.
+ * A device returning to its account with the records of its earlier connection ([recordKept]) finds most rows
+ * unchanged that way, keeping what it synced, such as each device's share of the time read (D066).
  */
 @Inject
 class ExistingRows(private val driver: SqlDriver, private val drain: OutboxDrain) {
     suspend fun record() {
+        insert()
+        drainAll()
+    }
+
+    /**
+     * As [record], for a device that kept its records: those whose row now has another key, as every row of a profile
+     * paired by name with another identity does, are removed first, so the row is recorded as new.
+     */
+    suspend fun recordKept() {
+        insert()
+        drain.dropReplaced()
+        drainAll()
+    }
+
+    private suspend fun insert() {
         statements.forEach { driver.execute(null, it, 0).await() }
+    }
+
+    private suspend fun drainAll() {
         do {
             val drained = drain.drain()
         } while (drained > 0)

@@ -56,6 +56,32 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
         rows.size
     }
 
+    /**
+     * Removes, without marking them deleted, the records that stand for rows the outbox names under a key those rows
+     * no longer have, leaving the outbox for [drain] to record the rows anew. A profile paired by name with an account
+     * profile of another identity changes every key under it, and a device returning to its account must neither push
+     * its records under the old keys nor carry their contents over to the new ones (D066).
+     */
+    suspend fun dropReplaced() {
+        var after = 0L
+        while (true) {
+            after = handler.await(inTransaction = true) {
+                val deviceId = sync_stateQueries.get().awaitAsOne().device_id ?: return@await null
+                val rows = sync_outboxQueries.page(after, BATCH).awaitAsList()
+                if (rows.isEmpty()) return@await null
+                val reads = LocalReads(this, DeviceId(deviceId), settings)
+                rows.forEach { row ->
+                    val kind = SyncKinds.named(row.kind) ?: return@forEach
+                    val held = sync_recordsQueries.getByLocalRef(kind.name, row.local_ref).awaitAsOneOrNull()
+                        ?: return@forEach
+                    val key = (kind.read(reads, LocalRef(row.local_ref)) as? LocalRead.Found)?.key ?: return@forEach
+                    if (key != held.record_key) sync_recordsQueries.delete(held.record_key)
+                }
+                rows.last().seq
+            } ?: return
+        }
+    }
+
     private class Drain(private val database: Database, private val reads: LocalReads) {
         private val records = LinkedHashMap<String, Touched>()
         private val read = HashSet<Pair<String, LocalRef>>()

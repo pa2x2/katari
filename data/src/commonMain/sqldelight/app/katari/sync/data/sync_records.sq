@@ -145,3 +145,16 @@ ORDER BY record_key;
 
 clear:
 DELETE FROM sync_records;
+
+-- Whether an earlier connection left records the server had, which a device returning to its account keeps (D066);
+-- a device joining afresh has none until its first push.
+hasSynced:
+SELECT EXISTS(SELECT 1 FROM sync_records WHERE synced = 1);
+
+delete:
+DELETE FROM sync_records
+WHERE record_key = :recordKey;
+
+deleteByLocalRef:
+DELETE FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef;
