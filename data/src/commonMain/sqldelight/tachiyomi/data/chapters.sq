@@ -27,7 +27,8 @@ CREATE TABLE chapters(
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_chapters_entry_id ON chapters(entry_id);
+-- Also finds an entry's last source_order, which a chapter added outside a source refresh (sync) is placed after.
+CREATE INDEX idx_chapters_entry_source_order ON chapters(entry_id, source_order);
 CREATE INDEX idx_chapters_unread_by_entry ON chapters(entry_id, read) WHERE read = 0;
 CREATE INDEX idx_chapters_url ON chapters(url);
 CREATE UNIQUE INDEX idx_chapters_entry_url ON chapters(entry_id, url);
