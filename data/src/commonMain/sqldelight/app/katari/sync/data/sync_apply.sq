@@ -97,11 +97,14 @@ SELECT _id, url, name, chapter_number
 FROM chapters
 WHERE entry_id = :entryId;
 
+-- After the entry's other chapters, in a place none of them holds until a refresh places it: chapters sharing a place
+-- read to a refresh as copies of one chapter.
 insertChapter:
-INSERT INTO chapters(entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch)
+INSERT INTO chapters(entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order)
 VALUES (
     :entryId, :url, :name, :read, :bookmark, :chapterNumber, :scanlator, :dateUpload,
-    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
+    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER),
+    (SELECT coalesce(max(source_order) + 1, 0) FROM chapters WHERE entry_id = :entryId)
 )
 RETURNING _id;
 
