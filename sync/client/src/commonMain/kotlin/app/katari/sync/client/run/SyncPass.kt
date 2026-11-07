@@ -109,6 +109,8 @@ class SyncPass(
             // Also how a server that takes connections but never answers is found within a small call's time limit,
             // before a page of records waits the long ones
             val info = client.info()
+            // A server that answers is reachable from now, not only once the run is done, which a large pull makes long
+            connection.reached(synced = false)
             if (state.stopped == SyncStop.SERVER_TOO_OLD && !serverUpdated(info)) return SyncOutcome.IDLE
             stages(client, checkNotNull(state.device), request).also { outcome ->
                 connection.reached(synced = outcome == SyncOutcome.SYNCED)

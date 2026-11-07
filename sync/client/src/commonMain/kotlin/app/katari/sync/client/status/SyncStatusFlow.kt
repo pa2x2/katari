@@ -110,7 +110,8 @@ class SyncStatusFlow(
         return when {
             !state.isLinked || state.stopped != null -> SyncStatus.Activity.Idle
             state.stage == SyncStage.CHOOSING -> SyncStatus.Activity.WaitingForChoices
-            inputs.running -> SyncStatus.Activity.Syncing(progressOf(state))
+            // A run trying again doesn't make a server found unreachable any closer: that shows until one answers
+            inputs.running && unreachableSince == null -> SyncStatus.Activity.Syncing(progressOf(state))
             !inputs.network.hasNetwork -> SyncStatus.Activity.Offline
             inputs.outcome == SyncOutcome.FAILED -> SyncStatus.Activity.Failed(state.lastSyncedAt)
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)

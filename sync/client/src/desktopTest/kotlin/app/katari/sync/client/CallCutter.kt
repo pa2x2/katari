@@ -9,6 +9,7 @@ import okhttp3.Response
 import okio.Buffer
 import okio.BufferedSink
 import java.io.IOException
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
 /** Cuts a device's calls short as a dropped connection would, and counts the pushes that reached the server. */
@@ -27,10 +28,23 @@ internal class CallCutter : Interceptor {
 
     val pushes = AtomicInteger()
 
+    @Volatile
+    private var held: Pair<String, CountDownLatch>? = null
+
+    /**
+     * The next call to [path] waits, as on a server that took the connection and hasn't answered, until the returned
+     * latch is counted down.
+     */
+    fun holdNext(path: String): CountDownLatch = CountDownLatch(1).also { held = path to it }
+
     val client: OkHttpClient = OkHttpClient.Builder().addInterceptor(this).build()
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val path = chain.request().url.encodedPath
+        held?.takeIf { path.endsWith(it.first) }?.let { (_, latch) ->
+            held = null
+            latch.await()
+        }
         val body = chain.request().body
         if (cutNextUpload && chain.request().method == "PUT" && body != null) {
             cutNextUpload = false
