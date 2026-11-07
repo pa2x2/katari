@@ -30,14 +30,14 @@
             <sha256 value="5cad8197d5056c3bcc0fb10b21db9c1a8637aa224b8a080893ba15cac9fd0fc5" origin="intellij-dependencies .sha256"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="image-decoder-android" version="1.0.0">
-         <artifact name="image-decoder-android-1.0.0.aar">
-            <sha256 value="49e12e99c1fe5d64706c3daec94a72955d6794205ed0efb402cabb114d6508b9" origin="image-decoder-1.0.0-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="image-decoder-android" version="1.1.0">
+         <artifact name="image-decoder-android-1.1.0.aar">
+            <sha256 value="74d90675e49b36974b771003ea4441eb1445a5bff0aad5e6dda7ebf64308af3e" origin="image-decoder-1.1.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
-      <component group="io.github.pa2x2" name="image-decoder-jvm" version="1.0.0">
-         <artifact name="image-decoder-jvm-1.0.0.jar">
-            <sha256 value="ab1c81b26510fe91847d607cef0a22d42ad96c066615d7804541b7e63901d972" origin="image-decoder-1.0.0-SHA256SUMS.txt"/>
+      <component group="io.github.pa2x2" name="image-decoder-jvm" version="1.1.0">
+         <artifact name="image-decoder-jvm-1.1.0.jar">
+            <sha256 value="dec76c92ef2ee7dabb4c5c50d5316024167e701f343c25d50ebf9f69b3e128fe" origin="image-decoder-1.1.0-SHA256SUMS.txt"/>
          </artifact>
       </component>
       <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.2">

@@ -53,7 +53,7 @@ firebase-bom = "35.1.0"
 firebase-crashlytics = "3.0.8"
 google-services = "4.5.0"
 icu4j = "79.1"
-image-decoder = "1.0.0"
+image-decoder = "1.1.0"
 injekt = "1.16.1"
 japicmp = "0.27.0"
 # JCEF's API as JetBrains publishes it for the JCEF of the JetBrains Runtime in gradle/mihon.versions.toml, whose
