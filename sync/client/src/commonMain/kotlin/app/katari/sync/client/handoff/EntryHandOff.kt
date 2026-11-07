@@ -6,6 +6,7 @@ import app.katari.sync.client.account.DeviceDirectory
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.merge.newestEdit
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordGroups
@@ -184,7 +185,9 @@ class EntryHandOff(
         }
         val payload = ProgressKind.decode(envelope.payload)
         val edited = newestEdit(ProgressKind.serializer, payload) ?: return null
-        if (edited.device == device) return null
+        // A position recorded when its device set up sync carries no edit time: no device made it, and naming its
+        // placeholder device would ask the server for a device that is never listed.
+        if (edited == Stamped.UNKNOWN_EDIT || edited.device == device) return null
         return IncomingEdit(envelope.key, Candidate(payload.entryKey, edited))
     }
 
