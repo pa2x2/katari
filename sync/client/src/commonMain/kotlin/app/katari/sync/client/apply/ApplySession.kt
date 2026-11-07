@@ -73,7 +73,7 @@ internal class ApplySession(
 
     suspend fun receive(record: SequencedRecord) {
         val envelope = record.record
-        if (failing[envelope.key] == FailedStage.STORING) return holdFailed(record)
+        if (failing[envelope.key] == FailedStage.STORING) return hold(record, HoldReason.FAILED)
         val kind = SyncKinds.named(envelope.kind)
         if (kind == null || envelope.kindVersion != kind.version) return hold(record, HoldReason.UNREADABLE)
         receive(kind, record)
@@ -233,7 +233,7 @@ internal class ApplySession(
             is ApplyOutcome.Held -> {
                 link(kind, key, previousRef)
                 if (outcome.reason == HoldReason.FAILED) {
-                    holdFailed(record ?: storedCopy(key))
+                    hold(record ?: storedCopy(key), HoldReason.FAILED)
                 } else {
                     record?.let { hold(it, outcome.reason) }
                 }
@@ -251,10 +251,6 @@ internal class ApplySession(
             database.sync_pendingQueries.release(held.record_key)
             reapply(held.record_key, held)
         }
-    }
-
-    private suspend fun holdFailed(record: SequencedRecord) {
-        hold(record, HoldReason.FAILED, failedOn = appVersion)
     }
 
     /**
@@ -305,7 +301,6 @@ internal class ApplySession(
         record: SequencedRecord,
         reason: HoldReason,
         waitsFor: String? = null,
-        failedOn: String? = null,
     ) {
         database.sync_pendingQueries.hold(
             recordKey = record.record.key,
@@ -314,7 +309,7 @@ internal class ApplySession(
             waitsFor = waitsFor,
             receivedAt = now(),
             kind = record.record.kind,
-            failedOn = failedOn,
+            heldOn = appVersion.takeIf { reason.waitsForUpdate },
         )
     }
 
