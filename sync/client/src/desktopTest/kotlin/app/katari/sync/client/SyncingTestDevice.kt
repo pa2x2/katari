@@ -19,6 +19,7 @@ import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
 import app.katari.sync.client.run.PushChanges
@@ -94,6 +95,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             local.fileCapture, local.drain, uploads,
             FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
             steps,
+            UngroupedRecords(local.handler),
         ),
         steps,
     )

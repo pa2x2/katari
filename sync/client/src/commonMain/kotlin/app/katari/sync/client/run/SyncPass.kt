@@ -14,6 +14,7 @@ import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.PendingChanges
+import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.server.Refusal
 import app.katari.sync.client.server.SyncFailure
@@ -38,7 +39,9 @@ import tachiyomi.core.common.util.system.logcat
  * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else.
  *
  * A device that is ready runs, in this order:
- * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else.
+ * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else. Records
+ *    stored before an update that keeps their groups get them first ([UngroupedRecords]), a batch at a time, so the
+ *    first migration applied after it doesn't read every record while every other write waits.
  * 2. Every page after its position, then the records held for later, which those pages may have made applicable.
  * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
  *    drained, and every change pushed.
@@ -74,6 +77,7 @@ class SyncPass(
     private val handOff: EntryHandOff,
     private val disconnection: Disconnection,
     private val steps: SyncSteps,
+    private val ungrouped: UngroupedRecords,
 ) {
     /**
      * Runs [request], calling [working] once it is found to have work to do with the server: a run that stops before,
@@ -188,6 +192,7 @@ class SyncPass(
     }
 
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
+        ungrouped.fill()
         if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
         steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
             val from = connection.state().position
