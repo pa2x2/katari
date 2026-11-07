@@ -9,10 +9,10 @@ CREATE TABLE record_changes(
 
 CREATE INDEX record_changes_sequence_index ON record_changes(account_id, sequence);
 
-sequenceOf:
-SELECT sequence
+sequencesOf:
+SELECT change_id, sequence
 FROM record_changes
-WHERE account_id = :accountId AND change_id = :changeId;
+WHERE account_id = :accountId AND change_id IN :changeIds;
 
 insert:
 INSERT INTO record_changes(account_id, change_id, sequence)

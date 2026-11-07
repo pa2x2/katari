@@ -8,25 +8,26 @@ interface RecordStore {
     /** The newest sequence given out in the account, 0 before its first write. */
     fun sequence(accountId: Long): Long
 
-    /** Gives out the account's next sequence. */
-    fun advanceSequence(accountId: Long): Long
+    /** Records [sequence], past the current one, as the newest given out in the account. */
+    fun advanceSequenceTo(accountId: Long, sequence: Long)
 
     /** The highest sequence of a deletion marker dropped from the account, 0 if none was. */
     fun markersDroppedThrough(accountId: Long): Long
 
     fun raiseMarkersDroppedThrough(accountId: Long, through: Long)
 
-    /** The sequence of the stored copy of [key], or null when the account has none. */
-    fun sequenceOf(accountId: Long, key: String): Long?
+    /** The sequences of the stored copies of [keys], by key, leaving out the keys the account holds no copy of. */
+    fun sequencesOf(accountId: Long, keys: Collection<String>): Map<String, Long>
 
-    /** The sequence the change was stored with, or null if the account has no record of applying it. */
-    fun appliedChange(accountId: Long, changeId: String): Long?
+    /** The sequences the changes were stored with, by change id, leaving out the changes the account has no record of. */
+    fun appliedChanges(accountId: Long, changeIds: Collection<String>): Map<String, Long>
 
     /**
-     * Replaces the stored copy of [record]'s key, with the files it lists, remembers its change as applied, and
-     * records [chain] as the account's history chain at [sequence].
+     * Stores [record] as the copy of its key, with the files it lists, remembers its change as applied, and records
+     * [chain] as the account's history chain at [sequence]. [replacing] says the account holds a copy of the key
+     * already, whose listed files are dropped with it.
      */
-    fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray)
+    fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray, replacing: Boolean)
 
     /** The account's history chain at [sequence], or null when it is not kept. */
     fun chainAt(accountId: Long, sequence: Long): ByteArray?

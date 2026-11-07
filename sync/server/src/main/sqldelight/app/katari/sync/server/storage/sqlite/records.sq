@@ -20,10 +20,10 @@ CREATE TABLE records(
 CREATE UNIQUE INDEX records_sequence_index ON records(account_id, sequence);
 CREATE INDEX records_group_index ON records(account_id, record_group) WHERE record_group != '';
 
-sequenceOf:
-SELECT sequence
+sequencesOf:
+SELECT record_key, sequence
 FROM records
-WHERE account_id = :accountId AND record_key = :recordKey;
+WHERE account_id = :accountId AND record_key IN :recordKeys;
 
 upsert:
 INSERT INTO records(

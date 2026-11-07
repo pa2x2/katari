@@ -36,19 +36,26 @@ class RecordPush(
             val before = storage.identityOf(accountId)
             val caughtUp = request.after == before.sequence &&
                 (request.afterChain.isEmpty() || request.afterChain == before.chain)
+            // Looked up for the whole push at once, then kept up to date with its own writes, which a later record
+            // with the same key or change id sees.
+            val applied = storage.records.appliedChanges(accountId, request.records.map { it.changeId }).toMutableMap()
+            val stored = storage.records.sequencesOf(accountId, request.records.map { it.key }).toMutableMap()
+            var sequence = before.sequence
+            var chain = checkNotNull(storage.chainAt(accountId, sequence))
             val results = request.records.map { record ->
-                val applied = storage.records.appliedChange(accountId, record.changeId)
-                if (applied != null) return@map PushResult(record.changeId, PushOutcome.ACCEPTED, applied)
-                val current = storage.records.sequenceOf(accountId, record.key) ?: 0
+                applied[record.changeId]?.let { return@map PushResult(record.changeId, PushOutcome.ACCEPTED, it) }
+                val current = stored[record.key] ?: 0
                 if (record.basedOn != current) return@map PushResult(record.changeId, PushOutcome.STALE, current)
-                val previous = checkNotNull(storage.chainAt(accountId, storage.records.sequence(accountId)))
-                val sequence = storage.records.advanceSequence(accountId)
-                val chain = HistoryChain.next(previous, sequence, record.key, record.changeId)
+                sequence++
+                chain = HistoryChain.next(chain, sequence, record.key, record.changeId)
                 // Stamped with the device that pushed it, whatever the envelope claims.
-                storage.records.write(accountId, record.copy(device = device.id), sequence, chain)
-                wrote = true
+                storage.records.write(accountId, record.copy(device = device.id), sequence, chain, current != 0L)
+                applied[record.changeId] = sequence
+                stored[record.key] = sequence
                 PushResult(record.changeId, PushOutcome.ACCEPTED, sequence)
             }
+            wrote = sequence != before.sequence
+            if (wrote) storage.records.advanceSequenceTo(accountId, sequence)
             PushResponse(results = results, server = storage.identityOf(accountId), caughtUp = caughtUp)
         }
         if (wrote) changes.announce(accountId, response.server.sequence)

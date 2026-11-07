@@ -41,6 +41,30 @@ class RecordPushTest {
     }
 
     @Test
+    fun `a record later in a push is checked against the records written before it in the same push`(
+        @TempDir dataDirectory: Path,
+    ) {
+        TestServer(dataDirectory).use { server ->
+            val account = server.account()
+            val phone = server.device(account)
+            val cover = server.upload(account, "cover")
+            val created = record("entry:1", basedOn = 0, changeId = "created").copy(files = listOf(cover))
+            val edited = record("entry:1", basedOn = 1, payload = "edited", changeId = "edited")
+
+            phone.push(created, edited, created).results shouldContainExactly listOf(
+                PushResult("created", PushOutcome.ACCEPTED, 1),
+                PushResult("edited", PushOutcome.ACCEPTED, 2),
+                PushResult("created", PushOutcome.ACCEPTED, 1),
+            )
+
+            val page = phone.pull(after = 0).shouldBeInstanceOf<PullOutcome.Page>().page
+            page.records.map { it.sequence to it.record.payload.decodeToString() } shouldContainExactly
+                listOf(2L to "edited")
+            page.records.single().record.files shouldBe emptyList()
+        }
+    }
+
+    @Test
     fun `a push is answered as all the device missed only when nothing else was written since its position`(
         @TempDir dataDirectory: Path,
     ) {

@@ -16,9 +16,8 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
 
     override fun sequence(accountId: Long): Long = accounts.sequence(accountId).executeAsOne()
 
-    override fun advanceSequence(accountId: Long): Long = database.transactionWithResult {
-        accounts.advanceSequence(accountId)
-        sequence(accountId)
+    override fun advanceSequenceTo(accountId: Long, sequence: Long) {
+        accounts.advanceSequenceTo(sequence = sequence, id = accountId)
     }
 
     override fun markersDroppedThrough(accountId: Long): Long =
@@ -28,17 +27,27 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
         accounts.raiseMarkersDroppedThrough(through = through, id = accountId)
     }
 
-    override fun sequenceOf(accountId: Long, key: String): Long? =
-        records.sequenceOf(accountId, key).executeAsOneOrNull()
+    override fun sequencesOf(accountId: Long, keys: Collection<String>): Map<String, Long> =
+        keys.distinct().chunked(MAX_LOOKUP_VALUES).flatMap { chunk ->
+            records.sequencesOf(accountId, chunk) { key, sequence -> key to sequence }.executeAsList()
+        }.toMap()
 
-    override fun appliedChange(accountId: Long, changeId: String): Long? =
-        changes.sequenceOf(accountId, changeId).executeAsOneOrNull()
+    override fun appliedChanges(accountId: Long, changeIds: Collection<String>): Map<String, Long> =
+        changeIds.distinct().chunked(MAX_LOOKUP_VALUES).flatMap { chunk ->
+            changes.sequencesOf(accountId, chunk) { changeId, sequence -> changeId to sequence }.executeAsList()
+        }.toMap()
 
-    override fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray) {
-        database.transaction { writeInTransaction(accountId, record, sequence, chain) }
+    override fun write(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray, replacing: Boolean) {
+        database.transaction { writeInTransaction(accountId, record, sequence, chain, replacing) }
     }
 
-    private fun writeInTransaction(accountId: Long, record: RecordEnvelope, sequence: Long, chain: ByteArray) {
+    private fun writeInTransaction(
+        accountId: Long,
+        record: RecordEnvelope,
+        sequence: Long,
+        chain: ByteArray,
+        replacing: Boolean,
+    ) {
         records.upsert(
             accountId = accountId,
             recordKey = record.key,
@@ -52,7 +61,7 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
             payload = record.payload,
             recordGroup = record.group,
         )
-        files.deleteForRecord(accountId, record.key)
+        if (replacing) files.deleteForRecord(accountId, record.key)
         if (!record.deleted) {
             record.files.forEach { file ->
                 files.insert(
@@ -122,6 +131,11 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
 
     override fun forgetChainBefore(accountId: Long, before: Long) {
         chains.deleteUnusedBefore(accountId, before)
+    }
+
+    private companion object {
+        // Keys per lookup query, well under SQLite's limit on bound values in one statement.
+        const val MAX_LOOKUP_VALUES = 500
     }
 }
 

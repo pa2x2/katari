@@ -58,9 +58,9 @@ SELECT sequence
 FROM accounts
 WHERE _id = :id;
 
-advanceSequence:
+advanceSequenceTo:
 UPDATE accounts
-SET sequence = sequence + 1
+SET sequence = :sequence
 WHERE _id = :id;
 
 markersDroppedThrough:
