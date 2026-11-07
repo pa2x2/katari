@@ -31,7 +31,10 @@ class PlayerScenes {
         openEntry("Sintel")
         // The episode row's other text changes with how much of it was watched.
         tap(By.textStartsWith("9/27/10"))
-        find(By.desc("Lock controls"))
+        // The controls show as the player opens and hide while it buffers and plays, which a busy runner does before
+        // they are first looked for, so they are tapped back once the film's surface is up.
+        find(By.pkg(appId).clazz("android.view.SurfaceView"))
+        showControls()
         device.setOrientationLandscape()
         try {
             settle()
