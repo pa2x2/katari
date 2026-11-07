@@ -39,6 +39,7 @@ import kotlin.time.TimeSource
  * - The app coming to the front: a run that fetches the entry Resume continues first (D052), then pulls and pushes.
  * - While in front: the live channel ([LiveUpdates]).
  * - In the background: the platform's periodic work while background sync is on.
+ * - The first download: the platform's work for it, which shows its progress and goes on when the app leaves the front.
  *
  * None of it runs while the device isn't linked to an account (D001).
  */
@@ -68,6 +69,11 @@ class SyncTriggers(
         val linked = connection.states().map { it.isLinked }.distinctUntilChanged()
         scope.launch { live.wanted(foreground).collectLatest { wanted -> if (wanted) live.listen() } }
         scope.launch { linked.collectLatest { isLinked -> if (isLinked) sendLocalEdits() } }
+        scope.launch {
+            connection.states().map { it.isLinked && it.stage.isFirstDownload }
+                .distinctUntilChanged()
+                .collect { if (it) work.firstDownload(onMetered = preferences.useMobileData.get()) }
+        }
         scope.launch {
             combine(linked, preferences.syncInBackground.changes()) { isLinked, inBackground ->
                 isLinked && inBackground

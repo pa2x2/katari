@@ -93,6 +93,10 @@ object Notifications {
     const val ID_SYNC_QUESTIONS = -901
     const val ID_SYNC_STOPPED = -902
 
+    /** The first download's progress, while it runs. */
+    const val CHANNEL_SYNC_PROGRESS = "sync_progress_channel"
+    const val ID_SYNC_FIRST_DOWNLOAD = -903
+
     /**
      * Notification channel used for Incognito Mode
      */
@@ -244,6 +248,10 @@ object Notifications {
                 },
                 buildNotificationChannel(CHANNEL_SYNC, IMPORTANCE_DEFAULT) {
                     setName(context.stringResource(MR.strings.sync_title))
+                },
+                buildNotificationChannel(CHANNEL_SYNC_PROGRESS, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.sync_progress_channel))
+                    setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.pref_incognito_mode))
