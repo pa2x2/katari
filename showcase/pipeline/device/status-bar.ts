@@ -65,14 +65,25 @@ function windowTrees(device: Device): string {
  * A wiped emulator's System UI sometimes lays the status bar out before the display's cutout is in place, 5 pixels
  * shorter than it does from then on, and keeps it so until the screen next turns. Every still of such a run would differ
  * from another run's. Turning the screen and back has System UI lay the bar out again, and leaves it locked upright.
+ *
+ * The screen turns whatever is in front: the launcher, there after a restore, keeps its home screen upright. Apps choose
+ * their orientation again afterwards, which the player needs to turn to landscape.
  */
 async function relayOutStatusBar(device: Device): Promise<void> {
-  for (const rotation of [1, 0]) {
-    device.shell(`cmd window user-rotation lock ${rotation}`);
-    const deadline = Date.now() + ROTATION_TIMEOUT_MS;
-    while (!device.shell("dumpsys window displays").includes(`mCurrentRotation=ROTATION_${rotation * 90}`)) {
-      if (Date.now() > deadline) throw new Error(`The emulator never turned to rotation ${rotation}`);
-      await sleep(200);
-    }
+  device.shell("cmd window fixed-to-user-rotation enabled");
+  try {
+    await turnTo(device, 1);
+    await turnTo(device, 0);
+  } finally {
+    device.shell("cmd window fixed-to-user-rotation default");
+  }
+}
+
+async function turnTo(device: Device, rotation: number): Promise<void> {
+  device.shell(`cmd window user-rotation lock ${rotation}`);
+  const deadline = Date.now() + ROTATION_TIMEOUT_MS;
+  while (!device.shell("dumpsys window displays").includes(`mCurrentRotation=ROTATION_${rotation * 90}`)) {
+    if (Date.now() > deadline) throw new Error(`The emulator never turned to rotation ${rotation}`);
+    await sleep(200);
   }
 }

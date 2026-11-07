@@ -1,8 +1,8 @@
 name: Showcase
 
-# Recaptures every showcase screenshot and clip from a published release on a freshly wiped emulator, and proposes
-# the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against the
-# `assets` branch, which the website is built from.
+# Recaptures every showcase screenshot and clip from a published release, each group of scenes on a freshly wiped
+# emulator of its own, the groups side by side, and proposes the ones that visibly changed, and the removal of any no
+# scene captures any more, as a pull request against the `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:
@@ -26,35 +26,26 @@ env:
   RUN_NAME: ${{ github.event.release.tag_name || github.ref_name }}
 
 jobs:
-  # Runs the build's dependencies, downloaded content and a third-party APK, so it holds no write access; the
-  # proposal job below publishes what it found.
-  capture:
-    name: Capture
+  # Builds the apps and gathers the content once for the capture jobs. Runs the build's dependencies and downloaded
+  # content, so it holds no write access; the proposal job below publishes what the run found.
+  build:
+    name: Build
     # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
     if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-26.04
-    timeout-minutes: 120
+    timeout-minutes: 60
     permissions:
       # Reads the downloads an earlier run kept.
       actions: read
       contents: read
     outputs:
-      differences: ${{ steps.compare.outputs.differences }}
-    env:
-      # Matches showcase/pipeline/device/emulator.ts.
-      SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
+      downloads-run: ${{ steps.downloads-run.outputs.id }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false
-
-      - name: Checkout published captures
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: assets
-          path: published
           persist-credentials: false
 
       - name: Set up JDK
@@ -76,6 +67,103 @@ jobs:
           cache: npm
           cache-dependency-path: showcase/package-lock.json
 
+      # Upstream sites such as Project Gutenberg go down for hours and Wikimedia limits how often it is asked, so a run
+      # starts from what the last run that downloaded anything kept. It is an artifact rather than an Actions cache: a
+      # release's run can only read caches of its tag and of main, and the build's Gradle caches, written on every push
+      # to upcoming, evict the rest of a repository's caches within hours. Looked up once here, so that every job of
+      # the run restores the same one.
+      - name: Find the showcase downloads to restore
+        id: downloads-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          id="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=showcase-downloads&per_page=1" \
+            --jq '.artifacts[] | select(.expired | not) | .workflow_run.id')"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the showcase downloads
+        id: restore
+        uses: ./.github/actions/restore-showcase-downloads
+        with:
+          run-id: ${{ steps.downloads-run.outputs.id }}
+
+      # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
+      - name: Fetch the showcase content
+        working-directory: showcase
+        run: |
+          npm ci
+          npm run fetch
+          npm run seed
+
+      - name: Build
+        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
+
+      # The benchmark build is minified, so the app's frames in a failed capture's thread dumps read only through its
+      # mapping, which goes along for that.
+      - name: Gather what the capture jobs need
+        run: |
+          set -euo pipefail
+
+          build="$RUNNER_TEMP/showcase-build"
+          mkdir -p "$build"
+          cp app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk "$build/app.apk"
+          cp showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$build/extension.apk"
+          cp showcase/capture/build/outputs/apk/showcase/capture-showcase.apk "$build/capture.apk"
+          cp app/build/outputs/mapping/benchmark/mapping.txt "$build/mapping.txt"
+          cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$build/"
+          cp -r "$KATARI_SHOWCASE_CACHE/served" "$build/"
+
+      - name: Upload what the capture jobs need
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-build
+          path: ${{ runner.temp }}/showcase-build
+          if-no-files-found: error
+          overwrite: true
+
+      - name: List the groups of scenes to capture
+        id: matrix
+        run: echo "matrix=$(node showcase/pipeline/capture-matrix.ts)" >> "$GITHUB_OUTPUT"
+
+      # Also after a failure, so a later run starts from whatever this one managed to download.
+      - name: Keep the showcase downloads the build used
+        if: always() && steps.restore.outcome == 'success'
+        uses: ./.github/actions/keep-used-showcase-downloads
+        with:
+          job: build
+
+  # A group of scenes on a freshly wiped emulator of its own, in a job of its own, so the groups capture side by side.
+  capture:
+    name: Capture ${{ matrix.group }}
+    needs: build
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      # Every group runs to the end, so a failure shows all that failed and the downloads of the rest are kept.
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
+    env:
+      # Matches showcase/pipeline/device/emulator.ts.
+      SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: showcase/package-lock.json
+
       - name: Set up the emulator
         run: |
           set -euo pipefail
@@ -84,9 +172,6 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-
-          sudo apt-get update
-          sudo apt-get install --yes ffmpeg
 
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           # Fed from a process substitution rather than a pipe: the runner ignores SIGPIPE, so once sdkmanager stops
@@ -113,65 +198,110 @@ jobs:
             echo "$tools/bin"
           } >> "$GITHUB_PATH"
 
-      # Outside the checkout, by an absolute path. The runner context that names the runner's temporary folder is not
-      # available to the job's env.
-      - name: Locate the showcase cache
-        run: echo "KATARI_SHOWCASE_CACHE=$RUNNER_TEMP/showcase-cache" >> "$GITHUB_ENV"
+      # Only where the recap clip is recorded, so an Ubuntu mirror that serves it slowly holds up one job.
+      - name: Install ffmpeg
+        if: matrix.records-clip
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
 
-      # Upstream sites such as Project Gutenberg go down for hours and Wikimedia limits how often it is asked, so a run
-      # starts from what the last run that downloaded anything kept. It is an artifact rather than an Actions cache: a
-      # release's run can only read caches of its tag and of main, and the build's Gradle caches, written on every push
-      # to upcoming, evict the rest of a repository's caches within hours.
       - name: Restore the showcase downloads
         id: restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
+        uses: ./.github/actions/restore-showcase-downloads
+        with:
+          run-id: ${{ needs.build.outputs.downloads-run }}
 
-          downloads="$KATARI_SHOWCASE_CACHE/downloads"
-          mkdir -p "$downloads"
-          run="$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=showcase-downloads&per_page=1" \
-            --jq '.artifacts[] | select(.expired | not) | .workflow_run.id')"
-          if [[ -n "$run" ]]; then
-            gh run download "$run" --repo "$GITHUB_REPOSITORY" --name showcase-downloads --dir "$downloads"
-          fi
-          # Written after the restore, so that the files the run reads, whose modification time the download cache renews,
-          # are newer than it and the rest are not.
-          ls "$downloads" > "$RUNNER_TEMP/restored-downloads"
-          echo "Restored $(wc -l < "$RUNNER_TEMP/restored-downloads") downloads${run:+ from run $run}."
-
-      # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
-      - name: Fetch the showcase content
-        working-directory: showcase
-        run: |
-          npm ci
-          npm run fetch
-          npm run seed
-
-      - name: Build
-        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
+      - name: Download the build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: showcase-build
+          path: ${{ runner.temp }}/showcase-build
 
       - name: Capture
-        id: capture
         working-directory: showcase
-        run: npm run capture -- --out "$RUNNER_TEMP/captures"
+        env:
+          BUILD: ${{ runner.temp }}/showcase-build
+          GROUP: ${{ matrix.group }}
+        run: |
+          npm ci
+          npm run capture -- --group "$GROUP" --out "$RUNNER_TEMP/captures" \
+            --app-apk "$BUILD/app.apk" --extension-apk "$BUILD/extension.apk" --capture-apk "$BUILD/capture.apk" \
+            --seed "$BUILD/showcase.tachibk" --served "$BUILD/served"
+
+      # Also after a failure, so a later run starts from whatever this one managed to download, the film the player
+      # streamed included.
+      - name: Keep the showcase downloads the group used
+        if: always() && steps.restore.outcome == 'success'
+        uses: ./.github/actions/keep-used-showcase-downloads
+        with:
+          job: ${{ matrix.group }}
+
+      - name: Upload the captures
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-captures-${{ matrix.group }}
+          path: ${{ runner.temp }}/captures
+          if-no-files-found: error
+          overwrite: true
+
+      # The app's mapping, for the thread dumps among them, is in the showcase-build artifact.
+      - name: Upload what the failed capture left
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-failure-${{ matrix.group }}
+          path: ${{ runner.temp }}/captures
+          if-no-files-found: ignore
+          overwrite: true
+
+  # Combines what the groups captured and compares it with the published captures, and combines the downloads the jobs
+  # used into the ones later runs restore. It runs after a failed capture too, for the downloads.
+  compare:
+    name: Compare
+    needs: [build, capture]
+    if: always() && needs.build.result != 'skipped'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      differences: ${{ steps.compare.outputs.differences }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Restore the showcase downloads
+        uses: ./.github/actions/restore-showcase-downloads
+        with:
+          run-id: ${{ needs.build.outputs.downloads-run }}
+
+      - name: Download the downloads the jobs used
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: showcase-downloads-used-*
+          path: ${{ runner.temp }}/used-downloads
+          merge-multiple: true
 
       - name: Note whether the run changed the downloads
         id: downloads
-        if: always() && steps.restore.outcome == 'success'
         env:
-          CAPTURED: ${{ steps.capture.outcome }}
+          CAPTURED: ${{ needs.capture.result }}
         run: |
           set -euo pipefail
 
           downloads="$KATARI_SHOWCASE_CACHE/downloads"
-          find "$downloads" -name '*.partial' -delete
-          # Once every scene has run, what the run did not read goes, which is how a download sources.ts no longer
-          # needs leaves. A failed run keeps it all, since the scenes after the failure never read theirs.
+          used="$RUNNER_TEMP/used-downloads"
+          mkdir -p "$used"
+          # Once every scene has run, what no job used goes, which is how a download sources.ts no longer needs
+          # leaves. A failed run keeps it all, since the scenes after the failure never read theirs.
           if [[ "$CAPTURED" == success ]]; then
-            find "$downloads" -type f ! -newer "$RUNNER_TEMP/restored-downloads" -delete
+            find "$downloads" -type f -delete
           fi
+          cp -r "$used/." "$downloads/"
           ls "$downloads" > "$RUNNER_TEMP/kept-downloads"
           if cmp -s "$RUNNER_TEMP/restored-downloads" "$RUNNER_TEMP/kept-downloads"; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -179,10 +309,9 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Only when something changed, so the latest one is the one to restore. Also after a failure, so a later run starts
-      # from whatever this one managed to download, the film the player streamed included.
+      # Only when something changed, so the latest one is the one to restore.
       - name: Keep the showcase downloads for later runs
-        if: always() && steps.downloads.outputs.changed == 'true'
+        if: steps.downloads.outputs.changed == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-downloads
@@ -192,30 +321,45 @@ jobs:
           # A rerun of the job replaces what its earlier attempt kept.
           overwrite: true
 
-      - name: Upload what the failed capture left
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Checkout published captures
+        if: needs.capture.result == 'success'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: showcase-failure
+          ref: assets
+          path: published
+          persist-credentials: false
+
+      - name: Download the captures
+        if: needs.capture.result == 'success'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: showcase-captures-*
           path: ${{ runner.temp }}/captures
-          if-no-files-found: ignore
-          overwrite: true
+          merge-multiple: true
 
-      # The benchmark build is minified, so the app's frames in a failure's thread dumps read only through its mapping.
-      - name: Upload the app's mapping for the failure's thread dumps
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - name: Set up Node
+        if: needs.capture.result == 'success'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          name: showcase-failure-mapping
-          path: app/build/outputs/mapping/benchmark/mapping.txt
-          if-no-files-found: ignore
-          overwrite: true
+          node-version: 24
+          cache: npm
+          cache-dependency-path: showcase/package-lock.json
 
+      # The comparison reads a clip's format with ffprobe.
+      - name: Install ffmpeg
+        if: needs.capture.result == 'success'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+
+      # Only once every group has captured: the comparison retires whatever is missing from the captures.
       - name: Compare with the published captures
         id: compare
+        if: needs.capture.result == 'success'
         run: |
           set -euo pipefail
 
+          (cd showcase && npm ci)
           proposal="$RUNNER_TEMP/proposal"
           mkdir -p "$proposal/files"
           node showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" > "$proposal/result.json"
@@ -226,7 +370,7 @@ jobs:
           echo "differences=$(jq '(.changed | length) + (.retired | length)' "$proposal/result.json")" >> "$GITHUB_OUTPUT"
 
       - name: Upload the changed captures
-        if: steps.compare.outputs.differences != '0'
+        if: steps.compare.outputs.differences != '' && steps.compare.outputs.differences != '0'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-proposal
@@ -236,8 +380,8 @@ jobs:
   propose:
     name: Propose the changed captures
     runs-on: ubuntu-26.04
-    needs: capture
-    if: needs.capture.outputs.differences != '0' && github.event.inputs.propose != 'false'
+    needs: compare
+    if: needs.compare.outputs.differences != '' && needs.compare.outputs.differences != '0' && github.event.inputs.propose != 'false'
     permissions:
       contents: write
       pull-requests: write

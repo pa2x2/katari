@@ -30,7 +30,8 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   if (running.length > 0) throw new Error(`Stop the running emulators first: ${running.join(", ")}`);
   // The emulator finds an AVD by its .ini, which avdmanager writes beside the .avd folder.
   const avdIni = join(AVD_HOME, `${AVD}.ini`);
-  if (!existsSync(avdIni)) {
+  // An AVD made before SYSTEM_IMAGE changed would go on booting the image it was made with.
+  if (!existsSync(avdIni) || avdImage() !== SYSTEM_IMAGE) {
     // avdmanager ignores an ANDROID_AVD_HOME that does not exist yet.
     mkdirSync(AVD_HOME, { recursive: true });
     const command = `echo no | avdmanager create avd --force -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE} 2>&1`;
@@ -75,6 +76,15 @@ export async function bootShowcaseEmulator(): Promise<Device> {
   // A fresh device explains full-screen mode over the first app that hides the system bars.
   device.shell("settings put secure immersive_mode_confirmations confirmed");
   return device;
+}
+
+/** The system image the AVD boots, in sdkmanager's notation, or undefined when there is no AVD yet. */
+function avdImage(): string | undefined {
+  const config = join(AVD_HOME, `${AVD}.avd`, "config.ini");
+  if (!existsSync(config)) return undefined;
+  // avdmanager writes it as a folder of the SDK, such as system-images/android-37.0/google_apis/x86_64/.
+  const folder = readFileSync(config, "utf8").match(/^image\.sysdir\.1=(.*)$/m)?.[1];
+  return folder?.replace(/\/$/, "").replaceAll("/", ";");
 }
 
 export async function shutDown(device: Device): Promise<void> {

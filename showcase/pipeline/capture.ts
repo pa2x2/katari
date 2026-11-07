@@ -1,9 +1,11 @@
 /**
- * Captures every showcase still and clip on a freshly wiped emulator, the same way locally and in CI.
+ * Captures the showcase stills and clips, a group of scenes (scenes.ts) at a time, each group on a freshly wiped
+ * emulator. CI runs each group in a job of its own, with --group; locally, the groups run one after another.
  *
  * Setup runs at the real time, because the text recognition models download over HTTPS: it restores the seed backup
- * (seed/generate.ts) into the benchmark build and readies on-page translation. Then the clock moves to the showcase
- * moment and the scenes run. Expects the content server's folder (content/fetch.ts), the seed, and the three APKs built:
+ * (seed/generate.ts) into the benchmark build and, for the translation scenes, readies on-page translation. Then the
+ * clock moves to the showcase moment and the scenes run. Expects the content server's folder (content/fetch.ts), the
+ * seed, and the three APKs built:
  *
  *   ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
  */
@@ -15,7 +17,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { EMULATOR_CONTENT_SERVER } from "../content/content-server.ts";
 import { cacheDir } from "../content/download-cache.ts";
 import { profiles } from "../seed/library-plan.ts";
-import { LIBRARY_UPDATED_AT } from "../seed/showcase-clock.ts";
+import { LIBRARY_UPDATED_AT, SHOWCASE_NOW } from "../seed/showcase-clock.ts";
 import { writeCredits } from "./credits.ts";
 import { attachedSerials, Device } from "./device/adb.ts";
 import { awaitIdle } from "./device/device-idle.ts";
@@ -24,7 +26,16 @@ import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./device/emulat
 import { installOfflineTranslator, startOfflineTranslator } from "./device/offline-translator.ts";
 import { writePreferences } from "./device/shared-preferences.ts";
 import { freezeStatusBar } from "./device/status-bar.ts";
-import { CAPTURE_DIRECTORY, FAILURE_DIRECTORY, runScene, SCENES } from "./scenes.ts";
+import {
+  CAPTURE_DIRECTORY,
+  FAILURE_DIRECTORY,
+  RECAP_SCENE,
+  runScene,
+  SCENE_GROUPS,
+  SCENES,
+  TRANSLATION_SCENES,
+  YEAR_RECAP_OPENED_SCENES,
+} from "./scenes.ts";
 import { encodeForWeb } from "./web-clip.ts";
 
 const APP_ID = "app.katari.benchmark";
@@ -32,6 +43,10 @@ const APP_PREFERENCES = `${APP_ID}_preferences.xml`;
 const RECAP_SHARE_IMAGE = `/data/data/${APP_ID}/cache/shared_image/statistics_recap.png`;
 const SEED_NAME = "showcase.tachibk";
 const SEED_ON_DEVICE = `/sdcard/Download/${SEED_NAME}`;
+// The app's name for the recap of the year so far, which it offers in December, as at the showcase moment.
+const YEAR_RECAP_EDITION = `${new Date(SHOWCASE_NOW).getUTCFullYear()}-so-far`;
+// App state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
+const PERSONAL_PROFILE_ID = profiles.findIndex((profile) => profile.name === "Personal") + 1;
 
 const repository = resolve(import.meta.dirname, "..", "..");
 const { values } = parseArgs({
@@ -48,8 +63,12 @@ const { values } = parseArgs({
       type: "string",
       default: join(repository, "showcase/capture/build/outputs/apk/showcase/capture-showcase.apk"),
     },
+    // Keeps the emulator of the last group running, for --reuse-emulator.
     "keep-emulator": { type: "boolean", default: false },
-    // For working on scenes: runs these, by the class names in scenes.ts and in that order, instead of all of them.
+    // Runs only this group of scenes.ts, as each of CI's capture jobs does.
+    group: { type: "string" },
+    // For working on scenes: runs these, by their class names in scenes.ts, on one emulator in the order the groups list
+    // them. Scenes of different groups then see what the others left, such as reading history.
     scenes: { type: "string" },
     // For working on scenes: uses the emulator a run with --keep-emulator left, already set up, and keeps it again.
     // Reader scenes it ran have added reading history, so history-dependent stills drift from a fresh run's.
@@ -57,43 +76,77 @@ const { values } = parseArgs({
   },
 });
 const out = resolve(values.out);
-const scenes = values.scenes === undefined ? SCENES : SCENES.filter((scene) => values.scenes!.split(",").includes(scene));
-if (scenes.length === 0) throw new Error(`No scene in scenes.ts matches ${values.scenes}`);
+const runs = chosenRuns();
 const keepEmulator = values["keep-emulator"] || values["reuse-emulator"];
+if (values["reuse-emulator"] && runs.length > 1) throw new Error("--reuse-emulator needs --group or --scenes");
 for (const input of [values.seed, values.served, values["app-apk"], values["extension-apk"], values["capture-apk"]]) {
   if (!existsSync(input)) throw new Error(`${input} is missing; see the top of pipeline/capture.ts for how to build it.`);
 }
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
-const device = values["reuse-emulator"] ? reusedEmulator() : await timed("booting the emulator", bootShowcaseEmulator);
-let server: ChildProcess | undefined;
+const server = await startContentServer(values.served);
 try {
-  server = await startContentServer(values.served);
-  if (!values["reuse-emulator"]) await prepare(device);
-  device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
-  await timed("waiting for the device to settle", () => awaitIdle(device));
-  for (const scene of scenes) {
-    // Times shown relative to now, such as "opened 27 minutes ago", would otherwise depend on how long the scenes
-    // before took, and cross a minute in some runs but not in others.
-    pinShowcaseClock(device);
-    await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
-  }
-  device.pull(`${CAPTURE_DIRECTORY}/.`, out);
-  if (scenes.includes("statistics.RecapScenes")) {
-    device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
-    encodeForWeb(join(out, "recap.mp4"));
+  for (const [index, run] of runs.entries()) {
+    await timed(`group ${run.name}`, () => capture(run.scenes, keepEmulator && index === runs.length - 1));
   }
   writeCredits(join(values.served, "catalog.json"), join(out, "credits.json"));
   console.log(out);
-} catch (error) {
-  saveDiagnostics(device);
-  throw error;
 } finally {
-  server?.kill();
-  // A failure to shut down is reported without replacing the error that ended the run.
-  if (!keepEmulator) {
-    await shutDown(device).catch((error) => console.error(`the emulator did not shut down: ${error}`));
+  server.kill();
+}
+
+interface Run {
+  name: string;
+  scenes: string[];
+}
+
+/** The scenes to capture, a list for each emulator in turn. */
+function chosenRuns(): Run[] {
+  if (values.group !== undefined && values.scenes !== undefined) throw new Error("Pass --group or --scenes, not both");
+  if (values.scenes !== undefined) {
+    const scenes = SCENES.filter((scene) => values.scenes!.split(",").includes(scene));
+    if (scenes.length === 0) throw new Error(`No scene in scenes.ts matches ${values.scenes}`);
+    return [{ name: values.scenes, scenes }];
+  }
+  if (values.group !== undefined) {
+    const scenes = SCENE_GROUPS[values.group];
+    if (scenes === undefined) throw new Error(`No group in scenes.ts is called ${values.group}`);
+    return [{ name: values.group, scenes }];
+  }
+  return Object.entries(SCENE_GROUPS).map(([name, scenes]) => ({ name, scenes }));
+}
+
+/** Captures [scenes] on a freshly set up emulator, or on the one --reuse-emulator names, and pulls what they left. */
+async function capture(scenes: string[], keep: boolean): Promise<void> {
+  const reuse = values["reuse-emulator"];
+  const device = reuse ? reusedEmulator() : await timed("booting the emulator", bootShowcaseEmulator);
+  try {
+    if (!reuse) await prepare(device, scenes.some((scene) => TRANSLATION_SCENES.includes(scene)));
+    device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
+    await timed("waiting for the device to settle", () => awaitIdle(device));
+    for (const scene of scenes) {
+      // Times shown relative to now, such as "opened 27 minutes ago", would otherwise depend on how long the scenes
+      // before took, and cross a minute in some runs but not in others.
+      pinShowcaseClock(device);
+      // Every scene starts the app afresh, so it reads this, whatever the scenes before it opened.
+      writePreferences(device, APP_ID, APP_PREFERENCES, {
+        [`__APP_STATE_profile_${PERSONAL_PROFILE_ID}:statistics_last_opened_year_recap`]:
+          YEAR_RECAP_OPENED_SCENES.includes(scene) ? YEAR_RECAP_EDITION : "",
+      });
+      await timed(`capturing ${scene}`, () => runScene(device, APP_ID, scene));
+    }
+    device.pull(`${CAPTURE_DIRECTORY}/.`, out);
+    if (scenes.includes(RECAP_SCENE)) {
+      device.pull(RECAP_SHARE_IMAGE, join(out, "recap-share.png"));
+      encodeForWeb(join(out, "recap.mp4"));
+    }
+  } catch (error) {
+    saveDiagnostics(device);
+    throw error;
+  } finally {
+    // A failure to shut down is reported without replacing the error that ended the run.
+    if (!keep) await shutDown(device).catch((error) => console.error(`the emulator did not shut down: ${error}`));
   }
 }
 
@@ -112,7 +165,8 @@ function saveDiagnostics(device: Device): void {
   console.error(`the device log and any screenshots and reports of the failure are in ${out}`);
 }
 
-async function prepare(device: Device): Promise<void> {
+/** Installs the apps and restores the seed, and readies on-page translation when [translation] scenes will run. */
+async function prepare(device: Device, translation: boolean): Promise<void> {
   useRealClock(device);
   await timed("installing the apps", async () => {
     device.adb("install", "-r", values["app-apk"]);
@@ -122,21 +176,24 @@ async function prepare(device: Device): Promise<void> {
     device.shell(`appops set ${APP_ID} REQUEST_INSTALL_PACKAGES allow`);
     device.adb("install", "-r", values["extension-apk"]);
     device.adb("install", "-r", "-t", values["capture-apk"]);
-    await installOfflineTranslator(device);
-    startOfflineTranslator(device);
+    if (translation) {
+      await installOfflineTranslator(device);
+      startOfflineTranslator(device);
+    }
   });
 
   // The apps just installed keep the system busy for minutes, which slows the screens the seed restore taps through.
   await timed("waiting for the device to settle", () => awaitIdle(device));
   const seedUri = await pushSeed(device);
   await timed("restoring the seed", () => runScene(device, APP_ID, "SeedRestore", { seedUri }));
-  // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
-  await timed("waiting for the device to settle", () => awaitIdle(device));
-  await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
+  if (translation) {
+    // Text recognition is the slowest work a scene waits for, and the restore may have set the system to work again.
+    await timed("waiting for the device to settle", () => awaitIdle(device));
+    await timed("readying on-page translation", () => runScene(device, APP_ID, "translation.TranslationSetup"));
+  }
   writePreferences(device, APP_ID, APP_PREFERENCES, {
-    // Setup reads in incognito, which shows a banner over every screen.
+    // Translation setup reads in incognito, which shows a banner over every screen.
     __APP_STATE_incognito_mode: false,
-    // Library state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
     ...Object.fromEntries(
       profiles.map((_, index) => [`__APP_STATE_profile_${index + 1}:library_update_last_timestamp`, LIBRARY_UPDATED_AT]),
     ),
