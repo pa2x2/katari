@@ -65,9 +65,9 @@
             <sha256 value="e5ad22bea331f376eba0ec915e4017aac677b7ac795a232ccdbf33767a93c069" origin="build-jar.sh"/>
          </artifact>
       </component>
-      <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-10-27-1">
-         <artifact name="libmpv-linux-x86-64-2026-10-27-1.jar">
-            <sha256 value="3babc0ef929542c142802427817d7aadd1aaebaf854338aea3d235d5afb773ea" origin="build-jar.sh"/>
+      <component group="app.katari.libmpv" name="libmpv-linux-x86-64" version="2026-11-07-1">
+         <artifact name="libmpv-linux-x86-64-2026-11-07-1.jar">
+            <sha256 value="2bd6728271f37d531c44e56be8c29fc8652707085a63528f5c57281eb8611f0a" origin="build-jar.sh"/>
          </artifact>
       </component>
    </components>

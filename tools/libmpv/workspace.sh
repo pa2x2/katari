@@ -16,19 +16,19 @@
 # nothing and a higher one would drop distributions the app runs on today.
 GLIBC_FLOOR=2.28
 
-ZIG_VERSION=0.17.0
+ZIG_VERSION=0.17.1
 ZIG_URL=https://ziglang.org/download/$ZIG_VERSION/zig-x86_64-linux-$ZIG_VERSION.tar.xz
-ZIG_SHA256=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026
+ZIG_SHA256=3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a
 
-FORK_VERSION=2026-10-27-1
+FORK_VERSION=2026-11-07-1
 FORK_SOURCES_URL=https://github.com/pa2x2/mpv-android/releases/download/libmpv-$FORK_VERSION/libmpv-android-$FORK_VERSION-sources.tar
-FORK_SOURCES_SHA256=c2458a02a784dd747853d447feee593782f6962c431903296b77cf7cd99edc20
+FORK_SOURCES_SHA256=1c2d9194c324376c7ee1c595623e51612ca5645bf8f5cc19e657a25432e03356
 
 # name version url sha256; what the desktop build needs beyond the fork's sources. zlib, libdrm and libdisplay-info are
 # built in. The rest give only the headers of libraries libmpv takes from the system (see system-libraries.txt): libva
 # for VA-API, PipeWire, PulseAudio and ALSA for audio, EGL for VA-API's zero-copy path into OpenGL.
 SOURCES=(
-    "zlib 1.3.2 https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3"
+    "zlib 1.4 https://github.com/madler/zlib/releases/download/v1.4/zlib-1.4.tar.xz 4f11c512053d7bab8d9e9b89bde3575add3e4c50a383b42ef6cb837035fc5a7c"
     "libdrm 2.4.134 https://dri.freedesktop.org/libdrm/libdrm-2.4.134.tar.xz ac5e74d157830eb8bee44c6a6bf3ad49774ef0dd2a72bdad74a8f20308b52a95"
     "libdisplay-info 0.4.0 https://gitlab.freedesktop.org/-/project/14497/uploads/289d58230e2981b51f23d31faf25bef9/libdisplay-info-0.4.0.tar.xz 43b180baa143e2035654759d84e2b2f5ee77d5fe817c423838c7fe59c0d68459"
     "libva 2.24.1 https://github.com/intel/libva/releases/download/2.24.1/libva-2.24.1.tar.bz2 eec6050b52876f229bd35e9df17cd31a06785e18e6f7990c445b584628483d67"

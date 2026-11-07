@@ -1,6 +1,6 @@
 {
   "uniqueId": "app.katari.libmpv:libmpv-linux-x86-64",
-  "artifactVersion": "0.41.0 (git 0fae46954, 20261023)",
+  "artifactVersion": "0.42.0",
   "name": "mpv",
   "description": "Plays video in the desktop app.",
   "website": "https://mpv.io",
