@@ -10,12 +10,12 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 |---|---|---|
 | A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`) |
 | A screen's top bar, with an action mode while items are selected | `AppBar`, `AppBarTitle`, `UpButton` | `UpButton` takes another icon where "up" closes something, such as a full-screen editor |
-| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile |
+| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs |
 | Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Filled like the bar (`actionMode` for a bar in action mode); never a `Surface` or row of your own under the bar |
 | A large title that collapses on scroll and grows back | `rememberAppBarScrollBehavior`, `rememberAppBarExpander` | The expander grows it back when content returns to its top from code |
 | An app bar that turns into a search field | `SearchToolbar` | |
 | An overlay app bar continued by an action on a row beneath it | `OverlayBarRow` | Such as Search all chapters under a reader's search |
-| The screen's main action, floating | `FloatingActionButton`, `SmallFloatingActionButton` | The small one is a secondary jump stacked above the main one |
+| The screen's main action, floating | `FloatingActionButton`, `SmallFloatingActionButton` | The small one is a secondary jump stacked above the main one; `loading` shows the wait indicator in place of the icon while what the action opens is still being checked |
 | A prompt and its actions raised from the bottom edge, such as unsaved changes | `BottomActionBar` | |
 | Actions on a selection | `SelectionActionBar`, `SelectionAction` | Raised from the bottom in narrow windows, floating from Medium |
 | A screen with no app bar names itself to the window | `ReportScreenTitle` | App bars report their own title |
@@ -47,8 +47,10 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A label naming rows inside one card that can't split into cards | `RowGroupSubheader` | |
 | A line between parts of one row group slice | `RowGroupSeparator` | |
 | A note between row group cards: how the rows below are used, or a card's stand-in when it is empty | `RowGroupNote` | |
+| Another way on between row group cards, such as typing a code instead of scanning it | `RowGroupAction` | A text button lined up with the cards' edge; never a `Button` in a padded `Box` of your own |
 | A group that opens and closes, such as a volume of chapters, a report section or a filter group | `CollapsibleRowGroupHeader`, `CollapsibleRowGroupSubheader` | The subheader is a row inside a card. Optional icon, `error` tone, toned summary and `actions`; `opensPage` for a group shown on a page of its own. Never a clickable row with an arrow of your own |
-| The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits |
+| The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits. `subtitleTone` for a subtitle that reports a state, such as a warning; `iconAlert` for a row that tells of a problem its subtitle explains calmly |
+| Answers to the row above in the same card, such as which side of a conflict to keep | `RowActions` | The last is the proposed one and stands out; they wrap where the card is narrow |
 | An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density |
 | One of a set where any number can be picked | `CheckRow` | |
 | One of a set where only one can be chosen | `ChoiceRow` | |
@@ -86,6 +88,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A dashboard section, its footer and headline tiles | `DashboardCard`, `DashboardCardFooter`, `DashboardTile` | Tiles go in `DashboardTiles` |
 | Headline tiles side by side: one line where they fit, two to a line otherwise | `DashboardTiles` | Never a hand-built `Row` of weighted tiles |
 | Figures laid out in columns inside a card | `FigureGrid` | |
+| A figure, such as a QR code, with the words that go with it, centred | `FigureWithText` | The words go under the figure, or beside it in a short window |
 | Facts on tiles of their own, such as an extension's version and language | `InfoTileRow`, `InfoTile` | |
 | A small rounded label for a value | `Pill` | |
 | A status as a toned label, such as an engine's readiness | `StatusPill` | |
@@ -101,7 +104,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | The app's button, including destructive confirms | `Button` | Style by its `style` enum and `destructive` |
-| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | |
+| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs |
 | Lines between groups of icon buttons in one row, such as a formatting bar | `ButtonGroupDivider` | |
 | An item's actions in a row that scrolls or wraps, such as an entry's library and tracking actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |
@@ -109,6 +112,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A chapter's download state as a button | `DownloadIndicator` | |
 | Resume an entry from its cover or row, with its progress around the edge | `ResumeButton` | |
 | A screen's refresh | `PullRefresh`, `RefreshButton`, `refreshAppBarAction` | Pull to refresh always comes with a button or app bar action |
+| The ways on from a page that explains something before the person starts, such as setting up a feature | `PageActions` | Under its row group cards and as wide as them: the main one filled, the others outlined below it |
 
 ## Choices and input
 
@@ -133,6 +137,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A search field filtering a list or picker, or a query run on demand | `SearchField` | `SearchToolbar` when it lives in the app bar |
 | A frameless multi-line text area | `PlainTextField` | |
 | A frameless editor for formatted text | `RichTextField` | |
+| A camera picture framed for scanning a code, such as another device's QR code | `ScanFrame` | A `ScanFrameNote` stands in the picture's place while there is none, such as a camera that needs permission |
 | A date | `DatePicker`, `DatePickerDialog`, `rememberDatePickerState`, `PickerCell` | |
 | A time | `TimePicker`, `TimePickerDialog`, `rememberTimePickerState` | |
 | A file or folder from the system's picker | `rememberDocumentPicker` | |
@@ -167,6 +172,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
+| A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; `FloatingChip` for a chip that jumps through a list |
+| An offer floating over what is read or watched that stays until taken or dismissed, such as going where another device got to | `OfferNote` | Messages time out; its owner removes it once the offer stops applying |
 | Messages and snackbars | `rememberScreenMessages`, `ScreenMessagesHost`, `ScreenMessagesOverlay`, `AppMessagesHost`, `SnackbarHost` | The overlay is for full-window screens without a `Scaffold` |
 | A tooltip on long press or hover | `Tooltip`, `HoverTooltip`, `PointerTooltip` | `PointerTooltip` follows the pointer over content that names its own |
 | Wait without known progress | `LoadingIndicator` | The app's only indeterminate indicator |
@@ -188,6 +195,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Badges, such as on library covers | `Badge`, `BadgeGroup` | |
 | A count or dot pinned to an icon or navigation item | `NotificationBadge`, `BadgedBox` | |
 | Key caps for a shortcut, such as Ctrl and F | `ShortcutKeyCaps` | |
+| Text as a QR code another device's camera reads, such as a link code | `QrCode` | Dark on a light tile in either theme, as scanners expect |
 
 ## Entries, artwork and avatars
 

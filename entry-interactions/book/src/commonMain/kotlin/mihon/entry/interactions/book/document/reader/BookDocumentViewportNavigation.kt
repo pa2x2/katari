@@ -20,22 +20,16 @@ internal suspend fun LazyListState.scrollToBookDocumentPosition(
 ) {
     if (index < 0) return
     scrollToItem(index)
-    val layout = snapshotFlow {
+    val (itemSize, viewportStart) = snapshotFlow {
         val info = layoutInfo
-        info.visibleItemsInfo.firstOrNull { it.index == index }?.let { item ->
-            Triple(item.size, info.viewportStartOffset, info.viewportEndOffset)
-        }
+        info.visibleItemsInfo.firstOrNull { it.index == index }?.let { item -> item.size to info.viewportStartOffset }
     }.filterNotNull().first()
-    scrollToItem(
-        index,
-        bookDocumentScrollOffset(document, position, layout.first, layout.second, layout.third),
-    )
+    scrollToItem(index, bookDocumentScrollOffset(document, position, itemSize, viewportStart))
 }
 
 /**
- * Puts the line holding [position] at the top of the viewport. Reading progress is measured at the
- * viewport centre, but a target the reader asked for (a link, a contents entry, an in-session
- * anchor) is where reading continues, so it starts the viewport.
+ * Puts the line holding [position] at the top of the viewport, where reading progress is measured, so a saved place
+ * and a target the reader asked for (a link, a contents entry, an in-session anchor) both start the viewport.
  */
 internal suspend fun LazyListState.scrollToBookDocumentLine(
     section: BookDocumentSection<EntryChapter>,

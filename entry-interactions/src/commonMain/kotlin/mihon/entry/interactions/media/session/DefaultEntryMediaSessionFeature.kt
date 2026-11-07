@@ -13,7 +13,8 @@ import tachiyomi.domain.entry.repository.EntryRepository
 /**
  * Applies the shared consequences of a media runtime's event, in order. Progress is recorded first because downloads,
  * history and tracking react to a child completing, and translate ahead runs after downloads have queued what they
- * fetch. An incognito source records no progress, history or tracking.
+ * fetch; the settled listeners hear last, once everything is recorded. An incognito source records no progress,
+ * history or tracking, and so has nothing for them to send.
  */
 internal class DefaultEntryMediaSessionFeature(
     private val types: EntryMediaSessionTypes,
@@ -25,6 +26,7 @@ internal class DefaultEntryMediaSessionFeature(
     private val tracking: () -> EntryTrackingFeature,
     private val automaticTrackingSynchronizationEnabled: () -> Boolean,
     private val translateAhead: () -> EntryTranslateAhead,
+    private val settledListeners: () -> Set<EntryMediaSessionSettledListener>,
 ) : EntryMediaSessionFeature {
     override fun isApplicable(type: EntryType): Boolean = type in types.mediaSession
 
@@ -41,6 +43,8 @@ internal class DefaultEntryMediaSessionFeature(
         if (recording) recordHistory(event, recorded)
         if (progressed != null && recording && type in types.progress) synchronizeTracking(progressed, recorded)
         if (progressed != null && type in types.translateAhead) translateAhead(progressed)
+        val settled = event is EntryMediaSessionEvent.ActivityRecorded || progressed?.settled == true
+        if (recording && settled) settledListeners().forEach { it.onSettled(event.visibleEntry.id) }
         return EntryMediaSessionResult.Handled
     }
 

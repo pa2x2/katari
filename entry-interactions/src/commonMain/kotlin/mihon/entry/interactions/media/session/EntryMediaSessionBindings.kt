@@ -3,6 +3,7 @@ package mihon.entry.interactions.media.session
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -43,6 +44,7 @@ object EntryMediaSessionBindings {
         tracking: () -> EntryTrackingFeature,
         trackingHost: () -> EntryTrackingHost,
         translateAhead: () -> EntryTranslateAhead,
+        settledListeners: () -> Set<EntryMediaSessionSettledListener>,
     ): EntryMediaSessionFeature = DefaultEntryMediaSessionFeature(
         types = EntryMediaSessionTypes(
             mediaSession = mediaSessionProcessors.keys,
@@ -60,5 +62,13 @@ object EntryMediaSessionBindings {
             trackingHost().automation.isAutomaticProgressSynchronizationEnabled()
         },
         translateAhead = translateAhead,
+        settledListeners = settledListeners,
     )
+}
+
+/** Features that act when media is put down contribute their listeners; a graph may have none. */
+@ContributesTo(AppScope::class)
+interface EntryMediaSessionSettledBindings {
+    @Multibinds(allowEmpty = true)
+    fun settledListeners(): Set<EntryMediaSessionSettledListener>
 }

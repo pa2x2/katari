@@ -21,6 +21,12 @@ interface EntryTrackingAutomation {
         target: Entry,
         tracks: List<EntryTrackingRecord>,
     ): EntryTrackingMigrationPreparationResult
+
+    /**
+     * Whether [prepareMigrationTracks] copies a binding to [service] to the new entry as it is, rather than letting the
+     * service look the new entry up from its source.
+     */
+    fun copiesBindingOnMigration(service: EntryTrackingServiceId): Boolean
 }
 
 sealed interface EntryTrackingAutomaticBindingResult {

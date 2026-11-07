@@ -44,6 +44,7 @@ import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -106,7 +107,7 @@ class EntryChapterDownloads(
                 }
                 // Each tick looks up its chapter row, and the progress shown needn't move more often than this
                 .sampleProgress(200.milliseconds)
-                .catch { error -> logcat(LogPriority.ERROR, error) }
+                .resubscribeOnFailure(this@EntryChapterDownloads)
                 .collect(::updateDownloadState)
         }
     }

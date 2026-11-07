@@ -5,7 +5,6 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -17,9 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.retry
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.category.repository.LibraryCategoryMappingObserver
@@ -40,7 +37,6 @@ import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
 import tachiyomi.domain.source.service.HiddenSourceIds
 import tachiyomi.domain.source.service.SourceManager
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(FlowPreview::class)
 @Inject
@@ -95,17 +91,7 @@ class GetLibraryEntries(
                     is LibraryFavoriteSetObservation.Populated -> observeMembership(observation)
                 }
             }
-            .retry {
-                if (it is NullPointerException) {
-                    delay(0.5.seconds)
-                    true
-                } else {
-                    false
-                }
-            }
-            .catch {
-                this@GetLibraryEntries.logcat(LogPriority.ERROR, it)
-            }
+            .resubscribeOnFailure(this@GetLibraryEntries)
     }
 
     private fun observeMembership(

@@ -80,6 +80,8 @@ class BackupCreator(
                 throw IllegalStateException(context.stringResource(MR.strings.create_backup_file_error))
             }
 
+            // Before any data is read, so nothing the backup holds was changed after it
+            val createdAt = Clock.System.now().toEpochMilliseconds()
             val allProfiles = profileDatabase.getProfiles(includeArchived = true)
             val activeProfile = allProfiles.firstOrNull { it.id == profileStore.currentProfileId }
             val profiles = allProfiles.filter { profile ->
@@ -133,6 +135,7 @@ class BackupCreator(
                     backupProfiles = backupProfiles,
                     activeProfileUuid = activeProfile?.uuid,
                     kitsuScoresNative = true,
+                    createdAt = createdAt,
                 )
                 metadata.backupSources = sourcesBackupCreator(entrySourceKeys + metadata.referencedSourceKeys())
                 writer.writeMetadata(metadata)

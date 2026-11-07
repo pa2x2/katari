@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.RowListScope
@@ -184,13 +185,28 @@ fun RowGroupNote(
     showIcon: Boolean = false,
     tone: ContentTone = ContentTone.Inherit,
 ) {
-    Column(
+    NoteText(
+        text = text,
+        showIcon = showIcon,
+        tone = tone,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = rowGroupTextInset(), vertical = KatariTheme.spacing.s),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-    ) {
-        if (showIcon) Icon(MaterialSymbols.Rounded.Info, contentDescription = null, tone = ContentTone.Secondary)
+    )
+}
+
+/** A note's text, with the info icon beside its first line when [showIcon]. */
+@Composable
+internal fun NoteText(text: String, showIcon: Boolean, tone: ContentTone, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+        if (showIcon) {
+            InlineIcon(
+                MaterialSymbols.Rounded.Info,
+                contentDescription = null,
+                role = TextRole.Supporting,
+                tone = ContentTone.Secondary,
+            )
+        }
         Text(text, role = TextRole.Supporting, tone = tone)
     }
 }
@@ -293,8 +309,11 @@ internal val LocalInDialog = staticCompositionLocalOf { false }
 internal val LocalInRowGroup = staticCompositionLocalOf { false }
 
 @Composable
-internal fun RowIconTile(icon: ImageVector) {
-    Surface(container = SurfaceContainer.SecondaryContainer, shape = KatariTheme.shapes.small) {
+internal fun RowIconTile(icon: ImageVector, alert: Boolean = false) {
+    Surface(
+        container = if (alert) SurfaceContainer.ErrorContainer else SurfaceContainer.SecondaryContainer,
+        shape = KatariTheme.shapes.small,
+    ) {
         Box(modifier = Modifier.size(IconTileSize), contentAlignment = Alignment.Center) {
             Icon(icon, contentDescription = null)
         }

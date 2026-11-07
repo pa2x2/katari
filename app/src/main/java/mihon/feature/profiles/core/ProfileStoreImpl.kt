@@ -1,6 +1,7 @@
 package mihon.feature.profiles.core
 
 import android.app.Application
+import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
@@ -109,6 +110,17 @@ class ProfileStoreImpl(
         return ProfileAwarePreferenceStore.Namespace.isNamespacedKey(key) ||
             key.startsWith(Preference.appStateKey("profile_")) ||
             key.startsWith(Preference.privateKey("profile_"))
+    }
+
+    // The shared store's file holds every profile's preferences too, so its listener hears them all. Shared
+    // preferences hold listeners weakly; the handle keeps this one.
+    override fun watchPreferenceWrites(listener: (PreferenceWrite) -> Unit): AutoCloseable {
+        val preferences = baseStore.sharedPreferences
+        val keyListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key != null) listener(ProfileAwarePreferenceStore.Namespace.preferenceWrite(key))
+        }
+        preferences.registerOnSharedPreferenceChangeListener(keyListener)
+        return AutoCloseable { preferences.unregisterOnSharedPreferenceChangeListener(keyListener) }
     }
 
     fun profileKeys(profileId: Long): Set<String> {

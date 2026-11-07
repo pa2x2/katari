@@ -80,6 +80,7 @@ import mihon.webview.jcef.runtime.JcefRuntime
         AppUpdateBindings::class,
         DataSettingsBindings::class,
         OnboardingBindings::class,
+        SyncBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {

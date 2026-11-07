@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,11 +39,13 @@ import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBinding
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.presentation.kit.dialog.ProgressDialog
 import mihon.presentation.kit.feedback.ScreenMessagesOverlay
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -93,6 +96,20 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
         ContentOverlay(controller, settings, state)
         AppBars(controller, host, settings, state, effectiveReadingMode, menuBounds)
         host.textLayer?.invoke(state.menuVisible, menuBounds)
+        // Under the controls while they show, which cover where it sits
+        val offer = state.progressOffer
+        if (offer != null && !state.menuVisible) {
+            ProgressOfferNote(
+                deviceName = offer.deviceName,
+                place = stringResource(MR.strings.sync_handoff_position_page, offer.chapterName, offer.pageIndex + 1),
+                onGoThere = controller::goToProgressOffer,
+                onDismiss = viewModel::dismissProgressOffer,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .safeDrawingPadding()
+                    .padding(KatariTheme.spacing.l),
+            )
+        }
     }
 
     val onDismissRequest = viewModel::closeDialog

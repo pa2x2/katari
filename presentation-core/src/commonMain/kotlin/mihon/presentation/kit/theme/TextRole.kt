@@ -59,6 +59,9 @@ enum class TextRole {
 
     /** Machine text such as logs, schemas and search syntax, in a monospace face. */
     Code,
+
+    /** A short code the person reads off this screen and types on another device, such as a link code. */
+    TypedCode,
 }
 
 internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
@@ -83,6 +86,10 @@ internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
     TextRole.Display -> typography.displayMedium
     TextRole.Hero -> typography.displayLarge
     TextRole.Code -> typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)
+    TextRole.TypedCode -> typography.headlineMedium.copy(
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Medium,
+    )
 }
 
 /** The colour a role uses unless the caller asks for a tone; [Color.Unspecified] inherits the content colour. */

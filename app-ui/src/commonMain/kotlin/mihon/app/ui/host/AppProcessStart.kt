@@ -2,6 +2,7 @@ package mihon.app.ui.host
 
 import eu.kanade.tachiyomi.crash.CrashPresenter
 import eu.kanade.tachiyomi.crash.UncaughtCrashHandling
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.app.ui.buildinfo.AppBuildType
@@ -80,6 +81,21 @@ object AppProcessStart {
                 preference.set(versionCode)
             },
         )
+    }
+
+    /**
+     * Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits, and
+     * then starts what makes sync run by itself and what tells of it by notification. On a device that doesn't sync,
+     * none of them does anything.
+     */
+    @HostEntryPoint
+    fun startSync(graph: AppProcessGraph) {
+        Migrator.scope.launch {
+            Migrator.await()
+            graph.syncCapture.resume()
+            graph.syncTriggers.start()
+            graph.syncNotices.start()
+        }
     }
 
     /**

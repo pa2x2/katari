@@ -1,0 +1,9 @@
+-- Whether the device holds the person's data in its database, so its first sync asks how to join it with the account's
+-- (D047): a profile of its own, the library, reading history, statistics, categories or tracking.
+hasOwnRows:
+SELECT EXISTS(SELECT 1 FROM profiles WHERE uuid != 'default')
+    OR EXISTS(SELECT 1 FROM entries WHERE favorite = 1)
+    OR EXISTS(SELECT 1 FROM history)
+    OR EXISTS(SELECT 1 FROM activity_sessions)
+    OR EXISTS(SELECT 1 FROM categories WHERE _id != 0)
+    OR EXISTS(SELECT 1 FROM entry_sync);

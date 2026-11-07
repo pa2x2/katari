@@ -1,0 +1,23 @@
+-- One-time invites admins make for new accounts. Not tied to the admin who made one: it creates an account of its own.
+CREATE TABLE invites(
+    -- SHA-256 of the code in its normalised form.
+    code_hash BLOB NOT NULL PRIMARY KEY,
+    expires_at INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO invites(code_hash, expires_at)
+VALUES (:codeHash, :expiresAt);
+
+countUnexpired:
+SELECT count(*)
+FROM invites
+WHERE code_hash = :codeHash AND expires_at > :now;
+
+delete:
+DELETE FROM invites
+WHERE code_hash = :codeHash AND expires_at > :now;
+
+deleteExpired:
+DELETE FROM invites
+WHERE expires_at <= :now;

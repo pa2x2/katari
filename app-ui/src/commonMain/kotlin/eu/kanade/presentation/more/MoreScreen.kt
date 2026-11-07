@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import app.katari.sync.ui.status.SyncRow
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
@@ -43,6 +44,7 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     onClickDownloadQueue: () -> Unit,
+    onClickSync: () -> Unit,
     onClickTracking: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
@@ -124,6 +126,11 @@ fun MoreScreen(
                         icon = MaterialSymbols.Rounded.Download,
                         onPreferenceClick = onClickDownloadQueue,
                     )
+                }
+            }
+            item {
+                RowGroupItem(RowGroupPosition.Middle) {
+                    SyncRow(onClick = onClickSync)
                 }
             }
             item {

@@ -1,0 +1,62 @@
+import kotlin.Boolean;
+
+-- Sync bookkeeping (app/katari/sync/data/*.sq). Nothing here captures changes: the capture triggers are TEMP triggers
+-- each connection installs while sync is on, after migrations have run.
+
+CREATE TABLE sync_state(
+    id INTEGER NOT NULL PRIMARY KEY CHECK(id = 0),
+    enabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    device_id INTEGER,
+    server_url TEXT,
+    server_instance_id TEXT,
+    cursor INTEGER NOT NULL DEFAULT 0,
+    chain TEXT NOT NULL DEFAULT ''
+);
+
+INSERT OR IGNORE INTO sync_state(id) VALUES (0);
+
+CREATE TABLE sync_clock(
+    id INTEGER NOT NULL PRIMARY KEY CHECK(id = 0),
+    seen_physical INTEGER NOT NULL DEFAULT 0,
+    seen_counter INTEGER NOT NULL DEFAULT 0,
+    issued_physical INTEGER NOT NULL DEFAULT 0,
+    issued_counter INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT OR IGNORE INTO sync_clock(id) VALUES (0);
+
+CREATE TABLE sync_outbox(
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    local_ref TEXT NOT NULL,
+    fields INTEGER NOT NULL,
+    record_key TEXT,
+    changed_at INTEGER NOT NULL,
+    seen_physical INTEGER NOT NULL,
+    seen_counter INTEGER NOT NULL
+);
+
+CREATE TABLE sync_records(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    local_ref TEXT,
+    kind_version INTEGER NOT NULL,
+    payload BLOB NOT NULL,
+    deleted INTEGER AS Boolean NOT NULL DEFAULT 0,
+    based_on INTEGER NOT NULL DEFAULT 0,
+    synced INTEGER AS Boolean NOT NULL DEFAULT 0,
+    change_id TEXT
+);
+
+CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
+CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
+
+CREATE TABLE sync_pending(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    record BLOB NOT NULL,
+    reason TEXT NOT NULL,
+    waits_for TEXT,
+    received_at INTEGER NOT NULL
+);
+
+CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;

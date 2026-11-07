@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Spin
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.spinning
 import mihon.presentation.kit.feedback.HoverTooltip
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.theme.ContentTone
@@ -25,6 +27,9 @@ enum class IconButtonStyle { Standard, Filled, Tonal, Outlined }
 enum class IconButtonSize { Standard, Large }
 
 /**
+ * [spin] turns the icon for as long as the work it stands for runs, such as sync's arrows while it syncs, the way the
+ * icon's arrows point.
+ *
  * In a window worked with a mouse, hovering the button shows [contentDescription] as its tooltip, with the keys of
  * [shortcut], the shortcut that does what the button does, unless the button already sits in a tooltip, such as an app
  * bar action's.
@@ -41,6 +46,7 @@ fun IconButton(
     enabled: Boolean = true,
     badgeCount: Int? = null,
     shortcut: KeyboardShortcut? = null,
+    spin: Spin? = null,
 ) {
     val sizedModifier = when (size) {
         IconButtonSize.Standard -> modifier
@@ -49,12 +55,13 @@ fun IconButton(
     // Squares off while pressed
     val shapes = IconButtonDefaults.shapes()
     val content: @Composable () -> Unit = {
+        val iconModifier = if (spin != null) Modifier.spinning(spin) else Modifier
         if (badgeCount != null && badgeCount > 0) {
             BadgedBox(badge = { Badge { Text(badgeCount.toString()) } }) {
-                Icon(icon, contentDescription, tone = tone)
+                Icon(icon, contentDescription, iconModifier, tone = tone)
             }
         } else {
-            Icon(icon, contentDescription, tone = tone)
+            Icon(icon, contentDescription, iconModifier, tone = tone)
         }
     }
     HoverTooltip(contentDescription, shortcut = shortcut) {

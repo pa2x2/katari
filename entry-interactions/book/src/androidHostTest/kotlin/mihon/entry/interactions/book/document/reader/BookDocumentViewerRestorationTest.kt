@@ -21,7 +21,6 @@ internal class BookDocumentViewerRestorationTest : BookDocumentViewerFixture() {
                 position = BookDocumentPosition(item.content.id, offsetWithinBlock),
                 itemSize = 1_000,
                 viewportStartOffset = 0,
-                viewportEndOffset = 800,
             )
 
             val restored = bookDocumentViewerLocation(

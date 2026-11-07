@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.handoff.VideoPlayerProgressOffers
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
@@ -62,6 +63,7 @@ import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
+import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
@@ -120,6 +122,7 @@ internal class VideoPlayerViewModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
     introTimesLookup: IntroTimesLookup,
+    progressOffers: EntryProgressOffers,
     private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -131,6 +134,12 @@ internal class VideoPlayerViewModel(
 
     val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesLookup)
     val seriesSearch = VideoPlayerSeriesSearch(viewModelScope, introTimesLookup)
+    val progressOffers = VideoPlayerProgressOffers(
+        scope = viewModelScope,
+        offers = progressOffers,
+        ready = mutableState,
+        readyStates = mutableState.filterIsInstance<State.Ready>(),
+    )
 
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
@@ -622,7 +631,8 @@ internal class VideoPlayerViewModel(
         )
     }
 
-    fun persistPlayback(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L) {
+    /** [settled] when the player paused or is being left rather than saving as it plays. */
+    fun persistPlayback(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L, settled: Boolean = false) {
         val current = mutableState.value as? State.Ready ?: return
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
@@ -657,6 +667,7 @@ internal class VideoPlayerViewModel(
                             0.0
                         },
                         activity = snapshot.activity,
+                        settled = settled,
                     ),
                 )
             }
@@ -667,6 +678,19 @@ internal class VideoPlayerViewModel(
         playbackSession?.restore(positionMs)
         val current = mutableState.value as? State.Ready ?: return
         mutableState.value = current.copy(resumePositionMs = positionMs.coerceAtLeast(0L))
+    }
+
+    /**
+     * Goes where the shown offer is: another episode plays from where the other device got to, which is its saved
+     * progress now, or the position in this one is returned for the player to seek to.
+     */
+    fun goToProgressOffer(): Long? {
+        val offer = progressOffers.offer.value ?: return null
+        val current = mutableState.value as? State.Ready ?: return null
+        progressOffers.dismiss()
+        if (offer.episodeId == current.chapterId) return offer.positionMs
+        playEpisode(current.visibleEntryId, offer.ownerEntryId, offer.episodeId)
+        return null
     }
 
     fun playPreviousEpisode() {

@@ -78,6 +78,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
@@ -325,7 +326,9 @@ class EntryViewModel(
             val needRefreshChapter = if (mergePresentation.memberIds.size > 1) {
                 membersNeedingRefresh.isNotEmpty()
             } else {
-                chapters.isEmpty()
+                // An entry never fetched here, such as one that arrived by sync with only the chapters read elsewhere,
+                // lists its source's chapters as a merge member does
+                chapters.isEmpty() || !entry.initialized
             }
 
             // Show what we have earlier
@@ -501,8 +504,7 @@ class EntryViewModel(
                         is EntryChildProgressResult.Available -> result.labels
                         is EntryChildProgressResult.Inapplicable -> flowOf(emptyMap())
                     }
-                        .catch { error ->
-                            logcat(LogPriority.ERROR, error)
+                        .resubscribeOnFailure(this@EntryViewModel) {
                             emit(emptyMap())
                         }
                 }

@@ -35,6 +35,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
+import app.katari.sync.ui.question.SyncQuestionsScreen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.components.DownloadedOnlyBannerTone
@@ -68,6 +69,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
+import mihon.app.sync.SyncNavigation
 import mihon.app.ui.host.HomeHost
 import mihon.app.ui.host.HomeLaunchState
 import mihon.entry.interactions.source.EntrySourceNavigation
@@ -519,6 +521,16 @@ class MainActivity : BaseActivity() {
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
+                null
+            }
+            SyncNavigation.ACTION_OPEN_SYNC -> {
+                navigator.popUntilRoot()
+                navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
+                null
+            }
+            SyncNavigation.ACTION_OPEN_SYNC_QUESTIONS -> {
+                navigator.popUntilRoot()
+                navigator.push(SyncQuestionsScreen)
                 null
             }
             LibraryUpdateSettingsNavigation.ACTION_OPEN_SETTINGS -> {

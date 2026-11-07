@@ -93,10 +93,14 @@ class DesktopScreenLifecycleOwner private constructor() :
 
     override fun onDispose(screen: Screen) = destroy()
 
-    /** Clears the ViewModels and ends the lifecycle, for an owner made with [detached] once its content is gone. */
+    /**
+     * Ends the lifecycle and then clears the ViewModels, in Android's order, so content that saves as it stops (the
+     * book reader recording time read) still finds its ViewModels. Also for an owner made with [detached] once its
+     * content is gone.
+     */
     fun destroy() {
-        viewModelStore.clear()
         lifecycle.currentState = Lifecycle.State.DESTROYED
+        viewModelStore.clear()
     }
 
     // Only the navigator destroys a screen, and a destroyed lifecycle can't move again: the outgoing screen's content

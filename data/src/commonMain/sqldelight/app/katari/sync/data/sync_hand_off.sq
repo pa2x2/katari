@@ -1,0 +1,9 @@
+-- What a device picked up after another one should check first (D052): the entry its Resume continues.
+lastReadEntry:
+SELECT chapters.entry_id
+FROM history
+JOIN chapters ON chapters._id = history.chapter_id
+JOIN entries ON entries._id = chapters.entry_id
+WHERE entries.profile_id = :profileId
+ORDER BY history.last_read DESC
+LIMIT 1;

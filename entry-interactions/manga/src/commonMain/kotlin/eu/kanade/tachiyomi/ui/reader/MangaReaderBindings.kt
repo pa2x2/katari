@@ -25,6 +25,7 @@ import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
+import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import mihon.entry.interactions.reader.image.export.ReaderImageExport
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.source.EntryWebViewFeature
@@ -110,6 +111,7 @@ object MangaReaderBindings {
         networkConnectivity: NetworkConnectivity,
         powerSource: PowerSource,
         pageImageExport: ReaderImageExport,
+        progressOffers: EntryProgressOffers,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = ReaderViewModel(
             savedState = extras.createSavedStateHandle(),
@@ -145,6 +147,7 @@ object MangaReaderBindings {
             networkConnectivity = networkConnectivity,
             powerSource = powerSource,
             pageImageExport = pageImageExport,
+            progressOffers = progressOffers,
         )
     }
 }

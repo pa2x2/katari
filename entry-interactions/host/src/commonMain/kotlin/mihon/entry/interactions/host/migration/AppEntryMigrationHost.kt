@@ -241,6 +241,17 @@ internal class AppEntryMigrationHost(
                 handler.await(inTransaction = true) {
                     replayResult(transition)?.let { return@await it }
                     validate(transition)
+                    // Recorded before the entries change, so sync captures the target's library state from before
+                    // the migration; a migration question answered elsewhere may put it back
+                    entry_migration_operationsQueries.insert(
+                        operationId = transition.operationId,
+                        intentFingerprint = transition.intentFingerprint,
+                        profileId = profileId,
+                        sourceEntryId = transition.expectedSource.id,
+                        targetEntryId = transition.expectedTarget.id,
+                        mode = transition.mode.name,
+                        createdAt = clockMillis(),
+                    )
                     transition.sourceUpdate?.let { updateEntry(profileId, it) }
                     updateEntry(profileId, transition.targetUpdate)
                     transition.targetCategoryIds?.let { categoryIds ->
@@ -266,15 +277,6 @@ internal class AppEntryMigrationHost(
                             }
                         }
                     }
-                    entry_migration_operationsQueries.insert(
-                        operationId = transition.operationId,
-                        intentFingerprint = transition.intentFingerprint,
-                        profileId = profileId,
-                        sourceEntryId = transition.expectedSource.id,
-                        targetEntryId = transition.expectedTarget.id,
-                        mode = transition.mode.name,
-                        createdAt = clockMillis(),
-                    )
                     transition.consequenceRequests.forEach { request ->
                         entry_migration_consequencesQueries.insert(
                             consequenceId = "${transition.operationId}:${request.participantId}",

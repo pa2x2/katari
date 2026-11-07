@@ -80,6 +80,7 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -285,7 +286,7 @@ class UpdatesViewModel(
             downloadRuntime.statusUpdates()
                 // Each tick scans the list for its row, and the progress shown needn't move more often than this
                 .sampleProgress(200.milliseconds)
-                .catch { logcat(LogPriority.ERROR, it) }
+                .resubscribeOnFailure(this@UpdatesViewModel)
                 .collect(this@UpdatesViewModel::updateDownloadState)
         }
     }

@@ -37,6 +37,7 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
             RestoreOptions.fromBooleanArray(
                 it,
                 inputData.getNullableStringArray(PROFILES_KEY)?.filterNotNullTo(mutableSetOf()),
+                inputData.getBoolean(ROLL_BACK_ACCOUNT_KEY, false),
             )
         }
 
@@ -82,5 +83,6 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
         internal const val SYNC_KEY = "sync" // Boolean
         internal const val OPTIONS_KEY = "options" // BooleanArray
         internal const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile
+        internal const val ROLL_BACK_ACCOUNT_KEY = "roll_back_account" // Boolean
     }
 }

@@ -45,6 +45,7 @@ import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.session.model.SourceMigrationGroupSelection
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -100,8 +101,7 @@ class MigrateEntriesViewModel(
             }
         }
         .flatMapLatest(::withProgress)
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@MigrateEntriesViewModel) {
             _events.send(MigrationEntriesEvent.FailedFetchingFavorites)
             emit(emptyList())
         }

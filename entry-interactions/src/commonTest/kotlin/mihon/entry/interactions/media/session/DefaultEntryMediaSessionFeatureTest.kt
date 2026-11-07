@@ -44,6 +44,7 @@ class DefaultEntryMediaSessionFeatureTest {
             tracking = { tracking },
             automaticTrackingSynchronizationEnabled = { true },
             translateAhead = { error("Translate ahead does not apply") },
+            settledListeners = { emptySet() },
         )
 
         feature.onEvent(event)

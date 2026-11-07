@@ -4,13 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.theme.ContentTone
 
 @Composable
 fun TextPreferenceWidget(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    subtitleTone: ContentTone = ContentTone.Inherit,
     icon: ImageVector? = null,
+    iconAlert: Boolean = false,
     isProfileSpecific: Boolean = false,
     widget: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
@@ -21,9 +24,11 @@ fun TextPreferenceWidget(
         modifier = modifier.preferenceHighlight(),
         subtitle = subtitle,
         icon = icon,
+        iconAlert = iconAlert,
         trailing = widget,
         titleSuffix = profileSpecificSuffix(isProfileSpecific),
         subtitleMaxLines = SUBTITLE_MAX_LINES,
+        subtitleTone = subtitleTone,
         enabled = enabled,
         onClick = onPreferenceClick,
     )

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import mihon.language.api.tag.LanguageTag
+import tachiyomi.domain.entry.migration.MigrationTranslationChoices
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryTranslationLanguages
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
@@ -91,10 +92,7 @@ internal class DefaultEntryTranslationLanguagesFeature(
         return EntryTranslationLanguagesWriteResult.Applied
     }
 
-    /**
-     * Captures the target language and whether downloads are translated, not the content language: that describes
-     * the source's text, so the Migration target follows the language its own source declares.
-     */
+    /** Captures what [MigrationTranslationChoices] says a migration carries. */
     suspend fun prepareMigration(source: Entry, target: Entry): EntryTranslationLanguagesMigrationPreparation {
         if (source.type != target.type) {
             return EntryTranslationLanguagesMigrationPreparation.TypeMismatch(source.type, target.type)
@@ -104,25 +102,35 @@ internal class DefaultEntryTranslationLanguagesFeature(
             return EntryTranslationLanguagesMigrationPreparation.Inapplicable(inapplicableTypes)
         }
         val stored = repository.getByEntryId(source.id)
-        val targetLanguage = stored?.targetLanguage?.let(LanguageTag::parse)
-        val translateDownloads = stored?.translateDownloads == true
-        if (targetLanguage == null && !translateDownloads) {
-            return EntryTranslationLanguagesMigrationPreparation.NothingToCarry
-        }
+        val carried = MigrationTranslationChoices(
+            targetLanguage = stored?.targetLanguage?.let(LanguageTag::parse)?.value,
+            translateDownloads = stored?.translateDownloads == true,
+        )
+        if (!carried.carriesAnything) return EntryTranslationLanguagesMigrationPreparation.NothingToCarry
         return EntryTranslationLanguagesMigrationPreparation.Prepared(
-            EntryTranslationLanguagesMigrationPayload(target, targetLanguage?.value, translateDownloads),
+            EntryTranslationLanguagesMigrationPayload(target, carried.targetLanguage, carried.translateDownloads),
         )
     }
 
     suspend fun applyMigration(
         payload: EntryTranslationLanguagesMigrationPayload,
     ): EntryTranslationLanguagesWriteResult {
-        payload.targetLanguage?.let(LanguageTag::parse)?.let { language ->
-            val result = setTargetLanguage(payload.target, language)
+        val stored = repository.getByEntryId(payload.target.id)
+        val current = MigrationTranslationChoices(stored?.targetLanguage, stored?.translateDownloads == true)
+        val migrated = MigrationTranslationChoices(
+            payload.targetLanguage,
+            payload.translateDownloads,
+        ).appliedTo(current)
+        if (migrated.targetLanguage != current.targetLanguage) {
+            val result = setTargetLanguage(payload.target, migrated.targetLanguage?.let(LanguageTag::parse))
             if (result != EntryTranslationLanguagesWriteResult.Applied) return result
         }
-        if (!payload.translateDownloads) return EntryTranslationLanguagesWriteResult.Applied
-        return setTranslateDownloads(payload.target, enabled = true)
+        if (migrated.translateDownloads ==
+            current.translateDownloads
+        ) {
+            return EntryTranslationLanguagesWriteResult.Applied
+        }
+        return setTranslateDownloads(payload.target, migrated.translateDownloads)
     }
 }
 

@@ -10,6 +10,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Class used to create cover cache.
@@ -18,7 +19,8 @@ import java.nio.file.StandardCopyOption
  *
  * Whether an entry has a custom cover is answered from an index of the custom cover directory, because image keys
  * and list items ask for every visible cover and a disk check each time would block the main thread. The index is
- * only correct while every custom cover is written and deleted through this class.
+ * only correct while every custom cover is written and deleted through this class, which is also what lets
+ * [watchCustomCovers] hear every change.
  *
  * @param directories where each platform keeps the cached and the custom covers.
  * @constructor creates an instance of the cover cache.
@@ -42,6 +44,8 @@ class CoverCache(
 
     @Volatile
     private var customCoversIndexed = false
+
+    private val customCoverWatchers = CopyOnWriteArrayList<(entryId: Long) -> Unit>()
 
     init {
         scope.launch {
@@ -95,7 +99,7 @@ class CoverCache(
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        onCustomCoverWritten(file)
+        onCustomCoverWritten(entryId, file)
     }
 
     @Throws(IOException::class)
@@ -122,7 +126,7 @@ class CoverCache(
         } finally {
             temporary.delete()
         }
-        onCustomCoverWritten(file)
+        onCustomCoverWritten(entryId, file)
     }
 
     /**
@@ -159,13 +163,21 @@ class CoverCache(
             customCoverNames.remove(file.name)
             if (!customCoversIndexed) deletedWhileIndexing.add(file.name)
         }
+        if (deleted && mangaId != null) customCoverWatchers.forEach { it(mangaId) }
         return deleted
     }
 
-    private fun onCustomCoverWritten(file: File) {
+    /** Calls [onChange] with the entry's ID after each write or deletion of a custom cover, until closed. */
+    fun watchCustomCovers(onChange: (entryId: Long) -> Unit): AutoCloseable {
+        customCoverWatchers += onChange
+        return AutoCloseable { customCoverWatchers -= onChange }
+    }
+
+    private fun onCustomCoverWritten(entryId: Long, file: File) {
         synchronized(customCoverNames) {
             customCoverNames.add(file.name)
             deletedWhileIndexing.remove(file.name)
         }
+        customCoverWatchers.forEach { it(entryId) }
     }
 }

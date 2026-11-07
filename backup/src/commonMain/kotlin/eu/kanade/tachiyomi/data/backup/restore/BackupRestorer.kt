@@ -6,6 +6,7 @@ import dev.zacsweers.metro.AssistedInject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.extensions.BackedUpFileExtensions
+import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -23,6 +24,7 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
 import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
 import eu.kanade.tachiyomi.data.backup.storage.BackupWorkingFiles
+import eu.kanade.tachiyomi.data.backup.stream.BackupSummary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -79,6 +81,7 @@ class BackupRestorer(
     private val fileExtensions: BackedUpFileExtensions,
     private val libraryUpdateSchedule: LibraryUpdateSchedule,
     private val backupCreateSchedule: BackupCreateSchedule,
+    private val syncedRestore: SyncedRestore,
 ) {
     @AssistedFactory
     fun interface Factory {
@@ -129,6 +132,29 @@ class BackupRestorer(
         // another one is switched to meanwhile.
         val targetProfileId = profileStore.currentProfileId
         val summary = backupDecoder.summarize(uri)
+        if (options.rollBackAccount) {
+            syncedRestore.rollingBackAccount(rolledBackProfiles(summary.metadata, targetProfileId)) {
+                restoreSummarized(uri, options, summary, targetProfileId)
+            }
+        } else {
+            syncedRestore.onThisDevice(summary.createdAt) { restoreSummarized(uri, options, summary, targetProfileId) }
+        }
+    }
+
+    /** This device's profiles that [backup] holds, or [targetProfileId] for a backup without profiles. */
+    private suspend fun rolledBackProfiles(backup: Backup, targetProfileId: Long): Set<Long> =
+        if (backup.backupProfiles.isEmpty()) {
+            setOf(targetProfileId)
+        } else {
+            backup.backupProfiles.mapNotNullTo(mutableSetOf()) { profileDatabase.getProfileByUuid(it.profile.uuid)?.id }
+        }
+
+    private suspend fun restoreSummarized(
+        uri: DocumentUri,
+        options: RestoreOptions,
+        summary: BackupSummary,
+        targetProfileId: Long,
+    ) {
         val sourceKeys = RestoredSourceKeys.of(summary, sourceIdentities)
         val backup = sourceKeys.applyTo(summary.metadata)
         val kitsuScoresHalved = summary.hasHalvedKitsuScores()

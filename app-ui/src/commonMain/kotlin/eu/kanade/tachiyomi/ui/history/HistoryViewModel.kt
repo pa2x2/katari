@@ -43,6 +43,7 @@ import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
@@ -86,8 +87,7 @@ class HistoryViewModel(
                 .groupBy { LocalDate.parse(it.localDate) }
                 .mapValues { (_, buckets) -> buckets.sumOf { it.durationMillis } }
         }
-        .catch { error ->
-            logcat(LogPriority.ERROR, error)
+        .resubscribeOnFailure(this@HistoryViewModel) {
             emit(emptyMap())
         }
         .flowOn(Dispatchers.IO)
@@ -100,8 +100,7 @@ class HistoryViewModel(
                     .flatMapLatest { query ->
                         getHistory.subscribe(query ?: "", profileId)
                             .distinctUntilChanged()
-                            .catch { error ->
-                                logcat(LogPriority.ERROR, error)
+                            .resubscribeOnFailure(this@HistoryViewModel) {
                                 _events.send(Event.InternalError)
                             }
                             .map { history -> history.toHistoryUiModels() }

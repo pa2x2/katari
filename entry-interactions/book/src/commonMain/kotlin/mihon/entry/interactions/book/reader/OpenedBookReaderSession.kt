@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.reader
 
 import mihon.book.api.BookLocator
+import mihon.book.api.document.isSameDocumentLocation
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import mihon.entry.interactions.book.state.BookProgressIdentity
@@ -34,7 +35,15 @@ internal class OpenedBookReaderSession(
         own(preparedPublication)
     }
 
+    /** The place the reader opened at, or last saved. */
+    @Volatile
+    private var savedLocator: BookLocator? = initialLocator
+
     suspend fun saveLocation(locator: BookLocator, completed: Boolean = false) {
+        // Coming back to the place it opened at, or saving it again on leaving, isn't reading: saved now, it would
+        // pass for the newest reading and win over reading done on another device since.
+        if (!completed && savedLocator?.isSameDocumentLocation(locator) == true) return
+        savedLocator = locator
         val publicationProgression = preparedPublication.progression(locator)
         val publicationLocator = locator.copy(totalProgression = publicationProgression)
         val timestamp = now()

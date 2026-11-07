@@ -78,6 +78,21 @@ fun BookDocument.locatorAt(position: BookDocumentPosition): BookLocator {
     )
 }
 
+/**
+ * Whether [other] names the same place: the same block and offset, or for locators without one, the same fragments,
+ * text and progression. Total progression is left out, as it depends on how the rest of the publication was measured.
+ */
+fun BookLocator.isSameDocumentLocation(other: BookLocator): Boolean {
+    if (resourceId != other.resourceId) return false
+    val precise = extensions[DOCUMENT_LOCATION_EXTENSION]
+    val otherPrecise = other.extensions[DOCUMENT_LOCATION_EXTENSION]
+    if (precise != null || otherPrecise != null) return precise == otherPrecise
+    return fragments == other.fragments &&
+        textContext == other.textContext &&
+        logicalPosition == other.logicalPosition &&
+        progression == other.progression
+}
+
 private fun BookTextContext.findOffsetIn(text: String): Int? {
     val highlightValue = highlight?.takeIf(String::isNotEmpty)
     if (highlightValue != null) {

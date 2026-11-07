@@ -31,6 +31,7 @@ import mihon.app.di.AppUiScope
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.history.model.activity.HistoryActivityScope
@@ -98,8 +99,7 @@ class HistoryActivityViewModel(
                 }
             }
         }
-        .catch { error ->
-            logcat(LogPriority.ERROR, error)
+        .resubscribeOnFailure(this@HistoryActivityViewModel) {
             emit(null)
         }
         .flowOn(Dispatchers.IO)

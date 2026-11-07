@@ -1,0 +1,95 @@
+import kotlin.Boolean;
+
+-- AUTOINCREMENT because an account id names the account's folder of files, so a deleted account's id must never be
+-- given to a new account.
+CREATE TABLE accounts(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    -- An Argon2id hash in PHC string form.
+    password_hash TEXT NOT NULL,
+    is_admin INTEGER AS Boolean NOT NULL DEFAULT 0,
+    is_disabled INTEGER AS Boolean NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    -- The newest record sequence given out in the account.
+    sequence INTEGER NOT NULL DEFAULT 0,
+    -- The highest sequence of a deletion marker dropped from the account. A pull from before it would miss that
+    -- deletion.
+    markers_dropped_through INTEGER NOT NULL DEFAULT 0
+);
+
+count:
+SELECT count(*)
+FROM accounts;
+
+insert:
+INSERT INTO accounts(username, password_hash, is_admin, created_at)
+VALUES (:username, :passwordHash, :isAdmin, :createdAt);
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+byUsername:
+SELECT _id, username, password_hash, is_admin, is_disabled
+FROM accounts
+WHERE username = :username;
+
+byId:
+SELECT _id, username, password_hash, is_admin, is_disabled
+FROM accounts
+WHERE _id = :id;
+
+ids:
+SELECT _id
+FROM accounts
+ORDER BY _id;
+
+setPasswordHash:
+UPDATE accounts
+SET password_hash = :passwordHash
+WHERE _id = :id;
+
+setDisabled:
+UPDATE accounts
+SET is_disabled = :isDisabled
+WHERE _id = :id;
+
+sequence:
+SELECT sequence
+FROM accounts
+WHERE _id = :id;
+
+advanceSequenceTo:
+UPDATE accounts
+SET sequence = :sequence
+WHERE _id = :id;
+
+markersDroppedThrough:
+SELECT markers_dropped_through
+FROM accounts
+WHERE _id = :id;
+
+raiseMarkersDroppedThrough:
+UPDATE accounts
+SET markers_dropped_through = max(markers_dropped_through, :through)
+WHERE _id = :id;
+
+setAdmin:
+UPDATE accounts
+SET is_admin = :isAdmin
+WHERE _id = :id;
+
+countEnabledAdmins:
+SELECT count(*)
+FROM accounts
+WHERE is_admin = 1 AND is_disabled = 0;
+
+delete:
+DELETE FROM accounts
+WHERE _id = :id;
+
+-- Starts the account's history over at :sequence, past where it was, with nothing before it kept: a pull from any
+-- earlier position is refused as expired.
+restartHistory:
+UPDATE accounts
+SET sequence = :sequence, markers_dropped_through = :sequence
+WHERE _id = :id;

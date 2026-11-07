@@ -195,7 +195,7 @@ class DuplicatePreferences(
         private const val STATUS_WEIGHT_KEY = "extended_duplicate_detection_status_weight"
         private const val CHAPTER_COUNT_WEIGHT_KEY = "extended_duplicate_detection_chapter_count_weight"
         private const val TITLE_WEIGHT_KEY = "extended_duplicate_detection_title_weight"
-        private const val TITLE_EXCLUSION_PATTERNS_KEY = "extended_duplicate_detection_title_exclusion_patterns"
+        const val TITLE_EXCLUSION_PATTERNS_KEY = "extended_duplicate_detection_title_exclusion_patterns"
 
         val profileKeys = setOf(
             EXTENDED_DUPLICATE_DETECTION_ENABLED_KEY,

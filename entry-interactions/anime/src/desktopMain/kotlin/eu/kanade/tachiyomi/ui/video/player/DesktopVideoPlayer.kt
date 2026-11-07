@@ -86,11 +86,12 @@ internal class DesktopVideoPlayer(
         }
         val scope = rememberCoroutineScope()
         val playback = remember(viewModel) {
-            VideoPlayerPlaybackController(scope) { positionMs, durationMs, activeDurationMs ->
+            VideoPlayerPlaybackController(scope) { positionMs, durationMs, activeDurationMs, settled ->
                 viewModel.persistPlayback(
                     positionMs = positionMs,
                     durationMs = durationMs,
                     activeDurationMs = activeDurationMs,
+                    settled = settled,
                 )
             }
         }

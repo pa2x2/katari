@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.sync.ui.handoff.HandOffNote
+import app.katari.sync.ui.handoff.ResumeHandOffNote
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -38,6 +40,7 @@ fun EntryContinueActions(
     visible: Boolean,
     onTargetReached: () -> Unit,
     onContinueReading: () -> Unit,
+    handOffNote: HandOffNote? = null,
 ) {
     val scope = rememberCoroutineScope()
     val targetPosition by remember(listState, continueTargetListIndex, topOcclusionPx) {
@@ -95,12 +98,15 @@ fun EntryContinueActions(
             }
         }
 
+        if (visible && handOffNote != null) ResumeHandOffNote(handOffNote)
+
         FloatingActionButton(
             label = continueLabel(isReading, targetChapter, entryType),
             icon = MaterialSymbols.RoundedFilled.PlayArrow,
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
             visible = visible,
+            loading = handOffNote == HandOffNote.Checking,
         )
     }
 }

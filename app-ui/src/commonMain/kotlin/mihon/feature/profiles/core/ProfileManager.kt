@@ -14,19 +14,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
-import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.defaultHomeScreenTabs
 import mihon.core.metro.AppCoroutineScope
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
+import mihon.domain.profile.ProfileSeedPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.library.service.DuplicatePreferences
-import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
@@ -42,8 +36,7 @@ class ProfileManager(
     private val profilesPreferences: ProfilesPreferences,
     private val legacyPreferenceKeys: LegacyProfilePreferenceKeys,
     private val extensions: ProfileExtensions,
-    private val entryRepository: EntryRepository,
-    private val destructiveRemoval: EntryDestructiveRemovalFeature,
+    private val deletion: ProfileDeletion,
     private val bookReaderFonts: BookDocumentReaderFontLibrary,
     private val libraryUpdateQueue: LibraryUpdateQueue,
     private val libraryUpdateSchedule: LibraryUpdateSchedule,
@@ -143,7 +136,7 @@ class ProfileManager(
         val customPreferences = CustomPreferences(profileStore.profileStore(id))
         customPreferences.homeScreenTabs.set(defaultHomeScreenTabs())
         customPreferences.homeScreenStartupTab.set(HomeScreenTabs.Library)
-        seedDuplicateTitleExclusions(profileId = id)
+        seedPreferences(profileId = id)
         libraryUpdateSchedule.schedule(id)
         return requireNotNull(profileDatabase.getProfileById(id))
     }
@@ -172,23 +165,7 @@ class ProfileManager(
         if (profileId == activeProfileId) return
         val profile = profileDatabase.getProfileById(profileId) ?: return
         if (!profile.isArchived) return
-        when (val result = destructiveRemoval.remove(entryRepository.getAllEntriesByProfile(profileId))) {
-            is EntryDestructiveRemovalResult.Failed -> throw result.cause
-            EntryDestructiveRemovalResult.NoChange -> Unit
-            is EntryDestructiveRemovalResult.Removed -> {
-                result.failures.forEach { failure ->
-                    logcat(LogPriority.ERROR, failure.cause) {
-                        "Profile deletion consequence ${failure.consequence} failed"
-                    }
-                }
-            }
-        }
-        libraryUpdateQueue.stop(profileId)
-        libraryUpdateSchedule.cancel(profileId)
-        profileDatabase.deleteProfile(profileId)
-        profileStore.deleteProfileState(profileId)
-        extensions.deleteSettings(profileId)
-        bookReaderFonts.deleteProfile(profileId)
+        deletion.delete(profileId)
     }
 
     /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */
@@ -214,7 +191,7 @@ class ProfileManager(
         legacyPreferenceKeys.migrate(fromVersion = currentVersion) {
             migrateLegacyProfileUnlockSettings()
             migrateLegacySourceListPreferences()
-            seedDuplicateTitleExclusionsForProfiles(
+            seedPreferencesOf(
                 profileDatabase.getProfiles(includeArchived = true)
                     .map(Profile::id)
                     .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) },
@@ -232,14 +209,12 @@ class ProfileManager(
         }
     }
 
-    private fun seedDuplicateTitleExclusionsForProfiles(profileIds: Iterable<Long>) {
-        profileIds.forEach(::seedDuplicateTitleExclusions)
+    private fun seedPreferencesOf(profileIds: Iterable<Long>) {
+        profileIds.forEach { seedPreferences(it) }
     }
 
-    private fun seedDuplicateTitleExclusions(profileId: Long) {
-        val preference = DuplicatePreferences(profileStore.profileStore(profileId)).titleExclusionPatterns
-        if (preference.isSet()) return
-        preference.set(DuplicateTitleExclusions.defaultPatterns)
+    private fun seedPreferences(profileId: Long) {
+        ProfileSeedPreferences.seed(profileStore.profileStore(profileId))
     }
 
     private fun migrateLegacySourceListPreferences() {

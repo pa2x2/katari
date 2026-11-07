@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.model.Page
+import eu.kanade.tachiyomi.ui.reader.handoff.ReaderProgressOffer
+import eu.kanade.tachiyomi.ui.reader.handoff.readerProgressOffer
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderLoadException
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
@@ -87,6 +89,7 @@ import mihon.entry.interactions.manga.state.mangaProgressState
 import mihon.entry.interactions.manga.state.resumePageIndex
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
+import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.reader.image.export.ReaderImageExport
@@ -118,6 +121,7 @@ import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
@@ -184,6 +188,7 @@ internal class ReaderViewModel(
     networkConnectivity: NetworkConnectivity,
     powerSource: PowerSource,
     private val pageImageExport: ReaderImageExport,
+    private val progressOffers: EntryProgressOffers,
 ) : ViewModel() {
 
     private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
@@ -536,7 +541,10 @@ internal class ReaderViewModel(
                     installViewerSettingBindings(entry)
                     pageSessionLoader.chapterLoader(appContext, entry).also { loader = it }
                 }
-                if (chapterList.isEmpty()) chapterList = loadChapterList(checkNotNull(manga))
+                if (chapterList.isEmpty()) {
+                    chapterList = loadChapterList(checkNotNull(manga))
+                    watchProgressOffers()
+                }
                 val requestedChapter = chapterList.firstOrNull { chapterId == it.chapter.id }
                     ?: throw ReaderLoadException(
                         message = "Requested chapter of id $chapterId not found in chapter list",
@@ -734,6 +742,8 @@ internal class ReaderViewModel(
             return
         }
 
+        // A turned page leaves the offer behind (D053)
+        dismissProgressOffer()
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return
         // With two pages showing, reading has reached the later one
@@ -958,7 +968,7 @@ internal class ReaderViewModel(
         val readingOrder = chapterList.mapNotNull { it.chapter.toDomainChapter()?.toEntryChapter() }
         emitAll(navigationPresenter.observe(manga, readingOrder))
     }
-        .catch { error -> logcat(LogPriority.ERROR, error) { "Failed to observe reader table-of-contents state" } }
+        .resubscribeOnFailure(this@ReaderViewModel)
         .flowOn(Dispatchers.IO)
 
     suspend fun returnToPreviousPosition(): Int? {
@@ -968,6 +978,33 @@ internal class ReaderViewModel(
         val pageIndex = target.pageIndex.coerceIn(0, chapter.pages?.lastIndex ?: return null)
         jumpHistory.dismiss()
         return pageIndex
+    }
+
+    /** Offers where another device got to while reading, for as long as the reader is open (D053). */
+    private fun watchProgressOffers() {
+        val entryIds = chapterList.mapNotNullTo(mutableSetOf()) { it.chapter.manga_id }
+        viewModelScope.launch {
+            progressOffers.offers(entryIds).collect { offer ->
+                val shown = readerProgressOffer(offer, chapterList, getCurrentChapter(), state.value.currentPage - 1)
+                    ?: return@collect
+                mutableState.update { it.copy(progressOffer = shown) }
+            }
+        }
+    }
+
+    fun dismissProgressOffer() {
+        if (state.value.progressOffer != null) mutableState.update { it.copy(progressOffer = null) }
+    }
+
+    /** Goes where the offer is, which the jump history can return from; the page index to show, or null. */
+    suspend fun goToProgressOffer(): Int? {
+        val offer = state.value.progressOffer ?: return null
+        dismissProgressOffer()
+        val chapter = chapterList.firstOrNull { it.chapter.id == offer.chapterId } ?: return null
+        if (chapter != getCurrentChapter()) {
+            if (!jumpHistory.rememberSuccessfulJump { loadAdjacent(chapter, offer.pageIndex) }) return null
+        }
+        return offer.pageIndex.coerceIn(0, chapter.pages?.lastIndex ?: return null)
     }
 
     /**
@@ -1367,6 +1404,8 @@ internal class ReaderViewModel(
         val dialog: Dialog? = null,
         val menuVisible: Boolean = false,
         @IntRange(from = -100, to = 100) val brightnessOverlayValue: Int = 0,
+        /** Where another device got to, offered until it is taken, dismissed or a page is turned. */
+        val progressOffer: ReaderProgressOffer? = null,
     ) {
         val currentChapter: ReaderChapter?
             get() = viewerChapters?.current

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -44,6 +45,7 @@ import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPictureScene
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
@@ -55,6 +57,7 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
 import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
@@ -62,6 +65,8 @@ import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.asEntryCover
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -586,6 +591,25 @@ internal fun VideoPlayerWatchScreen(
             markerSkip = markerSkip,
             onUndoSkip = seekToPosition,
         )
+
+        val progressOffer by viewModel.progressOffers.offer.collectAsState()
+        progressOffer?.takeIf { !isInPictureInPictureMode && !inOwnWindow }?.let { offer ->
+            ProgressOfferNote(
+                deviceName = offer.deviceName,
+                place = stringResource(
+                    MR.strings.sync_handoff_position_time,
+                    offer.episodeName,
+                    formatPlaybackTimestamp(offer.positionMs),
+                ),
+                onGoThere = { viewModel.goToProgressOffer()?.let(seekToPosition) },
+                onDismiss = viewModel.progressOffers::dismiss,
+                // At the top, clear of the controls and subtitles at the bottom
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .safeDrawingPadding()
+                    .padding(KatariTheme.spacing.l),
+            )
+        }
 
         VideoPlayerSettingsLayer(
             current = current,

@@ -1,0 +1,162 @@
+import kotlin.Boolean;
+
+-- Every record this device has synced or is about to: its key, the local row that holds it, and the record as this
+-- device last pushed or merged it.
+CREATE TABLE sync_records(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    -- The JSON array that locates the local row, as in sync_outbox.local_ref; NULL once that row is gone.
+    local_ref TEXT,
+    kind_version INTEGER NOT NULL,
+    -- The payload with its field timestamps, including fields a newer app version added that this one doesn't know.
+    payload BLOB NOT NULL,
+    deleted INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- The server sequence of the copy this record was last pushed as or merged with; 0 before the server had it.
+    based_on INTEGER NOT NULL DEFAULT 0,
+    -- Set once the server has had this record, and kept through a full resync, so a record missing from the server
+    -- can be told apart as deleted elsewhere (set) or not uploaded yet (unset).
+    synced INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- Set while a local change waits to be pushed; a retried push sends the same id.
+    change_id TEXT,
+    -- The payload of the server copy at based_on, as this device last merged it or had it taken; NULL before the
+    -- server had the record. Fields that differ from it in payload were edited on this device since.
+    base_payload BLOB
+);
+
+CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
+CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
+
+getByKey:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE record_key = :recordKey;
+
+getByLocalRef:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef;
+
+-- Detaches whatever other record the local row held, so the row holds only the record it was last stored for.
+detachLocalRef:
+UPDATE sync_records
+SET local_ref = NULL
+WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+
+-- A record holding the row under a key the row no longer has, removed without being marked deleted (D066).
+deleteReplaced:
+DELETE FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+
+storeLocalChange:
+INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id)
+VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :changeId)
+ON CONFLICT(record_key) DO UPDATE SET
+    local_ref = excluded.local_ref,
+    kind_version = excluded.kind_version,
+    payload = excluded.payload,
+    deleted = excluded.deleted,
+    change_id = excluded.change_id;
+
+-- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
+-- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
+-- whose copy here may lack what the server's holds. Changes come a page at a time in
+-- key order, so a push reaches every one even when the first are refused.
+pendingAfter:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE change_id IS NOT NULL
+AND record_key > :afterKey
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'))
+ORDER BY record_key
+LIMIT :limit;
+
+pendingCount:
+SELECT count(*)
+FROM sync_records
+WHERE change_id IS NOT NULL
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'));
+
+-- The server took the change as :sequence. A change made since keeps its own id and stays pending.
+markPushed:
+UPDATE sync_records
+SET based_on = :sequence,
+    synced = 1,
+    base_payload = CASE WHEN change_id = :changeId THEN payload ELSE base_payload END,
+    change_id = CASE WHEN change_id = :changeId THEN NULL ELSE change_id END
+WHERE record_key = :recordKey;
+
+-- A server copy merged in: the record as merged, based on that copy, with a change id when the merge holds edits the
+-- copy lacks and so must be pushed.
+storeMerged:
+INSERT INTO sync_records(
+    record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+)
+VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :basedOn, 1, :changeId, :basePayload)
+ON CONFLICT(record_key) DO UPDATE SET
+    local_ref = excluded.local_ref,
+    kind_version = excluded.kind_version,
+    payload = excluded.payload,
+    deleted = excluded.deleted,
+    based_on = excluded.based_on,
+    synced = 1,
+    change_id = excluded.change_id,
+    base_payload = excluded.base_payload;
+
+setLocalRef:
+UPDATE sync_records
+SET local_ref = :localRef
+WHERE record_key = :recordKey;
+
+byKind:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE kind = :kind
+ORDER BY record_key;
+
+byKinds:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE kind IN :kinds
+ORDER BY kind, record_key;
+
+-- The server holds no copy of the record, as after retention dropped its deletion marker: the next push makes one.
+rebase:
+UPDATE sync_records
+SET based_on = 0
+WHERE record_key = :recordKey;
+
+-- A full resync starts: no copy is known to be on the server until the resync's pull brings it again.
+forgetBases:
+UPDATE sync_records
+SET based_on = 0;
+
+-- The newest server sequence this device holds a copy of, by pushing it or pulling it; often past the position, since a
+-- device's own pushes come back only with its next pull. A server whose sequence is below it lost what it acknowledged.
+newestBase:
+SELECT coalesce(max(based_on), 0) FROM sync_records;
+
+-- After a full resync from a lost or restored server, every record its pull didn't bring is pushed again.
+pushUnseen:
+UPDATE sync_records
+SET change_id = lower(hex(randomblob(16)))
+WHERE based_on = 0 AND change_id IS NULL AND synced = 1;
+
+-- After a full resync that left deletions out, the live records its pull didn't bring that this device had synced
+-- and hasn't changed since: the server dropped their deletion markers, so they were deleted elsewhere.
+deletedElsewhere:
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+FROM sync_records
+WHERE based_on = 0 AND change_id IS NULL AND synced = 1 AND deleted = 0
+ORDER BY record_key;
+
+clear:
+DELETE FROM sync_records;
+
+-- Whether an earlier connection left records the server had, which a device returning to its account keeps (D066);
+-- a device joining afresh has none until its first push.
+hasSynced:
+SELECT EXISTS(SELECT 1 FROM sync_records WHERE synced = 1);
+
+deleteByLocalRef:
+DELETE FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef;

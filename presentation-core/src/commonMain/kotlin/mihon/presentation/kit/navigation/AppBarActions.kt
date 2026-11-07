@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.testTag
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Spin
 import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuDivider
@@ -51,6 +52,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                     tone = action.tone,
                     enabled = action.enabled,
                     badgeCount = action.badgeCount,
+                    spin = action.spin,
                 )
             }
             action.menu?.invoke()
@@ -96,6 +98,8 @@ sealed interface AppBar {
         val tone: ContentTone = ContentTone.Inherit,
         val enabled: Boolean = true,
         val badgeCount: Int? = null,
+        /** Turns the icon, the way its arrows point, while the work it stands for runs; null keeps it still. */
+        val spin: Spin? = null,
         /** A dropdown anchored to this action's button; the caller owns its expanded state. */
         val menu: (@Composable () -> Unit)? = null,
         val shortcut: KeyboardShortcut? = null,

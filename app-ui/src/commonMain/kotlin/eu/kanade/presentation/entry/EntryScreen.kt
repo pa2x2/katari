@@ -42,6 +42,8 @@ import androidx.compose.ui.util.fastMap
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.sync.ui.entry.EntrySync
+import app.katari.sync.ui.question.EntryQuestionBanner
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.ChapterGroupHeader
@@ -104,6 +106,7 @@ fun EntryScreen(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -198,6 +201,7 @@ fun EntryScreen(
             updatesLabel = updatesLabel,
             activity = activity,
             onActivityClicked = onActivityClicked,
+            sync = sync,
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
             navigateUp = navigateUp,
@@ -260,6 +264,7 @@ fun EntryScreen(
             updatesLabel = updatesLabel,
             activity = activity,
             onActivityClicked = onActivityClicked,
+            sync = sync,
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
@@ -321,6 +326,7 @@ private fun EntryScreenSmallImpl(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -491,6 +497,7 @@ private fun EntryScreenSmallImpl(
                         chapterHighlightGeneration++
                     },
                     onContinueReading = continueAction,
+                    handOffNote = sync.handOffNote,
                 )
             }
         },
@@ -560,6 +567,7 @@ private fun EntryScreenSmallImpl(
                         // The activity line shares the action row's item so the continue target's list index, which
                         // counts the items above the chapters, stays the same whether or not the line is shown.
                         Column {
+                            sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                             EntryActionRow(
                                 favorite = state.entry.favorite,
                                 trackingCount = state.trackingCount,
@@ -671,6 +679,7 @@ fun EntryScreenLargeImpl(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -837,6 +846,7 @@ fun EntryScreenLargeImpl(
                         chapterHighlightGeneration++
                     },
                     onContinueReading = continueAction,
+                    handOffNote = sync.handOffNote,
                 )
             }
         },
@@ -887,6 +897,7 @@ fun EntryScreenLargeImpl(
                                 onManageMerge = onManageMergeClicked,
                             )
                         }
+                        sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                         EntryActionRow(
                             favorite = state.entry.favorite,
                             trackingCount = state.trackingCount,

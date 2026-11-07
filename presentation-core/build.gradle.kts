@@ -45,6 +45,8 @@ kotlin {
                 implementation(libs.materialKolor)
                 implementation(libs.composeRichEditor)
                 implementation(libs.swipe)
+                // QR codes are drawn from the module grid ZXing encodes.
+                implementation(libs.zxing.core)
             }
         }
         commonTest {

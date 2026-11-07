@@ -10,7 +10,6 @@ import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.entry.interactions.viewer.EntryChildTransition
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Stable
@@ -342,19 +341,19 @@ internal fun <T> bookDocumentViewerLocation(
             ) ?: progression,
         )
     }
-    val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
-    val layout = visibleItems.firstOrNull {
-        viewportAnchor >= it.offset && viewportAnchor < it.offset + it.size
-    } ?: visibleItems.minByOrNull {
-        abs((it.offset + it.size / 2) - viewportAnchor)
-    }
-        ?: return null
+    // The reading position is the passage at the top of the viewport, where every restore puts it back: opening the
+    // book, another device's place, a link, and a page in paged mode, which starts with it. Under a chapter's
+    // separator, it is the start of the text below.
+    val viewportAnchor = viewportStartOffset
     // A chapter-window update can expose layout indexes from the previous item set for one frame.
     // Keep the index as the normal fast path, but use the stable key when that index has moved.
-    val item = (
-        items.getOrNull(layout.index)?.takeIf { it.key == layout.key }
-            ?: items.firstOrNull { it.key == layout.key }
-        ) as? BookDocumentViewerItem.Block ?: return null
+    val (layout, item) = visibleItems
+        .filter { it.offset + it.size > viewportAnchor }
+        .sortedBy { it.offset }
+        .firstNotNullOfOrNull { layout ->
+            (layout.resolveViewerItem(items) as? BookDocumentViewerItem.Block)?.let { layout to it }
+        }
+        ?: return null
     val fraction = (viewportAnchor - layout.offset).toFloat()
         .div(layout.size.coerceAtLeast(1))
         .coerceIn(0f, 1f)
@@ -424,18 +423,17 @@ internal fun <T> List<BookDocumentViewerItem<T>>.indexOfPosition(
         item.content.id == position.blockId
 }
 
+/** The scroll offset that puts [offsetWithinBlock] of a block [itemSize] tall at the top of the viewport. */
 internal fun blockScrollOffset(
     itemSize: Int,
     blockLength: Int,
     offsetWithinBlock: Int,
     viewportStartOffset: Int,
-    viewportEndOffset: Int,
 ): Int {
     if (itemSize <= 0 || blockLength <= 0) return 0
     val offsetWithinItem =
         (itemSize * offsetWithinBlock.coerceIn(0, blockLength).toFloat() / blockLength).roundToInt()
-    val viewportAnchor = (viewportStartOffset + viewportEndOffset) / 2
-    return offsetWithinItem - viewportAnchor
+    return offsetWithinItem - viewportStartOffset
 }
 
 internal fun bookDocumentScrollOffset(
@@ -443,7 +441,6 @@ internal fun bookDocumentScrollOffset(
     position: BookDocumentPosition,
     itemSize: Int,
     viewportStartOffset: Int,
-    viewportEndOffset: Int,
 ): Int {
     if (document.document.logicalOffset(position) == 0) return 0
     val block = document.block(position.blockId) ?: return 0
@@ -452,6 +449,5 @@ internal fun bookDocumentScrollOffset(
         blockLength = block.logicalLength,
         offsetWithinBlock = position.offsetWithinBlock,
         viewportStartOffset = viewportStartOffset,
-        viewportEndOffset = viewportEndOffset,
     )
 }

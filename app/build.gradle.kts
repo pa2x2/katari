@@ -270,6 +270,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.scriptRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sync.client.path)))
     implementation(dependencies.project(mapOf("path" to projects.data.path)))
     implementation(dependencies.project(mapOf("path" to projects.domain.path)))
     implementation(dependencies.project(mapOf("path" to projects.icons.customMaterialSymbols.path)))

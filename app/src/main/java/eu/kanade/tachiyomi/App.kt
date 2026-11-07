@@ -37,6 +37,7 @@ import mihon.app.di.AppGraph
 import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.app.ui.host.AppProcessStart
+import mihon.app.ui.host.AppVisibility
 import mihon.core.metro.GraphProvider
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
@@ -164,6 +165,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         AppProcessStart.installLogging(graph)
 
         AppProcessStart.runAppUpgradeMigrations(graph)
+        AppProcessStart.startSync(graph)
     }
 
     private fun onCreateCrashProcess(process: String) {
@@ -178,10 +180,12 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart(graph.securityPreferences)
+        AppVisibility.cameToFront(graph)
     }
 
     override fun onStop(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStopped(graph.securityPreferences)
+        AppVisibility.wentToBack(graph)
     }
 
     override fun getPackageName(): String {

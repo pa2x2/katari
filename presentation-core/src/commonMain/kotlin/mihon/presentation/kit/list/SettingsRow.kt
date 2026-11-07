@@ -33,6 +33,9 @@ import mihon.presentation.kit.theme.TextRole
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
  * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
  *
+ * [subtitleTone] marks a subtitle that reports a state by its colour role, such as a warning. [iconAlert] marks the
+ * icon instead, for a row that tells of a problem while its subtitle explains it calmly.
+ *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
  */
@@ -42,10 +45,12 @@ fun SettingsRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    iconAlert: Boolean = false,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     titleSuffix: (@Composable () -> Unit)? = null,
     subtitleMaxLines: Int = Int.MAX_VALUE,
+    subtitleTone: ContentTone = ContentTone.Inherit,
     enabled: Boolean = true,
     role: Role? = null,
     onClick: (() -> Unit)? = null,
@@ -65,8 +70,12 @@ fun SettingsRow(
             leading = {
                 when {
                     leading != null -> leading()
-                    icon != null && LocalInRowGroup.current -> RowIconTile(icon)
-                    icon != null -> Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
+                    icon != null && LocalInRowGroup.current -> RowIconTile(icon, iconAlert)
+                    icon != null -> Icon(
+                        icon,
+                        contentDescription = null,
+                        tone = if (iconAlert) ContentTone.Error else ContentTone.Secondary,
+                    )
                 }
             },
             words = {
@@ -75,6 +84,7 @@ fun SettingsRow(
                     Text(
                         subtitle,
                         role = TextRole.Supporting,
+                        tone = subtitleTone,
                         maxLines = subtitleMaxLines,
                         overflow = TextOverflow.Ellipsis,
                     )

@@ -1,0 +1,8 @@
+-- How far this device's connection to its sync server has got (app/katari/sync/data/sync_state.sq).
+ALTER TABLE sync_state ADD COLUMN account_name TEXT;
+ALTER TABLE sync_state ADD COLUMN stage TEXT NOT NULL DEFAULT 'ready';
+ALTER TABLE sync_state ADD COLUMN stage_target INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sync_state ADD COLUMN stopped TEXT;
+ALTER TABLE sync_state ADD COLUMN stopped_protocol INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE sync_state ADD COLUMN last_synced_at INTEGER;
+ALTER TABLE sync_state ADD COLUMN unreachable_since INTEGER;

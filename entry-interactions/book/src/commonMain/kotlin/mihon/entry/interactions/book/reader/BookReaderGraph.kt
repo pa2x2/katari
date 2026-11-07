@@ -13,6 +13,7 @@ import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeadingLoader
 import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import mihon.entry.interactions.reader.image.export.ReaderImageExport
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
@@ -69,6 +70,7 @@ class BookReaderDependencies internal constructor(
     linkOpener: Lazy<LinkOpener>,
     sharedSettingsRegistry: Lazy<ReaderSharedSettingsRegistry>,
     deviceControls: Lazy<ViewerDeviceControls>,
+    progressOffers: Lazy<EntryProgressOffers>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -96,4 +98,5 @@ class BookReaderDependencies internal constructor(
     internal val linkOpener by linkOpener
     internal val sharedSettingsRegistry by sharedSettingsRegistry
     internal val deviceControls by deviceControls
+    internal val progressOffers by progressOffers
 }

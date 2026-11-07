@@ -274,6 +274,17 @@ internal class MangaReaderController(
         }
     }
 
+    fun goToProgressOffer() {
+        scope.launch {
+            isNavigatingFromControls = true
+            try {
+                viewModel.goToProgressOffer()?.let(::moveToPageIndex)
+            } finally {
+                isNavigatingFromControls = false
+            }
+        }
+    }
+
     fun loadNextChapter() {
         scope.launch { if (viewModel.loadNextChapter()) moveToPageIndex(0) }
     }

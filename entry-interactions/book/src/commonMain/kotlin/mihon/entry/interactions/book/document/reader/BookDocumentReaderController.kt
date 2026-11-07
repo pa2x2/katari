@@ -17,6 +17,8 @@ import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
+import mihon.entry.interactions.book.document.reader.handoff.BookProgressOffer
+import mihon.entry.interactions.book.document.reader.handoff.bookProgressOffer
 import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
@@ -46,6 +48,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
@@ -106,6 +109,10 @@ internal class BookDocumentReaderController(
     var pendingHiddenText by mutableStateOf<String?>(null)
         private set
     var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
+        private set
+
+    /** Where another device got to, offered until it is taken, dismissed or the page moves (D053). */
+    var progressOffer by mutableStateOf<BookProgressOffer?>(null)
         private set
 
     val snackbarHostState = SnackbarHostState()
@@ -169,7 +176,34 @@ internal class BookDocumentReaderController(
         },
     )
 
+    private fun watchProgressOffers() {
+        scope.launch {
+            dependencies.progressOffers.offers(setOf(startupRequest.entryId)).collect { offer ->
+                val state = readerState ?: return@collect
+                bookProgressOffer(
+                    offer = offer,
+                    chapters = state.readingOrder.chapters,
+                    currentChapterId = state.currentChapterId,
+                    progression = visualChapterProgression.floatValue.toDouble(),
+                )?.let { progressOffer = it }
+            }
+        }
+    }
+
+    fun goToProgressOffer() {
+        val offer = progressOffer ?: return
+        progressOffer = null
+        chapterCoordinator.selectNavigationTarget(
+            BookDocumentNavigationTarget(offer.chapter, offer.locator, restorePosition = true),
+        )
+    }
+
+    fun dismissProgressOffer() {
+        progressOffer = null
+    }
+
     fun start() {
+        watchProgressOffers()
         if (startupRequest.entryId < 0L || startupRequest.chapterId < 0L) {
             showError(host.context.stringResource(MR.strings.book_reader_invalid_request))
         } else {
@@ -448,7 +482,6 @@ internal class BookDocumentReaderController(
             profileId = session.entry.profileId,
         ).also { readerFonts = it }
         fonts.refresh()
-        fonts.forgetMissing(requireNotNull(settingBindings).font)
         val chapterGroupTitles = readingOrder.chapters.map(EntryChapter::entryId).distinct()
             .flatMap { entryId -> dependencies.chapterGroupRepository.getByEntryId(entryId) }
             .associate { ChapterGroupId(it.entryId, it.key) to it.title }
@@ -490,9 +523,7 @@ internal class BookDocumentReaderController(
         navigationPresentationJob?.cancel()
         navigationPresentationJob = scope.launch {
             navigationPresenter.observe(entry, readingOrder.chapters)
-                .catch { error ->
-                    logcat(LogPriority.ERROR, error) { "Failed to observe BOOK table-of-contents state" }
-                }
+                .resubscribeOnFailure(this@BookDocumentReaderController)
                 .collect { presentation ->
                     readerState = readerState?.copy(navigationPresentation = presentation)
                 }

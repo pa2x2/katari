@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.Info
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Slider
@@ -101,15 +100,14 @@ fun InfoRow(
     modifier: Modifier = Modifier,
     showIcon: Boolean = true,
 ) {
-    Column(
+    NoteText(
+        text = text,
+        showIcon = showIcon,
+        tone = ContentTone.Inherit,
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = LocalRowInset.current, vertical = KatariTheme.spacing.l),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-    ) {
-        if (showIcon) Icon(MaterialSymbols.Rounded.Info, contentDescription = null, tone = ContentTone.Secondary)
-        Text(text, role = TextRole.Supporting)
-    }
+    )
 }
 
 /**

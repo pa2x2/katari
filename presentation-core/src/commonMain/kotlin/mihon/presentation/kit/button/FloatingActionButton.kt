@@ -1,5 +1,6 @@
 package mihon.presentation.kit.button
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
@@ -8,12 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.KatariTheme
 import androidx.compose.material3.SmallFloatingActionButton as MaterialSmallFloatingActionButton
 
 /**
  * The screen's floating action; collapses to its icon when not [expanded], such as while the list scrolls. It
  * animates out of and back into the screen's end corner as [visible] changes, such as when it applies only to a
- * selection.
+ * selection. [loading] shows the wait indicator in place of [icon] while what the action opens is still being
+ * checked; the action works meanwhile.
  */
 @Composable
 fun FloatingActionButton(
@@ -23,10 +27,17 @@ fun FloatingActionButton(
     modifier: Modifier = Modifier,
     expanded: Boolean = true,
     visible: Boolean = true,
+    loading: Boolean = false,
 ) {
     SmallExtendedFloatingActionButton(
         text = { Text(label) },
-        icon = { Icon(icon, contentDescription = null) },
+        icon = {
+            if (loading) {
+                LoadingIndicator(Modifier.size(KatariTheme.sizes.icon))
+            } else {
+                Icon(icon, contentDescription = null)
+            }
+        },
         onClick = onClick,
         modifier = modifier.animateFloatingActionButton(visible = visible, alignment = Alignment.BottomEnd),
         expanded = expanded,

@@ -10,7 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -73,6 +77,7 @@ class SettingsScreen(
             Destination.TextRecognition.id -> Destination.TextRecognition
             Destination.LibraryUpdates.id -> Destination.LibraryUpdates
             Destination.Profiles.id -> Destination.Profiles
+            Destination.Sync.id -> Destination.Sync
             else -> null
         }.let {
             resolveSettingsStartScreen(
@@ -82,27 +87,29 @@ class SettingsScreen(
             )
         }
 
-        if (!twoPane) {
-            Navigator(
-                screen = initialScreen,
-                onBackPressed = null,
-            ) {
+        // One navigator for both layouts, so crossing between them keeps the open page and what it shows (dialogs
+        // included): its screen area moves between the layouts whole, and its stack takes the other layout's shape.
+        Navigator(
+            screen = initialScreen,
+            onBackPressed = null,
+        ) { navigator ->
+            // The layout the stack is shaped for, saved along with the stack
+            var stackTwoPane by rememberSaveable { mutableStateOf(twoPane) }
+            if (stackTwoPane != twoPane) {
+                navigator.replaceAll(settingsStackFor(twoPane, navigator.items))
+                stackTwoPane = twoPane
+            }
+            val screens = remember(navigator) { movableContentOf { DefaultNavigatorScreenTransition(navigator) } }
+            if (!twoPane) {
                 val pop: () -> Unit = {
-                    if (it.canPop) {
-                        it.pop()
+                    if (navigator.canPop) {
+                        navigator.pop()
                     } else {
                         close()
                     }
                 }
-                CompositionLocalProvider(LocalBackPress provides pop) {
-                    DefaultNavigatorScreenTransition(navigator = it)
-                }
-            }
-        } else {
-            Navigator(
-                screen = initialScreen,
-                onBackPressed = null,
-            ) { navigator ->
+                CompositionLocalProvider(LocalBackPress provides pop) { screens() }
+            } else {
                 val insets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
                 TwoPanes(
                     modifier = Modifier
@@ -113,7 +120,7 @@ class SettingsScreen(
                             SettingsMainScreen.Content(twoPane = true)
                         }
                     },
-                    end = { DefaultNavigatorScreenTransition(navigator = navigator) },
+                    end = { screens() },
                 )
             }
         }
@@ -128,5 +135,6 @@ class SettingsScreen(
         data object TextRecognition : Destination(5)
         data object LibraryUpdates : Destination(6)
         data object Profiles : Destination(7)
+        data object Sync : Destination(8)
     }
 }

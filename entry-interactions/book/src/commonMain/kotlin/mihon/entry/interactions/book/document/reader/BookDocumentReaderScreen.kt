@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,6 +35,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
+import mihon.entry.interactions.book.document.reader.handoff.BookProgressOffer
 import mihon.entry.interactions.book.document.reader.input.BookDocumentKeyCommand
 import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.input.BookDocumentTextSizePill
@@ -79,6 +81,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.chrome.ui.bars.ReaderChrome
 import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBar
 import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
+import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
@@ -127,6 +130,9 @@ internal fun BookDocumentReaderScreen(
     onToggleBookmark: () -> Unit,
     onHideText: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
+    progressOffer: BookProgressOffer?,
+    onGoToProgressOffer: () -> Unit,
+    onDismissProgressOffer: () -> Unit,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
@@ -450,6 +456,23 @@ internal fun BookDocumentReaderScreen(
                         },
                     )
                     BookDocumentTextSizePill(textSizeZoom, Modifier.align(Alignment.Center))
+                    // Under the controls while they show, which cover where it sits
+                    if (progressOffer != null && !state.chromeVisible) {
+                        ProgressOfferNote(
+                            deviceName = progressOffer.deviceName,
+                            place = stringResource(
+                                MR.strings.sync_handoff_position_percent,
+                                progressOffer.chapter.name,
+                                progressOffer.percent,
+                            ),
+                            onGoThere = onGoToProgressOffer,
+                            onDismiss = onDismissProgressOffer,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .safeDrawingPadding()
+                                .padding(KatariTheme.spacing.l),
+                        )
+                    }
                     SnackbarHost(
                         hostState = snackbarHostState,
                         modifier = Modifier

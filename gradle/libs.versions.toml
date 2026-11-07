@@ -7,12 +7,14 @@ androidsvg = "1.4"
 asm = "9.10.1"
 # The version okhttp-brotli brings, so the app keeps one Brotli decoder.
 brotli = "0.1.2"
+bouncycastle = "1.86"
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.11.0"
 androidx-appCompat = "1.8.0"
 androidx-baselineProfile = "1.5.0"
 androidx-benchmark = "1.5.0"
 androidx-biometric = "1.4.0-alpha07"
+androidx-camera = "1.6.2"
 androidx-compose-bom = "2026.10.01"
 androidx-concurrent = "1.3.0"
 androidx-core = "1.19.1"
@@ -67,6 +69,7 @@ kotlinx-collections-immutable = "0.5.2"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-serialization = "1.12.0"
+ktor = "3.6.1"
 ktlint = "1.8.0"
 leakCanary = "2.14"
 libmpv = "2026-10-23-3" # Released from pa2x2/mpv-android; the mpv add-on must have the same glue level
@@ -90,6 +93,7 @@ reorderable = "3.1.0"
 robolectric = "4.17"
 rxJava = "1.3.8"
 shizuku = "13.1.5"
+slf4j = "2.0.20"
 spotless = "8.10.4"
 sqldelight = "2.4.1"
 sqldelight-androidx-driver = "0.2.2"
@@ -101,6 +105,7 @@ unifile = "08f224c8f9"
 valkyrie = "0.5.2"
 voyager = "2.2.21-1.10.3"
 xmlutil = "1.0.2.1"
+zxing = "3.5.4"
 
 [libraries]
 aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
@@ -114,12 +119,16 @@ asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 dex2jar-translator = { module = "de.femtopedia.dex2jar:dex-translator", version.ref = "dex2jar" }
 androidsvg = { module = "com.caverock:androidsvg", version.ref = "androidsvg" }
 brotli-dec = { module = "org.brotli:dec", version.ref = "brotli" }
+bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 japicmp = { module = "com.github.siom79.japicmp:japicmp", version.ref = "japicmp" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version.ref = "androidx-appCompat" }
 androidx-benchmark-macroJunit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "androidx-benchmark" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "androidx-camera" }
+androidx-camera-compose = { module = "androidx.camera:camera-compose", version.ref = "androidx-camera" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidx-camera" }
 androidx-compose-animation = { module = "androidx.compose.animation:animation" }
 androidx-compose-animationGraphics = { module = "androidx.compose.animation:animation-graphics" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom-beta", version.ref = "androidx-compose-bom" }
@@ -222,6 +231,12 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-serialization-jsonOkio = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json-okio", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
 ktlint-bom = { module = "com.pinterest.ktlint:ktlint-bom", version.ref = "ktlint" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
+ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.ref = "ktor" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-htmlBuilder = { module = "io.ktor:ktor-server-html-builder", version.ref = "ktor" }
+ktor-server-testHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
 leakCanary-core = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakCanary" }
 leakCanary-plumber = { module = "com.squareup.leakcanary:plumber-android", version.ref = "leakCanary" }
 logcat = { module = "com.squareup.logcat:logcat", version.ref = "logcat" }
@@ -259,6 +274,7 @@ reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reo
 rxJava = { module = "io.reactivex:rxjava", version.ref = "rxJava" }
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 spotless-gradle = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 sqldelight-androidxDriver = { module = "com.eygraber:sqldelight-androidx-driver", version.ref = "sqldelight-androidx-driver" }
 sqldelight-androidxPaging = { module = "app.cash.sqldelight:androidx-paging3-extensions", version.ref = "sqldelight" }
@@ -278,6 +294,7 @@ voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", vers
 xmlutil-core = { module = "io.github.pdvrieze.xmlutil:core-android", version.ref = "xmlutil" }
 xmlutil-core-multiplatform = { module = "io.github.pdvrieze.xmlutil:core", version.ref = "xmlutil" }
 xmlutil-serialization = { module = "io.github.pdvrieze.xmlutil:serialization", version.ref = "xmlutil" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
@@ -306,6 +323,7 @@ valkyrie = { id = "io.github.composegears.valkyrie", version.ref = "valkyrie" }
 androidx-lifecycle = ["androidx-lifecycle-common", "androidx-lifecycle-process", "androidx-lifecycle-runtime", "androidx-lifecycle-viewmodel", "androidx-lifecycle-viewmodelCompose"]
 coil = ["coil-core", "coil-gif", "coil-compose", "coil-network-okhttp"]
 kotlinx-coroutines = ["kotlinx-coroutines-core", "kotlinx-coroutines-android", "kotlinx-coroutines-guava"]
+ktor-server = ["ktor-server-core", "ktor-server-cio", "ktor-server-compression", "ktor-server-websockets", "ktor-server-htmlBuilder"]
 markdown = ["markdown-core", "markdown-coil"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-brotli", "okhttp-dnsOverHttps", "okhttp-zstd"]
 serialization = ["kotlinx-serialization-json", "kotlinx-serialization-jsonOkio", "kotlinx-serialization-protobuf", "xmlutil-core", "xmlutil-serialization"]

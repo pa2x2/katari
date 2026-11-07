@@ -1,0 +1,14 @@
+-- Facts about the data directory itself, such as the instance id devices use to tell a replaced server apart.
+CREATE TABLE server_meta(
+    name TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+valueOf:
+SELECT value
+FROM server_meta
+WHERE name = :name;
+
+insertIfAbsent:
+INSERT OR IGNORE INTO server_meta(name, value)
+VALUES (:name, :value);

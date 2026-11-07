@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.data.database.DatabaseRepositoryImpl
+import mihon.data.database.TemporarySchema
 import mihon.domain.database.repository.DatabaseRepository
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
@@ -21,7 +22,7 @@ import tachiyomi.data.UpdateStrategyColumnAdapter
 
 /**
  * The database every platform opens the same way. Each platform's graph adds the [SqlDriver] for its own database
- * file, built with `createSqlDriver` from the [DatabaseRepositoryImpl] provided here.
+ * file, built with `createSqlDriver` from the [DatabaseRepositoryImpl] and [TemporarySchema] provided here.
  */
 @BindingContainer
 interface DatabaseBindings {
@@ -36,6 +37,10 @@ interface DatabaseBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun databaseRepositoryImpl(driver: Lazy<SqlDriver>): DatabaseRepositoryImpl = DatabaseRepositoryImpl(driver)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun temporarySchema(): TemporarySchema = TemporarySchema()
 
         @Provides
         @SingleIn(AppScope::class)

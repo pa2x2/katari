@@ -1,0 +1,62 @@
+import app.katari.sync.protocol.file.FileCategory;
+
+-- The files in the data directory's files folder, one row per file, written before the file is moved in place.
+CREATE TABLE stored_files(
+    account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
+    category TEXT AS FileCategory NOT NULL,
+    sha256 TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    -- When the file was last uploaded or claimed. A file no record lists is kept for a day after it.
+    claimed_at INTEGER NOT NULL,
+    PRIMARY KEY (account_id, category, sha256)
+);
+
+upsert:
+INSERT INTO stored_files(account_id, category, sha256, size, claimed_at)
+VALUES (:accountId, :category, :sha256, :size, :claimedAt)
+ON CONFLICT(account_id, category, sha256) DO UPDATE SET
+    size = excluded.size,
+    claimed_at = max(claimed_at, excluded.claimed_at);
+
+claim:
+UPDATE stored_files
+SET claimed_at = max(claimed_at, :claimedAt)
+WHERE account_id = :accountId AND category = :category AND sha256 = :sha256;
+
+unreferencedClaimedBefore:
+SELECT account_id, category, sha256
+FROM stored_files f
+WHERE f.claimed_at < :before
+    AND NOT EXISTS (
+        SELECT 1
+        FROM record_files r
+        WHERE r.account_id = f.account_id AND r.category = f.category AND r.sha256 = f.sha256
+    );
+
+deleteIfUnreferencedClaimedBefore:
+DELETE FROM stored_files
+WHERE account_id = :accountId
+    AND category = :category
+    AND sha256 = :sha256
+    AND claimed_at < :before
+    AND NOT EXISTS (
+        SELECT 1
+        FROM record_files r
+        WHERE r.account_id = stored_files.account_id
+            AND r.category = stored_files.category
+            AND r.sha256 = stored_files.sha256
+    );
+
+referencedTotals:
+SELECT count(*) AS files, coalesce(sum(size), 0) AS bytes
+FROM stored_files f
+WHERE f.account_id = :accountId
+    AND EXISTS (
+        SELECT 1
+        FROM record_files r
+        WHERE r.account_id = f.account_id AND r.category = f.category AND r.sha256 = f.sha256
+    );
+
+deleteAccount:
+DELETE FROM stored_files
+WHERE account_id = :accountId;

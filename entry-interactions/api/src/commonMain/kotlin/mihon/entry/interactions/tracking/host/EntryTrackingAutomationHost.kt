@@ -29,6 +29,8 @@ interface EntryTrackingAutomationHost {
         target: Entry,
         tracks: List<EntryTrack>,
     ): List<EntryTrack>
+
+    fun copiesBindingOnMigration(serviceId: Long): Boolean
 }
 
 sealed interface EntryTrackingHostBindingOutcome {

@@ -53,7 +53,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
     }
 
     @Test
-    fun `visible transitions never produce or complete a content location`() {
+    fun `visible transitions never complete a content location or hide the text beside them`() {
         val section = section("current", listOf("a".repeat(100)))
         val block = BookDocumentViewerItem.Block(section, section.document.blocks.single())
         val next = BookDocumentViewerItem.Transition(
@@ -69,7 +69,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
             "previous-boundary",
         )
 
-        assertNull(
+        val beforeNext = assertNotNull(
             bookDocumentViewerLocation(
                 items = listOf(block, next),
                 visibleItems = listOf(
@@ -80,6 +80,7 @@ internal class BookDocumentViewerDatasetTest : BookDocumentViewerFixture() {
                 viewportEndOffset = 800,
             ),
         )
+        assertTrue(beforeNext.progression < 1f)
         val beforeTerminal = assertNotNull(
             bookDocumentViewerLocation(
                 items = listOf(block, terminal),

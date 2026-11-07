@@ -12,7 +12,8 @@ import java.util.concurrent.Executor
  * leaves writing the file to the background and `commit` waits for it. Listeners are held weakly and hear, on
  * [listenerThread], `null` when an editor cleared the file and then each key it changed, the last change first.
  *
- * [store] must have no other writer, so one instance serves each file.
+ * One instance serves each file. Writes made to [store] itself, as restoring a backup makes them, reach the listeners
+ * too, a key at a time, so whoever watches the file hears every change to it whatever wrote it.
  */
 class FileSharedPreferences(
     val store: DesktopPreferenceStore,
@@ -22,6 +23,15 @@ class FileSharedPreferences(
     // Editors commit one at a time, so one's clear can't land between another's changes
     private val commitLock = Any()
     private val listeners = WeakHashMap<OnSharedPreferenceChangeListener, Unit>()
+
+    // Set on the thread writing an editor's changes, which the listeners hear together once it is done
+    private val editorWriting = ThreadLocal.withInitial { false }
+
+    init {
+        store.addWriteListener { key ->
+            if (!editorWriting.get()) notifyListeners(Change(cleared = false, keys = listOf(key)))
+        }
+    }
 
     override fun getAll(): MutableMap<String, *> = HashMap(store.getAll())
 
@@ -56,12 +66,17 @@ class FileSharedPreferences(
     /** Applies [changes], `null` removing a key, after removing every key when [clear]; returns the keys it changed. */
     private fun write(clear: Boolean, changes: Map<String, Any?>): Change {
         synchronized(commitLock) {
-            val cleared = clear && store.getAll().isNotEmpty()
-            if (cleared) store.clear()
-            val current = store.getAll()
-            val changed = changes.filter { (key, value) -> current[key] != value }.keys.toList()
-            changed.forEach { key -> store.put(key, changes.getValue(key)) }
-            return Change(cleared, changed)
+            editorWriting.set(true)
+            try {
+                val cleared = clear && store.getAll().isNotEmpty()
+                if (cleared) store.clear()
+                val current = store.getAll()
+                val changed = changes.filter { (key, value) -> current[key] != value }.keys.toList()
+                changed.forEach { key -> store.put(key, changes.getValue(key)) }
+                return Change(cleared, changed)
+            } finally {
+                editorWriting.set(false)
+            }
         }
     }
 
