@@ -1,9 +1,13 @@
 package eu.kanade.presentation.browse.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -69,31 +73,34 @@ internal fun ExtensionItem(
     )
 }
 
-/** The extension's icon, shrunk inside a spinner while it is being installed. */
+/**
+ * The extension's icon, which the wait indicator takes the place of while it is being installed. The indicator is a
+ * filled shape, so it can't ring the icon: drawn behind it, the icon would cover it.
+ */
 @Composable
 private fun ExtensionItemIcon(
     extension: Extension,
     installStep: InstallStep,
 ) {
     val idle = installStep.isCompleted()
-    val scale by animateFloatAsState(targetValue = if (idle) 1f else INSTALLING_ICON_SCALE, label = "iconScale")
+    val iconShown by animateFloatAsState(targetValue = if (idle) 1f else 0f, label = "iconShown")
     Box(contentAlignment = Alignment.Center) {
-        if (!idle) {
-            LoadingIndicator(modifier = Modifier.matchParentSize())
-        }
+        // Stays laid out while hidden, so the row keeps its height and the indicator its size
         LocalAppUiGraph.current.sourceRows.ExtensionIcon(
             extension = extension,
             size = LogoSize.Row,
-            modifier = Modifier.graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            },
+            modifier = Modifier.graphicsLayer { alpha = iconShown },
         )
+        AnimatedVisibility(
+            visible = !idle,
+            modifier = Modifier.matchParentSize(),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            LoadingIndicator(modifier = Modifier.fillMaxSize())
+        }
     }
 }
-
-/** How small an icon gets inside its install spinner, so the spinner's ring clears it. */
-private const val INSTALLING_ICON_SCALE = 0.6f
 
 /** Language, version and install progress, separated by dots, then any warnings as pills. */
 @Composable
