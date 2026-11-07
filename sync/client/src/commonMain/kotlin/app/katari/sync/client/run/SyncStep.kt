@@ -6,6 +6,9 @@ package app.katari.sync.client.run
  */
 data class SyncStep(val kind: Kind, val done: Long, val total: Long) {
     enum class Kind {
+        /** This device's library recorded for the account on signing in, counted in rows. */
+        PREPARING,
+
         /** Changes made here going to the server, counted in records, such as a whole library after signing in. */
         UPLOADING_RECORDS,
 

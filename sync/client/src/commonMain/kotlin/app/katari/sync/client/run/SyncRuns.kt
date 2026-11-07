@@ -17,6 +17,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Sync runs, one at a time per device. Every trigger [request]s one; a request made while a run is going is merged
@@ -28,7 +29,7 @@ import tachiyomi.core.common.util.system.logcat
  */
 @Inject
 @SingleIn(AppScope::class)
-class SyncRuns(private val pass: SyncPass) {
+class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()
     private val runLock = Mutex()
@@ -78,6 +79,7 @@ class SyncRuns(private val pass: SyncPass) {
                 waiting = null
                 next to requested
             }
+            steps.begin()
             runningState.value = true
             val outcome = try {
                 runLock.withLock { pass.run(next) }
@@ -87,6 +89,7 @@ class SyncRuns(private val pass: SyncPass) {
                 logcat(LogPriority.ERROR, e) { "Sync run failed" }
                 SyncOutcome.FAILED
             } finally {
+                steps.end()
                 runningState.value = synchronized(lock) { waiting != null }
             }
             if (outcome != SyncOutcome.IDLE) outcomes.value = outcome
@@ -96,3 +99,9 @@ class SyncRuns(private val pass: SyncPass) {
 
     private class Finished(val ticket: Long, val outcome: SyncOutcome)
 }
+
+/**
+ * How long runs count as going after one ends, so runs that follow each other read as one and the status doesn't
+ * flicker to up to date between them (D064).
+ */
+internal val RUNS_SETTLE = 3.seconds

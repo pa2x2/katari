@@ -42,6 +42,11 @@ UPDATE sync_records
 SET local_ref = NULL
 WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
 
+-- A record holding the row under a key the row no longer has, removed without being marked deleted (D066).
+deleteReplaced:
+DELETE FROM sync_records
+WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
+
 storeLocalChange:
 INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id)
 VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :changeId)
@@ -151,10 +156,6 @@ DELETE FROM sync_records;
 -- a device joining afresh has none until its first push.
 hasSynced:
 SELECT EXISTS(SELECT 1 FROM sync_records WHERE synced = 1);
-
-delete:
-DELETE FROM sync_records
-WHERE record_key = :recordKey;
 
 deleteByLocalRef:
 DELETE FROM sync_records

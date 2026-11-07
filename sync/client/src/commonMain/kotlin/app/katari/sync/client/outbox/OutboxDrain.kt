@@ -31,8 +31,17 @@ import tachiyomi.data.DatabaseHandler
  */
 @Inject
 class OutboxDrain(private val handler: DatabaseHandler, private val settings: SettingReads) {
-    /** Drains up to [limit] outbox rows in one transaction and returns how many it drained; 0 once it is empty. */
-    suspend fun drain(limit: Long = BATCH): Int = handler.await(inTransaction = true) {
+    /**
+     * Drains up to [limit] outbox rows in one transaction and returns how many it drained; 0 once it is empty.
+     *
+     * A record that holds a drained row under a key the row no longer has lets go of the row, or, when [replacing],
+     * is removed without being marked deleted. A device returning to its account with its records replaces them so:
+     * a profile paired by name with an account profile of another identity changes every key under it, and the
+     * device must neither push its records under the old keys nor carry their contents over to the new ones (D066).
+     * Pairing never gives a profile an identity another of the device's profiles had, so no row takes a key another
+     * row's record still holds.
+     */
+    suspend fun drain(limit: Long = BATCH, replacing: Boolean = false): Int = handler.await(inTransaction = true) {
         val state = sync_stateQueries.get().awaitAsOne()
         val deviceId = state.device_id
         if (!state.enabled || deviceId == null) return@await 0
@@ -42,7 +51,7 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
         val clock = sync_clockQueries.get().awaitAsOne()
         val device = DeviceId(deviceId)
         val stamper = EditStamper(device, clock.issued_physical, clock.issued_counter.toInt())
-        val drain = Drain(this, LocalReads(this, device, settings))
+        val drain = Drain(this, LocalReads(this, device, settings), replacing)
         rows.forEach { row ->
             val stamp = stamper.stamp(row.changed_at, row.seen_physical, row.seen_counter.toInt())
             val kind = SyncKinds.named(row.kind) ?: return@forEach
@@ -56,33 +65,11 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
         rows.size
     }
 
-    /**
-     * Removes, without marking them deleted, the records that stand for rows the outbox names under a key those rows
-     * no longer have, leaving the outbox for [drain] to record the rows anew. A profile paired by name with an account
-     * profile of another identity changes every key under it, and a device returning to its account must neither push
-     * its records under the old keys nor carry their contents over to the new ones (D066).
-     */
-    suspend fun dropReplaced() {
-        var after = 0L
-        while (true) {
-            after = handler.await(inTransaction = true) {
-                val deviceId = sync_stateQueries.get().awaitAsOne().device_id ?: return@await null
-                val rows = sync_outboxQueries.page(after, BATCH).awaitAsList()
-                if (rows.isEmpty()) return@await null
-                val reads = LocalReads(this, DeviceId(deviceId), settings)
-                rows.forEach { row ->
-                    val kind = SyncKinds.named(row.kind) ?: return@forEach
-                    val held = sync_recordsQueries.getByLocalRef(kind.name, row.local_ref).awaitAsOneOrNull()
-                        ?: return@forEach
-                    val key = (kind.read(reads, LocalRef(row.local_ref)) as? LocalRead.Found)?.key ?: return@forEach
-                    if (key != held.record_key) sync_recordsQueries.delete(held.record_key)
-                }
-                rows.last().seq
-            } ?: return
-        }
-    }
-
-    private class Drain(private val database: Database, private val reads: LocalReads) {
+    private class Drain(
+        private val database: Database,
+        private val reads: LocalReads,
+        private val replacing: Boolean,
+    ) {
         private val records = LinkedHashMap<String, Touched>()
         private val read = HashSet<Pair<String, LocalRef>>()
 
@@ -145,7 +132,7 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
             records.forEach { (key, record) ->
                 val present = record.present
                 if (present != null) {
-                    database.storePresent(key, present, record.stamps)
+                    database.storePresent(key, present, record.stamps, replacing)
                 } else {
                     database.storeAbsent(key, record.kind, record.stamps)
                 }
@@ -171,14 +158,27 @@ private class Touched(val kind: SyncedKind<*>) {
 
 private class Present<P : Any>(val kind: SyncedKind<P>, val ref: LocalRef, val found: LocalRead.Found<P>)
 
-private suspend fun <P : Any> Database.storePresent(key: String, present: Present<P>, stamps: FieldStamps) {
+private suspend fun <P : Any> Database.storePresent(
+    key: String,
+    present: Present<P>,
+    stamps: FieldStamps,
+    replacing: Boolean,
+) {
     val kind = present.kind
     val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull()?.takeUnless { it.deleted }
     val previous = stored?.let { kind.decode(it.payload) }
     val payload = present.found.build(previous, stamps)
-    sync_recordsQueries.detachLocalRef(kind.name, present.ref.json, key)
+    // A row is held by one record at most, so when this one holds it no other is left to let it go
+    val holdsRow = stored?.local_ref == present.ref.json
+    if (!holdsRow) {
+        if (replacing) {
+            sync_recordsQueries.deleteReplaced(kind.name, present.ref.json, key)
+        } else {
+            sync_recordsQueries.detachLocalRef(kind.name, present.ref.json, key)
+        }
+    }
     val changeId = if (stored != null && payload == previous) {
-        if (stored.local_ref == present.ref.json) return
+        if (holdsRow) return
         stored.change_id
     } else {
         newChangeId()

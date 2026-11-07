@@ -64,7 +64,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val firstSync = FirstSyncSteps(
         local.firstSync,
         connection,
-        ExistingRows(local.driver, local.drain),
+        ExistingRows(local.driver, local.handler, local.drain),
         ExistingFiles(local.handler, local.ownedFiles),
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
         resync,
@@ -95,6 +95,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
             steps,
         ),
+        steps,
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(

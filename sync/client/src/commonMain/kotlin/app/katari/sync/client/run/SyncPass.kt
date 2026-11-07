@@ -78,7 +78,7 @@ class SyncPass(
     suspend fun run(request: SyncRequest): SyncOutcome {
         var outcome = SyncOutcome.FAILED
         try {
-            outcome = steps.run { attempt(request) }
+            outcome = attempt(request)
             return outcome
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
@@ -156,8 +156,8 @@ class SyncPass(
                 when (state.stage) {
                     SyncStage.JOINING -> firstSync.join(client)
                     SyncStage.CHOOSING -> return SyncOutcome.IDLE
-                    SyncStage.RECORDING -> firstSync.recordRows()
-                    SyncStage.RECORDING_KEPT -> firstSync.recordKept()
+                    SyncStage.RECORDING -> steps.step(SyncStep.Kind.PREPARING) { firstSync.recordRows(it) }
+                    SyncStage.RECORDING_KEPT -> steps.step(SyncStep.Kind.PREPARING) { firstSync.recordKept(it) }
                     SyncStage.DOWNLOADING -> {
                         if (waitsForWifi(state)) return SyncOutcome.WAITING_FOR_WIFI
                         pull.pullAll(client, device, liveOnly = true)

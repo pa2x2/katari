@@ -7,6 +7,7 @@ import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
 import app.katari.sync.client.outbox.OutboxDrain
 import dev.zacsweers.metro.Inject
+import tachiyomi.data.DatabaseHandler
 
 /**
  * Records the rows a device held before it joined an account (step 3 of [FirstSync]): every row a kind's insert
@@ -23,29 +24,37 @@ import dev.zacsweers.metro.Inject
  * unchanged that way, keeping what it synced, such as each device's share of the time read (D066).
  */
 @Inject
-class ExistingRows(private val driver: SqlDriver, private val drain: OutboxDrain) {
-    suspend fun record() {
+class ExistingRows(
+    private val driver: SqlDriver,
+    private val handler: DatabaseHandler,
+    private val drain: OutboxDrain,
+) {
+    /** Records every row, reporting to [progress] how many of them are recorded. */
+    suspend fun record(progress: (done: Long, total: Long) -> Unit) {
         insert()
-        drainAll()
+        drainAll(replacing = false, progress)
     }
 
     /**
      * As [record], for a device that kept its records: those whose row now has another key, as every row of a profile
-     * paired by name with another identity does, are removed first, so the row is recorded as new.
+     * paired by name with another identity does, are removed, so the row is recorded as new ([OutboxDrain.drain]).
      */
-    suspend fun recordKept() {
+    suspend fun recordKept(progress: (done: Long, total: Long) -> Unit) {
         insert()
-        drain.dropReplaced()
-        drainAll()
+        drainAll(replacing = true, progress)
     }
 
     private suspend fun insert() {
         statements.forEach { driver.execute(null, it, 0).await() }
     }
 
-    private suspend fun drainAll() {
+    private suspend fun drainAll(replacing: Boolean, progress: (done: Long, total: Long) -> Unit) {
+        val total = handler.awaitOne { sync_outboxQueries.count() }
+        var done = 0L
         do {
-            val drained = drain.drain()
+            val drained = drain.drain(replacing = replacing)
+            done += drained
+            progress(done, total)
         } while (drained > 0)
     }
 

@@ -6,15 +6,17 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The step of the run under way, for the status to name with its progress: a bare "Syncing" through minutes of
- * uploading a large library reads as a hang. Steps are named from [shownFrom], two seconds into the run: a shorter run
- * reads as one plain sync, and a longer one names every step from then on, so it never drops back to a bare "Syncing"
- * between them.
+ * The step of the runs under way, for the status to name with its progress: a bare "Syncing" through minutes of
+ * uploading a large library reads as a hang. Steps are named from [shownFrom], two seconds into a run: a shorter run
+ * reads as one plain sync, and a longer one names every step from then on.
+ *
+ * The step last named stays until another reports how far it got, so the work between steps, the end of the run and
+ * the runs that follow it within [RUNS_SETTLE] read as part of it rather than as a bare "Syncing" (D064). A run that
+ * starts after that starts over.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -22,30 +24,37 @@ class SyncSteps {
     private val current = MutableStateFlow<SyncStep?>(null)
     val step: StateFlow<SyncStep?> = current.asStateFlow()
 
-    /** Epoch milliseconds from which the steps of the run under way are named. */
+    /** Epoch milliseconds from which the steps of the runs under way are named. */
     @Volatile
     var shownFrom: Long = 0
         private set
 
-    /** Runs [block] as one run, whose steps are named once it has lasted [QUIET]. */
-    internal suspend fun <T> run(block: suspend () -> T): T {
-        shownFrom = Clock.System.now().toEpochMilliseconds() + QUIET.inWholeMilliseconds
-        try {
-            return block()
-        } finally {
-            current.value = null
-        }
+    @Volatile
+    private var lastEnded = 0L
+
+    /** A run starts, before it shows as running. */
+    internal fun begin() {
+        val now = nowMillis()
+        if (now - lastEnded <= RUNS_SETTLE.inWholeMilliseconds) return
+        current.value = null
+        shownFrom = now + QUIET.inWholeMilliseconds
     }
 
-    /** Runs [block] as a step of [kind], which reports how far it got, as done of total, to the function it is given. */
-    internal suspend fun <T> step(kind: SyncStep.Kind, block: suspend (progress: (Long, Long) -> Unit) -> T): T {
-        current.value = null
-        try {
-            return block { done, total -> current.value = SyncStep(kind, done.coerceIn(0, total), total) }
-        } finally {
-            current.update { if (it?.kind == kind) null else it }
-        }
+    /** The run that [begin] started ended. */
+    internal fun end() {
+        lastEnded = nowMillis()
     }
+
+    /**
+     * Runs [block] as a step of [kind], which reports how far it got, as done of total, to the function it is given. A
+     * step with nothing to do leaves the last one named.
+     */
+    internal suspend fun <T> step(kind: SyncStep.Kind, block: suspend (progress: (Long, Long) -> Unit) -> T): T =
+        block { done, total ->
+            if (total > 0) current.value = SyncStep(kind, done.coerceIn(0, total), total)
+        }
+
+    private fun nowMillis() = Clock.System.now().toEpochMilliseconds()
 
     private companion object {
         val QUIET = 2.seconds

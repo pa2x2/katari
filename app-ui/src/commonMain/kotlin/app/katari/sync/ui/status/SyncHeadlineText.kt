@@ -84,6 +84,7 @@ private fun stepText(step: SyncStep): String {
     val total = step.total.toInt()
     val percent = if (step.total > 0) (step.done * 100 / step.total).toInt() else 0
     return when (step.kind) {
+        SyncStep.Kind.PREPARING -> stringResource(MR.strings.sync_status_preparing, percent)
         SyncStep.Kind.UPLOADING_RECORDS -> stringResource(MR.strings.sync_status_uploading, percent)
         SyncStep.Kind.UPLOADING_FILES -> stringResource(MR.strings.sync_status_uploading_files, done, total)
         SyncStep.Kind.DOWNLOADING_FILES -> stringResource(MR.strings.sync_status_downloading_files, done, total)
@@ -121,6 +122,7 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
         MaterialSymbols.Rounded.CloudOff
     is SyncHeadline.Downloading -> MaterialSymbols.Rounded.CloudDownload
     is SyncHeadline.Step -> when (step.kind) {
+        SyncStep.Kind.PREPARING -> MaterialSymbols.Rounded.CloudSync
         SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload
         SyncStep.Kind.DOWNLOADING_FILES, SyncStep.Kind.DOWNLOADING_CHANGES -> MaterialSymbols.Rounded.CloudDownload
     }

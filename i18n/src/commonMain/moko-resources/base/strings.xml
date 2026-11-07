@@ -3157,6 +3157,7 @@
     <!-- %1$d is how far the first download got, in percent -->
     <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
     <string name="sync_status_downloading_unknown">Downloading your library…</string>
+    <string name="sync_status_preparing">Preparing your library · %1$d%%</string>
     <string name="sync_status_uploading">Uploading your library · %1$d%%</string>
     <string name="sync_status_downloading_changes">Downloading changes · %1$d%%</string>
     <string name="sync_status_uploading_files">Uploading covers and fonts · %1$d of %2$d</string>

@@ -61,15 +61,17 @@ class FirstSyncSteps(
     private suspend fun recordingStage() =
         if (firstSync.keepsRecords()) SyncStage.RECORDING_KEPT else SyncStage.RECORDING
 
-    suspend fun recordRows() {
+    /** Records this device's rows, reporting to [progress] how many of them are recorded. */
+    suspend fun recordRows(progress: (done: Long, total: Long) -> Unit) {
         existingFiles.record()
-        rows.record()
+        rows.record(progress)
         connection.setStage(SyncStage.DOWNLOADING, target = connection.state().stageTarget)
     }
 
-    suspend fun recordKept() {
+    /** Records this device's rows over the records it kept, reporting to [progress] how many of them are recorded. */
+    suspend fun recordKept(progress: (done: Long, total: Long) -> Unit) {
         existingFiles.record()
-        rows.recordKept()
+        rows.recordKept(progress)
         val state = connection.state()
         resync.start(SyncStage.RESYNC, ServerIdentity(checkNotNull(state.instanceId), state.stageTarget))
     }

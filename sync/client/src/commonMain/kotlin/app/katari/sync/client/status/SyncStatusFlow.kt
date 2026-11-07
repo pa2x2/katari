@@ -9,6 +9,7 @@ import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.PendingFiles
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
+import app.katari.sync.client.run.RUNS_SETTLE
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.run.SyncStep
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.transformLatest
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions, held records and the
@@ -75,10 +75,7 @@ class SyncStatusFlow(
         }.distinctUntilChanged()
     }
 
-    /**
-     * Whether runs are going, kept true for [RUNS_SETTLE] after one ends, so runs that follow each other read as one
-     * and the status doesn't flicker to up to date between them (D064). A new collector sees the current value at once.
-     */
+    /** Whether runs are going, kept true for [RUNS_SETTLE] after one ends. A new collector sees the current value at once. */
     private fun Flow<Boolean>.settled(): Flow<Boolean> = channelFlow {
         var shown: Boolean? = null
         collectLatest { running ->
@@ -163,8 +160,4 @@ class SyncStatusFlow(
             activity is SyncStatus.Activity.Unreachable -> SyncStatus.UnsentReason.SERVER_UNREACHABLE
             else -> null
         }
-
-    private companion object {
-        val RUNS_SETTLE = 3.seconds
-    }
 }
