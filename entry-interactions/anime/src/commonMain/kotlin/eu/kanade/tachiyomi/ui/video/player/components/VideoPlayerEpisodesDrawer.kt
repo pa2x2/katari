@@ -1,44 +1,28 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.icons.materialsymbols.roundedfilled.PlayArrow
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.list.ChapterRow
 import mihon.presentation.kit.list.CollapsibleRowGroupHeader
 import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.sheet.OverlayListDrawer
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -171,7 +155,6 @@ private fun LazyListScope.videoPlayerEpisodeItems(
                 RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone, selected = selected) {
                     VideoPlayerEpisodeRow(
                         episode = episode,
-                        selected = selected,
                         playbackState = playbackStateByEpisodeId[episode.id],
                         onClick = { onEpisodeClick(episode) },
                     )
@@ -219,63 +202,24 @@ private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedSections(
     }
 }
 
+/** The row slice's fill marks the episode playing, so the row itself doesn't fill again. */
 @Composable
 private fun VideoPlayerEpisodeRow(
     episode: EntryChapter,
-    selected: Boolean,
     playbackState: EntryProgressState?,
     onClick: () -> Unit,
 ) {
     val progress = playbackState.episodeProgress()
-    val completed = episode.read || playbackState?.completed == true
-    val titleTone = if (completed && !selected) ContentTone.Secondary else ContentTone.Inherit
-    val spacing = KatariTheme.spacing
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = currentRowInset, vertical = spacing.m),
-        horizontalArrangement = Arrangement.spacedBy(spacing.m),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (selected) {
-            Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null)
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(spacing.xs),
-        ) {
-            Text(
-                text = episode.name.ifBlank { episode.url },
-                role = TextRole.Body,
-                tone = titleTone,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (progress != null) {
-                Row(
-                    modifier = Modifier.padding(top = spacing.xxs),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LinearProgressIndicator(
-                        progress = { progress.fraction },
-                        modifier = Modifier.weight(1f),
-                        onContainer = selected,
-                    )
-                    Text(
-                        text = pluralStringResource(
-                            MR.plurals.anime_episode_minutes_left,
-                            progress.minutesLeft,
-                            progress.minutesLeft,
-                        ),
-                        role = TextRole.Supporting,
-                    )
-                }
-            }
-        }
-    }
+    ChapterRow(
+        title = episode.name.ifBlank { episode.url },
+        read = episode.read || playbackState?.completed == true,
+        bookmark = episode.bookmark,
+        onClick = onClick,
+        progress = progress?.let {
+            pluralStringResource(MR.plurals.anime_episode_minutes_left, it.minutesLeft, it.minutesLeft)
+        },
+        progressFraction = progress?.fraction,
+    )
 }
 
 private class EpisodeProgress(val fraction: Float, val minutesLeft: Int)

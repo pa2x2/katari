@@ -65,7 +65,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A choice of fonts, each title drawn in its font | `FontChoiceRow` | |
 | A choice of app themes, each drawn as a small screen | `ThemeChoiceRow` | |
 | Sets a sheet's content to compact rows | `ProvideRowDensity` | Sheets set it; rows never pick density themselves |
-| A chapter, episode or table-of-contents entry | `ChapterRow`, `ChapterMarks` | |
+| A chapter, episode or table-of-contents entry, on the entry screen or in a reader or player list | `ChapterRow`, `ChapterMarks` | `progressFraction` adds a watched or read bar |
 | A row led by an entry's cover, such as an update or history item | `CoverRow` | |
 | A place a search found, with the match highlighted | `SearchResultRow` | |
 | A row with actions on a swipe from either edge | `SwipeActionsRow` | |

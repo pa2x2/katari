@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +33,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.pointer.clickCursor
+import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -59,6 +61,8 @@ import androidx.compose.ui.semantics.selected as selectedState
  *
  * @param read null when the entry has no read state of its own, which shows neither the unread mark nor dimming.
  * @param progress where reading stopped, dimmed further than the other details since it is only a hint.
+ * @param progressFraction how much of it was watched or read (0..1), as a bar under the details, such as an episode
+ * stopped part way; null shows no bar.
  * @param preview draws the still with the modifier it is given, which sizes and clips it.
  */
 @Composable
@@ -81,6 +85,7 @@ fun ChapterRow(
     depth: Int = 0,
     onLongClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    progressFraction: Float? = null,
 ) {
     val spacing = KatariTheme.spacing
     val inset = if (LocalRowDensity.current == RowDensity.Compact) LocalRowInset.current else spacing.contentInset
@@ -125,6 +130,15 @@ fun ChapterRow(
                 progress = progress,
                 scanlator = scanlator,
             )
+            if (progressFraction != null) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = spacing.xs),
+                    progress = { progressFraction },
+                    onContainer = selected,
+                )
+            }
             if (summary != null) {
                 Text(
                     text = summary,
