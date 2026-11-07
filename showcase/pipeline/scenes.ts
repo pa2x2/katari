@@ -12,21 +12,46 @@ export const FAILURE_DIRECTORY = "/data/local/tmp/showcase-failures";
 const SCENE_TIMEOUT_MS = 15 * 60_000;
 
 /**
- * In the order they run. Opening a reader records a reading session at the showcase moment, so every scene that shows
- * reading history comes before the first one that opens a reader.
+ * The scene that records the recap clip, which the pipeline re-encodes for the site with ffmpeg, and leaves the image
+ * the recap shares in the app's cache.
  */
-export const SCENES = [
-  "library.LibraryScenes",
-  "library.EntryScenes",
-  "statistics.StatisticsScenes",
-  "statistics.RecapScenes",
-  "browse.BrowseScenes",
-  "translation.TranslatorScenes",
-  "translation.TranslationSettingsScenes",
-  "settings.BackupScenes",
-  "translation.TranslationScenes",
-  "reader.BookScenes",
-  "reader.PlayerScenes",
+export const RECAP_SCENE = "statistics.RecapScenes";
+
+/**
+ * The scenes, in groups that each run on their own freshly set up emulator, so CI runs the groups side by side. No scene
+ * may depend on what a scene of another group did. Within a group they run in this order: opening a reader records a
+ * reading session at the showcase moment, so every scene that shows reading history comes before the first one of its
+ * group that opens a reader. The groups are balanced by how long they take on a CI runner, where the recap alone takes
+ * about five minutes.
+ */
+export const SCENE_GROUPS: Record<string, string[]> = {
+  recap: [RECAP_SCENE],
+  translation: [
+    "translation.TranslatorScenes",
+    "translation.TranslationSettingsScenes",
+    "translation.TranslationScenes",
+  ],
+  "library-and-statistics": ["library.LibraryScenes", "library.EntryScenes", "statistics.StatisticsScenes"],
+  "browse-backup-and-readers": [
+    "browse.BrowseScenes",
+    "settings.BackupScenes",
+    "reader.BookScenes",
+    "reader.PlayerScenes",
+  ],
+};
+
+export const SCENES = Object.values(SCENE_GROUPS).flat();
+
+/** The scenes that translate with Offline Translator, which setup then installs and readies on-page translation for. */
+export const TRANSLATION_SCENES = SCENE_GROUPS.translation!;
+
+/**
+ * The scenes that find the Personal profile's year recap opened. Until it is, More carries a mark for it, which the
+ * library's stills show beside the recap the statistics dashboard offers, and the rest of the showcase leaves out.
+ */
+export const YEAR_RECAP_OPENED_SCENES = [
+  ...SCENE_GROUPS.translation!,
+  ...SCENE_GROUPS["browse-backup-and-readers"]!,
 ];
 
 export function runScene(device: Device, appId: string, scene: string, args: Record<string, string> = {}): void {

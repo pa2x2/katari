@@ -1,0 +1,35 @@
+name: Keep the showcase downloads a job used
+description: >-
+  Uploads the downloads this job read or added since restore-showcase-downloads, for the workflow's last job to combine
+  with what the other jobs used into the downloads later runs restore.
+
+inputs:
+  job:
+    description: Names the artifact, which is showcase-downloads-used-<job>.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Gather the downloads the job used
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        used="$RUNNER_TEMP/used-downloads"
+        mkdir -p "$used"
+        # A download cut short leaves a partial file, which the next attempt starts over rather than resumes.
+        find "$KATARI_SHOWCASE_CACHE/downloads" -type f -newer "$RUNNER_TEMP/restored-downloads" ! -name '*.partial' \
+          -exec cp -t "$used" {} +
+        echo "The job used $(ls "$used" | wc -l) downloads."
+
+    - name: Upload them
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: showcase-downloads-used-${{ inputs.job }}
+        path: ${{ runner.temp }}/used-downloads
+        if-no-files-found: ignore
+        # Books and videos are compressed already.
+        compression-level: 0
+        # A rerun of the job replaces what its earlier attempt kept.
+        overwrite: true

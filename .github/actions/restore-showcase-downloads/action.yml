@@ -1,0 +1,36 @@
+name: Restore the showcase downloads
+description: >-
+  Points the showcase scripts at a cache outside the checkout and fills its downloads with those an earlier run kept,
+  then notes which they were, so that keep-used-showcase-downloads can tell the ones this job read or added.
+
+inputs:
+  run-id:
+    description: The run whose showcase-downloads artifact to restore; empty when no run has kept any.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Outside the checkout, by an absolute path. The runner context that names the runner's temporary folder is not
+    # available to the job's env.
+    - name: Locate the showcase cache
+      shell: bash
+      run: echo "KATARI_SHOWCASE_CACHE=$RUNNER_TEMP/showcase-cache" >> "$GITHUB_ENV"
+
+    - name: Restore the downloads
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RUN_ID: ${{ inputs.run-id }}
+      run: |
+        set -euo pipefail
+
+        downloads="$KATARI_SHOWCASE_CACHE/downloads"
+        mkdir -p "$downloads"
+        if [[ -n "$RUN_ID" ]]; then
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name showcase-downloads --dir "$downloads"
+        fi
+        # Written after the restore, so that the files the job reads, whose modification time the download cache
+        # renews, are newer than it and the rest are not.
+        ls "$downloads" > "$RUNNER_TEMP/restored-downloads"
+        echo "Restored $(wc -l < "$RUNNER_TEMP/restored-downloads") downloads${RUN_ID:+ from run $RUN_ID}."
