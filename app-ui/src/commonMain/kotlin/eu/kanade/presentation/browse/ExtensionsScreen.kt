@@ -35,7 +35,8 @@ import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -154,8 +155,9 @@ private fun ExtensionContent(
 
         if (installPermissionMissing) {
             item(key = "extension-permissions-warning") {
-                WarningCard(
+                NoticeCard(
                     text = stringResource(MR.strings.ext_permission_install_apps_warning),
+                    tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { systemPackages.requestInstallPermission(context) },
                 )

@@ -13,7 +13,7 @@ For window sizes, panes, lists, grids and folding, also follow the `adaptive-lay
 
 ## 1. Find the component before writing UI
 
-1. **Look the job up in [components.md](components.md)**, the index of every public kit composable by the job it does. Search it by what the UI does (warning, figures, banner, choice, wait, empty), not by the name you would give the component: the kit's name is often a different one (`DashboardTiles`, not `TileRow`; `WarningCard`, not `WarningBanner`).
+1. **Look the job up in [components.md](components.md)**, the index of every public kit composable by the job it does. Search it by what the UI does (warning, figures, banner, choice, wait, empty), not by the name you would give the component: the kit's name is often a different one (`DashboardTiles`, not `TileRow`; `NoticeCard`, not `WarningBanner`).
 2. **Open an existing screen of the same kind** (another settings screen, sheet, picker, dashboard) and follow how it uses the kit.
 3. **Write only content and behaviour outside the kit.** A local composable that maps a domain value onto a kit component's parameters is fine, such as an engine status turned into a `StatusPill`'s text and tone. A local composable that frames, groups, spaces, aligns or measures content is the kit's job: a `Row` of weighted tiles, a `Surface` around padded text, a custom `Layout` or `MeasurePolicy` for a button.
 4. **A component you find elsewhere in the app is not precedent.** Check it against the index; if it duplicates a kit component, use the kit one (and replace the duplicate when the change touches it).
@@ -27,7 +27,7 @@ For window sizes, panes, lists, grids and folding, also follow the `adaptive-lay
 - **Spacing and sizes** from `KatariTheme.spacing` and `KatariTheme.sizes`, or a kit component's parameters.
 - **Rows** come from the kit `list` package and pick their control from `LocalRowDensity` (a switch on screens, a checkbox in sheets).
 - **Sheets, dialogs, menus, app bars and empty states** have one kit component each.
-- **A rounded or raised container** is the kit component named for its job (`Card`, `GroupCard`, `WarningCard`, `OverlayPill`, `OverlayPanel`, `ArtworkTile`, …), not a `Surface` with a chosen shape. A plain `Surface` is for a fill without a shape, such as a full-screen background.
+- **A rounded or raised container** is the kit component named for its job (`Card`, `GroupCard`, `NoticeCard`, `OverlayPill`, `OverlayPanel`, `ArtworkTile`, …), not a `Surface` with a chosen shape. A plain `Surface` is for a fill without a shape, such as a full-screen background.
 - **Lines and labels between content**: the kit's plain dividers and section header are internal. Rows are split by their row group and sections by the gap between cards; any other line or label is the kit component named for it (`RowGroupHeader`, `RowGroupSubheader`, `RowGroupSeparator`, `PaneDivider`, `MarkerLine`, `DropdownMenuDivider`, `DialogScrollEdges`, `ButtonGroupDivider`).
 - **Pagers** are the kit's `HorizontalPager` and `VerticalPager`, which turn one page per wheel notch or touchpad swipe. Only the readers in `entry-interactions` turn their own pages.
 

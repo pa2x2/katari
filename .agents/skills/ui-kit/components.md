@@ -81,7 +81,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A rounded container for one item or group | `Card` | |
 | A card holding a group of items, such as a shelf of entries; raised to float over content | `GroupCard`, `Modifier.groupCardBehind` | `groupCardBehind` draws the card behind items laid out one by one |
 | One choice of a set shown as a card, such as an engine in a picker | `SelectableCard` | The kit owns the selected look |
-| A warning among a screen's cards, such as an extension no store updates | `WarningCard` | Never a `Surface` in a warning colour |
+| A notice or warning among a screen's or sheet's cards, such as an extension no store updates or a paused source | `NoticeCard` | `NoticeTone.Info` or `Warning`; an optional action at its end. Never a `Card` or `Surface` with an icon of your own |
 | A banner in a story's colours that opens the story | `StoryBanner` | |
 | A dashboard section, its footer and headline tiles | `DashboardCard`, `DashboardCardFooter`, `DashboardTile` | Tiles go in `DashboardTiles` |
 | Headline tiles side by side: one line where they fit, two to a line otherwise | `DashboardTiles` | Never a hand-built `Row` of weighted tiles |

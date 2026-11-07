@@ -43,7 +43,8 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.surface.GroupCard
-import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
@@ -98,7 +99,7 @@ class RestoreBackupScreen(
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {
                     item {
-                        WarningCard(stringResource(MR.strings.restore_miui_warning))
+                        NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
                 }
 

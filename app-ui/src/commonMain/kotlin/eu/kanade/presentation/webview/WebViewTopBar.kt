@@ -27,7 +27,8 @@ import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.ScreenShortcuts
 import mihon.presentation.kit.shortcut.ShortcutGroup
 import mihon.presentation.kit.shortcut.ShortcutKeys
-import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.surface.NoticeCard
+import mihon.presentation.kit.surface.NoticeTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
@@ -115,8 +116,9 @@ internal fun WebViewTopBar(
             )
 
             if (showCloudflareHelp) {
-                WarningCard(
+                NoticeCard(
                     text = stringResource(MR.strings.information_cloudflare_help),
+                    tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },
                 )
