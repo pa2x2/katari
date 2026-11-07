@@ -60,7 +60,7 @@ japicmp = "0.27.0"
 # build number it may trail; checkJcefApiVersion compares them.
 jcef = "150.0.14-g7c1aa68-chromium-150.0.7871.129-api-1.21-263-b16"
 jna = "5.19.1"
-jsoup = "1.23.2"
+jsoup = "1.24.1"
 junit = "6.1.3"
 junit4 = "4.13.2"
 kotest-assertions = "6.2.6"
