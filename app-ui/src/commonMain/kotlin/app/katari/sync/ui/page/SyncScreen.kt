@@ -13,6 +13,7 @@ import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.link.LinkDeviceDialog
 import app.katari.sync.ui.link.linkCodeEntryScreen
 import app.katari.sync.ui.question.SyncQuestionsScreen
+import app.katari.sync.ui.signin.SyncJoinOrigin
 import app.katari.sync.ui.signin.SyncSignInScreen
 import app.katari.sync.ui.status.rememberSyncHeadline
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -33,7 +34,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * setup it explains what syncs and offers the ways in; once linked it shows the status, the account's devices, the
  * options and leaving; after the device was removed or its account disabled, it says so and offers to sign in again.
  */
-object SyncScreen : SearchableSettings {
+object SyncScreen : SearchableSettings, SyncJoinOrigin {
 
     @ReadOnlyComposable
     @Composable

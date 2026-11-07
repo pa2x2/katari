@@ -17,7 +17,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The first-run guide: how the person starts (new, from a backup, or from Mihon where [offersMihon]), that start's own
- * page, then appearance, storage, permissions, and the last page.
+ * page, then appearance, storage, permissions, linking to a sync account, and the last page.
  */
 @Composable
 fun OnboardingScreen(
@@ -45,6 +45,7 @@ fun OnboardingScreen(
                 privacyPreferences = graph.privacyPreferences,
                 telemetryIncluded = graph.appBuild.telemetryIncluded,
             ).takeIf { hasPermissionStep },
+            SyncStep(graph.syncStatusState),
             FinishStep(),
         )
     }

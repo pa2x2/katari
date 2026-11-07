@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.sync.ui.signin.SyncJoinOrigin
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.onboarding.OnboardingScreen
@@ -19,7 +20,7 @@ import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 
-class OnboardingScreen : Screen(), FullWindowScreen {
+class OnboardingScreen : Screen(), FullWindowScreen, SyncJoinOrigin {
 
     @Composable
     override fun Content() {

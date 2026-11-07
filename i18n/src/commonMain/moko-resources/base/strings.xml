@@ -746,6 +746,12 @@
     <string name="onboarding_start_mihon_summary">Bring your library from the Mihon app on this device</string>
     <string name="onboarding_restore_subtitle">Choose a %1$s or Mihon backup file. It is restored in the background while you finish setting up.</string>
     <string name="onboarding_restore_choose">Choose a backup file</string>
+    <string name="onboarding_sync_heading">Use %1$s on more devices?</string>
+    <string name="onboarding_sync_subtitle">Keep your library, progress and settings the same everywhere, through a sync server you run yourself.</string>
+    <string name="onboarding_sync_code_summary">On a linked device, Sync → Link a device shows it</string>
+    <string name="onboarding_sync_sign_in_summary">For the first device of an account</string>
+    <string name="onboarding_sync_linked_heading">This device is linked</string>
+    <string name="onboarding_sync_linked_account">%1$s on %2$s</string>
     <string name="onboarding_appearance_heading">Appearance</string>
     <string name="onboarding_appearance_subtitle">Light or dark, and the colours %1$s uses.</string>
     <string name="onboarding_storage_heading">Storage</string>
