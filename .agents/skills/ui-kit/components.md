@@ -11,7 +11,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`) |
 | A screen's top bar, with an action mode while items are selected | `AppBar`, `AppBarTitle`, `UpButton` | `UpButton` takes another icon where "up" closes something, such as a full-screen editor |
 | The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile |
-| Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Never a row of your own under the bar |
+| Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Filled like the bar (`actionMode` for a bar in action mode); never a `Surface` or row of your own under the bar |
 | A large title that collapses on scroll and grows back | `rememberAppBarScrollBehavior`, `rememberAppBarExpander` | The expander grows it back when content returns to its top from code |
 | An app bar that turns into a search field | `SearchToolbar` | |
 | An overlay app bar continued by an action on a row beneath it | `OverlayBarRow` | Such as Search all chapters under a reader's search |
@@ -144,7 +144,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
-| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet in wide windows; actions look like a dialog's |
+| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet in wide windows; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
 | A sheet of settings split into tabs | `TabbedSheet` | |
 | A sheet that explains one item, such as an engine or a library | `DetailsSheet`, `DetailsSection` | |
 | What a source says about one chapter or episode | `ChapterSheet` | |
@@ -242,7 +242,7 @@ See the `adaptive-layout` skill for which to use at which window size.
 
 | Job | Component | Notes |
 |---|---|---|
-| A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn` |
+| A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn`; `stickyRowGroupHeader` in its scope keeps a header at the top while its rows scroll |
 | Entries shown as rows by a grid | `RowGridColumn` | |
 | Columns for a cover grid, and how many a grid lays out | `coverGridCells`, `GridCells.columnCount` | |
 | Cards of varying height in columns | `CardFlow` | |

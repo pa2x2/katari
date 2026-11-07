@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.pointer.LocalWindowHasMouse
+import mihon.presentation.kit.surface.background
+import mihon.presentation.kit.surface.currentSurfaceContainer
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.util.drawVerticalScrollbar
 
@@ -123,6 +125,16 @@ interface RowListScope : LazyListScope {
 
     /** How many columns the rows of a row group wrap into: 1 unless the list wraps groups and has room for more. */
     val groupColumns: Int
+
+    /**
+     * A header, typically a `RowGroupHeader`, that stays at the top of the list while the rows under it scroll by. It is
+     * filled like the surface the list sits on, so the rows don't show through it.
+     */
+    fun stickyRowGroupHeader(key: Any? = null, header: @Composable () -> Unit) {
+        stickyHeader(key = key) {
+            Box(Modifier.fillMaxWidth().background(currentSurfaceContainer())) { header() }
+        }
+    }
 }
 
 private class RowListScopeImpl(

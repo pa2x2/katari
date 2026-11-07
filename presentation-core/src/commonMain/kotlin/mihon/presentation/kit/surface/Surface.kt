@@ -114,6 +114,10 @@ fun Surface(
 /** The container the content around here sits on, so a tonal element inside it can keep its contrast. */
 private val LocalSurfaceContainer = staticCompositionLocalOf { SurfaceContainer.Background }
 
+/** The container the content composed here sits on. */
+@Composable
+internal fun currentSurfaceContainer(): SurfaceContainer = LocalSurfaceContainer.current
+
 @Composable
 private fun ProvideSurfaceContainer(container: SurfaceContainer, content: @Composable () -> Unit) {
     if (container == SurfaceContainer.None) {
