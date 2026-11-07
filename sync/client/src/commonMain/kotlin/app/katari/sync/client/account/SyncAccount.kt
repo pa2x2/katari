@@ -119,9 +119,26 @@ class SyncAccount(
         } catch (_: SyncFailure.NotASyncServer) {
             return JoinResult.ServerNotReady(ServerCheck.NotASyncServer)
         }
-        runs.exclusive { start(check.server, registered) }
+        val choicesWaiting = runs.exclusive {
+            start(check.server, registered)
+            compareWithAccount(clients.of(check.server, registered.token))
+        }
         runs.request()
-        return JoinResult.Joined
+        return JoinResult.Joined(choicesWaiting)
+    }
+
+    /**
+     * Takes the first step of the first sync now rather than in the run, so whoever signed in learns at once whether
+     * the choices wait for them. A server that can't be reached for it leaves the step to the run.
+     */
+    private suspend fun compareWithAccount(client: SyncServerClient): Boolean {
+        if (connection.state().stage != SyncStage.JOINING) return false
+        try {
+            firstSync.join(client)
+        } catch (_: SyncFailure) {
+            return false
+        }
+        return connection.state().stage == SyncStage.CHOOSING
     }
 
     private suspend fun start(server: HttpUrl, registered: RegisterDeviceResponse) {

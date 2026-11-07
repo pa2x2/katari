@@ -19,7 +19,7 @@ enum class JoinPath { PASSWORD, LINK_CODE, INVITE }
  */
 @Composable
 fun joinProblemText(result: JoinResult, path: JoinPath): String? = when (result) {
-    JoinResult.Joined -> null
+    is JoinResult.Joined -> null
     is JoinResult.ServerNotReady -> serverCheckProblemText(result.check)
     JoinResult.Unreachable -> stringResource(MR.strings.sync_join_unreachable)
     JoinResult.NoSecretStore -> stringResource(MR.strings.sync_no_keyring)

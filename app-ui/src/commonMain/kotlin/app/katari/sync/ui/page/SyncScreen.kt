@@ -14,7 +14,6 @@ import app.katari.sync.ui.link.LinkDeviceDialog
 import app.katari.sync.ui.link.linkCodeEntryScreen
 import app.katari.sync.ui.question.SyncQuestionsScreen
 import app.katari.sync.ui.signin.SyncSignInScreen
-import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.rememberSyncHeadline
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -59,14 +58,6 @@ object SyncScreen : SearchableSettings {
         val messages = rememberScreenMessages()
 
         var dialog by rememberSaveable { mutableStateOf<SyncPageDialog?>(null) }
-        // A device that just joined and has to ask goes straight to the choices, once per visit of the page.
-        var choicesOpened by rememberSaveable { mutableStateOf(false) }
-        LaunchedEffect(headline is SyncHeadline.ChoicesWaiting) {
-            if (headline is SyncHeadline.ChoicesWaiting && !choicesOpened) {
-                choicesOpened = true
-                navigator.push(FirstSyncScreen)
-            }
-        }
         val removeFailedMessage = stringResource(MR.strings.sync_remove_device_failed)
         val removeFailed by model.removeFailed.collectAsState()
         LaunchedEffect(removeFailed) { if (removeFailed > 0) messages.show(removeFailedMessage) }

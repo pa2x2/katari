@@ -16,10 +16,10 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import app.katari.sync.client.account.LinkCodeLink
 import app.katari.sync.client.account.ServerCheck
-import app.katari.sync.ui.page.SyncScreen
 import app.katari.sync.ui.signin.JoinPath
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
+import app.katari.sync.ui.signin.leaveJoined
 import app.katari.sync.ui.signin.serverCheckProblemText
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -64,7 +64,7 @@ class EnterLinkCodeScreen : Screen() {
                 .collect { model.forgetFailedLookUp() }
         }
         LaunchedEffect(join) {
-            if (join == SyncJoinViewModel.JoinState.Joined) navigator.popUntil { it == SyncScreen }
+            (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
         }
         val server = ((check as? SyncJoinViewModel.AddressCheck.Checked)?.check as? ServerCheck.Ready)?.server
 

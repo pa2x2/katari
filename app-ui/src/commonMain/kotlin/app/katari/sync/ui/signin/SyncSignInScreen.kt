@@ -24,7 +24,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import app.katari.sync.client.account.ServerCheck
-import app.katari.sync.ui.page.SyncScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -78,7 +77,7 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
             }
         }
         LaunchedEffect(join) {
-            if (join == SyncJoinViewModel.JoinState.Joined) navigator.popUntil { it == SyncScreen }
+            (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
         }
 
         val joining = join == SyncJoinViewModel.JoinState.Joining

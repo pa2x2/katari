@@ -35,6 +35,7 @@ import app.katari.sync.client.trigger.SyncBackgroundWork
 import app.katari.sync.client.trigger.SyncTriggers
 import app.katari.sync.protocol.device.DeviceDescription
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -118,7 +119,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */
     suspend fun join(server: TestSyncServer, accountId: Long) {
-        account.redeemLinkCode(server.address, server.linkCode(accountId)) shouldBe JoinResult.Joined
+        account.redeemLinkCode(server.address, server.linkCode(accountId)).shouldBeInstanceOf<JoinResult.Joined>()
     }
 
     suspend fun sync(): SyncOutcome = runs.runAndWait()

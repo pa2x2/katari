@@ -22,9 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import app.katari.sync.client.account.LinkCodeLink
-import app.katari.sync.ui.page.SyncScreen
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
+import app.katari.sync.ui.signin.leaveJoined
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -77,7 +77,7 @@ class ScanLinkCodeScreen : Screen() {
         val link = scanned?.let(LinkCodeLink::parse)
 
         LaunchedEffect(join) {
-            if (join == SyncJoinViewModel.JoinState.Joined) navigator.popUntil { it == SyncScreen }
+            (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
         }
 
         Scaffold(

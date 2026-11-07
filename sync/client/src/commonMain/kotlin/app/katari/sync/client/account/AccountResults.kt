@@ -30,8 +30,11 @@ sealed interface ServerCheck {
 
 /** How signing in, redeeming a link code or redeeming an invite ended. */
 sealed interface JoinResult {
-    /** The device belongs to the account now; its first sync runs in the background. */
-    data object Joined : JoinResult
+    /**
+     * The device belongs to the account now; its first sync runs in the background. [choicesWaiting] when it holds
+     * data of its own and the account does too, so the person picks how its profiles join before it syncs (D027).
+     */
+    data class Joined(val choicesWaiting: Boolean) : JoinResult
 
     /** The address didn't pass [ServerCheck] as [ServerCheck.Ready]. */
     data class ServerNotReady(val check: ServerCheck) : JoinResult

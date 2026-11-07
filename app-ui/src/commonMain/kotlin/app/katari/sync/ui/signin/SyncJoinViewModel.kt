@@ -98,7 +98,11 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
         join.value = JoinState.Joining
         viewModelScope.launchIO {
             val result = attempt()
-            join.value = if (result == JoinResult.Joined) JoinState.Joined else JoinState.Failed(result, path)
+            join.value = if (result is JoinResult.Joined) {
+                JoinState.Joined(result.choicesWaiting)
+            } else {
+                JoinState.Failed(result, path)
+            }
         }
     }
 
@@ -125,7 +129,7 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
 
         data object Joining : JoinState
 
-        data object Joined : JoinState
+        data class Joined(val choicesWaiting: Boolean) : JoinState
 
         data class Failed(val result: JoinResult, val path: JoinPath) : JoinState
     }
