@@ -673,7 +673,6 @@
     <string name="manga_interval_expected_update">Następna aktualizacja spodziewana za około %1$s, sprawdzanie co %2$s.</string>
     <string name="onboarding_storage_selection_required">Folder musi być wybrany</string>
     <string name="onboarding_permission_notifications">Uprawnienia powiadomień</string>
-    <string name="onboarding_heading">Witaj!</string>
     <string name="action_menu_overflow_description">Więcej opcji</string>
     <string name="scanlator">Scanlator</string>
     <string name="onboarding_action_skip">Pomiń</string>
@@ -689,8 +688,6 @@
     <string name="onboarding_permission_install_apps">Zainstaluj uprawnienia aplikacji</string>
     <string name="onboarding_permission_install_apps_description">Do instalacji rozszerzeń.</string>
     <string name="onboarding_permission_action_grant">Zezwól</string>
-    <string name="onboarding_guides_new_user">Pierwszy raz w %s? Zalecamy zapoznać się z poradnikiem.</string>
-    <string name="onboarding_guides_returning_user">Ponowna instalacja %s?</string>
     <string name="pref_storage_usage">Zużycie pamięci</string>
     <string name="manga_interval_custom_amount">Niestandardowa częstotliwość aktualizacji:</string>
     <string name="no_scanlators_found">Nie znaleziono skanlatorów</string>
@@ -704,7 +701,6 @@
     <string name="theme_nord">Nord</string>
     <string name="pref_relative_format">Użyj dat względnych</string>
     <string name="pref_relative_format_summary">\"%1$s\" zamiast \"%2$s\"</string>
-    <string name="onboarding_description">Na początek ustawmy kilka rzeczy. Zawsze możesz je później zmienić w ustawieniach.</string>
     <string name="onboarding_storage_help_info">Aktualizujesz ze starszej wersji i nie jesteś pewien co wybrać? Zobacz na przewodnik po pamięci.</string>
     <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
     <string name="onboarding_storage_folder_info">Wybierz folder gdzie %1$s będzie zapisywał pobrane rozdziały, kopie zapasowe i inne. \n \nZalecany jest dedykowany folder.</string>

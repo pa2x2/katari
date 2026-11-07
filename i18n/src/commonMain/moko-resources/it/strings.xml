@@ -689,7 +689,6 @@
     <string name="onboarding_permission_notifications">Permessi di notifica</string>
     <string name="action_revert_to_default">Reimposta predefiniti</string>
     <string name="onboarding_permission_install_apps">Permessi per installare app</string>
-    <string name="onboarding_heading">Ti diamo il benvenuto!</string>
     <string name="action_menu_overflow_description">Altre opzioni</string>
     <string name="selected">Selezionato</string>
     <string name="not_selected">Non selezionato</string>
@@ -699,7 +698,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Uso della batteria in secondo piano</string>
     <string name="onboarding_permission_install_apps_description">Per installare le estensioni delle fonti.</string>
     <string name="action_bar_up_description">Navigare su</string>
-    <string name="onboarding_description">Per prima cosa impostiamo alcune cose. Puoi sempre cambiarle successivamente nelle impostazioni.</string>
     <string name="onboarding_permission_notifications_description">Ricevi notifiche per aggiornamenti della libreria e altro.</string>
     <string name="ext_permission_install_apps_warning">È necessaria l\'autorizzazione per installare le estensioni. Tocca qui per concederla.</string>
     <string name="onboarding_storage_folder_info">Selezione una cartella dove %1$s salverà i capitoli scaricati, i backup e altro. \n \nÈ raccomandato usare una cartella dedicata.</string>
@@ -710,10 +708,8 @@
     <string name="pref_flash_page_summ">Riduce il ghosting sugli schermi e-ink</string>
     <string name="pref_onboarding_guide">Guida di benvenuto</string>
     <string name="pref_storage_location_info">Usato per i backup automatici, download capitoli e fonti locali.</string>
-    <string name="onboarding_guides_new_user">Nuovo su %s? Ti consigliamo di dare un\'occhiata alla guida introduttiva.</string>
     <string name="available_disk_space_info">Disponibile: %1$s / Totale: %2$s</string>
     <string name="last_auto_backup_info">Ultimo backup automatico: %s</string>
-    <string name="onboarding_guides_returning_user">Hai già usato %s in precedenza?</string>
     <string name="no_scanlators_found">Nessuno scanlator trovato</string>
     <string name="pref_flash_page">Lampeggia al cambio pagina</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Evita interruzioni a lunghi aggiornamenti libreria, download e ripristino di backup.</string>

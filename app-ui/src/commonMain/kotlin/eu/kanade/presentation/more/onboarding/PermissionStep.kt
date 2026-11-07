@@ -6,9 +6,11 @@ import androidx.compose.runtime.getValue
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
+import mihon.icons.materialsymbols.rounded.VerifiedUser
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.feedback.GuidePageHeading
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.SettingsRow
@@ -27,6 +29,13 @@ internal class PermissionStep(
     private val privacyPreferences: PrivacyPreferences,
     private val telemetryIncluded: Boolean,
 ) : OnboardingStep {
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.VerifiedUser,
+        heading = stringResource(MR.strings.onboarding_permissions_heading),
+        subtitle = stringResource(MR.strings.onboarding_permissions_subtitle, stringResource(MR.strings.app_name)),
+    )
 
     override val isComplete: Boolean = true
 

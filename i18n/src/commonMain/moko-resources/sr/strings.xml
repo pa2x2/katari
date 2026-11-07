@@ -694,13 +694,9 @@
     <string name="onboarding_permission_install_apps_description">За инсталирање додатака.</string>
     <string name="onboarding_permission_notifications_description">За примање обавештења о ажурурању библиотеке и др.</string>
     <string name="onboarding_permission_action_grant">Одобри</string>
-    <string name="onboarding_heading">Добро дошли!</string>
     <string name="pref_onboarding_guide">Водич за прво покретање</string>
-    <string name="onboarding_guides_new_user">Користш %s први пут? Препоручујемо да погледаш водич за покретање</string>
-    <string name="onboarding_guides_returning_user">Поново инсталираш %s?</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Избегни прекиде при дуготрајном ажурирању колекције, преузимању и обнављању резервне копије</string>
     <string name="onboarding_permission_ignore_battery_opts">Коришћење батерије у позадини</string>
-    <string name="onboarding_description">Хајде да обавимо нека подешавања. Ако желиш можеш их касније променити у подешавањима.</string>
     <string name="no_location_set">Није постављена локација за складиштење</string>
     <string name="onboarding_storage_folder_info">Одабери путању у коју ће %1$s чувати преузимања поглавља, резервне копије и друго. \n \nПрепоручујемо коришћење засебне путање</string>
     <string name="onboarding_storage_selected_folder">Одабрана путања: %s</string>

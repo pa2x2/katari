@@ -95,8 +95,6 @@
     <string name="internal_error">Şaştiya Navxweyî: Ji bo agahiyên zêdetir li rojaneyên têkçûnê binerin</string>
     <string name="app_not_available">Sepan ne amade ye</string>
     <string name="pref_onboarding_guide">Rêbera Destpêkê</string>
-    <string name="onboarding_heading">Silav!</string>
-    <string name="onboarding_description">Ewilî çend gavên sazkirinê… Paşê jî tu dikarî ji mîhengan vana biguherînî.</string>
     <string name="action_display_grid">Toreya teng</string>
     <string name="action_display_comfortable_grid">Toreya fireh</string>
     <string name="action_display_list">Lîste</string>
@@ -162,8 +160,6 @@
     <string name="onboarding_permission_analytics">Destûrê bide amaran</string>
     <string name="onboarding_permission_analytics_description">Ji bo pêşxistina taybetmendiyên sepanê, daneyên xebatên anonîm bişîne.</string>
     <string name="onboarding_permission_action_grant">Destûrê bide</string>
-    <string name="onboarding_guides_new_user">Di %s de nû yî? Em pêşniyar dikin ku tu li rêbera destpêkê binerî.</string>
-    <string name="onboarding_guides_returning_user">Tu dîsa %s\'ê dadixînî?</string>
     <string name="pref_category_general">Giştî</string>
     <string name="pref_category_appearance">Rûkar</string>
     <string name="pref_category_library">Pirtûkxane</string>

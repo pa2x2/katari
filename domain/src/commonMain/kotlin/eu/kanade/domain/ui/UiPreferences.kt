@@ -19,7 +19,7 @@ class UiPreferences(
     dynamicColorAvailable: Boolean = false,
 ) {
 
-    val themeMode: Preference<ThemeMode> = preferenceStore.getEnum("pref_theme_mode_key", ThemeMode.SYSTEM)
+    val themeMode: Preference<ThemeMode> = preferenceStore.getEnum(THEME_MODE_KEY, ThemeMode.SYSTEM)
 
     val appTheme: Preference<AppTheme> = preferenceStore.getEnum(
         "pref_app_theme",
@@ -43,6 +43,9 @@ class UiPreferences(
     val imagesInDescription: Preference<Boolean> = preferenceStore.getBoolean("pref_render_images_description", true)
 
     companion object {
+        /** The light or dark choice's key, as the app names it. */
+        const val THEME_MODE_KEY = "pref_theme_mode_key"
+
         fun dateFormat(format: String, locale: Locale): DateTimeFormatter = when (format) {
             "" -> DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(locale)
             else -> DateTimeFormatter.ofPattern(format, locale)

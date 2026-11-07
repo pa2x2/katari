@@ -45,6 +45,10 @@ class InProcessSyncBackgroundWork(
         work.enqueue(HAND_OFF, ExistingWorkPolicy.Replace, request)
     }
 
+    // The app's own runs carry the first download while it is open, and its progress shows in the app; a quit stops it
+    // like any other run, and the next launch goes on with it.
+    override fun firstDownload(onMetered: Boolean) = Unit
+
     override fun allowsBackgroundSync(): Boolean = true
 
     override suspend fun resume(kind: String, input: Map<String, String>) {

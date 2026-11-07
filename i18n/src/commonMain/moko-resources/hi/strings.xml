@@ -634,10 +634,8 @@
     <string name="action_apply">लागू करें</string>
     <string name="action_move_to_bottom_all_for_series">सीरीज को नीचे ले जाएं</string>
     <string name="pref_onboarding_guide">ऑनबोर्डिंग मार्गदर्शक</string>
-    <string name="onboarding_heading">नमस्ते!आपका स्वागत है!</string>
     <string name="label_upcoming">आगामी</string>
     <string name="action_revert_to_default">डिफ़ॉल्ट पर वापस लौटें</string>
-    <string name="onboarding_description">पहले कुछ चीजें सेट करते हैं। आप इन्हें बाद में सेटिंग्स में बदल भी सकते हैं।</string>
     <string name="onboarding_storage_selection_required">एक फ़ोल्डर चुनना अनिवार्य है</string>
     <string name="onboarding_storage_help_info">पुराने संस्करण से अपडेट कर रहे हैं और नहीं समझ पा रहे कि क्या चुनें? अधिक जानकारी के लिए स्टोरेज गाइड देखें।</string>
     <string name="onboarding_storage_help_action">संग्रहण मार्गदर्शिका</string>
@@ -670,8 +668,6 @@
     <string name="onboarding_permission_analytics">डाटा विश्लेषण की अनुमति दें</string>
     <string name="onboarding_permission_analytics_description">ऐप की सुविधाएँ बेहतर करने के लिए गुमनाम उपयोग डेटा भेजें।</string>
     <string name="onboarding_permission_action_grant">अनुमति दें</string>
-    <string name="onboarding_guides_new_user">%s पर नए हैं? हम सुझाव देते हैं कि शुरुआत करने की गाइड देखें।</string>
-    <string name="onboarding_guides_returning_user">%s को फिर से इंस्टॉल कर रहे हैं?</string>
     <string name="pref_reader_summary">पढ़ने का मोड, प्रदर्शन, मार्गदर्शन</string>
     <string name="pref_tracking_summary">एक-तरफ़ा प्रगति सिंक, बेहतर सिंक</string>
     <string name="theme_catppuccin">कैटपुचिन</string>

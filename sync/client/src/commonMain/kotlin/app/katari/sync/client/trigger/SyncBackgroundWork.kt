@@ -21,6 +21,13 @@ interface SyncBackgroundWork {
      */
     fun handOff()
 
+    /**
+     * Runs [SyncBackgroundRun.firstDownload] as work that shows its progress and keeps going when the app leaves the
+     * front, on any network when [onMetered], otherwise on an unmetered one. A platform whose runs end with the app,
+     * such as the desktop, leaves the first download to them and shows its progress only in the app.
+     */
+    fun firstDownload(onMetered: Boolean)
+
     /** False while battery saver or a background restriction is on, which pauses background sync (D022). */
     fun allowsBackgroundSync(): Boolean
 

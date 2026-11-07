@@ -194,8 +194,6 @@
     <string name="internal_error">আভ্যন্তৰীণ ত্ৰুটি: অধিক তথ্যৰ বাবে ক্ৰেশ লগ চাওক</string>
     <string name="app_not_available">এপ উপলব্ধ নহয়</string>
     <string name="pref_onboarding_guide">অনবোৰ্ডিং গাইড</string>
-    <string name="onboarding_heading">স্বাগতম!</string>
-    <string name="onboarding_description">প্ৰথমে কিছুমান বস্তু ছেট কৰি লওঁ। আপুনি পাছত ছেটিংছত এইবোৰ সলনি কৰিব পাৰে।</string>
     <string name="onboarding_action_finish">আৰম্ভ কৰক</string>
     <string name="onboarding_action_skip">স্কিপ কৰক</string>
     <string name="onboarding_storage_folder_info">%1$sএ অধ্যায় ডাউনলোড, বেকআপ আৰু অধিক সঞ্চয় কৰিবলৈ এখন ফোল্ডাৰ বাছনি কৰক।\n\nএটা নিৰ্দিষ্ট ফোল্ডাৰ পৰামৰ্শ দিয়া হয়।</string>
@@ -211,8 +209,6 @@
     <string name="onboarding_permission_ignore_battery_opts">পৃষ্ঠভূমি বেটাৰী ব্যৱহাৰ</string>
     <string name="onboarding_permission_ignore_battery_opts_description">দীঘলীয়া পুথিভঁৰাল আপডেট, ডাউনলোড আৰু বেকআপ পুনৰুদ্ধাৰত বিৰতি এৰাই চলিবলৈ।</string>
     <string name="onboarding_permission_action_grant">অনুমতি দিয়ক</string>
-    <string name="onboarding_guides_new_user">%s লৈ নতুন? আমি আৰম্ভণি গাইড চাবলৈ পৰামৰ্শ দিওঁ।</string>
-    <string name="onboarding_guides_returning_user">%s পুনৰ ইন্সটল কৰি আছে নেকি?</string>
     <string name="pref_category_reader">পাঠক</string>
     <string name="pref_category_downloads">ডাউনলোড</string>
     <string name="pref_appearance_summary">থিম, তাৰিখ আৰু সময় বিন্যাস</string>

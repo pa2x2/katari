@@ -710,14 +710,10 @@
     <string name="pref_storage_location_info">Используется для автоматических резевных копии, загрузок глав и источнике на устройстве.</string>
     <string name="onboarding_storage_action_select">Выбрать папку</string>
     <string name="pref_onboarding_guide">Руководство для начинающих</string>
-    <string name="onboarding_guides_new_user">Новичок в %s? Мы настоятельно рекомендуем ознакомиться с нашим руководством.</string>
     <string name="onboarding_action_finish">Начать</string>
     <string name="onboarding_storage_selection_required">Необходимо выбрать папку</string>
-    <string name="onboarding_heading">Добро пожаловать!</string>
-    <string name="onboarding_guides_returning_user">Переустанавливаете %s?</string>
     <string name="onboarding_action_skip">Пропустить</string>
     <string name="onboarding_action_next">Следующее</string>
-    <string name="onboarding_description">Давайте настроем парочку вещей. Вы всегда можете их поменять позже в настройках.</string>
     <string name="no_location_set">Не указан путь хранилища</string>
     <string name="onboarding_storage_folder_info">Выберите папку где %1$s будет хранить загруженные главы, резервные копии и другое. \n \nРекомендуется использовать выделенную папку.</string>
     <string name="onboarding_storage_selected_folder">Выбранная папка: %s</string>

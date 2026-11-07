@@ -1,12 +1,14 @@
 package app.katari.sync.ui.notice
 
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.trigger.SyncBackgroundWork
 import mihon.core.common.platform.PlatformFacility
 import okhttp3.HttpUrl
 
 /**
  * Each platform's notifications for sync (D028): questions waiting and sync having stopped, each shown in place of the
- * one before it. Tapping a question notification opens the questions, the other the Sync page. Progress never posts one.
+ * one before it. Tapping a question notification opens the questions, the other the Sync page. Progress posts none,
+ * except the first download's, which the platform's work for it shows ([SyncBackgroundWork.firstDownload]).
  */
 @PlatformFacility
 interface SyncNotifications {

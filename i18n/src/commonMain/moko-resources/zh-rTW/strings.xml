@@ -696,14 +696,10 @@
     <string name="pref_storage_location_info">供自動備份、章節下載和本機來源使用</string>
     <string name="onboarding_storage_action_select">選擇資料夾</string>
     <string name="pref_onboarding_guide">新手上路精靈</string>
-    <string name="onboarding_guides_new_user">初探 %s？我們建議你查看入門指南</string>
     <string name="onboarding_action_finish">開始使用</string>
     <string name="onboarding_storage_selection_required">必須選擇一個資料夾</string>
-    <string name="onboarding_heading">歡迎！</string>
-    <string name="onboarding_guides_returning_user">重新安裝 %s？</string>
     <string name="onboarding_action_skip">略過</string>
     <string name="onboarding_action_next">下一步</string>
-    <string name="onboarding_description">讓我們先設定一些東西，隨後你隨時可至設定中變更這些選項</string>
     <string name="no_location_set">未設定儲存位置</string>
     <string name="onboarding_storage_folder_info">選擇供 %1$s 存放下載的章節、備份檔等內容的資料夾 \n \n建議使用專屬的資料夾</string>
     <string name="onboarding_storage_selected_folder">選擇的資料夾：%s</string>

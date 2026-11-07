@@ -8,6 +8,7 @@ import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
+import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
 import mihon.domain.profile.ProfileSeedPreferences
 import mihon.feature.profiles.core.ProfileStore
@@ -43,8 +44,9 @@ class FirstSync(
 ) {
     /**
      * Whether this device holds the person's data: anything in its database beyond the untouched default profile, or
-     * a person-level setting the app didn't write itself ([ProfileSeedPreferences]). A device that doesn't takes the
-     * whole account without questions.
+     * a person-level setting the app didn't write itself ([ProfileSeedPreferences]) and the unfinished first-run guide
+     * didn't ask for ([OnboardingPreferences.settingsChosenInGuide]). A device that doesn't takes the whole account
+     * without questions.
      */
     suspend fun hasOwnData(): Boolean {
         val found = ownData() ?: return false
@@ -58,9 +60,10 @@ class FirstSync(
         if (handler.await { sync_first_syncQueries.hasOwnRows().awaitAsOne() }) return "database rows"
         settings.sharedKeys().firstOrNull { it.isPersonLevel() && !settings.isProfileKey(it) }
             ?.let { return "setting $it" }
+        val chosenInGuide = OnboardingPreferences(profileStore.basePreferenceStore()).settingsChosenInGuide()
         localProfiles().forEach { profile ->
             val seeded = ProfileSeedPreferences.untouched(profileStore.profileStore(profile.id))
-            settings.profileKeys(profile.id).firstOrNull { it.isPersonLevel() && it !in seeded }
+            settings.profileKeys(profile.id).firstOrNull { it.isPersonLevel() && it !in seeded && it !in chosenInGuide }
                 ?.let { return "profile ${profile.id} setting $it" }
             settings.sourceKeys(profile.id).keys.firstOrNull()?.let {
                 return "profile ${profile.id} source $it settings"

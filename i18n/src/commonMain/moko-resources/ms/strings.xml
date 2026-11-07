@@ -677,8 +677,6 @@
     <string name="selected">Dipilih</string>
     <string name="onboarding_storage_action_select">Pilih folder</string>
     <string name="pref_onboarding_guide">Panduan pertama penggunaan</string>
-    <string name="onboarding_heading">Selamat datang!</string>
-    <string name="onboarding_description">Mari menetapkan sesuai terdahulu. Anda juga boleh menukar perkara ini di tetapan kemudian.</string>
     <string name="onboarding_action_next">Seterusnya</string>
     <string name="onboarding_action_finish">Mari memulakan</string>
     <string name="onboarding_action_skip">Langkau</string>
@@ -687,7 +685,6 @@
     <string name="onboarding_storage_selection_required">Folder mestilah dipilih</string>
     <string name="pref_relative_format">Cap masa relatif</string>
     <string name="pref_relative_format_summary">\"%1$s bukannya %2$s\"</string>
-    <string name="onboarding_guides_new_user">Baru menggunakan %s? Kami mengesyorkan anda membaca panduan permulaan.</string>
     <string name="invalid_backup_file_error">Ralat penuh:</string>
     <string name="private_settings">Masukkan tetapan sulit (cth., token log masuk penjejak)</string>
     <string name="available_disk_space_info">Tersedia:%1$s/Jumlah:%2$s</string>
@@ -701,7 +698,6 @@
     <string name="no_scanlators_found">Tiada scanlator dijumpai</string>
     <string name="onboarding_storage_help_info">Mengemaskini daripada versi lama dan tidak pasti pilihan yang patut diambil? Rujuk pada panduan storan untuk maklumat lanjut.</string>
     <string name="onboarding_permission_notifications">Kebenaran pemberitahuan</string>
-    <string name="onboarding_guides_returning_user">Memasang semula %s?</string>
     <string name="no_location_set">Tiada lokasi storan ditetapkan</string>
     <string name="relative_time_span_never">Tidak pernah</string>
     <string name="onboarding_storage_help_action">Panduan storan</string>

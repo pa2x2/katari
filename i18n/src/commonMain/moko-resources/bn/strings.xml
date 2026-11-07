@@ -583,12 +583,10 @@
     <string name="onboarding_permission_notifications">নোটিফিকেশনের পারমিশন</string>
     <string name="action_revert_to_default">সকল সেটিং ডিফল্ট করুন</string>
     <string name="onboarding_permission_install_apps">অ্যাপের ইন্সটল করার পারমিশন</string>
-    <string name="onboarding_heading">স্বাগতম!</string>
     <string name="action_move_to_bottom_all_for_series">নিচের দিকে সরান</string>
     <string name="onboarding_action_skip">বাদ দিন</string>
     <string name="onboarding_action_next">পরবর্তী</string>
     <string name="onboarding_permission_install_apps_description">সোর্স এক্সটেনশন ইনস্টল করার জন্য।</string>
-    <string name="onboarding_description">প্রথমে কিছু ঠিক করে নিন , পরবর্তীতে আপনি চাইলে সেটিং থেকে সবকিছু পরিবর্তন করতে পারবেন।</string>
     <string name="internal_error">ইন্টারনাল ইরর: বাকি ইনফরমেশন পেতে ক্যাশ লগ দেখুন</string>
     <string name="action_sort_tracker_score">ট্রেকার স্কোর</string>
     <string name="action_ok">ওকে</string>
@@ -614,8 +612,6 @@
     <string name="onboarding_permission_analytics">অ্যানালিটিক্স অনুমতি দিন</string>
     <string name="onboarding_permission_analytics_description">অ্যাপের ফিচার উন্নত করতে অজ্ঞাতনামা ব্যবহার ডেটা পাঠান।</string>
     <string name="onboarding_permission_action_grant">অনুমতি দিন</string>
-    <string name="onboarding_guides_new_user">%s‑এ নতুন? আমাদের শুরু হওয়ারগাইড পড়ে দেখুন।</string>
-    <string name="onboarding_guides_returning_user">%s পুনরায় ইনস্টল করছেন?</string>
     <string name="theme_tidalwave">টাইডাল ওয়েভ</string>
     <string name="pref_relative_format">আপেক্ষিক সময়চিহ্ন</string>
     <string name="pref_relative_format_summary">\"%1$s\" এর পরিবর্তে \"%2$s\"</string>

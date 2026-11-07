@@ -697,13 +697,9 @@
     <string name="onboarding_storage_action_select">Επιλέξτε ένα φάκελο</string>
     <string name="onboarding_action_finish">Ξεκινήστε</string>
     <string name="onboarding_storage_selection_required">Ένας φάκελος πρέπει να επιλεγεί</string>
-    <string name="onboarding_heading">Καλώς ορίσατε!</string>
     <string name="onboarding_action_skip">Παράλειψη</string>
     <string name="onboarding_action_next">Επόμενο</string>
     <string name="pref_onboarding_guide">Οδηγός εισαγωγής</string>
-    <string name="onboarding_guides_new_user">Είστε νέοι στο %s; Σας συνιστούμε να ανατρέξετε στον οδηγό έναρξης.</string>
-    <string name="onboarding_guides_returning_user">Επανεγκατάσταση %s;</string>
-    <string name="onboarding_description">Ας ρυθμίσουμε πρώτα κάποια πράγματα. Μπορείτε πάντα να τα αλλάξετε στις ρυθμίσεις αργότερα.</string>
     <string name="no_location_set">Δεν έχει οριστεί τοποθεσία αποθήκευσης</string>
     <string name="onboarding_storage_folder_info">Επιλέξτε ένα φάκελο όπου το %1$s θα αποθηκεύει λήψεις κεφαλαίων, αντίγραφα ασφαλείας και άλλα. \n \nΣυνιστάται ένας αποκλειστικός φάκελος.</string>
     <string name="onboarding_storage_selected_folder">Επιλεγμένος φάκελος: %s</string>

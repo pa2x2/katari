@@ -676,7 +676,6 @@
     <string name="label_auto">אוטומטי</string>
     <string name="action_sort_tracker_score">ציון אישי במעקב</string>
     <string name="action_add_anyway">הוסף בכל זאת</string>
-    <string name="onboarding_description">נגדיר כמה דברים תחילה. ניתן לשנות אותם בכל עת בהגדרות מאוחר יותר.</string>
     <string name="onboarding_storage_help_action">מדריך אחסון</string>
     <string name="onboarding_permission_install_apps">הרשאה להתקנת אפליקציות</string>
     <string name="theme_monochrome">מונוכרום</string>
@@ -684,7 +683,6 @@
     <string name="pref_firebase">ניתוח נתונים ודוחות קריסה</string>
     <string name="pref_behavior">התנהגות</string>
     <string name="action_sort_random">אקראי</string>
-    <string name="onboarding_heading">ברוכים הבאים!</string>
     <string name="action_bar_up_description">נווט למעלה</string>
     <string name="pref_onboarding_guide">מדריך התחלה</string>
     <string name="action_edit_notes">ערוך הערות</string>

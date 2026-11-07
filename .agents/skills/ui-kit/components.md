@@ -22,7 +22,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A screen whose whole content is empty | `EmptyScreen` | A kaomoji, a message and optional actions |
 | A screen still loading | `LoadingScreen` | `message` names the step it waits on, `progress` adds a bar, `action` offers a way past the wait; the indicator never moves. `onMedia` over video or artwork |
 | A full screen saying what was opened can't be shown | `ProblemScreen` | `ProblemCard` for a problem inside content that keeps showing |
-| A full screen that explains something and asks to accept it (onboarding, crash report) | `InfoScreen` | |
+| A full screen that explains something and asks to accept it, such as a crash report | `InfoScreen` | |
+| A guide of several pages gone through in order, such as the first-run setup | `GuideScreen` | A progress bar and "2 of 6" at the top; each page's heading slides in with its content; an optional Skip before Next |
 
 ## Navigation
 

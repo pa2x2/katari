@@ -704,13 +704,9 @@
     <string name="onboarding_permission_install_apps_description">Za instaliranje izvornih proširenja.</string>
     <string name="onboarding_permission_notifications_description">Primaj obavijesti o aktualiziranju biblioteke i više.</string>
     <string name="onboarding_permission_action_grant">Odobri</string>
-    <string name="onboarding_heading">Dobro došao, dobro došla!</string>
     <string name="pref_onboarding_guide">Vodič za početno pokretanje</string>
-    <string name="onboarding_guides_new_user">Koristiš %s po prvi puta? Preporučujemo da pogledaš vodič za pokretanje.</string>
-    <string name="onboarding_guides_returning_user">Ponovo istalirati %s?</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Izbjegni prekide pri dugotrajnim aktualiziranjima biblioteke, preuzimanjima i obnavljanja sigurnosnih kopija.</string>
     <string name="onboarding_permission_ignore_battery_opts">Upotreba baterije u pozadini</string>
-    <string name="onboarding_description">Hajdemo najprije postaviti neke stvari. Ako želiš možeš ih kasnije promijeniti u postavkama.</string>
     <string name="no_location_set">Nije postavljeno mjesto spremišta</string>
     <string name="onboarding_storage_folder_info">Odaberi mapu u koju će %1$s spremati preuzimanja poglavlja, sigurnosne kopije i drugo. \n \nPreporučujemo koristiti zasebnu mapu.</string>
     <string name="onboarding_storage_selected_folder">Odabrana mapa: %s</string>

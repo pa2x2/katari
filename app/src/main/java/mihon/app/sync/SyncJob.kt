@@ -1,20 +1,43 @@
 package mihon.app.sync
 
 import android.content.Context
+import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import app.katari.sync.client.trigger.SyncBackgroundRun
+import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.util.system.cancelNotification
+import eu.kanade.tachiyomi.util.system.notify
+import eu.kanade.tachiyomi.util.system.setForegroundSafely
+import kotlinx.coroutines.flow.first
 import mihon.app.di.appGraph
 import tachiyomi.domain.work.WorkOutcome
 
-/** Runs [SyncBackgroundRun] for WorkManager, as the periodic sync or the hand-off its input names. */
+/**
+ * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off or the first download its input names.
+ * The first download runs in the foreground, showing its progress as it goes.
+ */
 class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
-    private val run = context.appGraph.syncBackgroundRun
+    private val graph = context.appGraph
+    private val run = graph.syncBackgroundRun
+    private val notification = graph.syncFirstDownloadNotification
 
     override suspend fun doWork(): Result {
         val outcome = when (inputData.getString(KIND)) {
             HAND_OFF -> run.handOff()
+            FIRST_DOWNLOAD -> {
+                setForegroundSafely()
+                try {
+                    run.firstDownload {
+                        applicationContext.notify(Notifications.ID_SYNC_FIRST_DOWNLOAD, notification.build(it))
+                    }
+                } finally {
+                    applicationContext.cancelNotification(Notifications.ID_SYNC_FIRST_DOWNLOAD)
+                }
+            }
             else -> run.periodic()
         }
         return when (outcome) {
@@ -24,9 +47,16 @@ class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorke
         }
     }
 
+    override suspend fun getForegroundInfo(): ForegroundInfo = ForegroundInfo(
+        Notifications.ID_SYNC_FIRST_DOWNLOAD,
+        notification.build(graph.syncStatusFlow.status().first()),
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
+    )
+
     companion object {
         const val KIND = "kind"
         const val PERIODIC = "periodic"
         const val HAND_OFF = "handOff"
+        const val FIRST_DOWNLOAD = "firstDownload"
     }
 }

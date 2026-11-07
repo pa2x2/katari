@@ -189,6 +189,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
         override fun handOff() = Unit
 
+        override fun firstDownload(onMetered: Boolean) = Unit
+
         override fun allowsBackgroundSync() = true
     }
 }

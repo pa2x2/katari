@@ -1,16 +1,23 @@
 package app.katari.sync.client.trigger
 
+import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
+import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.client.status.SyncStatusFlow
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import tachiyomi.domain.work.WorkOutcome
 
 /** What a sync run started by the platform's background work does, the same on every platform. */
 @Inject
 class SyncBackgroundRun(
     private val runs: SyncRuns,
+    private val connection: SyncConnection,
+    private val statusFlow: SyncStatusFlow,
     private val work: SyncBackgroundWork,
     private val preferences: SyncPreferences,
 ) {
@@ -22,6 +29,25 @@ class SyncBackgroundRun(
         if (!preferences.syncInBackground.get() || !work.allowsBackgroundSync()) return WorkOutcome.Done
         runs.runAndWait(SyncRequest())
         return WorkOutcome.Done
+    }
+
+    /**
+     * The first download, to its end, giving [onProgress] the status each time it changes, for the platform to show;
+     * retried while the server can't be reached.
+     */
+    suspend fun firstDownload(onProgress: (SyncStatus) -> Unit): WorkOutcome {
+        if (!connection.state().stage.isFirstDownload) return WorkOutcome.Done
+        return coroutineScope {
+            val reporting = launch { statusFlow.status().collect(onProgress) }
+            try {
+                when (runs.runAndWait(SyncRequest())) {
+                    SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED -> WorkOutcome.RetryLater
+                    SyncOutcome.SYNCED, SyncOutcome.IDLE, SyncOutcome.WAITING_FOR_WIFI -> WorkOutcome.Done
+                }
+            } finally {
+                reporting.cancel()
+            }
+        }
     }
 
     /** Sends what changed; retried while the server can't be reached, until it has it. */

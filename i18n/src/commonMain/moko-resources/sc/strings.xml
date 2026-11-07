@@ -708,7 +708,6 @@
     <string name="invalid_backup_file_error">Errore intreu:</string>
     <string name="upcoming_guide">Ghia a sas atualizatziones imbenientes</string>
     <string name="pref_onboarding_guide">Ghia de introdutzione</string>
-    <string name="onboarding_heading">Bene bènnidu!</string>
     <string name="onboarding_action_next">Imbeniente</string>
     <string name="onboarding_action_finish">Incumintzemus</string>
     <string name="onboarding_action_skip">Brinca</string>
@@ -718,13 +717,11 @@
     <string name="onboarding_storage_help_action">Ghia a s\'archiviatzione</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Èvita interrutziones a agiornamentos longos de sa biblioteca, iscarrigamentos, e riprìstinos de còpias de seguresa.</string>
     <string name="onboarding_permission_action_grant">Fruni</string>
-    <string name="onboarding_guides_new_user">Nou in %s? Ti cussigiamus de t\'abbistare sa ghia de introdutzione.</string>
     <string name="theme_nord">Nord</string>
     <string name="private_settings">Include impostatziones sensìbiles ( a es. getones de intrada a sos arrastadores)</string>
     <string name="manga_interval_expected_update_soon">Luego</string>
     <string name="action_add_anyway">Annanghe su matessi</string>
     <string name="pref_webtoon_disable_zoom_out">Istuda sa ridutzione de ismanniada</string>
-    <string name="onboarding_description">In antis de totus tocat a cunfigurare una paja de cosas. L\'as a pòdere semper modificare a pustis dae sas impostatziones.</string>
     <string name="onboarding_storage_action_select">Seletziona una cartella</string>
     <string name="onboarding_storage_selection_required">Depes seletzionare una cartella</string>
     <string name="onboarding_permission_install_apps">Permissos pro installare s\'aplicatzione</string>
@@ -736,7 +733,6 @@
     <string name="manga_interval_custom_amount">Frecuèntzia de agiornamentu personalizada:</string>
     <string name="upcoming_calendar_next">Su mese chi intrat</string>
     <string name="upcoming_calendar_prev">Su mese coladu</string>
-    <string name="onboarding_guides_returning_user">Ses torrende a installare %s?</string>
     <string name="ext_revoke_trust">Rèvoca sas estensiones disconnotas afidàbiles</string>
     <string name="available_disk_space_info">A disponimentu: %1$s / Totale: %2$s</string>
     <string name="pref_display_profile">Profilu de visualizatzione predefinidu</string>

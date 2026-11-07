@@ -3,6 +3,8 @@ package app.katari.sync.client.firstsync
 import app.katari.sync.client.RecordExchange
 import app.katari.sync.client.SyncTestDevice
 import app.katari.sync.client.library
+import eu.kanade.domain.base.OnboardingPreferences
+import eu.kanade.domain.ui.UiPreferences
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -16,6 +18,18 @@ class FirstSyncTest {
 
     @TempDir
     lateinit var directory: File
+
+    @Test
+    fun `light or dark picked in the unfinished first-run guide isn't the device's own data`(): Unit = runBlocking {
+        SyncTestDevice(directory.resolve("b.db")).use { b ->
+            ProfileSeedPreferences.seed(b.preferences.profiles.profileStore(1))
+            b.preferences.profiles.profileStore(1).getString(UiPreferences.THEME_MODE_KEY).set("DARK")
+            b.firstSync.hasOwnData() shouldBe false
+
+            OnboardingPreferences(b.preferences.profiles.basePreferenceStore()).shownOnboardingFlow.set(true)
+            b.firstSync.hasOwnData() shouldBe true
+        }
+    }
 
     @Test
     fun `a device with data joins its profile to the account profile of its name, keeping its settings`(): Unit =

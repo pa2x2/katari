@@ -733,11 +733,33 @@
 
     <!-- Onboarding -->
     <string name="pref_onboarding_guide">Onboarding guide</string>
-    <string name="onboarding_heading">Welcome!</string>
-    <string name="onboarding_description">Let\'s set some things up first. You can always change these in the settings later too.</string>
     <string name="onboarding_action_next">Next</string>
     <string name="onboarding_action_finish">Get started</string>
     <string name="onboarding_action_skip">Skip</string>
+    <string name="guide_page_of">%1$d of %2$d</string>
+    <string name="onboarding_welcome_heading">Welcome to %1$s</string>
+    <string name="onboarding_welcome_subtitle">How are you starting?</string>
+    <string name="onboarding_start_new">I\'m new to %1$s</string>
+    <string name="onboarding_start_new_summary">Set it up from scratch</string>
+    <string name="onboarding_start_backup">I have a backup</string>
+    <string name="onboarding_start_backup_summary">Restore a %1$s or Mihon backup file</string>
+    <string name="onboarding_start_mihon_summary">Bring your library from the Mihon app on this device</string>
+    <string name="onboarding_restore_subtitle">Choose a %1$s or Mihon backup file. It is restored in the background while you finish setting up.</string>
+    <string name="onboarding_restore_choose">Choose a backup file</string>
+    <string name="onboarding_sync_heading">Use %1$s on more devices?</string>
+    <string name="onboarding_sync_subtitle">Keep your library, progress and settings the same everywhere, through a sync server you run yourself.</string>
+    <string name="onboarding_sync_code_summary">On a linked device, Sync → Link a device shows it</string>
+    <string name="onboarding_sync_sign_in_summary">For the first device of an account</string>
+    <string name="onboarding_sync_linked_heading">This device is linked</string>
+    <string name="onboarding_sync_linked_account">%1$s on %2$s</string>
+    <string name="onboarding_appearance_heading">Appearance</string>
+    <string name="onboarding_appearance_subtitle">Light or dark, and the colours %1$s uses.</string>
+    <string name="onboarding_storage_heading">Storage</string>
+    <string name="onboarding_storage_subtitle">Where downloads and backups are kept.</string>
+    <string name="onboarding_permissions_heading">Permissions</string>
+    <string name="onboarding_permissions_subtitle">What %1$s may do while you\'re not looking at it.</string>
+    <string name="onboarding_finish_heading">You\'re all set</string>
+    <string name="onboarding_finish_subtitle">New to %1$s? The getting started guide shows how to add sources and find something to read.</string>
     <string name="onboarding_storage_folder_info">Select a folder where %1$s will store downloads, backups, and more.\n\nA dedicated folder is recommended.</string>
     <string name="onboarding_storage_selected_folder">Selected folder: %s</string>
     <string name="onboarding_storage_action_select">Select a folder</string>
@@ -757,8 +779,6 @@
     <string name="onboarding_permission_analytics">Allow analytics</string>
     <string name="onboarding_permission_analytics_description">Send anonymized usage data to improve app features.</string>
     <string name="onboarding_permission_action_grant">Grant</string>
-    <string name="onboarding_guides_new_user">New to %s? We recommend checking out the getting started guide.</string>
-    <string name="onboarding_guides_returning_user">Reinstalling %s?</string>
     <string name="onboarding_mihon_migration_title">Move from Mihon</string>
     <string name="onboarding_mihon_migration_description">In Mihon, create a backup containing everything you want to keep. Include private settings if you want to move source preferences and sign-in details. Then return here and choose that backup.</string>
     <string name="onboarding_mihon_migration_open">Open Mihon to create a backup</string>
@@ -3165,6 +3185,8 @@
     <!-- %1$d is how far the first download got, in percent -->
     <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
     <string name="sync_status_downloading_unknown">Downloading your library…</string>
+    <string name="sync_first_download_progress">%1$s · %2$d%%</string>
+    <string name="sync_progress_channel">Sync progress</string>
     <string name="sync_status_preparing">Preparing your library · %1$d%%</string>
     <string name="sync_status_uploading">Uploading your library · %1$d%%</string>
     <string name="sync_status_downloading_changes">Downloading changes · %1$d%%</string>

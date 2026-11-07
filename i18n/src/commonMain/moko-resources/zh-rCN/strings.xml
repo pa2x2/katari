@@ -707,11 +707,9 @@
     <string name="not_selected">未选中</string>
     <string name="pref_onboarding_guide">首次启动引导</string>
     <string name="onboarding_action_finish">开始使用</string>
-    <string name="onboarding_heading">欢迎！</string>
     <string name="onboarding_action_skip">跳过</string>
     <string name="onboarding_action_next">下一步</string>
     <string name="action_bar_up_description">返回</string>
-    <string name="onboarding_description">首先调整一些设置。稍后也可以在设置中修改。</string>
     <string name="onboarding_permission_ignore_battery_opts_description">避免需要长时间运行的书架更新、下载、备份恢复任务受到中断。</string>
     <string name="onboarding_permission_action_grant">允许</string>
     <string name="no_location_set">未设置存储位置</string>
@@ -725,8 +723,6 @@
     <string name="onboarding_permission_install_apps">应用安装权限</string>
     <string name="onboarding_permission_install_apps_description">用来安装图源插件。</string>
     <string name="onboarding_permission_notifications">通知权限</string>
-    <string name="onboarding_guides_new_user">如果你是第一次使用 %s，推荐查看入门指南。</string>
-    <string name="onboarding_guides_returning_user">如果你是重新安装了 %s，可以使用以下功能。</string>
     <string name="onboarding_permission_notifications_description">用来发送书架更新等通知。</string>
     <string name="onboarding_storage_help_info">如果你是从旧版更新而来，可以查看存储指南了解详情。</string>
     <string name="onboarding_storage_help_action">存储指南</string>

@@ -696,14 +696,10 @@
     <string name="action_bar_up_description">Yukarı git</string>
     <string name="onboarding_storage_action_select">Klasör seç</string>
     <string name="pref_onboarding_guide">Başlangıç rehberi</string>
-    <string name="onboarding_guides_new_user">%s\'da yeni misiniz? Başlangıç rehberine göz atmanızı tavsiye ederiz.</string>
     <string name="onboarding_action_finish">Başlayın</string>
     <string name="onboarding_storage_selection_required">Bir klasör seçilmelidir</string>
-    <string name="onboarding_heading">Hoş geldiniz!</string>
-    <string name="onboarding_guides_returning_user">%s\'u yeniden mi yüklüyorsunuz?</string>
     <string name="onboarding_action_skip">Atla</string>
     <string name="onboarding_action_next">Sonraki</string>
-    <string name="onboarding_description">Hadi bazı şeyleri ayarlayalım. Bunları daha sonra ayarlardan da değiştirebilirsiniz.</string>
     <string name="no_location_set">Depolama konumu ayarlanmadı</string>
     <string name="onboarding_storage_folder_info">%1$s\'un bölüm indirmelerini, yedeklemeleri ve daha fazlasını kaydedeceği bir klasör seçin. \n \nYalnızca buna ait bir klasör tavsiye edilir.</string>
     <string name="onboarding_storage_selected_folder">Seçilen klasör: %s</string>

@@ -651,7 +651,6 @@
     <string name="action_set_interval">Establecer intervalo</string>
     <string name="exception_unknown_host">Non se puido acceder a %s</string>
     <string name="exception_offline">Sen conexión a Internet</string>
-    <string name="onboarding_description">Primeiro hai que configurar algunhas cousas. Sempre podes modificalas nos axustes.</string>
     <string name="onboarding_action_next">Seguinte</string>
     <string name="onboarding_storage_selection_required">Debes elexir un cartafol</string>
     <string name="onboarding_storage_help_action">Guía de almacenamento</string>
@@ -673,7 +672,6 @@
     <string name="action_move_to_bottom_all_for_series">Mover ao último posto</string>
     <string name="action_revert_to_default">Restablecer os axustes por defecto</string>
     <string name="pref_onboarding_guide">Guía de benvida</string>
-    <string name="onboarding_heading">Dámosche a benvida!</string>
     <string name="onboarding_action_finish">Comecemos</string>
     <string name="onboarding_action_skip">Omitir</string>
     <string name="onboarding_storage_folder_info">Elixe o cartafol onde %1$s almacenará os capítulos descargados, as copias de seguridade e máis. \n \nRecoméndase usar un cartafol dedicado.</string>
@@ -686,8 +684,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Uso de batería en segundo plano</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Evita as interrupcións nas actualizacións da biblioteca, nas descargas e na restauración de copias de seguridade que tarden un anaco.</string>
     <string name="onboarding_permission_action_grant">Permitir</string>
-    <string name="onboarding_guides_new_user">Primeira vez usando %s? Recomendámosche ler a guía de introdución.</string>
-    <string name="onboarding_guides_returning_user">Volvendo instalar %s?</string>
     <string name="pref_relative_format_summary">«%1$s» en lugar de «%2$s»</string>
     <string name="ext_permission_install_apps_warning">Preme aquí para conceder os permisos para instalar extensións.</string>
     <string name="ext_revoke_trust">Revogar as extensións de confianza de orixe descoñecida</string>

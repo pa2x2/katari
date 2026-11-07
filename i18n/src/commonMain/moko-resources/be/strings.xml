@@ -352,8 +352,6 @@
     <string name="action_not_now">Не зараз</string>
     <string name="action_add_anyway">Усё адно дадаць</string>
     <string name="pref_onboarding_guide">Першыя крокі</string>
-    <string name="onboarding_heading">Вітаем!</string>
-    <string name="onboarding_description">Давайце спачатку ўсё наладзім. Вы заўсёды зможаце змяніць гэта пазней у наладах.</string>
     <string name="onboarding_action_next">Далей</string>
     <string name="onboarding_action_finish">Пачнем</string>
     <string name="onboarding_action_skip">Прапусціць</string>
@@ -374,8 +372,6 @@
     <string name="onboarding_permission_analytics">Дазволіць аналітыку</string>
     <string name="onboarding_permission_analytics_description">Ананімна дасылаць даныя выкарыстання праграмы для паляпшэння яе функцый.</string>
     <string name="onboarding_permission_action_grant">Надаць</string>
-    <string name="onboarding_guides_new_user">Упершыню ў %s? Рэкамендуем азнаёміцца з дапаможнікам пачаткоўца.</string>
-    <string name="onboarding_guides_returning_user">Пераўсталёўваеце %s?</string>
     <string name="pref_appearance_summary">Тэма, фармат даты і часу</string>
     <string name="pref_library_summary">Катэгорыі, глабальнае абнаўленне, гартанне раздзелаў</string>
     <string name="pref_reader_summary">Рэжым чытання, адлюстраванне, навігацыя</string>

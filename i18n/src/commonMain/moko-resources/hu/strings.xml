@@ -680,7 +680,6 @@
     <string name="exclude_scanlators">Szkennelő-fordítók tiltása</string>
     <string name="action_apply">Alkalmazás</string>
     <string name="pref_onboarding_guide">Bevezetési útmutató</string>
-    <string name="onboarding_heading">Üdvözöljük!</string>
     <string name="onboarding_action_next">Következő</string>
     <string name="onboarding_action_finish">Kezdjünk hozzá</string>
     <string name="onboarding_action_skip">Kihagyás</string>
@@ -697,14 +696,11 @@
     <string name="onboarding_permission_ignore_battery_opts">Háttérben lévő akkumulátor-használat</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Kerülje el a hosszan tartó könyvtárfrissítések, letöltések és biztonsági mentések helyreállításának megszakítását.</string>
     <string name="onboarding_permission_action_grant">Engedélyezés</string>
-    <string name="onboarding_guides_new_user">Új a(z) %s az ön számára? Javasoljuk, hogy olvassa el a Kezdő útmutatót.</string>
-    <string name="onboarding_guides_returning_user">Újratelepíti a(z) %s?</string>
     <string name="ext_permission_install_apps_warning">A bővítmények telepítéséhez engedélyek szükségesek. Az engedélyezéshez koppintson ide.</string>
     <string name="ext_revoke_trust">Megbízható ismeretlen kiterjesztések visszavonása</string>
     <string name="no_location_set">Nincs tárolási hely beállítva</string>
     <string name="action_create">Létrehoz</string>
     <string name="invalid_backup_file_error">Teljes hiba:</string>
-    <string name="onboarding_description">Kezdetnek állítsunk be néhány dolgot. Ezeket később bármikor módosíthatja a beállításokban.</string>
     <string name="overlay_header">Felület</string>
     <string name="track_delete_remote_text">Törlés a(z) %s szolgáltatásból</string>
     <string name="track_delete_text">Ezzel leállítja a helyi nyilvántartást.</string>
