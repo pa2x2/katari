@@ -91,7 +91,12 @@ internal class SourceChapterSaver(
             .apply { if (placement != ChapterListPlacement.Whole) addAll(existingChapters.map(EntryChapter::url)) }
         val currentSourceNames = sourceChapters.mapTo(mutableSetOf(), IndexedSourceChapter::resolvedName)
             .apply { if (placement != ChapterListPlacement.Whole) addAll(existingChapters.map(EntryChapter::name)) }
-        val existingChapterGroups = existingChapters.groupBy { it.sourceOrder }.values
+        // Copies of one chapter share its place in the list. Chapters the list names by their own URLs are that many
+        // chapters whatever places they hold, as when chapters a refresh never placed share the default one, so they
+        // are never copies to remove
+        val existingChapterGroups = existingChapters.groupBy { it.sourceOrder }.values.flatMap { sameOrder ->
+            if (sameOrder.count { it.url in partUrls } > 1) sameOrder.map(::listOf) else listOf(sameOrder)
+        }
         val progressRankByChapterId = if (existingChapterGroups.any { it.size > 1 }) {
             entryProgressRepository.getByEntryId(entry.id)
                 .mapNotNull { progress ->

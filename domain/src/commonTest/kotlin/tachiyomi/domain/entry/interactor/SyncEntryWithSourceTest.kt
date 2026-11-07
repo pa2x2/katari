@@ -96,6 +96,33 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
+    fun `listed chapters sharing a place keep their rows and read marks`() = runTest {
+        // As sync stores the chapters it brings to an entry no refresh has placed yet
+        val existing = listOf(
+            chapter(id = 1L, url = "/1", name = "Chapter 1", chapterNumber = 1.0, read = true),
+            chapter(id = 2L, url = "/2", name = "Chapter 2", chapterNumber = 2.0, read = true),
+            chapter(id = 3L, url = "/3", name = "Chapter 3", chapterNumber = 3.0),
+        )
+        val source = TestSource(
+            chapters = listOf(
+                sourceChapter(url = "/3", name = "Chapter 3", chapterNumber = 3.0),
+                sourceChapter(url = "/2", name = "Chapter 2", chapterNumber = 2.0),
+                sourceChapter(url = "/1", name = "Chapter 1", chapterNumber = 1.0),
+            ),
+        )
+        val removed = slot<List<Long>>()
+        val updates = slot<List<EntryChapter>>()
+        val inserts = slot<List<EntryChapter>>()
+        val repository = chapterRepository(existing, removed = removed, updated = updates, inserted = inserts)
+
+        sync(source, repository = repository)(entry(), fetchDetails = false)
+
+        removed.captured shouldBe emptyList()
+        inserts.captured shouldBe emptyList()
+        updates.captured.filter(EntryChapter::read).map(EntryChapter::id).toSet() shouldBe setOf(1L, 2L)
+    }
+
+    @Test
     fun `backfilled chapter does not steal state when source urls also change`() = runTest {
         val existing = listOf(
             chapter(id = 1L, url = "/old-episode-1", name = "Episode 1", chapterNumber = 1.0, sourceOrder = 0L),
