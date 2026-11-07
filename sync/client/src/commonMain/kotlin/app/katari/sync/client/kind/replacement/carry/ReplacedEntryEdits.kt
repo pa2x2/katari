@@ -22,7 +22,9 @@ import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.progress.ProgressPayload
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
 import app.katari.sync.client.kind.tracking.TrackerBindingKind
+import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.record.fillRecordGroups
 
 /**
  * Carries edits made to an entry after it was replaced over to the entry that replaced it (D018): a device that
@@ -41,7 +43,7 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
     suspend fun <P : Any> carry(kind: SyncedKind<P>, key: String, payload: P) {
         val from = if (kind === EntryKind) key else kind.entryKeyOf(payload) ?: return
         val carry = carryFor(from) ?: return
-        carry(carry, payload)
+        carry(carry, key, payload)
     }
 
     /**
@@ -54,32 +56,31 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
         return writes.movedTo(entryKey) != null
     }
 
-    /** Carries over every record of the entry [from] this device holds, once its replacement arrived. */
+    /**
+     * Carries over every record of the entry [from] this device holds, once its replacement arrived: the records in
+     * its group ([RecordGroups.entry]), the entry's own among them.
+     */
     suspend fun carryAll(from: String) {
         val carry = carryFor(from) ?: return
+        writes.database.fillRecordGroups()
         CarriedChapterState(carry).chapterMarks()
         CARRIED.forEach { kind ->
-            val records = if (kind === EntryKind) {
-                listOfNotNull(writes.database.sync_recordsQueries.getByKey(from).awaitAsOneOrNull())
-            } else {
-                writes.database.sync_recordsQueries.byKind(kind.name).awaitAsList()
-            }
-            records.filterNot { it.deleted }.forEach { record -> carryDecoded(carry, kind, record.payload) }
+            writes.database.sync_recordsQueries.liveOfKindInGroup(RecordGroups.entry(from), kind.name).awaitAsList()
+                .forEach { record -> carry(carry, record.record_key, kind.decode(record.payload)) }
         }
     }
 
-    private suspend fun <P : Any> carryDecoded(carry: ReplacementCarry, kind: SyncedKind<P>, bytes: ByteArray) {
-        val payload = kind.decode(bytes)
-        if (kind !== EntryKind && kind.entryKeyOf(payload) != carry.from) return
-        carry(carry, payload)
-    }
-
-    private suspend fun carry(carry: ReplacementCarry, payload: Any) {
+    /** Carries [payload], the record [key], over the replacement [carry]. */
+    private suspend fun carry(carry: ReplacementCarry, key: String, payload: Any) {
         when (payload) {
             is EntryPayload -> CarriedLibraryState(carry).entry(payload)
             is CategoryMembershipPayload -> CarriedLibraryState(carry).membership(payload)
+            // The marks are decided from all of the old entry's chapters, so the chapters arriving together, as
+            // marking a whole entry read sends them, decide them once
             is ChapterPayload -> if (carry.after(payload.read) != null || carry.after(payload.bookmark) != null) {
-                CarriedChapterState(carry).chapterMarks()
+                writes.afterRecords(CHAPTER_MARKS_OF + carry.from, cause = key) {
+                    carryFor(carry.from)?.let { CarriedChapterState(it).chapterMarks() }
+                }
             }
             is ProgressPayload -> CarriedChapterState(carry).progress(payload)
             is HistoryPayload -> CarriedChapterState(carry).history(payload)
@@ -95,6 +96,8 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
     }
 
     private companion object {
+        const val CHAPTER_MARKS_OF = "chapter-marks:"
+
         /**
          * Each kind whose records belong to an entry and may carry over, parents before what refers to them. Chapter
          * marks aren't among them: they are carried for the whole entry at once, since migrating decides each from all

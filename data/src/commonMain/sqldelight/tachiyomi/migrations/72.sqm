@@ -1,0 +1,5 @@
+-- Sync records keep the group they travel in (app/katari/sync/data/sync_records.sq), so an entry's records are found
+-- without reading every record. Those stored before have it filled in when it is first needed.
+ALTER TABLE sync_records ADD COLUMN record_group TEXT;
+
+CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);

@@ -92,6 +92,7 @@ class SyncWriting(
             failing = failing,
         ) { Clock.System.now().toEpochMilliseconds() }
         val result = block(session, taken)
+        session.finish()
         session.newestSeen?.let { seen ->
             val clock = sync_clockQueries.get().awaitAsOne()
             val isNewer = seen.physicalMillis > clock.seen_physical ||
