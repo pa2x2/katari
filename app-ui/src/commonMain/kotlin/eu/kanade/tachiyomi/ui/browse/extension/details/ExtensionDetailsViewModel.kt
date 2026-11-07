@@ -43,6 +43,7 @@ import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.feature.profiles.core.ProfileManager
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import kotlin.time.Duration.Companion.seconds
@@ -128,8 +129,7 @@ class ExtensionDetailsViewModel(
                     }
                     .toImmutableList()
             }
-            .catch { throwable ->
-                logcat(LogPriority.ERROR, throwable)
+            .resubscribeOnFailure(this@ExtensionDetailsViewModel) {
                 emit(persistentListOf())
             }
     }

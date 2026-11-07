@@ -120,6 +120,7 @@ import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
@@ -954,7 +955,7 @@ internal class ReaderViewModel(
         val readingOrder = chapterList.mapNotNull { it.chapter.toDomainChapter()?.toEntryChapter() }
         emitAll(navigationPresenter.observe(manga, readingOrder))
     }
-        .catch { error -> logcat(LogPriority.ERROR, error) { "Failed to observe reader table-of-contents state" } }
+        .resubscribeOnFailure(this@ReaderViewModel)
         .flowOn(Dispatchers.IO)
 
     suspend fun returnToPreviousPosition(): Int? {

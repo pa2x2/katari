@@ -33,6 +33,7 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.preference.getAndSet
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.model.Source
@@ -81,8 +82,7 @@ class MigrateSourceViewModel(
         }
         migrationSources to activeSessions
     }
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@MigrateSourceViewModel) {
             _channel.send(Event.FailedFetchingSourcesWithCount)
         }
 

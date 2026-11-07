@@ -23,6 +23,7 @@ import mihon.data.extension.service.ExtensionStoreService
 import mihon.domain.extension.model.ExtensionStore
 import mihon.domain.extension.model.ExtensionStoreFormat
 import mihon.domain.extension.repository.ExtensionStoreRepository
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.data.subscribeToList
@@ -42,8 +43,7 @@ class ExtensionStoreRepositoryImpl(
     // Extension loading, store matching and the store screens all read the stores, so they share one query
     private val stores = database.extension_storeQueries.getAll(::extensionStoreMapper)
         .subscribeToList()
-        .catch {
-            logcat(LogPriority.ERROR, it) { "Failed to query extension stores" }
+        .resubscribeOnFailure(this@ExtensionStoreRepositoryImpl) {
             emit(emptyList())
         }
         .shareIn(

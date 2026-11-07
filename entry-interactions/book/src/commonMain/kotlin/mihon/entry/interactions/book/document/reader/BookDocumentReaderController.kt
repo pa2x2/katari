@@ -47,6 +47,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
@@ -516,9 +517,7 @@ internal class BookDocumentReaderController(
         navigationPresentationJob?.cancel()
         navigationPresentationJob = scope.launch {
             navigationPresenter.observe(entry, readingOrder.chapters)
-                .catch { error ->
-                    logcat(LogPriority.ERROR, error) { "Failed to observe BOOK table-of-contents state" }
-                }
+                .resubscribeOnFailure(this@BookDocumentReaderController)
                 .collect { presentation ->
                     readerState = readerState?.copy(navigationPresentation = presentation)
                 }

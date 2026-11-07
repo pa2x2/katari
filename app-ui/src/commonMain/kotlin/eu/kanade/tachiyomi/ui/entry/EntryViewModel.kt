@@ -78,6 +78,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
@@ -503,8 +504,7 @@ class EntryViewModel(
                         is EntryChildProgressResult.Available -> result.labels
                         is EntryChildProgressResult.Inapplicable -> flowOf(emptyMap())
                     }
-                        .catch { error ->
-                            logcat(LogPriority.ERROR, error)
+                        .resubscribeOnFailure(this@EntryViewModel) {
                             emit(emptyMap())
                         }
                 }

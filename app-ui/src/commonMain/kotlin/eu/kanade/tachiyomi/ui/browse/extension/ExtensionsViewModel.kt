@@ -43,6 +43,7 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import kotlin.time.Duration.Companion.seconds
@@ -91,7 +92,7 @@ class ExtensionsViewModel(
             stores = stores,
         )
     }
-        .catch { throwable -> logcat(LogPriority.ERROR, throwable) }
+        .resubscribeOnFailure(this@ExtensionsViewModel)
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionFilterState())
 
