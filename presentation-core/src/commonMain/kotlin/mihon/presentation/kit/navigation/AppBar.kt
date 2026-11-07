@@ -49,6 +49,8 @@ import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.layout.LocalScreenFrameMargin
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.theme.style
@@ -387,13 +389,19 @@ fun UpButton(onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVect
 
 /**
  * Content under an [AppBar] in the same top bar, such as filter chips or a summary line, kept clear of the system bars,
- * a camera cutout and a side dock, and inside the screen's frame, like the bar's own contents. The caller's background
- * runs under them with the bar's.
+ * a camera cutout and a side dock, and inside the screen's frame, like the bar's own contents. It is filled like the
+ * bar, so content scrolling under the top bar stays hidden; [actionMode] matches the raised fill of a bar in action
+ * mode.
  */
 @Composable
-fun AppBarExtension(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier = modifier.windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))) {
-        content()
+fun AppBarExtension(modifier: Modifier = Modifier, actionMode: Boolean = false, content: @Composable () -> Unit) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        container = if (actionMode) SurfaceContainer.Default else SurfaceContainer.Surface,
+    ) {
+        Box(modifier = Modifier.windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))) {
+            content()
+        }
     }
 }
 
