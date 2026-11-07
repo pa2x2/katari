@@ -1,30 +1,28 @@
 package eu.kanade.tachiyomi.ui.browse.migration.entry.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionAvailability
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
-import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.entryCoverScale
+import mihon.presentation.kit.list.CoverRow
+import mihon.presentation.kit.list.CoverRowSlot
 import mihon.presentation.kit.list.treeBranch
 import mihon.presentation.kit.list.treeStem
 import mihon.presentation.kit.theme.KatariTheme
@@ -89,9 +87,14 @@ fun MigrateEntrySelectionGroup(
             rootSummary,
         )
     }
-    val rootCoverHalfHeight = migrationCoverHeight(itemOrientation) / 2
-    // The vertical line linking a merged group's members runs under the middle of the root's cover slot.
-    val treeConnectorX = KatariTheme.spacing.contentInset + BrowseMetrics.listCoverSlotWidth * entryCoverScale() / 2
+    val coverSlot = LibraryMetrics.rowWideCoverSlot * entryCoverScale()
+    val rootCoverHalfHeight = when (itemOrientation) {
+        EntryItemOrientation.VERTICAL -> coverSlot.height / 2
+        EntryItemOrientation.HORIZONTAL -> coverSlot.width / EntryCover.Wide.ratio / 2
+    }
+    // The vertical line linking a merged group's members runs under the middle of the root's cover slot, which starts
+    // after CoverRow's own start inset.
+    val treeConnectorX = KatariTheme.spacing.m + coverSlot.width / 2
 
     Column(modifier = modifier) {
         MigrateEntrySelectionItem(
@@ -183,44 +186,31 @@ private fun MigrationEntryMergeContextItem(
     onInspect: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = BrowseMetrics.listCoverRowMinHeight * entryCoverScale())
-            .clickable(onClick = onInspect)
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+    CoverRow(
+        cover = { MigrateEntrySelectionCover(entry = entry, itemOrientation = itemOrientation, onInspect = onInspect) },
+        modifier = modifier,
+        onClick = onInspect,
+        coverSlot = CoverRowSlot.Wide,
     ) {
-        MigrateEntrySelectionCover(
-            entry = entry,
-            itemOrientation = itemOrientation,
-            onInspect = onInspect,
+        Text(
+            text = entry.displayTitle,
+            role = TextRole.ItemTitle,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-        ) {
-            Text(
-                text = entry.displayTitle,
-                role = TextRole.Body,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = stringResource(
-                    if (unavailable) {
-                        MR.strings.migrationEntriesScreen_unavailableMergedMember
-                    } else {
-                        MR.strings.migrationEntriesScreen_retainedMergedMember
-                    },
-                    sourceName,
-                    mergeRole,
-                ),
-                role = TextRole.Supporting,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Text(
+            text = stringResource(
+                if (unavailable) {
+                    MR.strings.migrationEntriesScreen_unavailableMergedMember
+                } else {
+                    MR.strings.migrationEntriesScreen_retainedMergedMember
+                },
+                sourceName,
+                mergeRole,
+            ),
+            role = TextRole.Supporting,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }

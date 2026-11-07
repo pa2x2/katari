@@ -15,6 +15,9 @@ object LibraryMetrics {
      */
     val rowCover: DpSize = DpSize(40.dp, 56.dp)
 
+    /** A row's cover slot in a list that mixes landscape and book covers, as tall as [rowCover]. */
+    val rowWideCoverSlot: DpSize = DpSize(72.dp, 56.dp)
+
     /** Preferred width of a list row in the horizontally scrolling shelf of pinned entries. */
     val pinnedShelfRowWidth: Dp = 280.dp
 

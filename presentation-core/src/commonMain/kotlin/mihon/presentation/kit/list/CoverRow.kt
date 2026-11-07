@@ -20,9 +20,17 @@ import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
+ * The cover slot of a [CoverRow]. [Book] fits one portrait shape, so posters and book covers line up. [Wide] is for
+ * lists that mix landscape covers with book covers, such as anime stills among manga: it is as wide as
+ * [LibraryMetrics.rowWideCoverSlot], and the cover is centred in it, so titles still line up.
+ */
+enum class CoverRowSlot { Book, Wide }
+
+/**
  * A row led by an entry's cover, such as an update or a history item. [cover] draws the image filling the thumbnail
- * slot, [lines] are the title and details beside it, and [trailing] is an action at the end. [leading] sits before the
- * cover, such as a title's rank.
+ * slot; in a [CoverRowSlot.Wide] slot, it draws a book cover at the slot's height and a wide one at its width. [lines]
+ * are the title and details beside it, and [trailing] is an action at the end. [leading] sits before the cover, such
+ * as a title's rank.
  *
  * A row without a [cover] continues the row above it, such as a chapter of an expanded group: its lines start where
  * the cover rows' lines do, and it sits tighter.
@@ -35,13 +43,17 @@ fun CoverRow(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     leading: (@Composable () -> Unit)? = null,
+    coverSlot: CoverRowSlot = CoverRowSlot.Book,
     trailing: (@Composable () -> Unit)? = null,
     lines: @Composable ColumnScope.() -> Unit,
 ) {
     val spacing = KatariTheme.spacing
     val nested = cover == null
     val coverScale = entryCoverScale()
-    val coverSize = LibraryMetrics.rowCover.let { DpSize(it.width * coverScale, it.height * coverScale) }
+    val coverSize = when (coverSlot) {
+        CoverRowSlot.Book -> LibraryMetrics.rowCover
+        CoverRowSlot.Wide -> LibraryMetrics.rowWideCoverSlot
+    }.let { DpSize(it.width * coverScale, it.height * coverScale) }
     TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
@@ -66,7 +78,7 @@ fun CoverRow(
                         Spacer(Modifier.width(spacing.m))
                     }
                     if (cover != null) {
-                        Box(modifier = Modifier.size(coverSize)) { cover() }
+                        Box(modifier = Modifier.size(coverSize), contentAlignment = Alignment.Center) { cover() }
                     }
                 }
             }
