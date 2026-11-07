@@ -21,14 +21,13 @@ object RecordGroups {
     /** The group of the record [key] of [kind] as [deleted] and [payload] hold it; empty when it is in none. */
     internal fun of(kind: String, key: String, deleted: Boolean, payload: ByteArray): String {
         val synced = SyncKinds.named(kind) ?: return ""
-        if (synced == ProfileKind) return PROFILES
-        if (synced == EntryKind) return entry(key)
+        ownGroup(synced, key)?.let { return it }
         val bytes = when (val state = RecordState.of(deleted, payload)) {
             is RecordState.Live -> state.bytes
             is RecordState.Deleted -> state.tombstone.last.takeIf { it.isNotEmpty() } ?: return ""
         }
         return try {
-            entryKeyOf(synced, bytes)?.let(::entry).orEmpty()
+            decodedOf(synced, key, bytes)
         } catch (_: SerializationException) {
             ""
         } catch (_: IllegalArgumentException) {
@@ -36,7 +35,17 @@ object RecordGroups {
         }
     }
 
-    private fun <P : Any> entryKeyOf(kind: SyncedKind<P>, bytes: ByteArray): String? = kind.entryKeyOf(
-        kind.decode(bytes),
-    )
+    /** The group of the live record [key] of [kind] whose payload is [payload]; empty when it is in none. */
+    internal fun <P : Any> of(kind: SyncedKind<P>, key: String, payload: P): String =
+        ownGroup(kind, key) ?: kind.entryKeyOf(payload)?.let(::entry).orEmpty()
+
+    /** The group a kind's records are in by their kind alone: profiles, and entries, each its own group. */
+    private fun ownGroup(kind: SyncedKind<*>, key: String): String? = when (kind) {
+        ProfileKind -> PROFILES
+        EntryKind -> entry(key)
+        else -> null
+    }
+
+    private fun <P : Any> decodedOf(kind: SyncedKind<P>, key: String, bytes: ByteArray): String =
+        of(kind, key, kind.decode(bytes))
 }

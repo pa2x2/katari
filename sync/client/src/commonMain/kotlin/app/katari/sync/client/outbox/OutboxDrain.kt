@@ -10,6 +10,7 @@ import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.read.SettingReads
@@ -191,6 +192,7 @@ private suspend fun <P : Any> Database.storePresent(
         payload = kind.encode(payload, stored?.payload),
         deleted = false,
         changeId = changeId,
+        recordGroup = RecordGroups.of(kind, key, payload),
     )
 }
 
@@ -198,18 +200,22 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
     val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return
     if (stored.deleted) return
     when (kind.absence) {
-        SyncedKind.Absence.TOMBSTONE -> sync_recordsQueries.storeLocalChange(
-            recordKey = key,
-            kind = kind.name,
-            localRef = null,
-            kindVersion = kind.version.toLong(),
-            payload = ProtoBuf.encodeToByteArray(
+        SyncedKind.Absence.TOMBSTONE -> {
+            val tombstone = ProtoBuf.encodeToByteArray(
                 Tombstone.serializer(),
                 Tombstone(stamps.latest ?: Stamped.UNKNOWN_EDIT, last = stored.payload),
-            ),
-            deleted = true,
-            changeId = newChangeId(),
-        )
+            )
+            sync_recordsQueries.storeLocalChange(
+                recordKey = key,
+                kind = kind.name,
+                localRef = null,
+                kindVersion = kind.version.toLong(),
+                payload = tombstone,
+                deleted = true,
+                changeId = newChangeId(),
+                recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
+            )
+        }
         SyncedKind.Absence.REMOVED_FLAG -> {
             val previous = kind.decode(stored.payload)
             val removed = kind.removed(previous, stamps)
@@ -222,6 +228,7 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
                 payload = kind.encode(removed, stored.payload),
                 deleted = false,
                 changeId = if (removed == previous) stored.change_id else newChangeId(),
+                recordGroup = RecordGroups.of(kind, key, removed),
             )
         }
         SyncedKind.Absence.KEEP -> Unit

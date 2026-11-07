@@ -20,6 +20,7 @@ import app.katari.sync.client.outbox.EditStamper
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.apply.SettingWrites
@@ -64,6 +65,7 @@ internal class ApplySession(
 ) : LocalWrites {
     private val resolving = HashSet<String>()
     private val questions = QuestionDetection(this)
+    private val afterRecords = LinkedHashMap<String, AfterRecords>()
 
     /** The newest edit taken in, which this device's later edits must be stamped after. */
     var newestSeen: HybridTimestamp? = null
@@ -71,7 +73,7 @@ internal class ApplySession(
 
     suspend fun receive(record: SequencedRecord) {
         val envelope = record.record
-        if (failing[envelope.key] == FailedStage.STORING) return holdFailed(record)
+        if (failing[envelope.key] == FailedStage.STORING) return hold(record, HoldReason.FAILED)
         val kind = SyncKinds.named(envelope.kind)
         if (kind == null || envelope.kindVersion != kind.version) return hold(record, HoldReason.UNREADABLE)
         receive(kind, record)
@@ -116,16 +118,18 @@ internal class ApplySession(
             val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
             val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
             val holdsLocalEdits = !kind.sameRecord(merged, incoming)
+            val payload = if (holdsLocalEdits) merged.bytes else envelope.payload
             database.sync_recordsQueries.storeMerged(
                 recordKey = envelope.key,
                 kind = kind.name,
                 localRef = stored?.local_ref,
                 kindVersion = kind.version.toLong(),
-                payload = if (holdsLocalEdits) merged.bytes else envelope.payload,
+                payload = payload,
                 deleted = merged.deleted,
                 basedOn = record.sequence,
                 changeId = if (holdsLocalEdits) newChangeId() else null,
                 basePayload = envelope.payload,
+                recordGroup = RecordGroups.of(kind.name, envelope.key, merged.deleted, payload),
             )
             stage = FailedStage.WRITING
             val outcome = if (envelope.key in failing) {
@@ -168,6 +172,25 @@ internal class ApplySession(
         }
     }
 
+    override fun afterRecords(id: String, cause: String, action: suspend () -> Unit) {
+        afterRecords.putIfAbsent(id, AfterRecords(cause, action))
+    }
+
+    /** Runs the work records asked for [afterRecords], including what that work asks for in turn. */
+    suspend fun finish() {
+        while (afterRecords.isNotEmpty()) {
+            val id = afterRecords.keys.first()
+            val work = checkNotNull(afterRecords.remove(id))
+            try {
+                work.action()
+            } catch (e: Exception) {
+                throw failure(work.cause, FailedStage.WRITING, e)
+            }
+        }
+    }
+
+    private class AfterRecords(val cause: String, val action: suspend () -> Unit)
+
     /** [e] as the failure of the record [key], unless it already is a record's own, or a cancellation. */
     private fun failure(key: String, stage: FailedStage, e: Exception): Exception = when (e) {
         is RecordApplyFailure, is CancellationException -> e
@@ -188,14 +211,16 @@ internal class ApplySession(
                 retryWaitingFor(key)
             }
             is ApplyOutcome.Superseded -> {
+                val tombstone = RecordState.Deleted(outcome.tombstone).bytes
                 database.sync_recordsQueries.storeLocalChange(
                     recordKey = key,
                     kind = kind.name,
                     localRef = null,
                     kindVersion = kind.version.toLong(),
-                    payload = RecordState.Deleted(outcome.tombstone).bytes,
+                    payload = tombstone,
                     deleted = true,
                     changeId = newChangeId(),
+                    recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
                 )
                 link(kind, key, null)
                 database.sync_pendingQueries.release(key)
@@ -208,7 +233,7 @@ internal class ApplySession(
             is ApplyOutcome.Held -> {
                 link(kind, key, previousRef)
                 if (outcome.reason == HoldReason.FAILED) {
-                    holdFailed(record ?: storedCopy(key))
+                    hold(record ?: storedCopy(key), HoldReason.FAILED)
                 } else {
                     record?.let { hold(it, outcome.reason) }
                 }
@@ -226,10 +251,6 @@ internal class ApplySession(
             database.sync_pendingQueries.release(held.record_key)
             reapply(held.record_key, held)
         }
-    }
-
-    private suspend fun holdFailed(record: SequencedRecord) {
-        hold(record, HoldReason.FAILED, failedOn = appVersion)
     }
 
     /**
@@ -280,7 +301,6 @@ internal class ApplySession(
         record: SequencedRecord,
         reason: HoldReason,
         waitsFor: String? = null,
-        failedOn: String? = null,
     ) {
         database.sync_pendingQueries.hold(
             recordKey = record.record.key,
@@ -289,7 +309,7 @@ internal class ApplySession(
             waitsFor = waitsFor,
             receivedAt = now(),
             kind = record.record.kind,
-            failedOn = failedOn,
+            heldOn = appVersion.takeIf { reason.waitsForUpdate },
         )
     }
 
@@ -382,6 +402,7 @@ internal class ApplySession(
             payload = merged.bytes,
             deleted = merged.deleted,
             changeId = newChangeId(),
+            recordGroup = RecordGroups.of(kind.name, key, merged.deleted, merged.bytes),
         )
         settle(kind, key, write(kind, key, merged, stored?.local_ref), stored?.local_ref, record = null)
     }
@@ -407,6 +428,7 @@ internal class ApplySession(
                 payload = merged.bytes,
                 deleted = merged.deleted,
                 changeId = newChangeId(),
+                recordGroup = RecordGroups.of(kind.name, key, merged.deleted, merged.bytes),
             )
         }
         settle(kind, key, write(kind, key, merged, ref), ref, record = null)

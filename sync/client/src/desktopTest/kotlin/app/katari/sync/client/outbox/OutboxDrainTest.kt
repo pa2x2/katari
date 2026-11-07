@@ -3,6 +3,7 @@ package app.katari.sync.client.outbox
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.SyncTestDevice
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.record.RecordGroups
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -41,6 +42,7 @@ class OutboxDrainTest {
                     payload = device.entryRecord().payload + newerField,
                     deleted = false,
                     changeId = null,
+                    recordGroup = RecordGroups.entry(key),
                 )
             }
 

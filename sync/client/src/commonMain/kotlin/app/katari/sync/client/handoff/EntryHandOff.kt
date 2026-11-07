@@ -1,10 +1,12 @@
 package app.katari.sync.client.handoff
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.account.DeviceDirectory
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.merge.newestEdit
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordGroups
@@ -142,7 +144,7 @@ class EntryHandOff(
         records: List<SequencedRecord>,
         apply: suspend () -> Unit,
     ): List<ProgressArrival> {
-        val candidates = records.mapNotNull { candidate(it, device) }
+        val candidates = candidates(records, device)
         apply()
         if (candidates.isEmpty()) return emptyList()
         val arrivals = candidates.groupBy { it.entryKey }.mapNotNull { (entryKey, edits) ->
@@ -159,20 +161,34 @@ class EntryHandOff(
         return arrivals
     }
 
-    /** A progress record another device edited after this device's copy, read before the record is applied. */
-    private suspend fun candidate(record: SequencedRecord, device: DeviceId): Candidate? {
+    /**
+     * The progress records among [records] another device edited after this device's copies, read before the records
+     * are applied, with this device's copies looked up together.
+     */
+    private suspend fun candidates(records: List<SequencedRecord>, device: DeviceId): List<Candidate> {
+        val edits = records.mapNotNull { record -> otherDevicesEdit(record, device) }
+        if (edits.isEmpty()) return emptyList()
+        val stored = handler.await {
+            edits.map { it.key }.chunked(LOOKUP_CHUNK).flatMap { keys ->
+                sync_recordsQueries.livePayloads(keys).awaitAsList()
+            }
+        }.associate { it.record_key to newestEdit(ProgressKind.serializer, ProgressKind.decode(it.payload)) }
+        return edits.filter { edit -> stored[edit.key].let { it == null || it < edit.candidate.at } }
+            .map { it.candidate }
+    }
+
+    /** The edit [record] brings when it is a position another device changed. */
+    private fun otherDevicesEdit(record: SequencedRecord, device: DeviceId): IncomingEdit? {
         val envelope = record.record
         if (envelope.kind != ProgressKind.name || envelope.kindVersion != ProgressKind.version || envelope.deleted) {
             return null
         }
         val payload = ProgressKind.decode(envelope.payload)
         val edited = newestEdit(ProgressKind.serializer, payload) ?: return null
-        if (edited.device == device) return null
-        val stored = handler.await { sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull() }
-            ?.takeUnless { it.deleted }
-            ?.let { newestEdit(ProgressKind.serializer, ProgressKind.decode(it.payload)) }
-        if (stored != null && stored >= edited) return null
-        return Candidate(payload.entryKey, edited)
+        // A position recorded when its device set up sync carries no edit time: no device made it, and naming its
+        // placeholder device would ask the server for a device that is never listed.
+        if (edited == Stamped.UNKNOWN_EDIT || edited.device == device) return null
+        return IncomingEdit(envelope.key, Candidate(payload.entryKey, edited))
     }
 
     private suspend fun entryIdOf(entryKey: String): Long? = handler.await {
@@ -187,8 +203,14 @@ class EntryHandOff(
 
     private class Candidate(val entryKey: String, val at: HybridTimestamp)
 
+    private class IncomingEdit(val key: String, val candidate: Candidate)
+
     internal companion object {
         private const val ARRIVALS_BUFFER = 16
+
+        // Keys per lookup, well under SQLite's limit on bound values in one statement
+        private const val LOOKUP_CHUNK = 500
+
         val CHECK_LIMIT = 4.seconds
     }
 }

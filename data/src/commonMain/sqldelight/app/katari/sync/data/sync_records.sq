@@ -20,21 +20,37 @@ CREATE TABLE sync_records(
     change_id TEXT,
     -- The payload of the server copy at based_on, as this device last merged it or had it taken; NULL before the
     -- server had the record. Fields that differ from it in payload were edited on this device since.
-    base_payload BLOB
+    base_payload BLOB,
+    -- The group the record travels in ([app.katari.sync.client.record.RecordGroups]), such as the entry it belongs to;
+    -- empty for none, NULL for a record stored before groups were kept here.
+    record_group TEXT
 );
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
 CREATE INDEX idx_sync_records_pending ON sync_records(change_id) WHERE change_id IS NOT NULL;
+CREATE INDEX idx_sync_records_group ON sync_records(record_group, kind, record_key);
+-- The records of a kind in key order, such as the open questions the status shows.
+CREATE INDEX idx_sync_records_kind ON sync_records(kind, record_key);
+-- The newest server copy held, which every page pulled and every push checks the server against.
+CREATE INDEX idx_sync_records_based_on ON sync_records(based_on);
 
 getByKey:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE record_key = :recordKey;
 
 getByLocalRef:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE kind = :kind AND local_ref = :localRef;
+
+-- The payloads of the live records among :recordKeys.
+livePayloads:
+SELECT record_key, payload
+FROM sync_records
+WHERE record_key IN :recordKeys AND deleted = 0;
 
 -- Detaches whatever other record the local row held, so the row holds only the record it was last stored for.
 detachLocalRef:
@@ -48,21 +64,23 @@ DELETE FROM sync_records
 WHERE kind = :kind AND local_ref = :localRef AND record_key != :recordKey;
 
 storeLocalChange:
-INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id)
-VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :changeId)
+INSERT INTO sync_records(record_key, kind, local_ref, kind_version, payload, deleted, change_id, record_group)
+VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :changeId, :recordGroup)
 ON CONFLICT(record_key) DO UPDATE SET
     local_ref = excluded.local_ref,
     kind_version = excluded.kind_version,
     payload = excluded.payload,
     deleted = excluded.deleted,
-    change_id = excluded.change_id;
+    change_id = excluded.change_id,
+    record_group = excluded.record_group;
 
 -- A record whose newest server copy this app can't read is not pushed: the server would take this app's older
 -- format over the newer one. It waits in sync_pending until an update can read it. So does one that failed to apply,
 -- whose copy here may lack what the server's holds. Changes come a page at a time in
 -- key order, so a push reaches every one even when the first are refused.
 pendingAfter:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE change_id IS NOT NULL
 AND record_key > :afterKey
@@ -89,9 +107,11 @@ WHERE record_key = :recordKey;
 -- copy lacks and so must be pushed.
 storeMerged:
 INSERT INTO sync_records(
-    record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+    record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload, record_group
 )
-VALUES (:recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :basedOn, 1, :changeId, :basePayload)
+VALUES (
+    :recordKey, :kind, :localRef, :kindVersion, :payload, :deleted, :basedOn, 1, :changeId, :basePayload, :recordGroup
+)
 ON CONFLICT(record_key) DO UPDATE SET
     local_ref = excluded.local_ref,
     kind_version = excluded.kind_version,
@@ -100,7 +120,8 @@ ON CONFLICT(record_key) DO UPDATE SET
     based_on = excluded.based_on,
     synced = 1,
     change_id = excluded.change_id,
-    base_payload = excluded.base_payload;
+    base_payload = excluded.base_payload,
+    record_group = excluded.record_group;
 
 setLocalRef:
 UPDATE sync_records
@@ -108,13 +129,34 @@ SET local_ref = :localRef
 WHERE record_key = :recordKey;
 
 byKind:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE kind = :kind
 ORDER BY record_key;
 
+-- The live records of :kind in :recordGroup, such as an entry's positions.
+liveOfKindInGroup:
+SELECT record_key, payload
+FROM sync_records
+WHERE record_group = :recordGroup AND kind = :kind AND deleted = 0
+ORDER BY record_key;
+
+-- Records stored before groups were kept here, a batch at a time for their groups to be filled in.
+ungrouped:
+SELECT record_key, kind, deleted, payload
+FROM sync_records
+WHERE record_group IS NULL
+LIMIT :limit;
+
+setGroup:
+UPDATE sync_records
+SET record_group = :recordGroup
+WHERE record_key = :recordKey;
+
 byKinds:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE kind IN :kinds
 ORDER BY kind, record_key;
@@ -144,7 +186,8 @@ WHERE based_on = 0 AND change_id IS NULL AND synced = 1;
 -- After a full resync that left deletions out, the live records its pull didn't bring that this device had synced
 -- and hasn't changed since: the server dropped their deletion markers, so they were deleted elsewhere.
 deletedElsewhere:
-SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload
+SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
+    record_group
 FROM sync_records
 WHERE based_on = 0 AND change_id IS NULL AND synced = 1 AND deleted = 0
 ORDER BY record_key;

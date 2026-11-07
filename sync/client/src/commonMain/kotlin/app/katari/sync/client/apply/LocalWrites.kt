@@ -60,4 +60,11 @@ internal interface LocalWrites {
 
     /** Writes the record [key] to the rows again as this device stores it, such as after its profile came back. */
     suspend fun reapply(key: String)
+
+    /**
+     * Runs [action] once the records written together with this one are, once for each [id] however many of them
+     * ask, for work decided from many records at once. Its failure is the failure of the record [cause], the first
+     * that asked.
+     */
+    fun afterRecords(id: String, cause: String, action: suspend () -> Unit)
 }

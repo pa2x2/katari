@@ -9,6 +9,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.payload.Tombstone
 import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.newChangeId
 
 /**
@@ -44,15 +45,17 @@ internal class CategoryRows(
             return ApplyOutcome.Superseded(Tombstone(writes.newEdit(), replacedBy = other.record_key))
         }
         if (other != null) {
-            val tombstone = Tombstone(writes.newEdit(), replacedBy = key, last = other.payload)
+            val tombstone =
+                RecordState.Deleted(Tombstone(writes.newEdit(), replacedBy = key, last = other.payload)).bytes
             records.storeLocalChange(
                 recordKey = other.record_key,
                 kind = CategoryKind.name,
                 localRef = null,
                 kindVersion = CategoryKind.version.toLong(),
-                payload = RecordState.Deleted(tombstone).bytes,
+                payload = tombstone,
                 deleted = true,
                 changeId = newChangeId(),
+                recordGroup = RecordGroups.of(CategoryKind.name, other.record_key, deleted = true, tombstone),
             )
         }
         return update(namesake)
