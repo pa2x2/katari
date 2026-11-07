@@ -26,10 +26,13 @@ abstract class UiKitBoundaryCheckTask : DefaultTask() {
             }
             .filter(File::isFile)
             .toList()
+        val kotlinSources = files.filter { it.extension == "kt" }.map { it.toSource(root) }
+        // The index lives in a hidden directory, which the walk above skips
+        val componentIndex = root.resolve(UI_KIT_COMPONENT_INDEX).takeIf(File::isFile)?.toSource(root)
         val findings = checkUiKitBoundaries(
-            kotlinSources = files.filter { it.extension == "kt" }.map { it.toSource(root) },
+            kotlinSources = kotlinSources,
             buildScripts = files.filter { it.name == "build.gradle.kts" }.map { it.toSource(root) },
-        )
+        ) + checkUiKitComponentIndex(kotlinSources, componentIndex)
         val lines = findings.map { finding ->
             val location = finding.lineNumber?.let { "${finding.relativePath}:$it" } ?: finding.relativePath
             "- $location: ${finding.reason}"
