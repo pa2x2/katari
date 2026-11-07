@@ -18,6 +18,9 @@ import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import mihon.presentation.kit.feedback.GuidePageHeading
+import mihon.icons.materialsymbols.rounded.RocketLaunch
+import mihon.icons.materialsymbols.MaterialSymbols
 
 internal class GuidesStep(
     private val onRestoreBackup: () -> Unit,
@@ -25,6 +28,13 @@ internal class GuidesStep(
     private val onOpenMihon: () -> Unit,
     private val onMigrateFromMihon: () -> Unit,
 ) : OnboardingStep {
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.RocketLaunch,
+        heading = stringResource(MR.strings.onboarding_finish_heading),
+        subtitle = stringResource(MR.strings.onboarding_finish_subtitle, stringResource(MR.strings.app_name)),
+    )
 
     override val isComplete: Boolean = true
 
@@ -36,7 +46,6 @@ internal class GuidesStep(
             RowGroup(
                 rows = listOf {
                     ControlRow {
-                        Text(stringResource(MR.strings.onboarding_guides_new_user, stringResource(MR.strings.app_name)))
                         Button(
                             label = stringResource(MR.strings.getting_started_guide),
                             onClick = { handler.openUri(GETTING_STARTED_URL) },

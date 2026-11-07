@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -49,27 +51,14 @@ fun InfoScreen(
     Scaffold(
         bottomBar = {
             BottomActionBar {
-                if (rejectText != null && onRejectClick != null) {
-                    Button(
-                        label = rejectText,
-                        onClick = onRejectClick,
-                        modifier = Modifier.weight(1f),
-                        style = ButtonStyle.Outlined,
-                    )
-                }
-                if (alternativeText != null && onAlternativeClick != null) {
-                    Button(
-                        label = alternativeText,
-                        onClick = onAlternativeClick,
-                        modifier = Modifier.weight(1f),
-                        style = ButtonStyle.Outlined,
-                    )
-                }
-                Button(
-                    label = acceptText,
-                    onClick = onAcceptClick,
-                    modifier = Modifier.weight(1f),
-                    enabled = canAccept,
+                InfoActions(
+                    acceptText = acceptText,
+                    onAcceptClick = onAcceptClick,
+                    canAccept = canAccept,
+                    rejectText = rejectText,
+                    onRejectClick = onRejectClick,
+                    alternativeText = alternativeText,
+                    onAlternativeClick = onAlternativeClick,
                 )
             }
         },
@@ -83,35 +72,86 @@ fun InfoScreen(
                 .height(paddingValues.calculateTopPadding()),
         )
 
-        Column(
+        InfoPage(
+            icon = icon,
+            headingText = headingText,
+            subtitleText = subtitleText,
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth()
-                .padding(paddingValues)
-                .padding(top = 48.dp, bottom = KatariTheme.spacing.l),
-        ) {
-            Column(modifier = Modifier.padding(horizontal = KatariTheme.spacing.l)) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(bottom = KatariTheme.spacing.s)
-                        .size(48.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Text(
-                    text = headingText,
-                    style = MaterialTheme.typography.headlineLarge,
-                )
-                Text(
-                    text = subtitleText,
-                    modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
-                    color = KatariTheme.colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-            }
-            Column(modifier = Modifier.padding(top = KatariTheme.spacing.s), content = content)
+                .padding(paddingValues),
+            content = content,
+        )
+    }
+}
+
+/** The bottom bar's buttons of an [InfoScreen] or a [GuideScreen] page: reject, the alternative, then accept. */
+@Composable
+internal fun RowScope.InfoActions(
+    acceptText: String,
+    onAcceptClick: () -> Unit,
+    canAccept: Boolean,
+    rejectText: String?,
+    onRejectClick: (() -> Unit)?,
+    alternativeText: String? = null,
+    onAlternativeClick: (() -> Unit)? = null,
+) {
+    if (rejectText != null && onRejectClick != null) {
+        Button(
+            label = rejectText,
+            onClick = onRejectClick,
+            modifier = Modifier.weight(1f),
+            style = ButtonStyle.Outlined,
+        )
+    }
+    if (alternativeText != null && onAlternativeClick != null) {
+        Button(
+            label = alternativeText,
+            onClick = onAlternativeClick,
+            modifier = Modifier.weight(1f),
+            style = ButtonStyle.Outlined,
+        )
+    }
+    Button(
+        label = acceptText,
+        onClick = onAcceptClick,
+        modifier = Modifier.weight(1f),
+        enabled = canAccept,
+    )
+}
+
+/** An [InfoScreen]'s or [GuideScreen] page's icon, heading and subtitle above its [content]. */
+@Composable
+internal fun InfoPage(
+    icon: ImageVector,
+    headingText: String,
+    subtitleText: String,
+    modifier: Modifier = Modifier,
+    topPadding: PaddingValues = PaddingValues(top = 48.dp),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier = modifier.padding(topPadding).padding(bottom = KatariTheme.spacing.l)) {
+        Column(modifier = Modifier.padding(horizontal = KatariTheme.spacing.l)) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(bottom = KatariTheme.spacing.s)
+                    .size(48.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = headingText,
+                style = MaterialTheme.typography.headlineLarge,
+            )
+            Text(
+                text = subtitleText,
+                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                color = KatariTheme.colors.onSurfaceVariant,
+                style = MaterialTheme.typography.titleSmall,
+            )
         }
+        Column(modifier = Modifier.padding(top = KatariTheme.spacing.s), content = content)
     }
 }
 

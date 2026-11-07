@@ -12,8 +12,11 @@ import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.data.collectPickedStorageDirectory
 import eu.kanade.presentation.more.settings.screen.data.storageLocationDisplayPath
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Folder
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.GuidePageHeading
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.list.RowGroup
@@ -28,6 +31,13 @@ internal class StorageStep(
 ) : OnboardingStep {
 
     private var _isComplete by mutableStateOf(false)
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.Folder,
+        heading = stringResource(MR.strings.onboarding_storage_heading),
+        subtitle = stringResource(MR.strings.onboarding_storage_subtitle),
+    )
 
     override val isComplete: Boolean
         get() = _isComplete

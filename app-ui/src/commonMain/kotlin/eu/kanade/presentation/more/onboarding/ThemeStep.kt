@@ -7,13 +7,25 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.screen.appearance.AppThemeHost
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Palette
+import mihon.presentation.kit.feedback.GuidePageHeading
 import mihon.presentation.kit.list.RowGroup
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
 internal class ThemeStep(
     private val uiPreferences: UiPreferences,
     private val themeHost: AppThemeHost,
 ) : OnboardingStep {
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.Palette,
+        heading = stringResource(MR.strings.onboarding_appearance_heading),
+        subtitle = stringResource(MR.strings.onboarding_appearance_subtitle, stringResource(MR.strings.app_name)),
+    )
 
     override val isComplete: Boolean = true
 

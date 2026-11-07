@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.onboarding
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -11,11 +10,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import mihon.app.ui.di.LocalAppUiGraph
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.RocketLaunch
-import mihon.presentation.kit.feedback.InfoScreen
-import soup.compose.material.motion.animation.materialSharedAxisX
-import soup.compose.material.motion.animation.rememberSlideDistance
+import mihon.presentation.kit.feedback.GuideScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -27,8 +22,6 @@ fun OnboardingScreen(
     onOpenMihon: () -> Unit,
     onMigrateFromMihon: () -> Unit,
 ) {
-    val slideDistance = rememberSlideDistance()
-
     val graph = LocalAppUiGraph.current
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     val steps = remember(graph, showMihonMigration, onRestoreBackup, onOpenMihon, onMigrateFromMihon) {
@@ -50,6 +43,13 @@ fun OnboardingScreen(
         )
     }
     val isLastStep = currentStep == steps.lastIndex
+    val goNext: () -> Unit = {
+        if (isLastStep) {
+            onComplete()
+        } else {
+            currentStep++
+        }
+    }
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
@@ -57,37 +57,22 @@ fun OnboardingScreen(
         onBackCompleted = { currentStep-- },
     )
 
-    InfoScreen(
-        icon = MaterialSymbols.Rounded.RocketLaunch,
-        headingText = stringResource(MR.strings.onboarding_heading),
-        subtitleText = stringResource(MR.strings.onboarding_description),
-        acceptText = stringResource(
+    GuideScreen(
+        page = currentStep,
+        pageCount = steps.size,
+        heading = { steps[it].heading() },
+        nextText = stringResource(
             if (isLastStep) {
                 MR.strings.onboarding_action_finish
             } else {
                 MR.strings.onboarding_action_next
             },
         ),
-        canAccept = steps[currentStep].isComplete,
-        onAcceptClick = {
-            if (isLastStep) {
-                onComplete()
-            } else {
-                currentStep++
-            }
-        },
+        onNextClick = goNext,
+        canGoNext = steps[currentStep].isComplete,
+        skipText = stringResource(MR.strings.onboarding_action_skip).takeIf { steps[currentStep].canSkip },
+        onSkipClick = goNext.takeIf { steps[currentStep].canSkip },
     ) {
-        AnimatedContent(
-            targetState = currentStep,
-            transitionSpec = {
-                materialSharedAxisX(
-                    forward = targetState > initialState,
-                    slideDistance = slideDistance,
-                )
-            },
-            label = "stepContent",
-        ) {
-            steps[it].Content()
-        }
+        steps[it].Content()
     }
 }
