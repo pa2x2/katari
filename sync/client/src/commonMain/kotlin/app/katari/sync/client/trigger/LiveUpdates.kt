@@ -9,6 +9,7 @@ import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.LiveChannel
 import app.katari.sync.client.server.SyncServerClients
 import app.katari.sync.protocol.live.ChangesAvailable
+import app.katari.sync.protocol.server.ServerIdentity
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
@@ -53,16 +54,25 @@ class LiveUpdates(
         val latest = AtomicReference(connection.state())
         val following = launch { connection.states().collect(latest::set) }
         val batching = PullBatching()
-        val pulling = launch { batching.pulls { runs.request(SyncRequest()) } }
+        // The announcement of this device's own push can come before the push's answer moves the device past it; by
+        // the time the batch closes the answer has, and a pull would find nothing
+        val announced = AtomicReference<ServerIdentity?>(null)
+        val pulling = launch {
+            batching.pulls { if (latest.get().isBehind(announced.get())) runs.request(SyncRequest()) }
+        }
         try {
-            keepOpen(latest, batching)
+            keepOpen(latest, batching, announced)
         } finally {
             following.cancel()
             pulling.cancel()
         }
     }
 
-    private suspend fun keepOpen(latest: AtomicReference<SyncConnectionState>, batching: PullBatching) {
+    private suspend fun keepOpen(
+        latest: AtomicReference<SyncConnectionState>,
+        batching: PullBatching,
+        announced: AtomicReference<ServerIdentity?>,
+    ) {
         var backoff = FIRST_BACKOFF
         while (true) {
             val server = latest.get().server
@@ -75,8 +85,8 @@ class LiveUpdates(
                     override fun onAnnouncement(changes: ChangesAvailable) {
                         heard.set(true)
                         deviceChanges.hear(changes.devices)
-                        val state = latest.get()
-                        if (changes.server.sequence > state.position || changes.server.instanceId != state.instanceId) {
+                        if (latest.get().isBehind(changes.server)) {
+                            announced.set(changes.server)
                             batching.hear()
                         }
                     }
@@ -97,6 +107,9 @@ class LiveUpdates(
             backoff = (backoff * 2).coerceAtMost(MAX_BACKOFF)
         }
     }
+
+    private fun SyncConnectionState.isBehind(server: ServerIdentity?) =
+        server != null && (server.sequence > position || server.instanceId != instanceId)
 
     private fun SyncConnectionState.listens() = isLinked && stopped == null && stage == SyncStage.READY
 

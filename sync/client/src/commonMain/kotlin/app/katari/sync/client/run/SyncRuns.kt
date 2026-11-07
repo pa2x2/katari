@@ -40,7 +40,7 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     private val runningState = MutableStateFlow(false)
     private val outcomes = MutableStateFlow(SyncOutcome.IDLE)
 
-    /** Whether a run is going now. */
+    /** Whether a run is going now that has work to do with the server ([SyncPass.run]). */
     val running: StateFlow<Boolean> = runningState.asStateFlow()
 
     /**
@@ -79,17 +79,22 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
                 waiting = null
                 next to requested
             }
-            steps.begin()
-            runningState.value = true
+            var working = false
             val outcome = try {
-                runLock.withLock { pass.run(next) }
+                runLock.withLock {
+                    pass.run(next) {
+                        working = true
+                        steps.begin()
+                        runningState.value = true
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Sync run failed" }
                 SyncOutcome.FAILED
             } finally {
-                steps.end()
+                if (working) steps.end()
                 runningState.value = synchronized(lock) { waiting != null }
             }
             if (outcome != SyncOutcome.IDLE) outcomes.value = outcome

@@ -75,10 +75,14 @@ class SyncPass(
     private val disconnection: Disconnection,
     private val steps: SyncSteps,
 ) {
-    suspend fun run(request: SyncRequest): SyncOutcome {
+    /**
+     * Runs [request], calling [working] once it is found to have work to do with the server: a run that stops before,
+     * as one asked for after edits that were sync's own writes does, never reads as syncing.
+     */
+    suspend fun run(request: SyncRequest, working: () -> Unit = {}): SyncOutcome {
         var outcome = SyncOutcome.FAILED
         try {
-            outcome = attempt(request)
+            outcome = attempt(request, working)
             return outcome
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
@@ -87,7 +91,7 @@ class SyncPass(
         }
     }
 
-    private suspend fun attempt(request: SyncRequest): SyncOutcome {
+    private suspend fun attempt(request: SyncRequest, working: () -> Unit): SyncOutcome {
         val state = connection.state()
         if (!state.isLinked) return SyncOutcome.IDLE
         if (!resumes(state)) return SyncOutcome.IDLE
@@ -105,6 +109,7 @@ class SyncPass(
             connection.stop(SyncStop.SIGN_IN_AGAIN)
             return SyncOutcome.IDLE
         }
+        working()
         val client = clients.of(checkNotNull(state.server), token)
         return try {
             // Also how a server that takes connections but never answers is found within a small call's time limit,

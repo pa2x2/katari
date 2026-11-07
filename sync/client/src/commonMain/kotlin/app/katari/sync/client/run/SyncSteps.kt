@@ -32,7 +32,7 @@ class SyncSteps {
     @Volatile
     private var lastEnded = 0L
 
-    /** A run starts, before it shows as running. */
+    /** A run starts working, before it shows as running. */
     internal fun begin() {
         val now = nowMillis()
         if (now - lastEnded <= RUNS_SETTLE.inWholeMilliseconds) return
