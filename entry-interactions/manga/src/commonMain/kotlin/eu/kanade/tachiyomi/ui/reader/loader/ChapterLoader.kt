@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader.loader
 
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupStep
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.archive.ArchiveOpener
@@ -38,9 +39,9 @@ internal class ChapterLoader(
 
     /**
      * Assigns the chapter's page loader and loads the its pages. Returns immediately if the chapter
-     * is already loaded.
+     * is already loaded. [onStep] hears what the load waits on, from the IO thread.
      */
-    suspend fun loadChapter(chapter: ReaderChapter) {
+    suspend fun loadChapter(chapter: ReaderChapter, onStep: (ReaderStartupStep) -> Unit = {}) {
         if (chapterIsReady(chapter)) {
             return
         }
@@ -54,7 +55,7 @@ internal class ChapterLoader(
             logcat { "Loading pages for ${chapter.chapter.name}" }
             var pageLoader: PageLoader? = null
             try {
-                val resolvedLoader = getPageLoader(chapter)
+                val resolvedLoader = getPageLoader(chapter, onStep)
                 pageLoader = resolvedLoader
                 chapter.pageLoader = resolvedLoader
 
@@ -103,7 +104,7 @@ internal class ChapterLoader(
     /**
      * Returns the page loader to use for this [chapter].
      */
-    private fun getPageLoader(chapter: ReaderChapter): PageLoader {
+    private fun getPageLoader(chapter: ReaderChapter, onStep: (ReaderStartupStep) -> Unit): PageLoader {
         val dbChapter = chapter.chapter
         val chapterManga = chapter.manga ?: manga
         val chapterUnifiedSource = sourceManager.getOrStub(chapterManga.source)
@@ -116,6 +117,7 @@ internal class ChapterLoader(
             chapterManga.source,
             skipCache = true,
         )
+        if (isDownloaded || localSource != null) onStep(ReaderStartupStep.OpeningFile)
         return when {
             isDownloaded -> DownloadPageLoader(
                 archives,
@@ -150,6 +152,7 @@ internal class ChapterLoader(
                 pageStore,
                 pageAcquisition,
                 appScope,
+                onRequestPageList = { onStep(ReaderStartupStep.AskingSource(chapterUnifiedSource.name)) },
             )
             chapterUnifiedSource is UnifiedStubSource -> throw ReaderLoadException(
                 message = context.stringResource(MR.strings.source_not_installed, chapterUnifiedSource.toString()),

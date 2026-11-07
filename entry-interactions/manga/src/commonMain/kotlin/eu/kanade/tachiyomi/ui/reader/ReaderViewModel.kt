@@ -27,6 +27,7 @@ import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.unref
 import eu.kanade.tachiyomi.ui.reader.navigation.MangaReaderJumpHistory
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
+import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupStep
 import eu.kanade.tachiyomi.ui.reader.startup.toReaderStartupFailure
 import eu.kanade.tachiyomi.util.lang.byteSize
 import kotlinx.coroutines.CancellationException
@@ -516,7 +517,7 @@ internal class ReaderViewModel(
 
     private fun startInitialChapterLoad() {
         startupJob?.cancel()
-        mutableState.update { it.copy(startupState = ReaderStartupState.Loading) }
+        mutableState.update { it.copy(startupState = ReaderStartupState.Loading()) }
         startupJob = viewModelScope.launch { loadInitialChapter() }
     }
 
@@ -530,6 +531,7 @@ internal class ReaderViewModel(
                             message = "Requested entry of id $mangaId not found",
                             canRetry = false,
                         )
+                    if (!sourceManager.isInitialized.value) showStartupStep(ReaderStartupStep.LoadingExtensions)
                     sourceManager.isInitialized.first { it }
                     installViewerSettingBindings(entry)
                     pageSessionLoader.chapterLoader(appContext, entry).also { loader = it }
@@ -540,7 +542,7 @@ internal class ReaderViewModel(
                         message = "Requested chapter of id $chapterId not found in chapter list",
                         canRetry = false,
                     )
-                loadChapter(activeLoader, requestedChapter)
+                loadChapter(activeLoader, requestedChapter, onStep = ::showStartupStep)
                 mutableState.update { it.copy(startupState = ReaderStartupState.Ready) }
             } catch (e: Throwable) {
                 if (e is CancellationException) {
@@ -548,6 +550,16 @@ internal class ReaderViewModel(
                 }
                 logcat(LogPriority.ERROR, e) { "Failed to open the initial reader chapter" }
                 mutableState.update { it.copy(startupState = e.toReaderStartupFailure()) }
+            }
+        }
+    }
+
+    private fun showStartupStep(step: ReaderStartupStep) {
+        mutableState.update { state ->
+            if (state.startupState is ReaderStartupState.Loading) {
+                state.copy(startupState = ReaderStartupState.Loading(step))
+            } else {
+                state
             }
         }
     }
@@ -560,8 +572,9 @@ internal class ReaderViewModel(
         loader: ChapterLoader,
         chapter: ReaderChapter,
         pageIndex: Int? = null,
+        onStep: (ReaderStartupStep) -> Unit = {},
     ): ViewerChapters {
-        loader.loadChapter(chapter)
+        loader.loadChapter(chapter, onStep)
 
         if (initialPageIndexPending && chapterPageIndex >= 0) {
             chapter.requestedPage = chapterPageIndex
@@ -1336,7 +1349,7 @@ internal class ReaderViewModel(
 
     @Immutable
     data class State(
-        val startupState: ReaderStartupState = ReaderStartupState.Loading,
+        val startupState: ReaderStartupState = ReaderStartupState.Loading(),
         val manga: Entry? = null,
         val viewerChapters: ViewerChapters? = null,
         val bookmarked: Boolean = false,

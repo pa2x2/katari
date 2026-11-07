@@ -45,7 +45,10 @@ internal class EpubContentSessionFixture(
     override suspend fun openResource(resourceId: String, range: BookByteRange?): Result<OpenedBookResource> =
         error("The EPUB preparer must materialize its primary resource")
 
-    override suspend fun materializeResource(resourceId: String): Result<MaterializedBookResource> = Result.success(
+    override suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit,
+    ): Result<MaterializedBookResource> = Result.success(
         object : MaterializedBookResource {
             override val metadata = resource
             override val file = this@EpubContentSessionFixture.file

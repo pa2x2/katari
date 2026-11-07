@@ -66,10 +66,8 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
             videoTitle = current.entryTitle,
             episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
             onBack = host.onClose,
-            step = VideoPlayerViewModel.LoadingStep.Opening(
-                server = current.serverNotice?.playingServer ?: playingServer(playbackData)?.label,
-                failedServer = current.serverNotice?.failedServer,
-            ),
+            step = current.serverNotice?.let(VideoPlayerViewModel.LoadingStep::FallingBack)
+                ?: VideoPlayerViewModel.LoadingStep.Opening(server = playingServer(playbackData)?.label),
             sourceChoice = playbackData.sourceChoice()?.let { choice ->
                 SourceChoiceAction(choice) { actions.openSettings(choice.settingsSection) }
             },

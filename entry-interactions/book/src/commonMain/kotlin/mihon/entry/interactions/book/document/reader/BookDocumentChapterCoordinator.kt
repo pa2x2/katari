@@ -20,6 +20,7 @@ import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPu
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.navigation.resolveNavigationDestination
 import mihon.entry.interactions.book.document.render.toPreparedBookDocument
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
@@ -109,7 +110,7 @@ internal class BookDocumentChapterCoordinator(
                     val result = sessionFactory.open(
                         BookReaderRequest(current.entry.id, chapter.id),
                         BookDocumentReaderProcessor.PROCESSOR_ID,
-                    )
+                    ) { progress -> scope.launch { showSelectionProgress(chapter.id, progress) } }
                 ) {
                     is BookReaderOpenResult.Failure -> setLoadState(
                         chapter,
@@ -501,6 +502,15 @@ internal class BookDocumentChapterCoordinator(
             }
             session.saveLocation(locator, completed = true)
         }
+    }
+
+    /** Opening reports from background threads; the reader's state changes only here, on [scope]. */
+    private fun showSelectionProgress(chapterId: Long, progress: BookOpeningProgress) {
+        val state = currentState() ?: return
+        val selection = state.chapterSelection
+            ?.takeIf { it.chapter.id == chapterId && it.loadState == BookDocumentChapterLoadState.Loading }
+            ?: return
+        updateState(state.copy(chapterSelection = selection.copy(progress = progress)))
     }
 
     private fun setLoadState(

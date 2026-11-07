@@ -19,6 +19,7 @@ import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -139,7 +140,10 @@ internal class SessionFactoryTestPreparer(
     override fun supports(descriptor: BookContentDescriptor): Boolean =
         descriptor.format == "text/html"
 
-    override suspend fun prepare(content: BookContentSession): BookPreparationResult =
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult =
         BookPreparationResult.Success(preparedPublication)
 }
 

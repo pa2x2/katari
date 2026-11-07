@@ -21,6 +21,7 @@ import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
@@ -58,14 +59,15 @@ internal class BookReaderSessionFactory(
     suspend fun open(
         request: BookReaderRequest,
         processorId: String,
+        onProgress: (BookOpeningProgress) -> Unit = {},
     ): BookReaderOpenResult {
-        return when (val prepared = prepare(request)) {
+        return when (val prepared = prepare(request, onProgress = onProgress)) {
             is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(
                 failure = prepared.failure,
                 canRetry = prepared.canRetry,
                 sourceChapter = prepared.sourceChapter,
             )
-            is BookReaderPrepareResult.Success -> openPrepared(prepared.request, processorId)
+            is BookReaderPrepareResult.Success -> openPrepared(prepared.request, processorId, onProgress)
         }
     }
 
@@ -82,7 +84,11 @@ internal class BookReaderSessionFactory(
             (openPrepared(prepared.request, processorId) as? BookReaderOpenResult.Success)?.session
     }
 
-    suspend fun prepare(request: BookReaderRequest, downloadedOnly: Boolean = false): BookReaderPrepareResult {
+    suspend fun prepare(
+        request: BookReaderRequest,
+        downloadedOnly: Boolean = false,
+        onProgress: (BookOpeningProgress) -> Unit = {},
+    ): BookReaderPrepareResult {
         val visibleEntry = entryRepository.getEntryById(request.entryId)
             ?: return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
@@ -119,6 +125,7 @@ internal class BookReaderSessionFactory(
                 "The book source is not available.",
                 canRetry = true,
             )
+        onProgress(BookOpeningProgress.Requesting)
         val media = try {
             // Sources read responses on the thread they resume on, and the reader prepares from the main thread.
             withContext(Dispatchers.IO) { source.getMedia(chapter.toSEntryChapter()) } as? EntryMedia.Book
@@ -149,6 +156,7 @@ internal class BookReaderSessionFactory(
     suspend fun openPrepared(
         prepared: PreparedBookReaderRequest,
         processorId: String,
+        onProgress: (BookOpeningProgress) -> Unit = {},
     ): BookReaderOpenResult {
         val readerProcessor = readerProcessorRegistry.get(processorId)
             ?: return failure(BookFailureReason.PROCESSOR_UNAVAILABLE, "The selected book reader is unavailable.")
@@ -179,7 +187,7 @@ internal class BookReaderSessionFactory(
         }
         val contentSession = content.createSession(owner)
         val preparedPublication = try {
-            preparer.prepare(contentSession)
+            preparer.prepare(contentSession, onProgress)
         } catch (error: CancellationException) {
             closeAfterFailure(contentSession, cause = error)
             throw error

@@ -12,6 +12,7 @@ import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.core.platform.PlatformContext
+import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
@@ -35,6 +36,10 @@ internal class BookReaderHostController(
 ) {
     /** Null while the chapter is prepared or opened. */
     var state by mutableStateOf<BookReaderHostState?>(null)
+        private set
+
+    /** The step opening is on while [state] is null; null until the first step reports. */
+    var progress by mutableStateOf<BookOpeningProgress?>(null)
         private set
 
     private var launchJob: Job? = null
@@ -70,7 +75,8 @@ internal class BookReaderHostController(
             return
         }
         runStartup(retrySelection = null) {
-            when (val resolved = dependencies.hostResolver.resolve(request.entryId, request.chapterId)) {
+            val resolved = dependencies.hostResolver.resolve(request.entryId, request.chapterId) { progress = it }
+            when (resolved) {
                 is BookReaderHostState.ReaderSelected -> openSelected(resolved)
                 else -> state = resolved
             }
@@ -86,6 +92,7 @@ internal class BookReaderHostController(
         val result = dependencies.sessionFactory.openPrepared(
             prepared = selected.prepared,
             processorId = selected.processor.id,
+            onProgress = { progress = it },
         )
         when (result) {
             is BookReaderOpenResult.Failure -> {
@@ -119,6 +126,7 @@ internal class BookReaderHostController(
     private fun runStartup(retrySelection: BookReaderHostState.ReaderSelected?, block: suspend () -> Unit) {
         launchJob?.cancel()
         state = null
+        progress = null
         launchJob = scope.launch {
             try {
                 block()
