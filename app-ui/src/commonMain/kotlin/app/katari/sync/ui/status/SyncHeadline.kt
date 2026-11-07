@@ -1,6 +1,7 @@
 package app.katari.sync.ui.status
 
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.run.SyncStep
 import app.katari.sync.client.status.SyncStatus
 
 /**
@@ -32,6 +33,9 @@ sealed interface SyncHeadline {
 
     /** A first download or full resync; [progress] from 0 to 1, or null when unknown. */
     data class Downloading(val progress: Float?) : SyncHeadline
+
+    /** A step of a long run, named with how far it got. */
+    data class Step(val step: SyncStep) : SyncHeadline
 
     data object FirstDownloadWaitsForWifi : SyncHeadline
 
@@ -93,10 +97,9 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     }
     if (heldKinds.isNotEmpty()) return SyncHeadline.HeldKinds(heldKinds)
     return when (activity) {
-        is SyncStatus.Activity.Syncing -> if (activity.progress != null) {
-            SyncHeadline.Downloading(activity.progress)
-        } else {
-            SyncHeadline.Syncing
+        is SyncStatus.Activity.Syncing -> when {
+            activity.progress != null -> SyncHeadline.Downloading(activity.progress)
+            else -> activity.step?.let(SyncHeadline::Step) ?: SyncHeadline.Syncing
         }
         SyncStatus.Activity.WaitingForWifi -> SyncHeadline.FirstDownloadWaitsForWifi
         SyncStatus.Activity.Offline -> if (unsent > 0) SyncHeadline.Unsent(unsent, null) else SyncHeadline.Offline

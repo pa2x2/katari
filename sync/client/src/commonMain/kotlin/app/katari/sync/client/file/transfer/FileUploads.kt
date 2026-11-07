@@ -34,11 +34,16 @@ class FileUploads(
      * server lacks that no file here holds any more is not waited for: the record naming it was changed since, or the
      * file was lost with a server everywhere.
      */
-    suspend fun ensure(client: SyncServerClient, references: Collection<FileReference>): Set<FileReference> {
+    suspend fun ensure(
+        client: SyncServerClient,
+        references: Collection<FileReference>,
+        onSettled: (Int) -> Unit = {},
+    ): Set<FileReference> {
         val asked = references.distinct()
         if (asked.isEmpty()) return emptySet()
         val missing = asked.chunked(CLAIM_CHUNK).flatMapTo(HashSet()) { client.claimFiles(it).missing }
         asked.filterNot(missing::contains).forEach { uploaded(it) }
+        onSettled(asked.size - missing.size)
         val waiting = HashSet<FileReference>()
         missing.forEach { reference ->
             val source = heldHere(reference)
@@ -49,16 +54,26 @@ class FileUploads(
                 // The bytes changed while they were read; capture records the change, and the next sync looks again.
                 else -> waiting += queue(reference)
             }
+            onSettled(1)
         }
         return waiting
     }
 
-    /** Offers every queued file, such as the files a full resync found the server may have lost. */
-    suspend fun offerQueued(client: SyncServerClient) {
+    /**
+     * Offers every queued file, such as the files a full resync found the server may have lost, reporting how many of
+     * them are settled to [progress].
+     */
+    suspend fun offerQueued(client: SyncServerClient, progress: (done: Long, total: Long) -> Unit) {
         val queued = handler.await { sync_filesQueries.uploads(Long.MAX_VALUE).awaitAsList() }
+        var settled = 0L
         queued.map { FileReference(fileCategoryOf(it.category), it.sha256, it.size) }
             .chunked(CLAIM_CHUNK)
-            .forEach { ensure(client, it) }
+            .forEach { chunk ->
+                ensure(client, chunk) { count ->
+                    settled += count
+                    progress(settled, queued.size.toLong())
+                }
+            }
     }
 
     /** A file in place here that holds [reference] now, checked by its content. */

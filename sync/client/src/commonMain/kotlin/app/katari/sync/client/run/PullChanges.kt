@@ -30,7 +30,13 @@ class PullChanges(
     private val handOff: EntryHandOff,
     private val thisDevice: ThisDevice,
 ) {
-    suspend fun pullAll(client: SyncServerClient, device: DeviceId, liveOnly: Boolean) {
+    /** [onPage] hears where each page applied moved the device, and the account's sequence then. */
+    suspend fun pullAll(
+        client: SyncServerClient,
+        device: DeviceId,
+        liveOnly: Boolean,
+        onPage: (position: Long, accountSequence: Long) -> Unit = { _, _ -> },
+    ) {
         // Each pull says how this device presents itself, so its row in the device list follows app updates
         val description = thisDevice.description()
         while (true) {
@@ -52,6 +58,7 @@ class PullChanges(
             }
             continuity.check(page.server)
             handOff.watching(client, device, page.records) { incoming.apply(page) }
+            onPage(page.nextCursor, page.server.sequence)
             if (!page.hasMore) return
         }
     }

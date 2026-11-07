@@ -37,12 +37,20 @@ class PendingChanges(private val handler: DatabaseHandler) {
     fun counts(): Flow<Long> = handler.subscribeToOne { sync_recordsQueries.pendingCount() }
 
     /**
-     * The server took [changeId] of [key] as [sequence]. A change the drain stored since keeps waiting, now based on
-     * [sequence].
+     * The server took each of [changes] as its sequence. A change the drain stored since keeps waiting, now based on
+     * that sequence. One transaction for them all: a first upload takes a whole library, and a commit for each record
+     * held it up for minutes on a phone.
      */
-    suspend fun taken(key: String, changeId: String, sequence: Long) {
-        handler.await { sync_recordsQueries.markPushed(sequence = sequence, changeId = changeId, recordKey = key) }
+    suspend fun taken(changes: List<Taken>) {
+        if (changes.isEmpty()) return
+        handler.await(inTransaction = true) {
+            changes.forEach {
+                sync_recordsQueries.markPushed(sequence = it.sequence, changeId = it.changeId, recordKey = it.key)
+            }
+        }
     }
+
+    data class Taken(val key: String, val changeId: String, val sequence: Long)
 
     /**
      * The server holds no copy of [key] any more ([app.katari.sync.protocol.push.PushResult.sequence] 0): its last

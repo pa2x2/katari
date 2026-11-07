@@ -2,6 +2,8 @@ package app.katari.sync.client.status
 
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.question.Question
+import app.katari.sync.client.run.SyncStep
+import app.katari.sync.client.run.SyncSteps
 import okhttp3.HttpUrl
 import kotlin.time.Duration.Companion.days
 
@@ -45,9 +47,9 @@ data class SyncStatus(
 
         /**
          * A run is going; during a first download or full resync, [progress] says how far it got, from 0 to 1, and is
-         * null otherwise.
+         * null otherwise. [step] is the step of a run long enough to name, with its own progress ([SyncSteps]).
          */
-        data class Syncing(val progress: Float?) : Activity
+        data class Syncing(val progress: Float?, val step: SyncStep? = null) : Activity
 
         /** Waits for the person's first-sync choices ([app.katari.sync.client.account.SyncAccount.firstSyncProposal]). */
         data object WaitingForChoices : Activity

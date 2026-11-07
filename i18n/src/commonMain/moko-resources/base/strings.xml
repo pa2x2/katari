@@ -3157,6 +3157,10 @@
     <!-- %1$d is how far the first download got, in percent -->
     <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
     <string name="sync_status_downloading_unknown">Downloading your library…</string>
+    <string name="sync_status_uploading">Uploading your library · %1$d%%</string>
+    <string name="sync_status_downloading_changes">Downloading changes · %1$d%%</string>
+    <string name="sync_status_uploading_files">Uploading covers and fonts · %1$d of %2$d</string>
+    <string name="sync_status_downloading_files">Downloading covers and fonts · %1$d of %2$d</string>
     <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
     <string name="sync_status_offline">Offline · changes will sync when you\'re online</string>
     <!-- %1$s is the server's address, such as sync.home.lan -->

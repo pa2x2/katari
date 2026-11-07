@@ -35,40 +35,48 @@ class PushChanges(
      * dropped. On the first push the deletion may not have reached this device yet, which the pull that follows
      * finds out; when it is refused so again after that pull ([afterPull]), the change is pushed as a new record.
      */
-    suspend fun pushAll(client: SyncServerClient, afterPull: Boolean): Boolean {
+    suspend fun pushAll(client: SyncServerClient, afterPull: Boolean, onTaken: (Int) -> Unit = {}): Boolean {
         var stale = false
         var after = ""
         while (true) {
             val chunk = pending.after(after, CHUNK)
             if (chunk.isEmpty()) return stale
             val (plain, naming) = chunk.partition { it.files.isEmpty() }
-            if (push(client, plain, afterPull)) stale = true
+            if (push(client, plain, afterPull, onTaken)) stale = true
             if (naming.isNotEmpty()) {
                 val waiting = uploads.ensure(client, naming.flatMap { it.files })
-                if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull)) stale = true
+                if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull, onTaken)) stale = true
             }
             after = chunk.last().key
         }
     }
 
-    /** Pushes [records] and returns whether the server refused some as stale. */
-    private suspend fun push(client: SyncServerClient, records: List<RecordEnvelope>, afterPull: Boolean): Boolean {
+    /** Pushes [records], tells [onTaken] how many the server took, and returns whether it refused some as stale. */
+    private suspend fun push(
+        client: SyncServerClient,
+        records: List<RecordEnvelope>,
+        afterPull: Boolean,
+        onTaken: (Int) -> Unit,
+    ): Boolean {
         if (records.isEmpty()) return false
         var stale = false
         val state = connection.state()
         val response = client.push(PushRequest(records, after = state.position, afterChain = state.chain))
         continuity.check(response.server)
         val sent = records.associateBy { it.changeId }
+        val taken = ArrayList<PendingChanges.Taken>()
         response.results.forEach { result ->
             val envelope = sent[result.changeId] ?: return@forEach
             when (result.outcome) {
-                PushOutcome.ACCEPTED -> pending.taken(envelope.key, envelope.changeId, result.sequence)
+                PushOutcome.ACCEPTED -> taken += PendingChanges.Taken(envelope.key, envelope.changeId, result.sequence)
                 PushOutcome.STALE -> {
                     stale = true
                     if (afterPull && result.sequence == 0L && envelope.basedOn != 0L) pending.rebase(envelope.key)
                 }
             }
         }
+        pending.taken(taken)
+        onTaken(taken.size)
         if (response.caughtUp) connection.passOwnPush(response.server)
         return stale
     }

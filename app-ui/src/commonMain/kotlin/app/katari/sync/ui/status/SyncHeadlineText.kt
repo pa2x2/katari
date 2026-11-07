@@ -2,12 +2,14 @@ package app.katari.sync.ui.status
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.sync.client.run.SyncStep
 import eu.kanade.presentation.util.relativeTimeSpanString
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CloudDone
 import mihon.icons.materialsymbols.rounded.CloudDownload
 import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.icons.materialsymbols.rounded.CloudSync
+import mihon.icons.materialsymbols.rounded.CloudUpload
 import mihon.icons.materialsymbols.rounded.PhonelinkErase
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.SyncProblem
@@ -40,6 +42,7 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
         headline.progress
             ?.let { stringResource(MR.strings.sync_status_downloading, (it * 100).toInt()) }
             ?: stringResource(MR.strings.sync_status_downloading_unknown)
+    is SyncHeadline.Step -> stepText(headline.step)
     SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
     SyncHeadline.Syncing -> stringResource(MR.strings.sync_status_syncing)
     is SyncHeadline.Unsent -> stringResource(
@@ -75,6 +78,19 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     }
 }
 
+@Composable
+private fun stepText(step: SyncStep): String {
+    val done = step.done.toInt()
+    val total = step.total.toInt()
+    val percent = if (step.total > 0) (step.done * 100 / step.total).toInt() else 0
+    return when (step.kind) {
+        SyncStep.Kind.UPLOADING_RECORDS -> stringResource(MR.strings.sync_status_uploading, percent)
+        SyncStep.Kind.UPLOADING_FILES -> stringResource(MR.strings.sync_status_uploading_files, done, total)
+        SyncStep.Kind.DOWNLOADING_FILES -> stringResource(MR.strings.sync_status_downloading_files, done, total)
+        SyncStep.Kind.DOWNLOADING_CHANGES -> stringResource(MR.strings.sync_status_downloading_changes, percent)
+    }
+}
+
 /** The colour role of a Sync row's subtitle: only lasting trouble is coloured; being offline is normal. */
 fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
@@ -83,7 +99,7 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
     SyncHeadline.FirstDownloadWaitsForWifi,
     -> ContentTone.Warning
-    is SyncHeadline.Downloading, SyncHeadline.Syncing -> ContentTone.Primary
+    is SyncHeadline.Downloading, is SyncHeadline.Step, SyncHeadline.Syncing -> ContentTone.Primary
     else -> ContentTone.Inherit
 }
 
@@ -104,6 +120,10 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff
     is SyncHeadline.Downloading -> MaterialSymbols.Rounded.CloudDownload
+    is SyncHeadline.Step -> when (step.kind) {
+        SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload
+        SyncStep.Kind.DOWNLOADING_FILES, SyncStep.Kind.DOWNLOADING_CHANGES -> MaterialSymbols.Rounded.CloudDownload
+    }
     SyncHeadline.FirstDownloadWaitsForWifi -> MaterialSymbols.Rounded.Wifi
     SyncHeadline.Syncing -> MaterialSymbols.Rounded.Sync
     is SyncHeadline.UpToDate -> if (files is SyncHeadline.FilesNote.WaitingForWifi) {

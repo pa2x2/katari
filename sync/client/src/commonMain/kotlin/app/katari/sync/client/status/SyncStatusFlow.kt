@@ -11,15 +11,20 @@ import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRuns
+import app.katari.sync.client.run.SyncStep
+import app.katari.sync.client.run.SyncSteps
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.transformLatest
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -36,9 +41,17 @@ class SyncStatusFlow(
     private val held: HeldRecords,
     private val pendingFiles: PendingFiles,
     private val fileRule: FileTransferRule,
+    private val steps: SyncSteps,
 ) {
     fun status(): Flow<SyncStatus> {
-        val activity = combine(connection.states(), runs.running.settled(), runs.lastOutcome, network.state(), ::Inputs)
+        val activity = combine(
+            connection.states(),
+            runs.running.settled(),
+            runs.lastOutcome,
+            network.state(),
+            namedStep(),
+            ::Inputs,
+        )
         val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
         return combine(activity, pending.counts(), questions.open(), waiting, files()) {
                 inputs,
@@ -91,11 +104,23 @@ class SyncStatusFlow(
 
     private class Held(val kinds: List<String>, val failed: Long)
 
+    /** The run's step, once the run has lasted long enough for it to be named ([SyncSteps.shownFrom]). */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun namedStep(): Flow<SyncStep?> = steps.step.transformLatest { step ->
+        val wait = steps.shownFrom - Clock.System.now().toEpochMilliseconds()
+        if (step != null && wait > 0) {
+            emit(null)
+            delay(wait)
+        }
+        emit(step)
+    }.distinctUntilChanged()
+
     private class Inputs(
         val state: SyncConnectionState,
         val running: Boolean,
         val outcome: SyncOutcome,
         val network: NetworkState,
+        val step: SyncStep?,
     )
 
     private fun linkOf(state: SyncConnectionState): SyncStatus.Link {
@@ -115,7 +140,7 @@ class SyncStatusFlow(
             !state.isLinked || state.stopped != null -> SyncStatus.Activity.Idle
             state.stage == SyncStage.CHOOSING -> SyncStatus.Activity.WaitingForChoices
             // A run trying again doesn't make a server found unreachable any closer: that shows until one answers
-            inputs.running && unreachableSince == null -> SyncStatus.Activity.Syncing(progressOf(state))
+            inputs.running && unreachableSince == null -> SyncStatus.Activity.Syncing(progressOf(state), inputs.step)
             !inputs.network.hasNetwork -> SyncStatus.Activity.Offline
             inputs.outcome == SyncOutcome.FAILED -> SyncStatus.Activity.Failed(state.lastSyncedAt)
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)

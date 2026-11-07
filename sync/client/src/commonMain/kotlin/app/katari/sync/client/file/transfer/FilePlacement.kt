@@ -43,13 +43,17 @@ class FilePlacement(
     private val rule: FileTransferRule,
     private val directories: AppPrivateDirectories,
 ) {
-    suspend fun place(client: SyncServerClient) {
+    /** Places what the records name, reporting to [progress] how many of the files wanted are placed. */
+    suspend fun place(client: SyncServerClient, progress: (done: Long, total: Long) -> Unit) {
         val unsettled = handler.await { sync_filesQueries.unsettled().awaitAsList() }
         val (removals, wanted) = unsettled.partition { it.wanted_sha256 == null }
         // Copies first, so a file whose owner gives it up, as an entry moved to another profile does, is still there to
         // copy from.
-        wanted.groupBy { FileReference(fileCategoryOf(it.category), it.wanted_sha256!!, it.wanted_size) }
-            .forEach { (reference, owners) -> place(client, reference, owners) }
+        val files = wanted.groupBy { FileReference(fileCategoryOf(it.category), it.wanted_sha256!!, it.wanted_size) }
+        files.entries.forEachIndexed { index, (reference, owners) ->
+            place(client, reference, owners)
+            progress(index + 1L, files.size.toLong())
+        }
         removals.forEach { removeUnnamed(it) }
     }
 

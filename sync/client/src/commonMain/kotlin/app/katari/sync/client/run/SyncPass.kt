@@ -49,10 +49,10 @@ import tachiyomi.core.common.util.system.logcat
  *    the applied records name that aren't in place here yet ([FilePlacement]). A file that can't move now, for want
  *    of Wi-Fi or of an answer, waits for a later run without holding back any record.
  *
- * Every page and every acknowledged change is committed as it arrives, so a run cut off anywhere loses nothing and
- * the next one carries on. A refusal that means the device left its account ends the connection ([Disconnection]);
- * one that means the device must sign in again, or that one side needs an update, stops syncing until then
- * ([SyncStop]) while capture goes on.
+ * Every page, and the changes each push had acknowledged, are committed as they arrive, so a run cut off anywhere
+ * loses nothing and the next one carries on. Steps that can take a while say how far they got ([SyncSteps]). A
+ * refusal that means the device left its account ends the connection ([Disconnection]); one that means the device
+ * must sign in again, or that one side needs an update, stops syncing until then ([SyncStop]) while capture goes on.
  */
 @Inject
 class SyncPass(
@@ -73,11 +73,12 @@ class SyncPass(
     private val placement: FilePlacement,
     private val handOff: EntryHandOff,
     private val disconnection: Disconnection,
+    private val steps: SyncSteps,
 ) {
     suspend fun run(request: SyncRequest): SyncOutcome {
         var outcome = SyncOutcome.FAILED
         try {
-            outcome = attempt(request)
+            outcome = steps.run { attempt(request) }
             return outcome
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
@@ -183,15 +184,29 @@ class SyncPass(
 
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
         if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
-        pull.pullAll(client, device, liveOnly = false)
+        steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
+            val from = connection.state().position
+            pull.pullAll(client, device, liveOnly = false) { position, sequence ->
+                progress(position - from, sequence - from)
+            }
+        }
         incoming.retryHeld()
-        run rounds@{
-            repeat(PUSH_ROUNDS) { round ->
-                settings.flush()
-                fileCapture.flush()
-                drainAll()
-                if (!push.pushAll(client, afterPull = round > 0)) return@rounds
-                pull.pullAll(client, device, liveOnly = false)
+        steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
+            var sent = 0L
+            run rounds@{
+                repeat(PUSH_ROUNDS) { round ->
+                    settings.flush()
+                    fileCapture.flush()
+                    drainAll()
+                    val total = sent + pending.count()
+                    progress(sent, total)
+                    val stale = push.pushAll(client, afterPull = round > 0) { taken ->
+                        sent += taken
+                        progress(sent, total)
+                    }
+                    if (!stale) return@rounds
+                    pull.pullAll(client, device, liveOnly = false)
+                }
             }
         }
         moveFiles(client)
@@ -200,8 +215,8 @@ class SyncPass(
 
     private suspend fun moveFiles(client: SyncServerClient) {
         try {
-            uploads.offerQueued(client)
-            placement.place(client)
+            steps.step(SyncStep.Kind.UPLOADING_FILES) { progress -> uploads.offerQueued(client, progress) }
+            steps.step(SyncStep.Kind.DOWNLOADING_FILES) { progress -> placement.place(client, progress) }
         } catch (e: SyncFailure.Refused) {
             throw e
         } catch (e: SyncFailure) {

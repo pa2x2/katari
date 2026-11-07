@@ -2,6 +2,7 @@ package app.katari.sync.client
 
 import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.db.QueryResult
+import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.protocol.pull.PullPage
 import app.katari.sync.protocol.record.SequencedRecord
 import app.katari.sync.protocol.server.ServerIdentity
@@ -18,11 +19,9 @@ internal class RecordExchange {
     suspend fun pushFrom(device: SyncTestDevice): List<SequencedRecord> {
         device.settingsCapture.flush()
         device.drainAll()
-        return device.pending.next(Long.MAX_VALUE).map { envelope ->
-            SequencedRecord(++sequence, envelope).also {
-                device.pending.taken(envelope.key, envelope.changeId, it.sequence)
-            }
-        }
+        val records = device.pending.next(Long.MAX_VALUE).map { SequencedRecord(++sequence, it) }
+        device.pending.taken(records.map { PendingChanges.Taken(it.record.key, it.record.changeId, it.sequence) })
+        return records
     }
 
     suspend fun deliver(device: SyncTestDevice, records: List<SequencedRecord>) {

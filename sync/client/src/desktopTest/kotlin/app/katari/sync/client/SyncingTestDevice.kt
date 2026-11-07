@@ -26,6 +26,7 @@ import app.katari.sync.client.run.ServerContinuity
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncPass
 import app.katari.sync.client.run.SyncRuns
+import app.katari.sync.client.run.SyncSteps
 import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.client.server.SyncServerClients
 import app.katari.sync.client.status.SyncStatusFlow
@@ -78,6 +79,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
         override val appVersion get() = local.appVersion
     }
+    val steps = SyncSteps()
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
@@ -91,6 +93,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,
             FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
+            steps,
         ),
     )
     private val deviceChanges = DeviceListChanges()
@@ -118,6 +121,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.held,
         PendingFiles(local.handler),
         fileRule,
+        steps,
     )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */
