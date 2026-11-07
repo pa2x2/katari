@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -50,14 +49,16 @@ class SyncViewModel(
 
     init {
         viewModelScope.launchIO { canKeepSignIn.value = tokens.isAvailable }
-        // Listed again when the device links to another account, stops or signs in again, and after each sync, which
-        // is when devices join and when the server notes when each last synced; and once the server can't be reached,
-        // saying so
+        // Listed again when the device links to another account, stops or signs in again, even while the first sync
+        // after that runs, which can take minutes; after each sync, which is when devices join and when the server
+        // notes when each last synced; and once the server can't be reached, saying so. A sync starting changes none.
         viewModelScope.launch {
             status.filterNotNull()
-                .filter { it.activity !is SyncStatus.Activity.Syncing }
-                .map { (it.link as? SyncStatus.Link.Linked) to (it.activity as? SyncStatus.Activity.UpToDate) }
-                .distinctUntilChanged()
+                .map { DevicesKey(it.link as? SyncStatus.Link.Linked, it.activity) }
+                .distinctUntilChanged { listed, now ->
+                    listed.link == now.link &&
+                        (now.activity is SyncStatus.Activity.Syncing || listed.ended == now.ended)
+                }
                 .collect { refreshDevices() }
         }
         // And as soon as the server says another device joined or left (D063)
@@ -97,6 +98,11 @@ class SyncViewModel(
 
     fun dismissEnded() {
         viewModelScope.launchIO { account.dismissNotice() }
+    }
+
+    private class DevicesKey(val link: SyncStatus.Link.Linked?, val activity: SyncStatus.Activity) {
+        // The last sync that got through while the status shows it, null while it shows anything else
+        val ended = activity as? SyncStatus.Activity.UpToDate
     }
 
     sealed interface DevicesState {
