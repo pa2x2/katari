@@ -3,6 +3,7 @@ package mihon.presentation.kit.feedback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.Text
@@ -21,46 +21,55 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
 /**
- * Fills the space while its content loads. A wait long enough to read names its current step in [message], and
- * [progress] (0..1) adds a bar under it while that step knows how far it has got. The bar's room stays reserved
- * whenever [message] shows, so steps with and without a bar don't shift the screen as they take turns.
+ * Fills the space while its content loads. [message] names the step the wait is on, [progress] (0..1) adds a bar under
+ * it while that step knows how far it has got, and [action] offers a way past the wait under both. The indicator stays
+ * at the centre whatever shows under it, so steps coming and going never move it. [onMedia] draws it over video or
+ * artwork in the media tones.
  */
 @Composable
 fun LoadingScreen(
     modifier: Modifier = Modifier,
     message: String? = null,
     progress: (() -> Float)? = null,
+    onMedia: Boolean = false,
+    action: (@Composable () -> Unit)? = null,
 ) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (message == null) {
-            LoadingIndicator()
-            return@Box
+    val indicatorTone = if (onMedia) ContentTone.OnMedia else ContentTone.Primary
+    if (message == null && progress == null && action == null) {
+        // Also laid out where the height is unbounded, such as inside a dialog, which the weighted column can't be.
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            LoadingIndicator(tone = indicatorTone)
         }
+        return
+    }
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Equal weights above and below keep the indicator centred however tall the status under it grows.
+        Spacer(Modifier.weight(1f))
+        LoadingIndicator(tone = indicatorTone)
         Column(
             modifier = Modifier
-                .widthIn(max = MessageWidth)
-                .padding(horizontal = KatariTheme.spacing.xl),
+                .weight(1f)
+                .widthIn(max = StatusWidth)
+                .padding(horizontal = KatariTheme.spacing.xl)
+                .padding(top = KatariTheme.spacing.l),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LoadingIndicator()
-            Text(
-                text = message,
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
-                textAlign = TextAlign.Center,
-            )
-            LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .alpha(if (progress == null) 0f else 1f),
-                progress = progress ?: { 0f },
-            )
+            message?.let {
+                Text(
+                    text = it,
+                    role = TextRole.Body,
+                    tone = if (onMedia) ContentTone.OnMediaVariant else ContentTone.Secondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            progress?.let { LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), progress = it) }
+            action?.invoke()
         }
     }
 }
 
-private val MessageWidth = 320.dp
+private val StatusWidth = 320.dp

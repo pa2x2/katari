@@ -32,15 +32,11 @@ internal fun BookOpeningLoadingScreen(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    if (progress == null) {
-        LoadingScreen(modifier = modifier.semantics { contentDescription = description })
-    } else {
-        LoadingScreen(
-            modifier = modifier,
-            message = stringResource(progress.message),
-            progress = progress.barFraction?.let { fraction -> { fraction } },
-        )
-    }
+    LoadingScreen(
+        modifier = if (progress == null) modifier.semantics { contentDescription = description } else modifier,
+        message = progress?.let { stringResource(it.message) },
+        progress = progress?.barFraction?.let { fraction -> { fraction } },
+    )
 }
 
 private val BookOpeningProgress.message

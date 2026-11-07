@@ -1864,7 +1864,7 @@
     <string name="anime_playback_asking_source">Asking %1$s for streams…</string>
     <string name="anime_playback_opening_stream">Opening the stream…</string>
     <string name="anime_playback_opening_server">Opening %1$s…</string>
-    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s</string>
+    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s (%3$d of %4$d)</string>
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="anime_playback_details">Details</string>
@@ -2458,6 +2458,9 @@
     <!-- Full-screen viewers such as the reader and the player -->
     <string name="viewer_full_screen_hint">Press Esc to leave full screen</string>
     <string name="page_list_empty_error">No pages found</string>
+    <string name="reader_startup_loading_extensions">Loading extensions…</string>
+    <string name="reader_startup_opening_file">Opening the chapter…</string>
+    <string name="reader_startup_asking_source">Asking %1$s for the pages…</string>
     <string name="loader_not_implemented_error">Source not found</string>
 
     <!-- Updates -->

@@ -13,13 +13,20 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun ReaderStartupLoadingScreen() {
+internal fun ReaderStartupLoadingScreen(step: ReaderStartupStep?) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         container = SurfaceContainer.Background,
     ) {
-        LoadingScreen()
+        LoadingScreen(message = step?.label())
     }
+}
+
+@Composable
+private fun ReaderStartupStep.label(): String = when (this) {
+    ReaderStartupStep.LoadingExtensions -> stringResource(MR.strings.reader_startup_loading_extensions)
+    ReaderStartupStep.OpeningFile -> stringResource(MR.strings.reader_startup_opening_file)
+    is ReaderStartupStep.AskingSource -> stringResource(MR.strings.reader_startup_asking_source, sourceName)
 }
 
 @Composable
