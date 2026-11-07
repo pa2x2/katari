@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.ProfileKind
@@ -85,7 +86,12 @@ object CategoryMembershipKind : SyncedKind<CategoryMembershipPayload>(
 ) {
     override val capture = listOf(
         CaptureTrigger("entries_categories", Event.INSERT, listOf("NEW.entry_id", "NEW.category_id")),
-        CaptureTrigger("entries_categories", Event.DELETE, listOf("OLD.entry_id", "OLD.category_id")),
+        CaptureTrigger(
+            "entries_categories",
+            Event.DELETE,
+            listOf("OLD.entry_id", "OLD.category_id"),
+            owners = listOf(Owner.entry()),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<CategoryMembershipPayload> {

@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
@@ -41,7 +42,7 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             listOf("NEW._id"),
             fields = listOf(Field(5, *locatorColumns), Field(6, "completed")),
         ),
-        CaptureTrigger("entry_progress_state", Event.DELETE, listOf("OLD._id")),
+        CaptureTrigger("entry_progress_state", Event.DELETE, listOf("OLD._id"), owners = listOf(Owner.entry())),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ProgressPayload> {

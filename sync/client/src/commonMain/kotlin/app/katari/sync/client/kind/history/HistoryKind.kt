@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.merge.latest
@@ -35,7 +36,12 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
             listOf("NEW.chapter_id"),
             fields = listOf(Field(3, "last_read"), Field(4, "time_read")),
         ),
-        CaptureTrigger("history", Event.DELETE, listOf("OLD.chapter_id")),
+        CaptureTrigger(
+            "history",
+            Event.DELETE,
+            listOf("OLD.chapter_id"),
+            owners = listOf(Owner.entry(), Owner.chapter()),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<HistoryPayload> {

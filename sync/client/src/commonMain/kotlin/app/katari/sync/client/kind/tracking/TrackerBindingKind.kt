@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
@@ -47,7 +48,12 @@ object TrackerBindingKind : SyncedKind<TrackerBindingPayload>(
                 Field(13, "private"),
             ),
         ),
-        CaptureTrigger("entry_sync", Event.DELETE, listOf("OLD.entry_id", "OLD.sync_id")),
+        CaptureTrigger(
+            "entry_sync",
+            Event.DELETE,
+            listOf("OLD.entry_id", "OLD.sync_id"),
+            owners = listOf(Owner.entry()),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<TrackerBindingPayload> {

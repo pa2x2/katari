@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
@@ -36,7 +37,12 @@ object MergeMemberKind : SyncedKind<MergeMemberPayload>(
             listOf("NEW.profile_id", "NEW.entry_id"),
             fields = listOf(Field(2, "target_entry_id"), Field(3, "position")),
         ),
-        CaptureTrigger("merged_entries", Event.DELETE, listOf("OLD.profile_id", "OLD.entry_id")),
+        CaptureTrigger(
+            "merged_entries",
+            Event.DELETE,
+            listOf("OLD.profile_id", "OLD.entry_id"),
+            owners = listOf(Owner.entry(), Owner.entry("target_entry_id")),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<MergeMemberPayload> {

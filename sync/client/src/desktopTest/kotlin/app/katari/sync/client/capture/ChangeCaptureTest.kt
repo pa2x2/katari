@@ -32,7 +32,7 @@ class ChangeCaptureTest {
     lateinit var directory: File
 
     @Test
-    fun `synced tables' writes are captured only while sync is on, and a source refresh is no change`() = runTest {
+    fun `writes are captured only while sync is on, and refreshes and cache removal are no change`() = runTest {
         SyncTestDevice(directory.resolve("device.db")).use { device ->
             device.sql(
                 "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
@@ -43,6 +43,7 @@ class ChangeCaptureTest {
                     (3, 1, 0, 'folder', 'Local', 1, 'manga')
                 """,
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (10, 1, '/show/1', 'Episode 1')",
+                "INSERT INTO chapters(_id, entry_id, url, name) VALUES (12, 1, '/show/0', 'Recap')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (11, 3, 'folder/1', 'Local chapter')",
             )
             val entries = EntryRepositoryImpl(device.handler, device.defaultProfile)
@@ -94,8 +95,9 @@ class ChangeCaptureTest {
                     ),
                 )
             }
-            expect("history", "history") {
+            expect("history", "history", "history") {
                 history.upsertHistory(HistoryUpdate(chapterId = 10, readAt = Date(5), sessionReadDuration = 60))
+                history.upsertHistory(HistoryUpdate(chapterId = 12, readAt = Date(6), sessionReadDuration = 60))
             }
             expect("activity session and segment", "activity.session", "activity.segment") {
                 db.activityQueries.insertActivitySession("session", 1, 100, 200)
@@ -189,21 +191,25 @@ class ChangeCaptureTest {
                     updateTitle = true,
                 )
                 val episode = chapters.getChapterById(10)!!
+                // The source no longer lists the recap, whose history goes with it
                 chapters.applySourceSync(
-                    removedIds = emptyList(),
+                    removedIds = listOf(12),
                     updated = listOf(episode.copy(name = "Episode 1: Pilot")),
                     inserted = listOf(EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2")),
                     afterUpdates = {},
                     afterInserts = {},
                 )
             }
+            expect("clear history", "history", "statistics.epoch") { history.deleteAllHistory() }
+            // Rows that go with their entry, such as clearing the database of entries outside the library
+            expect("entry removed as cache") { db.entriesQueries.deleteById(profileId = 1, entryId = 1) }
 
             val stored = device.handler.await {
                 sync_recordsQueries.pendingAfter("", Long.MAX_VALUE).awaitAsList().map { it.kind }
             }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
-            withClue("the local-source chapter never syncs") { stored.count { it == "chapter" } shouldBe 1 }
+            withClue("both episodes, not the local chapter") { stored.count { it == "chapter" } shouldBe 2 }
         }
     }
 }

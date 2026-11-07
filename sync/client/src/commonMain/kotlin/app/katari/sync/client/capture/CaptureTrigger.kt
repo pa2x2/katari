@@ -14,9 +14,25 @@ internal class CaptureTrigger(
     val fields: List<Field> = emptyList(),
     /** An SQL condition the row must also meet. */
     val condition: String? = null,
+    /**
+     * For a delete, the entries and chapters the row belongs to. The delete is recorded only while every one of them
+     * is still here: a row deleted along with its entry or chapter, as a refresh, a move or clearing the database
+     * removes them, went as cache and not by the person's hand, so its record stays as it is everywhere (D017).
+     */
+    val owners: List<Owner> = emptyList(),
 ) {
     init {
         require((event == Event.UPDATE) == fields.isNotEmpty()) { "Only updates name the fields they capture" }
+        require(event == Event.DELETE || owners.isEmpty()) { "Only deletes depend on their owners" }
+    }
+
+    /** The row of [table] whose `_id` is [id], an SQL expression over the deleted row. */
+    class Owner(val table: String, val id: String) {
+        companion object {
+            fun entry(column: String = "entry_id") = Owner("entries", "OLD.$column")
+
+            fun chapter(column: String = "chapter_id") = Owner("chapters", "OLD.$column")
+        }
     }
 
     enum class Event { INSERT, UPDATE, DELETE }
@@ -53,6 +69,8 @@ internal class CaptureTrigger(
             Event.DELETE -> "(SELECT record_key FROM sync_records WHERE kind = '$kind' AND local_ref = $localRef)"
             Event.INSERT, Event.UPDATE -> "NULL"
         }
+        // SQLite deletes a cascade's rows after their owner's, so an owner still here means the row went by itself.
+        val ownersHere = owners.joinToString("") { " AND EXISTS (SELECT 1 FROM main.${it.table} WHERE _id = ${it.id})" }
         // A deleted row's record is detached from it, so a row that later takes the same local id starts its own.
         val detach = when (event) {
             Event.DELETE -> "UPDATE sync_records SET local_ref = NULL WHERE kind = '$kind' AND local_ref = $localRef;"
@@ -65,7 +83,7 @@ internal class CaptureTrigger(
             BEGIN
                 INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
                 SELECT '$kind', $localRef, $changed, $recordKey, $NOW_MILLIS, seen_physical, seen_counter
-                FROM sync_clock WHERE id = 0;
+                FROM sync_clock WHERE id = 0$ownersHere;
                 $detach
             END
         """.trimIndent()

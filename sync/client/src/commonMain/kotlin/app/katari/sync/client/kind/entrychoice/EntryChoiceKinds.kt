@@ -8,6 +8,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
@@ -38,7 +39,8 @@ private suspend fun <P : Any, R : Any> SyncedKind<P>.entryChoice(
 }
 
 /**
- * Inserts, updates of [fields] and deletes of [table], for rows that meet [condition] (of `NEW` or `OLD`). Inserts are
+ * Inserts, updates of [fields] and deletes of [table] while the row's entry is here, for rows that meet [condition]
+ * (of `NEW` or `OLD`). Inserts are
  * captured whatever [condition] says: a table written with `INSERT OR REPLACE` replaces a row that met it with one
  * that may not, and SQLite reports that as an insert alone.
  */
@@ -57,7 +59,13 @@ private fun triggers(
         fields = fields,
         condition = condition?.let { "${it("NEW")} OR ${it("OLD")}" },
     ),
-    CaptureTrigger(table, Event.DELETE, ref.map { "OLD.$it" }, condition = condition?.invoke("OLD")),
+    CaptureTrigger(
+        table,
+        Event.DELETE,
+        ref.map { "OLD.$it" },
+        condition = condition?.invoke("OLD"),
+        owners = listOf(Owner.entry()),
+    ),
 )
 
 /** Local ref: `[entry_id]`. */
@@ -103,7 +111,12 @@ object ExcludedScanlatorKind : SyncedKind<ExcludedScanlatorPayload>(
 ) {
     override val capture = listOf(
         CaptureTrigger("excluded_scanlators", Event.INSERT, listOf("NEW.entry_id", "NEW.scanlator")),
-        CaptureTrigger("excluded_scanlators", Event.DELETE, listOf("OLD.entry_id", "OLD.scanlator")),
+        CaptureTrigger(
+            "excluded_scanlators",
+            Event.DELETE,
+            listOf("OLD.entry_id", "OLD.scanlator"),
+            owners = listOf(Owner.entry()),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ExcludedScanlatorPayload> {
