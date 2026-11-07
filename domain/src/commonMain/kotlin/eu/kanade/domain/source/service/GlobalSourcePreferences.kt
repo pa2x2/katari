@@ -14,4 +14,13 @@ class GlobalSourcePreferences(
         Preference.appStateKey("trusted_extensions"),
         emptySet(),
     )
+
+    /**
+     * Package names of extensions libraries need that the Library already suggested installing here, or that were
+     * uninstalled here, so the suggestion only comes back for others.
+     */
+    val suggestedMissingExtensions = preferenceStore.getStringSet(
+        Preference.appStateKey("suggested_missing_extensions"),
+        emptySet(),
+    )
 }

@@ -24,6 +24,7 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdentityRepository
+import tachiyomi.domain.source.repository.SourceRepository
 
 /** The extension manager, built on the platform's answers to what it asks of the platform. */
 @ContributesTo(AppScope::class)
@@ -49,6 +50,7 @@ object ExtensionManagerBindings {
         networkHelper: Lazy<NetworkHelper>,
         sourceClaims: SourceClaims,
         sourceIdentities: SourceIdentityRepository,
+        sourceRepository: Lazy<SourceRepository>,
         @AppCoroutineScope scope: CoroutineScope,
     ): ExtensionManager = ExtensionManager(
         loader = loader,
@@ -68,6 +70,7 @@ object ExtensionManagerBindings {
         networkHelper = networkHelper,
         sourceClaims = sourceClaims,
         sourceIdentities = sourceIdentities,
+        sourceRepository = sourceRepository,
         scope = scope,
     )
 }

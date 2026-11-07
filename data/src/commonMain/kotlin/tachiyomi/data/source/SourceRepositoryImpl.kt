@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.source.model.MissingLibrarySource
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.repository.SourceRepository
@@ -63,6 +64,32 @@ class SourceRepositoryImpl(
                 SourceWithCount(domainSource, count)
             }
         }
+    }
+
+    override fun getMissingLibrarySources(): Flow<List<MissingLibrarySource>> {
+        return combine(
+            handler.subscribeToList {
+                entriesQueries.getFavoriteCountsBySourceAndProfile { profileId, source, count ->
+                    Triple(source, profileId, count)
+                }
+            },
+            sourceManager.sources,
+        ) { counts, _ ->
+            counts
+                .groupBy({ it.first }, { it.second to it.third })
+                .mapNotNull { (sourceId, profileCounts) ->
+                    val source =
+                        sourceManager.getDisplayInfo(sourceId).takeIf { it.isMissing } ?: return@mapNotNull null
+                    MissingLibrarySource(
+                        source = source,
+                        countsByProfile = profileCounts.toMap(),
+                    )
+                }
+        }
+    }
+
+    override suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long> {
+        return handler.awaitList { entriesQueries.getSourcesWithEntries(sourceIds) }.toSet()
     }
 
     private fun mapSourceToDomainSource(source: UnifiedSource): DomainSource {

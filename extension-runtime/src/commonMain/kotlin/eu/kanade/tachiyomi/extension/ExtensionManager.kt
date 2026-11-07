@@ -64,6 +64,7 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.StubSource
+import tachiyomi.domain.source.repository.SourceRepository
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -93,6 +94,8 @@ class ExtensionManager(
     private val networkHelper: Lazy<NetworkHelper>,
     private val sourceClaims: SourceClaims,
     private val sourceIdentities: SourceIdentityRepository,
+    // Lazy since the source repository reads installed sources from the source manager, which is built on this
+    private val sourceRepository: Lazy<SourceRepository>,
     private val scope: CoroutineScope,
 ) {
 
@@ -188,6 +191,16 @@ class ExtensionManager(
             isInitialized.first { it }
             extensionStoreRepository.getAllAsFlow().collect(::assignStores)
         }
+
+        // Stores are added and removed by sync and restore as well as on their screen, and what they list is what
+        // missing sources are installed from, so the listings follow the stores whoever changed them
+        scope.launch {
+            extensionStoreRepository.getAllAsFlow()
+                .map { stores -> stores.mapTo(HashSet()) { it.indexUrl } }
+                .distinctUntilChanged()
+                .drop(1)
+                .collectLatest { findAvailableExtensions() }
+        }
     }
 
     private var subLanguagesEnabledOnFirstRun = preferences.enabledLanguages.isSet()
@@ -222,17 +235,27 @@ class ExtensionManager(
         }
     }
 
-    private var availableExtensionsSourcesData: Map<Long, ListedSource> = emptyMap()
+    private val listedSources = MutableStateFlow<Map<Long, ListedSource>>(emptyMap())
+
+    /** A store's listing of the extension that provides each source the stores list, by the source's key. */
+    val listingsBySource: Flow<Map<Long, Extension.Available>> =
+        listedSources.map { sources -> sources.mapValues { it.value.listing } }
 
     private suspend fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
         if (extensions.isEmpty()) return
-        availableExtensionsSourcesData = listedSourcesByKey(extensions, sourceIdentities.findAll())
+        listedSources.value = listedSourcesByKey(extensions, sourceIdentities.findAll())
     }
 
-    fun getSourceData(id: Long): StubSource? = availableExtensionsSourcesData[id]?.stub
+    fun getSourceData(id: Long): StubSource? = listedSources.value[id]?.stub
 
-    /** A store's listing of the extension that provides the source with key [id], for a source that isn't installed. */
-    fun getListingOfSource(id: Long): Extension.Available? = availableExtensionsSourcesData[id]?.listing
+    private val firstFetch = Mutex()
+
+    /** Reads what the stores list, unless it was read since the app started. */
+    suspend fun fetchListingsOnce() {
+        firstFetch.withLock {
+            if (!hasFetchedListings) findAvailableExtensions()
+        }
+    }
 
     /**
      * Loads and registers the installed extensions. Safe to call again: every extension is judged
@@ -535,10 +558,18 @@ class ExtensionManager(
         publishExtensions()
     }
 
+    /**
+     * Shows a newly installed extension's sources in the open profile and hides them in the others. A source entries
+     * already come from was installed before, here or on the device sync or a backup brought them from, so each
+     * profile's hidden sources already say what was chosen for it; rewriting them would also reach every synced device.
+     */
     private fun initializeExtensionVisibility(key: String, sourceIds: Set<String>) {
         if (sourceIds.isEmpty()) return
 
         scope.launch {
+            val known = sourceRepository.value.getSourcesWithEntries(sourceIds.map(String::toLong))
+            val newSourceIds = sourceIds.filterTo(HashSet()) { it.toLong() !in known }
+            if (newSourceIds.isEmpty()) return@launch
             val profiles = profileDatabase.getProfiles(includeArchived = true)
             val activeProfileId = profileStore.currentProfileId
             profiles.forEach { profile ->
@@ -546,11 +577,11 @@ class ExtensionManager(
                     .getStringSet(key, emptySet())
                     .getAndSet { hiddenSources ->
                         when {
-                            profile.id == activeProfileId -> hiddenSources - sourceIds
+                            profile.id == activeProfileId -> hiddenSources - newSourceIds
                             profile.id == ProfileConstants.DEFAULT_PROFILE_ID && profiles.size == 1 ->
                                 hiddenSources -
-                                    sourceIds
-                            else -> hiddenSources + sourceIds
+                                    newSourceIds
+                            else -> hiddenSources + newSourceIds
                         }
                     }
             }

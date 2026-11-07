@@ -16,6 +16,9 @@ interface ExtensionStoreRepository {
 
     suspend fun fetchExtensions(): List<Extension.Available>
 
+    /** What [stores] list, whether or not they're added; a store that can't be read lists nothing. */
+    suspend fun fetchExtensions(stores: List<ExtensionStore>): List<Extension.Available>
+
     suspend fun getAll(): List<ExtensionStore>
 
     fun getAllAsFlow(): Flow<List<ExtensionStore>>

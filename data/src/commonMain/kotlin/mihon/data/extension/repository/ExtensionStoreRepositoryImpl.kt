@@ -135,10 +135,12 @@ class ExtensionStoreRepositoryImpl(
         )
     }
 
-    override suspend fun fetchExtensions(): List<Extension.Available> {
+    override suspend fun fetchExtensions(): List<Extension.Available> = fetchExtensions(getAll())
+
+    override suspend fun fetchExtensions(stores: List<ExtensionStore>): List<Extension.Available> {
         return try {
             supervisorScope {
-                database.extension_storeQueries.getAll(::extensionStoreMapper).awaitAsList().map { store ->
+                stores.map { store ->
                     async {
                         service.getExtensions(store).onFailure {
                             this@ExtensionStoreRepositoryImpl.logcat(LogPriority.ERROR, it) {

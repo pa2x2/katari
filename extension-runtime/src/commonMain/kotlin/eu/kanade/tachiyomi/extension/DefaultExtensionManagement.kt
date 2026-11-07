@@ -3,12 +3,13 @@ package eu.kanade.tachiyomi.extension
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
+import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
+import tachiyomi.core.common.preference.getAndSet
 
 /** The apks and files the extension manager loads, installs and lists from the stores. */
 @Inject
@@ -17,6 +18,7 @@ class DefaultExtensionManagement(
     private val extensionManager: ExtensionManager,
     private val profileStore: ProfileStore,
     private val sourcePreferenceFiles: SourcePreferenceFiles,
+    private val globalPreferences: GlobalSourcePreferences,
 ) : ExtensionManagement {
     override val isInstallOffered: Boolean = true
 
@@ -34,11 +36,14 @@ class DefaultExtensionManagement(
 
     override fun installed(pkgName: String): Extension.Installed? = extensionManager.getInstalledExtension(pkgName)
 
-    override fun listingOf(sourceId: Long): Flow<Extension.Available?> =
-        extensionManager.availableExtensionsFlow.map { extensionManager.getListingOfSource(sourceId) }
+    override val listingsBySource: Flow<Map<Long, Extension.Available>> = extensionManager.listingsBySource
 
     override suspend fun refreshAvailable(refreshStores: Boolean) {
         extensionManager.findAvailableExtensions(forceRefresh = refreshStores)
+    }
+
+    override suspend fun fetchListingsOnce() {
+        extensionManager.fetchListingsOnce()
     }
 
     override fun install(listing: Extension.Available): Flow<InstallStep> = extensionManager.installExtension(listing)
@@ -53,6 +58,8 @@ class DefaultExtensionManagement(
     }
 
     override fun uninstall(extension: Extension.Installed) {
+        // Uninstalled on purpose, so the Library doesn't suggest installing it again for entries left from it
+        globalPreferences.suggestedMissingExtensions.getAndSet { it + extension.pkgName }
         extensionManager.uninstallExtension(extension)
     }
 

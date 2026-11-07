@@ -78,7 +78,7 @@ internal fun ExtensionItem(
  * filled shape, so it can't ring the icon: drawn behind it, the icon would cover it.
  */
 @Composable
-private fun ExtensionItemIcon(
+internal fun ExtensionItemIcon(
     extension: Extension,
     installStep: InstallStep,
 ) {
@@ -167,18 +167,22 @@ private fun ExtensionItemDetails(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        warnings.forEach { (label, tone) ->
-            Pill(
-                text = stringResource(label),
-                container = when (tone) {
-                    ContentTone.Error -> SurfaceContainer.ErrorContainer
-                    ContentTone.Warning -> SurfaceContainer.WarningContainer
-                    else -> SurfaceContainer.SecondaryContainer
-                },
-                role = TextRole.Badge,
-            )
-        }
+        warnings.forEach { (label, tone) -> ExtensionWarningPill(stringResource(label), tone) }
     }
+}
+
+/** A warning about an extension, such as its content warning or a failed install, as its rows show them. */
+@Composable
+internal fun ExtensionWarningPill(text: String, tone: ContentTone) {
+    Pill(
+        text = text,
+        container = when (tone) {
+            ContentTone.Error -> SurfaceContainer.ErrorContainer
+            ContentTone.Warning -> SurfaceContainer.WarningContainer
+            else -> SurfaceContainer.SecondaryContainer
+        },
+        role = TextRole.Badge,
+    )
 }
 
 /** A file extension, which nobody signs: its store vouches for it. */

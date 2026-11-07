@@ -34,11 +34,18 @@ interface ExtensionManagement {
     /** The installed extension [pkgName], loaded or not; null when it isn't installed or not looked for yet. */
     fun installed(pkgName: String): Extension.Installed?
 
-    /** A store's listing of the extension that provides the source [sourceId], for a source that isn't installed. */
-    fun listingOf(sourceId: Long): Flow<Extension.Available?>
+    /**
+     * A store's listing of the extension that provides each source the added stores list, by the source's key, whether
+     * or not it's installed. Empty until the stores' lists are first read; it follows the stores as they're added and
+     * removed.
+     */
+    val listingsBySource: Flow<Map<Long, Extension.Available>>
 
     /** Reads again what the stores list, after reading the stores themselves again when [refreshStores]. */
     suspend fun refreshAvailable(refreshStores: Boolean = false)
+
+    /** Reads what the stores list, unless it was read since the app started. */
+    suspend fun fetchListingsOnce()
 
     /** Installs [listing], reporting each step until it completes. */
     fun install(listing: Extension.Available): Flow<InstallStep>
