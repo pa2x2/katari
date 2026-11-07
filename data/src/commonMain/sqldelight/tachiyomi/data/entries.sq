@@ -115,6 +115,11 @@ WHERE profile_id = :profileId
 AND favorite = 1
 GROUP BY source;
 
+getSourcesWithEntries:
+SELECT DISTINCT source
+FROM entries
+WHERE source IN :sourceIds;
+
 getFavoritesBySourceId:
 SELECT *
 FROM entries

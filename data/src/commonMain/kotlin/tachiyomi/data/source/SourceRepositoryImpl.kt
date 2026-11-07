@@ -65,6 +65,10 @@ class SourceRepositoryImpl(
         }
     }
 
+    override suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long> {
+        return handler.awaitList { entriesQueries.getSourcesWithEntries(sourceIds) }.toSet()
+    }
+
     private fun mapSourceToDomainSource(source: UnifiedSource): DomainSource {
         val description = sourceDescription.describe(source)
         return DomainSource(

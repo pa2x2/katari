@@ -64,6 +64,7 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.StubSource
+import tachiyomi.domain.source.repository.SourceRepository
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -93,6 +94,8 @@ class ExtensionManager(
     private val networkHelper: Lazy<NetworkHelper>,
     private val sourceClaims: SourceClaims,
     private val sourceIdentities: SourceIdentityRepository,
+    // Lazy since the source repository reads installed sources from the source manager, which is built on this
+    private val sourceRepository: Lazy<SourceRepository>,
     private val scope: CoroutineScope,
 ) {
 
@@ -535,10 +538,18 @@ class ExtensionManager(
         publishExtensions()
     }
 
+    /**
+     * Shows a newly installed extension's sources in the open profile and hides them in the others. A source entries
+     * already come from was installed before, here or on the device sync or a backup brought them from, so each
+     * profile's hidden sources already say what was chosen for it; rewriting them would also reach every synced device.
+     */
     private fun initializeExtensionVisibility(key: String, sourceIds: Set<String>) {
         if (sourceIds.isEmpty()) return
 
         scope.launch {
+            val known = sourceRepository.value.getSourcesWithEntries(sourceIds.map(String::toLong))
+            val newSourceIds = sourceIds.filterTo(HashSet()) { it.toLong() !in known }
+            if (newSourceIds.isEmpty()) return@launch
             val profiles = profileDatabase.getProfiles(includeArchived = true)
             val activeProfileId = profileStore.currentProfileId
             profiles.forEach { profile ->
@@ -546,11 +557,11 @@ class ExtensionManager(
                     .getStringSet(key, emptySet())
                     .getAndSet { hiddenSources ->
                         when {
-                            profile.id == activeProfileId -> hiddenSources - sourceIds
+                            profile.id == activeProfileId -> hiddenSources - newSourceIds
                             profile.id == ProfileConstants.DEFAULT_PROFILE_ID && profiles.size == 1 ->
                                 hiddenSources -
-                                    sourceIds
-                            else -> hiddenSources + sourceIds
+                                    newSourceIds
+                            else -> hiddenSources + newSourceIds
                         }
                     }
             }

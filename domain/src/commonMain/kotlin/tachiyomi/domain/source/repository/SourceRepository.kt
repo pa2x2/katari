@@ -11,4 +11,7 @@ interface SourceRepository {
     fun getSourcesWithFavoriteCount(): Flow<List<Pair<Source, Long>>>
 
     fun getSourcesWithNonLibraryEntries(): Flow<List<SourceWithCount>>
+
+    /** Which of [sourceIds] any profile has entries from, in its library or not. */
+    suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long>
 }
