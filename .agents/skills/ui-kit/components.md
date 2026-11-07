@@ -217,6 +217,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The background where media is loading or failed | `MediaBackdrop` | |
 | A shade behind controls along an edge of media | `MediaScrim` | |
 | Text straight over pages or video | `OutlinedMediaText` | |
+| A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton` | `Modifier.mediaToolbarSlot` puts a button at the end or orders its label's dropping |
 | A playback position bar over video | `MediaTimeline` | |
 | A player's volume among its controls | `MediaVolumeControl` | |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
