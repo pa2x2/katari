@@ -28,8 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Preview
+import mihon.presentation.kit.content.turningAsDrawn
 import mihon.presentation.kit.progress.LoadingIndicator
 
 /**
@@ -52,7 +52,7 @@ fun CombinedCircularProgressIndicator(
             LoadingIndicator()
         } else {
             val infiniteTransition = rememberInfiniteTransition(label = "infiniteRotation")
-            val rotation by infiniteTransition.animateFloat(
+            val rotation = infiniteTransition.animateFloat(
                 initialValue = 0f,
                 targetValue = 360f,
                 animationSpec = infiniteRepeatable(
@@ -68,7 +68,7 @@ fun CombinedCircularProgressIndicator(
             )
             CircularProgressIndicator(
                 progress = { animatedProgress },
-                modifier = Modifier.rotate(rotation),
+                modifier = Modifier.turningAsDrawn { rotation.value },
             )
         }
     }
