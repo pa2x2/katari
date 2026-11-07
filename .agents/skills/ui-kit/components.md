@@ -47,7 +47,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A label naming rows inside one card that can't split into cards | `RowGroupSubheader` | |
 | A line between parts of one row group slice | `RowGroupSeparator` | |
 | A note between row group cards: how the rows below are used, or a card's stand-in when it is empty | `RowGroupNote` | |
-| A row group card that opens and closes, such as a volume of chapters | `CollapsibleRowGroupHeader`, `CollapsibleRowGroupSubheader` | |
+| A group that opens and closes, such as a volume of chapters, a report section or a filter group | `CollapsibleRowGroupHeader`, `CollapsibleRowGroupSubheader` | The subheader is a row inside a card. Optional icon, `error` tone, toned summary and `actions`; `opensPage` for a group shown on a page of its own. Never a clickable row with an arrow of your own |
 | The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits |
 | An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density |
 | One of a set where any number can be picked | `CheckRow` | |

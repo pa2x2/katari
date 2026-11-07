@@ -1,21 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.group
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterGroupSummary
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
@@ -27,22 +19,15 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.clearSelection
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.metadata
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterListOff
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.TonedSpan
-import mihon.presentation.kit.content.TonedText
+import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import mihon.presentation.kit.list.RowGroupSeparator
-import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -75,61 +60,35 @@ internal fun GroupFilterHeader(
         ?: hostSummary
         ?: filter.metadata?.description?.takeIf { it.isNotBlank() }?.let { listOf(TonedSpan(it)) }
     val clearDiffersFromReset = filter.canClear() && !changes.hasEmptyDefault(filter) && filter.activeCount() != 0
-    val spacing = KatariTheme.spacing
     Column {
         if (leadingDivider) RowGroupSeparator()
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clickable { state.expanded = !state.expanded }
-                .padding(start = currentRowInset, end = spacing.s, top = spacing.m, bottom = spacing.m),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = filter.name,
-                    role = TextRole.Label,
-                    tone = if (hasIssues) ContentTone.Error else ContentTone.Inherit,
-                )
-                subtitle?.let {
-                    TonedText(
-                        spans = it,
-                        role = TextRole.Supporting,
-                        separator = " · ",
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+        CollapsibleRowGroupSubheader(
+            title = filter.name,
+            summary = subtitle.orEmpty(),
+            expanded = state.expanded,
+            onClick = { state.expanded = !state.expanded },
+            error = hasIssues,
+            actions = {
+                FilterChangeBadges(change, hasIssues = hasIssues)
+                if (change.isChanged) {
+                    IconButton(
+                        icon = MaterialSymbols.Rounded.RestartAlt,
+                        contentDescription = stringResource(MR.strings.filter_reset_group, filter.name),
+                        onClick = {
+                            onReset(filter)
+                            onUpdate()
+                        },
+                        tone = ContentTone.Primary,
                     )
                 }
-            }
-            FilterChangeBadges(change, hasIssues = hasIssues)
-            if (change.isChanged) {
-                IconButton(
-                    icon = MaterialSymbols.Rounded.RestartAlt,
-                    contentDescription = stringResource(MR.strings.filter_reset_group, filter.name),
-                    onClick = {
-                        onReset(filter)
+                if (clearDiffersFromReset) {
+                    GroupClearMenu(filter.name) {
+                        filter.clearSelection()
                         onUpdate()
-                    },
-                    tone = ContentTone.Primary,
-                )
-            }
-            if (clearDiffersFromReset) {
-                GroupClearMenu(filter.name) {
-                    filter.clearSelection()
-                    onUpdate()
+                    }
                 }
-            }
-            Icon(
-                imageVector = if (state.expanded) {
-                    MaterialSymbols.Rounded.KeyboardArrowUp
-                } else {
-                    MaterialSymbols.Rounded.KeyboardArrowDown
-                },
-                contentDescription = null,
-                modifier = Modifier.padding(horizontal = spacing.xs),
-            )
-        }
+            },
+        )
     }
 }
 
