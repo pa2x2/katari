@@ -34,6 +34,12 @@ sealed interface SyncHeadline {
     /** A first download or full resync; [percent] done, or null when unknown. */
     data class Downloading(val percent: Int?) : SyncHeadline
 
+    /**
+     * A full resync filling in a server that lost what it had, such as one restored from an older copy (D021);
+     * [percent] of the account taken so far, or null when unknown.
+     */
+    data class CatchingUp(val percent: Int?) : SyncHeadline
+
     /** A step of a long run, named with how far it got. */
     data class Step(val step: SyncStep) : SyncHeadline
 
@@ -98,6 +104,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     if (heldKinds.isNotEmpty()) return SyncHeadline.HeldKinds(heldKinds)
     return when (activity) {
         is SyncStatus.Activity.Syncing -> when {
+            activity.catchingUp -> SyncHeadline.CatchingUp(activity.percent)
             activity.percent != null -> SyncHeadline.Downloading(activity.percent)
             else -> activity.step?.let(SyncHeadline::Step) ?: SyncHeadline.Syncing
         }

@@ -42,6 +42,10 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
         headline.percent
             ?.let { stringResource(MR.strings.sync_status_downloading, it) }
             ?: stringResource(MR.strings.sync_status_downloading_unknown)
+    is SyncHeadline.CatchingUp ->
+        headline.percent
+            ?.let { stringResource(MR.strings.sync_status_catching_up, it) }
+            ?: stringResource(MR.strings.sync_status_catching_up_unknown)
     is SyncHeadline.Step -> stepText(headline.step)
     SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
     SyncHeadline.Syncing -> stringResource(MR.strings.sync_status_syncing)
@@ -100,7 +104,8 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
     SyncHeadline.FirstDownloadWaitsForWifi,
     -> ContentTone.Warning
-    is SyncHeadline.Downloading, is SyncHeadline.Step, SyncHeadline.Syncing -> ContentTone.Primary
+    is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
+        ContentTone.Primary
     else -> ContentTone.Inherit
 }
 
@@ -121,6 +126,7 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff
     is SyncHeadline.Downloading -> MaterialSymbols.Rounded.CloudDownload
+    is SyncHeadline.CatchingUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Step -> when (step.kind) {
         SyncStep.Kind.PREPARING -> MaterialSymbols.Rounded.CloudSync
         SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload

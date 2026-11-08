@@ -32,7 +32,8 @@ fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
             onClick = onClick,
             tone = ContentTone.Warning,
         )
-        headline is SyncHeadline.Syncing || headline is SyncHeadline.Downloading || headline is SyncHeadline.Step ->
+        headline is SyncHeadline.Syncing || headline is SyncHeadline.Downloading ||
+            headline is SyncHeadline.CatchingUp || headline is SyncHeadline.Step ->
             AppBar.Action(
                 title = title,
                 icon = MaterialSymbols.Rounded.Cloud,

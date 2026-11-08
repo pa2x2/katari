@@ -83,8 +83,12 @@ private fun statusCard(
     return Preference.PreferenceItem.CustomPreference(title = "status") {
         TextPreferenceWidget(
             title = headline?.let { syncHeadlineText(it) }.orEmpty(),
-            // The headline says when it last synced
-            subtitle = account,
+            // The headline says when it last synced; a resync that reads like a first download says why it runs
+            subtitle = if (headline is SyncHeadline.CatchingUp) {
+                stringResource(MR.strings.sync_catching_up_text)
+            } else {
+                account
+            },
             icon = headline?.icon(),
             iconAlert = headline?.stopsSync() == true,
             widget = {

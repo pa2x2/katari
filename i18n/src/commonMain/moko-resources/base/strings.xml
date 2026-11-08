@@ -3203,6 +3203,10 @@
     <!-- %1$d is how far the first download got, in percent -->
     <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
     <string name="sync_status_downloading_unknown">Downloading your library…</string>
+    <!-- %1$d is how far the resync got, in percent -->
+    <string name="sync_status_catching_up">Catching the server up · %1$d%%</string>
+    <string name="sync_status_catching_up_unknown">Catching the server up…</string>
+    <string name="sync_catching_up_text">The server went back to an older copy. This device is sending it what it\'s missing.</string>
     <string name="sync_progress_channel">Sync progress</string>
     <!-- Titles of the notification shown while sync moves a whole library, such as on a device's first sync -->
     <string name="sync_long_run_preparing">Preparing your library</string>
