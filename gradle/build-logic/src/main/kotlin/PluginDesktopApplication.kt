@@ -1,5 +1,6 @@
 import mihon.gradle.configurations.configureJvmTestVerification
 import mihon.gradle.configurations.configureKotlin
+import mihon.gradle.configurations.verifyDesktopMetroGraph
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.configureTest
 import mihon.gradle.extensions.libs
@@ -24,6 +25,7 @@ class PluginDesktopApplication : Plugin<Project> {
         configureKotlin()
         configureTest()
         configureJvmTestVerification()
+        verifyDesktopMetroGraph()
 
         val compose = extensions.getByType<ComposeExtension>()
         (compose as ExtensionAware).extensions.getByType<DesktopExtension>().application {

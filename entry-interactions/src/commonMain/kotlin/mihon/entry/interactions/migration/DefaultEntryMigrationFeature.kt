@@ -474,6 +474,11 @@ internal class DefaultEntryMigrationFeature(
             targetCategoryIds = inspected.sourceCategoryIds
                 .takeIf { EntryMigrationOption.CATEGORIES in selectedOptions },
             childUpdates = childUpdates,
+            historyChapterMoves = durableEvent.childMatches
+                .mapNotNull { match -> match.source?.let { source -> source.id to match.target.id } }
+                .distinctBy { (sourceId) -> sourceId }
+                .toMap()
+                .takeIf { replace },
             expectedSourceTracks = inspected.sourceTracks,
             preparedTracks = preparedTracks,
             consequenceRequests = consequenceRequests,

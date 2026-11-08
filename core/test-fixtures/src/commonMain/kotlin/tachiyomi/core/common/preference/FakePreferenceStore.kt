@@ -26,13 +26,6 @@ class FakePreferenceStore : PreferenceStore {
         deserializer: (String) -> T,
     ) = preference(key, defaultValue)
 
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ) = preference(key, defaultValue)
-
     override fun <T> getObjectSetFromStringSet(
         key: String,
         defaultValue: Set<T>,

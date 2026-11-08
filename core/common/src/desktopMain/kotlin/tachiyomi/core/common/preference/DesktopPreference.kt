@@ -138,22 +138,6 @@ internal sealed class DesktopPreference<T>(
         override fun encode(value: T): Any = serializer(value)
     }
 
-    class ObjectAsInt<T>(
-        store: DesktopPreferenceStore,
-        key: String,
-        defaultValue: T,
-        private val serializer: (T) -> Int,
-        private val deserializer: (Int) -> T,
-    ) : DesktopPreference<T>(store, key, defaultValue) {
-        override fun decode(stored: Any): T = try {
-            deserializer(stored as Int)
-        } catch (_: Exception) {
-            defaultValue()
-        }
-
-        override fun encode(value: T): Any = serializer(value)
-    }
-
     class ObjectSetAsStringSet<T>(
         store: DesktopPreferenceStore,
         key: String,

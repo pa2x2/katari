@@ -16,7 +16,6 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.entry.interactions.migration.EntryMigrationMode
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
-import mihon.feature.migration.options.toMigrationFlag
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -91,7 +90,7 @@ internal fun MigrateEntryDialog(
                                 current.type
                                     .entryTypePresentation()
                                     .childListTitle
-                            else -> option.toMigrationFlag().getLabel()
+                            else -> option.getLabel()
                         },
                     ),
                     checked = option in state.selectedOptions,

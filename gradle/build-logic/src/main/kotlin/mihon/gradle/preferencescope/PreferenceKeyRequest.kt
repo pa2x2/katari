@@ -73,7 +73,6 @@ private val GETTERS = setOf(
     "getBoolean",
     "getStringSet",
     "getObjectFromString",
-    "getObjectFromInt",
     "getObjectSetFromStringSet",
     "getEnum",
     "getEnumSet",

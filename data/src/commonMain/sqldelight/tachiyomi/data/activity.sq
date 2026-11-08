@@ -72,6 +72,16 @@ CREATE TABLE statistics_epochs(
     CHECK(started_at >= 0)
 );
 
+moveSessionsToEntry:
+UPDATE activity_sessions
+SET entry_id = :toEntryId
+WHERE entry_id = :fromEntryId;
+
+moveCompletionEventsToEntry:
+UPDATE activity_completion_events
+SET entry_id = :toEntryId
+WHERE entry_id = :fromEntryId;
+
 getActivitySessionCheckpoint:
 SELECT entry_id, last_sequence
 FROM activity_sessions

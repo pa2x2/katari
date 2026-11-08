@@ -1,6 +1,6 @@
 {
   "uniqueId": "app.katari.libmpv:zlib",
-  "artifactVersion": "1.3.2",
+  "artifactVersion": "1.4",
   "name": "zlib",
   "description": "Built into the desktop app's libmpv.",
   "website": "https://zlib.net",

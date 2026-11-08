@@ -1,15 +1,15 @@
 package mihon.feature.migration.options
 
 import dev.icerock.moko.resources.StringResource
-import mihon.domain.migration.models.MigrationFlag
+import mihon.entry.interactions.migration.EntryMigrationOption
 import tachiyomi.i18n.*
 
-internal fun MigrationFlag.getLabel(): StringResource {
+internal fun EntryMigrationOption.getLabel(): StringResource {
     return when (this) {
-        MigrationFlag.CHAPTER -> MR.strings.items
-        MigrationFlag.CATEGORY -> MR.strings.categories
-        MigrationFlag.CUSTOM_COVER -> MR.strings.custom_cover
-        MigrationFlag.NOTES -> MR.strings.action_notes
-        MigrationFlag.REMOVE_DOWNLOAD -> MR.strings.delete_downloaded
+        EntryMigrationOption.CHILD_STATE -> MR.strings.items
+        EntryMigrationOption.CATEGORIES -> MR.strings.categories
+        EntryMigrationOption.CUSTOM_COVER -> MR.strings.custom_cover
+        EntryMigrationOption.NOTES -> MR.strings.action_notes
+        EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS -> MR.strings.delete_downloaded
     }
 }

@@ -1,6 +1,6 @@
 {
   "uniqueId": "app.katari.libmpv:libcxx",
-  "artifactVersion": "zig 0.17.0",
+  "artifactVersion": "zig 0.17.1",
   "name": "libc++",
   "description": "LLVM's C++ runtime (libc++, libc++abi, libunwind) as zig ships it, built into the desktop app's libmpv.",
   "website": "https://libcxx.llvm.org",

@@ -11,7 +11,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.replacement.chapterFollowingMove
-import app.katari.sync.client.kind.replacement.entryFollowingMove
+import app.katari.sync.client.kind.replacement.entryFollowingReplacement
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -52,7 +52,7 @@ object ActivitySessionKind : SyncedKind<ActivitySessionPayload>(
         maxOf(local, incoming, compareBy<ActivitySessionPayload>({ it.endedAt }, { it.duration }, { it.startedAt }))
 
     override suspend fun apply(writes: LocalWrites, key: String, payload: ActivitySessionPayload): ApplyOutcome {
-        val entryId = writes.entryId(writes.entryFollowingMove(payload.entryKey)).idOr { return it }
+        val entryId = writes.entryId(writes.entryFollowingReplacement(payload.entryKey)).idOr { return it }
         writes.database.sync_applyQueries.upsertActivitySession(
             sessionId = payload.sessionId,
             entryId = entryId,
@@ -181,7 +181,7 @@ object ActivityCompletionKind : SyncedKind<ActivityCompletionPayload>(
 
     /** Stored under its record key, which is the same on every device, as this device's event ID for it. */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ActivityCompletionPayload): ApplyOutcome {
-        val entryId = writes.entryId(writes.entryFollowingMove(payload.entryKey)).idOr { return it }
+        val entryId = writes.entryId(writes.entryFollowingReplacement(payload.entryKey)).idOr { return it }
         val chapterId = payload.chapterKey?.let {
             writes.chapterId(writes.chapterFollowingMove(it)).idOr { outcome -> return outcome }
         }

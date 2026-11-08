@@ -44,13 +44,6 @@ internal class ActiveProfilePreferenceStore(
         deserializer: (String) -> T,
     ): Preference<T> = preference { it.getObjectFromString(key, defaultValue, serializer, deserializer) }
 
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> = preference { it.getObjectFromInt(key, defaultValue, serializer, deserializer) }
-
     override fun <T> getObjectSetFromStringSet(
         key: String,
         defaultValue: Set<T>,

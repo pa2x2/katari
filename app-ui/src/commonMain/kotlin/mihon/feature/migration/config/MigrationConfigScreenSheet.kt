@@ -10,17 +10,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
-import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
-import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
-import mihon.feature.migration.options.toEntryMigrationOptions
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.Warning
@@ -40,7 +39,6 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -60,7 +58,7 @@ fun MigrationConfigScreenSheet(
 ) {
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
-    val migrationFlags by preferences.migrationFlags.collectAsState()
+    var carriedOptions by rememberSaveable(stateSaver = CarriedOptionsSaver) { mutableStateOf(CARRIED_OPTIONS) }
     Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -70,40 +68,26 @@ fun MigrationConfigScreenSheet(
                     .verticalScroll(rememberScrollState()),
             ) {
                 ChipsRow(title = stringResource(MR.strings.migrationConfigScreen_dataToMigrateHeader)) {
-                    MigrationFlag.entries
-                        .fastFilterNot { it == MigrationFlag.REMOVE_DOWNLOAD }
-                        .fastForEach { flag ->
-                            FilterChip(
-                                label = stringResource(flag.getLabel()),
-                                selected = flag in migrationFlags,
-                                onClick = {
-                                    preferences.migrationFlags.getAndSet { currentFlags ->
-                                        if (flag in currentFlags) {
-                                            currentFlags - flag
-                                        } else {
-                                            currentFlags + flag
-                                        }
-                                    }
-                                },
-                            )
-                        }
-                }
-                val removeDownloads = MigrationFlag.REMOVE_DOWNLOAD in migrationFlags
-                RowGroup {
-                    row {
-                        ToggleRow(
-                            title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
-                            checked = removeDownloads,
-                            onCheckedChange = { remove ->
-                                preferences.migrationFlags.getAndSet {
-                                    if (remove) {
-                                        it + MigrationFlag.REMOVE_DOWNLOAD
-                                    } else {
-                                        it -
-                                            MigrationFlag.REMOVE_DOWNLOAD
-                                    }
+                    CARRIED_OPTIONS.fastForEach { option ->
+                        FilterChip(
+                            label = stringResource(option.getLabel()),
+                            selected = option in carriedOptions,
+                            onClick = {
+                                carriedOptions = if (option in carriedOptions) {
+                                    carriedOptions - option
+                                } else {
+                                    carriedOptions + option
                                 }
                             },
+                        )
+                    }
+                }
+                RowGroup {
+                    row {
+                        PreferenceToggleRow(
+                            title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
+                            subtitle = null,
+                            preference = preferences.migrationRemoveDownloads,
                         )
                     }
                     if (showInitialAdvancedSearchOption) {
@@ -178,7 +162,11 @@ fun MigrationConfigScreenSheet(
                     val cleanedExtraSearchQuery = extraSearchQuery.trim().ifBlank { null }
                     onStartMigration(
                         cleanedExtraSearchQuery,
-                        migrationFlags.toEntryMigrationOptions(),
+                        if (preferences.migrationRemoveDownloads.get()) {
+                            carriedOptions.toSet() + EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS
+                        } else {
+                            carriedOptions.toSet()
+                        },
                         if (initialAdvancedSearch) {
                             SourceMigrationDiscoveryDepth.BROAD
                         } else {
@@ -207,3 +195,11 @@ private fun PreferenceToggleRow(
         onCheckedChange = { preference.toggle() },
     )
 }
+
+/** What a migration can carry over, all chosen when the sheet opens. */
+private val CARRIED_OPTIONS = EntryMigrationOption.entries - EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS
+
+private val CarriedOptionsSaver: Saver<List<EntryMigrationOption>, Any> = listSaver(
+    save = { options -> options.map { it.name } },
+    restore = { names -> names.map(EntryMigrationOption::valueOf) },
+)

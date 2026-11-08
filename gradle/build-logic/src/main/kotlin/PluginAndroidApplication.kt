@@ -1,3 +1,4 @@
+import mihon.gradle.configurations.verifyAndroidMetroGraph
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.mihonx
@@ -12,5 +13,7 @@ class PluginAndroidApplication : Plugin<Project> {
             alias(libs.plugins.android.application)
             alias(mihonx.plugins.android.base)
         }
+
+        verifyAndroidMetroGraph()
     }
 }

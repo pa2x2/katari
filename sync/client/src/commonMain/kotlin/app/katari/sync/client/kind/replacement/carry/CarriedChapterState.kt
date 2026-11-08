@@ -143,9 +143,11 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
     }
 
     /**
-     * History follows a move only; a migration leaves it with the old entry. Every share of time read on the old
-     * chapter is carried as read on it ([HistoryKind]), so it adds to the time read on the new chapter, a later share
-     * from the same device replaces the one carried before, and carrying it again changes nothing.
+     * Later history follows a move only. Every share of time read on the old chapter is carried as read on it
+     * ([HistoryKind]), so it adds to the time read on the new chapter, a later share from the same device replaces the
+     * one carried before, and carrying it again changes nothing. A migration moves history on the device that migrates
+     * as its own time read, which already holds every other device's share as last merged, so carrying them again would
+     * count them twice.
      */
     suspend fun history(from: HistoryPayload) {
         if (!carry.isMove) return
