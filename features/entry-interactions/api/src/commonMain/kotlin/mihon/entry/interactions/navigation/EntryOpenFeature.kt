@@ -13,6 +13,7 @@ interface EntryOpenFeature {
      */
     fun isApplicable(type: EntryType): Boolean
 
+    /** Opens [chapter] in its reader or player. Call it on the main thread: on desktop it navigates the window. */
     fun open(
         context: PlatformContext,
         entry: Entry,

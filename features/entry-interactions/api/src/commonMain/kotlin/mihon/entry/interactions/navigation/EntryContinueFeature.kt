@@ -16,6 +16,7 @@ interface EntryContinueFeature {
         return entries.associate { entry -> entry.id to nextTarget(entry) }
     }
 
+    /** Opens the next child of [entry]. Call it on the main thread, which [EntryOpenFeature.open] needs. */
     suspend fun continueEntry(context: PlatformContext, entry: Entry): EntryContinueResult
 }
 

@@ -69,8 +69,6 @@ import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
@@ -270,9 +268,9 @@ data object LibraryTab : Tab {
                             navigator.push(EntryScreen(item.entry.id))
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
-                            scope.launchIO {
+                            scope.launch {
                                 val result = viewModel.continueEntry(context, item.entry)
-                                withUIContext { openMessages.report(item.entry.type, result) }
+                                openMessages.report(item.entry.type, result)
                             }
                             Unit
                         }.takeIf { state.showContinueButton },

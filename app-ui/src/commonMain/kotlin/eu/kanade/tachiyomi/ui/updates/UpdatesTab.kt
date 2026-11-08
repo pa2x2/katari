@@ -39,13 +39,12 @@ import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.feature.upcoming.UpcomingScreen
 import mihon.presentation.kit.feedback.EmptyScreen
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -197,9 +196,9 @@ data object UpdatesTab : Tab {
                 },
                 isOpenApplicable = viewModel::isOpenApplicable,
                 onClickUpdate = { item ->
-                    scope.launchIO {
-                        val result = viewModel.openUpdate(context, item) ?: return@launchIO
-                        withUIContext { openMessages.report(item.update.entryType, result) }
+                    scope.launch {
+                        val result = viewModel.openUpdate(context, item) ?: return@launch
+                        openMessages.report(item.update.entryType, result)
                     }
                 },
                 onDownloadChapter = viewModel::downloadChapters,
