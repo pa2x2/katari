@@ -51,21 +51,13 @@ internal class VideoPlayerPinchGesture(private val target: VideoPlayerInputTarge
 
     private fun move(event: MotionEvent, geometry: VideoPictureGeometry) {
         if (baseSpan <= 0f) return
-        val span = span(event, liftingIndex = -1)
-        val focusX = focusX(event, liftingIndex = -1)
-        val focusY = focusY(event, liftingIndex = -1)
-        val scale = geometry.snapScale(base.scale * span / baseSpan)
-        val centreX = geometry.width / 2f
-        val centreY = geometry.height / 2f
-        // The point of the picture under the fingers when the pinch began, in the picture's fitted size.
-        val anchorX = (baseFocusX - centreX - base.offsetX) / base.scale
-        val anchorY = (baseFocusY - centreY - base.offsetY) / base.scale
-        val placement = geometry.clamp(
-            VideoPicturePlacement(
-                scale = scale,
-                offsetX = focusX - centreX - anchorX * scale,
-                offsetY = focusY - centreY - anchorY * scale,
-            ),
+        val placement = geometry.pinch(
+            base = base,
+            factor = span(event, liftingIndex = -1) / baseSpan,
+            fromX = baseFocusX,
+            fromY = baseFocusY,
+            toX = focusX(event, liftingIndex = -1),
+            toY = focusY(event, liftingIndex = -1),
         )
         latest = placement
         target.previewPictureFraming(geometry.framingOf(placement))

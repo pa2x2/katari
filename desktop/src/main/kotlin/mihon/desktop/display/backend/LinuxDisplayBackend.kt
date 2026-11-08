@@ -1,11 +1,15 @@
 package mihon.desktop.display.backend
 
+import kotlinx.coroutines.flow.Flow
 import logcat.LogPriority
 import mihon.desktop.display.x11.X11LaunchHandover
 import mihon.desktop.display.x11.X11PointerButtons
+import mihon.desktop.display.x11.X11TouchpadPinches
 import mihon.desktop.display.x11.X11WindowClass
+import mihon.presentation.kit.pointer.TouchpadPinch
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Frame
+import java.awt.Window
 
 /**
  * Linux: AWT on X11, which a Wayland session runs through XWayland, with Compose drawing on the GPU; or, in a Wayland
@@ -53,6 +57,10 @@ class LinuxDisplayBackend(private val applicationId: String) : DisplayBackend {
         if (!isNativeWayland && activationToken != null) X11LaunchHandover.handOver(window, activationToken)
         window.toFront()
     }
+
+    // The native Wayland toolkit takes no pointer gestures from the compositor
+    override fun touchpadPinches(window: Window): Flow<TouchpadPinch>? =
+        if (isNativeWayland) null else X11TouchpadPinches.over(window)
 
     private fun isWaylandSession(): Boolean = !System.getenv("WAYLAND_DISPLAY").isNullOrEmpty()
 

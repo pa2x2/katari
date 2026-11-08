@@ -60,19 +60,32 @@ internal class VideoPictureGeometry(val width: Float, val height: Float, aspectR
         factor: Float,
         focusX: Float = width / 2f,
         focusY: Float = height / 2f,
-    ): PictureFraming {
-        val base = place(framing)
+    ): PictureFraming = framingOf(pinch(place(framing), factor, focusX, focusY, focusX, focusY))
+
+    /**
+     * [base] scaled by [factor], with the part of the picture that was under the point ([fromX], [fromY]) of the
+     * player moved under ([toX], [toY]), as two fingers that pinch and move together do; the scale lands on Fit or
+     * Fill when close to either, and the picture stays over the player.
+     */
+    fun pinch(
+        base: VideoPicturePlacement,
+        factor: Float,
+        fromX: Float,
+        fromY: Float,
+        toX: Float,
+        toY: Float,
+    ): VideoPicturePlacement {
         val scale = snapScale(base.scale * factor)
         val centreX = width / 2f
         val centreY = height / 2f
-        // The point of the picture under the focus, in the picture's fitted size
-        val anchorX = (focusX - centreX - base.offsetX) / base.scale
-        val anchorY = (focusY - centreY - base.offsetY) / base.scale
-        return framingOf(
+        // The point of the picture under (fromX, fromY), in the picture's fitted size
+        val anchorX = (fromX - centreX - base.offsetX) / base.scale
+        val anchorY = (fromY - centreY - base.offsetY) / base.scale
+        return clamp(
             VideoPicturePlacement(
                 scale = scale,
-                offsetX = focusX - centreX - anchorX * scale,
-                offsetY = focusY - centreY - anchorY * scale,
+                offsetX = toX - centreX - anchorX * scale,
+                offsetY = toY - centreY - anchorY * scale,
             ),
         )
     }

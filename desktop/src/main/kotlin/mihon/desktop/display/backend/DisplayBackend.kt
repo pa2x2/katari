@@ -1,6 +1,9 @@
 package mihon.desktop.display.backend
 
+import kotlinx.coroutines.flow.Flow
+import mihon.presentation.kit.pointer.TouchpadPinch
 import java.awt.Frame
+import java.awt.Window
 
 /**
  * How the app's windows reach the display. The window toolkit is fixed once anything starts AWT, so the backend is
@@ -31,6 +34,12 @@ interface DisplayBackend {
      * the desktop shows that it wants attention instead.
      */
     fun bringForward(window: Frame, activationToken: String?)
+
+    /**
+     * The touchpad pinches over [window], a shown window, while collected; null where the window toolkit passes none
+     * on. One collection at a time per window: share it.
+     */
+    fun touchpadPinches(window: Window): Flow<TouchpadPinch>?
 }
 
 enum class WindowDrawing {

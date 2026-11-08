@@ -6,10 +6,11 @@ import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+import com.sun.jna.ptr.IntByReference
 
 /**
- * The part of the system's Xlib (`Xlib.h`) that the app calls itself: telling the window manager about the app's
- * windows, which AWT has no call for. Each function is the C one without its `X` prefix: [openDisplay] is
+ * The part of the system's Xlib (`Xlib.h`) that the app calls itself, for what AWT has no call for: telling the window
+ * manager about the app's windows, and reading the touchpad pinches over them ([X11TouchpadPinches]). Each function is the C one without its `X` prefix: [openDisplay] is
  * `XOpenDisplay`. An X window or atom is a C `unsigned long`.
  */
 internal interface Xlib : Library {
@@ -42,13 +43,49 @@ internal interface Xlib : Library {
     ): Int
 
     fun flush(display: Pointer): Int
+
+    /** Whether the display has the extension [name]; its major opcode goes into [opcode]. */
+    fun queryExtension(
+        display: Pointer,
+        name: String,
+        opcode: IntByReference,
+        firstEvent: IntByReference,
+        firstError: IntByReference,
+    ): Boolean
+
+    fun createSimpleWindow(
+        display: Pointer,
+        parent: NativeLong,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        borderWidth: Int,
+        border: NativeLong,
+        background: NativeLong,
+    ): NativeLong
+
+    fun destroyWindow(display: Pointer, window: NativeLong): Int
+
+    /** Waits for the next event and copies it into [event], memory of [XEVENT_SIZE] bytes. */
+    fun nextEvent(display: Pointer, event: Pointer): Int
+
+    /** Fills the [cookie] of an extension's event with the event's data, which [freeEventData] lets go of. */
+    fun getEventData(display: Pointer, cookie: XGenericEventCookie): Boolean
+
+    fun freeEventData(display: Pointer, cookie: XGenericEventCookie)
 }
 
 internal const val PROP_MODE_REPLACE = 0
 
 internal const val CLIENT_MESSAGE = 33
 
+internal const val GENERIC_EVENT = 35
+
 internal const val PROPERTY_CHANGE_MASK = 1L shl 22
+
+/** The size of the `XEvent` union: 24 longs. */
+internal val XEVENT_SIZE = 24L * NativeLong.SIZE
 
 /**
  * `XClientMessageEvent`, padded to the size of the `XEvent` union, which `XSendEvent` reads whatever the event's type.
@@ -90,6 +127,33 @@ internal class XClientMessageEvent : Structure() {
 
     companion object {
         const val MESSAGE_BYTES = 20
+    }
+}
+
+/**
+ * `XGenericEventCookie`, which an extension's event, read as an `XEvent`, is: [extension] is the extension's major
+ * opcode, [evtype] its own event type, and [data] the event itself once [Xlib.getEventData] has filled it.
+ */
+@Structure.FieldOrder("type", "serial", "sendEvent", "display", "extension", "evtype", "cookie", "data")
+internal class XGenericEventCookie(memory: Pointer) : Structure(memory) {
+    @JvmField var type: Int = 0
+
+    @JvmField var serial: NativeLong = NativeLong(0)
+
+    @JvmField var sendEvent: Int = 0
+
+    @JvmField var display: Pointer? = null
+
+    @JvmField var extension: Int = 0
+
+    @JvmField var evtype: Int = 0
+
+    @JvmField var cookie: Int = 0
+
+    @JvmField var data: Pointer? = null
+
+    init {
+        read()
     }
 }
 

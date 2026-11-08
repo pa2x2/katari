@@ -17,9 +17,9 @@ import mihon.presentation.kit.pointer.HiddenPointer
 import mihon.video.engine.spi.player.VideoPlayer
 
 /**
- * The desktop's mouse and keys: the mouse's buttons ([videoPlayerMouse]) and scrolling ([videoPlayerWheel]) on the
- * picture, and the player's keys ([VideoPlayerKeys]). The pointer hides with the controls, and over a picture zoomed
- * past the player it is a hand, as the picture can be dragged.
+ * The desktop's mouse, touchpad and keys: the mouse's buttons ([videoPlayerMouse]), scrolling ([videoPlayerWheel]) and
+ * touchpad pinches ([videoPlayerTouchpadPinch]) on the picture, and the player's keys ([VideoPlayerKeys]). The pointer
+ * hides with the controls, and over a picture zoomed past the player it is a hand, as the picture can be dragged.
  */
 internal object PointerVideoPlayerInput : VideoPlayerInput {
     override val hovers = true
@@ -49,7 +49,8 @@ internal object PointerVideoPlayerInput : VideoPlayerInput {
                 .onSizeChanged { size = it }
                 .pointerHoverIcon(pointer)
                 .videoPlayerMouse(target, geometry)
-                .videoPlayerWheel(target, geometry),
+                .videoPlayerWheel(target, geometry)
+                .videoPlayerTouchpadPinch(target, geometry),
         )
     }
 
