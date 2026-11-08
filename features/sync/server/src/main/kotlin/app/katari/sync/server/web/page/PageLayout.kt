@@ -29,6 +29,9 @@ import kotlinx.html.title
 /** Where the stylesheet, script, font and logo are served from; the server's resources under `web/`. */
 internal const val ASSETS_PATH = "/assets"
 
+/** The website's guide to running the server: setup, accounts, HTTPS and updating. */
+private const val GUIDE_URL = "https://pa2x2.github.io/katari/docs/sync-server/"
+
 internal suspend fun ApplicationCall.respondPage(
     title: String,
     status: HttpStatusCode = HttpStatusCode.OK,
@@ -70,9 +73,13 @@ private fun HTML.katariPage(title: String, visitor: WebVisitor, content: MAIN.()
             }
         }
         main("body") { content() }
-        // Admins, who upgrade the server, see its version; nobody else is told which version runs.
-        if (visitor.account?.isAdmin == true) {
-            footer("foot") { +"Katari sync server ${ServerVersion.name}" }
+        footer("foot") {
+            // Admins, who upgrade the server, see its version; nobody else is told which version runs.
+            if (visitor.account?.isAdmin == true) +"Katari sync server ${ServerVersion.name} · "
+            a(href = GUIDE_URL, target = "_blank") {
+                attributes["rel"] = "noopener"
+                +"Help"
+            }
         }
     }
 }
