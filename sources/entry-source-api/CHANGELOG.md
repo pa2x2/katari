@@ -1,5 +1,18 @@
 # SDK Changelog
 
+## [4.0.0] - Unreleased
+
+> From SDK 3.0, [Upgrade to SDK 4.0](https://pa2x2.github.io/katari/developers/upgrade/4.0/) walks through the changes.
+
+### 🔄 Changed
+
+- The book API moved from `mihon.book.api` to `app.katari.book.api`, with the same classes in it. `EntryMedia.Book.descriptor`, `BookResourceCatalog.coverage` and `BookSourceResource.availability` take their types from the new package.
+- Katari loads only extensions built with SDK 4.0. It reads the SDK version from the major and minor of an extension's `versionName`, so a 4.0 build needs a `versionName` of `4.0.x`. Extensions built with SDK 3.x show as needing an update.
+
+### 🐛 Fixed
+
+- `cloudflareClient` solves a challenge with the user agent it then sends the request again with. When Cloudflare answers the solution with a second challenge, it waits for that one too, instead of taking a clearance the site rejects.
+
 ## [3.0.0] - 2026-10-26
 
 > From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/developers/upgrade/3.0/) walks through the changes.
