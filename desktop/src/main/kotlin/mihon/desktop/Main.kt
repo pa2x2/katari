@@ -26,6 +26,7 @@ import mihon.desktop.extension.startExtensionHost
 import mihon.desktop.home.HomeWindowContent
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.player.Host
+import mihon.desktop.security.signin.SignInCheckProcess
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.systemDesktopDirectories
 import mihon.desktop.update.DesktopAppUpdatePrompt
@@ -36,6 +37,8 @@ import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
 fun main(arguments: Array<String>) {
+    // Before anything of the app's: the check only talks to PAM and to the app that started it
+    SignInCheckProcess.serviceIn(arguments)?.let(SignInCheckProcess::run)
     val operatingSystem = DesktopOperatingSystem.current()
     val directories = systemDesktopDirectories(operatingSystem)
     val crashReport = CrashReportArgument.reportIn(arguments)
