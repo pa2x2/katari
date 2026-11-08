@@ -8,7 +8,6 @@ import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.power.PowerSource
 import mihon.core.platform.power.ScreenIdleInhibitor
-import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.power.PortalScreenIdleInhibitor
 import mihon.desktop.power.UPowerPowerSource
@@ -26,10 +25,7 @@ object PowerBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun screenIdleInhibitor(
-        operatingSystem: DesktopOperatingSystem,
-        displayBackend: DisplayBackend,
-    ): ScreenIdleInhibitor = when (operatingSystem) {
-        DesktopOperatingSystem.LINUX -> PortalScreenIdleInhibitor(displayBackend)
+    fun screenIdleInhibitor(operatingSystem: DesktopOperatingSystem): ScreenIdleInhibitor = when (operatingSystem) {
+        DesktopOperatingSystem.LINUX -> PortalScreenIdleInhibitor()
     }
 }

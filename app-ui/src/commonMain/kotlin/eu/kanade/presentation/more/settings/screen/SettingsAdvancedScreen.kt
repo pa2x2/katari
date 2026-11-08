@@ -106,7 +106,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                 visible = appNotifications.hasSystemSettings,
                 onClick = { appNotifications.openSystemSettings(context) },
             ),
-            graph.displayBackendSetting.preferenceItem(),
             getBackgroundActivityGroup(),
             getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),

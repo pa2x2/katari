@@ -6,7 +6,6 @@ import mihon.core.platform.power.ScreenIdleInhibitor
 import mihon.desktop.dbus.DbusConnection
 import mihon.desktop.dbus.DbusException
 import mihon.desktop.dbus.Variant
-import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.portal.DesktopPortal
 import mihon.desktop.portal.portalParentWindow
 import mihon.desktop.window.WindowPlatformContext
@@ -22,13 +21,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * The calls run on a thread of their own, in order, so a hold closed at once is still taken and let go in turn.
  * Without the portal, or with a backend that can't inhibit, the screen locks as it would anyway.
  */
-class PortalScreenIdleInhibitor(private val displayBackend: DisplayBackend) : ScreenIdleInhibitor {
+class PortalScreenIdleInhibitor : ScreenIdleInhibitor {
     private val calls = Executors.newSingleThreadExecutor { task ->
         Thread(task, "Screen idle inhibitor").apply { isDaemon = true }
     }
 
     override fun keepAwake(window: PlatformContext, reason: String): AutoCloseable {
-        val parent = portalParentWindow((window as? WindowPlatformContext)?.window, displayBackend)
+        val parent = portalParentWindow((window as? WindowPlatformContext)?.window)
         val hold = Hold()
         calls.execute { hold.take(parent, reason) }
         return AutoCloseable { calls.execute(hold::letGo) }

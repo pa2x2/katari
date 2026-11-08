@@ -28,5 +28,4 @@ interface AdvancedSettingsGraph {
     val progressiveImageEngine: ProgressiveImageEngine
     val hardwareBitmapSetting: HardwareBitmapSetting
     val extensionInstallerSetting: ExtensionInstallerSetting
-    val displayBackendSetting: DisplayBackendSetting
 }

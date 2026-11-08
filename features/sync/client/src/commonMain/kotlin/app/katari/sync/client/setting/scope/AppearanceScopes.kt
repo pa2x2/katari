@@ -26,7 +26,7 @@ internal val AppearanceScopes = PreferenceScopeTable {
     // The tab arrangement being edited, until it is saved.
     device("home_screen_navigation_draft")
 
-    // Desktop: InterfaceSizePreferences, DisplayBackendPreferences, PreferenceAppLocaleStore. The app language lives
-    // in the store all profiles share, and Android keeps its own in the system's per-app language.
-    device("interface_size", "use_native_wayland", "app_language")
+    // Desktop: InterfaceSizePreferences, PreferenceAppLocaleStore. The app language lives in the store all profiles
+    // share, and Android keeps its own in the system's per-app language.
+    device("interface_size", "app_language")
 }

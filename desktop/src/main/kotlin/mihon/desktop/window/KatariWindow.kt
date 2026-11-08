@@ -21,7 +21,6 @@ import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.application.icon.AppIcon
 import mihon.desktop.application.instance.InstanceRequest
 import mihon.desktop.di.DesktopGraph
-import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
 import mihon.desktop.extension.dialog.ExtensionDialogsHost
@@ -45,8 +44,7 @@ import javax.swing.JFrame
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
  * screen's title unless the profile is locked, carrying the app's icon, brought forward when the app is launched again
  * and opening what that launch opens, and closing the app when it closes, after asking while background work runs (see
- * [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame Compose draws into where the
- * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it what only a
+ * [mihon.desktop.work.WorkCloseGuard]). [content] gets what [AppUiRoot] gives every platform's screens, and around it what only a
  * desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
@@ -75,7 +73,15 @@ fun ApplicationScope.KatariWindow(
     val title = screenTitle?.let { stringResource(MR.strings.window_title_with_screen, appName, it) } ?: appName
     val icon = remember { AppIcon.painter() }
     val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }
-    val windowContent: @Composable (JFrame) -> Unit = { window ->
+    Window(
+        onCloseRequest = requestQuit,
+        state = state,
+        title = title,
+        icon = icon,
+        onKeyEvent = shortcuts::onKeyEvent,
+    ) {
+        OpensAtBounds(window, state, opening)
+        LeavesFullScreenToMaximized(window, state)
         WindowContent(
             graph = graph,
             window = window,
@@ -86,27 +92,6 @@ fun ApplicationScope.KatariWindow(
             onQuit = requestQuit,
             onConfirmedQuit = ::exitApplication,
             content = content,
-        )
-    }
-    when (graph.displayBackend.windowDrawing) {
-        WindowDrawing.Accelerated -> Window(
-            onCloseRequest = requestQuit,
-            state = state,
-            title = title,
-            icon = icon,
-            onKeyEvent = shortcuts::onKeyEvent,
-        ) {
-            OpensAtBounds(window, state, opening)
-            LeavesFullScreenToMaximized(window, state)
-            windowContent(window)
-        }
-        WindowDrawing.SwingGraphics -> SwingGraphicsWindow(
-            state = state,
-            title = title,
-            icon = icon,
-            onCloseRequest = requestQuit,
-            shortcuts = shortcuts,
-            content = windowContent,
         )
     }
 }
