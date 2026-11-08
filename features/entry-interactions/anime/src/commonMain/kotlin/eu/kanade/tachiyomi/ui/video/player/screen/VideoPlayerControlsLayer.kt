@@ -62,6 +62,7 @@ internal fun VideoPlayerControlsLayer(
         skipOffer?.let { offer -> onlineMarkers.firstOrNull { it.marker == offer.marker }?.service }
     }
     val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
+    VideoPlayerTimelineHoverEffect(ui)
     if (shown) {
         VideoPlayerOverlay(
             visible = ui.controlsVisible,
@@ -185,7 +186,7 @@ internal fun VideoPlayerControlsLayer(
             onPointerOverControlsChange = { over: Boolean ->
                 ui.pointerOverControls = over
             }.takeIf { host.input.hovers },
-            onTimelineHover = { positionMs: Long? -> ui.timelineHoverMs = positionMs }.takeIf { host.input.hovers },
+            onTimelineHover = { positionMs: Long? -> ui.timelinePointerMs = positionMs }.takeIf { host.input.hovers },
             timelineHoverMs = ui.timelineHoverMs,
             timelineHoverChapter = ui.timelineHoverMs?.let(chapters::chapterAt),
             modifier = Modifier.fillMaxSize(),

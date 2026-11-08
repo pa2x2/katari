@@ -87,30 +87,14 @@ internal fun VideoPlayerTimeline(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val hoverMs = hoverPositionMs?.takeIf { !isScrubbing && effectiveDurationMs > 0L }
-            if (isScrubbing && seekPreviewState?.visible == true) {
-                VideoPlayerSeekPreview(
-                    positionMs = clampedPositionMs,
-                    previewFraction = playedFraction,
-                    previewState = seekPreviewState,
-                    previewPicture = seekPreviewPicture,
-                    previewAspectRatio = seekPreviewAspectRatio,
-                )
-            } else if (hoverMs != null) {
-                VideoPlayerSeekPreview(
-                    positionMs = hoverMs,
-                    previewFraction = hoverMs.fractionOf(effectiveDurationMs),
-                    previewState = seekPreviewState,
-                    previewPicture = seekPreviewPicture,
-                    previewAspectRatio = seekPreviewAspectRatio,
-                    chapterName = hoverChapter?.name?.text(),
-                )
+            // The frame at the scrubbed or hovered position floats above the bar, over the picture
+            val previewMs = when {
+                isScrubbing && seekPreviewState?.visible == true -> clampedPositionMs
+                else -> hoverMs
             }
+            val hoverChapterName = hoverChapter?.name?.text()
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -160,6 +144,18 @@ internal fun VideoPlayerTimeline(
                     },
                     onHover = onHover?.let { hover ->
                         { fraction -> hover(fraction?.let { playbackPositionAt(it, effectiveDurationMs) }) }
+                    },
+                    previewAt = previewMs?.fractionOf(effectiveDurationMs),
+                    preview = previewMs?.let { positionMs ->
+                        {
+                            VideoPlayerSeekPreview(
+                                positionMs = positionMs,
+                                previewState = seekPreviewState,
+                                previewPicture = seekPreviewPicture,
+                                previewAspectRatio = seekPreviewAspectRatio,
+                                chapterName = hoverChapterName.takeIf { !isScrubbing },
+                            )
+                        }
                     },
                     modifier = Modifier.videoPlayerControl(),
                 )
