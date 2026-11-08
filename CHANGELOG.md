@@ -1,5 +1,50 @@
 # Changelog
 
+## [3.0.0] - 2026-11-08
+
+# DO NOT UPDATE IF YOU USE TRACKERS
+# TRACKERS WERE REMOVED IN THIS RELEASE
+# APP UPGRADE WIPES ALL DATA RELATED TO TRACKERS FROM APP'S DB
+
+### ✨ Added
+
+- Sync keeps your library, progress, history and settings the same on every device, through a sync server you run.
+- The readers and the player offer to go where another device got further.
+- The setup guide asks how you start, restores a backup inside the guide, and can link the device to sync.
+- The library, the Extensions tab and backup restore offer to install the extensions your titles need.
+- Intro and credits skip times also come from TheIntroDB.
+
+### 🔄 Changed
+
+- Every migration starts with everything to carry over selected, and only Delete downloads is remembered.
+- The player shows the time and chapter in its button row, the skip button above the timeline, and the timeline's preview over the picture.
+- Subtitles stay in place when the player's controls show or hide.
+- The player's controls also hide after a while when paused.
+
+### 🧩 Improved
+
+- Migrating a title moves its reading time to the title that replaces it.
+- While another episode opens, the player's loading pill can cancel it.
+- Opening a book, chapter or episode shows which step it is on.
+- When the speech engine can't speak, the readers and the speech preview say why.
+- On wide windows, the Comfortable list display shows its rows in columns.
+
+### 🗑️ Removed
+
+- Tracker support, along with the tracking data it kept.
+- Extensions built with Entry SDK 3.x no longer load.
+
+### 🐛 Fixed
+
+- The library and other screens keep updating after a database error instead of freezing until a restart.
+- Migrating a merged title with seasons to a source that lists every episode together carries each season's progress to its own episodes.
+- A dub or server the source doesn't offer for an episode says so instead of playing the previous one again.
+- The subtitle editor's preview shows the subtitles where they will appear.
+- Reopening a book in a scrolling mode returns to the line at the top of the screen, not half a screen further.
+- At start, a locked profile asks for its unlock by its Lock when idle time, as switching profiles does, and the app lock waits until a profile is picked.
+- Covers that fade in are no longer slightly blurry.
+- Settings keep the open page and its dialogs when the window switches between one and two panes.
+
 ## [2.0.6] - 2026-11-06
 
 ### 🔄 Changed
@@ -1058,7 +1103,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.6...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/pa2x2/katari/releases/tag/v3.0.0
 [2.0.6]: https://github.com/pa2x2/katari/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pa2x2/katari/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pa2x2/katari/releases/tag/v2.0.4
