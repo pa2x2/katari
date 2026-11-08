@@ -4,6 +4,7 @@ import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
+import { plannedCapture } from "../../media/planned-captures.ts";
 import { sitePath } from "../../site/links.ts";
 ---
 
@@ -34,7 +35,11 @@ import { sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="sign-in" title="Sign in the first device">
+  <Task
+    id="sign-in"
+    title="Sign in the first device"
+    shot={{ image: plannedCapture("sync-page.png"), alt: "The Sync page listing the account's devices", caption: "The Sync page" }}
+  >
     <ol>
       <li>Open <Path>Settings › Sync</Path> and select <strong>Sign in with server address</strong>.</li>
       <li>Enter the server's address, such as <code>https://sync.example.com</code>.</li>
@@ -66,7 +71,11 @@ import { sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="link" title="Link more devices">
+  <Task
+    id="link"
+    title="Link more devices"
+    shot={{ image: plannedCapture("sync-link-code.png"), alt: "Link a device showing a code to scan", caption: "Link a device" }}
+  >
     <ol>
       <li>On a device that already syncs, open <Path>Settings › Sync › Link a device</Path>. It shows a code that works for two minutes.</li>
       <li>
@@ -78,7 +87,15 @@ import { sitePath } from "../../site/links.ts";
     <p>Signing in with your username and password on the new device works too.</p>
   </Task>
 
-  <Task id="offline" title="Offline, and picking up on another device">
+  <Task
+    id="offline"
+    title="Offline, and picking up on another device"
+    shot={{
+      image: plannedCapture("sync-handoff.png"),
+      alt: "The reader offering to go where another device got to",
+      caption: "Pick up where you stopped",
+    }}
+  >
     <p>
       Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
       the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs every hour with

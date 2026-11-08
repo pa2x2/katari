@@ -1,5 +1,5 @@
 ---
-import type { ImageMetadata } from "astro";
+import type { CaptureImage } from "../media/planned-captures.ts";
 import Shot from "../media/Shot.astro";
 import PlatformLabel from "./PlatformLabel.astro";
 import type { Platform } from "./platforms.ts";
@@ -9,7 +9,7 @@ interface Props {
   id: string;
   title: string;
   /** A screenshot of the screen the steps describe, shown beside them. */
-  shot?: { image: ImageMetadata; alt: string; caption: string };
+  shot?: { image: CaptureImage; alt: string; caption: string };
   /** The one app the section is about; unset when both apps share it. */
   platform?: Platform;
 }

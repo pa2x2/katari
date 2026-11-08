@@ -4,8 +4,8 @@ import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Snippet from "../../guide/Snippet.astro";
 import Task from "../../guide/Task.astro";
+import WideShots from "../../guide/WideShots.astro";
 import { plannedCapture } from "../../media/planned-captures.ts";
-import Shot from "../../media/Shot.astro";
 import { SYNC_SERVER_IMAGE, SYNC_SERVER_RUN } from "../../download/sync-server-release.ts";
 import { RELEASES, leavesSite, sitePath } from "../../site/links.ts";
 
@@ -82,16 +82,17 @@ volumes:
         keep theirs either way.
       </li>
     </ul>
-    <div style="--shot-width: min(36rem, 100%); margin-bottom: 1.25rem">
-      <Shot
-        image={plannedCapture("sync-server-web.png")}
-        alt="The server's web page listing its accounts"
-        caption="The server's web page"
-        device="browser"
-        address="http://nas.local:8080"
-        sizes="(min-width: 44rem) 36rem, 92vw"
-      />
-    </div>
+    <WideShots
+      shots={[
+        {
+          image: plannedCapture("sync-server-web.png"),
+          alt: "The server's web page listing its accounts",
+          caption: "The server's web page",
+          device: "browser",
+          address: "http://nas.local:8080",
+        },
+      ]}
+    />
     <p>
       Everyone can sign in to the web page to see their devices and storage, change their password, remove a device, or delete their synced
       data under <strong>My account</strong>. How people use sync on their devices is in <a href={sitePath("docs/sync/")}>Sync</a>.

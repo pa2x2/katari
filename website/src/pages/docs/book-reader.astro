@@ -4,6 +4,8 @@ import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
+import WideShots from "../../guide/WideShots.astro";
+import { plannedCapture } from "../../media/planned-captures.ts";
 import { sitePath } from "../../site/links.ts";
 ---
 
@@ -19,6 +21,16 @@ import { sitePath } from "../../site/links.ts";
       zones</strong> work as in the <a href={sitePath("docs/comic-reader/#turning-pages")}>comic reader</a>, and <strong>Volume keys</strong>
       turn pages on Android. <strong>Pages</strong> set to <strong>Automatic</strong> shows two pages side by side when the screen is wide enough.
     </p>
+    <WideShots
+      shots={[
+        {
+          image: plannedCapture("desktop-book.png"),
+          alt: "A book two pages side by side on a wide window",
+          caption: "Two pages side by side",
+          device: "window",
+        },
+      ]}
+    />
     <p>
       The slider in the bottom bar moves through the chapter. Tap the position beside it for <strong>Go to position</strong>, where you
       type a page or a percentage. <strong>Table of contents</strong> lists the chapters and the book's own contents inside them.
@@ -39,7 +51,11 @@ import { sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="appearance" title="Change how the text looks">
+  <Task
+    id="appearance"
+    title="Change how the text looks"
+    shot={{ image: plannedCapture("book-appearance.png"), alt: "The Appearance tab with themes and fonts", caption: "Appearance" }}
+  >
     <p>Open the menus, tap <strong>Settings</strong> and go to the <strong>Appearance</strong> tab.</p>
     <ul>
       <li>
@@ -80,7 +96,11 @@ import { sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="selection" title="Listen, translate or copy">
+  <Task
+    id="selection"
+    title="Listen, translate or copy"
+    shot={{ image: plannedCapture("book-selection.png"), alt: "Copy, Listen and Translate on a selected passage", caption: "A selection" }}
+  >
     <p>
       Select text for <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong>. <strong>Listen</strong> reads the
       selection aloud with the voice set under <Path>Settings › Text to speech</Path>. Katari doesn't read whole chapters aloud.

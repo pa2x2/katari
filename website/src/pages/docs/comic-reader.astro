@@ -3,11 +3,21 @@ import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
+import WideShots from "../../guide/WideShots.astro";
+import { plannedCapture } from "../../media/planned-captures.ts";
 import { sitePath } from "../../site/links.ts";
 ---
 
 <GuidePage manual="docs" slug="comic-reader" lead="How comic pages turn, scroll and fit the screen, and which settings stay with one title.">
-  <Task id="reading-mode" title="Pick a reading mode">
+  <Task
+    id="reading-mode"
+    title="Pick a reading mode"
+    shot={{
+      image: plannedCapture("comic-menus.png"),
+      alt: "The reader's menus over a comic page, with Reading mode in the bottom bar",
+      caption: "The reader's menus",
+    }}
+  >
     <p>
       The modes are <strong>Paged (left to right)</strong>, <strong>Paged (right to left)</strong>, <strong>Paged (vertical)</strong>,
       <strong>Long strip</strong> and <strong>Long strip with gaps</strong>. Long strip suits webtoons; the paged modes suit printed
@@ -48,6 +58,16 @@ import { sitePath } from "../../site/links.ts";
       zooms. In the paged modes, a sideways swipe on the touchpad turns one page.
     </p>
     <p>Press F for full screen and ? to list every key.</p>
+    <WideShots
+      shots={[
+        {
+          image: plannedCapture("desktop-comic-menu.png"),
+          alt: "A comic page's right-click menu in Katari for Linux",
+          caption: "A page's right-click actions",
+          device: "window",
+        },
+      ]}
+    />
   </Task>
 
   <Task id="fit" title="Fit the page to the screen">
