@@ -21,8 +21,10 @@ import tachiyomi.domain.entry.migration.EntryMigrationOption
 import tachiyomi.domain.entry.migration.MigrationChapterMarks
 import tachiyomi.domain.entry.migration.MigrationChapterMatch
 import tachiyomi.domain.entry.migration.MigrationChapterPairs
+import tachiyomi.domain.entry.migration.MigrationChapterPosition
 import tachiyomi.domain.entry.migration.migratedChapterMarks
 import tachiyomi.domain.entry.migration.pairMigrationChaptersByNumber
+import tachiyomi.domain.entry.migration.pairMigrationChaptersInOrder
 
 /**
  * What hangs off an entry's chapters, carried over a replacement to the chapters that stand for them ([pairs]): read
@@ -176,9 +178,17 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
     private suspend fun pairedTargets(sources: List<Chapter>, source: Chapter): List<Chapter> =
         pairs(sources).matches.filter { it.source === source }.map { it.target }
 
-    /** The old entry's chapters, [sources], paired with the new entry's as local migration pairs them. */
-    private suspend fun pairs(sources: List<Chapter>): MigrationChapterPairs<Chapter> =
-        pairMigrationChaptersByNumber(sources, chapters(carry.to), Chapter::number, Chapter::name)
+    /**
+     * The old entry's chapters, [sources], paired with the new entry's as the replacement paired them. A migration
+     * pairs them as local migration does, by number or else by name. A move keeps its own chapter rows, so each pairs
+     * with itself by URL, also where two chapters share a number.
+     */
+    private suspend fun pairs(sources: List<Chapter>): MigrationChapterPairs<Chapter> {
+        val targets = chapters(carry.to)
+        if (!carry.isMove) return pairMigrationChaptersByNumber(sources, targets, Chapter::number, Chapter::name)
+        val sourceByUrl = sources.associateBy(Chapter::url)
+        return pairMigrationChaptersInOrder(targets.map { MigrationChapterPosition(sourceByUrl[it.url], it) })
+    }
 
     /**
      * The chapters of [entryKey] on this device, with their marks as stored, unedited when nothing is. A move takes
