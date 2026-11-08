@@ -392,9 +392,11 @@ internal object ShowcaseDevice {
      * Has the gesture handle take its colour from the screen as it is now. The launcher draws the handle light or dark
      * by the brightness behind it, but changes it only once that brightness moves by more than a step from what it last
      * went by, so a screen that brightened gradually, as covers fading in do, keeps the colour the handle took partway,
-     * which differs from run to run. A launcher started afresh goes by its first look.
+     * which differs from run to run. A launcher started afresh goes by its first look. A screen that hides the
+     * navigation bar, as the readers do, shows no handle, and the launcher looks at nothing until the bar returns.
      */
     private fun refreshGestureHandle() {
+        if (!navigationBarShown()) return
         val home = "-a android.intent.action.MAIN -c android.intent.category.HOME"
         val launcher = shell("cmd package resolve-activity --brief $home")
             .lines()
@@ -409,6 +411,12 @@ internal object ShowcaseDevice {
         // The first look comes with the next frame the system composes, or once it has been idle for a moment.
         SystemClock.sleep(HANDLE_SAMPLE_MS)
     }
+
+    /** Whether the window that draws the navigation bar, and the gesture handle in it, is on screen. */
+    private fun navigationBarShown(): Boolean =
+        shell("dumpsys window windows")
+            .split(WINDOW_HEADER)
+            .any { " ty=NAVIGATION_BAR " in it && "isVisible=true" in it }
 
     /**
      * Saves the screen as it is this moment, for what never holds still, such as a countdown, which [capture] would wait
@@ -532,6 +540,7 @@ internal object ShowcaseDevice {
     private const val STILL_INTERVAL_MS = 500L
     private const val HANDLE_POLL_MS = 200L
     private const val HANDLE_SAMPLE_MS = 1_000L
+    private val WINDOW_HEADER = Regex("^  Window #", RegexOption.MULTILINE)
 
     // Outside CAPTURE_DIRECTORY, which the pipeline publishes whole.
     private const val STILL_PROBE = "/data/local/tmp/showcase-still.png"
