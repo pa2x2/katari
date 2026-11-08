@@ -13,7 +13,7 @@ import kotlin.reflect.KClass
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class MihonViewModelFactory(
+class KatariViewModelFactory(
     override val viewModelProviders: Map<KClass<out ViewModel>, () -> ViewModel>,
     override val assistedFactoryProviders: Map<KClass<out ViewModel>, () -> ViewModelAssistedFactory>,
     override val manualAssistedFactoryProviders:
