@@ -7,10 +7,12 @@ description: Bring the Katari website's pages up to date with app and extension 
 
 Leave these alone; they follow the release without edits here:
 
-- The home page's What's new card reads `CHANGELOG.md` when the site builds.
+- The home page's What's new tabs read `CHANGELOG.md`, `desktop/CHANGELOG.md` and
+  `features/sync/server/CHANGELOG.md` when the site builds.
 - `showcase.yml` recaptures every still and clip from a published release and proposes the changed ones against the
   `assets` branch. Never edit `website/src/captures` by hand.
-- `website-release.yml` redeploys the site when a release is published.
+- `website-release.yml` redeploys the site when an app release is published, and `sync-server-image.yml` does once a
+  published server release's image is pushed.
 
 What drifts is the prose: the home page and the pages under `website/src/pages`, which name the app's labels and
 describe what it does.
