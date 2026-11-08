@@ -183,8 +183,12 @@ class SyncPass(
                 }
             } catch (e: ResyncNeeded) {
                 // A first download that finds its server changed takes the new one's records from the start instead,
-                // and still goes on to the device's settings after.
-                val stage = if (state.stage == SyncStage.DOWNLOADING) SyncStage.DOWNLOADING else e.stage
+                // and still goes on to the device's settings after. A resync after a lost or restored server stays one:
+                // resyncing without deletions deletes what the server doesn't send back, which is what it lost.
+                val stage = when (state.stage) {
+                    SyncStage.DOWNLOADING, SyncStage.RESYNC -> state.stage
+                    else -> e.stage
+                }
                 logcat(LogPriority.WARN) { "The sync server was lost or restored; resyncing in full ($stage)" }
                 resync.start(stage, e.server ?: client.snapshot().server)
             }

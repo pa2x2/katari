@@ -11,6 +11,7 @@ import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.showRows
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -52,6 +53,43 @@ class ReplacedServerTest {
             }
         }
     }
+
+    @Test
+    fun `a server restored from an old copy that dropped deletion markers keeps what other devices made since`(): Unit =
+        runBlocking {
+            TestSyncServer(directory).use { server ->
+                val account = server.account("reader")
+                SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.sql(*showRows("/show"), "INSERT INTO categories(name, sort, flags) VALUES ('Later', 1, 0)")
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        a.sql("DELETE FROM categories WHERE name = 'Later'")
+                        // A device's position counts as passed once it pulls from there again
+                        repeat(2) {
+                            a.sync() shouldBe SyncOutcome.SYNCED
+                            b.sync() shouldBe SyncOutcome.SYNCED
+                        }
+                        server.dropPassedDeletionMarkers(account) shouldBeGreaterThan 0
+                        val backup = server.backUp()
+
+                        b.sql("INSERT INTO categories(name, sort, flags) VALUES ('Made after the backup', 2, 0)")
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        server.restoreFrom(backup)
+
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        a.connection.state().stage shouldBe SyncStage.READY
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        a.library() shouldContain """["category","default","Made after the backup",2,0]"""
+                        b.library() shouldBe a.library()
+                    }
+                }
+            }
+        }
 
     @Test
     fun `a new server under the same address says it was reset, then takes everything without questions`(): Unit =

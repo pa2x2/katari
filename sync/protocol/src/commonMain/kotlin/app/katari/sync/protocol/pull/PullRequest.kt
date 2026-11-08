@@ -28,4 +28,10 @@ data class PullRequest(
      * instead of keeping what it registered with. A device that leaves it out keeps its description.
      */
     @ProtoNumber(5) val device: DeviceDescription? = null,
+    /**
+     * The device takes the whole account again, deletions included, because its server was lost or restored from an
+     * older copy. The server drops a deletion marker only once every device still syncing has pulled past it, so the
+     * device applied the deletions behind the dropped markers before: such a pull isn't refused for them.
+     */
+    @ProtoNumber(6) val resync: Boolean = false,
 )
