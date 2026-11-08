@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBarReach
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerVolumeButton
@@ -186,6 +187,7 @@ internal fun VideoPlayerControlsLayer(
             onPointerOverControlsChange = { over: Boolean ->
                 ui.pointerOverControls = over
             }.takeIf { host.input.hovers },
+            onBarReachChange = { reach: VideoPlayerBarReach -> ui.barReach = reach }.takeIf { host.input.hovers },
             onTimelineHover = { positionMs: Long? -> ui.timelinePointerMs = positionMs }.takeIf { host.input.hovers },
             timelineHoverMs = ui.timelineHoverMs,
             timelineHoverChapter = ui.timelineHoverMs?.let(chapters::chapterAt),

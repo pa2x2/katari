@@ -140,6 +140,7 @@ internal class VideoPlayerWatchInputTarget(
     }
 
     override val videoAspectRatio get() = host.visit.videoAspectRatio
+    override val barReach get() = ui.barReach
     override val pictureFraming get() = ui.picturePreview ?: ready.playback.pictureFraming
 
     override fun previewPictureFraming(framing: PictureFraming) {

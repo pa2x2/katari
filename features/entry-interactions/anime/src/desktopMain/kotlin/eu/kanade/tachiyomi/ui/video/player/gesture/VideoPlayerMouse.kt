@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 
 /**
  * The mouse's buttons and moves on the picture. Moving shows the controls, which hide again on their own, but not
- * while the left button is held, as it drags the picture or plays at 2× then. A click plays or pauses as soon as the
+ * while the left button is held, as it drags the picture or plays at 2× then, nor away from the bars over a picture
+ * zoomed past the player, where it shows only the [pointer]. A click plays or pauses as soon as the
  * button is let go; the second click of a double-click plays or pauses back and switches full screen, so a double-click
  * leaves playback and the controls as they were, as browsers' players do. Holding the left button plays at 2× until it
  * is let go. While the picture is zoomed past the player, dragging with the left button moves it, and a hold that
@@ -24,7 +25,8 @@ import kotlinx.coroutines.launch
 internal fun Modifier.videoPlayerMouse(
     target: VideoPlayerInputTarget,
     geometry: () -> VideoPictureGeometry?,
-): Modifier = pointerInput(target) {
+    pointer: VideoPlayerPointer,
+): Modifier = pointerInput(target, pointer) {
     coroutineScope {
         var lastClickAtMs: Long? = null
         var lastClickAt = Offset.Zero
@@ -42,8 +44,11 @@ internal fun Modifier.videoPlayerMouse(
                         // The window repeats the last move whenever what is under a still pointer is laid out anew
                         if (change.position == lastAt) continue
                         lastAt = change.position
+                        pointer.moved()
                         if (current == null) {
-                            target.registerControllerInteraction(showControls = true)
+                            if (pointer.showsControlsAt(change.position.y, target, geometry())) {
+                                target.registerControllerInteraction(showControls = true)
+                            }
                             continue
                         }
                         if (current.boosted) continue

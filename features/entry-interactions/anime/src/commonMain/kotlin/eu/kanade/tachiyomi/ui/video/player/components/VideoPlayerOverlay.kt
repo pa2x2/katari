@@ -25,10 +25,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
@@ -136,6 +138,8 @@ internal fun VideoPlayerOverlay(
      * them don't count. Null where nothing hovers, as on touch screens.
      */
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
+    /** How far the bars reach in, each time they are laid out anew; null where nothing hovers, as on touch screens. */
+    onBarReachChange: ((VideoPlayerBarReach) -> Unit)?,
     /** Where a mouse hovers over the timeline, null once it leaves; null where nothing hovers. */
     onTimelineHover: ((Long?) -> Unit)?,
     timelineHoverMs: Long?,
@@ -180,6 +184,7 @@ internal fun VideoPlayerOverlay(
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
                 onPointerOverControlsChange = onPointerOverControlsChange,
+                onBarReachChange = onBarReachChange,
                 topBar = {
                     VideoPlayerTopBar(
                         videoTitle = videoTitle,
@@ -340,6 +345,7 @@ private fun BoxScope.VideoPlayerControls(
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
+    onBarReachChange: ((VideoPlayerBarReach) -> Unit)?,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
@@ -348,6 +354,13 @@ private fun BoxScope.VideoPlayerControls(
     val controlHover = remember { MutableInteractionSource() }
     val pointerOverControls by controlHover.collectIsHoveredAsState()
     LaunchedEffect(pointerOverControls) { onPointerOverControlsChange?.invoke(pointerOverControls) }
+    var topBarHeight by remember { mutableIntStateOf(0) }
+    var bottomBarHeight by remember { mutableIntStateOf(0) }
+    LaunchedEffect(topBarHeight, bottomBarHeight) {
+        if (topBarHeight > 0 && bottomBarHeight > 0) {
+            onBarReachChange?.invoke(VideoPlayerBarReach(top = topBarHeight, bottom = bottomBarHeight))
+        }
+    }
     CompositionLocalProvider(
         LocalVideoPlayerControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
     ) {
@@ -367,7 +380,10 @@ private fun BoxScope.VideoPlayerControls(
                     animationSpec = overlayBarsSlideAnimationSpec,
                 ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
-                VideoPlayerChromeContainer(contentAlignment = Alignment.TopCenter) {
+                VideoPlayerChromeContainer(
+                    modifier = Modifier.onSizeChanged { topBarHeight = it.height },
+                    contentAlignment = Alignment.TopCenter,
+                ) {
                     topBar()
                 }
             }
@@ -417,7 +433,10 @@ private fun BoxScope.VideoPlayerControls(
                     animationSpec = overlayBarsSlideAnimationSpec,
                 ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
-                VideoPlayerChromeContainer(contentAlignment = Alignment.Center) {
+                VideoPlayerChromeContainer(
+                    modifier = Modifier.onSizeChanged { bottomBarHeight = it.height },
+                    contentAlignment = Alignment.Center,
+                ) {
                     timeline()
                 }
             }
