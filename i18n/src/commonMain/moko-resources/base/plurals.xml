@@ -505,6 +505,14 @@
         <item quantity="one">%d title in another profile needs an extension that isn\'t installed here</item>
         <item quantity="other">%d titles across your profiles need extensions that aren\'t installed here</item>
     </plurals>
+    <plurals name="onboarding_finish_arriving_missing">
+        <item quantity="one">Your library is downloading. So far, %d title needs an extension that isn\'t installed here.</item>
+        <item quantity="other">Your library is downloading. So far, %d titles need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_finish_account_missing">
+        <item quantity="one">%d title from your account needs an extension that isn\'t installed here.</item>
+        <item quantity="other">%d titles from your account need extensions that aren\'t installed here.</item>
+    </plurals>
     <plurals name="missing_extensions_install">
         <item quantity="one">Install %d</item>
         <item quantity="other">Install %d</item>
