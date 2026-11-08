@@ -1,0 +1,63 @@
+---
+/*
+ * Shots too wide for the column beside a section's steps, such as desktop windows and the player on its side, placed
+ * across the text column after the text they show. Several share one row and one height; on a phone they stack.
+ */
+import { aspectOf } from "../media/aspect.ts";
+import type { Device } from "../media/devices.ts";
+import type { CaptureImage } from "../media/planned-captures.ts";
+import Shot from "../media/Shot.astro";
+
+type WideShot = { image: CaptureImage; alt: string; caption: string } & (
+  | { device: Exclude<Device, "phone" | "browser"> }
+  | { device: "browser"; address: string }
+);
+
+interface Props {
+  shots: WideShot[];
+}
+
+const { shots } = Astro.props;
+const several = shots.length > 1;
+---
+
+<div class:list={["wide-shots", { several }]}>
+  {
+    shots.map((shot) => (
+      <div class="slot" style={`--aspect: ${aspectOf(shot.image, shot.device)}`}>
+        <Shot {...shot} sizes={several ? "(min-width: 44rem) 26rem, 92vw" : "(min-width: 44rem) 36rem, 92vw"} />
+      </div>
+    ))
+  }
+</div>
+
+<style>
+  .wide-shots {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    max-width: 36rem;
+    margin: 0.5rem 0 1.5rem;
+  }
+
+  .several {
+    max-width: none;
+  }
+
+  .slot {
+    flex: var(--aspect) 1 0;
+    min-width: 0;
+    --shot-width: 100%;
+  }
+
+  @media (max-width: 44rem) {
+    .wide-shots {
+      flex-direction: column;
+    }
+
+    .slot {
+      flex: none;
+      width: 100%;
+    }
+  }
+</style>

@@ -4,46 +4,54 @@
  * side, each caption below where its phone stands. In a band they stand side by side. On a phone either becomes a row to swipe
  * through. Wherever upright shots stand in a row, they share one height whatever their proportions.
  *
- * A landscape shot, such as the player, can't share a height with phones, so it has a row of its own under the others,
- * below their captions. In a scene it stands behind instead, as wide as the column, with the upright shots in a row in
- * front of its lower edge; on a phone the scene becomes the landscape shot over the row to swipe through.
+ * A wide shot, such as the player or a desktop window, can't share a height with phones, so it has a row of its own
+ * under the others, below their captions. In a scene it stands behind instead, as wide as the column, with the upright
+ * shots in a row in front of its lower edge; on a phone the scene becomes the wide shot over the row to swipe through.
+ *
+ * Windows stand the same way: the first stands behind, and the others share a height in a row that hangs over its lower
+ * edge. On a phone the first stays on top and the others become the row to swipe through.
  */
 import { aspectOf } from "../media/aspect.ts";
+import { isUpright } from "../media/devices.ts";
 import type { Shot } from "./chapters.ts";
 import ShotView from "./ShotView.astro";
 
 interface Props {
   shots: Shot[];
-  arrangement: "overlap" | "row" | "scene";
+  arrangement: "overlap" | "row" | "scene" | "windows";
 }
 
 const { shots, arrangement } = Astro.props;
 
-const isWide = (shot: Shot) => shot.kind === "still" && shot.landscape === true;
+const isWide = (shot: Shot) => shot.kind === "still" && !isUpright(shot.device ?? "phone");
 const upright = shots.filter((shot) => !isWide(shot));
 const wide = shots.filter(isWide);
+
+const layered = arrangement === "scene" || arrangement === "windows";
+const behind = arrangement === "windows" ? shots.slice(0, 1) : arrangement === "scene" ? wide : [];
+const inFront = arrangement === "windows" ? shots.slice(1) : upright;
 
 type Place = "front" | "left" | "right";
 // A second upright shot sits behind the front one on the left; a third goes behind on the right.
 const places: Place[] = ["front", "left", "right"];
-const placed = upright.map((shot, index) => ({ shot, place: places[index] ?? "right" }));
+const placed = inFront.map((shot, index) => ({ shot, place: places[index] ?? "right" }));
 
-const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : shot.kind === "compare" ? shot.after : shot.poster);
+const aspect = (shot: Shot) =>
+  shot.kind === "still" ? aspectOf(shot.image, shot.device ?? "phone") : aspectOf(shot.kind === "compare" ? shot.after : shot.poster, "phone");
 ---
 
 <div
   class:list={["stack", arrangement, `upright-${upright.length}`]}
-  style={arrangement === "scene" && wide[0] ? `--back-aspect: ${aspect(wide[0])}` : undefined}
+  style={behind[0] ? `--back-aspect: ${aspect(behind[0])}` : undefined}
   data-zoom-group
   data-reveal
 >
   {
-    arrangement === "scene" &&
-      wide.map((shot) => (
-        <div class="wide">
-          <ShotView shot={shot} />
-        </div>
-      ))
+    behind.map((shot) => (
+      <div class="wide">
+        <ShotView shot={shot} />
+      </div>
+    ))
   }
   <div class="shots">
     {
@@ -66,7 +74,7 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     )
   }
   {
-    arrangement !== "scene" &&
+    !layered &&
       wide.map((shot) => (
         <div class="wide">
           <ShotView shot={shot} />
@@ -209,8 +217,8 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       margin-top: 0.6rem;
     }
 
-    /* The phones would cover the caption of the shot behind them; screen readers still read it. */
-    .scene .wide :global(figcaption) {
+    /* The shots in front would cover the caption of the one behind them; screen readers still read it. */
+    :is(.scene, .windows) .wide :global(figcaption) {
       position: absolute;
       width: 1px;
       height: 1px;
@@ -243,6 +251,30 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     }
 
     .scene .slot > :global(*) {
+      --shot-width: 100%;
+    }
+
+    /* The window behind leaves room on its right for the row in front, which rises over the lower 30% of it and hangs
+       below. Each window in the row takes a share of the row's width in proportion to its own, so they share a height. */
+    .windows .wide {
+      width: 86%;
+    }
+
+    .windows .shots {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      width: 92%;
+      margin: calc(-0.3 * 86cqi / var(--back-aspect)) 0 0 auto;
+    }
+
+    .windows .slot {
+      flex: var(--aspect) 1 0;
+      min-width: 0;
+    }
+
+    .windows .slot > :global(*) {
       --shot-width: 100%;
     }
 
@@ -289,8 +321,13 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       margin-top: 0.5rem;
     }
 
-    .scene .wide {
+    :is(.scene, .windows) .wide {
       margin: 0 0 0.5rem;
+    }
+
+    /* A window as tall as a phone in the row would be wider than the screen. */
+    .windows .slot {
+      --shot-width: min(85vw, 26rem);
     }
   }
 </style>

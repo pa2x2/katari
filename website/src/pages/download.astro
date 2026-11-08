@@ -1,4 +1,5 @@
 ---
+import library from "../captures/library.png";
 import { desktopRelease } from "../download/desktop-release.ts";
 import DownloadButtons from "../download/DownloadButtons.astro";
 import { latestRelease } from "../download/latest-release.ts";
@@ -6,6 +7,8 @@ import { megabytes, releaseDate } from "../download/release-format.ts";
 import { mpvAddon } from "../download/mpv-addon-release.ts";
 import { SYNC_SERVER_RUN, syncServerRelease } from "../download/sync-server-release.ts";
 import Snippet from "../guide/Snippet.astro";
+import { plannedCapture } from "../media/planned-captures.ts";
+import Shot from "../media/Shot.astro";
 import Page from "../site/Page.astro";
 import { leavesSite, RELEASES, sitePath } from "../site/links.ts";
 
@@ -31,6 +34,9 @@ const abiHints: Record<string, string> = {
 
     <div class="apps">
       <section id="android" aria-labelledby="android-title">
+        <div class="picture">
+          <Shot image={library} alt="A library holding comics, books, and films in Katari for Android" sizes="6rem" />
+        </div>
         <h2 id="android-title">Android</h2>
         <p class="meta">For phones and tablets.</p>
         <DownloadButtons explained={false} />
@@ -106,6 +112,14 @@ const abiHints: Record<string, string> = {
       {
         desktop && (
           <section id="linux" aria-labelledby="linux-title">
+            <div class="picture">
+              <Shot
+                image={plannedCapture("sync-desktop.png")}
+                alt="The same library in Katari for Linux"
+                device="window"
+                sizes="18rem"
+              />
+            </div>
             <h2 id="linux-title">Linux</h2>
             <p class="meta">For desktop and laptop computers.</p>
             <div class="get" data-download-buttons>
@@ -206,6 +220,27 @@ const abiHints: Record<string, string> = {
     border-radius: 1rem;
   }
 
+  /* Each app shows itself in a band across the top of its card. The bands match, so the cards' headings line up side by
+     side, and the phone and the window are about the same height. */
+  .picture {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 15rem;
+    margin: -1.5rem -1.75rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: 1rem 1rem 0 0;
+    background: var(--surface);
+  }
+
+  #android .picture {
+    --shot-width: 6rem;
+  }
+
+  #linux .picture {
+    --shot-width: 17.5rem;
+  }
+
   h2 {
     margin: 0 0 0.25rem;
     font-size: 2rem;
@@ -277,6 +312,10 @@ const abiHints: Record<string, string> = {
   @media (width < 30rem) {
     section {
       padding: 1.25rem 1rem;
+    }
+
+    .picture {
+      margin: -1.25rem -1rem 1.25rem;
     }
   }
 </style>

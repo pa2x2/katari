@@ -16,7 +16,7 @@ const posterImage = await getImage({ src: poster, width: 540, format: "webp" });
 // The browser's own controls would cover the bottom of the clip, so the whole frame plays and pauses it instead.
 ---
 
-<figure class="shot clip" style={`--aspect: ${aspectOf(poster)}`}>
+<figure class="shot clip" style={`--aspect: ${aspectOf(poster, "phone")}`}>
   <button class="frame" type="button" aria-label={`Play: ${label}`} data-label={label}>
     <video src={src} poster={posterImage.src} muted loop playsinline preload="none" aria-hidden="true"></video>
     <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5v11l9-5.5z" /></svg>
