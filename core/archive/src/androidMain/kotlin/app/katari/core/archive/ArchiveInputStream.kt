@@ -1,12 +1,11 @@
 package app.katari.core.archive
 
 import me.zhanghai.android.libarchive.Archive
-import me.zhanghai.android.libarchive.ArchiveEntry
 import me.zhanghai.android.libarchive.ArchiveException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import kotlin.concurrent.Volatile
-import app.katari.core.archive.ArchiveEntry as MihonArchiveEntry
+import me.zhanghai.android.libarchive.ArchiveEntry as LibarchiveEntry
 
 internal class ArchiveInputStream(buffer: Long, size: Long) : InputStream() {
     private val lock = Any()
@@ -56,11 +55,12 @@ internal class ArchiveInputStream(buffer: Long, size: Long) : InputStream() {
         Archive.readFree(archive)
     }
 
-    fun getNextEntry(): MihonArchiveEntry? {
+    fun getNextEntry(): ArchiveEntry? {
         return Archive.readNextHeader(archive).takeUnless { it == 0L }?.let { entry ->
-            val name = ArchiveEntry.pathnameUtf8(entry) ?: ArchiveEntry.pathname(entry)?.decodeToString() ?: return null
-            val isFile = ArchiveEntry.filetype(entry) == ArchiveEntry.AE_IFREG
-            MihonArchiveEntry(name, isFile)
+            val name =
+                LibarchiveEntry.pathnameUtf8(entry) ?: LibarchiveEntry.pathname(entry)?.decodeToString() ?: return null
+            val isFile = LibarchiveEntry.filetype(entry) == LibarchiveEntry.AE_IFREG
+            ArchiveEntry(name, isFile)
         }
     }
 }
