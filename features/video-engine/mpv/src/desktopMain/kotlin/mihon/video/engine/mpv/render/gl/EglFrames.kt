@@ -4,10 +4,10 @@ import com.sun.jna.Memory
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
 import logcat.LogPriority
-import mihon.video.engine.mpv.client.CLibrary
 import mihon.video.engine.mpv.client.LibMpv
 import mihon.video.engine.mpv.render.MemoryFrames
 import mihon.video.engine.mpv.render.RenderParams
+import mihon.video.engine.mpv.system.linux.LinuxCLibrary
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 
@@ -46,7 +46,7 @@ internal class EglFrames private constructor(
         mpv.renderContextFree(renderContext)
         deleteTarget()
         context.destroy()
-        if (renderNode >= 0) CLibrary.INSTANCE.close(renderNode)
+        if (renderNode >= 0) LinuxCLibrary.INSTANCE.close(renderNode)
     }
 
     private fun resize(width: Int, height: Int): Memory? {
@@ -96,7 +96,7 @@ internal class EglFrames private constructor(
             if (status < 0) {
                 logcat(LogPriority.ERROR) { "mpv's OpenGL renderer didn't start: ${mpv.errorString(status)}" }
                 context.destroy()
-                if (renderNode >= 0) CLibrary.INSTANCE.close(renderNode)
+                if (renderNode >= 0) LinuxCLibrary.INSTANCE.close(renderNode)
                 return null
             }
             return EglFrames(mpv, result.value, context, gl, renderNode, params)
@@ -106,7 +106,9 @@ internal class EglFrames private constructor(
         private fun openRenderNode(): Int {
             val nodes = File("/dev/dri").listFiles { file -> file.name.startsWith("renderD") }.orEmpty().sorted()
             return nodes.firstNotNullOfOrNull { node ->
-                CLibrary.INSTANCE.open(node.path, CLibrary.O_RDWR or CLibrary.O_CLOEXEC).takeIf { it >= 0 }
+                LinuxCLibrary.INSTANCE.open(node.path, LinuxCLibrary.O_RDWR or LinuxCLibrary.O_CLOEXEC).takeIf {
+                    it >= 0
+                }
             } ?: -1
         }
 

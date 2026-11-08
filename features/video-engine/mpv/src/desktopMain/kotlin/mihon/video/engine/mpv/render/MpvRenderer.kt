@@ -7,7 +7,8 @@ import com.sun.jna.Pointer
 import logcat.LogPriority
 import mihon.video.engine.mpv.client.LibMpv
 import mihon.video.engine.mpv.client.RenderUpdateCallback
-import mihon.video.engine.mpv.render.gl.EglFrames
+import mihon.video.engine.mpv.system.MpvSystem
+import mihon.video.engine.mpv.system.mpvSystem
 import mihon.video.engine.spi.player.ComposeVideoOutput
 import org.jetbrains.skia.Image
 import tachiyomi.core.common.util.system.logcat
@@ -22,12 +23,12 @@ import kotlin.concurrent.withLock
  * first, and has to be set back to `null` before the render context goes.
  *
  * The render context draws off any window, so it lives as long as the instance and outputs only come and go: mpv picks
- * its hardware decoding when a file opens, and only takes VA-API's frames without a copy if its output can already
+ * its hardware decoding when a file opens, and only takes the decoder's frames without a copy if its output can already
  * show them then. mpv renders whole frames into memory, [FrameSlots], that the attached output's window draws from:
- * only when it has a new frame, or the output changed, and the window draws again only then. It renders with OpenGL
- * off any window ([EglFrames]), where VA-API's frames need no copy and the GPU scales, and with its software renderer
- * where that can't start. Frames render at the output's size in pixels. With no output, frames still render, into a few pixels nothing reads: mpv's output waits
- * for each frame to be rendered before showing the next.
+ * only when it has a new frame, or the output changed, and the window draws again only then. It renders with the best
+ * renderer the system has ([MpvSystem.createFrames]). Frames render at the output's size in pixels. With no output,
+ * frames still render, into a few pixels nothing reads: mpv's output waits for each frame to be rendered before showing
+ * the next.
  *
  * Compose draws a window's frame by recording it on the UI thread and replaying the recording later inside its own
  * renderer, whose OpenGL context it offers no way into, so mpv can't draw straight into the window's drawing.
@@ -135,7 +136,7 @@ internal class MpvRenderer(
     }
 
     private fun run(created: CompletableFuture<Boolean>) {
-        val frames = EglFrames.create(mpv, handle) ?: SoftwareFrames.create(mpv, handle)
+        val frames = mpvSystem.createFrames(mpv, handle)
         created.complete(frames != null)
         if (frames == null) return
         logcat(LogPriority.INFO) { "mpv renders with its ${frames.name} renderer" }

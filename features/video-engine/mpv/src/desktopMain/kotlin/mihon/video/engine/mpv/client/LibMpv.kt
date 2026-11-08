@@ -6,6 +6,8 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
+import mihon.video.engine.mpv.system.MpvSystem
+import mihon.video.engine.mpv.system.mpvSystem
 import java.io.IOException
 
 /**
@@ -77,11 +79,9 @@ internal object MpvFormatCode {
 }
 
 /**
- * libmpv, loaded on first use: the copy the app carries, built for x86_64 Linux, or else the system's. Throws
- * [MpvUnavailableException] when neither loads; that is decided once per run.
- *
- * libmpv refuses to create an instance unless the C library's numbers are formatted with a dot, so `LC_NUMERIC` is set
- * to "C" before it is first used. The JVM formats its numbers itself, so nothing else in the process depends on it.
+ * libmpv, loaded on first use: the copy the app carries, built for x86_64 Linux, or else the system's, and the process
+ * readied for it ([MpvSystem.prepareProcess]). Throws [MpvUnavailableException] when neither loads; that is decided
+ * once per run.
  */
 internal fun libMpv(): LibMpv = loadedLibMpv.getOrElse { throw MpvUnavailableException(it) }
 
@@ -98,7 +98,7 @@ private val loadedLibMpv: Result<LibMpv> by lazy {
     for (name in names) {
         try {
             val library = Native.load(name, LibMpv::class.java, LIBRARY_OPTIONS)
-            CLibrary.INSTANCE.setlocale(CLibrary.LC_NUMERIC, "C")
+            mpvSystem.prepareProcess()
             return@lazy Result.success(library)
         } catch (e: UnsatisfiedLinkError) {
             failures += e
