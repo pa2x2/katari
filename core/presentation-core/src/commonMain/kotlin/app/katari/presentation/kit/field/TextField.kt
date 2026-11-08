@@ -4,7 +4,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
@@ -124,12 +126,16 @@ fun TextField(
     singleLine: Boolean = true,
     enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    inputTransformation: InputTransformation? = null,
+    outputTransformation: OutputTransformation? = null,
 ) {
     val dialog = dialogFieldBehaviour(singleLine, keyboardOptions, KeyboardActions.Default)
     OutlinedTextField(
         state = state,
         modifier = modifier.then(dialog.modifier).typingFocus(),
         enabled = enabled,
+        inputTransformation = inputTransformation,
+        outputTransformation = outputTransformation,
         label = label?.let { { Text(it) } },
         placeholder = placeholder?.let { { Text(it) } },
         trailingIcon = trailingIcon,
