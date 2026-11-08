@@ -265,7 +265,7 @@ object SettingsMainScreen : Screen() {
             ),
             Item(
                 titleRes = MR.strings.pref_category_advanced,
-                subtitleRes = MR.strings.pref_advanced_summary,
+                subtitleRes = MR.strings.pref_advanced_logs_network_summary,
                 icon = MaterialSymbols.Rounded.Code,
                 screen = SettingsAdvancedScreen,
             ),

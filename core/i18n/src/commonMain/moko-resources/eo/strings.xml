@@ -490,7 +490,6 @@
     <string name="crash_screen_title">Ups!</string>
     <string name="onboarding_permission_analytics">Permesi analizojn</string>
     <string name="onboarding_permission_crashlytics_description">Sendi anonimigajn prikolapsajn protokolojn al la programistoj.</string>
-    <string name="pref_advanced_summary">Deponi protokolojn, bateriaj optimumigoj</string>
     <string name="pref_security">Sekureco</string>
     <string name="action_copy_link">Kopii ligilon</string>
     <string name="action_sort_random">Hazarde</string>

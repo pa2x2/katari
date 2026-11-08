@@ -593,7 +593,6 @@
     <string name="pref_browse_summary">Fontes, estensiones, chirca globale</string>
     <string name="pref_backup_summary">Còpias de seguresa manuales e globales</string>
     <string name="pref_security_summary">Blocu de s\'aplicatzione, ischermu seguru</string>
-    <string name="pref_advanced_summary">Registros de serraduras anòmalas, otimizatziones de sa bateria</string>
     <string name="crash_screen_title">Oops!</string>
     <string name="invalid_location">Positzione non vàlida: %s</string>
     <string name="unknown_title">Tìtulu disconnotu</string>

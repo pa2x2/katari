@@ -586,7 +586,6 @@
     <string name="action_search_hint">Ara…</string>
     <string name="pref_backup_summary">Elle ve otomatik yedeklemeler, depolama alanı</string>
     <string name="pref_security_summary">Uygulama kilidi, güvenli ekran</string>
-    <string name="pref_advanced_summary">Çökme günlükleri dökümü, pil iyileştirmeleri</string>
     <string name="pref_library_summary">Kategoriler, genel güncelleme, kaydırma kontrolleri</string>
     <string name="pref_browse_summary">Kaynaklar, uzantılar, genel arama</string>
     <string name="pref_downloads_summary">Otomatik indirme, önceden indirme</string>

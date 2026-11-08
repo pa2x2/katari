@@ -593,7 +593,6 @@
     <string name="pref_browse_summary">Surse, extensii, căutare globală</string>
     <string name="pref_backup_summary">Copii de rezervă manuale și automate</string>
     <string name="pref_security_summary">Blocarea aplicației, securizarea ecranului</string>
-    <string name="pref_advanced_summary">Golirea registrelor de eroare, optimizări ale bateriei</string>
     <string name="pref_user_agent_string">Șirul implicit de agent al utilizatorului</string>
     <string name="error_user_agent_string_blank">Șirul agentului de utilizator nu poate fi gol</string>
     <string name="crash_screen_title">Ups!</string>

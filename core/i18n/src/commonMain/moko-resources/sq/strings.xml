@@ -145,7 +145,6 @@
     <string name="pref_reader_summary">Modaliteti i leximit, ekrani, navigimi</string>
     <string name="pref_tracking_summary">Sinkronizimi i përparimit në një drejtim, sinkronizimi i përmirësuar</string>
     <string name="pref_category_about">Rreth</string>
-    <string name="pref_advanced_summary">Hidh regjistrat e përplasjeve, optimizimet e baterisë</string>
     <string name="pref_category_theme">Tema</string>
     <string name="theme_system">Ndiq Sistemin</string>
     <string name="theme_light">Ndrçim</string>

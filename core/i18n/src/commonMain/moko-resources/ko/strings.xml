@@ -613,7 +613,6 @@
     <string name="pref_browse_summary">소스, 확장 기능, 전체 검색</string>
     <string name="pref_backup_summary">수동 및 자동 백업</string>
     <string name="pref_security_summary">앱 잠금, 화면 보안</string>
-    <string name="pref_advanced_summary">오류 로그 덤프, 배터리 최적화</string>
     <string name="pref_appearance_summary">테마, 날짜 및 시간 형식</string>
     <string name="pref_downloads_summary">자동 다운로드, 미리 다운로드</string>
     <string name="crash_screen_title">앗!</string>

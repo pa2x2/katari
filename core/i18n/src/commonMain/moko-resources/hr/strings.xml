@@ -561,7 +561,6 @@
     <string name="missing_storage_permission">Dozvole za spremište nisu odobrena</string>
     <string name="theme_tidalwave">Tsunami</string>
     <string name="invalid_location">Nevažeće mjesto: %s</string>
-    <string name="pref_advanced_summary">Zapisnici iznenadnog gašenja aplikacije, optimizacije baterije</string>
     <string name="label_started">Započeto</string>
     <string name="label_local">Lokalno</string>
     <string name="action_search_hint">Traži …</string>

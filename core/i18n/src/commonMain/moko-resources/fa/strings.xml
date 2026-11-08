@@ -506,7 +506,6 @@
     <string name="local_invalid_format">قالب فصل نامعتبر است</string>
     <string name="cancelled">لغو شد</string>
     <string name="pref_security_summary">قفل برنامه، صفحه امن</string>
-    <string name="pref_advanced_summary">گزارش‌های خرابی، بهینه‌سازی باتری</string>
     <string name="theme_lavender">ارغوانی</string>
     <string name="theme_tidalwave">تم جزر و مدی</string>
     <string name="pref_app_language">زبان برنامه</string>

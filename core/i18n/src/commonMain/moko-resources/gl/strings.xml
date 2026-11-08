@@ -227,7 +227,6 @@
     <string name="pref_app_theme">Tema da aplicación</string>
     <string name="pref_tracking_summary">Sincronización unidireccional do progreso de lectura; sincronización mellorada</string>
     <string name="pref_browse_summary">Fontes, extensións, procura global</string>
-    <string name="pref_advanced_summary">Envorcar os rexistros de erros, optimizacións de batería</string>
     <string name="theme_tidalwave">Maremoto</string>
     <string name="relative_time_today">Hoxe</string>
     <string name="ext_info_version">Versión</string>

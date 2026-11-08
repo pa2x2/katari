@@ -590,7 +590,6 @@
     <string name="pref_downloads_summary">Muat turun automatik, muat turun maju</string>
     <string name="pref_tracking_summary">Penyegerakan kemajuan satu hala, penyegerakan dipertingkat</string>
     <string name="pref_backup_summary">Sandaran manual &amp; automatik, ruang storan</string>
-    <string name="pref_advanced_summary">Longgokan log ranap, pengoptimuman bateri</string>
     <string name="pref_security_summary">Kekunci aplikasi, skrin keselamatan</string>
     <string name="crash_screen_title">Aduhai!</string>
     <string name="crash_screen_restart_application">Mulakan semula aplikasi</string>

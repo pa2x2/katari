@@ -591,7 +591,6 @@
     <string name="pref_browse_summary">Джерела, розширення, глобальний пошук</string>
     <string name="pref_backup_summary">Ручне та автоматичне резервування, сховище</string>
     <string name="pref_security_summary">Блокування застосунку, захист екрану</string>
-    <string name="pref_advanced_summary">Вивантаження журнала з помилками, оптимізація батареї</string>
     <string name="crash_screen_title">Ой!</string>
     <string name="crash_screen_restart_application">Перезапустити застосунок</string>
     <string name="action_search_hint">Шукати…</string>

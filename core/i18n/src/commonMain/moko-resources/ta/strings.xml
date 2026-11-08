@@ -225,7 +225,6 @@
     <string name="pref_browse_summary">ஆதாரங்கள், நீட்டிப்புகள், உலகளாவிய தேடல்</string>
     <string name="pref_backup_summary">கையேடு மற்றும் தானியங்கி காப்புப்பிரதிகள், சேமிப்பு இடம்</string>
     <string name="pref_security_summary">பயன்பாட்டு பூட்டு, பாதுகாப்பான திரை</string>
-    <string name="pref_advanced_summary">செயலிழப்பு பதிவுகள், பேட்டரி மேம்படுத்தல்கள்</string>
     <string name="pref_category_theme">கருப்பொருள்</string>
     <string name="pref_app_theme">பயன்பாட்டு கருப்பொருள்</string>
     <string name="theme_system">மண்டலம்</string>

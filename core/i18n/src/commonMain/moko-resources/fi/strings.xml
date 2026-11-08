@@ -601,7 +601,6 @@
     <string name="pref_browse_summary">Lähteet, laajennokset, globaali haku</string>
     <string name="pref_backup_summary">Manuaaliset ja automaattiset varmuuskopiot, tallennustila</string>
     <string name="pref_security_summary">Applikaation lukko, turvallinen ruutu</string>
-    <string name="pref_advanced_summary">Kaatumislokien vedos, akun optimoinnit</string>
     <string name="theme_nord">Pohjoismainen</string>
     <string name="pref_relative_format">Suhteelliset aikaleimat</string>
     <string name="pref_relative_format_summary">Käytä muotoa \"%1$s\", kuin muotoa \"%2$s\"</string>

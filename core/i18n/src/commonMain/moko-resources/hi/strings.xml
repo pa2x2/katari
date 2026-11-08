@@ -610,7 +610,6 @@
     <string name="pref_chapter_swipe_end">अध्यााय: दाएँ स्वाइप करें</string>
     <string name="action_sort_next_updated">अगला अपेक्षित अपडेट</string>
     <string name="pref_debug_info">डीबग जानकारी</string>
-    <string name="pref_advanced_summary">डंप क्रैश लॉग, बैटरी अनुकूलन</string>
     <string name="pref_chapter_swipe_start">अध्यााय: बाएँ स्वाइप करें</string>
     <string name="library_sync_complete">लाइब्रेरी सिंक पूरा</string>
     <string name="download_cache_invalidated">डाउनलोड इंडेक्स को पुनः बनाया जा रहा है</string>

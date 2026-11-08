@@ -590,7 +590,6 @@
     <string name="pref_tracking_summary">單向進度同步、增強式同步</string>
     <string name="pref_backup_summary">手動與自動備份、儲存空間</string>
     <string name="pref_security_summary">上鎖應用程式、防窺畫面</string>
-    <string name="pref_advanced_summary">傾印當機記錄、電池效能最佳化</string>
     <string name="crash_screen_restart_application">重新啟動應用程式</string>
     <string name="crash_screen_title">哎呀！</string>
     <string name="pref_library_summary">類別、全域更新、目錄滑動動作</string>
