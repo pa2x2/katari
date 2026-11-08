@@ -34,7 +34,6 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_X
 import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_Y
 import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_X
 import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_Y
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
@@ -75,7 +74,6 @@ internal fun VideoSubtitleEditorOverlay(
         framing = framing,
         appearance = normalizedAppearance,
         keepInPicture = keepInPicture,
-        controls = VideoControlsFootprint.None,
         gapPx = gapPx,
     )
     // Half-open on a table the picture, and so the subtitles, keep to the upper half

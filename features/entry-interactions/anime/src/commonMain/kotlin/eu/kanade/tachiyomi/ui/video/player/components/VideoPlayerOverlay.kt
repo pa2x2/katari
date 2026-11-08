@@ -25,12 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
@@ -42,7 +40,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import mihon.entry.interactions.anime.introtimes.IntroTimesService
 import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -134,7 +131,6 @@ internal fun VideoPlayerOverlay(
     skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     /**
      * Whether a mouse rests on one of the controls, which keeps them shown; the bars around them and the gaps between
      * them don't count. Null where nothing hovers, as on touch screens.
@@ -183,7 +179,6 @@ internal fun VideoPlayerOverlay(
                 skipService = skipService,
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
-                onControlsFootprintChange = onControlsFootprintChange,
                 onPointerOverControlsChange = onPointerOverControlsChange,
                 topBar = {
                     VideoPlayerTopBar(
@@ -211,27 +206,31 @@ internal fun VideoPlayerOverlay(
                         onScrubStarted = onScrubStarted,
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
-                        showsRemainingTime = showsRemainingTime,
-                        onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
                         onlineMarkers = onlineMarkers,
-                        chapter = chapter,
-                        onOpenChapters = onOpenChapters,
                         onHover = onTimelineHover,
                         hoverPositionMs = timelineHoverMs,
                         hoverChapter = timelineHoverChapter,
-                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
-                            {
-                                VideoPlayerSkipButton(
-                                    offer = offer,
-                                    service = skipService,
-                                    countdown = skipCountdown,
-                                    onClick = onSkip,
-                                )
-                            }
-                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
+                                position = { slot ->
+                                    VideoPlayerPositionButton(
+                                        positionMs = displayedPositionMs,
+                                        durationMs = playbackSnapshot.durationMs,
+                                        showsRemainingTime = showsRemainingTime,
+                                        onToggleRemainingTime = onToggleRemainingTime,
+                                        modifier = slot,
+                                    )
+                                },
+                                chapter = chapter?.let { playing ->
+                                    { slot ->
+                                        VideoPlayerChapterLabel(
+                                            chapter = playing,
+                                            onClick = onOpenChapters,
+                                            modifier = slot,
+                                        )
+                                    }
+                                },
                                 hasPreviousEpisode = hasPreviousEpisode,
                                 hasNextEpisode = hasNextEpisode,
                                 playbackSpeedLabel = playbackSpeedLabel,
@@ -340,25 +339,12 @@ private fun BoxScope.VideoPlayerControls(
     skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
     locked: @Composable () -> Unit,
 ) {
-    var bottomRowHeight by remember { mutableIntStateOf(0) }
-    var centreButtonsBottom by remember { mutableIntStateOf(0) }
-    // Half-open on a table the controls sit under the picture, so the subtitles have nothing to clear
-    val footprint = if (transportVisible && posture !is VideoPlayerPosture.Tabletop) {
-        VideoControlsFootprint(
-            bottomRowTopPx = bottomRowHeight.toFloat(),
-            centreButtonsBottomPx = centreButtonsBottom.toFloat(),
-        )
-    } else {
-        VideoControlsFootprint.None
-    }
-    LaunchedEffect(footprint) { onControlsFootprintChange(footprint) }
     val controlHover = remember { MutableInteractionSource() }
     val pointerOverControls by controlHover.collectIsHoveredAsState()
     LaunchedEffect(pointerOverControls) { onPointerOverControlsChange?.invoke(pointerOverControls) }
@@ -397,9 +383,9 @@ private fun BoxScope.VideoPlayerControls(
                 Spacer(modifier = Modifier.weight(1f))
             }
 
-            // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
+            // Above the timeline's end while the controls show, at the bottom while they don't
             AnimatedVisibility(
-                visible = skipVisible && !transportVisible,
+                visible = skipVisible,
                 modifier = Modifier.align(Alignment.End),
                 enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
                 exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
@@ -411,8 +397,11 @@ private fun BoxScope.VideoPlayerControls(
                         countdown = skipCountdown,
                         onClick = onSkip,
                         modifier = Modifier
-                            .videoPlayerSafeContentPadding(includeBottom = true)
-                            .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
+                            .videoPlayerSafeContentPadding(includeBottom = !transportVisible)
+                            .padding(
+                                end = KatariTheme.spacing.l,
+                                bottom = if (transportVisible) KatariTheme.sizes.none else KatariTheme.spacing.l,
+                            ),
                     )
                 }
             }
@@ -428,10 +417,7 @@ private fun BoxScope.VideoPlayerControls(
                     animationSpec = overlayBarsSlideAnimationSpec,
                 ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
-                VideoPlayerChromeContainer(
-                    modifier = Modifier.onSizeChanged { bottomRowHeight = it.height },
-                    contentAlignment = Alignment.Center,
-                ) {
+                VideoPlayerChromeContainer(contentAlignment = Alignment.Center) {
                     timeline()
                 }
             }
@@ -444,7 +430,6 @@ private fun BoxScope.VideoPlayerControls(
                     is VideoPlayerPosture.Book -> Modifier.align(Alignment.CenterStart).width(posture.startHalfWidth)
                     else -> Modifier.align(Alignment.Center)
                 }.zIndex(1f),
-                onBottomChange = { centreButtonsBottom = it },
                 centre = centre,
             )
         }
@@ -476,13 +461,8 @@ private fun BoxScope.VideoPlayerControls(
 private fun VideoPlayerCentreButtons(
     visible: Boolean,
     modifier: Modifier,
-    onBottomChange: (Int) -> Unit = {},
     centre: @Composable () -> Unit,
 ) {
-    var areaHeight by remember { mutableIntStateOf(0) }
-    var buttonsHeight by remember { mutableIntStateOf(0) }
-    // The area centres the buttons in it, so their bottom edge is half the room they leave above the area's bottom
-    LaunchedEffect(areaHeight, buttonsHeight) { onBottomChange((areaHeight - buttonsHeight) / 2) }
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
@@ -497,11 +477,8 @@ private fun VideoPlayerCentreButtons(
                 targetScale = 0.97f,
             ),
     ) {
-        VideoPlayerChromeContainer(
-            modifier = Modifier.fillMaxSize().onSizeChanged { areaHeight = it.height },
-            matchParentHeight = true,
-        ) {
-            Box(modifier = Modifier.onSizeChanged { buttonsHeight = it.height }) { centre() }
+        VideoPlayerChromeContainer(modifier = Modifier.fillMaxSize(), matchParentHeight = true) {
+            centre()
         }
     }
 }

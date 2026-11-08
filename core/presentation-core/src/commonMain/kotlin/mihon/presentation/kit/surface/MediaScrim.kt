@@ -21,8 +21,8 @@ enum class MediaScrimWeight {
     Light,
 
     /**
-     * Stays dark behind its content and fades out past it, so rows of text and controls stay readable over bright
-     * video.
+     * Fades out across its content and on past it, lighter at the edge than [Light] but taller, so a player's rows of
+     * controls stay readable without a dark band hiding the picture.
      */
     Controls,
 }
@@ -42,11 +42,7 @@ fun MediaScrim(
     val colors = KatariTheme.colors
     val fromEdge = when (weight) {
         MediaScrimWeight.Light -> arrayOf(0f to colors.mediaScrim, 1f to Color.Transparent)
-        MediaScrimWeight.Controls -> arrayOf(
-            0f to colors.mediaScrimEdge,
-            CONTROLS_CONTENT_END to colors.mediaScrim,
-            1f to Color.Transparent,
-        )
+        MediaScrimWeight.Controls -> arrayOf(0f to colors.mediaControlsShade, 1f to Color.Transparent)
     }
     val stops = when (edge) {
         MediaScrimEdge.Top -> fromEdge
@@ -63,6 +59,3 @@ fun MediaScrim(
         Box(modifier = modifier.background(Brush.verticalGradient(*stops)).then(fade), content = content)
     }
 }
-
-// Roughly where the content ends once the fade-out space is added past it.
-private const val CONTROLS_CONTENT_END = 0.6f

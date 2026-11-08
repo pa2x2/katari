@@ -4,14 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
@@ -23,7 +20,6 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.window.currentWindowLayout
-import kotlin.math.roundToInt
 
 internal data class VideoPlayerSeekPreviewState(
     val positionMs: Long = 0L,
@@ -33,14 +29,13 @@ internal data class VideoPlayerSeekPreviewState(
 )
 
 /**
- * The frame above the timeline while scrubbing: a live preview of the target position when the preview player has
- * one, drawn by [previewPicture], otherwise the target timestamp. It follows the scrub position along the timeline
- * without leaving the screen.
+ * The frame the timeline floats above its bar while scrubbing or hovering: a live preview of the target position when
+ * the preview player has one, drawn by [previewPicture], otherwise the target timestamp, with the hovered chapter's
+ * [chapterName]. The preview grows with the window up to the timeline's cap.
  */
 @Composable
 internal fun VideoPlayerSeekPreview(
     positionMs: Long,
-    previewFraction: Float,
     previewState: VideoPlayerSeekPreviewState?,
     previewPicture: (@Composable (Modifier) -> Unit)?,
     previewAspectRatio: Float?,
@@ -51,54 +46,34 @@ internal fun VideoPlayerSeekPreview(
     val spacing = KatariTheme.spacing
     val windowLongSide = currentWindowLayout().size.run { maxOf(width, height) }
 
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints {
         val previewSize = fitVideoPreviewSize(
             maxWidth = minOf(maxWidth, windowLongSide * PREVIEW_MAX_WIDTH_FRACTION).value,
             maxHeight = (windowLongSide * PREVIEW_MAX_HEIGHT_FRACTION).value,
             aspectRatio = previewAspectRatio,
         )
-
-        // Room for the frame, which the timestamp alone needs none of while there is no preview to show
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(if (previewPicture != null) Modifier.height(previewSize.height.dp + spacing.s) else Modifier),
-        ) {
-            val placement = Modifier.layout { measurable, constraints ->
-                val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-                val width = constraints.maxWidth
-                val targetCenterX = (width * previewFraction.coerceIn(0f, 1f)).roundToInt()
-                val x = (targetCenterX - (placeable.width / 2))
-                    .coerceIn(0, (width - placeable.width).coerceAtLeast(0))
-
-                layout(width, placeable.height) {
-                    placeable.placeRelative(x, 0)
+        if (showPlayer) {
+            OverlayPanel(style = OverlayStyle.Scrim) {
+                Box {
+                    previewPicture(Modifier.size(width = previewSize.width.dp, height = previewSize.height.dp))
+                    SeekPreviewTimestamp(
+                        positionMs = previewState.positionMs,
+                        chapterName = chapterName,
+                        loading = showLoading,
+                        role = TextRole.Badge,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(spacing.xs),
+                    )
                 }
             }
-            if (showPlayer) {
-                OverlayPanel(modifier = placement, style = OverlayStyle.Scrim) {
-                    Box {
-                        previewPicture(Modifier.size(width = previewSize.width.dp, height = previewSize.height.dp))
-                        SeekPreviewTimestamp(
-                            positionMs = previewState.positionMs,
-                            chapterName = chapterName,
-                            loading = showLoading,
-                            role = TextRole.Badge,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .padding(spacing.xs),
-                        )
-                    }
-                }
-            } else {
-                SeekPreviewTimestamp(
-                    positionMs = positionMs,
-                    chapterName = chapterName,
-                    loading = showLoading,
-                    role = TextRole.Label,
-                    modifier = placement,
-                )
-            }
+        } else {
+            SeekPreviewTimestamp(
+                positionMs = positionMs,
+                chapterName = chapterName,
+                loading = showLoading,
+                role = TextRole.Label,
+            )
         }
     }
 }
@@ -154,7 +129,7 @@ internal fun fitVideoPreviewSize(
     )
 }
 
-// The preview grows with the screen, capped at these shares of its longer side: about 350 by 200dp on a phone.
+// The preview grows with the screen, capped at these shares of its longer side and at the timeline's own width cap.
 private const val PREVIEW_MAX_WIDTH_FRACTION = 0.38f
 private const val PREVIEW_MAX_HEIGHT_FRACTION = 0.22f
 private const val DEFAULT_SEEK_PREVIEW_ASPECT_RATIO = 16f / 9f
