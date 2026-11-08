@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 @Inject
 @SingleIn(AppScope::class)
-class AppRestart {
+class AppRestart(private val relaunch: AppRelaunch) {
     private val requested = MutableStateFlow(false)
 
     val isRequested: StateFlow<Boolean> = requested.asStateFlow()
@@ -23,6 +23,6 @@ class AppRestart {
     }
 
     fun relaunchIfRequested() {
-        if (requested.value) AppRelaunch.start()
+        if (requested.value) relaunch.start()
     }
 }

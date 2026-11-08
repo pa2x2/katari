@@ -12,6 +12,7 @@ import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.desktop.appearance.PreferenceAppLocaleStore
 import mihon.desktop.application.AppRestart
+import mihon.desktop.application.installation.AppInstallation
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
@@ -94,6 +95,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
+    val appInstallation: AppInstallation
     val preferenceAppLocaleStore: PreferenceAppLocaleStore
     val workCloseGuard: WorkCloseGuard
     val openWindow: OpenWindow

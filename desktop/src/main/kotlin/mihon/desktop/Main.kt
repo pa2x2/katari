@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import mihon.app.ui.host.AppProcessStart
+import mihon.desktop.application.AppRelaunch
+import mihon.desktop.application.installation.systemAppInstallation
 import mihon.desktop.application.instance.InstanceClaim
 import mihon.desktop.application.instance.InstanceRequest
 import mihon.desktop.application.instance.SingleInstance
@@ -48,7 +50,9 @@ fun main(arguments: Array<String>) {
     val graph = if (crashReport == null) {
         // As on Android, the crash screen's run installs no crash handling, which would answer a crash of the crash
         // screen by opening it again
-        AppProcessStart.installCrashHandling(RelaunchCrashPresenter(directories))
+        AppProcessStart.installCrashHandling(
+            RelaunchCrashPresenter(directories, AppRelaunch(systemAppInstallation(operatingSystem))),
+        )
         val launch = LaunchArguments.read(arguments.asList(), workingDirectory = Path.of("").toAbsolutePath())
         val instance = claimInstance(systemSingleInstance(operatingSystem, directories), launch)
         createGraph(directories).also { graph ->
@@ -109,7 +113,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
-            DesktopAppUpdatePrompt(graph.appUpdateController, graph.onboardingPreferences)
+            DesktopAppUpdatePrompt(graph.appInstallation, graph.appUpdateController, graph.onboardingPreferences)
         }
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }

@@ -1,4 +1,4 @@
-package mihon.desktop.update
+package mihon.desktop.application.installation
 
 import mihon.feature.appupdate.AppUpdateError
 import mihon.feature.appupdate.AppUpdateException
@@ -23,8 +23,12 @@ internal object AppImageFiles {
             header.copyOfRange(APPIMAGE_MAGIC_OFFSET, HEADER_SIZE).contentEquals(APPIMAGE_TYPE_2)
     }
 
-    /** Whether [replace] can write in [target]'s folder, checked before a download the folder couldn't take. */
-    fun canReplace(target: File): Boolean = target.absoluteFile.parentFile?.canWrite() == true
+    /** Throws unless [replace] can write in [target]'s folder. */
+    fun checkReplaceable(target: File) {
+        if (target.absoluteFile.parentFile?.canWrite() != true) {
+            throw AppUpdateException(AppUpdateError.NotReplaceable(target.absolutePath))
+        }
+    }
 
     /**
      * Puts [update] in [target]'s place, with [target]'s permissions. It is copied beside [target] first, so a failed

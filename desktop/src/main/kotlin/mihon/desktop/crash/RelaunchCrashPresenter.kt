@@ -13,12 +13,15 @@ import kotlin.system.exitProcess
  * crash screen; a window that crashed may not draw again. Then it ends this process, since nothing else on desktop
  * ends it after an uncaught exception.
  */
-class RelaunchCrashPresenter(private val directories: DesktopDirectories) : CrashPresenter {
+class RelaunchCrashPresenter(
+    private val directories: DesktopDirectories,
+    private val relaunch: AppRelaunch,
+) : CrashPresenter {
     override fun present(report: String) {
         try {
             val file = directories.state.resolve(REPORT_FILE_NAME)
             Files.writeString(file, report)
-            AppRelaunch.start(crashReport = file)
+            relaunch.start(crashReport = file)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Can't open the crash screen" }
         } finally {

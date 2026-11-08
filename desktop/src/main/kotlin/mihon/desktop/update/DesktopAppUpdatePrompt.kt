@@ -7,16 +7,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.domain.base.OnboardingPreferences
 import kotlinx.coroutines.flow.first
+import mihon.desktop.application.installation.AppInstallation
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.ui.AppUpdateSheet
 
 /**
  * Hosts the update prompt over the home and starts the automatic checks once onboarding is done, so a found update
  * never lands on top of the first-run setup. The window is the app, so the checks repeat for as long as it is open.
+ * Only an [installation] that updates itself checks.
  */
 @Composable
-fun DesktopAppUpdatePrompt(controller: AppUpdateController, onboardingPreferences: OnboardingPreferences) {
-    if (!RunningAppImage.canUpdate) return
+fun DesktopAppUpdatePrompt(
+    installation: AppInstallation,
+    controller: AppUpdateController,
+    onboardingPreferences: OnboardingPreferences,
+) {
+    if (installation.update == null) return
     LaunchedEffect(Unit) {
         onboardingPreferences.shownOnboardingFlow.changes().first { it }
         controller.onLaunch()

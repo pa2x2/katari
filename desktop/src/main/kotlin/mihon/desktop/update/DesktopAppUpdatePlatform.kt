@@ -6,6 +6,8 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import mihon.desktop.application.AppRestart
 import mihon.desktop.application.DesktopBuildInfo
+import mihon.desktop.application.installation.AppInstallation
+import mihon.desktop.application.installation.InstallationUpdate
 import mihon.desktop.release.DesktopRelease
 import mihon.desktop.storage.DesktopDirectories
 import mihon.feature.appupdate.AppUpdateError
@@ -21,8 +23,8 @@ import tachiyomi.core.common.util.lang.withIOContext
 import java.io.File
 
 /**
- * The desktop app's updates: the release's AppImage, written over the AppImage the app runs from, which runs the new
- * version once the app restarts.
+ * The desktop app's updates: the release's package for the app's [AppInstallation], put in the installed app's place,
+ * which runs the new version once the app restarts.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -30,6 +32,7 @@ class DesktopAppUpdatePlatform(
     network: NetworkHelper,
     directories: DesktopDirectories,
     private val restart: AppRestart,
+    private val installation: AppInstallation,
 ) : AppUpdatePlatform {
 
     private val downloader = UpdateDownloader(directories.cache.resolve("app-update").toFile(), network)
@@ -40,12 +43,13 @@ class DesktopAppUpdatePlatform(
 
     override val installedVersion: String = DesktopBuildInfo.VERSION_NAME
 
-    /** The downloaded AppImage of the update being installed. */
+    /** The downloaded package of the update being installed. */
     @Volatile
     private var downloaded: File? = null
 
-    override fun selectAsset(assets: List<GithubAsset>): GithubAsset? = assets.find {
-        RELEASE_APPIMAGE.matches(it.name)
+    override fun selectAsset(assets: List<GithubAsset>): GithubAsset? {
+        val update = installation.update ?: return null
+        return assets.find { update.isPackageName(it.name) }
     }
 
     override fun elapsedRealtime(): Long = System.nanoTime() / NANOS_PER_MILLI
@@ -60,10 +64,7 @@ class DesktopAppUpdatePlatform(
 
     override suspend fun download(update: AvailableUpdate, onProgress: (Float?) -> Unit) {
         // Before the download, which is large, rather than after it
-        val target = target()
-        if (!AppImageFiles.canReplace(target)) {
-            throw AppUpdateException(AppUpdateError.NotReplaceable(target.absolutePath))
-        }
+        installationUpdate().checkReplaceable()
         downloaded = downloader.download(update.version, update.asset, onProgress)
     }
 
@@ -72,7 +73,7 @@ class DesktopAppUpdatePlatform(
         val expected = update.asset.sha256
         if (file == null ||
             (expected != null && !file.sha256().equals(expected, ignoreCase = true)) ||
-            !AppImageFiles.isAppImage(file)
+            !installationUpdate().isPackage(file)
         ) {
             downloader.clear()
             throw AppUpdateException(AppUpdateError.Damaged)
@@ -83,18 +84,16 @@ class DesktopAppUpdatePlatform(
 
     override suspend fun install(update: AvailableUpdate): InstallResult = withIOContext {
         val file = downloaded ?: throw AppUpdateException(AppUpdateError.Damaged)
-        AppImageFiles.replace(target(), file)
+        installationUpdate().replace(file)
         InstallResult.RestartToFinish
     }
 
     override fun restart() = restart.request()
 
-    private fun target(): File =
-        RunningAppImage.file ?: throw AppUpdateException(AppUpdateError.InstallFailed("Not running from an AppImage"))
+    private fun installationUpdate(): InstallationUpdate = installation.update
+        ?: throw AppUpdateException(AppUpdateError.InstallFailed("The installation doesn't update itself"))
 
     private companion object {
-        /** The release's AppImage as the release workflow publishes it, `Katari-<version>-x86_64.AppImage`. */
-        val RELEASE_APPIMAGE = Regex("""Katari-\d[^/]*-x86_64\.AppImage""")
         const val NANOS_PER_MILLI = 1_000_000L
     }
 }
