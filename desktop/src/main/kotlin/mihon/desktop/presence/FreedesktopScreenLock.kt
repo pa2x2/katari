@@ -1,8 +1,5 @@
 package mihon.desktop.presence
 
-import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +7,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.dbus.Gdbus
 
 /**
@@ -18,12 +14,11 @@ import mihon.desktop.dbus.Gdbus
  * app's session, which GNOME's and KDE's lock screens set, or the `org.freedesktop.ScreenSaver` service's active state,
  * which KDE, Xfce and LXQt keep. A locker that tells neither, such as swaylock, isn't seen.
  */
-@SingleIn(AppScope::class)
-@Inject
-class SessionScreenLock(@AppCoroutineScope scope: CoroutineScope) {
-    val isLocked: Flow<Boolean> = combine(logindLockedHint(scope), screenSaverActive(scope)) { locked, active ->
-        locked || active
-    }
+class FreedesktopScreenLock(scope: CoroutineScope) : ScreenLock {
+    override val isLocked: Flow<Boolean> =
+        combine(logindLockedHint(scope), screenSaverActive(scope)) { locked, active ->
+            locked || active
+        }
 
     private fun logindLockedHint(scope: CoroutineScope): Flow<Boolean> = flow {
         // gdbus prints the session as `(objectpath '/org/freedesktop/login1/session/_32',)`

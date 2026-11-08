@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.desktop.application.thisProcessLaunch
-import mihon.desktop.security.pam.findPamService
-import mihon.desktop.security.pam.pam
 import tachiyomi.core.common.util.system.logcat
 import java.io.DataInputStream
 import java.io.DataOutputStream
@@ -19,26 +17,26 @@ import java.io.EOFException
 import java.io.IOException
 
 /**
- * The user's sign-in to this computer, checked by the system through PAM, as Android checks the device's unlock.
- * [isAvailable] is false where the system has no PAM or no sign-in service the app can use.
+ * The user's sign-in to this computer, checked by the system ([SystemSignInCheck]), as Android checks the device's
+ * unlock. [isAvailable] is false where the system can't check it.
  */
 @SingleIn(AppScope::class)
 @Inject
-class SystemSignIn {
+class SystemSignIn(private val check: SystemSignInCheck) {
     /** The account the check is for: the one running the app. */
     val account: String = System.getProperty("user.name")
 
-    private val service: String? by lazy { if (pam == null) null else findPamService() }
+    private val configuration: String? by lazy { check.configuration() }
 
     val isAvailable: Boolean
-        get() = service != null
+        get() = configuration != null
 
     /** Starts a check, in a process of its own (see [SignInCheckProcess]); null where none can start. */
     fun start(): SignInCheckRun? {
-        val service = service ?: return null
+        val configuration = configuration ?: return null
         val launch = thisProcessLaunch() ?: return null
         return try {
-            val process = ProcessBuilder(launch + SignInCheckProcess.argument(service))
+            val process = ProcessBuilder(launch + SignInCheckProcess.argument(configuration))
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start()
             SignInCheckRun(process)

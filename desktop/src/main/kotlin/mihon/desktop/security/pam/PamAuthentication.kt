@@ -4,15 +4,9 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
 import mihon.desktop.security.signin.SignInCheckEvent
+import mihon.desktop.security.signin.SignInConversation
 import mihon.desktop.security.signin.SignInOutcome
 import java.lang.ref.Reference
-
-/** Where PAM's messages go and its questions get their answers, one at a time, as the check runs. */
-internal interface PamConversation {
-    fun tell(message: SignInCheckEvent.Message)
-
-    fun ask(question: SignInCheckEvent.Question): String
-}
 
 /**
  * Checks [user]'s sign-in through PAM's [service], with what the service says and asks going through [conversation].
@@ -22,7 +16,7 @@ internal fun authenticateWithPam(
     pam: Pam,
     service: String,
     user: String,
-    conversation: PamConversation,
+    conversation: SignInConversation,
 ): SignInOutcome {
     val function = PamConversationFunction { count, messages, responses, _ ->
         converse(count, messages, responses, conversation)
@@ -42,7 +36,7 @@ internal fun authenticateWithPam(
     }
 }
 
-private fun converse(count: Int, messages: Pointer, responses: Pointer, conversation: PamConversation): Int {
+private fun converse(count: Int, messages: Pointer, responses: Pointer, conversation: SignInConversation): Int {
     val size = RESPONSE_SIZE * count
     val answers = Pointer(Native.malloc(size.toLong()))
     answers.clear(size.toLong())

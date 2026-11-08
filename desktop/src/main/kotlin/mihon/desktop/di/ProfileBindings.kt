@@ -1,7 +1,15 @@
 package mihon.desktop.di
 
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CoroutineScope
+import mihon.core.metro.AppCoroutineScope
+import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.desktop.presence.FreedesktopScreenLock
+import mihon.desktop.presence.ScreenLock
 import mihon.desktop.profile.DesktopProfileStore
 import mihon.desktop.profile.DesktopProfileSwitchEffects
 import mihon.desktop.profile.DesktopProfileUnlock
@@ -28,4 +36,16 @@ interface ProfileBindings {
 
     @Binds
     val DesktopProfileSwitchEffects.profileSwitchEffects: ProfileSwitchEffects
+
+    companion object {
+        // The screen lock starts a profile's "Lock when idle" clock, as the app going to the background does on Android
+        @Provides
+        @SingleIn(AppScope::class)
+        fun screenLock(
+            operatingSystem: DesktopOperatingSystem,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): ScreenLock = when (operatingSystem) {
+            DesktopOperatingSystem.LINUX -> FreedesktopScreenLock(scope)
+        }
+    }
 }

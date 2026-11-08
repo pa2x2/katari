@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
  */
 @SingleIn(AppScope::class)
 @Inject
-class AppPresence(screenLock: SessionScreenLock) {
+class AppPresence(screenLock: ScreenLock) {
     private val mainWindowMinimized = MutableStateFlow(false)
     private val pictureInPictureOpen = MutableStateFlow(false)
 
