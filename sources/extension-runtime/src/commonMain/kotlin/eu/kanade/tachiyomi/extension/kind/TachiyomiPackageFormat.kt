@@ -37,8 +37,7 @@ internal fun describeTachiyomiPackage(
     return ExtensionDescription(
         name = (metaData.getString(METADATA_NAME) ?: label())
             .removePrefix("Tachiyomi: ")
-            .removePrefix("Katari: ")
-            .removePrefix("K-Mihon: "),
+            .removePrefix("Katari: "),
         contentWarning = when {
             metaData.containsKey(
                 METADATA_CONTENT_WARNING,
