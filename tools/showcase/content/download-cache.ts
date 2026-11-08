@@ -159,10 +159,12 @@ function rangeResponseSize(url: string, response: Response): number {
 
 async function download(url: string, path: string): Promise<void> {
   const response = await request(url);
-  // Written beside the cache and moved in whole, so an interrupted download is never mistaken for a finished one.
+  // Written beside the cache and moved in whole, so an interrupted download is never mistaken for a finished one. It is
+  // flushed to the disk before the move: after a power loss or a reset, the move can outlast data that wasn't, which
+  // leaves an empty file under the cached name.
   const partial = `${path}.partial`;
   try {
-    await pipeline(Readable.fromWeb(response.body as ReadableStream), createWriteStream(partial));
+    await pipeline(Readable.fromWeb(response.body as ReadableStream), createWriteStream(partial, { flush: true }));
   } catch (error) {
     if (existsSync(partial)) unlinkSync(partial);
     throw error;
@@ -187,7 +189,8 @@ async function fetchWithResponseTimeout(url: string, headers: Record<string, str
 /** Writes [meta] and [bytes] as one file, moved into place whole like a download. */
 function writeAtomically(path: string, meta: string, bytes: Buffer): void {
   const header = Buffer.from(`${meta}\n`);
-  writeFileSync(`${path}.partial`, Buffer.concat([header, bytes]));
+  // Flushed before the move, as download() is.
+  writeFileSync(`${path}.partial`, Buffer.concat([header, bytes]), { flush: true });
   renameSync(`${path}.partial`, path);
 }
 

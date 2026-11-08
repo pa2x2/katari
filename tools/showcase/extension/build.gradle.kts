@@ -14,8 +14,9 @@ android {
         // The extension loader reads the source API version from versionName's major.minor.
         versionName = "3.0.0"
 
-        // tools/showcase/content/content-server.ts: the content server on the host, as the emulator reaches it.
-        buildConfigField("String", "CONTENT_SERVER", "\"http://10.0.2.2:8571\"")
+        // tools/showcase/content/content-server.ts: the content server on the host's loopback interface, which the
+        // emulator reaches through adb reverse.
+        buildConfigField("String", "CONTENT_SERVER", "\"http://127.0.0.1:8571\"")
     }
 
     buildFeatures {

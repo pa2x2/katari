@@ -2,14 +2,14 @@ package app.katari.showcase.capture.browse
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.Direction
 import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
+import app.katari.showcase.capture.ShowcaseDevice.dragUp
 import app.katari.showcase.capture.ShowcaseDevice.enterText
 import app.katari.showcase.capture.ShowcaseDevice.find
-import app.katari.showcase.capture.ShowcaseDevice.list
 import app.katari.showcase.capture.ShowcaseDevice.scrollTo
+import app.katari.showcase.capture.ShowcaseDevice.scrollToTop
 import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
@@ -35,7 +35,10 @@ class BrowseScenes {
         find(By.text("Sintel"))
         scrollTo(By.textStartsWith("The War of the Worlds"))
         settle()
-        repeat(2) { list().fling(Direction.UP) }
+        // The results' top, then one held drag past the film to the comics in both languages and the books under them;
+        // where a swipe stopped differs from run to run.
+        scrollToTop()
+        dragUp(RESULTS_FRAMING)
         capture("global-search")
     }
 
@@ -68,5 +71,10 @@ class BrowseScenes {
         tap(By.text("Migrate"))
         find(By.text("Project Gutenberg"))
         capture("migration")
+    }
+
+    private companion object {
+        // Of the screen's height: the film's source goes under the filter chips and the next source takes its place.
+        const val RESULTS_FRAMING = 0.32f
     }
 }

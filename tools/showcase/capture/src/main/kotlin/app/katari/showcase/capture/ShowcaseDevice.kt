@@ -14,6 +14,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import java.io.File
+import java.util.regex.Pattern
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -24,6 +26,9 @@ import kotlin.math.roundToInt
 internal object ShowcaseDevice {
     const val CAPTURE_DIRECTORY = "/data/local/tmp/showcase"
     const val FAILURE_DIRECTORY = "/data/local/tmp/showcase-failures"
+
+    // The pipeline watches for it while a scene with another alongside it runs (tools/showcase/pipeline/scenes.ts).
+    private const val READY_SIGNAL = "/data/local/tmp/showcase-ready"
 
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
 
@@ -82,6 +87,31 @@ internal object ShowcaseDevice {
     }
 
     /**
+     * Scrolls the screen back to its top through the middle of the screen, as [scrollTo] goes down, until a swipe moves
+     * nothing. A swipe glides on and stops wherever its speed runs out, a few pixels apart from run to run, but every
+     * run stops at the top, so a still taken there or [dragUp] from there comes out the same.
+     */
+    fun scrollToTop(timeoutMs: Long = TIMEOUT_MS) {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        val x = device.displayWidth / 2
+        while (SystemClock.uptimeMillis() < deadline) {
+            val before = textBounds()
+            device.swipe(
+                x,
+                (device.displayHeight * SCROLL_TO).toInt(),
+                x,
+                (device.displayHeight * SCROLL_FROM).toInt(),
+                SCROLL_STEPS,
+            )
+            settle(extraMs = 300)
+            if (textBounds() == before) return
+        }
+        fail("Scrolling never reached the top")
+    }
+
+    private fun textBounds(): List<Rect> = device.findObjects(By.text(ANY_TEXT)).map { it.visibleBounds }
+
+    /**
      * The scrollable matching [selector], with its gestures kept out of the bands along the top and bottom edges where
      * the system takes a swipe as its own: one starting at the bottom edge opens recents in place of scrolling.
      * Elsewhere they keep UiAutomator's default margin of a tenth of the size, so scrolls go as far as they always did.
@@ -134,6 +164,29 @@ internal object ShowcaseDevice {
         touch(MotionEvent.ACTION_UP, downTime, x, endY)
     }
 
+    /**
+     * Presses the screen point ([startX], [startY]), holds it past the long-press timeout, and drags to ([endX], [endY])
+     * before letting go, as a reader selects a passage. The drag steps as far apart as [dragUp]'s, so the selection ends
+     * on the same word every run.
+     */
+    fun pressAndDrag(startX: Int, startY: Int, endX: Int, endY: Int) {
+        val downTime = SystemClock.uptimeMillis()
+        touch(MotionEvent.ACTION_DOWN, downTime, startX.toFloat(), startY.toFloat())
+        SystemClock.sleep(LONG_PRESS_HOLD_MS)
+        val steps = maxOf(abs(endX - startX), abs(endY - startY)) / DRAG_STEP_PX.toInt()
+        for (step in 1..steps) {
+            SystemClock.sleep(DRAG_STEP_MS)
+            val x = startX + (endX - startX) * step / steps
+            val y = startY + (endY - startY) * step / steps
+            touch(MotionEvent.ACTION_MOVE, downTime, x.toFloat(), y.toFloat())
+        }
+        repeat(DRAG_HOLD_MOVES) {
+            SystemClock.sleep(DRAG_HOLD_INTERVAL_MS)
+            touch(MotionEvent.ACTION_MOVE, downTime, endX.toFloat(), endY.toFloat())
+        }
+        touch(MotionEvent.ACTION_UP, downTime, endX.toFloat(), endY.toFloat())
+    }
+
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
         try {
             tap(findOrUncover(selector, timeoutMs))
@@ -160,6 +213,17 @@ internal object ShowcaseDevice {
         }
         fail("Nothing on screen matches $selector, nor under the dock")
     }
+
+    /** Closes the on-screen keyboard if typing brought it up, as it covers the bottom of the screen. */
+    fun hideKeyboard() {
+        if ("mInputShown=true" in shell("dumpsys input_method")) {
+            device.pressBack()
+            settle()
+        }
+    }
+
+    /** A text field by the label it shows, which Compose lays out inside the field. */
+    fun textField(label: String): BySelector = By.clazz("android.widget.EditText").hasDescendant(By.text(label))
 
     fun enterText(selector: BySelector, text: String) {
         try {
@@ -319,17 +383,81 @@ internal object ShowcaseDevice {
      */
     fun capture(name: String) {
         settle()
+        refreshGestureHandle()
         shell("mkdir -p $CAPTURE_DIRECTORY")
-        val still = File("$CAPTURE_DIRECTORY/$name.png")
+        if (!heldStill(File("$CAPTURE_DIRECTORY/$name.png"))) fail("The screen never held still for $name")
+    }
+
+    /**
+     * Has the gesture handle take its colour from the screen as it is now. The launcher draws the handle light or dark
+     * by the brightness behind it, but changes it only once that brightness moves by more than a step from what it last
+     * went by, so a screen that brightened gradually, as covers fading in do, keeps the colour the handle took partway,
+     * which differs from run to run. A launcher started afresh goes by its first look.
+     */
+    private fun refreshGestureHandle() {
+        val home = "-a android.intent.action.MAIN -c android.intent.category.HOME"
+        val launcher = shell("cmd package resolve-activity --brief $home")
+            .lines()
+            .last { it.isNotBlank() }
+            .substringBefore('/')
+        shell("am force-stop $launcher")
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MS
+        while ("mSamplingListenerRegistered: true" !in shell("dumpsys activity service $launcher")) {
+            if (SystemClock.uptimeMillis() > deadline) fail("The launcher never drew the gesture handle again")
+            SystemClock.sleep(HANDLE_POLL_MS)
+        }
+        // The first look comes with the next frame the system composes, or once it has been idle for a moment.
+        SystemClock.sleep(HANDLE_SAMPLE_MS)
+    }
+
+    /**
+     * Saves the screen as it is this moment, for what never holds still, such as a countdown, which [capture] would wait
+     * out. Taken right after [awaitPromptly], it shows what that waited for.
+     */
+    fun captureNow(name: String) {
+        shell("mkdir -p $CAPTURE_DIRECTORY")
+        shell("screencap -p $CAPTURE_DIRECTORY/$name.png")
+    }
+
+    /**
+     * Waits for [selector] to show, looking as often as the screen can be read rather than at UiAutomator's usual
+     * second, for a still taken the moment something changes, such as one count of a countdown.
+     */
+    fun awaitPromptly(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        while (!device.hasObject(selector)) {
+            if (SystemClock.uptimeMillis() > deadline) fail("Nothing on screen matches $selector")
+        }
+    }
+
+    /** Tells the pipeline the scene is ready for the desktop scene that runs alongside it. */
+    fun signalReady() = writeDeviceFile(READY_SIGNAL, "")
+
+    /**
+     * Waits until the screen holds still, as [capture] does, for a gesture that must land on what is drawn now: a
+     * reader can still be moving its page into place after it shows its progress.
+     */
+    fun awaitStill() {
+        settle()
+        val probe = File(STILL_PROBE)
+        try {
+            if (!heldStill(probe)) fail("The screen never held still")
+        } finally {
+            shell("rm -f ${probe.path}")
+        }
+    }
+
+    /** Takes screenshots into [file] until two in a row are the same; false when the screen never holds still. */
+    private fun heldStill(file: File): Boolean {
         var previous: ByteArray? = null
         repeat(STILL_ATTEMPTS) {
-            shell("screencap -p ${still.path}")
-            val current = still.readBytes()
-            if (current.contentEquals(previous)) return
+            shell("screencap -p ${file.path}")
+            val current = file.readBytes()
+            if (current.contentEquals(previous)) return true
             previous = current
             SystemClock.sleep(STILL_INTERVAL_MS)
         }
-        fail("The screen never held still for $name")
+        return false
     }
 
     /**
@@ -375,6 +503,7 @@ internal object ShowcaseDevice {
     private const val SCROLL_FROM = 0.7f
     private const val SCROLL_TO = 0.3f
     private const val SCROLL_STEPS = 50
+    private val ANY_TEXT = Pattern.compile(".+", Pattern.DOTALL)
 
     // The status bar's band, whose swipes pull the notification shade, and gesture navigation's 32 dp band with room
     // for the slop the system allows a swipe.
@@ -390,6 +519,9 @@ internal object ShowcaseDevice {
     private const val DRAG_STEP_PX = 10f
     private const val DRAG_HOLD_MOVES = 6
     private const val DRAG_HOLD_INTERVAL_MS = 50L
+
+    // Well past the 400 ms after which a held finger becomes a long press.
+    private const val LONG_PRESS_HOLD_MS = 1_000L
     private const val REVEAL_ATTEMPTS = 3
     private const val STEADY_INTERVAL_MS = 100L
     private const val STEADY_SAMPLES = 2
@@ -398,4 +530,9 @@ internal object ShowcaseDevice {
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
     private const val STILL_INTERVAL_MS = 500L
+    private const val HANDLE_POLL_MS = 200L
+    private const val HANDLE_SAMPLE_MS = 1_000L
+
+    // Outside CAPTURE_DIRECTORY, which the pipeline publishes whole.
+    private const val STILL_PROBE = "/data/local/tmp/showcase-still.png"
 }

@@ -6,10 +6,10 @@
  * show the difference for review.
  *
  * A work's `kind` picks its resolver: `peppercarrot` lists episode pages on peppercarrot.com, `gutenberg` reads a
- * Project Gutenberg book's catalog record, and `film` takes its metadata as written here. Only the chapters a work names
- * in `fetchChapters` are downloaded.
+ * Project Gutenberg book's catalog record, and `film` and `series` take their metadata as written here. Only the
+ * chapters a work names in `fetchChapters` are downloaded.
  */
-import type { CoverDefinition, SourceDefinition, WorkDefinition } from "./source-definitions.ts";
+import type { CoverDefinition, SourceDefinition, VideoVersion, WorkDefinition } from "./source-definitions.ts";
 import sourceList from "./source-list/sources.json" with { type: "json" };
 
 // A file of its own, because the showcase extension lists the same sources before it can reach the content server.
@@ -28,6 +28,8 @@ export const works: WorkDefinition[] = [
     kind: "peppercarrot",
     language: "en",
     episodes: { first: 1, last: 8 },
+    // The comic reader scenes on both apps, and the sync scenes' hand-off between them, read episode 6.
+    fetchChapters: [6],
     title: "Pepper&Carrot",
     description:
       "Pepper, a young witch of Chaosah, and her cat Carrot stumble from one magical mishap to the next in the world of Hereva.",
@@ -96,11 +98,27 @@ export const works: WorkDefinition[] = [
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | durian.blender.org",
     // The player scene plays it. Wikimedia's 1080p transcode is a fifth the size of Blender's own 1080p file, for the
-    // same frames on a phone.
+    // same frames on a phone. The other versions fill the player's settings, which a scene shows without playing them.
     fetchChapters: [1],
-    video: {
-      url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.1080p.vp9.webm",
-    },
+    versions: [
+      {
+        server: "Wikimedia Commons",
+        quality: "1080p",
+        url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.1080p.vp9.webm",
+      },
+      {
+        server: "Wikimedia Commons",
+        quality: "480p",
+        url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.480p.vp9.webm",
+      },
+      {
+        server: "Wikimedia Commons",
+        quality: "240p",
+        url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/f/f1/Sintel_movie_4K.webm/Sintel_movie_4K.webm.240p.vp9.webm",
+      },
+      { server: "Internet Archive", quality: "872p", url: "https://archive.org/download/Sintel/sintel-2048-stereo.mp4" },
+      { server: "Internet Archive", quality: "240p", url: "https://archive.org/download/Sintel/sintel-2048-stereo_512kb.mp4" },
+    ],
     // The player scene seeks to 691 s (tools/showcase/capture PlayerScenes.kt), and the player buffers 50 s past it.
     played: { from: 680, to: 760 },
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/8/8f/Sintel_poster.jpg" },
@@ -117,9 +135,72 @@ export const works: WorkDefinition[] = [
     genres: ["Comedy", "Family"],
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     attribution: "© copyright Blender Foundation | www.bigbuckbunny.org",
-    video: {
-      url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.720p.vp9.webm",
-    },
+    versions: [
+      {
+        server: "Wikimedia Commons",
+        quality: "720p",
+        url: "https://upload.wikimedia.org/wikipedia/commons/transcoded/c/c0/Big_Buck_Bunny_4K.webm/Big_Buck_Bunny_4K.webm.720p.vp9.webm",
+      },
+    ],
     cover: { url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Big_buck_bunny_poster_big.jpg" },
   },
+  {
+    id: "caminandes",
+    source: "blender-studio",
+    kind: "series",
+    title: "Caminandes",
+    author: "Blender Foundation",
+    artist: "Pablo Vazquez",
+    description: "Koro, a llama of Patagonia, will go to any length for the grass on the other side.",
+    genres: ["Comedy", "Family"],
+    license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
+    // Wikimedia Commons lists the second episode's upload under CC BY-SA, so the credit says so.
+    attribution: "© copyright Blender Foundation | caminandes.com; Gran Dillama as on Wikimedia Commons, under CC BY-SA 3.0",
+    // The episode list scene shows its episodes' stills and summaries, and the desktop player scene plays the second.
+    // The stills are Wikimedia's frames of each video at the given second.
+    fetchChapters: [2],
+    episodes: [
+      {
+        name: "Llama Drama",
+        released: "2013-02-09",
+        summary: "Koro wants the grass across the road, and the road has other plans.",
+        still: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Caminandes_-_Short_Movie.ogv/960px-seek%3D20-Caminandes_-_Short_Movie.ogv.jpg",
+        versions: commonsVersions("3/3d/Caminandes_-_Short_Movie.ogv"),
+      },
+      {
+        name: "Gran Dillama",
+        released: "2013-11-22",
+        summary: "The grass is greener beyond an electric fence, and Koro means to get through it.",
+        still:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm/960px-seek%3D45-Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm.jpg",
+        versions: commonsVersions("7/7c/Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm"),
+        // The desktop player scene (tools/showcase/desktop-capture PlayerScenes.kt) pauses the episode as it starts and
+        // seeks to 1:05, and the player buffers 50 s past it.
+        played: { from: 60, to: 120 },
+      },
+      {
+        name: "Llamigos",
+        released: "2016-01-29",
+        summary: "In the middle of winter, Koro meets Oti, a pesky penguin after the same berries.",
+        still:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Caminandes_3_-_Llamigos_-_Blender_Animated_Short.webm/960px-seek%3D20-Caminandes_3_-_Llamigos_-_Blender_Animated_Short.webm.jpg",
+        versions: commonsVersions("a/ab/Caminandes_3_-_Llamigos_-_Blender_Animated_Short.webm"),
+      },
+    ],
+    // Koro on the road, from the first episode, cut to a portrait.
+    cover: {
+      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Caminandes_-_Short_Movie.ogv/1280px-seek%3D45-Caminandes_-_Short_Movie.ogv.jpg",
+      crop: { left: 250, top: 0, width: 480, height: 720 },
+    },
+  },
 ];
+
+/** Wikimedia Commons' 1080p and 480p transcodes of the video at [path] under its `commons/` folder. */
+function commonsVersions(path: string): VideoVersion[] {
+  const file = path.slice(path.lastIndexOf("/") + 1);
+  return ["1080p", "480p"].map((quality) => ({
+    server: "Wikimedia Commons",
+    quality,
+    url: `https://upload.wikimedia.org/wikipedia/commons/transcoded/${path}/${file}.${quality}.vp9.webm`,
+  }));
+}

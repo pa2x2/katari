@@ -1,73 +1,100 @@
 /**
- * Runs the UiAutomator classes of tools/showcase/capture against the app. Each scene leaves its stills and clips in
- * CAPTURE_DIRECTORY on the device, and a screenshot of whatever was on screen when it failed, with the app's and the
- * system's state at that moment, in FAILURE_DIRECTORY.
+ * The scenes, in groups that each run on freshly set up devices of their own, so CI runs the groups side by side. No
+ * scene may depend on what a scene of another group did; within a group they run in this order. A scene runs on the
+ * phone, as a UiAutomator class of tools/showcase/capture against the Android app on an emulator; on the desktop, as a
+ * class of tools/showcase/desktop-capture inside the desktop app; or in a browser, as a page of browser/pages.ts.
+ *
+ * Opening a reader on the phone records a reading session at the showcase moment, so every phone scene that shows
+ * reading history comes before the first one of its group that opens a reader. The groups are balanced by how long they
+ * take on a CI runner, where the recap alone takes about five minutes.
  */
-import type { Device } from "./device/adb.ts";
+export type Platform = "phone" | "desktop" | "browser";
 
-export const CAPTURE_PACKAGE = "app.katari.showcase.capture";
-export const CAPTURE_DIRECTORY = "/data/local/tmp/showcase";
-export const FAILURE_DIRECTORY = "/data/local/tmp/showcase-failures";
-// Several times the slowest scene on a CI runner, which takes about three minutes.
-const SCENE_TIMEOUT_MS = 15 * 60_000;
+export interface Scene {
+  platform: Platform;
+  /** The scene's class under its capture module's package, such as `reader.BookScenes`, or a browser page's name. */
+  name: string;
+  /**
+   * A desktop scene, by its class, that runs beside this phone scene: it starts once the phone scene signals that it is
+   * ready for it, and ends after the phone scene. The hand-off scene's reader waits for the progress the desktop makes.
+   */
+  alongside?: string;
+}
+
+export interface SceneGroup {
+  scenes: Scene[];
+  /**
+   * Whether its devices sync, through a sync server the group runs (sync/sync-server.ts). Its desktop then starts empty
+   * and joins the phone's account in a scene, rather than restoring the seed.
+   */
+  syncs?: boolean;
+}
 
 /**
- * The scene that records the recap clip, which the pipeline re-encodes for the site with ffmpeg, and leaves the image
- * the recap shares in the app's cache.
+ * The phone scene that records the recap clip, which the pipeline re-encodes for the site with ffmpeg, and leaves the
+ * image the recap shares in the app's cache.
  */
 export const RECAP_SCENE = "statistics.RecapScenes";
 
-/**
- * The scenes, in groups that each run on their own freshly set up emulator, so CI runs the groups side by side. No scene
- * may depend on what a scene of another group did. Within a group they run in this order: opening a reader records a
- * reading session at the showcase moment, so every scene that shows reading history comes before the first one of its
- * group that opens a reader. The groups are balanced by how long they take on a CI runner, where the recap alone takes
- * about five minutes.
- */
-export const SCENE_GROUPS: Record<string, string[]> = {
-  recap: [RECAP_SCENE],
-  translation: [
-    "translation.TranslatorScenes",
-    "translation.TranslationSettingsScenes",
-    "translation.TranslationScenes",
-  ],
-  "library-and-statistics": ["library.LibraryScenes", "library.EntryScenes", "statistics.StatisticsScenes"],
-  "browse-backup-and-readers": [
-    "browse.BrowseScenes",
-    "settings.BackupScenes",
-    "reader.BookScenes",
-    "reader.PlayerScenes",
-  ],
+export const SCENE_GROUPS: Record<string, SceneGroup> = {
+  recap: { scenes: phone(RECAP_SCENE) },
+  translation: {
+    scenes: phone("translation.TranslatorScenes", "translation.TranslationSettingsScenes", "translation.TranslationScenes"),
+  },
+  "library-and-statistics": {
+    scenes: phone("library.LibraryScenes", "library.EntryScenes", "statistics.StatisticsScenes"),
+  },
+  "browse-and-backup": { scenes: phone("browse.BrowseScenes", "settings.BackupScenes") },
+  readers: { scenes: phone("reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes") },
+  desktop: { scenes: desktop("reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes") },
+  // The phone signs in with its seeded library, the desktop joins and takes it in, and the phone's reader then hears
+  // of the desktop reading on.
+  sync: {
+    syncs: true,
+    scenes: [
+      ...phone("sync.SignInScenes"),
+      ...desktop("sync.JoinScenes", "sync.LibraryScenes"),
+      ...phone("sync.SyncPageScenes", "sync.LinkCodeScenes"),
+      { platform: "phone", name: "sync.HandOffScenes", alongside: "sync.ReadAheadScenes" },
+      { platform: "browser", name: "sync-server" },
+    ],
+  },
 };
 
-export const SCENES = Object.values(SCENE_GROUPS).flat();
+/** How `--scenes` names a scene: its platform and class, such as `phone:reader.BookScenes`. */
+export function sceneId(scene: Scene): string {
+  return `${scene.platform}:${scene.name}`;
+}
 
-/** The scenes that translate with Offline Translator, which setup then installs and readies on-page translation for. */
-export const TRANSLATION_SCENES = SCENE_GROUPS.translation!;
+export const SCENES = Object.values(SCENE_GROUPS).flatMap((group) => group.scenes);
+
+/** Every platform [scenes] run on, those started alongside others included. */
+export function platformsOf(scenes: Scene[]): Set<Platform> {
+  return new Set(scenes.flatMap((scene): Platform[] => (scene.alongside ? [scene.platform, "desktop"] : [scene.platform])));
+}
+
+/** The phone scenes that translate with Offline Translator, which setup then installs and readies on-page translation for. */
+export const TRANSLATION_SCENES = names(SCENE_GROUPS.translation!.scenes);
 
 /**
- * The scenes that find the Personal profile's year recap opened. Until it is, More carries a mark for it, which the
- * library's stills show beside the recap the statistics dashboard offers, and the rest of the showcase leaves out.
+ * The phone scenes that find the Personal profile's year recap opened. Until it is, More carries a mark for it, which
+ * the library's stills show beside the recap the statistics dashboard offers, and the rest of the showcase leaves out.
  */
-export const YEAR_RECAP_OPENED_SCENES = [
-  ...SCENE_GROUPS.translation!,
-  ...SCENE_GROUPS["browse-backup-and-readers"]!,
-];
+export const YEAR_RECAP_OPENED_SCENES = names([
+  ...SCENE_GROUPS.translation!.scenes,
+  ...SCENE_GROUPS["browse-and-backup"]!.scenes,
+  ...SCENE_GROUPS.readers!.scenes,
+  ...SCENE_GROUPS.sync!.scenes,
+]);
 
-export function runScene(device: Device, appId: string, scene: string, args: Record<string, string> = {}): void {
-  const extras = Object.entries({ targetAppId: appId, ...args }).flatMap(([name, value]) => ["-e", name, `'${value}'`]);
-  const output = device.adbWithin(
-    SCENE_TIMEOUT_MS,
-    "shell",
-    "am",
-    "instrument",
-    "-w",
-    ...extras,
-    "-e",
-    "class",
-    `${CAPTURE_PACKAGE}.${scene}`,
-    `${CAPTURE_PACKAGE}/androidx.test.runner.AndroidJUnitRunner`,
-  );
-  // Instrumentation exits with 0 whether or not its tests pass; only its summary tells.
-  if (!/^OK \(\d+ tests?\)$/m.test(output)) throw new Error(`${scene} failed:\n${output}`);
+function phone(...names: string[]): Scene[] {
+  return names.map((name) => ({ platform: "phone", name }));
+}
+
+function desktop(...names: string[]): Scene[] {
+  return names.map((name) => ({ platform: "desktop", name }));
+}
+
+function names(scenes: Scene[]): string[] {
+  return scenes.map((scene) => scene.name);
 }

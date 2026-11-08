@@ -1,6 +1,5 @@
 package mihon.presentation.kit.dialog
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -114,16 +113,8 @@ fun Dialog(
                 fitsSystemWindows = false,
             ),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = null,
-                        indication = null,
-                        enabled = properties.dismissOnClickOutside,
-                        onClick = onDismissRequest,
-                    ),
-            ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                OutsideTapArea(enabled = properties.dismissOnClickOutside, onTap = onDismissRequest)
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -132,11 +123,7 @@ fun Dialog(
                         .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = modifier
-                            .width(dialogWidth(half.width))
-                            .clickable(interactionSource = null, indication = null, onClick = {}),
-                    ) {
+                    Box(modifier = modifier.width(dialogWidth(half.width))) {
                         panel()
                     }
                 }

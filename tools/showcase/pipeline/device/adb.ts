@@ -1,5 +1,5 @@
 /** One device reached through adb, addressed by serial so another connected phone or emulator is never touched. */
-import { run } from "../run-command.ts";
+import { run, runAsync } from "../run-command.ts";
 
 export class Device {
   readonly serial: string;
@@ -9,12 +9,15 @@ export class Device {
   }
 
   adb(...args: string[]): string {
-    return this.adbWithin(COMMAND_TIMEOUT_MS, ...args);
+    return run("adb", ["-s", this.serial, ...args], process.env, COMMAND_TIMEOUT_MS);
   }
 
-  /** For a command that may take longer than a single step should, such as a whole scene. */
-  adbWithin(timeoutMs: number, ...args: string[]): string {
-    return run("adb", ["-s", this.serial, ...args], process.env, timeoutMs);
+  /**
+   * For a command that may take longer than a single step should, such as a whole scene, which leaves the pipeline free
+   * to drive another device meanwhile.
+   */
+  adbAsync(timeoutMs: number, ...args: string[]): Promise<string> {
+    return runAsync("adb", ["-s", this.serial, ...args], process.env, timeoutMs);
   }
 
   shell(command: string): string {
@@ -31,6 +34,11 @@ export class Device {
 
   forceStop(appId: string): void {
     this.shell(`am force-stop ${appId}`);
+  }
+
+  /** Forwards connections to the device's own loopback [port] to the host's, where the pipeline's servers listen. */
+  reversePort(port: number): void {
+    this.adb("reverse", `tcp:${port}`, `tcp:${port}`);
   }
 }
 

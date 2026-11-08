@@ -9,8 +9,18 @@ export interface CatalogChapter {
   number: number;
   name: string;
   date: string;
-  /** Pages in reading order for manga; the single EPUB or video otherwise. */
+  /** Pages in reading order for manga, or the single EPUB of a book; empty for anime, whose [versions] list its videos. */
   files: string[];
+  versions?: CatalogVideoVersion[];
+  summary?: string;
+  /** An image of a moment of the episode. */
+  still?: string;
+}
+
+export interface CatalogVideoVersion {
+  server: string;
+  quality: string;
+  file: string;
 }
 
 export interface CatalogWork extends Omit<ResolvedWork, "cover" | "chapters"> {

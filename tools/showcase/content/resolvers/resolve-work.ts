@@ -1,6 +1,6 @@
 import type { WorkDefinition } from "../source-definitions.ts";
 import type { ResolvedWork } from "../resolved-work.ts";
-import { resolveFilm } from "./film.ts";
+import { resolveFilm, resolveSeries } from "./film.ts";
 import { resolveGutenberg } from "./gutenberg.ts";
 import { resolvePepperCarrot } from "./peppercarrot.ts";
 
@@ -14,6 +14,8 @@ export async function resolveWork(work: WorkDefinition): Promise<ResolvedWork> {
         return resolveGutenberg(work);
       case "film":
         return resolveFilm(work);
+      case "series":
+        return resolveSeries(work);
     }
   })();
   return { id: work.id, source: work.source, ...resolved, cover: work.cover ?? { fromEpub: true } };

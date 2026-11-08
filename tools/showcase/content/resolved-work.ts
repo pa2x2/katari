@@ -1,13 +1,19 @@
 /** A work from sources.ts as its resolver describes it: its metadata and where each of its files is downloaded from. */
-import type { CoverDefinition, EntryType, License } from "./source-definitions.ts";
+import type { CoverDefinition, EntryType, License, PlayedStretch, VideoVersion } from "./source-definitions.ts";
 
 export interface ResolvedChapter {
   number: number;
   name: string;
   /** ISO date the chapter was published. */
   date: string;
-  /** Upstream URLs of the chapter's files. */
+  /** Upstream URLs of a comic chapter's pages or a book's EPUB; an episode lists its videos as [versions] instead. */
   files: string[];
+  versions?: VideoVersion[];
+  /** Of the first of the [versions], which the player opens. */
+  played?: PlayedStretch;
+  summary?: string;
+  /** Upstream URL of an image from the episode. */
+  still?: string;
 }
 
 /** Gutenberg EPUBs carry their own cover, which fetch.ts extracts when sources.ts names none. */

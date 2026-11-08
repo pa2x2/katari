@@ -8,6 +8,9 @@ export const SHOWCASE_NOW = Date.UTC(2026, 11, 15, 19, 30);
 
 export const SHOWCASE_TIME_ZONE = "UTC";
 
+/** The apps' name for the recap of the year so far, which they offer in December, as at the showcase moment. */
+export const YEAR_RECAP_EDITION = `${new Date(SHOWCASE_NOW).getUTCFullYear()}-so-far`;
+
 /**
  * When the library last checked its sources for new chapters. Entries carry it in the seed; the app's own record of the
  * check is app state that backups leave out, so the pipeline writes it.

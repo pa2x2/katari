@@ -1,8 +1,9 @@
 name: Showcase
 
-# Recaptures every showcase screenshot and clip from a published release, each group of scenes on a freshly wiped
-# emulator of its own, the groups side by side, and proposes the ones that visibly changed, and the removal of any no
-# scene captures any more, as a pull request against the `assets` branch, which the website is built from.
+# Recaptures every showcase screenshot and clip from a published release, each group of scenes on devices of its own
+# (a freshly wiped emulator, the desktop app on a private display, a browser), the groups side by side, and proposes
+# the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against the
+# `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:
@@ -26,10 +27,11 @@ env:
   RUN_NAME: ${{ github.event.release.tag_name || github.ref_name }}
 
 jobs:
-  # Builds the apps and gathers the content once for the capture jobs. Runs the build's dependencies and downloaded
-  # content, so it holds no write access; the proposal job below publishes what the run found.
-  build:
-    name: Build
+  # Gathers the content once for the capture jobs, with the showcase extension that serves it to both apps, and lists
+  # the groups to capture. Runs downloaded content, so it holds no write access; the proposal job below publishes what
+  # the run found.
+  content:
+    name: Content
     # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
     if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-26.04
@@ -97,29 +99,24 @@ jobs:
           npm run fetch
           npm run seed
 
-      - name: Build
-        run: ./gradlew :app:assembleBenchmark :tools:showcase:extension:assembleShowcase :tools:showcase:capture:assembleShowcase
+      - name: Build the showcase extension
+        run: ./gradlew :tools:showcase:extension:assembleShowcase
 
-      # The benchmark build is minified, so the app's frames in a failed capture's thread dumps read only through its
-      # mapping, which goes along for that.
       - name: Gather what the capture jobs need
         run: |
           set -euo pipefail
 
-          build="$RUNNER_TEMP/showcase-build"
-          mkdir -p "$build"
-          cp app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk "$build/app.apk"
-          cp tools/showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$build/extension.apk"
-          cp tools/showcase/capture/build/outputs/apk/showcase/capture-showcase.apk "$build/capture.apk"
-          cp app/build/outputs/mapping/benchmark/mapping.txt "$build/mapping.txt"
-          cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$build/"
-          cp -r "$KATARI_SHOWCASE_CACHE/served" "$build/"
+          content="$RUNNER_TEMP/showcase-content"
+          mkdir -p "$content"
+          cp tools/showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$content/extension.apk"
+          cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$content/"
+          cp -r "$KATARI_SHOWCASE_CACHE/served" "$content/"
 
       - name: Upload what the capture jobs need
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: showcase-build
-          path: ${{ runner.temp }}/showcase-build
+          name: showcase-content
+          path: ${{ runner.temp }}/showcase-content
           if-no-files-found: error
           overwrite: true
 
@@ -128,16 +125,121 @@ jobs:
         run: echo "matrix=$(node tools/showcase/pipeline/capture-matrix.ts)" >> "$GITHUB_OUTPUT"
 
       # Also after a failure, so a later run starts from whatever this one managed to download.
-      - name: Keep the showcase downloads the build used
+      - name: Keep the showcase downloads the content used
         if: always() && steps.restore.outcome == 'success'
         uses: ./.github/actions/keep-used-showcase-downloads
         with:
-          job: build
+          job: content
 
-  # A group of scenes on a freshly wiped emulator of its own, in a job of its own, so the groups capture side by side.
+  # The Android app and the scenes that drive it, for the groups with phone scenes, beside the content and the desktop.
+  build-android:
+    name: Build (Android)
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-read-only: true
+
+      - name: Build
+        run: ./gradlew :app:assembleBenchmark :tools:showcase:capture:assembleShowcase
+
+      # The benchmark build is minified, so the app's frames in a failed capture's thread dumps read only through its
+      # mapping, which goes along for that.
+      - name: Gather what the capture jobs need
+        run: |
+          set -euo pipefail
+
+          build="$RUNNER_TEMP/showcase-android"
+          mkdir -p "$build"
+          cp app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk "$build/app.apk"
+          cp tools/showcase/capture/build/outputs/apk/showcase/capture-showcase.apk "$build/capture.apk"
+          cp app/build/outputs/mapping/benchmark/mapping.txt "$build/mapping.txt"
+
+      - name: Upload what the capture jobs need
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-android
+          path: ${{ runner.temp }}/showcase-android
+          if-no-files-found: error
+          overwrite: true
+
+  # The desktop app's AppDir, the agent that drives it and the sync server, for the groups with desktop scenes or devices
+  # that sync.
+  build-desktop:
+    name: Build (desktop)
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          cache-read-only: true
+
+      # The release, which names itself and its version as people's installs do.
+      - name: Build
+        run: |
+          ./gradlew :desktop:assembleAppDir :tools:showcase:desktop-capture:jar :tools:showcase:sync-server:installDist \
+            -Pdesktop-release
+
+      # As one archive, since an artifact keeps neither the files' execute permissions nor the AppDir's links.
+      - name: Gather what the capture jobs need
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$RUNNER_TEMP/showcase-desktop"
+          tar --create --file "$RUNNER_TEMP/showcase-desktop/desktop.tar" \
+            -C desktop/build/appimage Katari.AppDir \
+            -C "$GITHUB_WORKSPACE/tools/showcase/desktop-capture/build/libs" desktop-capture.jar \
+            -C "$GITHUB_WORKSPACE/tools/showcase/sync-server/build/install" showcase-sync-server
+
+      - name: Upload what the capture jobs need
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: showcase-desktop
+          path: ${{ runner.temp }}/showcase-desktop
+          if-no-files-found: error
+          overwrite: true
+
+  # A group of scenes on devices of its own, in a job of its own, so the groups capture side by side. It waits for every
+  # build but goes ahead without one its group doesn't use, so a failure shows all that failed.
   capture:
     name: Capture ${{ matrix.group }}
-    needs: build
+    needs: [content, build-android, build-desktop]
+    if: ${{ !cancelled() && needs.content.result == 'success' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
@@ -146,12 +248,20 @@ jobs:
     strategy:
       # Every group runs to the end, so a failure shows all that failed and the downloads of the rest are kept.
       fail-fast: false
-      matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
+      matrix: ${{ fromJSON(needs.content.outputs.matrix) }}
     env:
       # Matches tools/showcase/pipeline/device/emulator.ts.
       SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
 
     steps:
+      - name: Check the builds the group needs
+        if: >-
+          (matrix.phone && needs.build-android.result != 'success') ||
+          ((matrix.desktop || matrix.syncs) && needs.build-desktop.result != 'success')
+        run: |
+          echo "::error::A build this group needs did not succeed."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -165,6 +275,7 @@ jobs:
           cache-dependency-path: tools/showcase/package-lock.json
 
       - name: Set up the emulator
+        if: matrix.phone
         run: |
           set -euo pipefail
 
@@ -205,28 +316,68 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes ffmpeg
 
+      # A display of the desktop app's own (Xvfb, with xrdb for its scale), its fonts (Noto, with CJK for the library's
+      # Japanese titles), the session bus and keyring it runs with, and libfaketime for the showcase moment.
+      - name: Install what the desktop app runs with
+        if: matrix.desktop
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb x11-xserver-utils fonts-noto-core fonts-noto-cjk dbus gnome-keyring libfaketime
+
+      # The sync server runs on the JVM it was built for.
+      - name: Set up JDK
+        if: matrix.syncs
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
       - name: Restore the showcase downloads
         id: restore
         uses: ./.github/actions/restore-showcase-downloads
         with:
-          run-id: ${{ needs.build.outputs.downloads-run }}
+          run-id: ${{ needs.content.outputs.downloads-run }}
 
-      - name: Download the build
+      - name: Download the content
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: showcase-build
-          path: ${{ runner.temp }}/showcase-build
+          name: showcase-content
+          path: ${{ runner.temp }}/showcase-content
 
+      - name: Download the Android build
+        if: matrix.phone
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: showcase-android
+          path: ${{ runner.temp }}/showcase-android
+
+      - name: Download the desktop build
+        if: matrix.desktop || matrix.syncs
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: showcase-desktop
+          path: ${{ runner.temp }}/showcase-desktop
+
+      - name: Unpack the desktop build
+        if: matrix.desktop || matrix.syncs
+        working-directory: ${{ runner.temp }}/showcase-desktop
+        run: tar --extract --file desktop.tar
+
+      # Each group checks only the paths its devices use. Browser scenes run the runner image's Google Chrome.
       - name: Capture
         working-directory: tools/showcase
         env:
-          BUILD: ${{ runner.temp }}/showcase-build
+          CONTENT: ${{ runner.temp }}/showcase-content
+          ANDROID: ${{ runner.temp }}/showcase-android
+          DESKTOP: ${{ runner.temp }}/showcase-desktop
           GROUP: ${{ matrix.group }}
         run: |
           npm ci
           npm run capture -- --group "$GROUP" --out "$RUNNER_TEMP/captures" \
-            --app-apk "$BUILD/app.apk" --extension-apk "$BUILD/extension.apk" --capture-apk "$BUILD/capture.apk" \
-            --seed "$BUILD/showcase.tachibk" --served "$BUILD/served"
+            --seed "$CONTENT/showcase.tachibk" --served "$CONTENT/served" --extension-apk "$CONTENT/extension.apk" \
+            --app-apk "$ANDROID/app.apk" --capture-apk "$ANDROID/capture.apk" \
+            --desktop-app-dir "$DESKTOP/Katari.AppDir" --desktop-agent "$DESKTOP/desktop-capture.jar" \
+            --sync-server "$DESKTOP/showcase-sync-server/bin/showcase-sync-server"
 
       # Also after a failure, so a later run starts from whatever this one managed to download, the film the player
       # streamed included.
@@ -244,7 +395,7 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
-      # The app's mapping, for the thread dumps among them, is in the showcase-build artifact.
+      # The app's mapping, for the thread dumps among them, is in the showcase-android artifact.
       - name: Upload what the failed capture left
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -258,8 +409,8 @@ jobs:
   # used into the ones later runs restore. It runs after a failed capture too, for the downloads.
   compare:
     name: Compare
-    needs: [build, capture]
-    if: always() && needs.build.result != 'skipped'
+    needs: [content, capture]
+    if: always() && needs.content.result != 'skipped'
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
@@ -277,7 +428,7 @@ jobs:
       - name: Restore the showcase downloads
         uses: ./.github/actions/restore-showcase-downloads
         with:
-          run-id: ${{ needs.build.outputs.downloads-run }}
+          run-id: ${{ needs.content.outputs.downloads-run }}
 
       - name: Download the downloads the jobs used
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2

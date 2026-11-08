@@ -51,24 +51,56 @@ export interface GutenbergWork extends WorkBase {
   cover?: CoverDefinition;
 }
 
-export interface FilmWork extends WorkBase {
-  kind: "film";
+/** One version of a video, which the player's settings offer by its server and quality. */
+export interface VideoVersion {
+  server: string;
+  quality: string;
+  /** A video that answers byte ranges, since it is streamed to the player rather than downloaded. */
+  url: string;
+}
+
+interface VideoWorkBase extends WorkBase {
   title: string;
   author: string;
   artist: string;
-  released: string;
   description: string;
   genres: string[];
   license: License;
   attribution: string;
-  /** A WebM or MP4 that answers byte ranges, since it is streamed to the player rather than downloaded. */
-  video: { url: string };
-  /**
-   * The stretch of the film a scene plays, in seconds, which fetch.ts downloads ahead of the run with the WebM's header
-   * and ending, so the player waits on no upstream site during the scene. The rest is streamed only if asked for.
-   */
-  played?: { from: number; to: number };
   cover: CoverDefinition;
 }
 
-export type WorkDefinition = PepperCarrotWork | GutenbergWork | FilmWork;
+/**
+ * The stretch of a video a scene plays, in seconds, which fetch.ts downloads ahead of the run with the WebM's header and
+ * ending, so the player waits on no upstream site during the scene. The rest is streamed only if asked for.
+ */
+export interface PlayedStretch {
+  from: number;
+  to: number;
+}
+
+export interface FilmWork extends VideoWorkBase {
+  kind: "film";
+  released: string;
+  /** The film's versions; the player opens the first, so it is the only one a scene plays. */
+  versions: VideoVersion[];
+  played?: PlayedStretch;
+}
+
+export interface SeriesEpisode {
+  name: string;
+  released: string;
+  summary: string;
+  /** An image of a moment of the episode, which the episode list shows beside it. */
+  still: string;
+  versions: VideoVersion[];
+  played?: PlayedStretch;
+}
+
+export interface SeriesWork extends VideoWorkBase {
+  kind: "series";
+  /** Numbered from 1 in this order. */
+  episodes: SeriesEpisode[];
+}
+
+export type WorkDefinition = PepperCarrotWork | GutenbergWork | FilmWork | SeriesWork;

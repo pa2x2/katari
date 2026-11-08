@@ -2,11 +2,13 @@ package app.katari.showcase.capture.library
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.openTab
 import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,6 +22,18 @@ class EntryScenes {
         tap(By.textContains("since"))
         find(By.text("Your activity"))
         capture("entry-activity")
+    }
+
+    /** Caminandes, from its source, with its episodes' stills and summaries. */
+    @Test
+    fun episodes() {
+        openProfile("Personal")
+        openTab(HomeTab.Browse)
+        tap(By.text("Sources"))
+        tap(By.text("Blender Studio"))
+        tap(By.text("Caminandes"))
+        find(By.text("Llama Drama"))
+        capture("episodes")
     }
 
     @Test
