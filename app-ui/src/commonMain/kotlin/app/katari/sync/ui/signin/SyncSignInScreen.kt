@@ -96,8 +96,9 @@ class SyncSignInScreen(
         // Back from the server's web page, where an empty server's admin account is made, the server can sign in now
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.recheckAddress() }
         val addressFocus = remember { FocusRequester() }
-        // The keyboard opens in the address field once, not each time the field scrolls back into view
-        var addressFocused by rememberSaveable { mutableStateOf(false) }
+        // The keyboard opens in the address field once, not each time the field scrolls back into view, and not when
+        // the address came filled in, such as from an invite's QR code
+        var addressFocused by rememberSaveable { mutableStateOf(server != null) }
 
         val joining = join == SyncJoinViewModel.JoinState.Joining
         val serverReady = (check as? AddressCheck.Checked)?.check is ServerCheck.Ready
