@@ -75,7 +75,7 @@ internal class SpeechDispatcherEngine(
         when (val voices = voiceCatalog(forceRefresh = false)) {
             is CatalogResult.Listed -> TtsEngineDeviceAvailability.Available
             is CatalogResult.Unavailable -> when (val problem = voices.problem) {
-                SpeechDispatcherProblem.NotInstalled -> TtsEngineDeviceAvailability.NotInstalled
+                SpeechDispatcherProblem.NotInstalled -> TtsEngineDeviceAvailability.NotInstalled(problem.message)
                 SpeechDispatcherProblem.NoVoices -> TtsEngineDeviceAvailability.VoiceDataRequired(problem.message)
                 else -> TtsEngineDeviceAvailability.Unavailable(problem.message)
             }

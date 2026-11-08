@@ -13,6 +13,7 @@ import mihon.tts.api.playback.TtsPlaybackFailureReason
 import mihon.tts.api.preparation.TtsPreparation
 import mihon.tts.api.preparation.TtsSystemSetupReason
 import mihon.tts.api.provider.TtsProviderDisclosure
+import mihon.tts.ui.playback.engineExplanation
 import mihon.tts.ui.settings.TtsPreviewState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -43,19 +44,21 @@ internal fun TtsPreviewStatus(
                 onClick = onOpenSetup,
             )
             else -> TtsPreviewAction(
-                message = stringResource(MR.strings.tts_settings_preview_failed),
+                message = preparation.engineExplanation() ?: stringResource(MR.strings.tts_settings_preview_failed),
                 action = stringResource(MR.strings.action_retry),
                 onClick = onRetry,
             )
         }
         is TtsPreviewState.Failed -> TtsPreviewAction(
-            message = when (preview.reason) {
+            message = when (val reason = preview.reason) {
                 TtsPlaybackFailureReason.AudioFocusUnavailable ->
                     stringResource(MR.strings.tts_settings_audio_focus_unavailable)
                 TtsPlaybackFailureReason.InvalidReadyTts,
                 is TtsPlaybackFailureReason.ProviderFailure,
                 null,
-                -> preview.message ?: stringResource(MR.strings.tts_settings_provider_failed)
+                -> reason?.engineExplanation()
+                    ?: preview.message
+                    ?: stringResource(MR.strings.tts_settings_provider_failed)
             },
             action = stringResource(MR.strings.action_retry),
             onClick = onRetry,

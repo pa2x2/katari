@@ -31,7 +31,8 @@ internal fun TranslatorRoute(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                TranslatorEvent.SpeechFailed -> snackbarHostState.showSnackbar(speechFailureMessage)
+                is TranslatorEvent.SpeechFailed ->
+                    snackbarHostState.showSnackbar(event.explanation ?: speechFailureMessage)
                 TranslatorEvent.SwapUnavailable -> snackbarHostState.showSnackbar(swapUnavailableMessage)
             }
         }

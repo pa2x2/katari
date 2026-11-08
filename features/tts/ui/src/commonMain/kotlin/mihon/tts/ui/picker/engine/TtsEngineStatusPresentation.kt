@@ -57,10 +57,10 @@ private fun TtsEngineStatus.toPresentation(): TtsEngineStatusPresentation {
             StatusTone.Ready,
             null,
         )
-        TtsEngineStatus.NotInstalled -> TtsEngineStatusPresentation(
+        is TtsEngineStatus.NotInstalled -> TtsEngineStatusPresentation(
             TtsEngineStatusLabel.NotInstalled,
             StatusTone.ActionRequired,
-            null,
+            reason,
         )
         is TtsEngineStatus.ConfigurationRequired -> TtsEngineStatusPresentation(
             TtsEngineStatusLabel.SetupRequired,

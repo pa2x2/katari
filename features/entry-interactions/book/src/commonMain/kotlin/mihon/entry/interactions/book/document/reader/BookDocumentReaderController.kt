@@ -38,7 +38,6 @@ import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
 import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
-import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
@@ -47,6 +46,7 @@ import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
@@ -560,18 +560,18 @@ internal class BookDocumentReaderController(
         )
     }
 
-    private fun showSpeechFailure(failure: BookShortFormSpeechFailure) {
+    private fun showSpeechFailure(failure: ShortFormSpeechFailure) {
         val message = when (failure) {
-            BookShortFormSpeechFailure.LanguageUnavailable ->
+            ShortFormSpeechFailure.LanguageUnavailable ->
                 MR.strings.book_reader_selection_speech_language_unavailable
-            BookShortFormSpeechFailure.ConfigurationRequired ->
+            ShortFormSpeechFailure.ConfigurationRequired ->
                 MR.strings.book_reader_selection_speech_configuration_required
-            BookShortFormSpeechFailure.Unavailable ->
+            is ShortFormSpeechFailure.Unavailable ->
                 MR.strings.book_reader_selection_speech_unavailable
-            BookShortFormSpeechFailure.PlaybackFailed ->
+            is ShortFormSpeechFailure.PlaybackFailed ->
                 MR.strings.book_reader_selection_speech_failed
         }
-        host.showMessage(host.context.stringResource(message))
+        host.showMessage(failure.explanation ?: host.context.stringResource(message))
     }
 
     private fun updateSystemBars() {

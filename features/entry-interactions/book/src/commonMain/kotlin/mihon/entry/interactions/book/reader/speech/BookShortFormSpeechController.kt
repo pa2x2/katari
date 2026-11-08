@@ -14,7 +14,6 @@ import mihon.tts.ui.playback.ShortFormSpeechState
 internal typealias BookShortFormSpeechPhase = ShortFormSpeechPhase
 internal typealias BookShortFormSpeechRequest = ShortFormSpeechRequest<BookShortFormSpeechOwner>
 internal typealias BookShortFormSpeechState = ShortFormSpeechState<BookShortFormSpeechOwner>
-internal typealias BookShortFormSpeechFailure = ShortFormSpeechFailure
 
 internal sealed interface BookShortFormSpeechOwner {
     data class Selection(val identity: String) : BookShortFormSpeechOwner
@@ -27,7 +26,7 @@ internal sealed interface BookShortFormSpeechOwner {
 internal class BookShortFormSpeechController(
     feature: TtsFeature,
     scope: CoroutineScope,
-    onFailure: (BookShortFormSpeechFailure) -> Unit,
+    onFailure: (ShortFormSpeechFailure) -> Unit,
     onLanguageResolved: (LanguageTag) -> Unit = {},
 ) : AutoCloseable {
     private val delegate = ShortFormSpeechController<BookShortFormSpeechOwner>(

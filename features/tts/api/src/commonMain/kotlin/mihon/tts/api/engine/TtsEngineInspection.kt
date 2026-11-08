@@ -23,7 +23,14 @@ sealed interface TtsEngineStatus {
 
     data object Ready : TtsEngineStatus
 
-    data object NotInstalled : TtsEngineStatus
+    /** [reason] tells the user what to install, when the engine knows. */
+    data class NotInstalled(
+        val reason: String? = null,
+    ) : TtsEngineStatus {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
 
     data class ConfigurationRequired(
         val reason: String,

@@ -47,11 +47,19 @@ data class ShortFormSpeechState<Owner : Any>(
     }
 }
 
-enum class ShortFormSpeechFailure {
-    LanguageUnavailable,
-    ConfigurationRequired,
-    Unavailable,
-    PlaybackFailed,
+/** Why speech didn't play. */
+sealed interface ShortFormSpeechFailure {
+    /** The engine's own words for the user, which a surface shows in place of its general message; null without. */
+    val explanation: String?
+        get() = null
+
+    data object LanguageUnavailable : ShortFormSpeechFailure
+
+    data object ConfigurationRequired : ShortFormSpeechFailure
+
+    data class Unavailable(override val explanation: String?) : ShortFormSpeechFailure
+
+    data class PlaybackFailed(override val explanation: String?) : ShortFormSpeechFailure
 }
 
 class ShortFormSpeechController<Owner : Any>(
@@ -116,7 +124,7 @@ class ShortFormSpeechController<Owner : Any>(
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                fail(activeGeneration, ShortFormSpeechFailure.PlaybackFailed)
+                fail(activeGeneration, ShortFormSpeechFailure.PlaybackFailed(explanation = null))
             }
         }
     }
@@ -131,7 +139,10 @@ class ShortFormSpeechController<Owner : Any>(
         when (val start = feature.play(preparation.speech)) {
             is TtsPlaybackStart.Started -> observe(start.session, owner, activeGeneration)
             is TtsPlaybackStart.PreparationChanged -> fail(activeGeneration, start.preparation.failure())
-            is TtsPlaybackStart.Failed -> fail(activeGeneration, ShortFormSpeechFailure.PlaybackFailed)
+            is TtsPlaybackStart.Failed -> fail(
+                activeGeneration,
+                ShortFormSpeechFailure.PlaybackFailed(start.reason.engineExplanation()),
+            )
         }
     }
 
@@ -155,7 +166,10 @@ class ShortFormSpeechController<Owner : Any>(
                 TtsPlaybackState.Completed,
                 is TtsPlaybackState.Stopped,
                 -> finish(activeGeneration)
-                is TtsPlaybackState.Failed -> fail(activeGeneration, ShortFormSpeechFailure.PlaybackFailed)
+                is TtsPlaybackState.Failed -> fail(
+                    activeGeneration,
+                    ShortFormSpeechFailure.PlaybackFailed(playback.reason.engineExplanation()),
+                )
             }
         }
     }
@@ -215,6 +229,6 @@ private fun TtsPreparation.failure(): ShortFormSpeechFailure = when (this) {
     -> ShortFormSpeechFailure.ConfigurationRequired
     is TtsPreparation.Rejected,
     is TtsPreparation.Unavailable,
-    -> ShortFormSpeechFailure.Unavailable
+    -> ShortFormSpeechFailure.Unavailable(engineExplanation())
     is TtsPreparation.Ready -> error("Ready speech is not a failure")
 }
