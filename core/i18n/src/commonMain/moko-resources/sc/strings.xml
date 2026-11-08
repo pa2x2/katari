@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Partzi sas pàginas largas</string>
     <string name="pref_dual_page_invert_summary">Si sa positzione de sas pàginas largas partzidas non currispondet a sa diretzione de leghidura</string>
     <string name="pref_dual_page_invert">Fùrria su positzionamentu de sas pàginas partzidas</string>
-    <string name="backup_restore_content_full">A pustis dias pòdere dèpere installare sas estensiones chi mancant e atzèdere a sos servìtzios de arrastamentu pro los pòdere impreare.</string>
+    <string name="backup_restore_content_full">A pustis dias pòdere dèpere installare sas estensiones chi mancant pro las pòdere impreare.</string>
     <string name="nav_zone_right">Destra</string>
     <string name="nav_zone_left">Manca</string>
     <string name="nav_zone_next">Imbeniente</string>
@@ -666,7 +666,7 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Èvita interrutziones a agiornamentos longos de sa biblioteca, iscarrigamentos, e riprìstinos de còpias de seguresa.</string>
     <string name="onboarding_permission_action_grant">Fruni</string>
     <string name="theme_nord">Nord</string>
-    <string name="private_settings">Include impostatziones sensìbiles ( a es. getones de intrada a sos arrastadores)</string>
+    <string name="private_settings">Include impostatziones sensìbiles (a es. getones de intrada)</string>
     <string name="manga_interval_expected_update_soon">Luego</string>
     <string name="action_add_anyway">Annanghe su matessi</string>
     <string name="pref_webtoon_disable_zoom_out">Istuda sa ridutzione de ismanniada</string>

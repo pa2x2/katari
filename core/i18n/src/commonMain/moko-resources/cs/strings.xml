@@ -313,7 +313,7 @@
     <string name="creating_backup_error">Zálohování selhalo</string>
     <string name="backup_in_progress">Zálohování již probíhá</string>
     <string name="restore_duration">%1$02d min, %2$02d s</string>
-    <string name="backup_restore_content_full">Budeš poté muset doinstalovat jakékoliv chybějící rozšíření a přihlásit se do sledovacích služeb pro jejich použití.</string>
+    <string name="backup_restore_content_full">Budeš poté muset doinstalovat jakékoliv chybějící rozšíření pro jejich použití.</string>
     <string name="backup_restore_missing_sources">Chybějící zdroje:</string>
     <string name="invalid_backup_file_missing_manga">Záloha neobsahuje žádné položky knihovny.</string>
     <string name="invalid_backup_file">Neplatný soubor se zálohou:</string>
@@ -657,7 +657,7 @@
     <string name="no_location_set">Není nastaveno umístění úložiště</string>
     <string name="onboarding_permission_notifications_description">Buďte upozorněni na aktualizaci knihovny atd.</string>
     <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
-    <string name="private_settings">Zahrnout citlivé nastavení (např. přihlašovací tokeny sledovačů)</string>
+    <string name="private_settings">Zahrnout citlivé nastavení (např. přihlašovací tokeny)</string>
     <string name="onboarding_permission_action_grant">Udělit</string>
     <string name="onboarding_storage_folder_info">Vyberte složku, kde %1$s bude ukládat stahování kapitol, zálohy a další. \n \nJe doporučena vyhrazená složka.</string>
     <string name="onboarding_storage_selected_folder">Vybraná složka: %s</string>

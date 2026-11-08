@@ -396,7 +396,7 @@
     <string name="pref_dual_page_invert_summary">分割された幅広いページの配置が読む方向と一致しない場合は有効にしてください</string>
     <string name="pref_dual_page_invert">分割ページの配置を反転</string>
     <string name="pref_dual_page_split">幅広いページの分割</string>
-    <string name="backup_restore_content_full">後で手動で必要な拡張機能をインストールし、使用したい追跡サービスにログインしてください。</string>
+    <string name="backup_restore_content_full">後で手動で必要な拡張機能をインストールしてください。</string>
     <string name="nav_zone_right">右</string>
     <string name="nav_zone_left">左</string>
     <string name="nav_zone_next">次へ</string>
@@ -664,7 +664,7 @@
     <string name="ext_permission_install_apps_warning">拡張機能をインストールするためには権限が必要です。タップで許可してください。</string>
     <string name="manga_interval_custom_amount">カスタム更新頻度：</string>
     <string name="onboarding_storage_help_action">ストレージ ガイド</string>
-    <string name="private_settings">トラッカーログイン情報などの機密性の高い情報を含む</string>
+    <string name="private_settings">ログイントークンなどの機密性の高い情報を含む</string>
     <string name="manga_interval_expected_update_soon">間もなく</string>
     <string name="ext_revoke_trust">不明な拡張機能の信頼を取り消す</string>
     <string name="onboarding_storage_help_info">古いバージョンからアップデートする場合で、どのオプションを選択すればよいか分からない場合は、ストレージ ガイドを参照してください。</string>

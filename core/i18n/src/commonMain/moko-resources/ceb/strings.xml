@@ -328,7 +328,7 @@
     <string name="backup_in_progress">Ang pag-backup nagpadayon na</string>
     <string name="restore_duration">%1$02d minuto , %2$02d ikaduha</string>
     <string name="backup_choice">Unsa ang gusto nimo i-backup?</string>
-    <string name="backup_restore_content_full">Ang datos gikan sa backup file mapasig-uli. \n \nKinahanglan nimo nga i-install ang bisan unsang nawala nga mga extension ug mag-log in sa mga serbisyo sa pagsubay pagkahuman aron magamit kini.</string>
+    <string name="backup_restore_content_full">Ang datos gikan sa backup file mapasig-uli. \n \nKinahanglan nimo nga i-install ang bisan unsang nawala nga mga extension pagkahuman aron magamit kini.</string>
     <string name="restore_completed">Nakompleto ang pag-uli</string>
     <string name="creating_backup">Paghimo og backup</string>
     <string name="restoring_backup">Pag-uli sa backup</string>

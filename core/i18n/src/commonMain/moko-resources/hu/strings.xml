@@ -410,7 +410,7 @@
     <string name="pref_landscape_zoom">Automatikusan nagyítsa a széles képeket</string>
     <string name="restore_completed">Helyreállítás befejeződött</string>
     <string name="restore_duration">%1$02d perc, %2$02d mp.</string>
-    <string name="backup_restore_content_full">Előfordulhat, hogy telepítenie kell a hiányzó bővítményeket, majd később be kell jelentkeznie a nyilvántartási szolgáltatásokba a használatukhoz.</string>
+    <string name="backup_restore_content_full">Előfordulhat, hogy később telepítenie kell a hiányzó bővítményeket a használatukhoz.</string>
     <string name="pref_refresh_library_covers">Könyvtár fedők frissítése</string>
     <string name="pref_dump_crash_logs">Hibaüzenetetek törlése</string>
     <string name="pref_reset_viewer_flags">Sorozat beállításainak visszaállítása</string>
@@ -661,7 +661,7 @@
     <string name="day_short">%d nap</string>
     <string name="hour_short">%d óra</string>
     <string name="theme_nord">Nord</string>
-    <string name="private_settings">Érzékeny beállítások megadása (Pl. szolgáltatások bejelentkezési tokenei)</string>
+    <string name="private_settings">Érzékeny beállítások megadása (Pl. bejelentkezési tokenek)</string>
     <string name="pref_invalidate_download_cache">Letöltések újraindexelése</string>
     <string name="manga_interval_expected_update">Új fejezetek megjelenése %1$s múlva várható, frissítési időköz: %2$s.</string>
     <string name="pref_webtoon_disable_zoom_out">Kicsinyítés letiltása</string>

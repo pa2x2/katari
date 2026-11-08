@@ -73,7 +73,7 @@
     <string name="last_read_chapter">கடைசியாக படித்த அத்தியாயம்</string>
     <string name="second_to_last">இரண்டாவது முதல் கடைசியாக படிக்க அத்தியாயம்</string>
     <string name="third_to_last">மூன்றாவது முதல் கடைசியாக படிக்க அத்தியாயம்</string>
-    <string name="private_settings">உணர்திறன் அமைப்புகளைச் சேர்க்கவும் (எ.கா., டிராக்கர் உள்நுழைவு டோக்கன்கள்)</string>
+    <string name="private_settings">உணர்திறன் அமைப்புகளைச் சேர்க்கவும் (எ.கா., உள்நுழைவு டோக்கன்கள்)</string>
     <string name="non_library_settings">உள்ளீடுகள் அனைத்தும்</string>
     <string name="creating_backup">காப்புப்பிரதியை உருவாக்குதல்</string>
     <string name="creating_backup_error">காப்புப்பிரதி தோல்வியடைந்தது</string>
@@ -456,7 +456,7 @@
     <string name="invalid_backup_file_json">சாதொபொகு காப்புப்பிரதி ஆதரிக்கப்படவில்லை</string>
     <string name="invalid_backup_file_unknown">காப்பு கோப்பு சிதைந்துள்ளது</string>
     <string name="backup_restore_missing_sources">ஆதாரங்களைக் காணவில்லை:</string>
-    <string name="backup_restore_content_full">நீங்கள் காணாமல் போன நீட்டிப்புகளை நிறுவ வேண்டும், பின்னர் அவற்றைப் பயன்படுத்த கண்காணிப்பு சேவைகளில் உள்நுழைய வேண்டும்.</string>
+    <string name="backup_restore_content_full">காணாமல் போன நீட்டிப்புகளைப் பயன்படுத்த, பின்னர் நீங்கள் அவற்றை நிறுவ வேண்டியிருக்கலாம்.</string>
     <string name="restore_completed">மீட்டமை முடிந்தது</string>
     <string name="restore_duration">%1$02d மணித்துளி, %2$02d நொடி</string>
     <string name="backup_in_progress">காப்புப்பிரதி ஏற்கனவே நடந்து வருகிறது</string>

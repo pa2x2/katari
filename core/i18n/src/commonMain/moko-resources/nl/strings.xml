@@ -394,7 +394,7 @@
     <string name="action_display_show_number_of_items">Aantal items tonen</string>
     <string name="right_and_left_nav">Rechts en links</string>
     <string name="pref_dual_page_split">Brede pagina\'s opsplitsen</string>
-    <string name="backup_restore_content_full">Je zal mogelijk missende extensies opnieuw moeten installeren en opnieuw moeten inloggen bij trackingdiensten om deze weer te gebruiken.</string>
+    <string name="backup_restore_content_full">Je zal mogelijk missende extensies opnieuw moeten installeren om deze weer te gebruiken.</string>
     <string name="nav_zone_right">Rechts</string>
     <string name="nav_zone_left">Links</string>
     <string name="nav_zone_next">Volgende</string>
@@ -708,7 +708,7 @@
     <string name="pref_disallow_non_ascii_filenames_details">Verzekert compatibiliteit met bepaalde opslagmedia die Unicode niet ondersteunen. Wanneer dit is ingeschakeld moet je manueel bron- en mangamappen hernoemen door niet-ASCII-tekens te vervangen met hun UTF-8 hexadecimale representaties in kleine letters. Hoofdstukbestanden moeten niet hernoemd worden.</string>
     <string name="storage_failed_to_create_download_directory">Downloadmap kon niet worden aangemaakt</string>
     <string name="storage_failed_to_create_directory">Map kon niet worden aangemaakt: %s</string>
-    <string name="private_settings">Voeg gevoelige intellingen toe (bijv. logintokens voor trackers)</string>
+    <string name="private_settings">Voeg gevoelige instellingen toe (bijv. logintokens)</string>
     <string name="export">Exporteren</string>
     <string name="library_list">Bibliotheeklijst</string>
     <string name="library_exported">Bibliotheek geëxporteerd</string>

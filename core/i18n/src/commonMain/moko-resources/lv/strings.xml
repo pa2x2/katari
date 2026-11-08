@@ -154,7 +154,7 @@
     <string name="pref_category_delete_chapters">Izdzēst nodaļas</string>
     <string name="pref_category_auto_download">Automātiska lejupielāde</string>
     <string name="pref_restore_backup">Atjaunot dublējumu</string>
-    <string name="backup_restore_content_full">Dublējuma faila dati tiks atjaunoti. \n \nJums būs jāinstalē visi trūkstošie paplašinājumi un jāpiesakās izsekošanas pakalpojumos, lai tos izmantotu.</string>
+    <string name="backup_restore_content_full">Dublējuma faila dati tiks atjaunoti. \n \nJums pēc tam būs jāinstalē visi trūkstošie paplašinājumi, lai tos izmantotu.</string>
     <string name="unread">Neizlasītie</string>
     <string name="all">Visi</string>
     <string name="ext_update">Atjauninājums</string>

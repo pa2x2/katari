@@ -393,7 +393,7 @@
     <string name="action_order_by_chapter_number">अध्याय संख्या से</string>
     <string name="action_order_by_upload_date">अपलोड तिथि से</string>
     <string name="action_display_show_number_of_items">वस्तुओं की संख्या दिखाएं</string>
-    <string name="backup_restore_content_full">आपको किसी भी गायब एक्सटेंशनों को स्थापित करने की आवश्यकता हो सकती है और उन्हें उपयोग करने के लिए बाद में ट्रैकिंग सेवाओं में लॉग इन करना पड़ सकता है।</string>
+    <string name="backup_restore_content_full">आपको उन्हें उपयोग करने के लिए बाद में किसी भी गायब एक्सटेंशनों को स्थापित करने की आवश्यकता हो सकती है।</string>
     <string name="pref_dual_page_invert_summary">यदि स्प्लिट वाइड पेजों का प्लेसमेंट पढ़ने की दिशा से मेल नहीं खाता है</string>
     <string name="pref_dual_page_invert">स्प्लिट पेज प्लेसमेंट को उल्टा करें</string>
     <string name="pref_dual_page_split">चौड़े पृष्ठ को दो भागों में बांट दे</string>
@@ -664,7 +664,7 @@
     <string name="invalid_backup_file_unknown">बैकअप फ़ाइल भ्रष्ट हो गई है</string>
     <string name="app_settings">ऐप सेटिंग्स</string>
     <string name="source_settings">स्रोत सेटिंग्स</string>
-    <string name="private_settings">संवेदनशील सेटिंग्स शामिल करें (जैसे, ट्रैकर लॉगिन टोकन)</string>
+    <string name="private_settings">संवेदनशील सेटिंग्स शामिल करें (जैसे, लॉगिन टोकन)</string>
     <string name="non_library_settings">सभी पढ़ी गई प्रविष्टियाँ</string>
     <string name="missing_storage_permission">स्टोरेज अनुमति नहीं मिली है</string>
     <string name="create_backup_file_error">बैकअप फ़ाइल बनाने में असमर्थ</string>

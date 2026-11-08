@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Geniş sayfaları böl</string>
     <string name="pref_dual_page_invert_summary">Bölünmüş geniş sayfaların sırası okuma yönüyle uyuşmuyorsa</string>
     <string name="pref_dual_page_invert">Bölünmüş sayfa sırasını ters çevir</string>
-    <string name="backup_restore_content_full">Daha sonra kullanmak için eksik uzantıları yüklemeniz ve izleyici hizmetlerinde oturum açmanız gerekebilir.</string>
+    <string name="backup_restore_content_full">Daha sonra kullanmak için eksik uzantıları yüklemeniz gerekebilir.</string>
     <string name="nav_zone_right">Sağ</string>
     <string name="nav_zone_left">Sol</string>
     <string name="nav_zone_next">Sonraki</string>
@@ -660,7 +660,7 @@
     <string name="onboarding_permission_action_grant">İzin Ver</string>
     <string name="available_disk_space_info">Kullanılabilir: %1$s / Toplam: %2$s</string>
     <string name="ext_permission_install_apps_warning">Uzantıları yüklemek için izin gerekli. İzin vermek için buraya dokunun.</string>
-    <string name="private_settings">Hassas ayarları dahil et (örn. izleyici oturum açma bilgileri)</string>
+    <string name="private_settings">Hassas ayarları dahil et (örn. oturum açma bilgileri)</string>
     <string name="manga_interval_expected_update">Sonraki bölümlerin %1$s içinde yayınlanacağı tahmin ediliyor, her %2$s içinde bir kontrol ediliyor.</string>
     <string name="invalid_backup_file_error">Tüm hata:</string>
     <string name="onboarding_storage_help_action">Depolama kılavuzu</string>

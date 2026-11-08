@@ -289,7 +289,7 @@
     <string name="scale_type_fit_width">फिट चौडाइ</string>
     <string name="invalid_backup_file">अवैध ब्याकअप फाइल:</string>
     <string name="backup_created">ब्याकअप सिर्जना गरियो</string>
-    <string name="backup_restore_content_full">तपाईंले कुनै पनि छुटेको एक्सटेन्शनहरू स्थापना गर्न र तिनीहरूलाई प्रयोग गर्न पछि ट्र्याकिङ सेवाहरूमा लगइन गर्न आवश्यक हुनेछ।</string>
+    <string name="backup_restore_content_full">तपाईंले तिनीहरूलाई प्रयोग गर्न पछि कुनै पनि छुटेको एक्सटेन्शनहरू स्थापना गर्न आवश्यक हुनेछ।</string>
     <string name="restore_in_progress">रिस्टोर पहिले नै प्रगतिमा छ</string>
     <string name="label_network">नेटवर्किङ</string>
     <string name="restoring_backup_error">ब्याकअप रिस्टोर असफल भयो</string>
@@ -668,7 +668,7 @@
     <string name="pref_storage_location_info">स्वचालित ब्याकअप, अध्याय डाउनलोड, र स्थानीय स्रोतको लागि प्रयोग गरिन्छ।</string>
     <string name="action_create">सिर्जना गर्नुहोस्</string>
     <string name="invalid_backup_file_error">पूर्ण त्रुटि:</string>
-    <string name="private_settings">संवेदनशील सेटिंग्स समावेश गर्नुहोस् (जस्तै, ट्र्याकर लगइन टोकनहरू)</string>
+    <string name="private_settings">संवेदनशील सेटिंग्स समावेश गर्नुहोस् (जस्तै, लगइन टोकनहरू)</string>
     <string name="pref_webtoon_disable_zoom_out">जूम आउट असक्षम गर्नुहोस्</string>
     <string name="action_add_anyway">जे भए पनि थप्नुहोस्</string>
     <string name="pref_display_profile">कस्टम प्रदर्शन प्रोफाइल</string>

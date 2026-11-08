@@ -608,9 +608,9 @@
     <string name="pref_user_agent_string">Defaŭlta ĉeno por \"user agent\"</string>
     <string name="syncing_library">Biblioteka sinkronigo</string>
     <string name="pref_storage_location">Konserveja loko</string>
-    <string name="backup_restore_content_full">Vi devos instali mankantajn etendaĵojn kaj ensaluti al sekvadaj servoj poste por uzi ilin.</string>
+    <string name="backup_restore_content_full">Vi devos instali mankantajn etendaĵojn poste por uzi ilin.</string>
     <string name="pref_reset_user_agent_string">Restarigi defaŭltan ĉenon por \"user agent\"</string>
-    <string name="private_settings">Inkluzivi konfidencajn agordojn (ekz. ensalutajn ĵetonojn de sekvilo)</string>
+    <string name="private_settings">Inkluzivi konfidencajn agordojn (ekz. ensalutajn ĵetonojn)</string>
     <string name="pref_storage_usage">Konserveja uzo</string>
     <string name="error_user_agent_string_blank">Ĉeno por \"user agent\" ne povas malpleni</string>
     <string name="error_user_agent_string_invalid">Nevalida ĉeno por \"user agent\"</string>

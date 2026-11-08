@@ -372,7 +372,7 @@
     <string name="pref_hide_threshold">Citlivosť pre skrytie ponuky pri posúvaní</string>
     <string name="page_list_empty_error">Nenašli sa žiadne stránky</string>
     <string name="pref_low">Nízke</string>
-    <string name="backup_restore_content_full">Údaje zo záložného súboru sa obnovia. \n \nBudete musieť nainštalovať všetky chýbajúce rozšírenia a potom sa prihlásiť do sledovacích služieb, aby ste ich mohli používať.</string>
+    <string name="backup_restore_content_full">Údaje zo záložného súboru sa obnovia. \n \nBudete musieť potom nainštalovať všetky chýbajúce rozšírenia, aby ste ich mohli používať.</string>
     <string name="pref_reset_viewer_flags_error">Nepodarilo sa obnoviť nastavenia čítačky</string>
     <string name="pref_tablet_ui_mode">Používateľské rozhranie tabletu</string>
     <string name="manga_from_library">Manga z knižnice</string>
@@ -607,7 +607,7 @@
     <string name="onboarding_permission_action_grant">Povoliť</string>
     <string name="pref_appearance_summary">Téma, dátum a formát času</string>
     <string name="upcoming_guide">Príručka pre nadchádzajúce</string>
-    <string name="private_settings">Zahrnúť citlivé nastavenia (napr. prihlasovacie údaje do sledovačov)</string>
+    <string name="private_settings">Zahrnúť citlivé nastavenia (napr. prihlasovacie údaje)</string>
     <string name="pref_library_summary">Kategórie, globálna aktualizácia, prechádzanie kapitolami</string>
     <string name="pref_reader_summary">Režim čítania, displej, navigácia</string>
     <string name="pref_downloads_summary">Automatické sťahovanie, sťahovanie dopredu</string>

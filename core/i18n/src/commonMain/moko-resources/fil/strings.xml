@@ -404,7 +404,7 @@
     <string name="action_display_show_number_of_items">Ipakita ang bilang ng mga aytem</string>
     <string name="pref_dual_page_invert_summary">Kung sakaling hindi sumasakto sa direksyon ng pagbabasa ang paghahati sa malalapad na pahina</string>
     <string name="pref_dual_page_invert">Baligtarin ang paghahati sa pahina</string>
-    <string name="backup_restore_content_full">Kailangan mong i-install muli ang mga nawawalang extension at mag-login muli sa mga tracker pagkatapos para magamit ang mga ito.</string>
+    <string name="backup_restore_content_full">Kailangan mong i-install muli ang mga nawawalang extension pagkatapos para magamit ang mga ito.</string>
     <string name="pref_dns_over_https">DNS kesa HTTPS (DoH)</string>
     <string name="pref_download_new_categories_details">Ang mga entry sa mga ibinukod na kategorya ay hindi mada-download kahit na sila ay kasama rin sa mga kategoryang kasama.</string>
     <string name="pref_category_auto_download">Awtomatikong pag-download</string>
@@ -682,7 +682,7 @@
     <string name="manga_interval_expected_update">Mga bagong kabanata na nahulaang ilalabas sa loob ng %1$s, na tumitingin bawat %2$s.</string>
     <string name="invalid_backup_file_error">Buong error:</string>
     <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
-    <string name="private_settings">Kasali ang mga sensitibong setting (hal., mga tracker login token)</string>
+    <string name="private_settings">Kasali ang mga sensitibong setting (hal., mga login token)</string>
     <string name="onboarding_storage_help_info">Nag-a-update mula sa isang mas lumang bersyon at hindi sigurado kung ano ang pipiliin? Sumangguni sa gabay sa storage para sa higit pang impormasyon.</string>
     <string name="onboarding_storage_help_action">Gabay sa storage</string>
     <string name="manga_interval_custom_amount">Custom na frequency sa pag-update:</string>

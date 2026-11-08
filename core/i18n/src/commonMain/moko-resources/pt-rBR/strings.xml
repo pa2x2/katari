@@ -404,7 +404,7 @@
     <string name="pref_dual_page_split">Dividir as páginas longas</string>
     <string name="pref_dual_page_invert_summary">Se a posição das páginas longas divididas não se adequar ao modo de leitura</string>
     <string name="pref_dual_page_invert">Inverter a posição das páginas divididas</string>
-    <string name="backup_restore_content_full">Você precisará instalar quaisquer extensões que estejam faltando e depois realizar o login nos serviços de monitoramento para utilizá-los.</string>
+    <string name="backup_restore_content_full">Você precisará instalar depois quaisquer extensões que estejam faltando para utilizá-las.</string>
     <string name="pref_show_navigation_mode_summary">Mostra rapidamente quando o leitor for aberto</string>
     <string name="pref_show_navigation_mode">Mostrar a sobreposição das zonas de toque</string>
     <string name="nav_zone_right">Direita</string>
@@ -683,7 +683,7 @@
     <string name="onboarding_permission_action_grant">Conceder</string>
     <string name="available_disk_space_info">Disponível: %1$s / Total: %2$s</string>
     <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
-    <string name="private_settings">Incluir configurações sensíveis (tokens de login dos monitoradores, por exemplo)</string>
+    <string name="private_settings">Incluir configurações sensíveis (tokens de login, por exemplo)</string>
     <string name="manga_interval_expected_update">Novos capítulos com previsão de serem lançados em torno de %1$s, verificando em torno de cada %2$s.</string>
     <string name="manga_interval_custom_amount">Frequência de atualização personalizada:</string>
     <string name="invalid_backup_file_error">Erro completo:</string>

@@ -404,7 +404,7 @@
     <string name="pref_dual_page_split">Разделение широких страниц</string>
     <string name="pref_dual_page_invert">Разделение широких страниц наоборот</string>
     <string name="pref_dual_page_invert_summary">Если разделение широких страниц не соответствует направлению чтения</string>
-    <string name="backup_restore_content_full">Вам будет нужно установить все недостающие расширения и после этого авторизоваться в сервисах отслеживания для их использования.</string>
+    <string name="backup_restore_content_full">Вам будет нужно после этого установить все недостающие расширения для их использования.</string>
     <string name="nav_zone_left">Слева</string>
     <string name="nav_zone_right">Справа</string>
     <string name="nav_zone_next">Следующая</string>
@@ -674,7 +674,7 @@
     <string name="onboarding_permission_action_grant">Предоставить</string>
     <string name="available_disk_space_info">Доступно: %1$s / Всего: %2$s</string>
     <string name="ext_permission_install_apps_warning">Нужны разрешения для установки расширений. Нажмите сюда, чтобы их предоставить.</string>
-    <string name="private_settings">Включать конфиденциальные настройки (например, токены для входа в службы отслеживания)</string>
+    <string name="private_settings">Включать конфиденциальные настройки (например, токены для входа)</string>
     <string name="invalid_backup_file_error">Полная ошибка:</string>
     <string name="manga_interval_expected_update">Выход новых глав ожидается примерно через %1$s, следующая проверка будет через %2$s.</string>
     <string name="manga_interval_custom_amount">Настраиваемая частота обновления:</string>

@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Dividir as páginas longas</string>
     <string name="pref_dual_page_invert_summary">Se a posição das páginas longas divididas não se adequar ao modo de leitura</string>
     <string name="pref_dual_page_invert">Inverter a posição das páginas divididas</string>
-    <string name="backup_restore_content_full">Pode ter que instalar quaisquer extensões em falta e iniciar a sessão para rastrear os serviços depois de os utilizar.</string>
+    <string name="backup_restore_content_full">Pode ter que instalar depois quaisquer extensões em falta para as utilizar.</string>
     <string name="nav_zone_right">Direita</string>
     <string name="nav_zone_left">Esquerda</string>
     <string name="nav_zone_next">Seguinte</string>
@@ -651,7 +651,7 @@
     <string name="pref_flash_page_summ">Reduz o efeito fantasma em ecrãs de e-ink</string>
     <string name="invalid_backup_file_error">Erro completo:</string>
     <string name="source_settings">Configurações das fontes</string>
-    <string name="private_settings">Incluir configurações sensíveis (tokens de login dos monitoradores, por exemplo)</string>
+    <string name="private_settings">Incluir configurações sensíveis (tokens de login, por exemplo)</string>
     <string name="create_backup_file_error">Não foi possível criar o ficheiro do backup</string>
     <string name="has_results">Há resultados</string>
     <string name="manga_interval_expected_update_soon">Em breve</string>

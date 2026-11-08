@@ -418,7 +418,7 @@
     <string name="pref_dual_page_split">Breite Seiten aufteilen</string>
     <string name="pref_dual_page_invert_summary">Falls die Platzierung der aufgeteilten Seiten nicht mit der Leserichtung übereinstimmt</string>
     <string name="pref_dual_page_invert">Platzierung aufgeteilter Seiten umkehren</string>
-    <string name="backup_restore_content_full">Du musst jegliche fehlende Erweiterungen installieren und dich anschließend bei den Tracking-Anbietern einloggen, um sie zu benutzen.</string>
+    <string name="backup_restore_content_full">Du musst anschließend jegliche fehlende Erweiterungen installieren, um sie zu benutzen.</string>
     <string name="pref_show_navigation_mode_summary">Kurz anzeigen, wenn der Leser geöffnet wird</string>
     <string name="pref_show_navigation_mode">Tippzonen-Overlay anzeigen</string>
     <string name="nav_zone_right">Rechts</string>
@@ -683,7 +683,7 @@
     <string name="onboarding_permission_install_apps_description">Zum Installieren von Quellenerweiterungen.</string>
     <string name="onboarding_permission_notifications_description">Erhalte Benachrichtigungen für Bibliotheksaktualisierungen und mehr.</string>
     <string name="ext_permission_install_apps_warning">Für das Installieren von Erweiterungen sind Berechtigungen erforderlich. Tippe hier, um sie zu gewähren.</string>
-    <string name="private_settings">Sensible Einstellungen einbeziehen (z. B. Login-Token für Tracker)</string>
+    <string name="private_settings">Sensible Einstellungen einbeziehen (z. B. Login-Token)</string>
     <string name="onboarding_permission_action_grant">Zulassen</string>
     <string name="invalid_backup_file_error">Vollständiger Fehler:</string>
     <string name="manga_interval_custom_amount">Benutzerdefinierte Aktualisierungshäufigkeit:</string>

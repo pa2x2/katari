@@ -392,7 +392,7 @@
     <string name="action_order_by_chapter_number">Por número de capítulo</string>
     <string name="action_order_by_upload_date">Por fecha de subida</string>
     <string name="right_and_left_nav">Derecha e izquierda</string>
-    <string name="backup_restore_content_full">Tendrás que instalar las extensiones que falten e iniciar sesión en los servicios de seguimiento para poder usarlos.</string>
+    <string name="backup_restore_content_full">Tendrás que instalar después las extensiones que falten para poder usarlas.</string>
     <string name="clipboard_copy_error">No se pudo copiar al portapapeles</string>
     <string name="pref_dns_over_https">DNS sobre HTTPS (DoH)</string>
     <string name="pref_download_new_categories_details">Los elementos de las categorías excluidas no se descargarán, aunque sí estén en alguna categoría con descargas.</string>
@@ -660,7 +660,7 @@
     <string name="onboarding_permission_action_grant">Conceder</string>
     <string name="available_disk_space_info">Disponible: %1$s / Total: %2$s</string>
     <string name="ext_permission_install_apps_warning">Toca aquí para conceder los permisos necesarios para instalar extensiones.</string>
-    <string name="private_settings">Incluir datos privados, como las claves de inicio de sesión en plataformas de seguimiento</string>
+    <string name="private_settings">Incluir datos privados, como las claves de inicio de sesión</string>
     <string name="invalid_backup_file_error">Descripción completa del problema:</string>
     <string name="manga_interval_expected_update">Se espera que el siguiente número salga en aproximadamente %1$s, la aplicación busca actualizaciones cada %2$s.</string>
     <string name="manga_interval_custom_amount">Frecuencia de actualización personalizada:</string>

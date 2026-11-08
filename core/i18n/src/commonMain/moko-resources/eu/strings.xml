@@ -300,7 +300,7 @@
     <string name="whats_new">Zer dago berri</string>
     <string name="pref_create_backup">Sortu babeskopia</string>
     <string name="backup_restore_missing_sources">Falta diren iturriak:</string>
-    <string name="backup_restore_content_full">Babeskopia fitxategiko datuak berreskuratu egingo dira. \n \nFalta diren luzapenak instalatu eta jarraipen-zerbitzuetan saioa hasi beharko duzu ondoren horiek erabiltzeko.</string>
+    <string name="backup_restore_content_full">Babeskopia fitxategiko datuak berreskuratu egingo dira. \n \nFalta diren luzapenak instalatu beharko dituzu ondoren horiek erabiltzeko.</string>
     <string name="chapter_downloading_progress">Deskargatzen (%1$d/%2$d)</string>
     <string name="chapter_error">Errorea</string>
     <string name="also_set_chapter_settings_for_library">Nire liburutegiko manga guztietan ere aplikatu</string>

@@ -332,7 +332,7 @@
     <string name="tapping_inverted_horizontal">Horizontal</string>
     <string name="nav_zone_left">Esquerda</string>
     <string name="pref_landscape_zoom">Ampliar a imaxe en horizontal</string>
-    <string name="backup_restore_content_full">Pode ser que debas instalar as extensións que falten e iniciar sesión nos servizos de seguimento para usalos.</string>
+    <string name="backup_restore_content_full">Pode ser que debas instalar despois as extensións que falten para usalas.</string>
     <string name="label_data">Datos</string>
     <string name="pref_reset_viewer_flags_success">Restableceuse a configuración do lector</string>
     <string name="publishing_finished">Publicación rematada</string>
@@ -658,7 +658,7 @@
     <string name="relative_time_span_never">Nunca</string>
     <string name="label_upcoming">Proximamente</string>
     <string name="pref_display_profile">Perfil de visualización personalizado</string>
-    <string name="private_settings">Incluír configuracións sensibles (por exemplo, as chaves de inicio de sesión en plataformas de seguimento)</string>
+    <string name="private_settings">Incluír configuracións sensibles (por exemplo, as chaves de inicio de sesión)</string>
     <string name="action_bar_up_description">Navegar arriba</string>
     <string name="library_sync_complete">A biblioteca sincronizouse correctamente</string>
     <string name="intervals_header">Intervalos</string>

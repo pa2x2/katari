@@ -404,7 +404,7 @@
     <string name="pref_dual_page_split">Divideix les pàgines amples</string>
     <string name="pref_dual_page_invert_summary">Si la ubicació de les pàgines amples dividides no encaixa amb la direcció de lectura</string>
     <string name="pref_dual_page_invert">Inverteix la ubicació de la divisió de pàgines</string>
-    <string name="backup_restore_content_full">Caldrà que instal·leu les extensions que manquin i que després inicieu la sessió als serveis de seguiment per a utilitzar-los.</string>
+    <string name="backup_restore_content_full">Caldrà que després instal·leu les extensions que manquin per a utilitzar-les.</string>
     <string name="error_no_match">No s’ha trobat cap coincidència</string>
     <string name="source_unsupported">La font no està suportada</string>
     <string name="unread">No llegit</string>
@@ -676,7 +676,7 @@
     <string name="manga_interval_expected_update">S’ha previst que se’n publicaran nous capítols d’aquí a %1$s, es comprova cada %2$s.</string>
     <string name="invalid_backup_file_error">Error complet:</string>
     <string name="ext_permission_install_apps_warning">Calen permisos per a instal·lar extensions. Premeu aquí per a concedir-les.</string>
-    <string name="private_settings">Inclou-hi configuració sensible (per exemple, testimonis d’autenticació dels serveis de seguiment)</string>
+    <string name="private_settings">Inclou-hi configuració sensible (per exemple, testimonis d’autenticació)</string>
     <string name="onboarding_storage_help_action">Guia d’emmagatzematge</string>
     <string name="onboarding_storage_help_info">Heu actualitzat d’una versió més antiga i no sabeu què heu de seleccionar? Consulteu la guia d’emmagatzematge per a més informació.</string>
     <string name="theme_nord">Nòrdic</string>

@@ -443,14 +443,14 @@
     <string name="invalid_backup_file_json">JSON-фармат рэзервовак не падтрымліваецца</string>
     <string name="invalid_backup_file_unknown">Файл рэзервоўкі пашкоджаны</string>
     <string name="backup_restore_missing_sources">Адсутныя крыніцы:</string>
-    <string name="backup_restore_content_full">Вам можа спатрэбіцца ўсталяваць адсутныя пашырэнні і ўвайсці ў трэкеры для іх выкарыстання.</string>
+    <string name="backup_restore_content_full">Вам можа спатрэбіцца ўсталяваць адсутныя пашырэнні для іх выкарыстання.</string>
     <string name="restore_completed">Аднаўленне завершана</string>
     <string name="restore_duration">%1$02d хв %2$02d сек</string>
     <string name="backup_in_progress">Рэзерваванне ўжо выконваецца</string>
     <string name="backup_choice">Што вы хочаце зарэзерваваць?</string>
     <string name="app_settings">Налады праграмы</string>
     <string name="source_settings">Налады крыніцы</string>
-    <string name="private_settings">Уключаць прыватныя налады (напр., токены трэкераў)</string>
+    <string name="private_settings">Уключаць прыватныя налады (напр., токены ўваходу)</string>
     <string name="non_library_settings">Усе прачытаныя творы</string>
     <string name="creating_backup">Зарэзерваванне</string>
     <string name="creating_backup_error">Памылка рэзервавання</string>

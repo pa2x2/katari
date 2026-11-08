@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Diviser les pages larges</string>
     <string name="pref_dual_page_invert_summary">Si l\'emplacement des pages larges divisées ne correspond pas au sens de lecture</string>
     <string name="pref_dual_page_invert">Inverser le placement des pages divisées</string>
-    <string name="backup_restore_content_full">Vous devrez installer les extensions manquantes et vous connecter ensuite aux services de suivi pour les utiliser.</string>
+    <string name="backup_restore_content_full">Vous devrez ensuite installer les extensions manquantes pour les utiliser.</string>
     <string name="nav_zone_prev">Précédent</string>
     <string name="pref_dns_over_https">DNS sur HTTPS (DoH)</string>
     <string name="nav_zone_right">Droite</string>

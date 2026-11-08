@@ -394,7 +394,7 @@
     <string name="right_and_left_nav">Höger och Vänster</string>
     <string name="action_display_show_number_of_items">Visa antal objekt</string>
     <string name="pref_dual_page_split">Dela upp breda sidor</string>
-    <string name="backup_restore_content_full">Du måste installera eventuella tillägg som saknas och logga in på spårningstjänster efteråt för att kunna använda dem.</string>
+    <string name="backup_restore_content_full">Du måste installera eventuella tillägg som saknas efteråt för att kunna använda dem.</string>
     <string name="nav_zone_right">Höger</string>
     <string name="nav_zone_left">Vänster</string>
     <string name="nav_zone_next">Nästa</string>
@@ -660,7 +660,7 @@
     <string name="onboarding_permission_action_grant">Bevilja</string>
     <string name="available_disk_space_info">Tillgängligt: %1$s / Totalt: %2$s</string>
     <string name="ext_permission_install_apps_warning">Behörigheter krävs för att installera tillägg. Tryck här för att bevilja.</string>
-    <string name="private_settings">Inkludera känsliga inställningar (t.ex. spårningsinloggningstokens)</string>
+    <string name="private_settings">Inkludera känsliga inställningar (t.ex. inloggningstokens)</string>
     <string name="manga_interval_expected_update">Nya kapitel förväntas att släppas varje \"%1$s\", kontrollerar varje \"%2$s\".</string>
     <string name="invalid_backup_file_error">Fullständigt fel:</string>
     <string name="onboarding_storage_help_info">Osäker på vad du ska välja då du uppdaterar från en äldre version? Se lagerhanteringsguiden för mer information.</string>

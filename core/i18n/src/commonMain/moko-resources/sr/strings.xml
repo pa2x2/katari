@@ -373,7 +373,7 @@
     <string name="backup_restore_missing_sources">Недостају извори:</string>
     <string name="invalid_backup_file_missing_manga">Резервна копија не садржи ниједан наслов.</string>
     <string name="label_network">Мрежа</string>
-    <string name="backup_restore_content_full">Подаци из датотеке резервне копије ће бити враћени. \n \nМораћете да инсталирате све додатке које недостају и да се после тога пријавите на пратиоце да бисте их користили.</string>
+    <string name="backup_restore_content_full">Подаци из датотеке резервне копије ће бити враћени. \n \nМораћете после тога да инсталирате све додатке које недостају да бисте их користили.</string>
     <string name="help_translate">Помозите у превођењу</string>
     <string name="pref_dump_crash_logs">Дели извештаје о паду</string>
     <string name="pref_verbose_logging_summary">Исписуј детаљне извештаје у системски дневник (смањује перформансе апликације)</string>
@@ -631,7 +631,7 @@
     <string name="manga_interval_expected_update">Предвиђа се да ће нова поглавља изаћи за %1$s, проверава се сваких %2$s.</string>
     <string name="manga_interval_expected_update_soon">Ускоро</string>
     <string name="available_disk_space_info">Доступно: %1$s / Укупно: %2$s</string>
-    <string name="private_settings">Укључи и осетљива подешавања (нпр. токени за пријаву у пратиоце)</string>
+    <string name="private_settings">Укључи и осетљива подешавања (нпр. токени за пријаву)</string>
     <string name="onboarding_storage_action_select">Изабери путању</string>
     <string name="onboarding_action_finish">Започни</string>
     <string name="onboarding_storage_selection_required">Мораш да изабереш једну путању</string>

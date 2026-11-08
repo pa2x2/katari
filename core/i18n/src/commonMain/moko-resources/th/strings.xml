@@ -401,7 +401,7 @@
     <string name="creating_backup_error">การสำรองข้อมูลล้มเหลว</string>
     <string name="backup_in_progress">การสำรองข้อมูลกําลังดําเนินการอยู่แล้ว</string>
     <string name="restore_duration">%1$02d นาที %2$02d วินาที</string>
-    <string name="backup_restore_content_full">คุณจะต้องติดตั้งส่วนขยายที่ขาดหายไปและลงชื่อเข้าใช้บริการติดตามจึงจะสามารถใช้งานได้</string>
+    <string name="backup_restore_content_full">คุณจะต้องติดตั้งส่วนขยายที่ขาดหายไปในภายหลังจึงจะสามารถใช้งานได้</string>
     <string name="backup_restore_missing_sources">แหล่งที่มาที่หายไป:</string>
     <string name="invalid_backup_file_missing_manga">แฟ้มสํารองข้อมูลไม่มีรายการคลังใด ๆ</string>
     <string name="invalid_backup_file">ข้อมูลสำรองไม่ถูกต้อง:</string>
@@ -659,7 +659,7 @@
     <string name="no_location_set">ไม่มีการกำหนดตำแหน่งจัดเก็บ</string>
     <string name="onboarding_permission_notifications_description">รับการแจ้งเตือนการอัปเดตคลังและอื่น ๆ</string>
     <string name="ext_permission_install_apps_warning">จำเป็นต้องมีสิทธิ์ในการติดตั้งส่วนขยาย แตะที่นี่เพื่อให้สิทธิ์</string>
-    <string name="private_settings">รวมการตั้งค่าที่ละเอียดอ่อน (เช่น โทเค็นการเข้าสู่ระบบตัวติดตาม)</string>
+    <string name="private_settings">รวมการตั้งค่าที่ละเอียดอ่อน (เช่น โทเค็นการเข้าสู่ระบบ)</string>
     <string name="onboarding_permission_action_grant">อนุญาต</string>
     <string name="onboarding_storage_folder_info">เลือกโฟลเดอร์ที่ %1$s จะจัดเก็บการดาวน์โหลดบท การสำรองข้อมูล และอื่นๆ \n \nแนะนำให้ใช้โฟลเดอร์เฉพาะ</string>
     <string name="onboarding_storage_selected_folder">โฟลเดอร์ที่เลือก: %s</string>

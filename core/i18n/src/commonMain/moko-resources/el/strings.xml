@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Διαχωρισμός πλατιών σελίδων</string>
     <string name="pref_dual_page_invert_summary">Εάν η τοποθέτηση των διαχωρισμένων πλατιών σελίδων δεν ταιριάζει με την κατεύθυνση ανάγνωσης</string>
     <string name="pref_dual_page_invert">Αντιστροφή τοποθέτησης διαχωρισμένης σελίδας</string>
-    <string name="backup_restore_content_full">Ενδέχεται να χρειαστεί να εγκαταστήσετε τυχόν επεκτάσεις που λείπουν και στη συνέχεια να συνδεθείτε στις υπηρεσίες παρακολούθησης για να τις χρησιμοποιήσετε.</string>
+    <string name="backup_restore_content_full">Ενδέχεται να χρειαστεί στη συνέχεια να εγκαταστήσετε τυχόν επεκτάσεις που λείπουν για να τις χρησιμοποιήσετε.</string>
     <string name="pref_show_navigation_mode_summary">Εμφάνιση εν συντομία κατά το άνοιγμα του προγράμματος ανάγνωσης</string>
     <string name="pref_show_navigation_mode">Εμφάνιση επικάλυψης ζωνών πατήματος</string>
     <string name="nav_zone_right">Δεξιά</string>
@@ -660,7 +660,7 @@
     <string name="onboarding_permission_action_grant">Παραχώρηση</string>
     <string name="available_disk_space_info">Διαθέσιμο: %1$s / Σύνολο: %2$s</string>
     <string name="ext_permission_install_apps_warning">Απαιτούνται δικαιώματα για την εγκατάσταση επεκτάσεων. Πατήστε εδώ για παραχώρηση.</string>
-    <string name="private_settings">Συμπεριλάβετε ευαίσθητες ρυθμίσεις (π.χ. διακριτικά σύνδεσης παρακολούθησης)</string>
+    <string name="private_settings">Συμπεριλάβετε ευαίσθητες ρυθμίσεις (π.χ. διακριτικά σύνδεσης)</string>
     <string name="invalid_backup_file_error">Πλήρες σφάλμα:</string>
     <string name="onboarding_storage_help_info">Ενημερώνετε από μια παλαιότερη έκδοση και δεν είστε σίγουροι τι να επιλέξετε; Ανατρέξτε στον οδηγό αποθήκευσης για περισσότερες πληροφορίες.</string>
     <string name="onboarding_storage_help_action">Οδηγός αποθήκευσης</string>

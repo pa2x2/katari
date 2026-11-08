@@ -487,7 +487,7 @@
     <string name="extension_api_error">사용 가능한 확장 앱 가져오기 실패</string>
     <string name="exclude">제외: %s</string>
     <string name="pref_download_new_categories_details">카테고리가 다운로드에서 제외된 경우 다른 카테고리에 포함되어 있어도 다운로드 되지 않습니다.</string>
-    <string name="backup_restore_content_full">복구 완료 후 없어진 소스를 다시 설치하고 트래킹 서비스에 로그인 해야 합니다.</string>
+    <string name="backup_restore_content_full">복구 완료 후 없어진 소스를 다시 설치해야 합니다.</string>
     <string name="backup_info">백업 파일은 복사하여 다른 장소에 나눠 보관하세요. 백업 파일에는 비밀번호 등의 민감한 정보가 포함될 수 있습니다. 백업 파일 공유시 주의하세요.</string>
     <string name="pref_disable_battery_optimization_summary">백그라운드 서재 업데이트와 라이브러리 업데이트를 도울 수 있습니다</string>
     <string name="pref_verbose_logging">자세한 로그</string>
@@ -644,7 +644,7 @@
     <string name="onboarding_permission_install_apps_description">확장 앱 설치를 위해 필요합니다.</string>
     <string name="onboarding_permission_notifications_description">서재 업데이트 등의 알림을 보냅니다.</string>
     <string name="invalid_backup_file_error">오류 전체 보기:</string>
-    <string name="private_settings">민감한 설정 포함(예시: 트래커 로그인 토큰)</string>
+    <string name="private_settings">민감한 설정 포함(예시: 로그인 토큰)</string>
     <string name="manga_interval_expected_update">새 회차는 약 %1$s 후에 출시될 것으로 예상되며, 매 %2$s마다 확인됩니다.</string>
     <string name="no_scanlators_found">스캔레이터가 발견되지 않았습니다</string>
     <string name="onboarding_permission_notifications">알림 권한</string>

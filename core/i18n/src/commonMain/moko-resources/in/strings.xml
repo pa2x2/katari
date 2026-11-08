@@ -409,7 +409,7 @@
     <string name="pref_dns_over_https">DNS melalui HTTPS (DoH)</string>
     <string name="kindlish_nav">semacam Kindle</string>
     <string name="pref_category_auto_download">Unduh otomatis</string>
-    <string name="backup_restore_content_full">Anda mungkin perlu memasang ulang ekstensi yang hilang dan log in ke layanan pelacakan setelahnya untuk menggunakannya.</string>
+    <string name="backup_restore_content_full">Anda mungkin perlu memasang ulang ekstensi yang hilang setelahnya untuk menggunakannya.</string>
     <string name="notification_incognito_text">Matikan mode penyamaran</string>
     <string name="source_unsupported">Sumber tidak didukung</string>
     <string name="error_no_match">Tidak ditemukan kecocokan</string>
@@ -661,7 +661,7 @@
     <string name="onboarding_storage_help_action">Panduan penyimpanan</string>
     <string name="onboarding_storage_help_info">Memperbarui dari versi lama dan tak yakin harus pilih mana? lihat panduan penyimpanan untuk informasi lebih lanjut.</string>
     <string name="invalid_backup_file_error">Kesalahan penuh:</string>
-    <string name="private_settings">Sertakan pengaturan sensitif (contohnya, token login pelacak)</string>
+    <string name="private_settings">Sertakan pengaturan sensitif (contohnya, token login)</string>
     <string name="ext_permission_install_apps_warning">Izin diperlukan untuk memasang ekstensi. Klik disini untuk memberi izin.</string>
     <string name="manga_interval_expected_update">Bab baru diperkirakan akan dirils sekitar %1$s, diperiksa setiap sekitar %2$s.</string>
     <string name="available_disk_space_info">Tersedia:%1$s/Total:%2$s</string>

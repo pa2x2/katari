@@ -397,7 +397,7 @@
     <string name="action_order_by_upload_date">حسب تاريخ الرفع</string>
     <string name="action_order_by_chapter_number">حسب رقم الفصل</string>
     <string name="pref_dns_over_https">إستخدام DNS عبر HTTPS (DoH)</string>
-    <string name="backup_restore_content_full">قد تحتاج إلى تثبيت أي إضافات مفقودة وتسجيل الدخول إلى خدمات التتبع بعد ذلك لاستخدامها.</string>
+    <string name="backup_restore_content_full">قد تحتاج إلى تثبيت أي إضافات مفقودة بعد ذلك لاستخدامها.</string>
     <string name="nav_zone_right">يمين</string>
     <string name="nav_zone_left">يسار</string>
     <string name="nav_zone_next">التالي</string>
@@ -660,7 +660,7 @@
     <string name="ext_permission_install_apps_warning">تثبيت الإضافات يتطلب أذونات. انقر هنا لمنحها.</string>
     <string name="ext_revoke_trust">إبطال الإضافات غير الموثوق بها</string>
     <string name="invalid_backup_file_error">الخطأ الكامل:</string>
-    <string name="private_settings">تضمين إعدادات حساسة (على سبيل المثال، رموز تسجيل دخول المتتبع)</string>
+    <string name="private_settings">تضمين إعدادات حساسة (على سبيل المثال، رموز تسجيل الدخول)</string>
     <string name="manga_interval_expected_update_soon">قريباً</string>
     <string name="manga_interval_custom_amount">تكرار تحديث مخصص:</string>
     <string name="onboarding_storage_help_info">هل تقوم بالتحديث من إصدار أقدم ولست متأكداً مما تختاره؟ إرجع إلى دليل التخزين للمزيد من المعلومات.</string>

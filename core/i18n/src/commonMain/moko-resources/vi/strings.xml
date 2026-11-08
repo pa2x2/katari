@@ -379,7 +379,7 @@
     <string name="restore_in_progress">Đang trong quá trình khôi phục</string>
     <string name="creating_backup_error">Sao lưu thất bại</string>
     <string name="restore_duration">%1$02d phút, %2$02d giây</string>
-    <string name="backup_restore_content_full">Bạn có thể cần phải cài đặt bất kỳ tiện ích mở rộng nào bị thiếu và đăng nhập vào các dịch vụ theo dõi để sử dụng chúng.</string>
+    <string name="backup_restore_content_full">Bạn có thể cần phải cài đặt bất kỳ tiện ích mở rộng nào bị thiếu sau đó để sử dụng chúng.</string>
     <string name="backup_restore_missing_sources">Nguồn không tìm thấy :</string>
     <string name="pref_download_new_categories_details">Truyện trong các danh mục bị loại trừ sẽ không được tải xuống, kể cả khi chúng ở trong các danh mục được phép.</string>
     <string name="pref_category_auto_download">Tự động tải xuống</string>
@@ -661,7 +661,7 @@
     <string name="available_disk_space_info">Hiện có: %1$s / Tổng cộng: %2$s</string>
     <string name="invalid_backup_file_error">Mã lỗi đầy đủ:</string>
     <string name="ext_permission_install_apps_warning">Cần phải cấp phép để cài đặt tiện ích mở rộng. Bấm đây để cấp.</string>
-    <string name="private_settings">Bao gồm những cài đặt nhạy cảm (ví dụ như token đăng nhập tracker)</string>
+    <string name="private_settings">Bao gồm những cài đặt nhạy cảm (ví dụ như token đăng nhập)</string>
     <string name="action_add_anyway">Vẫn thêm</string>
     <string name="theme_nord">Phương bắc</string>
     <string name="label_upcoming">Sắp tới</string>

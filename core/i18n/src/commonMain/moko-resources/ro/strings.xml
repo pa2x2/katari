@@ -402,7 +402,7 @@
     <string name="kindlish_nav">Similar unui Kindle</string>
     <string name="l_nav">În formă de L</string>
     <string name="action_sort_chapter_fetch_date">Data obținerii capitolului</string>
-    <string name="backup_restore_content_full">Este posibil să fie necesar să instalați extensiile lipsă și să vă conectați ulterior la serviciile de urmărire pentru a le utiliza.</string>
+    <string name="backup_restore_content_full">Este posibil să fie necesar să instalați ulterior extensiile lipsă pentru a le utiliza.</string>
     <string name="pref_download_new_categories_details">Nu vor fi descărcate înscrierile din categoriile excluse, chiar dacă acestea se află și în categoriile incluse.</string>
     <string name="pref_category_auto_download">Descărcare automată</string>
     <string name="nav_zone_right">Dreapta</string>
@@ -652,7 +652,7 @@
     <string name="onboarding_permission_action_grant">Acordă</string>
     <string name="no_location_set">Nici o locație pentru stocare nu a fost setată</string>
     <string name="invalid_backup_file_error">Eroarea completă:</string>
-    <string name="private_settings">Includeți setări sensibile (ex. token-ul serviciilor de urmărire al logări)</string>
+    <string name="private_settings">Includeți setări sensibile (ex. token-uri de autentificare)</string>
     <string name="available_disk_space_info">Disponibil: %1$s / Total: %2$s</string>
     <string name="manga_display_interval_title">Estimează la fiecare</string>
     <string name="manga_display_modified_interval_title">Configurează actualizări la fiecare</string>

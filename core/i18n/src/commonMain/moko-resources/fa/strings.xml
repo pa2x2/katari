@@ -508,7 +508,7 @@
     <string name="action_display_show_continue_reading_button">نمایش دکمه ادامه خواندن</string>
     <string name="download_ahead_info">اگر قسمت فعلی و بعدی دانلود شده باشند، تنها برای ورودی‌های کتابخانه کار می‌کند.</string>
     <string name="missing_storage_permission">اجازه دسترسی به حافظه داده نشد</string>
-    <string name="backup_restore_content_full">ممکن است لازم باشد افزونه‌های احتمالیِ موجود نبودن را نصب کنید و پس از آن، برای استفاده از سرویس‌های ردیابی، به آن‌ها وارد شوید.</string>
+    <string name="backup_restore_content_full">ممکن است لازم باشد پس از آن افزونه‌های موجود نبودن را برای استفاده از آن‌ها نصب کنید.</string>
     <string name="pref_skip_dupe_chapters">چپتر های تکراری را رد کن</string>
     <string name="empty_backup_error">هیچ داده کتابخانه ای نیست که پشتیبانی شود</string>
     <string name="restore_miui_warning">اگر قابلیت «بهینه‌سازی MIUI» غیرفعال باشد، ممکن است عملیات پشتیبان‌گیری/بازیابی به‌درستی کار نکند.</string>
@@ -563,7 +563,7 @@
     <string name="invalid_backup_file_error">خطای کامل:</string>
     <string name="app_settings">تنظیمات برنامه</string>
     <string name="source_settings">تنظیمات منبع</string>
-    <string name="private_settings">حاوی تنظیمات حساس (یه عنوان مثال رمز ورود ناظر)</string>
+    <string name="private_settings">حاوی تنظیمات حساس (به عنوان مثال توکن‌های ورود)</string>
     <string name="create_backup_file_error">فایل پشتیبانی ایجاد نشد</string>
     <string name="pref_storage_usage">استفاده از فظای زخیره سازی</string>
     <string name="available_disk_space_info">در دسترس: %1$s / کل:%2$s</string>

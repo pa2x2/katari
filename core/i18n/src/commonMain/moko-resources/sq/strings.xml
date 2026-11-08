@@ -544,7 +544,7 @@
     <string name="chapter_settings_updated">Cilësimet e kapitullit të parazgjedhur të përditësuara</string>
     <string name="theme_midnightdusk">Perëndim Mesnate</string>
     <string name="pref_restore_backup_summ">Rivendosni bibliotekën nga skedari rezervë</string>
-    <string name="backup_restore_content_full">Të dhënat nga skedari rezervë do të rikthehen. \n \n Do t\'ju duhet të instaloni çdo shtesë që mungon dhe më pas të identifikoheni në shërbimet e gjurmimit për t\'i përdorur ato.</string>
+    <string name="backup_restore_content_full">Të dhënat nga skedari rezervë do të rikthehen. \n \n Do t\'ju duhet më pas të instaloni çdo shtesë që mungon për t\'i përdorur ato.</string>
     <string name="invalid_backup_file">Skedar rezervë i pavlefshëm</string>
     <string name="invalid_backup_file_missing_manga">Rezervimi nuk përmban asnjë element në bibliotekë.</string>
     <string name="pref_user_agent_string">Varg i parazgjedhur i agjentit të përdoruesit</string>

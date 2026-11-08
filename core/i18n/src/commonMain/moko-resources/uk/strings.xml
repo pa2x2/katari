@@ -396,7 +396,7 @@
     <string name="pref_dual_page_split">Розділення широких сторінок</string>
     <string name="pref_dual_page_invert_summary">Якщо розділення широких сторінок, не відповідає напрямку читання</string>
     <string name="pref_dual_page_invert">Інвертувати розділення широких сторінок</string>
-    <string name="backup_restore_content_full">Вам потрібно встановити розширення яких бракує та увійти в сервіси відстежування для їх використання.</string>
+    <string name="backup_restore_content_full">Вам потрібно буде встановити розширення, яких бракує, для їх використання.</string>
     <string name="nav_zone_right">Зправа</string>
     <string name="nav_zone_left">Зліва</string>
     <string name="nav_zone_next">Наступний</string>
@@ -640,7 +640,7 @@
     <string name="onboarding_permission_install_apps">Встановити дозволи додатка</string>
     <string name="ext_permission_install_apps_warning">Потребуються дозволи для встановлення додатків. Натисніть сюди для отримання.</string>
     <string name="invalid_backup_file_error">Повна помилка:</string>
-    <string name="private_settings">Включати конфіденційні налаштування (наприклад, токени для входу в трекери)</string>
+    <string name="private_settings">Включати конфіденційні налаштування (наприклад, токени для входу)</string>
     <string name="available_disk_space_info">Доступні: %1$s / Усього: %2$s</string>
     <string name="onboarding_permission_ignore_battery_opts">Використання батареї на фоні</string>
     <string name="onboarding_storage_selection_required">Потрібно обрати папку</string>

@@ -417,12 +417,12 @@
     <string name="invalid_backup_file_json">JSON বেকআপ সমৰ্থিত নহয়</string>
     <string name="invalid_backup_file_unknown">বেকআপ ফাইল দুৰ্নীতিগ্ৰস্ত</string>
     <string name="backup_restore_missing_sources">নোহোৱা উৎস:</string>
-    <string name="backup_restore_content_full">সিহঁত ব্যৱহাৰ কৰিবলৈ আপুনি পাছত কোনো নোহোৱা এক্সটেনশ্বন ইন্সটল আৰু ট্ৰেকিং সেৱাত লগইন কৰিব লাগিব পাৰে।</string>
+    <string name="backup_restore_content_full">সিহঁত ব্যৱহাৰ কৰিবলৈ আপুনি পাছত কোনো নোহোৱা এক্সটেনশ্বন ইন্সটল কৰিব লাগিব পাৰে।</string>
     <string name="backup_in_progress">বেকআপ ইতিমধ্যে চলি আছে</string>
     <string name="backup_choice">আপুনি কি বেকআপ কৰিব বিচাৰে?</string>
     <string name="app_settings">এপ ছেটিংছ</string>
     <string name="source_settings">উৎস ছেটিংছ</string>
-    <string name="private_settings">সংবেদনশীল ছেটিংছ অন্তৰ্ভুক্ত কৰক (যেনে, ট্ৰেকাৰ লগইন ট\'কেন)</string>
+    <string name="private_settings">সংবেদনশীল ছেটিংছ অন্তৰ্ভুক্ত কৰক (যেনে, লগইন ট\'কেন)</string>
     <string name="creating_backup">বেকআপ সৃষ্টি কৰি আছে</string>
     <string name="creating_backup_error">বেকআপ বিফল</string>
     <string name="empty_backup_error">বেকআপ কৰিবলৈ কোনো পুথিভঁৰাল প্ৰৱিষ্টি নাই</string>
