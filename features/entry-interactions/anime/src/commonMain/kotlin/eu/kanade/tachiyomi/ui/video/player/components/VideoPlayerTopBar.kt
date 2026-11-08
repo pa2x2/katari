@@ -97,6 +97,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.LockOpen,
                 contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
                 onClick = onToggleLock,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -104,6 +105,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Lock,
                 contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
                 onClick = onToggleLock,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -116,6 +118,7 @@ internal fun VideoPlayerTopBarActions(
                     icon = MaterialSymbols.Rounded.PictureInPictureAlt,
                     contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
                     onClick = onEnterPictureInPicture,
+                    modifier = Modifier.videoPlayerControl(),
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                     shortcut = VideoPlayerShortcuts.PictureInPicture,
@@ -129,6 +132,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Settings,
                 contentDescription = stringResource(MR.strings.label_settings),
                 onClick = onOpenSettings,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -137,13 +141,15 @@ internal fun VideoPlayerTopBarActions(
             if (locked) {
                 EmptyActionSlot()
             } else {
-                EntryChildWebViewActionsMenu(
-                    resolution = childWebView,
-                    actions = childWebViewActions,
-                    onAction = onChildWebViewAction,
-                    size = IconButtonSize.Large,
-                    tone = ContentTone.OnMedia,
-                )
+                Box(modifier = Modifier.videoPlayerControl()) {
+                    EntryChildWebViewActionsMenu(
+                        resolution = childWebView,
+                        actions = childWebViewActions,
+                        onAction = onChildWebViewAction,
+                        size = IconButtonSize.Large,
+                        tone = ContentTone.OnMedia,
+                    )
+                }
             }
         }
     }

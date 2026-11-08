@@ -50,6 +50,7 @@ internal fun VideoPlayerHeading(
             icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
             contentDescription = stringResource(MR.strings.action_back),
             onClick = onBack,
+            modifier = Modifier.videoPlayerControl(),
             size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
         )

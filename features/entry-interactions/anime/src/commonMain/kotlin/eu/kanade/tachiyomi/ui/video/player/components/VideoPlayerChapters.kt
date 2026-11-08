@@ -36,6 +36,7 @@ internal fun VideoPlayerChapterLabel(
 ) {
     Row(
         modifier = modifier
+            .videoPlayerControl()
             .clickable(
                 onClickLabel = stringResource(MR.strings.anime_chapters_show),
                 role = Role.Button,

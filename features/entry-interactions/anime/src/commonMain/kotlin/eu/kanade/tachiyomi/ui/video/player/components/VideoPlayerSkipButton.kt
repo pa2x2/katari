@@ -43,7 +43,7 @@ internal fun VideoPlayerSkipButton(
     val focus = remember { FocusRequester() }
     val takesFocus = LocalKeyboardShortcuts.current != null
     LaunchedEffect(takesFocus) { if (takesFocus) focus.requestFocus() }
-    val pill = if (takesFocus) modifier.focusRequester(focus) else modifier
+    val pill = (if (takesFocus) modifier.focusRequester(focus) else modifier).videoPlayerControl()
     if (countdown == null) {
         OverlayPill(modifier = pill, style = OverlayStyle.Scrim, onClick = onClick) {
             SkipLabel(offer)

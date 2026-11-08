@@ -110,6 +110,7 @@ internal fun VideoPlayerTimeline(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
+                            .videoPlayerControl()
                             .clickable(
                                 onClickLabel = stringResource(
                                     if (showsRemainingTime) {
@@ -149,6 +150,7 @@ internal fun VideoPlayerTimeline(
                     onHover = onHover?.let { hover ->
                         { fraction -> hover(fraction?.let { playbackPositionAt(it, effectiveDurationMs) }) }
                     },
+                    modifier = Modifier.videoPlayerControl(),
                 )
 
                 if (footerContent != null) {

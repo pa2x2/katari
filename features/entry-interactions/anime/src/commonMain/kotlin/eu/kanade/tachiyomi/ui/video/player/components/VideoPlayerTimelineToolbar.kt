@@ -58,6 +58,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
                 contentDescription = stringResource(MR.strings.anime_playback_previous_episode),
                 onClick = onPreviousEpisode,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.PreviousEpisode,
@@ -68,6 +69,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipNext,
                 contentDescription = stringResource(MR.strings.anime_playback_next_episode),
                 onClick = onNextEpisode,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.NextEpisode,
@@ -78,13 +80,14 @@ internal fun VideoPlayerTimelineToolbar(
             label = playbackSpeedLabel,
             onClick = onOpenSpeed,
             iconDescription = stringResource(MR.strings.anime_playback_speed),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER).videoPlayerControl(),
         )
         if (showSubtitles) {
             IconButton(
                 icon = MaterialSymbols.Rounded.Subtitles,
                 contentDescription = stringResource(MR.strings.anime_playback_subtitles),
                 onClick = onOpenSubtitles,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -94,6 +97,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.Rounded.MobileRotate,
                 contentDescription = stringResource(MR.strings.anime_playback_rotate),
                 onClick = onRotate,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -103,7 +107,7 @@ internal fun VideoPlayerTimelineToolbar(
             label = picture.label(),
             onClick = onTogglePicture,
             iconDescription = stringResource(MR.strings.anime_playback_picture),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER).videoPlayerControl(),
         )
         volume?.invoke()
         MediaToolbarButton(
@@ -111,7 +115,9 @@ internal fun VideoPlayerTimelineToolbar(
             label = stringResource(MR.strings.episodes),
             onClick = onOpenEpisodes,
             iconDescription = stringResource(MR.strings.action_view_episodes),
-            modifier = Modifier.mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER),
+            modifier = Modifier
+                .mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER)
+                .videoPlayerControl(),
         )
         if (fullScreen != null) {
             Box(modifier = Modifier.mediaToolbarSlot(trailing = true)) {
@@ -129,6 +135,7 @@ internal fun VideoPlayerTimelineToolbar(
                         },
                     ),
                     onClick = onToggleFullScreen,
+                    modifier = Modifier.videoPlayerControl(),
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                     shortcut = VideoPlayerShortcuts.FullScreen,

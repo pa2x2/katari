@@ -29,7 +29,12 @@ internal fun VideoPlayerTransportButton(
     content: @Composable (tone: ContentTone) -> Unit,
 ) {
     HoverTooltip(label, shortcut = shortcut) {
-        OverlayPill(modifier = modifier, style = OverlayStyle.Scrim, onClick = onClick, enabled = enabled) {
+        OverlayPill(
+            modifier = modifier.videoPlayerControl(),
+            style = OverlayStyle.Scrim,
+            onClick = onClick,
+            enabled = enabled,
+        ) {
             Box(
                 modifier = Modifier
                     .padding(KatariTheme.spacing.l)
