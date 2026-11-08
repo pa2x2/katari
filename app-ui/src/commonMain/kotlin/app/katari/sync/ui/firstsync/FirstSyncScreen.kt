@@ -23,7 +23,6 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.SettingsRow
@@ -38,6 +37,7 @@ import mihon.presentation.kit.surface.AvatarSize
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
@@ -96,22 +96,13 @@ data object FirstSyncScreen : Screen() {
                     item { RowGroupNote(stringResource(MR.strings.sync_first_sync_intro)) }
                     item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_profiles)) }
                     rowGroupItems(shown.pairings, key = { "profile-${it.profileId}" }) { pairing ->
-                        PairingRow(
+                        ProfileRow(
                             pairing = pairing,
                             profile = byId[pairing.profileId],
-                            isDefault = shown.isDefault(pairing),
                             paired = shown.isPaired(pairing),
+                            settings = shown.choices.getValue(pairing.profileId).settings,
                             onPairedChange = { model.setPaired(pairing.profileId, it) },
-                        )
-                    }
-                    val paired = shown.pairings.filter(shown::isPaired)
-                    item { RowGroupGap() }
-                    item { RowGroupHeader(stringResource(MR.strings.sync_first_sync_settings)) }
-                    rowGroupItems(paired, key = { "settings-${it.profileId}" }) { pairing ->
-                        SettingsChoiceRow(
-                            name = pairing.name,
-                            winner = shown.choices.getValue(pairing.profileId).settings,
-                            onChange = { model.setSettings(pairing.profileId, it) },
+                            onSettingsChange = { model.setSettings(pairing.profileId, it) },
                         )
                     }
                     item {
@@ -123,58 +114,62 @@ data object FirstSyncScreen : Screen() {
     }
 }
 
+/**
+ * One of this device's profiles, in one row: how it joins the account, with its library's size to tell profiles of
+ * one name apart, and, once paired, whose settings it keeps. A profile that matches an account profile only by name
+ * gets a pill to pair it or add it as new in place of saying how it pairs.
+ */
 @Composable
-private fun PairingRow(
+private fun ProfileRow(
     pairing: ProfilePairing,
     profile: Profile?,
-    isDefault: Boolean,
     paired: Boolean,
+    settings: SettingsWinner,
     onPairedChange: (Boolean) -> Unit,
+    onSettingsChange: (SettingsWinner) -> Unit,
 ) {
     val accountProfile = pairing.pairedWith
+    val size = pairing.librarySize
+    val titles = pluralStringResource(MR.plurals.sync_first_sync_titles, size.toInt(), size)
+    val choosesPairing = accountProfile != null && !pairing.sameProfile
     SettingsRow(
         title = pairing.name,
-        subtitle = when {
-            isDefault -> stringResource(MR.strings.sync_first_sync_default_paired)
-            pairing.sameProfile -> stringResource(MR.strings.sync_first_sync_same_profile)
-            accountProfile == null -> stringResource(MR.strings.sync_first_sync_add_new)
-            else -> null
+        subtitle = if (choosesPairing) {
+            titles
+        } else {
+            val pairs = if (paired) MR.strings.sync_first_sync_paired else MR.strings.sync_first_sync_add_new
+            stringResource(MR.strings.sync_first_sync_profile_line, stringResource(pairs), titles)
         },
         leading = profile?.let { { ProfileAvatar(colorSeed = it.colorSeed, size = AvatarSize.Row) } },
-        trailing = if (accountProfile != null && !pairing.sameProfile) {
+        below = accountProfile?.takeIf { choosesPairing }?.let {
             {
                 ChoicePill(
                     selected = if (paired) 0 else 1,
                     options = listOf(
-                        stringResource(MR.strings.sync_first_sync_same_as, accountProfile.name),
+                        stringResource(MR.strings.sync_first_sync_same_as, it.name),
                         stringResource(MR.strings.sync_first_sync_add_new),
                     ),
-                    onSelect = { onPairedChange(it == 0) },
+                    onSelect = { index -> onPairedChange(index == 0) },
+                )
+            }
+        },
+        trailing = if (paired) {
+            {
+                ChoicePill(
+                    selected = settings.ordinal,
+                    options = SettingsWinner.entries.map {
+                        stringResource(
+                            when (it) {
+                                SettingsWinner.ACCOUNT -> MR.strings.sync_first_sync_settings_account
+                                SettingsWinner.DEVICE -> MR.strings.sync_first_sync_settings_device
+                            },
+                        )
+                    },
+                    onSelect = { onSettingsChange(SettingsWinner.entries[it]) },
                 )
             }
         } else {
             null
-        },
-    )
-}
-
-@Composable
-private fun SettingsChoiceRow(name: String, winner: SettingsWinner, onChange: (SettingsWinner) -> Unit) {
-    SettingsRow(
-        title = name,
-        trailing = {
-            ChoicePill(
-                selected = winner.ordinal,
-                options = SettingsWinner.entries.map {
-                    stringResource(
-                        when (it) {
-                            SettingsWinner.ACCOUNT -> MR.strings.sync_first_sync_use_account
-                            SettingsWinner.DEVICE -> MR.strings.sync_first_sync_use_device
-                        },
-                    )
-                },
-                onSelect = { onChange(SettingsWinner.entries[it]) },
-            )
         },
     )
 }

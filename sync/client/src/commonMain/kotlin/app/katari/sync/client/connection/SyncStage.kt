@@ -46,12 +46,17 @@ enum class SyncStage(internal val stored: String) {
     /** Whether the device takes everything from the account now, which pushes wait for. */
     val isDownloading: Boolean get() = this == DOWNLOADING || this == RESYNC || this == RESYNC_WITHOUT_DELETIONS
 
-    /**
-     * Whether the device is in its first sync with the account, from recording what it held to its settings: the long
-     * download whose progress the platform shows and which it keeps going in the background.
-     */
+    /** Whether the device is in its first sync with the account, from recording what it held to its settings. */
     val isFirstDownload: Boolean
         get() = this == RECORDING || this == RECORDING_KEPT || this == DOWNLOADING || this == SETTINGS
+
+    /**
+     * Whether the device moves its whole library to or from the account now: in its first sync, or a full resync. The
+     * run that carries it on also uploads the library once it is ready, often for minutes: the long run whose progress
+     * the platform shows and which it keeps going in the background.
+     */
+    val movesLibrary: Boolean
+        get() = isFirstDownload || this == RESYNC || this == RESYNC_WITHOUT_DELETIONS
 
     internal companion object {
         fun of(stored: String): SyncStage = entries.firstOrNull { it.stored == stored } ?: READY
@@ -65,6 +70,12 @@ enum class SyncStop(internal val stored: String) {
      * than the device's sign-in. The device keeps capturing, and signing in again resyncs everything it holds.
      */
     SIGN_IN_AGAIN("sign-in-again"),
+
+    /**
+     * As [SIGN_IN_AGAIN], from a server whose storage started over (another instance), such as one replaced by an
+     * empty one: the account the device signed in to is gone and is made again on the server before signing in.
+     */
+    SERVER_RESET("server-reset"),
 
     /** Removed from the account on another device or the web page; standalone again. */
     REMOVED("removed"),

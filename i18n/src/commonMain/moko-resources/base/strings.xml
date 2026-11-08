@@ -773,7 +773,7 @@
     <string name="onboarding_permission_notifications">Notification permission</string>
     <string name="onboarding_permission_notifications_description">Get notified for library updates and more.</string>
     <string name="onboarding_permission_ignore_battery_opts">Background battery usage</string>
-    <string name="onboarding_permission_ignore_battery_opts_description">Avoid interruptions to long-running library updates, downloads, and backup restores.</string>
+    <string name="onboarding_permission_ignore_battery_opts_description">Avoid interruptions to long-running library updates, downloads, backup restores, and syncs.</string>
     <string name="onboarding_permission_crashlytics">Send crash logs</string>
     <string name="onboarding_permission_crashlytics_description">Send anonymized crash logs to the developers.</string>
     <string name="onboarding_permission_analytics">Allow analytics</string>
@@ -1230,7 +1230,8 @@
     <string name="missing_source_install_from">From %1$s · %2$s</string>
     <string name="missing_source_migrate">Migrate to another source</string>
     <string name="missing_extensions_title">Install extensions</string>
-    <string name="missing_extensions_note">Titles in your library come from these extensions, which aren\'t installed here.</string>
+    <string name="missing_extensions_note">Titles in your library come from these extensions.</string>
+    <string name="missing_extensions_untrusted">Installed, not trusted here</string>
     <string name="missing_extensions_ready">Ready to install</string>
     <string name="missing_extensions_unavailable">Can\'t install here</string>
     <string name="missing_extensions_details">%1$s · %2$s · %3$s</string>
@@ -1727,6 +1728,8 @@
     <string name="profiles_name_exists">A profile with this name already exists</string>
     <string name="profiles_archive_profile_confirmation">Archive %1$s?</string>
     <string name="profiles_delete_profile_confirmation">Delete %1$s permanently?</string>
+    <!-- %1$s is the profile's name; asked while this device syncs -->
+    <string name="profiles_delete_profile_confirmation_synced">Delete %1$s permanently, here and on every device linked to your sync account?</string>
     <string name="move_entries_action">Move to profile</string>
     <string name="move_entries_select_profile">Select destination profile</string>
     <string name="move_entries_select_category">Select destination category</string>
@@ -3200,8 +3203,19 @@
     <!-- %1$d is how far the first download got, in percent -->
     <string name="sync_status_downloading">Downloading your library · %1$d%%</string>
     <string name="sync_status_downloading_unknown">Downloading your library…</string>
-    <string name="sync_first_download_progress">%1$s · %2$d%%</string>
+    <!-- %1$d is how far the resync got, in percent -->
+    <string name="sync_status_catching_up">Catching the server up · %1$d%%</string>
+    <string name="sync_status_catching_up_unknown">Catching the server up…</string>
+    <string name="sync_catching_up_text">The server went back to an older copy. This device is sending it what it\'s missing.</string>
     <string name="sync_progress_channel">Sync progress</string>
+    <!-- Titles of the notification shown while sync moves a whole library, such as on a device's first sync -->
+    <string name="sync_long_run_preparing">Preparing your library</string>
+    <string name="sync_long_run_uploading">Uploading your library</string>
+    <string name="sync_long_run_downloading">Downloading your library</string>
+    <string name="sync_long_run_syncing">Syncing your library</string>
+    <string name="sync_long_run_catching_up">Catching the server up</string>
+    <!-- %1$s is the server's address, %2$d how far it got in percent, such as "127.0.0.1 · 42%" -->
+    <string name="sync_long_run_progress">%1$s · %2$d%%</string>
     <string name="sync_status_preparing">Preparing your library · %1$d%%</string>
     <string name="sync_status_uploading">Uploading your library · %1$d%%</string>
     <string name="sync_status_downloading_changes">Downloading changes · %1$d%%</string>
@@ -3222,6 +3236,7 @@
     <!-- %1$s is the server's address -->
     <string name="sync_status_account_disabled">Your account on %1$s was disabled</string>
     <string name="sync_status_sign_in_again">Sign in again to keep syncing</string>
+    <string name="sync_status_server_reset">Your sync server was reset</string>
     <string name="sync_status_app_too_old">Update Katari to keep syncing</string>
     <!-- %1$s is the server's address -->
     <string name="sync_status_server_too_old">%1$s needs a server update</string>
@@ -3267,6 +3282,8 @@
     <string name="sync_server_plain_http_refused">Plain http:// works only for addresses on your local network. Use the server\'s https:// address.</string>
     <!-- %1$s is the server's address -->
     <string name="sync_server_needs_setup">This server has no accounts yet. Open %1$s in a browser to create the admin account, then sign in here.</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_server_reset_needs_setup">This server was reset and has no accounts. Open %1$s in a browser to create the admin account again, then sign in here. This device still has your library.</string>
     <string name="sync_server_malformed">That isn\'t a server address.</string>
     <string name="sync_server_unreachable">Can\'t reach this server. Check the address and your connection.</string>
     <string name="sync_server_not_sync">Something answered at this address, but it isn\'t a Katari sync server.</string>
@@ -3337,6 +3354,9 @@
     <!-- %1$s is the device's name -->
     <string name="sync_remove_device_text">%1$s stops syncing and has to be linked again to rejoin. Its own data stays on it.</string>
     <string name="sync_remove_device_failed">Couldn\'t remove the device. Try again when the server can be reached.</string>
+    <string name="sync_rename_device_title">Rename this device</string>
+    <!-- %1$s is the name the device has from its system, such as the phone's model -->
+    <string name="sync_rename_device_hint">Your other devices show this name. Leave it empty to use %1$s.</string>
     <string name="sync_options">Options</string>
     <string name="sync_use_mobile_data">Use mobile data for covers, fonts and first download</string>
     <string name="sync_use_mobile_data_summary">Changes sync on any network</string>
@@ -3349,11 +3369,15 @@
     <!-- %1$s is the server's address -->
     <string name="sync_disconnect_text">This device stops syncing with %1$s. Your library, history and settings stay here, and the app works on its own again. Your account and other devices are not affected; deleting the account or its data is done on the server\'s web page.</string>
     <string name="sync_action_disconnect">Disconnect</string>
+    <string name="sync_server_address_text">If your server moved, such as to a new IP address or domain, enter where it is now. This device stays signed in when the same server answers there.</string>
+    <string name="sync_server_other">Another sync server answers at this address, not the one this device syncs with. To sync with it, disconnect this device and sign in there.</string>
     <string name="sync_removed_title">This device was removed from your account</string>
     <string name="sync_account_disabled_title">Your sync account was disabled</string>
     <!-- %1$s is the server's address -->
     <string name="sync_ended_text">It no longer syncs with %1$s. Everything stays on this device, which works on its own again.</string>
     <string name="sync_action_sign_in_again">Sign in again</string>
+    <string name="sync_action_set_up_again">Set it up again</string>
+    <string name="sync_server_reset_text">It has no accounts now. This device still has your library and fills the server in again.</string>
     <string name="sync_action_continue_choosing">Continue setting up</string>
     <string name="sync_action_answer_questions">Review and answer</string>
 
@@ -3361,14 +3385,14 @@
     <string name="sync_first_sync_title">Before the first sync</string>
     <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged; nothing is deleted.</string>
     <string name="sync_first_sync_profiles">Profiles on this device</string>
-    <string name="sync_first_sync_default_paired">Paired automatically (default profile)</string>
-    <string name="sync_first_sync_same_profile">Paired automatically (already in your account)</string>
+    <string name="sync_first_sync_paired">Paired automatically</string>
     <!-- %1$s is the account profile's name -->
     <string name="sync_first_sync_same_as">Same as %1$s</string>
     <string name="sync_first_sync_add_new">Add as new</string>
-    <string name="sync_first_sync_settings">Settings of paired profiles</string>
-    <string name="sync_first_sync_use_account">Use account\'s</string>
-    <string name="sync_first_sync_use_device">Use this device\'s</string>
+    <!-- %1$s says how the profile joins the account, %2$s how many titles its library holds -->
+    <string name="sync_first_sync_profile_line">%1$s · %2$s</string>
+    <string name="sync_first_sync_settings_account">Account\'s settings</string>
+    <string name="sync_first_sync_settings_device">This device\'s settings</string>
     <string name="sync_first_sync_device_settings">Settings tied to this device (screen, storage, network) are never replaced.</string>
     <string name="sync_action_start_sync">Start sync</string>
     <string name="sync_first_sync_unavailable">Can\'t reach the server to compare profiles. Try again when you\'re online.</string>
@@ -3376,29 +3400,31 @@
     <!-- Sync: questions -->
     <string name="sync_questions_title">Needs your answer</string>
     <string name="sync_questions_none">Nothing needs your answer.</string>
+    <!-- %1$s is the profile's name -->
+    <string name="sync_question_in_profile">In the %1$s profile</string>
     <!-- %1$s is the entry's title -->
-    <string name="sync_question_migration_title">%1$s was migrated twice</string>
-    <!-- %1$s is a device's name, %2$s the source it migrated the entry to -->
-    <string name="sync_question_migration_move">%1$s moved it to %2$s</string>
-    <string name="sync_question_migration_kept">Both are kept until you choose.</string>
-    <!-- %1$s is a source's name -->
-    <string name="sync_action_keep_source">Keep %1$s</string>
-    <!-- %1$s is the name of the device that made one of the two migrations, when both went to sources of the same name -->
-    <string name="sync_action_keep_device">Keep %1$s\'s choice</string>
-    <!-- Answers of a migration question whose two migrations can't be told apart by source or device -->
-    <string name="sync_action_keep_earlier">Keep the earlier one</string>
-    <string name="sync_action_keep_later">Keep the later one</string>
+    <string name="sync_question_migration_title">%1$s was migrated on two devices</string>
+    <string name="sync_question_migration_kept">Both editions stay in your library until you choose.</string>
+    <!-- %1$s is the device that migrated the entry to this edition, %2$s when, such as "2 minutes ago" -->
+    <string name="sync_question_migration_moved">Moved on %1$s · %2$s</string>
+    <!-- %1$s is when this device migrated the entry to this edition, such as "2 minutes ago" -->
+    <string name="sync_question_migration_moved_here">Moved here · %1$s</string>
     <!-- %1$s is the profile's name -->
     <string name="sync_question_profile_title">%1$s was deleted</string>
     <!-- %1$s is the device that deleted it, %2$s the device that changed it since -->
     <string name="sync_question_profile_text">Deleted on %1$s, but %2$s changed things in it since. Kept for now.</string>
     <string name="sync_action_keep_profile">Keep profile</string>
+    <!-- %1$s is the profile's name; shown with Undo before the deletion is made -->
+    <string name="sync_question_profile_deleted">%1$s deleted</string>
     <!-- %1$s is the entry's title -->
     <string name="sync_question_notes_title">Notes on %1$s</string>
-    <string name="sync_question_notes_text">Edited on two devices at the same time. Showing the later notes for now.</string>
+    <string name="sync_question_notes_text">Edited on two devices before they synced. Showing the later notes for now.</string>
     <!-- %1$s is a device's name, %2$s when it wrote the notes -->
     <string name="sync_question_notes_version">%1$s · %2$s</string>
     <string name="sync_action_keep_these">Keep these</string>
+    <string name="sync_action_keep_both">Keep both</string>
+    <!-- This device as a sentence names it, such as "Deleted on this device" -->
+    <string name="sync_this_device_in_text">this device</string>
     <string name="sync_unknown_device">another device</string>
     <string name="sync_unknown_entry">An entry</string>
     <string name="sync_unknown_profile">A profile</string>
@@ -3410,6 +3436,7 @@
     <string name="sync_notification_account_disabled">Your sync account was disabled</string>
     <string name="sync_notification_sign_in_again">Sign in to sync again</string>
     <string name="sync_notification_ended_text">Everything stays on this device. Open Sync to sign in again.</string>
+    <string name="sync_notification_reset_text">Everything stays on this device. Open Sync to set the server up again.</string>
 
     <!-- Sync: restoring a backup on a synced device -->
     <string name="sync_restore_reach">How far the restore reaches</string>
@@ -3431,7 +3458,7 @@
     <string name="sync_handoff_checking">Checking your other devices…</string>
     <!-- %1$s is a device's name, %2$s when, such as "2 minutes ago" -->
     <string name="sync_handoff_from">From %1$s · %2$s</string>
-    <string name="sync_handoff_own">Can\'t reach your other devices · this device\'s progress</string>
+    <string name="sync_handoff_own">Can\'t reach your other devices</string>
     <!-- %1$s is a device's name, %2$s where it is, such as "Ch. 12, page 18" -->
     <string name="sync_handoff_further">%1$s is further: %2$s</string>
     <!-- %1$s is where another device is, such as "Chapter 12, page 18", when the device's name isn't known -->

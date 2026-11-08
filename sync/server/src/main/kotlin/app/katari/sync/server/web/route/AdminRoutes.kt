@@ -1,8 +1,8 @@
 package app.katari.sync.server.web.route
 
-import app.katari.sync.server.ServerVersion
 import app.katari.sync.server.SyncServices
 import app.katari.sync.server.administration.AdminOutcome
+import app.katari.sync.server.http.browserAddress
 import app.katari.sync.server.http.group
 import app.katari.sync.server.web.page.FormMessages
 import app.katari.sync.server.web.page.INVITES_PATH
@@ -58,7 +58,11 @@ internal fun Route.adminRoutes(services: SyncServices) {
 
         post(INVITES_PATH) {
             val code = storage { services.invites.issue(call.actorId) }
-            if (code == null) call.respondNotAllowed() else call.respondInviteReady(code)
+            if (code == null) {
+                call.respondNotAllowed()
+            } else {
+                call.respondInviteReady(code, call.browserAddress(services.config.trustedProxies))
+            }
         }
 
         get("/accounts/{id}") {
@@ -140,8 +144,7 @@ internal fun Route.adminRoutes(services: SyncServices) {
 /** The admin start page, at the address itself ([startRoute]). */
 internal suspend fun ApplicationCall.respondAccountList(services: SyncServices) {
     when (val outcome = storage { services.administration.accounts(actorId) }) {
-        is AdminOutcome.Done ->
-            respondAdminStart(outcome.value, ServerVersion.name, services.clock.now().toEpochMilliseconds())
+        is AdminOutcome.Done -> respondAdminStart(outcome.value, services.clock.now().toEpochMilliseconds())
         else -> respondRefusal(outcome)
     }
 }

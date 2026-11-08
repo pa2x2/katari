@@ -6,6 +6,7 @@ import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
@@ -35,7 +36,6 @@ import app.katari.sync.client.trigger.LiveUpdates
 import app.katari.sync.client.trigger.LocalChanges
 import app.katari.sync.client.trigger.SyncBackgroundWork
 import app.katari.sync.client.trigger.SyncTriggers
-import app.katari.sync.protocol.device.DeviceDescription
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,17 +74,21 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
-    private val thisDevice = object : ThisDevice {
-        override fun description() =
-            DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", local.appVersion)
+    val naming = DeviceNaming(
+        object : ThisDevice {
+            override fun platformName() = file.nameWithoutExtension
 
-        override val appVersion get() = local.appVersion
-    }
+            override val platform = "Linux"
+
+            override val appVersion get() = local.appVersion
+        },
+        preferences,
+    )
     val steps = SyncSteps()
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
-            PullChanges(connection, continuity, local.incoming, handOff, thisDevice),
+            PullChanges(connection, continuity, local.incoming, handOff, naming),
             PushChanges(
                 connection,
                 continuity,
@@ -101,12 +105,12 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(
-        clients, connection, tokens, thisDevice, capture, runs, resync, firstSync, directory, disconnection,
+        clients, connection, tokens, naming, capture, runs, resync, firstSync, directory, disconnection,
         deviceChanges,
     )
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges),
+        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff),
         LocalChanges(local.driver),
         work,
         connection,
@@ -191,7 +195,9 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
         override fun handOff() = Unit
 
-        override fun firstDownload(onMetered: Boolean) = Unit
+        override fun longRun(onMetered: Boolean) = Unit
+
+        override fun dropLongRun() = Unit
 
         override fun allowsBackgroundSync() = true
     }

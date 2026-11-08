@@ -32,11 +32,12 @@ class SyncBackgroundRun(
     }
 
     /**
-     * The first download, to its end, giving [onProgress] the status each time it changes, for the platform to show;
-     * retried while the server can't be reached.
+     * A long run ([app.katari.sync.client.connection.SyncStage.movesLibrary]), to its end, giving [onProgress] the
+     * status each time it changes, for the platform to show; retried while the server can't be reached. It waits for
+     * the run going now, which may be carrying the library's upload on past the stage that asked for this.
      */
-    suspend fun firstDownload(onProgress: (SyncStatus) -> Unit): WorkOutcome {
-        if (!connection.state().stage.isFirstDownload) return WorkOutcome.Done
+    suspend fun longRun(onProgress: (SyncStatus) -> Unit): WorkOutcome {
+        if (!connection.state().stage.movesLibrary && !runs.running.value) return WorkOutcome.Done
         return coroutineScope {
             val reporting = launch { statusFlow.status().collect(onProgress) }
             try {

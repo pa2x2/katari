@@ -10,4 +10,9 @@ data class DeviceDescription(
     /** Free text such as "Android" or "Linux", so a new platform needs no server update. */
     @ProtoNumber(2) val platform: String,
     @ProtoNumber(3) val appVersion: String,
-)
+) {
+    companion object {
+        /** The longest any field may be; the server refuses a longer one, as it does a blank one. */
+        const val MAX_FIELD_LENGTH = 128
+    }
+}

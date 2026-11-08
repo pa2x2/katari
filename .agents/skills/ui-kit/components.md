@@ -10,7 +10,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 |---|---|---|
 | A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`) |
 | A screen's top bar, with an action mode while items are selected | `AppBar`, `AppBarTitle`, `UpButton` | `UpButton` takes another icon where "up" closes something, such as a full-screen editor |
-| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs |
+| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs, or only its `arrows` over a still icon, such as sync's cloud |
 | Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Filled like the bar (`actionMode` for a bar in action mode); never a `Surface` or row of your own under the bar |
 | A large title that collapses on scroll and grows back | `rememberAppBarScrollBehavior`, `rememberAppBarExpander` | The expander grows it back when content returns to its top from code |
 | An app bar that turns into a search field | `SearchToolbar` | |
@@ -105,7 +105,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | The app's button, including destructive confirms | `Button` | Style by its `style` enum and `destructive` |
-| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs |
+| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs; with `arrows` drawn over a still icon, only they turn |
 | Lines between groups of icon buttons in one row, such as a formatting bar | `ButtonGroupDivider` | |
 | An item's actions in a row that scrolls or wraps, such as an entry's library and tracking actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |
@@ -173,7 +173,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
-| A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; `FloatingChip` for a chip that jumps through a list |
+| A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; it steps aside while a snackbar shows above the action. `FloatingChip` for a chip that jumps through a list |
 | An offer floating over what is read or watched that stays until taken or dismissed, such as going where another device got to | `OfferNote` | Messages time out; its owner removes it once the offer stops applying |
 | Messages and snackbars | `rememberScreenMessages`, `ScreenMessagesHost`, `ScreenMessagesOverlay`, `AppMessagesHost`, `SnackbarHost` | The overlay is for full-window screens without a `Scaffold` |
 | A tooltip on long press or hover | `Tooltip`, `HoverTooltip`, `PointerTooltip` | `PointerTooltip` follows the pointer over content that names its own |

@@ -7,3 +7,10 @@ SELECT EXISTS(SELECT 1 FROM profiles WHERE uuid != 'default')
     OR EXISTS(SELECT 1 FROM activity_sessions)
     OR EXISTS(SELECT 1 FROM categories WHERE _id != 0)
     OR EXISTS(SELECT 1 FROM entry_sync);
+
+-- How many titles each profile's library holds, so the first-sync screen can tell profiles of one name apart.
+librarySizes:
+SELECT profile_id, count(*) AS size
+FROM entries
+WHERE favorite = 1
+GROUP BY profile_id;

@@ -93,9 +93,9 @@ object Notifications {
     const val ID_SYNC_QUESTIONS = -901
     const val ID_SYNC_STOPPED = -902
 
-    /** The first download's progress, while it runs. */
+    /** The progress of a long run, such as a first sync, while it goes. */
     const val CHANNEL_SYNC_PROGRESS = "sync_progress_channel"
-    const val ID_SYNC_FIRST_DOWNLOAD = -903
+    const val ID_SYNC_LONG_RUN = -903
 
     /**
      * Notification channel used for Incognito Mode

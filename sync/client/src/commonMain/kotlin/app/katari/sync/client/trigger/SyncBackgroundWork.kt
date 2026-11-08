@@ -22,11 +22,17 @@ interface SyncBackgroundWork {
     fun handOff()
 
     /**
-     * Runs [SyncBackgroundRun.firstDownload] as work that shows its progress and keeps going when the app leaves the
-     * front, on any network when [onMetered], otherwise on an unmetered one. A platform whose runs end with the app,
-     * such as the desktop, leaves the first download to them and shows its progress only in the app.
+     * Runs [SyncBackgroundRun.longRun] as work that shows its progress in a notification and keeps going when the app
+     * leaves the front, on any network when [onMetered], otherwise on an unmetered one. Work for it already waiting or
+     * going carries on instead.
      */
-    fun firstDownload(onMetered: Boolean)
+    fun longRun(onMetered: Boolean)
+
+    /**
+     * Drops the long run's work, waiting or retrying, as the device leaves its account: left waiting, it would carry on
+     * in place of the next account's long run, at its own retry's time.
+     */
+    fun dropLongRun()
 
     /** False while battery saver or a background restriction is on, which pauses background sync (D022). */
     fun allowsBackgroundSync(): Boolean

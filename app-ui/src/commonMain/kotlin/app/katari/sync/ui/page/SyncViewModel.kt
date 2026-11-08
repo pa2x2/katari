@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.AccountDevice
 import app.katari.sync.client.account.SyncAccount
+import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
@@ -32,6 +33,7 @@ class SyncViewModel(
     private val tokens: DeviceTokenStore,
     statusState: SyncStatusState,
     val preferences: SyncPreferences,
+    val naming: DeviceNaming,
 ) : ViewModel() {
     val status: StateFlow<SyncStatus?> = statusState.status
 
@@ -86,6 +88,24 @@ class SyncViewModel(
             val removed = account.removeDevice(device.id)
             if (removed !is AccountCall.Done) removeFailures.value++
             refreshDevices()
+        }
+    }
+
+    /** Names this device [name], in its row at once and in the account with the sync this starts. */
+    fun renameThisDevice(name: String) {
+        viewModelScope.launchIO {
+            naming.rename(name)
+            (devices.value as? DevicesState.Listed)?.let { listed ->
+                val named = naming.name()
+                devices.value = DevicesState.Listed(
+                    listed.devices.map { device ->
+                        if (!device.isThisDevice) return@map device
+                        val description = device.device.description.copy(name = named)
+                        device.copy(device = device.device.copy(description = description))
+                    },
+                )
+            }
+            account.syncNow()
         }
     }
 

@@ -11,17 +11,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import app.katari.sync.client.account.ServerCheck
+import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.server.shownAddress
+import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.address.AddressCheck
+import app.katari.sync.ui.status.rememberSyncStatus
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -45,15 +55,21 @@ import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import okhttp3.HttpUrl
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Signing in with a server address (D027): the address is checked as it is typed, then a username and password, or
  * an invite code with the username and password of the new account. [server] and [account] fill the address and
- * username in, such as when signing in again to the server the device was removed from.
+ * username in, such as when signing in again to the server the device was removed from; [inviteCode] opens it on
+ * signing up with that invite, as an invite's QR code does.
  */
-class SyncSignInScreen(private val server: String? = null, private val account: String? = null) : Screen() {
+class SyncSignInScreen(
+    private val server: String? = null,
+    private val account: String? = null,
+    private val inviteCode: String? = null,
+) : Screen() {
 
     @Composable
     override fun Content() {
@@ -65,8 +81,8 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
         val address = rememberTextFieldState(server.orEmpty())
         val username = rememberTextFieldState(account.orEmpty())
         val password = rememberTextFieldState()
-        val invite = rememberTextFieldState()
-        var withInvite by rememberSaveable { mutableStateOf(false) }
+        val invite = rememberTextFieldState(inviteCode.orEmpty())
+        var withInvite by rememberSaveable { mutableStateOf(inviteCode != null) }
 
         LaunchedEffect(address) {
             snapshotFlow { address.text.toString() }.collect {
@@ -77,9 +93,15 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
         LaunchedEffect(join) {
             (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
         }
+        // Back from the server's web page, where an empty server's admin account is made, the server can sign in now
+        LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.recheckAddress() }
+        val addressFocus = remember { FocusRequester() }
+        // The keyboard opens in the address field once, not each time the field scrolls back into view, and not when
+        // the address came filled in, such as from an invite's QR code
+        var addressFocused by rememberSaveable { mutableStateOf(server != null) }
 
         val joining = join == SyncJoinViewModel.JoinState.Joining
-        val serverReady = (check as? SyncJoinViewModel.AddressCheck.Checked)?.check is ServerCheck.Ready
+        val serverReady = (check as? AddressCheck.Checked)?.check is ServerCheck.Ready
         val canSubmit = !joining && serverReady && username.text.isNotBlank() && password.text.isNotEmpty() &&
             (!withInvite || invite.text.isNotBlank())
         val submit = {
@@ -123,17 +145,23 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
                         ControlRow {
                             TextField(
                                 state = address,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().focusRequester(addressFocus),
                                 label = stringResource(MR.strings.sync_server_address),
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Uri,
                                     imeAction = ImeAction.Next,
                                 ),
                             )
+                            LaunchedEffect(Unit) {
+                                if (!addressFocused) {
+                                    addressFocus.requestFocus()
+                                    addressFocused = true
+                                }
+                            }
                         }
                     }
                 }
-                item { AddressNote(check) }
+                item { AddressNote(check, resetServer = rememberResetServer()) }
                 item { RowGroupGap() }
                 item {
                     RowGroupItem(RowGroupPosition.Alone) {
@@ -167,13 +195,16 @@ class SyncSignInScreen(private val server: String? = null, private val account: 
     }
 }
 
-/** What checking the address found, under the address: a warning, a refusal, or that it is being checked. */
+/**
+ * What checking the address found, under the address: a warning, a refusal, or that it is being checked. An empty
+ * server at [resetServer], the one this device synced with before it was reset, says so.
+ */
 @Composable
-private fun AddressNote(check: SyncJoinViewModel.AddressCheck) {
+private fun AddressNote(check: AddressCheck, resetServer: HttpUrl?) {
     when (check) {
-        SyncJoinViewModel.AddressCheck.Empty -> Unit
-        SyncJoinViewModel.AddressCheck.Checking -> RowGroupNote(stringResource(MR.strings.sync_server_checking))
-        is SyncJoinViewModel.AddressCheck.Checked -> when (val result = check.check) {
+        AddressCheck.Empty -> Unit
+        AddressCheck.Checking -> RowGroupNote(stringResource(MR.strings.sync_server_checking))
+        is AddressCheck.Checked -> when (val result = check.check) {
             is ServerCheck.Ready -> if (result.isPlainHttp) {
                 RowGroupNote(stringResource(MR.strings.sync_server_plain_http_local), tone = ContentTone.Warning)
             }
@@ -182,7 +213,12 @@ private fun AddressNote(check: SyncJoinViewModel.AddressCheck) {
                 if (!result.webPage.isHttps) {
                     RowGroupNote(stringResource(MR.strings.sync_server_plain_http_local), tone = ContentTone.Warning)
                 }
-                serverCheckProblemText(result)?.let { RowGroupNote(it, showIcon = true) }
+                val setUp = if (result.webPage == resetServer) {
+                    stringResource(MR.strings.sync_server_reset_needs_setup, result.webPage.shownAddress)
+                } else {
+                    serverCheckProblemText(result)
+                }
+                setUp?.let { RowGroupNote(it, showIcon = true) }
                 RowGroupAction(
                     label = stringResource(MR.strings.action_open_in_browser),
                     onClick = { uriHandler.openUri(result.webPage.toString()) },
@@ -192,6 +228,11 @@ private fun AddressNote(check: SyncJoinViewModel.AddressCheck) {
         }
     }
 }
+
+/** The server this device synced with, while it waits to sign in again because that server was reset. */
+@Composable
+private fun rememberResetServer(): HttpUrl? =
+    (rememberSyncStatus()?.link as? SyncStatus.Link.Linked)?.takeIf { it.stopped == SyncStop.SERVER_RESET }?.server
 
 @Composable
 private fun CredentialFields(

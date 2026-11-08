@@ -4,18 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.LinkCodeLookup
-import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.client.account.SyncAccount
+import app.katari.sync.ui.address.AddressCheck
+import app.katari.sync.ui.address.TypedAddressCheck
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Joining an account (D027): the server address is checked as it is typed, so the screen can warn about plain HTTP or
@@ -26,8 +24,9 @@ import kotlin.time.Duration.Companion.milliseconds
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
 class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
-    val check: StateFlow<AddressCheck>
-        field = MutableStateFlow<AddressCheck>(AddressCheck.Empty)
+    private val typedAddress = TypedAddressCheck(viewModelScope, account::checkServer)
+
+    val check: StateFlow<AddressCheck> = typedAddress.state
 
     val join: StateFlow<JoinState>
         field = MutableStateFlow<JoinState>(JoinState.Idle)
@@ -35,25 +34,11 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
     val lookUp: StateFlow<LookUpState>
         field = MutableStateFlow<LookUpState>(LookUpState.Idle)
 
-    private var checking: Job? = null
-    private var checkedAddress: String? = null
-
     /** Checks [address] once typing has paused. */
-    fun addressChanged(address: String) {
-        val trimmed = address.trim()
-        if (trimmed == checkedAddress) return
-        checkedAddress = trimmed
-        checking?.cancel()
-        if (trimmed.isEmpty()) {
-            check.value = AddressCheck.Empty
-            return
-        }
-        check.value = AddressCheck.Checking
-        checking = viewModelScope.launchIO {
-            delay(TYPING_PAUSE)
-            check.value = AddressCheck.Checked(account.checkServer(trimmed))
-        }
-    }
+    fun addressChanged(address: String) = typedAddress.changed(address)
+
+    /** Checks the address again, such as when the person comes back from the server's web page. */
+    fun recheckAddress() = typedAddress.recheck()
 
     fun signIn(address: String, username: String, password: String) = joining(JoinPath.PASSWORD) {
         account.signIn(address, username, password)
@@ -106,14 +91,6 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
         }
     }
 
-    sealed interface AddressCheck {
-        data object Empty : AddressCheck
-
-        data object Checking : AddressCheck
-
-        data class Checked(val check: ServerCheck) : AddressCheck
-    }
-
     sealed interface LookUpState {
         data object Idle : LookUpState
 
@@ -132,9 +109,5 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
         data class Joined(val choicesWaiting: Boolean) : JoinState
 
         data class Failed(val result: JoinResult, val path: JoinPath) : JoinState
-    }
-
-    private companion object {
-        val TYPING_PAUSE = 600.milliseconds
     }
 }

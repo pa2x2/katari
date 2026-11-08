@@ -62,6 +62,14 @@ class SyncConnection(
         }
     }
 
+    /** Keeps [server] as where this device's server is now, the same one at another address. */
+    suspend fun moveTo(server: HttpUrl) {
+        handler.await(inTransaction = true) {
+            val device = sync_stateQueries.get().awaitAsOne().device_id
+            sync_stateQueries.setServer(serverUrl = server.toString(), deviceId = device)
+        }
+    }
+
     suspend fun setStage(stage: SyncStage, target: Long = 0) {
         handler.await { sync_stateQueries.setStage(stage.stored, target) }
     }

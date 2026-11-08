@@ -50,9 +50,15 @@ class SyncSteps {
      * step with nothing to do leaves the last one named.
      */
     internal suspend fun <T> step(kind: SyncStep.Kind, block: suspend (progress: (Long, Long) -> Unit) -> T): T =
-        block { done, total ->
-            if (total > 0) current.value = SyncStep(kind, done.coerceIn(0, total), total)
-        }
+        block(progressOf(kind))
+
+    /**
+     * Names a step of [kind] with how far it got, done of total, for work that happens inside another step, such as the
+     * files a record push waits for; the other step is named again as soon as it reports.
+     */
+    internal fun progressOf(kind: SyncStep.Kind): (done: Long, total: Long) -> Unit = { done, total ->
+        if (total > 0) current.value = SyncStep(kind, done.coerceIn(0, total), total)
+    }
 
     private fun nowMillis() = Clock.System.now().toEpochMilliseconds()
 

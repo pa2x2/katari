@@ -46,6 +46,7 @@ class BackupMissingExtensions(
                     name = source.name,
                     listing =
                     candidates.firstOrNull { compatibility.cantInstall(it) == null } ?: candidates.firstOrNull(),
+                    untrusted = null,
                     countsByProfile = mapOf(0L to source.libraryEntries.toLong()),
                 )
             }

@@ -84,7 +84,7 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
     /** Each device's share is written only by that device, so the share it changed last is its current one. */
     override fun merge(local: HistoryPayload, incoming: HistoryPayload) = local.copy(
         lastRead = latest(local.lastRead, incoming.lastRead),
-        timeRead = (local.timeRead + incoming.timeRead)
+        timeRead = (joined(local.timeRead, incoming.timeRead) + incoming.timeRead)
             .groupBy { it.device to it.from }
             .map { (_, shares) ->
                 shares.reduce { a, b ->
@@ -95,6 +95,26 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
             }
             .sorted(),
     )
+
+    /**
+     * [local] as it counts once it meets [incoming]. A device joining an account records the time read on each
+     * chapter before sync as its own share, never seen edited ([Stamped.UNKNOWN_EDIT]). When that copy first meets the
+     * account's record of the chapter, which holds none of its devices' shares, the time counts as the larger of the
+     * two rather than their sum: a device restored from a backup of the same library holds that same time again. Its
+     * shares keep only what they add to the account's total; reading after that adds as usual. Once merged, the record
+     * holds the account's shares too, so this happens once.
+     */
+    private fun joined(local: List<TimeReadShare>, incoming: List<TimeReadShare>): List<TimeReadShare> {
+        val devices = local.map { it.device }.toSet()
+        val meetsAccount = incoming.isNotEmpty() && incoming.none { it.device in devices }
+        if (!meetsAccount || local.any { it.at != Stamped.UNKNOWN_EDIT }) return local
+        var accountMillis = incoming.sumOf { it.millis }
+        return local.map { share ->
+            val counted = minOf(share.millis, accountMillis)
+            accountMillis -= counted
+            share.copy(millis = share.millis - counted)
+        }
+    }
 
     /** The row holds the sum of every device's share, this device's own included. */
     override suspend fun apply(writes: LocalWrites, key: String, payload: HistoryPayload): ApplyOutcome {

@@ -3,6 +3,7 @@ package app.katari.sync.ui.page
 import androidx.compose.runtime.Composable
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
@@ -13,6 +14,7 @@ import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import mihon.feature.missingextensions.model.MissingExtension
 import mihon.feature.missingextensions.ui.noticeText
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Dns
 import mihon.icons.materialsymbols.rounded.Extension
 import mihon.icons.materialsymbols.rounded.Logout
 import mihon.icons.materialsymbols.rounded.SyncProblem
@@ -47,8 +49,12 @@ internal fun linkedPreferences(
         add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
     }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
-    if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
-    add(syncOptionsGroup(preferences, knowsWifi))
+    if (link.stopped != SyncStop.SIGN_IN_AGAIN && link.stopped != SyncStop.SERVER_RESET) {
+        val reachable = status.activity !is SyncStatus.Activity.Unreachable &&
+            status.activity != SyncStatus.Activity.Offline
+        add(devicesGroup(devices, reachable, actions))
+    }
+    add(syncOptionsGroup(preferences, knowsWifi, serverAddressRow(link, actions)))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
             TextPreferenceWidget(
@@ -67,13 +73,22 @@ private fun statusCard(
     headline: SyncHeadline?,
     actions: SyncPageActions,
 ): Preference.PreferenceItem<*, *> {
-    val account = link.accountName?.let { stringResource(MR.strings.sync_account_on_server, it, link.server.host) }
-        ?: link.server.host
+    // A headline that names the server leaves the account alone under it
+    val accountName = link.accountName
+    val account = when {
+        accountName == null -> link.server.host
+        headline?.namesServer() == true -> accountName
+        else -> stringResource(MR.strings.sync_account_on_server, accountName, link.server.host)
+    }
     return Preference.PreferenceItem.CustomPreference(title = "status") {
         TextPreferenceWidget(
             title = headline?.let { syncHeadlineText(it) }.orEmpty(),
-            // The headline says when it last synced
-            subtitle = account,
+            // The headline says when it last synced; a resync that reads like a first download says why it runs
+            subtitle = if (headline is SyncHeadline.CatchingUp) {
+                stringResource(MR.strings.sync_catching_up_text)
+            } else {
+                account
+            },
             icon = headline?.icon(),
             iconAlert = headline?.stopsSync() == true,
             widget = {
@@ -90,6 +105,14 @@ private fun statusCard(
             },
         )
     }
+}
+
+/** Whether the status card's headline names the server, as "Can't reach 127.0.0.1" does. */
+private fun SyncHeadline.namesServer(): Boolean = when (this) {
+    is SyncHeadline.Unreachable, is SyncHeadline.UnreachableLong, is SyncHeadline.ServerTooOld -> true
+    is SyncHeadline.AccountDisabled -> server != null
+    is SyncHeadline.Unsent -> unreachableServer != null
+    else -> false
 }
 
 /** Library titles whose extensions this device lacks, opening the sheet that installs them. */
@@ -125,17 +148,27 @@ private fun attentionRows(
             )
         }
     }
+    val signInAgain = { actions.signIn(link.server.shownAddress, link.accountName) }
     return when (headline) {
         SyncHeadline.ChoicesWaiting ->
             listOf(row(stringResource(MR.strings.sync_action_continue_choosing), actions.openChoices))
         is SyncHeadline.Questions ->
             listOf(row(stringResource(MR.strings.sync_action_answer_questions), actions.openQuestions))
-        SyncHeadline.SignInAgain ->
+        SyncHeadline.SignInAgain -> listOf(row(stringResource(MR.strings.sync_action_sign_in_again), signInAgain))
+        // Signing in tells the person how to make the account again, and says so again if they haven't yet
+        SyncHeadline.ServerReset -> {
+            val title = stringResource(MR.strings.sync_action_set_up_again)
             listOf(
-                row(stringResource(MR.strings.sync_action_sign_in_again)) {
-                    actions.signIn(link.server.toString(), link.accountName)
+                Preference.PreferenceItem.CustomPreference(title = title) {
+                    TextPreferenceWidget(
+                        title = title,
+                        subtitle = stringResource(MR.strings.sync_server_reset_text),
+                        icon = MaterialSymbols.Rounded.Dns,
+                        onPreferenceClick = signInAgain,
+                    )
                 },
             )
+        }
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
         )
@@ -143,14 +176,37 @@ private fun attentionRows(
     }
 }
 
+/** Where this device's server is, opening the dialog that follows it to a new address. */
+@Composable
+private fun serverAddressRow(
+    link: SyncStatus.Link.Linked,
+    actions: SyncPageActions,
+): Preference.PreferenceItem<out Any, out Any> {
+    val title = stringResource(MR.strings.sync_server_address)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = link.server.shownAddress,
+            icon = MaterialSymbols.Rounded.Dns,
+            onPreferenceClick = actions.changeServer,
+        )
+    }
+}
+
 /**
- * The device's own sync options, which every device sets for itself (D022, D050). Where the platform can't tell Wi-Fi
- * ([knowsWifi] false), the mobile data switch holds files back on networks the system marks metered, and says so.
+ * The device's own sync options, which every device sets for itself (D022, D050), led by [serverAddress] once linked.
+ * Where the platform can't tell Wi-Fi ([knowsWifi] false), the mobile data switch holds files back on networks the
+ * system marks metered, and says so.
  */
 @Composable
-internal fun syncOptionsGroup(preferences: SyncPreferences, knowsWifi: Boolean) = Preference.PreferenceGroup(
+internal fun syncOptionsGroup(
+    preferences: SyncPreferences,
+    knowsWifi: Boolean,
+    serverAddress: Preference.PreferenceItem<out Any, out Any>? = null,
+) = Preference.PreferenceGroup(
     title = stringResource(MR.strings.sync_options),
-    preferenceItems = listOf(
+    preferenceItems = listOfNotNull(
+        serverAddress,
         Preference.PreferenceItem.SwitchPreference(
             preference = preferences.useMobileData,
             title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),

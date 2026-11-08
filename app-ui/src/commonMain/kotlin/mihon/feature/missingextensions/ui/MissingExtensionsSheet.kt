@@ -5,11 +5,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.browse.components.ExtensionItemIcon
+import eu.kanade.presentation.browse.components.ExtensionTrustDialog
 import eu.kanade.presentation.browse.components.ExtensionWarningPill
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.tachiyomi.extension.model.InstallStep
@@ -19,6 +23,9 @@ import mihon.feature.missingextensions.model.CantInstall
 import mihon.feature.missingextensions.model.MissingExtension
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Extension
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonSize
+import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CheckRow
@@ -35,8 +42,9 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Installs the extensions the library's titles need, from the Library card, the Sync page or Browse → Extensions.
- * Installs go on after it closes. [onOpenStores] opens Extension stores, where a store that lists one is added.
+ * Installs the extensions the library's titles need, or trusts those installed on the device but not trusted in this
+ * app, from the Library card, the Sync page, Browse → Extensions or the first-run guide. Installs go on after it
+ * closes. [onOpenStores] opens Extension stores, where a store that lists one is added.
  */
 @Composable
 fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Unit) {
@@ -47,6 +55,7 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
     val systemPackages = remember { graph.extensionSystemPackages }
     val context = currentPlatformContext()
     val permissionMissing = systemPackages.isInstallPermissionMissing()
+    var trustingKey by rememberSaveable { mutableStateOf<String?>(null) }
 
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -54,6 +63,12 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
             RowGroupNote(stringResource(MR.strings.missing_extensions_note))
             val current = state ?: return@Column
             RowList(modifier = Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                if (current.untrusted.isNotEmpty()) {
+                    item(key = "untrusted") { RowGroupHeader(stringResource(MR.strings.missing_extensions_untrusted)) }
+                    rowGroupItems(current.untrusted, key = { "untrusted-${it.key}" }) { extension ->
+                        UntrustedRow(extension, current, onTrust = { trustingKey = extension.key })
+                    }
+                }
                 if (current.installable.isNotEmpty()) {
                     item(key = "ready") { RowGroupHeader(stringResource(MR.strings.missing_extensions_ready)) }
                     rowGroupItems(current.installable, key = { it.extension.key }) { row ->
@@ -97,6 +112,45 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
             )
         }
     }
+    state?.untrusted?.find { it.key == trustingKey }?.let { extension ->
+        ExtensionTrustDialog(
+            onClickConfirm = {
+                model.trust(extension)
+                trustingKey = null
+            },
+            onClickDismiss = {
+                model.uninstall(extension)
+                trustingKey = null
+            },
+            onDismissRequest = { trustingKey = null },
+        )
+    }
+}
+
+/** An extension installed on the device but not trusted in this app, which Trust loads after the usual warning. */
+@Composable
+private fun UntrustedRow(
+    extension: MissingExtension,
+    state: MissingExtensionsSheetViewModel.State,
+    onTrust: () -> Unit,
+) {
+    val installed = extension.untrusted ?: return
+    val titles = titlesText(extension, state)
+    SettingsRow(
+        title = extension.name,
+        subtitle = installed.store
+            ?.let { stringResource(MR.strings.missing_extensions_details, titles, it.name, installed.versionName) }
+            ?: titles,
+        leading = { ExtensionItemIcon(installed, InstallStep.Idle) },
+        trailing = {
+            Button(
+                label = stringResource(MR.strings.ext_trust),
+                onClick = onTrust,
+                style = ButtonStyle.Tonal,
+                size = ButtonSize.Small,
+            )
+        },
+    )
 }
 
 @Composable

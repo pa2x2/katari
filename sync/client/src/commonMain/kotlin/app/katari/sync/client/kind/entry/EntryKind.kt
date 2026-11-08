@@ -24,6 +24,7 @@ import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileReference
 import tachiyomi.domain.source.identity.SourceIdScheme
+import tachiyomi.domain.source.model.StubSource
 
 /**
  * Entries, keyed by profile uuid, source identity, URL and type ([LocalReads.entryKey]). Local ref: `[entries._id]`.
@@ -95,9 +96,11 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                     thumbnailUrl = row.thumbnail_url,
                     backgroundUrl = row.background_url,
                 ),
+                sourceName = row.source_name?.takeIf { StubSource.isKnownName(it) } ?: previous?.sourceName,
             )
         }
     }
+
     override fun merge(local: EntryPayload, incoming: EntryPayload) = local.copy(
         favorite = latest(local.favorite, incoming.favorite),
         dateAdded = latest(local.dateAdded, incoming.dateAdded),
@@ -108,6 +111,10 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
         customCover = latest(local.customCover, incoming.customCover),
+        // A record from a device that doesn't know the name never takes it away
+        sourceName = fieldOfNewer(serializer, local, incoming) { it.sourceName }
+            ?: local.sourceName
+            ?: incoming.sourceName,
     )
 
     override fun files(payload: EntryPayload): List<FileReference> =
@@ -115,19 +122,21 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
 
     /**
      * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
-     * keeps the metadata of its own refreshes. The custom cover is put in place after the transaction, fetched first
-     * when no file here holds it. An entry another one replaced stays out of the library; its changes
-     * carry over to the replacement instead. An entry moved to another profile has no row of its own any more, as
-     * after moving it here, so its record makes none. Local-source entries never sync.
+     * keeps the metadata of its own refreshes. The source's name is stored for a source no extension here named. The
+     * custom cover is put in place after the transaction, fetched first when no file here holds it. An entry another
+     * one replaced stays out of the library; its changes carry over to the replacement instead. An entry moved to
+     * another profile has no row of its own any more, as after moving it here, so its record makes none. Local-source
+     * entries never sync.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: EntryPayload): ApplyOutcome {
         if (payload.source.idScheme == SourceIdScheme.LOCAL.key) return ApplyOutcome.Applied(null)
         if (writes.movedTo(key) != null) return ApplyOutcome.Applied(null)
         val profileId = writes.profileId(payload.profileUuid).idOr { return it }
         val source = writes.sourceKey(payload.source)
+        val queries = writes.database.sync_applyQueries
+        payload.sourceName?.let { queries.nameSource(source, it) }
         val favorite = payload.favorite.value && writes.replacementOf(key) == null
         val pinned = payload.libraryPinned.value && favorite
-        val queries = writes.database.sync_applyQueries
         val existing = queries.entryId(profileId, source, payload.url, payload.type).awaitAsOneOrNull()
         val entryId = if (existing == null) {
             val metadata = payload.metadata

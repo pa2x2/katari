@@ -11,6 +11,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import app.katari.sync.client.server.shownAddress
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.coroutines.delay
 import mihon.presentation.kit.content.QrCode
@@ -77,7 +78,7 @@ internal fun LinkDeviceDialog(onDismissRequest: () -> Unit) {
                         },
                     ) {
                         Text(code.offer.code, role = TextRole.TypedCode, textAlign = TextAlign.Center)
-                        Text(code.offer.server.toString(), role = TextRole.Body, textAlign = TextAlign.Center)
+                        Text(code.offer.server.shownAddress, role = TextRole.Body, textAlign = TextAlign.Center)
                         Text(
                             stringResource(MR.strings.sync_link_instructions),
                             role = TextRole.Supporting,

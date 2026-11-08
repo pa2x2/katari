@@ -48,9 +48,11 @@ data class SyncStatus(
         /**
          * A run is going; during a first download or full resync, [percent] says how far it got, and is null
          * otherwise. [step] is the step of a run long enough to name, with its own progress ([SyncSteps]). Both change
-         * only as what they show does, and at most every couple of seconds.
+         * only as what they show does, and at most every couple of seconds. [catchingUp] while the device resyncs a
+         * server that lost what it had, such as one restored from an older copy, to fill it in again
+         * ([app.katari.sync.client.connection.SyncStage.RESYNC]).
          */
-        data class Syncing(val percent: Int?, val step: SyncStep? = null) : Activity
+        data class Syncing(val percent: Int?, val step: SyncStep? = null, val catchingUp: Boolean = false) : Activity
 
         /** Waits for the person's first-sync choices ([app.katari.sync.client.account.SyncAccount.firstSyncProposal]). */
         data object WaitingForChoices : Activity

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.client.server.Refusal
+import app.katari.sync.client.server.shownAddress
 import app.katari.sync.protocol.version.ProtocolCompatibility
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -50,7 +51,7 @@ fun joinProblemText(result: JoinResult, path: JoinPath): String? = when (result)
 @Composable
 fun serverCheckProblemText(check: ServerCheck): String? = when (check) {
     is ServerCheck.Ready -> null
-    is ServerCheck.NeedsSetup -> stringResource(MR.strings.sync_server_needs_setup, check.webPage.toString())
+    is ServerCheck.NeedsSetup -> stringResource(MR.strings.sync_server_needs_setup, check.webPage.shownAddress)
     is ServerCheck.Incompatible -> compatibilityText(check.compatibility)
     ServerCheck.Malformed -> stringResource(MR.strings.sync_server_malformed)
     ServerCheck.PlainHttpOutsideLocalNetwork -> stringResource(MR.strings.sync_server_plain_http_refused)

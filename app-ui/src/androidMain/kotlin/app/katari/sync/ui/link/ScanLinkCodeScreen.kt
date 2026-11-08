@@ -17,7 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import app.katari.sync.client.account.LinkCodeLink
+import app.katari.sync.protocol.link.InviteLink
 import app.katari.sync.ui.signin.SyncJoinViewModel
+import app.katari.sync.ui.signin.SyncSignInScreen
 import app.katari.sync.ui.signin.joinProblemText
 import app.katari.sync.ui.signin.leaveJoined
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -39,7 +41,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Scanning a linked device's code with the camera (D027). The camera asks for its permission first; a phone without
- * a camera, or a person who would rather not, types the code instead. A code read asks before joining.
+ * a camera, or a person who would rather not, types the code instead. A code read asks before joining. An invite's
+ * code from the server's web page opens signing up with its address and code filled in.
  */
 class ScanLinkCodeScreen : Screen() {
 
@@ -66,9 +69,13 @@ class ScanLinkCodeScreen : Screen() {
         var scanned by rememberSaveable { mutableStateOf<String?>(null) }
         var lastRefused by remember { mutableStateOf<String?>(null) }
         val link = scanned?.let(LinkCodeLink::parse)
+        var invite by remember { mutableStateOf<InviteLink?>(null) }
 
         LaunchedEffect(join) {
             (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
+        }
+        LaunchedEffect(invite) {
+            invite?.let { navigator.replace(SyncSignInScreen(server = it.server, inviteCode = it.code)) }
         }
 
         Scaffold(
@@ -93,9 +100,12 @@ class ScanLinkCodeScreen : Screen() {
                         },
                     ) {
                         LinkCodeCamera(
-                            scanning = link == null,
+                            scanning = link == null && invite == null,
                             onText = { text ->
-                                if (LinkCodeLink.parse(text) != null) {
+                                val scannedInvite = InviteLink.parse(text)
+                                if (scannedInvite != null) {
+                                    invite = scannedInvite
+                                } else if (LinkCodeLink.parse(text) != null) {
                                     model.clearResult()
                                     scanned = text
                                 } else if (text != lastRefused) {

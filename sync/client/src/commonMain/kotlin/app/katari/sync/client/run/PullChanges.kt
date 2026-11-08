@@ -1,9 +1,9 @@
 package app.katari.sync.client.run
 
 import app.katari.sync.client.apply.IncomingRecords
+import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncStage
-import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.server.Refusal
 import app.katari.sync.client.server.SyncFailure
@@ -28,7 +28,7 @@ class PullChanges(
     private val continuity: ServerContinuity,
     private val incoming: IncomingRecords,
     private val handOff: EntryHandOff,
-    private val thisDevice: ThisDevice,
+    private val naming: DeviceNaming,
 ) {
     /** [onPage] hears where each page applied moved the device, and the account's sequence then. */
     suspend fun pullAll(
@@ -38,7 +38,7 @@ class PullChanges(
         onPage: (position: Long, accountSequence: Long) -> Unit = { _, _ -> },
     ) {
         // Each pull says how this device presents itself, so its row in the device list follows app updates
-        val description = thisDevice.description()
+        val description = naming.description()
         while (true) {
             val state = connection.state()
             val request = PullRequest(

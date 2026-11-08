@@ -42,6 +42,9 @@ data class StubSource(
         fun from(source: Source): StubSource {
             return StubSource(id = source.id, lang = source.lang, name = source.name)
         }
+
+        /** Whether [name] names a source: some backups store the ID as the name, and some no name at all. */
+        fun isKnownName(name: String): Boolean = name.isNotBlank() && name.toLongOrNull() == null
     }
 }
 

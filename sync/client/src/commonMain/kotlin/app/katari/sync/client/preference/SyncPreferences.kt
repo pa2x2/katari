@@ -14,4 +14,10 @@ class SyncPreferences(profileStore: ProfileStore) {
 
     /** Whether the device syncs on a schedule while the app is closed. */
     val syncInBackground: Preference<Boolean> = store.getBoolean("sync_in_background", true)
+
+    /**
+     * The name the person gave this device for its account's device list, blank for the platform's name. App state,
+     * so no backup carries it to another device.
+     */
+    val deviceName: Preference<String> = store.getString(Preference.appStateKey("sync_device_name"))
 }

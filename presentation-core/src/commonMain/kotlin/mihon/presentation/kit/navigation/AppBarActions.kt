@@ -53,6 +53,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                     enabled = action.enabled,
                     badgeCount = action.badgeCount,
                     spin = action.spin,
+                    arrows = action.arrows,
                 )
             }
             action.menu?.invoke()
@@ -100,6 +101,8 @@ sealed interface AppBar {
         val badgeCount: Int? = null,
         /** Turns the icon, the way its arrows point, while the work it stands for runs; null keeps it still. */
         val spin: Spin? = null,
+        /** Arrows drawn over [icon] that turn alone while [spin] is set, such as sync's inside its cloud. */
+        val arrows: ImageVector? = null,
         /** A dropdown anchored to this action's button; the caller owns its expanded state. */
         val menu: (@Composable () -> Unit)? = null,
         val shortcut: KeyboardShortcut? = null,

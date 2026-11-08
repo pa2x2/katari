@@ -115,10 +115,11 @@ class SyncPass(
         }
         working()
         val client = clients.of(checkNotNull(state.server), token)
+        var info: ServerInfo? = null
         return try {
             // Also how a server that takes connections but never answers is found within a small call's time limit,
             // before a page of records waits the long ones
-            val info = client.info()
+            info = client.info()
             // A server that answers is reachable from now, not only once the run is done, which a large pull makes long
             connection.reached(synced = false)
             if (state.stopped == SyncStop.SERVER_TOO_OLD && !serverUpdated(info)) return SyncOutcome.IDLE
@@ -127,7 +128,8 @@ class SyncPass(
             }
         } catch (e: SyncFailure.Refused) {
             handOff.unreachable(request.entriesFirst)
-            refused(e.reason)
+            // The instance names the server's storage: another one means it started over and the account went with it
+            refused(e.reason, serverStartedOver = info != null && info.instanceId != state.instanceId)
         } catch (e: SyncFailure) {
             logcat(LogPriority.INFO, e) { "Sync server not reached" }
             handOff.unreachable(request.entriesFirst)
@@ -149,7 +151,7 @@ class SyncPass(
         SyncStop.APP_TOO_OLD -> (SyncProtocolVersion.CURRENT > state.stoppedProtocol).also { updated ->
             if (updated) connection.stop(null)
         }
-        SyncStop.SIGN_IN_AGAIN, SyncStop.REMOVED, SyncStop.ACCOUNT_DISABLED -> false
+        SyncStop.SIGN_IN_AGAIN, SyncStop.SERVER_RESET, SyncStop.REMOVED, SyncStop.ACCOUNT_DISABLED -> false
     }
 
     private suspend fun serverUpdated(info: ServerInfo): Boolean {
@@ -203,6 +205,8 @@ class SyncPass(
         incoming.retryHeld()
         steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
             var sent = 0L
+            // The files records wait for, named while they upload, the records named again once taken
+            val files = steps.progressOf(SyncStep.Kind.UPLOADING_FILES)
             run rounds@{
                 repeat(PUSH_ROUNDS) { round ->
                     settings.flush()
@@ -210,7 +214,7 @@ class SyncPass(
                     drainAll()
                     val total = sent + pending.count()
                     progress(sent, total)
-                    val stale = push.pushAll(client, afterPull = round > 0) { taken ->
+                    val stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
                         sent += taken
                         progress(sent, total)
                     }
@@ -235,11 +239,11 @@ class SyncPass(
         }
     }
 
-    private suspend fun refused(reason: Refusal): SyncOutcome {
+    private suspend fun refused(reason: Refusal, serverStartedOver: Boolean): SyncOutcome {
         when (reason) {
             Refusal.TokenNotAccepted -> {
                 connection.forgetToken()
-                connection.stop(SyncStop.SIGN_IN_AGAIN)
+                connection.stop(if (serverStartedOver) SyncStop.SERVER_RESET else SyncStop.SIGN_IN_AGAIN)
             }
             Refusal.DeviceRemoved -> disconnection.leave(SyncStop.REMOVED)
             Refusal.AccountDisabled -> disconnection.leave(SyncStop.ACCOUNT_DISABLED)

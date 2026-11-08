@@ -23,6 +23,17 @@ internal fun ApplicationCall.cameOverHttps(trustedProxies: Int): Boolean {
     return proto.equals("https", ignoreCase = true)
 }
 
+/**
+ * The address the browser reached the server at, such as `https://sync.example.com`: the page and the sync API share
+ * it, so it is the one apps use too. The host is the Host header as the browser sent it, port included, so behind a
+ * proxy it is right only when the proxy passes Host on unchanged.
+ */
+internal fun ApplicationCall.browserAddress(trustedProxies: Int): String {
+    val scheme = if (cameOverHttps(trustedProxies)) "https" else "http"
+    val host = request.headers[HttpHeaders.Host] ?: "${request.local.serverHost}:${request.local.serverPort}"
+    return "$scheme://$host"
+}
+
 private fun ApplicationCall.forwarded(header: String, trustedProxies: Int): String? {
     if (trustedProxies == 0) return null
     val entries = request.headers.getAll(header).orEmpty()

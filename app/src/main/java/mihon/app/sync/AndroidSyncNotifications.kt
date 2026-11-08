@@ -32,6 +32,8 @@ class AndroidSyncNotifications(private val application: Application) : SyncNotif
         val (title, text) = when (reason) {
             SyncStop.REMOVED -> application.stringResource(MR.strings.sync_removed_title) to ended
             SyncStop.ACCOUNT_DISABLED -> application.stringResource(MR.strings.sync_account_disabled_title) to ended
+            SyncStop.SERVER_RESET -> application.stringResource(MR.strings.sync_status_server_reset) to
+                application.stringResource(MR.strings.sync_notification_reset_text)
             else -> application.stringResource(MR.strings.sync_title) to
                 application.stringResource(MR.strings.sync_status_sign_in_again)
         }

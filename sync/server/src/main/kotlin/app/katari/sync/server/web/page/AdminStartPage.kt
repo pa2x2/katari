@@ -20,7 +20,6 @@ import kotlinx.html.tr
 /** The admin's start page: the server at a glance and every account. */
 internal suspend fun ApplicationCall.respondAdminStart(
     accounts: List<AccountSummary>,
-    version: String,
     nowMillis: Long,
 ) {
     val visitor = visitor
@@ -28,7 +27,6 @@ internal suspend fun ApplicationCall.respondAdminStart(
     respondPage("Accounts") {
         notice(this@respondAdminStart)
         div("stats") {
-            stat("Server", version)
             stat("Storage", byteSizeText(accounts.sumOf { it.storedBytes }))
             stat("Accounts", accounts.size.toString())
             stat("Devices", accounts.sumOf { it.devices }.toString())
@@ -52,10 +50,14 @@ internal suspend fun ApplicationCall.respondAdminStart(
                 }
                 tbody {
                     accounts.forEach { account ->
+                        val isYou = account.id == me.id
                         tr {
                             td("name") {
-                                a(href = managedAccountPath(account.id)) { +account.username }
-                                accountTags(account.isAdmin, account.isDisabled, isYou = account.id == me.id)
+                                // An admin manages their own account where everyone does: My account.
+                                a(href = if (isYou) ACCOUNT_PATH else managedAccountPath(account.id)) {
+                                    +account.username
+                                }
+                                accountTags(account.isAdmin, account.isDisabled, isYou)
                             }
                             td("num") {
                                 attributes["data-label"] = "Devices"

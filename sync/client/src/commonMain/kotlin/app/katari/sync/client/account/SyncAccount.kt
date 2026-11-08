@@ -1,11 +1,11 @@
 package app.katari.sync.client.account
 
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
-import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.firstsync.ProfileChoice
 import app.katari.sync.client.firstsync.ProfilePairing
@@ -42,7 +42,7 @@ class SyncAccount(
     private val clients: SyncServerClients,
     private val connection: SyncConnection,
     private val tokens: DeviceTokenStore,
-    private val thisDevice: ThisDevice,
+    private val naming: DeviceNaming,
     private val capture: SyncCapture,
     private val runs: SyncRuns,
     private val resync: FullResync,
@@ -54,12 +54,25 @@ class SyncAccount(
     /** Changes whenever the server says a device joined or left the account, while the app listens live. */
     val deviceListChanges: Flow<Long> get() = deviceChanges.heard
 
+    /**
+     * What [address] leads to. A local-network address typed without a scheme that finds no sync server over HTTPS is
+     * tried over plain HTTP; when nothing answers there, the HTTPS answer says why.
+     */
     suspend fun checkServer(address: String): ServerCheck {
-        val url = when (val parsed = ServerAddress.parse(address)) {
-            is ServerAddress.Accepted -> parsed.url
+        val parsed = when (val parsed = ServerAddress.parse(address)) {
+            is ServerAddress.Accepted -> parsed
             ServerAddress.Malformed -> return ServerCheck.Malformed
             ServerAddress.PlainHttpOutsideLocalNetwork -> return ServerCheck.PlainHttpOutsideLocalNetwork
         }
+        val checked = checkServer(parsed.url)
+        val fallback = parsed.plainHttpFallback
+        if (fallback == null || (checked != ServerCheck.Unreachable && checked != ServerCheck.NotASyncServer)) {
+            return checked
+        }
+        return checkServer(fallback).takeIf { it != ServerCheck.Unreachable } ?: checked
+    }
+
+    private suspend fun checkServer(url: HttpUrl): ServerCheck {
         val info = try {
             clients.of(url).info()
         } catch (_: SyncFailure.Unreachable) {
@@ -71,7 +84,7 @@ class SyncAccount(
         return when {
             compatibility != ProtocolCompatibility.SUPPORTED -> ServerCheck.Incompatible(compatibility)
             info.needsSetup -> ServerCheck.NeedsSetup(url)
-            else -> ServerCheck.Ready(url, isPlainHttp = !url.isHttps)
+            else -> ServerCheck.Ready(url, isPlainHttp = !url.isHttps, instanceId = info.instanceId)
         }
     }
 
@@ -111,7 +124,7 @@ class SyncAccount(
         val check = checkServer(address)
         if (check !is ServerCheck.Ready) return JoinResult.ServerNotReady(check)
         val registered = try {
-            register(clients.of(check.server), thisDevice.description())
+            register(clients.of(check.server), naming.description())
         } catch (e: SyncFailure.Refused) {
             return JoinResult.Refused(e.reason)
         } catch (_: SyncFailure.Unreachable) {
@@ -121,10 +134,26 @@ class SyncAccount(
         }
         val choicesWaiting = runs.exclusive {
             start(check.server, registered)
-            compareWithAccount(clients.of(check.server, registered.token))
+            val client = clients.of(check.server, registered.token)
+            setNameApart(client, registered.device)
+            compareWithAccount(client)
         }
         runs.request()
         return JoinResult.Joined(choicesWaiting)
+    }
+
+    /**
+     * Numbers this device's name when another device of the account has it, before the first pull tells the
+     * account. A server that can't be reached for the list leaves the name as it is.
+     */
+    private suspend fun setNameApart(client: SyncServerClient, device: DeviceId) {
+        val listed = try {
+            client.devices().devices
+        } catch (_: SyncFailure) {
+            return
+        }
+        devices.remember(listed)
+        naming.setApart(listed.filter { it.id != device }.map { it.description.name })
     }
 
     /**
@@ -161,13 +190,16 @@ class SyncAccount(
         if (!sameAccount) capture.start()
     }
 
+    /** This device's ID in its account, known without the server; null while the device has never joined one. */
+    suspend fun thisDevice(): DeviceId? = connection.state().device
+
     suspend fun devices(): AccountCall<List<AccountDevice>> = linked { client, device ->
         client.devices().devices.also(devices::remember).map { AccountDevice(it, isThisDevice = it.id == device) }
     }
 
     suspend fun createLinkCode(): AccountCall<LinkCodeOffer> = linked { client, _ ->
         val code = client.createLinkCode()
-        val link = LinkCodeLink(client.server, code.code, connection.state().accountName, thisDevice.description().name)
+        val link = LinkCodeLink(client.server, code.code, connection.state().accountName, naming.name())
         LinkCodeOffer(code.code, code.expiresAtMillis, link)
     }
 
@@ -213,6 +245,31 @@ class SyncAccount(
 
     suspend fun syncNow() {
         runs.request()
+    }
+
+    /**
+     * Whether [check] found the server this device syncs with: the same storage, by its instance, whatever its
+     * address. A server that started over, or another one, is not.
+     */
+    suspend fun isThisServer(check: ServerCheck.Ready): Boolean = connection.state().instanceId == check.instanceId
+
+    /**
+     * Follows this device's server to [address], such as a new IP address or domain, keeping the sign-in when
+     * the server answering there is the one it syncs with ([isThisServer]), and syncs there. Any other server is
+     * refused: joining it is signing in anew, which the person does after disconnecting.
+     */
+    suspend fun moveServer(address: String): ServerMove {
+        val check = checkServer(address)
+        if (check !is ServerCheck.Ready) return ServerMove.NotReady(check)
+        val moved = runs.exclusive {
+            val state = connection.state()
+            val same = state.isLinked && state.instanceId == check.instanceId
+            if (same) connection.moveTo(check.server)
+            same
+        }
+        if (!moved) return ServerMove.OtherServer
+        runs.request()
+        return ServerMove.Moved
     }
 
     /** Forgets why the device stopped syncing once the person has read it. */

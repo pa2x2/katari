@@ -6,14 +6,16 @@ import java.net.InetAddress
 
 /**
  * A sync server's address as the person typed it, checked before anything is sent there (D027). A missing scheme
- * means HTTPS. Plain `http://` is accepted only on a local network, where a home server often has no certificate,
- * and [ServerAddress.Accepted.isPlainHttp] then says so for the screen to warn: on any other network a password and
- * every synced record would cross the internet readable.
+ * means HTTPS, and on a local network plain HTTP after it: a home server often has no certificate, and its
+ * address is typed bare. Plain `http://` is accepted only on a local network, and the screen warns when a server is
+ * reached that way: on any other network a password and every synced record would cross the internet readable.
  */
 sealed interface ServerAddress {
-    data class Accepted(val url: HttpUrl) : ServerAddress {
-        val isPlainHttp: Boolean get() = !url.isHttps
-    }
+    /**
+     * [url] as typed, or over HTTPS when typed without a scheme. [plainHttpFallback] is the same address over plain
+     * HTTP, for a local-network address typed without a scheme, to try when no sync server answers at [url].
+     */
+    data class Accepted(val url: HttpUrl, val plainHttpFallback: HttpUrl?) : ServerAddress
 
     /** Not an address at all. */
     data object Malformed : ServerAddress
@@ -25,11 +27,13 @@ sealed interface ServerAddress {
         fun parse(input: String): ServerAddress {
             val trimmed = input.trim().trimEnd('/')
             if (trimmed.isEmpty()) return Malformed
-            val withScheme = if ("://" in trimmed) trimmed else "https://$trimmed"
-            val url = withScheme.toHttpUrlOrNull() ?: return Malformed
+            val hasScheme = "://" in trimmed
+            val url = (if (hasScheme) trimmed else "https://$trimmed").toHttpUrlOrNull() ?: return Malformed
             if (url.query != null || url.fragment != null) return Malformed
-            if (!url.isHttps && !isLocalNetworkHost(url.host)) return PlainHttpOutsideLocalNetwork
-            return Accepted(url)
+            val isLocal = isLocalNetworkHost(url.host)
+            if (!url.isHttps && !isLocal) return PlainHttpOutsideLocalNetwork
+            val fallback = if (!hasScheme && isLocal) url.newBuilder().scheme("http").build() else null
+            return Accepted(url, fallback)
         }
 
         /**

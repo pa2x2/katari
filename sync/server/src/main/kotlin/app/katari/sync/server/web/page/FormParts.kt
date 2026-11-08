@@ -88,10 +88,15 @@ internal fun FlowContent.secret(value: String) {
         id = "secret"
         +value
     }
-    button(type = ButtonType.button, classes = "bt t copy") {
-        attributes["data-copy"] = "secret"
+    copyButton("Copy", copies = "secret", classes = "bt t copy")
+}
+
+/** A button that copies the text of the element with id [copies], which the script reveals and runs. */
+internal fun FlowContent.copyButton(label: String, copies: String, classes: String) {
+    button(type = ButtonType.button, classes = classes) {
+        attributes["data-copy"] = copies
         attributes["hidden"] = "hidden"
-        +"Copy"
+        +label
     }
 }
 

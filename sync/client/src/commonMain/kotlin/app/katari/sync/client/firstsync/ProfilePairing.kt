@@ -8,13 +8,15 @@ data class AccountProfile(val uuid: String, val name: String)
 /**
  * One of this device's profiles, and the account profile proposed as the same person's; null to add it as new.
  * [sameProfile] when it already is that account profile (it carries its identity, as the default profile and every
- * profile shared before the server started over do), so it pairs whatever the person picks.
+ * profile shared before the server started over do), so it pairs whatever the person picks. [librarySize] is how many
+ * titles its library holds on this device, which tells profiles of one name apart.
  */
 data class ProfilePairing(
     val profileId: Long,
     val name: String,
     val pairedWith: AccountProfile?,
     val sameProfile: Boolean,
+    val librarySize: Long,
 )
 
 /** Whose person-level settings a paired profile keeps where both have a value. */
@@ -36,7 +38,11 @@ data class ProfileChoice(
  * spaces, among the account profiles no device profile is yet, so two profiles of one name pair with two of the
  * account's. The default profile only ever pairs with the account's default, whatever either is called.
  */
-internal fun proposePairings(local: List<LocalProfile>, account: List<AccountProfile>): List<ProfilePairing> {
+internal fun proposePairings(
+    local: List<LocalProfile>,
+    account: List<AccountProfile>,
+    librarySizes: Map<Long, Long>,
+): List<ProfilePairing> {
     val byIdentity = account.associateBy { it.uuid }
     val localIdentities = local.mapTo(HashSet()) { it.uuid }
     val unpaired = account
@@ -50,7 +56,13 @@ internal fun proposePairings(local: List<LocalProfile>, account: List<AccountPro
             else -> unpaired.firstOrNull { it.name.trim().equals(profile.name.trim(), ignoreCase = true) }
                 ?.also { unpaired -= it }
         }
-        ProfilePairing(profile.id, profile.name, pairedWith, sameProfile = same != null)
+        ProfilePairing(
+            profileId = profile.id,
+            name = profile.name,
+            pairedWith = pairedWith,
+            sameProfile = same != null,
+            librarySize = librarySizes[profile.id] ?: 0,
+        )
     }
 }
 

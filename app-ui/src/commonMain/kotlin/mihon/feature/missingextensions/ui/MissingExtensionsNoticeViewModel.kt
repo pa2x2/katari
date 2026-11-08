@@ -22,6 +22,10 @@ class MissingExtensionsNoticeViewModel(private val suggestion: MissingExtensionS
     val installable: StateFlow<List<MissingExtension>> = suggestion.installable
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
 
+    /** Whether a first sync is downloading the library, so the counts still climb; null until known. */
+    val libraryArriving: StateFlow<Boolean?> = suggestion.libraryArriving
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
+
     val libraryCard: StateFlow<List<MissingExtension>> = suggestion.libraryCard
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), emptyList())
 

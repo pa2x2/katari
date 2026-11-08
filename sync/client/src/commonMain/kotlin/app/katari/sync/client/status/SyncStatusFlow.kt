@@ -166,16 +166,20 @@ class SyncStatusFlow(
             state.stage == SyncStage.CHOOSING -> SyncStatus.Activity.WaitingForChoices
             // A run trying again doesn't make a server found unreachable any closer: that shows until one answers
             inputs.running && unreachableSince == null ->
-                SyncStatus.Activity.Syncing(inputs.progress.download, inputs.progress.step)
+                SyncStatus.Activity.Syncing(inputs.progress.download, inputs.progress.step, state.catchingUp)
             !inputs.network.hasNetwork -> SyncStatus.Activity.Offline
             inputs.outcome == SyncOutcome.FAILED -> SyncStatus.Activity.Failed(state.lastSyncedAt)
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)
             inputs.outcome == SyncOutcome.WAITING_FOR_WIFI && state.stage == SyncStage.DOWNLOADING ->
                 SyncStatus.Activity.WaitingForWifi
-            state.stage != SyncStage.READY -> SyncStatus.Activity.Syncing(inputs.progress.download)
+            state.stage != SyncStage.READY ->
+                SyncStatus.Activity.Syncing(inputs.progress.download, catchingUp = state.catchingUp)
             else -> SyncStatus.Activity.UpToDate(state.lastSyncedAt)
         }
     }
+
+    // A resync that leaves deletions out is a device that was away too long, not a server that lost anything
+    private val SyncConnectionState.catchingUp: Boolean get() = stage == SyncStage.RESYNC
 
     private fun downloadPercent(state: SyncConnectionState): Int? {
         if (!state.stage.isDownloading || state.stageTarget <= 0) return null

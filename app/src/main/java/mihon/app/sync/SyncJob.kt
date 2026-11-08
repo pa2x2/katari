@@ -16,26 +16,24 @@ import mihon.app.di.appGraph
 import tachiyomi.domain.work.WorkOutcome
 
 /**
- * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off or the first download its input names.
- * The first download runs in the foreground, showing its progress as it goes.
+ * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off or the long run its input names. A long
+ * run goes in the foreground, showing its progress as it goes.
  */
 class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 
     private val graph = context.appGraph
     private val run = graph.syncBackgroundRun
-    private val notification = graph.syncFirstDownloadNotification
+    private val notification = graph.syncLongRunNotification
 
     override suspend fun doWork(): Result {
         val outcome = when (inputData.getString(KIND)) {
             HAND_OFF -> run.handOff()
-            FIRST_DOWNLOAD -> {
+            LONG_RUN -> {
                 setForegroundSafely()
                 try {
-                    run.firstDownload {
-                        applicationContext.notify(Notifications.ID_SYNC_FIRST_DOWNLOAD, notification.build(it))
-                    }
+                    run.longRun { applicationContext.notify(Notifications.ID_SYNC_LONG_RUN, notification.build(it)) }
                 } finally {
-                    applicationContext.cancelNotification(Notifications.ID_SYNC_FIRST_DOWNLOAD)
+                    applicationContext.cancelNotification(Notifications.ID_SYNC_LONG_RUN)
                 }
             }
             else -> run.periodic()
@@ -48,7 +46,7 @@ class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorke
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo = ForegroundInfo(
-        Notifications.ID_SYNC_FIRST_DOWNLOAD,
+        Notifications.ID_SYNC_LONG_RUN,
         notification.build(graph.syncStatusFlow.status().first()),
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0,
     )
@@ -57,6 +55,6 @@ class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorke
         const val KIND = "kind"
         const val PERIODIC = "periodic"
         const val HAND_OFF = "handOff"
-        const val FIRST_DOWNLOAD = "firstDownload"
+        const val LONG_RUN = "longRun"
     }
 }

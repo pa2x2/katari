@@ -477,6 +477,11 @@
         <item quantity="one">%d change not sent yet</item>
         <item quantity="other">%d changes not sent yet</item>
     </plurals>
+    <!-- %1$d is how many changes, %2$s the server's address -->
+    <plurals name="sync_disconnect_unsent">
+        <item quantity="one">%1$d change made here hasn\'t reached %2$s yet. Your other devices won\'t get it.</item>
+        <item quantity="other">%1$d changes made here haven\'t reached %2$s yet. Your other devices won\'t get them.</item>
+    </plurals>
     <plurals name="sync_held_aside">
         <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
         <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>
@@ -489,6 +494,10 @@
         <item quantity="one">%d minute</item>
         <item quantity="other">%d minutes</item>
     </plurals>
+    <plurals name="sync_first_sync_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
     <plurals name="missing_extensions_titles">
         <item quantity="one">%d title</item>
         <item quantity="other">%d titles</item>
@@ -496,6 +505,18 @@
     <plurals name="missing_extensions_notice">
         <item quantity="one">%d title in your library needs an extension that isn\'t installed here</item>
         <item quantity="other">%d titles in your library need extensions that aren\'t installed here</item>
+    </plurals>
+    <plurals name="missing_extensions_notice_profiles">
+        <item quantity="one">%d title in another profile needs an extension that isn\'t installed here</item>
+        <item quantity="other">%d titles across your profiles need extensions that aren\'t installed here</item>
+    </plurals>
+    <plurals name="onboarding_finish_arriving_missing">
+        <item quantity="one">Your library is downloading. So far, %d title needs an extension that isn\'t installed here.</item>
+        <item quantity="other">Your library is downloading. So far, %d titles need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_finish_account_missing">
+        <item quantity="one">%d title from your account needs an extension that isn\'t installed here.</item>
+        <item quantity="other">%d titles from your account need extensions that aren\'t installed here.</item>
     </plurals>
     <plurals name="missing_extensions_install">
         <item quantity="one">Install %d</item>

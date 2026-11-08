@@ -10,6 +10,7 @@ import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.feature.profiles.core.ProfileBackup
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceIdentityRepository
+import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 import tachiyomi.domain.storage.DocumentUri
@@ -51,8 +52,7 @@ class BackupFileValidator(
                     localKeys[identity] ?: identity.externalId.takeIf { identity.scheme.externalIdIsLocalKey }
                 val name = when {
                     localKey != null && sourceManager.get(localKey) != null -> return@mapNotNull null
-                    // Some backups store the id as the name, and sources without a stub were backed up with no name
-                    source.name.isNotBlank() && source.name.toLongOrNull() == null -> source.name
+                    StubSource.isKnownName(source.name) -> source.name
                     localKey != null -> sourceManager.getDisplayInfo(localKey).visualName()
                     else -> identity.externalId.toString()
                 }

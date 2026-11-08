@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.address.ServerAddressDialog
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.link.LinkDeviceDialog
 import app.katari.sync.ui.link.linkCodeEntryScreen
@@ -74,8 +75,10 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             openChoices = { navigator.push(FirstSyncScreen) },
             openQuestions = { navigator.push(SyncQuestionsScreen) },
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
+            renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
             disconnect = { dialog = SyncPageDialog.Disconnect },
+            changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
             openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
         )
@@ -106,6 +109,15 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
         when (val shown = dialog) {
             null -> Unit
             SyncPageDialog.LinkDevice -> LinkDeviceDialog(onDismissRequest = { dialog = null })
+            SyncPageDialog.RenameDevice -> RenameDeviceDialog(
+                name = model.naming.name(),
+                platformName = model.naming.platformName(),
+                onRename = {
+                    model.renameThisDevice(it)
+                    dialog = null
+                },
+                onDismissRequest = { dialog = null },
+            )
             is SyncPageDialog.RemoveDevice -> ConfirmDialog(
                 title = stringResource(MR.strings.sync_remove_device_title, shown.name),
                 text = stringResource(MR.strings.sync_remove_device_text, shown.name),
@@ -126,15 +138,13 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
                     navigator.push(ExtensionStoresScreen())
                 },
             )
-            SyncPageDialog.Disconnect -> ConfirmDialog(
-                title = stringResource(MR.strings.sync_disconnect_title),
-                text = stringResource(
-                    MR.strings.sync_disconnect_text,
-                    (status?.link as? SyncStatus.Link.Linked)?.server?.host.orEmpty(),
-                ),
-                confirmLabel = stringResource(MR.strings.sync_action_disconnect),
-                destructive = true,
-                onConfirm = {
+            SyncPageDialog.ServerAddress -> (status?.link as? SyncStatus.Link.Linked)?.let { link ->
+                ServerAddressDialog(current = link.server, onDismissRequest = { dialog = null })
+            }
+            SyncPageDialog.Disconnect -> DisconnectDialog(
+                status = status,
+                onSyncNow = model::syncNow,
+                onDisconnect = {
                     model.disconnect()
                     dialog = null
                 },
@@ -153,8 +163,10 @@ internal class SyncPageActions(
     val openChoices: () -> Unit,
     val openQuestions: () -> Unit,
     val linkDevice: () -> Unit,
+    val renameDevice: () -> Unit,
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
     val disconnect: () -> Unit,
+    val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,
     val openMissingExtensions: () -> Unit,
 )
