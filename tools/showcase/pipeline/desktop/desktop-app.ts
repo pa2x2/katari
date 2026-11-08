@@ -26,8 +26,11 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { SHOWCASE_NOW, SHOWCASE_TIME_ZONE, YEAR_RECAP_EDITION } from "../../seed/showcase-clock.ts";
 import type { Display } from "./display.ts";
 
-/** The folder name the development build keeps its data under, which the AppDir the pipeline runs is. */
-const APP_FOLDER = "katari-dev";
+/**
+ * The folder name the release keeps its data under. The pipeline runs the release, so the app names itself and its
+ * version as people's installs do, such as on the Sync page's list of devices.
+ */
+const APP_FOLDER = "katari";
 const EXTENSION_PACKAGE = "app.katari.showcase.extension";
 /** The captures' size in device pixels: a 1280×800 window at the display's 1.5 scale. */
 const WINDOW = { width: 1920, height: 1200 };
@@ -40,7 +43,7 @@ const FONT = "Noto Sans";
 const HOST_NAME = "Desktop";
 
 export interface DesktopAppOptions {
-  /** The `Katari-Dev.AppDir` folder `:desktop:assembleAppDir` lays out. */
+  /** The `Katari.AppDir` folder `:desktop:assembleAppDir -Pdesktop-release` lays out. */
   appDir: string;
   agentJar: string;
   extensionApk: string;

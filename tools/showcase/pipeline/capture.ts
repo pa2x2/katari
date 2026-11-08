@@ -11,7 +11,8 @@
  *
  * for the desktop the AppDir, the capture agent and the extension, with libfaketime and GNOME Keyring installed:
  *
- *   ./gradlew :desktop:assembleAppDir :tools:showcase:desktop-capture:jar :tools:showcase:extension:assembleShowcase
+ *   ./gradlew :desktop:assembleAppDir :tools:showcase:desktop-capture:jar :tools:showcase:extension:assembleShowcase \
+ *     -Pdesktop-release
  *
  * and for a group that syncs the sync server, with Chrome installed for its web page:
  *
@@ -55,7 +56,7 @@ const { values } = parseArgs({
       type: "string",
       default: join(repository, "tools/showcase/capture/build/outputs/apk/showcase/capture-showcase.apk"),
     },
-    "desktop-app-dir": { type: "string", default: join(repository, "desktop/build/appimage/Katari-Dev.AppDir") },
+    "desktop-app-dir": { type: "string", default: join(repository, "desktop/build/appimage/Katari.AppDir") },
     "desktop-agent": {
       type: "string",
       default: join(repository, "tools/showcase/desktop-capture/build/libs/desktop-capture.jar"),

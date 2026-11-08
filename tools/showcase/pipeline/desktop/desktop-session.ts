@@ -10,7 +10,7 @@ import { DesktopApp } from "./desktop-app.ts";
 import { type Display, startDisplay } from "./display.ts";
 
 export interface DesktopOptions {
-  /** The `Katari-Dev.AppDir` folder `:desktop:assembleAppDir` lays out. */
+  /** The `Katari.AppDir` folder `:desktop:assembleAppDir -Pdesktop-release` lays out. */
   appDir: string;
   agentJar: string;
   extensionApk: string;

@@ -209,8 +209,11 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
 
+      # The release, which names itself and its version as people's installs do.
       - name: Build
-        run: ./gradlew :desktop:assembleAppDir :tools:showcase:desktop-capture:jar :tools:showcase:sync-server:installDist
+        run: |
+          ./gradlew :desktop:assembleAppDir :tools:showcase:desktop-capture:jar :tools:showcase:sync-server:installDist \
+            -Pdesktop-release
 
       # As one archive, since an artifact keeps neither the files' execute permissions nor the AppDir's links.
       - name: Gather what the capture jobs need
@@ -219,7 +222,7 @@ jobs:
 
           mkdir -p "$RUNNER_TEMP/showcase-desktop"
           tar --create --file "$RUNNER_TEMP/showcase-desktop/desktop.tar" \
-            -C desktop/build/appimage Katari-Dev.AppDir \
+            -C desktop/build/appimage Katari.AppDir \
             -C "$GITHUB_WORKSPACE/tools/showcase/desktop-capture/build/libs" desktop-capture.jar \
             -C "$GITHUB_WORKSPACE/tools/showcase/sync-server/build/install" showcase-sync-server
 
@@ -373,7 +376,7 @@ jobs:
           npm run capture -- --group "$GROUP" --out "$RUNNER_TEMP/captures" \
             --seed "$CONTENT/showcase.tachibk" --served "$CONTENT/served" --extension-apk "$CONTENT/extension.apk" \
             --app-apk "$ANDROID/app.apk" --capture-apk "$ANDROID/capture.apk" \
-            --desktop-app-dir "$DESKTOP/Katari-Dev.AppDir" --desktop-agent "$DESKTOP/desktop-capture.jar" \
+            --desktop-app-dir "$DESKTOP/Katari.AppDir" --desktop-agent "$DESKTOP/desktop-capture.jar" \
             --sync-server "$DESKTOP/showcase-sync-server/bin/showcase-sync-server"
 
       # Also after a failure, so a later run starts from whatever this one managed to download, the film the player
