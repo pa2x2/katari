@@ -103,7 +103,14 @@ export const developers: Manual = {
           title: "SDK changelog",
           summary: "What each SDK release added, changed and removed.",
           icon: description,
-          related: ["developers/upgrade/3.0/", "developers/project/"],
+          related: ["developers/upgrade/4.0/", "developers/project/"],
+        },
+        {
+          slug: "upgrade/4.0",
+          title: "Upgrade to SDK 4.0",
+          summary: "Rebuild an SDK 3.x extension: the new version and the book classes' new package.",
+          icon: arrowUpward,
+          related: ["developers/sdk-changelog/", "developers/media/"],
         },
         {
           slug: "upgrade/3.0",

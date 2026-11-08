@@ -2,23 +2,24 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Deselect
+import app.katari.icons.materialsymbols.rounded.FilterList
+import app.katari.icons.materialsymbols.rounded.SelectAll
+import app.katari.icons.materialsymbols.rounded.Shuffle
+import app.katari.icons.materialsymbols.rounded.Sync
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarActions
+import app.katari.presentation.kit.navigation.AppBarScrollBehavior
+import app.katari.presentation.kit.navigation.AppBarTitle
+import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.presentation.kit.refresh.refreshAppBarAction
+import app.katari.presentation.kit.surface.Pill
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.profiles.ui.switcher.ActiveProfileButton
+import app.katari.sync.ui.status.rememberSyncToolbarAction
 import kotlinx.collections.immutable.toPersistentList
-import mihon.feature.profiles.ui.switcher.ActiveProfileButton
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Deselect
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.SelectAll
-import mihon.icons.materialsymbols.rounded.Shuffle
-import mihon.icons.materialsymbols.rounded.Sync
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarActions
-import mihon.presentation.kit.navigation.AppBarScrollBehavior
-import mihon.presentation.kit.navigation.AppBarTitle
-import mihon.presentation.kit.navigation.SearchToolbar
-import mihon.presentation.kit.refresh.refreshAppBarAction
-import mihon.presentation.kit.surface.Pill
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
@@ -37,6 +38,7 @@ fun LibraryToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
+    onClickSync: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
@@ -57,6 +59,7 @@ fun LibraryToolbar(
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
         onClickOpenRandomEntry = onClickOpenRandomEntry,
+        onClickSync = onClickSync,
         scrollBehavior = scrollBehavior,
     )
 }
@@ -72,8 +75,10 @@ private fun LibraryRegularToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
+    onClickSync: () -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
 ) {
+    val syncAction = rememberSyncToolbarAction(onClickSync)
     val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
         LibraryGroupingDimension.Category -> stringResource(MR.strings.action_update_category)
         LibraryGroupingDimension.EntryType -> stringResource(MR.strings.action_update_type)
@@ -97,6 +102,7 @@ private fun LibraryRegularToolbar(
             val filterTone = if (hasFilters) ContentTone.Active else ContentTone.Inherit
             AppBarActions(
                 buildList<AppBar.AppBarAction> {
+                    syncAction?.let(::add)
                     add(
                         AppBar.Action(
                             title = stringResource(MR.strings.action_filter),

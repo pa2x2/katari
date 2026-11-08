@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
@@ -13,7 +14,6 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
-import mihon.core.platform.PlatformContext
 import tachiyomi.presentation.core.util.collectAsState
 
 /** Extension apks installed for every app, which Android's settings, installer permission and uninstaller handle. */

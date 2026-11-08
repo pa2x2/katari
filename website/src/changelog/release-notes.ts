@@ -1,5 +1,6 @@
 import changelog from "../../../CHANGELOG.md?raw";
-import desktopChangelog from "../../../DESKTOP-CHANGELOG.md?raw";
+import desktopChangelog from "../../../desktop/CHANGELOG.md?raw";
+import syncServerChangelog from "../../../features/sync/server/CHANGELOG.md?raw";
 
 export interface Release {
   /** Such as `1.14.2`, or `0.1.0-alpha.1` for a pre-release. */
@@ -17,9 +18,9 @@ export interface ReleaseNotes extends Release {
 }
 
 /**
- * Every release in a changelog written like CHANGELOG.md and SDK-CHANGELOG.md, newest first. A release starts with
- * `## [1.14.2] - 2026-10-11`, `## [0.1.0-alpha.1] - 2026-11-10` or `## [3.0.0] - Unreleased`, each kind of change
- * with a heading such as `### 🐛 Fixed`, and each change is one `- ` line.
+ * Every release in a changelog written like CHANGELOG.md and sources/entry-source-api/CHANGELOG.md, newest first. A
+ * release starts with `## [1.14.2] - 2026-10-11`, `## [0.1.0-alpha.1] - 2026-11-10` or `## [3.0.0] - Unreleased`, each
+ * kind of change with a heading such as `### 🐛 Fixed`, and each change is one `- ` line.
  */
 export function releases(markdown: string): Release[] {
   return markdown.split(/^(?=## \[)/m).flatMap((release) => {
@@ -51,7 +52,12 @@ export function releaseNotes(markdown: string = changelog): ReleaseNotes[] {
   return releases(markdown).filter((release): release is ReleaseNotes => release.date !== undefined);
 }
 
-/** The desktop app's released versions in DESKTOP-CHANGELOG.md, newest first. */
+/** The desktop app's released versions in desktop/CHANGELOG.md, newest first. */
 export function desktopReleaseNotes(): ReleaseNotes[] {
   return releaseNotes(desktopChangelog);
+}
+
+/** The sync server's released versions in features/sync/server/CHANGELOG.md, newest first. */
+export function syncServerReleaseNotes(): ReleaseNotes[] {
+  return releaseNotes(syncServerChangelog);
 }

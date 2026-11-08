@@ -7,9 +7,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.ui.di.LocalAppUiGraph
+import app.katari.upgrade.Migrator
 import kotlinx.coroutines.delay
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.migration.Migrator
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 

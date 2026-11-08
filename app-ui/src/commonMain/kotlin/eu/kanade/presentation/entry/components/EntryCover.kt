@@ -6,14 +6,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
+import app.katari.presentation.kit.content.CoverBacking
+import app.katari.presentation.kit.content.CoverFrame
+import app.katari.presentation.kit.content.coverFrame
+import app.katari.presentation.kit.content.rememberArtworkPlaceholder
+import app.katari.ui.resources.Res
+import app.katari.ui.resources.cover_error
 import coil3.compose.AsyncImage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import mihon.app.ui.resources.Res
-import mihon.app.ui.resources.cover_error
-import mihon.presentation.kit.content.CoverBacking
-import mihon.presentation.kit.content.CoverFrame
-import mihon.presentation.kit.content.coverFrame
-import mihon.presentation.kit.content.rememberArtworkPlaceholder
 import org.jetbrains.compose.resources.painterResource
 
 enum class EntryCover(val ratio: Float) {

@@ -8,16 +8,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
-import mihon.icons.materialsymbols.rounded.DeleteSweep
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.list.CheckRow
-import mihon.presentation.kit.theme.KatariPreviewTheme
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Delete
+import app.katari.icons.materialsymbols.rounded.DeleteSweep
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.dialog.ConfirmDialog
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.theme.KatariPreviewTheme
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,7 +1,7 @@
 package eu.kanade.domain.source.model
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueListing
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
-import mihon.entry.interactions.catalogue.EntryCatalogueListing
 
 fun catalogueListing(query: String, filters: EntryFilterList): EntryCatalogueListing {
     return when (query) {

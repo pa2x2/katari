@@ -8,6 +8,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.core.platform.currentPlatformContext
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.missingextensions.ui.MissingExtensionsNotice
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.EmptyScreenAction
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.rowGroupItems
+import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.components.ContentTypeFilterSummary
@@ -23,20 +39,6 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Settings
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.EmptyScreenAction
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.rowGroupItems
-import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.surface.WarningCard
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -58,6 +60,7 @@ fun ExtensionScreen(
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
+    onReviewMissingExtensions: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -102,6 +105,7 @@ fun ExtensionScreen(
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
                     onShowCompatibility = onShowCompatibility,
+                    onReviewMissingExtensions = onReviewMissingExtensions,
                 )
             }
         }
@@ -123,6 +127,7 @@ private fun ExtensionContent(
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
+    onReviewMissingExtensions: () -> Unit,
 ) {
     val context = currentPlatformContext()
     val graph = LocalAppUiGraph.current
@@ -154,12 +159,20 @@ private fun ExtensionContent(
 
         if (installPermissionMissing) {
             item(key = "extension-permissions-warning") {
-                WarningCard(
+                NoticeCard(
                     text = stringResource(MR.strings.ext_permission_install_apps_warning),
+                    tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { systemPackages.requestInstallPermission(context) },
                 )
             }
+        }
+
+        item(key = "missing-extensions") {
+            MissingExtensionsNotice(
+                onReview = onReviewMissingExtensions,
+                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+            )
         }
 
         state.items.forEach { (header, items) ->

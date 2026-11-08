@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.language.api.tag.LanguageTag
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.ui.picker.language.TranslationLanguageRole
-import mihon.translation.ui.picker.language.TranslationLanguageSupportPicker
-import mihon.translation.ui.session.TranslationLanguageSupportState
+import app.katari.language.api.tag.LanguageTag
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.ui.picker.language.TranslationLanguageRole
+import app.katari.translation.ui.picker.language.TranslationLanguageSupportPicker
+import app.katari.translation.ui.session.TranslationLanguageSupportState
 
 @Composable
 internal fun TranslationLanguagePickerContent(

@@ -1,12 +1,12 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.CallMerge
-import mihon.icons.materialsymbols.automirroredrounded.CompareArrows
-import mihon.icons.materialsymbols.rounded.Favorite
-import mihon.icons.materialsymbols.rounded.OpenInFull
-import mihon.icons.materialsymbols.roundedfilled.Favorite
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.CallMerge
+import app.katari.icons.materialsymbols.automirroredrounded.CompareArrows
+import app.katari.icons.materialsymbols.rounded.Favorite
+import app.katari.icons.materialsymbols.rounded.OpenInFull
+import app.katari.icons.materialsymbols.roundedfilled.Favorite
 
 object EntryActionIcons {
     val addToLibrary: ImageVector = MaterialSymbols.Rounded.Favorite

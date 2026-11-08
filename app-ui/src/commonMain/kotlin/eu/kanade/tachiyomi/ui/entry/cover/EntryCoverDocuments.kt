@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry.cover
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.storage.DocumentUri
 import java.io.InputStream

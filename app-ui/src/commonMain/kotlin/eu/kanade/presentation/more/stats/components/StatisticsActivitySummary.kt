@@ -4,30 +4,29 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.currentPlatformContext
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.ArrowDownward
+import app.katari.icons.materialsymbols.rounded.ArrowUpward
+import app.katari.presentation.kit.content.InlineIcon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.DashboardTiles
+import app.katari.presentation.kit.progress.CircularProgressIndicator
+import app.katari.presentation.kit.surface.DashboardTile
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
 import eu.kanade.presentation.more.stats.data.StatsDailyGoal
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsType
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ArrowDownward
-import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.presentation.kit.content.InlineIcon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.layout.DashboardTiles
-import mihon.presentation.kit.progress.CircularProgressIndicator
-import mihon.presentation.kit.surface.DashboardTile
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -156,7 +155,7 @@ internal fun StatisticsActivitySummaryCards(
 @Composable
 private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String, modifier: Modifier = Modifier) {
     val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
-    DashboardTile(modifier = modifier.fillMaxHeight()) {
+    DashboardTile(modifier = modifier) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
@@ -258,7 +257,7 @@ private fun SummaryTile(
     modifier: Modifier = Modifier,
     detail: @Composable () -> Unit = {},
 ) {
-    DashboardTile(modifier = modifier.fillMaxHeight()) {
+    DashboardTile(modifier = modifier) {
         Text(text = label, role = TextRole.Supporting)
         Spacer(Modifier.height(KatariTheme.spacing.xs))
         Text(text = value, role = TextRole.Metric, maxLines = 1)

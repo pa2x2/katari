@@ -1,7 +1,9 @@
 import accountCircle from "../guide/icons/account_circle.svg";
 import callMerge from "../guide/icons/call_merge.svg";
 import chromeReaderMode from "../guide/icons/chrome_reader_mode.svg";
+import cloudSync from "../guide/icons/cloud_sync.svg";
 import compareArrows from "../guide/icons/compare_arrows.svg";
+import dns from "../guide/icons/dns.svg";
 import download from "../guide/icons/download.svg";
 import explore from "../guide/icons/explore.svg";
 import extension from "../guide/icons/extension.svg";
@@ -13,7 +15,6 @@ import queryStats from "../guide/icons/query_stats.svg";
 import settingsBackupRestore from "../guide/icons/settings_backup_restore.svg";
 import storage from "../guide/icons/storage.svg";
 import store from "../guide/icons/store.svg";
-import sync from "../guide/icons/sync.svg";
 import translate from "../guide/icons/translate.svg";
 import update from "../guide/icons/update.svg";
 import type { Manual } from "../guide/contents.ts";
@@ -60,21 +61,14 @@ export const docs: Manual = {
           title: "Library updates",
           summary: "When Katari checks for new chapters, and what Upcoming shows.",
           icon: update,
-          related: ["docs/tracking/", "docs/merged-entries/", "docs/troubleshooting/"],
+          related: ["docs/merged-entries/", "docs/troubleshooting/"],
         },
         {
           slug: "merged-entries",
           title: "Merged entries",
           summary: "One entry for every edition of a title.",
           icon: callMerge,
-          related: ["docs/source-migration/", "docs/library-updates/", "docs/tracking/"],
-        },
-        {
-          slug: "tracking",
-          title: "Tracking",
-          summary: "Send your progress to AniList, MyAnimeList and other trackers.",
-          icon: sync,
-          related: ["docs/profiles/", "docs/source-migration/", "docs/backups-and-storage/"],
+          related: ["docs/source-migration/", "docs/library-updates/"],
         },
       ],
     },
@@ -86,7 +80,6 @@ export const docs: Manual = {
           title: "Comic reader",
           summary: "Reading modes, turning pages, and fitting pages to the screen.",
           icon: chromeReaderMode,
-          platform: "Android",
           related: ["docs/translation/", "docs/book-reader/", "docs/statistics/"],
         },
         {
@@ -94,7 +87,6 @@ export const docs: Manual = {
           title: "Book reader",
           summary: "Themes, fonts, search, hiding repeated text, and listening.",
           icon: menuBook,
-          platform: "Android",
           related: ["docs/comic-reader/", "docs/translation/", "docs/statistics/"],
         },
         {
@@ -102,7 +94,6 @@ export const docs: Manual = {
           title: "Watching video",
           summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
           icon: playCircle,
-          platform: "Android",
           related: ["docs/troubleshooting/", "docs/extension-compatibility/", "docs/statistics/"],
         },
         {
@@ -136,7 +127,7 @@ export const docs: Manual = {
           title: "Moving to another source",
           summary: "Move titles to a new source and keep what you've read.",
           icon: compareArrows,
-          related: ["docs/merged-entries/", "docs/tracking/", "docs/extension-stores/"],
+          related: ["docs/merged-entries/", "docs/extension-stores/"],
         },
         {
           slug: "local-source",
@@ -155,7 +146,7 @@ export const docs: Manual = {
           title: "Profiles",
           summary: "Separate libraries, history and settings in one app.",
           icon: accountCircle,
-          related: ["docs/tracking/", "docs/backups-and-storage/", "docs/statistics/"],
+          related: ["docs/sync/", "docs/backups-and-storage/", "docs/statistics/"],
         },
         {
           slug: "statistics",
@@ -170,6 +161,25 @@ export const docs: Manual = {
           summary: "What a backup keeps, where files go, and restoring one.",
           icon: storage,
           related: ["docs/coming-from-mihon/", "docs/profiles/", "docs/local-source/"],
+        },
+      ],
+    },
+    {
+      title: "Sync",
+      pages: [
+        {
+          slug: "sync",
+          title: "Sync",
+          summary: "Your library, progress and settings on every device.",
+          icon: cloudSync,
+          related: ["docs/sync-server/", "docs/profiles/", "docs/backups-and-storage/"],
+        },
+        {
+          slug: "sync-server",
+          title: "Running a sync server",
+          summary: "Set it up with Docker, add people, and keep it updated.",
+          icon: dns,
+          related: ["docs/sync/"],
         },
       ],
     },

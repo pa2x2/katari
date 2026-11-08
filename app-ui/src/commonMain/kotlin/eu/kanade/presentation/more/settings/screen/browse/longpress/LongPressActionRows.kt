@@ -3,14 +3,14 @@ package eu.kanade.presentation.more.settings.screen.browse.longpress
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.core.common.CustomPreferences
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.DragHandle
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.core.common.CustomPreferences
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.DragHandle
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

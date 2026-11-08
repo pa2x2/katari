@@ -11,12 +11,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.currentPlatformContext
+import app.katari.entry.interactions.child.EntryRelatedEntriesAvailability
+import app.katari.entry.interactions.child.EntryRelatedEntriesContext
+import app.katari.entry.interactions.child.EntryScanlatorFilterStateResult
+import app.katari.entry.interactions.download.EntryBulkDownloadAction
+import app.katari.entry.interactions.download.EntryDownloadActionAvailability
+import app.katari.entry.interactions.download.EntryDownloadActionRequest
+import app.katari.entry.interactions.media.EntryPreviewOpenTargetResult
+import app.katari.entry.interactions.media.EntryPreviewSize
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.navigation.EntryOpenOptions
+import app.katari.entry.interactions.navigation.EntryOpenResult
+import app.katari.entry.interactions.source.EntryWebViewResolution
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.sourcemigration.config.MigrationConfigScreen
+import app.katari.sync.ui.entry.rememberEntrySync
+import app.katari.sync.ui.question.SyncQuestionsScreen
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entry.EntryChapterSettingsDialog
 import eu.kanade.presentation.entry.EntryScreen
 import eu.kanade.presentation.entry.activity.EntryActivitySheet
@@ -46,30 +64,11 @@ import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.search.performGenreSearch
 import eu.kanade.tachiyomi.ui.entry.search.performSearch
-import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.currentPlatformContext
-import mihon.entry.interactions.child.EntryRelatedEntriesAvailability
-import mihon.entry.interactions.child.EntryRelatedEntriesContext
-import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
-import mihon.entry.interactions.download.EntryBulkDownloadAction
-import mihon.entry.interactions.download.EntryDownloadActionAvailability
-import mihon.entry.interactions.download.EntryDownloadActionRequest
-import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
-import mihon.entry.interactions.media.EntryPreviewSize
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.entry.interactions.navigation.EntryOpenOptions
-import mihon.entry.interactions.navigation.EntryOpenResult
-import mihon.entry.interactions.source.EntryWebViewResolution
-import mihon.feature.migration.config.MigrationConfigScreen
-import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -124,6 +123,8 @@ class EntryScreen(
             create(entryId)
         }
 
+        // Before the entry loads, so its progress is asked of the other devices at once
+        val sync = rememberEntrySync(entryId) { navigator.push(SyncQuestionsScreen) }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         if (state is EntryViewModel.State.Loading) {
@@ -293,6 +294,7 @@ class EntryScreen(
             updatesLabel = updatesLabel,
             activity = activityState,
             onActivityClicked = { showActivitySheet = true },
+            sync = sync,
             chapterSwipeStartAction = viewModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,
@@ -329,13 +331,6 @@ class EntryScreen(
                 val url = checkNotNull(availableWebView).url
                 textClipboard.copy(url, url)
             }.takeIf { availableWebView != null },
-            onTrackingClicked = {
-                if (!successState.hasLoggedInTrackers) {
-                    navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
-                } else {
-                    viewModel.showTrackDialog()
-                }
-            }.takeIf { viewModel.supportsTracking() },
             onDuplicatesClicked = viewModel.library::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
@@ -479,15 +474,6 @@ class EntryScreen(
                     showScanlatorsDialog = true
                 }.takeIf { successState.scanlatorFilterApplicable },
             )
-            EntryViewModel.Dialog.TrackSheet -> {
-                NavigatorAdaptiveSheet(
-                    screen = TrackInfoDialogHomeScreen(
-                        entry = successState.entry,
-                    ),
-                    enableSwipeDismiss = { it.lastItem is TrackInfoDialogHomeScreen },
-                    onDismissRequest = onDismissRequest,
-                )
-            }
             EntryViewModel.Dialog.FullCover -> EntryCoverViewer(
                 entryId = successState.entry.id,
                 onDismissRequest = onDismissRequest,

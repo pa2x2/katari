@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.onboarding
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 
 /** Mihon installed beside the app, whose library the first-run guide offers to bring over through a backup. */
 @PlatformFacility

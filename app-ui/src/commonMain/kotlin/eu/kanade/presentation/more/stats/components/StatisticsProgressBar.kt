@@ -10,9 +10,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Dp
+import app.katari.presentation.kit.content.chartBar
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.more.stats.data.StatsProgress
-import mihon.presentation.kit.content.chartBar
-import mihon.presentation.kit.theme.KatariTheme
 
 /** Progress stages from least to most consumed; the stacked bar and its legends share this order. */
 internal fun StatsProgress.stageCounts(): List<Int> = listOf(notStarted, inProgress, caughtUp, completed)

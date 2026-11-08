@@ -2,7 +2,7 @@ package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

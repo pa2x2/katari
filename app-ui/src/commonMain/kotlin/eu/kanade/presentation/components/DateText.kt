@@ -3,14 +3,14 @@ package eu.kanade.presentation.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLocale
+import app.katari.core.platform.currentPlatformContext
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.util.lang.toRelativeString
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toLocalDateTime
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Instant

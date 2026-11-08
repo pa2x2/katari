@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.model.ExtensionStoreFormat
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import io.kotest.matchers.shouldBe
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.ExtensionStoreFormat
 import org.junit.jupiter.api.Test
 
 class ExtensionStoreFilterTest {

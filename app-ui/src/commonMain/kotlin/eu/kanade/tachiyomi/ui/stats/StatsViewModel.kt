@@ -3,6 +3,12 @@ package eu.kanade.tachiyomi.ui.stats
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.entry.interactions.statistics.EntryStatisticsFeature
+import app.katari.profiles.core.ProfileScopedStateEvent
+import app.katari.profiles.core.ProfileStore
+import app.katari.profiles.core.observeProfileScopedState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -43,13 +49,8 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.statistics.EntryStatisticsFeature
-import mihon.feature.profiles.core.ProfileScopedStateEvent
-import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
@@ -154,8 +155,7 @@ class StatsViewModel(
                         }
                         loadEvents.onStart {
                             emit(StatisticsActivityLoadEvent.Loading(request))
-                        }.catch { error ->
-                            logcat(LogPriority.ERROR, error)
+                        }.resubscribeOnFailure(this@StatsViewModel) {
                             emit(StatisticsActivityLoadEvent.Failed(request))
                         }
                     }.runningFold<StatisticsActivityLoadEvent, ActivityState?>(null, ::reduceStatisticsActivityRequest)
@@ -228,8 +228,7 @@ class StatsViewModel(
                 endLocalDate = day.toString(),
             ).map<StatisticsActivityTimeline, StatsReadingCalendar?> { timeline ->
                 buildReadingCalendar(timeline, start, day)
-            }.catch { error ->
-                logcat(LogPriority.ERROR, error)
+            }.resubscribeOnFailure(this@StatsViewModel) {
                 emit(null)
             }
         }
@@ -246,16 +245,14 @@ class StatsViewModel(
                     endLocalDate = day.toString(),
                 ).map<StatisticsActivityTimeline, Pair<Int, StatsDailyGoal?>> { timeline ->
                     minutes to buildDailyGoal(timeline, minutes * 60_000L, day)
-                }.catch { error ->
-                    logcat(LogPriority.ERROR, error)
+                }.resubscribeOnFailure(this@StatsViewModel) {
                     emit(minutes to null)
                 }
             }
 
     /** The year recap that's new and unopened, shown as a banner until it's opened. */
     val newYearRecap: StateFlow<StatisticsRecapPeriod.Year?> = unopenedYearRecap.subscribe()
-        .catch { error ->
-            logcat(LogPriority.ERROR, error)
+        .resubscribeOnFailure(this@StatsViewModel) {
             emit(null)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), null)

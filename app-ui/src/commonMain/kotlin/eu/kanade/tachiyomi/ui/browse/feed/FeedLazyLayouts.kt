@@ -11,13 +11,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.ScrollbarFrame
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.layout.ScrollbarFrame
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.plus
 
 /**

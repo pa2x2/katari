@@ -1,0 +1,46 @@
+package app.katari.entry.interactions.manga.library
+
+import app.katari.entry.interactions.library.EntryLibraryProgressEvidence
+import app.katari.entry.interactions.library.EntryLibraryProgressProvider
+import app.katari.entry.interactions.manga.runtime.requireManga
+import app.katari.entry.interactions.manga.state.lastReadAt
+import app.katari.entry.interactions.manga.state.pageIndex
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.repository.EntryProgressRepository
+
+internal class MangaLibraryProgressProvider(
+    private val entryProgressRepository: EntryProgressRepository,
+) : EntryLibraryProgressProvider {
+
+    override suspend fun evidence(entry: Entry, chapters: List<EntryChapter>): EntryLibraryProgressEvidence {
+        entry.requireManga()
+        val progress = chapters
+            .map(EntryChapter::entryId)
+            .distinct()
+            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
+        return evidence(entry, chapters, progress)
+    }
+
+    override suspend fun evidence(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryLibraryProgressEvidence {
+        entry.requireManga()
+        val chapterIds = chapters.mapTo(mutableSetOf(), EntryChapter::id)
+        val progress = progressStates
+            .filter { it.chapterId in chapterIds }
+        val inProgress = progress
+            .filter { !it.completed && it.pageIndex > 0L }
+            .maxByOrNull { it.lastReadAt }
+
+        return EntryLibraryProgressEvidence(
+            hasMediaProgress = progress.any { it.pageIndex > 0L },
+            inProgressItemId = inProgress?.chapterId,
+            inProgressFraction = inProgress?.locator?.progression?.toFloat(),
+            lastActivityAt = progress.maxOfOrNull { it.lastReadAt } ?: 0L,
+        )
+    }
+}

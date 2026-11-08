@@ -3,16 +3,16 @@ package eu.kanade.presentation.more.settings.screen.translation.engine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.translation.api.host.TranslationHostActionResult
+import app.katari.translation.api.host.TranslationSetupDestination
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.RefreshTranslationSettingsOnResume
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsViewModel
 import eu.kanade.presentation.util.Screen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.translation.api.host.TranslationHostActionResult
-import mihon.translation.api.host.TranslationSetupDestination
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 

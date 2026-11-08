@@ -1,0 +1,46 @@
+package app.katari.entry.interactions.book.format.epub.navigation
+
+import app.katari.book.api.BookNavigationItem
+import app.katari.entry.interactions.book.format.epub.EpubContract
+import app.katari.entry.interactions.book.format.epub.archive.EpubArchive
+import app.katari.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
+import app.katari.entry.interactions.book.format.epub.xml.parseEpubXml
+import org.jsoup.nodes.Element
+
+internal class EpubNavigationDocumentParser(private val archive: EpubArchive) {
+    fun parse(item: EpubManifestItem): List<BookNavigationItem> {
+        val document = archive.read(item.resourceId, EpubContract.MAX_DOCUMENT_BYTES).parseEpubXml()
+        val navigation = document.getAllElements().firstOrNull { element ->
+            element.normalName() == "nav" &&
+                listOf(element.attr("epub:type"), element.attr("type"))
+                    .flatMap { it.split(Regex("\\s+")) }
+                    .any { it == "toc" }
+        } ?: document.getAllElements().firstOrNull { it.normalName() == "nav" } ?: return emptyList()
+        val list = navigation.children().firstOrNull { it.normalName() in LIST_ELEMENTS } ?: return emptyList()
+        return list.children().filter { it.normalName() == "li" }.flatMap { child ->
+            parseNavigationListItem(child, item.resourceId)
+        }
+    }
+
+    private fun parseNavigationListItem(element: Element, baseResource: String): List<BookNavigationItem> {
+        val link = element.children().firstOrNull { it.normalName() == "a" }
+        val target = link?.attr("href")?.let { href -> epubNavigationLocator(baseResource, href) }
+        val nested = element.children().firstOrNull { it.normalName() in LIST_ELEMENTS }
+            ?.children()
+            ?.filter { it.normalName() == "li" }
+            ?.flatMap { parseNavigationListItem(it, baseResource) }
+            .orEmpty()
+        if (target == null) return nested
+        return listOf(
+            BookNavigationItem(
+                title = link.text().trim().takeIf(String::isNotEmpty),
+                target = target,
+                children = nested,
+            ),
+        )
+    }
+
+    private companion object {
+        val LIST_ELEMENTS = setOf("ol", "ul")
+    }
+}

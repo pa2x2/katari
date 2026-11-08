@@ -1,0 +1,8 @@
+-- Sync bookkeeping for applying other devices' records (app/katari/sync/data/*.sq).
+
+-- The server copy each record was last merged with or pushed as, so an edit made on this device since can be told
+-- apart from one another device made meanwhile.
+ALTER TABLE sync_records ADD COLUMN base_payload BLOB;
+
+-- The kind of each held record, so what waits can be reported per kind without decoding it.
+ALTER TABLE sync_pending ADD COLUMN kind TEXT NOT NULL DEFAULT '';

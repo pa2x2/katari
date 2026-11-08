@@ -1,16 +1,24 @@
 ---
+import library from "../captures/library.png";
 import { desktopRelease } from "../download/desktop-release.ts";
 import DownloadButtons from "../download/DownloadButtons.astro";
 import { latestRelease } from "../download/latest-release.ts";
 import { megabytes, releaseDate } from "../download/release-format.ts";
 import { mpvAddon } from "../download/mpv-addon-release.ts";
+import { SYNC_SERVER_RUN, syncServerRelease } from "../download/sync-server-release.ts";
+import Snippet from "../guide/Snippet.astro";
+import { plannedCapture } from "../media/planned-captures.ts";
+import Shot from "../media/Shot.astro";
 import Page from "../site/Page.astro";
 import { leavesSite, RELEASES, sitePath } from "../site/links.ts";
 
 const release = await latestRelease();
 const addon = await mpvAddon();
-// The desktop app's section waits for its first release.
+// The desktop app's and the sync server's sections wait for their first release.
 const desktop = await desktopRelease();
+const server = await syncServerRelease();
+const offered = [desktop ? "Katari for Android and Linux" : "Katari for Android", "the optional mpv add-on", server && "the sync server"];
+const description = `Download ${new Intl.ListFormat("en", { type: "conjunction" }).format(offered.filter((part) => part !== undefined))}.`;
 
 // Which phones each processor type is for, in the words a reader can match against their phone.
 const abiHints: Record<string, string> = {
@@ -19,16 +27,16 @@ const abiHints: Record<string, string> = {
 };
 ---
 
-<Page
-  title="Download · Katari"
-  description={desktop ? "Download Katari for Android and Linux, and the optional mpv add-on." : "Download Katari and its optional mpv add-on for Android."}
->
+<Page title="Download · Katari" description={description}>
   <main class:list={{ both: desktop }} data-pagefind-body data-pagefind-filter="section:Download">
     <h1>Download Katari</h1>
     <p class="lead">The newest release, straight from GitHub. After installing, Katari keeps itself up to date.</p>
 
     <div class="apps">
       <section id="android" aria-labelledby="android-title">
+        <div class="picture">
+          <Shot image={library} alt="A library holding comics, books, and films in Katari for Android" sizes="6rem" />
+        </div>
         <h2 id="android-title">Android</h2>
         <p class="meta">For phones and tablets.</p>
         <DownloadButtons explained={false} />
@@ -104,6 +112,14 @@ const abiHints: Record<string, string> = {
       {
         desktop && (
           <section id="linux" aria-labelledby="linux-title">
+            <div class="picture">
+              <Shot
+                image={plannedCapture("sync-desktop.png")}
+                alt="The same library in Katari for Linux"
+                device="window"
+                sizes="18rem"
+              />
+            </div>
             <h2 id="linux-title">Linux</h2>
             <p class="meta">For desktop and laptop computers.</p>
             <div class="get" data-download-buttons>
@@ -117,6 +133,20 @@ const abiHints: Record<string, string> = {
             </div>
             <p>
               <a href={desktop.page} {...leavesSite()}>What's new in {desktop.version}</a>
+            </p>
+          </section>
+        )
+      }
+      {
+        server && (
+          <section id="sync-server" class="server" aria-labelledby="sync-server-title">
+            <h2 id="sync-server-title">Sync server</h2>
+            <p class="meta">Keeps your library, progress and settings the same on all your devices. You run it yourself, in Docker.</p>
+            <Snippet lang="shell" code={SYNC_SERVER_RUN} />
+            <p class="meta">{server.version} · {releaseDate(server.publishedAt)} · Docker image for x86_64 and arm64.</p>
+            <p>
+              <a href={sitePath("docs/sync-server/")}>Running a sync server</a> explains setting it up, HTTPS, adding people and updating.{" "}
+              <a href={server.page} {...leavesSite()}>What's new in {server.version}</a>
             </p>
           </section>
         )
@@ -147,6 +177,19 @@ const abiHints: Record<string, string> = {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
   }
 
+  /* Under both apps, as wide as the two together. */
+  .server {
+    grid-column: 1 / -1;
+  }
+
+  .server .meta {
+    margin-bottom: 0;
+  }
+
+  .server :global(.snippet) {
+    margin: 1rem 0 0.75rem;
+  }
+
   .get svg {
     fill: none;
     stroke: currentColor;
@@ -175,6 +218,27 @@ const abiHints: Record<string, string> = {
     padding: 1.5rem 1.75rem 1.75rem;
     border: 1px solid var(--border);
     border-radius: 1rem;
+  }
+
+  /* Each app shows itself in a band across the top of its card. The bands match, so the cards' headings line up side by
+     side, and the phone and the window are about the same height. */
+  .picture {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 15rem;
+    margin: -1.5rem -1.75rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: 1rem 1rem 0 0;
+    background: var(--surface);
+  }
+
+  #android .picture {
+    --shot-width: 6rem;
+  }
+
+  #linux .picture {
+    --shot-width: 17.5rem;
   }
 
   h2 {
@@ -248,6 +312,10 @@ const abiHints: Record<string, string> = {
   @media (width < 30rem) {
     section {
       padding: 1.25rem 1rem;
+    }
+
+    .picture {
+      margin: -1.25rem -1rem 1.25rem;
     }
   }
 </style>

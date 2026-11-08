@@ -1,0 +1,44 @@
+package app.katari.entry.interactions.media
+
+import app.katari.core.common.platform.PlatformFacility
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.source.entry.EntryType
+
+data class EntryMediaCacheAutoClearPreference(
+    val key: String,
+    /** One-time persistence compatibility seed; it is not evidence that this cache is supported. */
+    val seedFromKeyWhenAbsent: String? = null,
+) {
+    init {
+        require(key.isNotBlank()) { "Media cache auto-clear preference key cannot be blank" }
+        require(seedFromKeyWhenAbsent != key) { "Media cache preference cannot seed itself" }
+    }
+}
+
+@PlatformFacility
+interface EntryMediaCacheArtifact {
+    val id: EntryMediaCacheId
+    val clearLabel: StringResource
+    val autoClearLabel: StringResource
+    val autoClearPreference: EntryMediaCacheAutoClearPreference
+
+    /** Measured on disk, so read it off the main thread. */
+    val sizeBytes: Long
+    fun clear(): Int
+}
+
+@PlatformFacility
+interface EntryMediaCacheProvider {
+    /** A supporting provider must expose genuine cache artifacts; absence is represented by no provider binding. */
+    val artifacts: List<EntryMediaCacheArtifact>
+}
+
+interface EntryMediaCacheInteraction {
+    fun provider(type: EntryType): EntryMediaCacheProvider?
+}
+
+internal class ProviderBackedEntryMediaCacheInteraction(
+    private val providers: Map<EntryType, EntryMediaCacheProvider>,
+) : EntryMediaCacheInteraction {
+    override fun provider(type: EntryType): EntryMediaCacheProvider? = providers[type]
+}

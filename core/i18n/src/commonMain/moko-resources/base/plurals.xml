@@ -1,0 +1,520 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="reader_text_translate_downloads_offer">
+        <item quantity="one">%d chapter of this series is downloaded but not translated.</item>
+        <item quantity="other">%d chapters of this series are downloaded but not translated.</item>
+    </plurals>
+    <plurals name="profiles_count">
+        <item quantity="one">%d profile</item>
+        <item quantity="other">%d profiles</item>
+    </plurals>
+    <plurals name="browse_feed_count">
+        <item quantity="one">%d feed</item>
+        <item quantity="other">%d feeds</item>
+    </plurals>
+    <plurals name="entry_merged_entries_count">
+        <item quantity="one">%d merged entry</item>
+        <item quantity="other">%d merged entries</item>
+    </plurals>
+    <plurals name="chapter_translation_queued">
+        <item quantity="one">%d chapter queued for translation</item>
+        <item quantity="other">%d chapters queued for translation</item>
+    </plurals>
+    <plurals name="text_recognition_settings_languages_choices">
+        <item quantity="one">%d language uses your choice</item>
+        <item quantity="other">%d languages use your choice</item>
+    </plurals>
+    <plurals name="text_recognition_settings_regions">
+        <item quantity="one">%d region</item>
+        <item quantity="other">%d regions</item>
+    </plurals>
+    <plurals name="model_artifacts_count">
+        <item quantity="one">%d model</item>
+        <item quantity="other">%d models</item>
+    </plurals>
+    <plurals name="translation_series_languages_count">
+        <item quantity="one">%d series uses its own languages</item>
+        <item quantity="other">%d series use their own languages</item>
+    </plurals>
+    <plurals name="statistics_title_count">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
+    <plurals name="statistics_recap_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="statistics_recap_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="statistics_recap_hours_unit">
+        <item quantity="one">hour</item>
+        <item quantity="other">hours</item>
+    </plurals>
+    <plurals name="statistics_recap_minutes_unit">
+        <item quantity="one">minute</item>
+        <item quantity="other">minutes</item>
+    </plurals>
+    <plurals name="statistics_recap_full_days">
+        <item quantity="one">That\'s %d full day, end to end.</item>
+        <item quantity="other">That\'s %d full days, end to end.</item>
+    </plurals>
+    <plurals name="statistics_recap_started_days_with">
+        <item quantity="one">You started it on %2$s and spent %1$d day with it.</item>
+        <item quantity="other">You started it on %2$s and spent %1$d days with it.</item>
+    </plurals>
+    <plurals name="statistics_recap_days_with">
+        <item quantity="one">You spent %d day with it.</item>
+        <item quantity="other">You spent %d days with it.</item>
+    </plurals>
+    <plurals name="statistics_recap_active_days_text">
+        <item quantity="one">You were active on %d day.</item>
+        <item quantity="other">You were active on %d days.</item>
+    </plurals>
+    <plurals name="statistics_recap_new_titles">
+        <item quantity="one">title you\'d never opened before.</item>
+        <item quantity="other">titles you\'d never opened before.</item>
+    </plurals>
+    <plurals name="statistics_active_day_count">
+        <item quantity="one">%d active day</item>
+        <item quantity="other">%d active days</item>
+    </plurals>
+    <plurals name="statistics_days_active_of">
+        <item quantity="one">%1$d of %2$d day active</item>
+        <item quantity="other">%1$d of %2$d days active</item>
+    </plurals>
+    <plurals name="statistics_backlog_title_count">
+        <item quantity="one">in %d title</item>
+        <item quantity="other">in %d titles</item>
+    </plurals>
+    <plurals name="statistics_other_source_count">
+        <item quantity="one">%d other source</item>
+        <item quantity="other">%d other sources</item>
+    </plurals>
+    <plurals name="statistics_added_this_month">
+        <item quantity="one">%d this month</item>
+        <item quantity="other">%d this month</item>
+    </plurals>
+    <plurals name="lock_after_mins">
+        <item quantity="one">After %1$s minute</item>
+        <item quantity="other">After %1$s minutes</item>
+    </plurals>
+
+    <plurals name="relative_time">
+        <item quantity="one">Yesterday</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+
+    <plurals name="upcoming_relative_time">
+        <item quantity="one">Tomorrow</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
+
+    <plurals name="num_categories">
+        <item quantity="one">%d category</item>
+        <item quantity="other">%d categories</item>
+    </plurals>
+
+    <plurals name="extension_filter_languages_count">
+        <item quantity="one">%d language</item>
+        <item quantity="other">%d languages</item>
+    </plurals>
+
+    <plurals name="extension_filter_stores_count">
+        <item quantity="one">%d extension store</item>
+        <item quantity="other">%d extension stores</item>
+    </plurals>
+
+    <plurals name="tts_settings_voice_count">
+        <item quantity="one">%d voice</item>
+        <item quantity="other">%d voices</item>
+    </plurals>
+
+    <plurals name="next_unread_chapters">
+        <item quantity="one">Next unseen item</item>
+        <item quantity="other">Next %d unseen items</item>
+    </plurals>
+
+    <plurals name="restore_completed_message">
+        <item quantity="one">Done in %1$s with %2$s error</item>
+        <item quantity="other">Done in %1$s with %2$s errors</item>
+    </plurals>
+
+    <plurals name="download_queue_summary">
+        <item quantity="one">%1$s remaining</item>
+        <item quantity="other">%1$s remaining</item>
+    </plurals>
+
+    <plurals name="day">
+        <item quantity="one">1 day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+
+    <plurals name="statistics_goal_met_days">
+        <item quantity="one">Met on %1$d of the last %2$d day</item>
+        <item quantity="other">Met on %1$d of the last %2$d days</item>
+    </plurals>
+    <plurals name="statistics_chapters_read_count">
+        <item quantity="one">%d chapter read</item>
+        <item quantity="other">%d chapters read</item>
+    </plurals>
+    <plurals name="statistics_episodes_watched_count">
+        <item quantity="one">%d episode watched</item>
+        <item quantity="other">%d episodes watched</item>
+    </plurals>
+
+    <plurals name="activity_completed_chapters">
+        <item quantity="one">Chapter completed</item>
+        <item quantity="other">%1$d chapters completed</item>
+    </plurals>
+
+    <plurals name="activity_completed_episodes">
+        <item quantity="one">Episode completed</item>
+        <item quantity="other">%1$d episodes completed</item>
+    </plurals>
+
+    <plurals name="activity_completed_items">
+        <item quantity="one">Item completed</item>
+        <item quantity="other">%1$d items completed</item>
+    </plurals>
+
+    <plurals name="pref_pages">
+        <item quantity="one">1 page</item>
+        <item quantity="other">%1$s pages</item>
+    </plurals>
+
+    <!-- Manga info -->
+    <plurals name="missing_chapters">
+        <item quantity="one">Missing %1$s chapter</item>
+        <item quantity="other">Missing %1$s chapters</item>
+    </plurals>
+
+    <plurals name="missing_episodes">
+        <item quantity="one">Missing %1$s episode</item>
+        <item quantity="other">Missing %1$s episodes</item>
+    </plurals>
+
+    <plurals name="missing_items">
+        <item quantity="one">Missing %1$s item</item>
+        <item quantity="other">Missing %1$s items</item>
+    </plurals>
+
+    <plurals name="manga_num_chapters">
+        <item quantity="one">%1$s chapter</item>
+        <item quantity="other">%1$s chapters</item>
+    </plurals>
+
+    <plurals name="anime_num_episodes">
+        <item quantity="one">%1$s episode</item>
+        <item quantity="other">%1$s episodes</item>
+    </plurals>
+
+    <plurals name="entry_num_items">
+        <item quantity="one">%1$s item</item>
+        <item quantity="other">%1$s items</item>
+    </plurals>
+
+    <plurals name="anime_num_scheduled_episodes">
+        <item quantity="one">%1$s scheduled</item>
+        <item quantity="other">%1$s scheduled</item>
+    </plurals>
+
+    <plurals name="anime_num_upcoming_episodes">
+        <item quantity="one">%1$s upcoming</item>
+        <item quantity="other">%1$s upcoming</item>
+    </plurals>
+
+    <plurals name="anime_num_seasons">
+        <item quantity="one">%1$s season</item>
+        <item quantity="other">%1$s seasons</item>
+    </plurals>
+
+    <plurals name="download_amount">
+        <item quantity="one">Next chapter</item>
+        <item quantity="other">Next %d chapters</item>
+    </plurals>
+
+    <plurals name="download_amount_episodes">
+        <item quantity="one">Next episode</item>
+        <item quantity="other">Next %d episodes</item>
+    </plurals>
+
+    <plurals name="download_amount_items">
+        <item quantity="one">Next item</item>
+        <item quantity="other">Next %d items</item>
+    </plurals>
+
+    <plurals name="missing_chapters_warning">
+        <item quantity="one">Skipping %d chapter, either the source is missing it or it has been filtered out</item>
+        <item quantity="other">Skipping %d chapters, either the source is missing them or they have been filtered out</item>
+    </plurals>
+
+    <plurals name="notification_new_items_summary">
+        <item quantity="one">For %d entry</item>
+        <item quantity="other">For %d entries</item>
+    </plurals>
+    <plurals name="notification_chapters_generic">
+        <item quantity="one">%1$d new chapter</item>
+        <item quantity="other">%1$d new chapters</item>
+    </plurals>
+    <plurals name="notification_episodes_generic">
+        <item quantity="one">%1$d new episode</item>
+        <item quantity="other">%1$d new episodes</item>
+    </plurals>
+    <plurals name="notification_items_generic">
+        <item quantity="one">%d new item</item>
+        <item quantity="other">%d new items</item>
+    </plurals>
+    <plurals name="notification_updates_generic">
+        <item quantity="one">%1$d new update</item>
+        <item quantity="other">%1$d new updates</item>
+    </plurals>
+
+    <plurals name="browse_feed_new_items">
+        <item quantity="one">%1$d new item</item>
+        <item quantity="other">%1$d new items</item>
+    </plurals>
+
+    <plurals name="notification_chapters_multiple_and_more">
+        <item quantity="one">Chapters %1$s and 1 more</item>
+        <item quantity="other">Chapters %1$s and %2$d more</item>
+    </plurals>
+    <plurals name="notification_episodes_multiple_and_more">
+        <item quantity="one">Episodes %1$s and 1 more</item>
+        <item quantity="other">Episodes %1$s and %2$d more</item>
+    </plurals>
+    <plurals name="notification_items_multiple_and_more">
+        <item quantity="one">Items %1$s and %2$d more</item>
+        <item quantity="other">Items %1$s and %2$d more</item>
+    </plurals>
+
+    <!--Extension Updates Notifications-->
+    <plurals name="update_check_notification_ext_updates">
+        <item quantity="one">Extension update available</item>
+        <item quantity="other">%d extension updates available</item>
+    </plurals>
+
+    <plurals name="restore_extensions_installed">
+        <item quantity="one">Installed 1 extension from your backup</item>
+        <item quantity="other">Installed %d extensions from your backup</item>
+    </plurals>
+    <plurals name="extension_auto_update_notification_updated">
+        <item quantity="one">1 extension updated automatically</item>
+        <item quantity="other">%d extensions updated automatically</item>
+    </plurals>
+
+    <plurals name="num_repos">
+        <item quantity="one">%d store</item>
+        <item quantity="other">%d stores</item>
+    </plurals>
+
+    <plurals name="pref_duplicate_detection_title_exclusions_count">
+        <item quantity="one">%d exclusion rule</item>
+        <item quantity="other">%d exclusion rules</item>
+    </plurals>
+
+    <!--Migration-->
+    <plurals name="migrationListScreen.migrateDialog.migrateTitle">
+        <item quantity="one">Migrate %1$d entry?</item>
+        <item quantity="other">Migrate %1$d entries?</item>
+    </plurals>
+    <plurals name="migrationListScreen.migrateDialog.copyTitle">
+        <item quantity="one">Copy %1$d entry?</item>
+        <item quantity="other">Copy %1$d entries?</item>
+    </plurals>
+    <plurals name="migrationListScreen.migrateDialog.skipText">
+        <item quantity="one">An entry was skipped</item>
+        <item quantity="other">%1$d entries were skipped</item>
+    </plurals>
+    <plurals name="migrationEntriesScreen.mergedGroupSummary">
+        <item quantity="one">Root • %1$d child</item>
+        <item quantity="other">Root • %1$d children</item>
+    </plurals>
+
+    <plurals name="notification_update_error">
+        <item quantity="one">%1$d update failed</item>
+        <item quantity="other">%1$d updates failed</item>
+    </plurals>
+
+    <plurals name="filter_problem_count">
+        <item quantity="one">%1$d problem</item>
+        <item quantity="other">%1$d problems</item>
+    </plurals>
+
+    <plurals name="filter_fix_problems_to_apply">
+        <item quantity="one">Fix %1$d problem to apply</item>
+        <item quantity="other">Fix %1$d problems to apply</item>
+    </plurals>
+    <plurals name="library_updates_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="library_updates_new_chapters">
+        <item quantity="one">%d new chapter</item>
+        <item quantity="other">%d new chapters</item>
+    </plurals>
+    <plurals name="library_updates_failed">
+        <item quantity="one">%d failed</item>
+        <item quantity="other">%d failed</item>
+    </plurals>
+    <plurals name="library_updates_skipped">
+        <item quantity="one">%d skipped</item>
+        <item quantity="other">%d skipped</item>
+    </plurals>
+    <plurals name="library_updates_checks_of">
+        <item quantity="one">Checks %1$d of %2$d entry</item>
+        <item quantity="other">Checks %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_manual_checks_of">
+        <item quantity="one">Updating now would check %1$d of %2$d entry</item>
+        <item quantity="other">Updating now would check %1$d of %2$d entries</item>
+    </plurals>
+    <plurals name="library_updates_sources_all_checked">
+        <item quantity="one">%d source checked</item>
+        <item quantity="other">All %d sources checked</item>
+    </plurals>
+    <plurals name="library_updates_sources_some_off">
+        <item quantity="one">%1$d of %2$d source not checked</item>
+        <item quantity="other">%1$d of %2$d sources not checked</item>
+    </plurals>
+    <plurals name="library_updates_defers">
+        <item quantity="one">Defers %d entry today</item>
+        <item quantity="other">Defers %d entries today</item>
+    </plurals>
+    <plurals name="library_update_report_considered">
+        <item quantity="one">%d entry considered</item>
+        <item quantity="other">%d entries considered</item>
+    </plurals>
+    <plurals name="library_update_report_failed_in_a_row">
+        <item quantity="one">%1$s · failed %2$d check in a row</item>
+        <item quantity="other">%1$s · failed %2$d checks in a row</item>
+    </plurals>
+    <plurals name="library_update_report_source_entries">
+        <item quantity="one">%1$s · %2$d entry</item>
+        <item quantity="other">%1$s · %2$d entries</item>
+    </plurals>
+    <plurals name="library_update_report_retry_entries">
+        <item quantity="one">Retry %d</item>
+        <item quantity="other">Retry %d</item>
+    </plurals>
+    <plurals name="library_update_report_migrate_entries">
+        <item quantity="one">Migrate %d</item>
+        <item quantity="other">Migrate %d</item>
+    </plurals>
+    <plurals name="library_update_report_fine">
+        <item quantity="one">%d fine</item>
+        <item quantity="other">%d fine</item>
+    </plurals>
+    <plurals name="updates_paused_sources">
+        <item quantity="one">%d source paused for library updates</item>
+        <item quantity="other">%d sources paused for library updates</item>
+    </plurals>
+    <plurals name="library_update_report_check_skipped">
+        <item quantity="one">Check the skipped entry</item>
+        <item quantity="other">Check the %d skipped</item>
+    </plurals>
+    <plurals name="library_update_skipped_by_rules">
+        <item quantity="one">%d skipped by rules</item>
+        <item quantity="other">%d skipped by rules</item>
+    </plurals>
+    <plurals name="library_update_never_left_out">
+        <item quantity="one">%d set to never check, left out</item>
+        <item quantity="other">%d set to never check, left out</item>
+    </plurals>
+    <plurals name="library_update_switched_off">
+        <item quantity="one">%d switched off in settings</item>
+        <item quantity="other">%d switched off in settings</item>
+    </plurals>
+    <plurals name="library_update_mode_title">
+        <item quantity="one">Update mode for %d entry</item>
+        <item quantity="other">Update mode for %d entries</item>
+    </plurals>
+    <plurals name="updates_hidden">
+        <item quantity="one">%d hidden</item>
+        <item quantity="other">%d hidden</item>
+    </plurals>
+    <plurals name="updates_hidden_by_filters">
+        <item quantity="one">%d hidden by filters</item>
+        <item quantity="other">%d hidden by filters</item>
+    </plurals>
+    <plurals name="updates_from_hidden_sources">
+        <item quantity="one">%d from hidden sources</item>
+        <item quantity="other">%d from hidden sources</item>
+    </plurals>
+
+    <plurals name="anime_episode_minutes_left">
+        <item quantity="one">%d min left</item>
+        <item quantity="other">%d min left</item>
+    </plurals>
+    <plurals name="book_reader_search_matches">
+        <item quantity="one">%d match</item>
+        <item quantity="other">%d matches</item>
+    </plurals>
+    <plurals name="book_reader_search_chapters">
+        <item quantity="one">%d chapter</item>
+        <item quantity="other">%d chapters</item>
+    </plurals>
+    <plurals name="book_text_rules_count">
+        <item quantity="one">%d rule</item>
+        <item quantity="other">%d rules</item>
+    </plurals>
+
+    <plurals name="sync_files_waiting_for_wifi">
+        <item quantity="one">%d cover or font waits for Wi-Fi</item>
+        <item quantity="other">%d covers and fonts wait for Wi-Fi</item>
+    </plurals>
+    <plurals name="sync_files_missing">
+        <item quantity="one">%d cover or font is missing on the server</item>
+        <item quantity="other">%d covers and fonts are missing on the server</item>
+    </plurals>
+    <plurals name="sync_unsent">
+        <item quantity="one">%d change not sent yet</item>
+        <item quantity="other">%d changes not sent yet</item>
+    </plurals>
+    <!-- %1$d is how many changes, %2$s the server's address -->
+    <plurals name="sync_disconnect_unsent">
+        <item quantity="one">%1$d change made here hasn\'t reached %2$s yet. Your other devices won\'t get it.</item>
+        <item quantity="other">%1$d changes made here haven\'t reached %2$s yet. Your other devices won\'t get them.</item>
+    </plurals>
+    <plurals name="sync_held_aside">
+        <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
+        <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>
+    </plurals>
+    <plurals name="sync_questions_waiting">
+        <item quantity="one">%d question needs your answer</item>
+        <item quantity="other">%d questions need your answer</item>
+    </plurals>
+    <plurals name="sync_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="sync_first_sync_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
+    <plurals name="missing_extensions_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
+    <plurals name="missing_extensions_notice">
+        <item quantity="one">%d title in your library needs an extension that isn\'t installed here</item>
+        <item quantity="other">%d titles in your library need extensions that aren\'t installed here</item>
+    </plurals>
+    <plurals name="missing_extensions_notice_profiles">
+        <item quantity="one">%d title in another profile needs an extension that isn\'t installed here</item>
+        <item quantity="other">%d titles across your profiles need extensions that aren\'t installed here</item>
+    </plurals>
+    <plurals name="onboarding_finish_arriving_missing">
+        <item quantity="one">Your library is downloading. So far, %d title needs an extension that isn\'t installed here.</item>
+        <item quantity="other">Your library is downloading. So far, %d titles need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="onboarding_finish_account_missing">
+        <item quantity="one">%d title from your account needs an extension that isn\'t installed here.</item>
+        <item quantity="other">%d titles from your account need extensions that aren\'t installed here.</item>
+    </plurals>
+    <plurals name="missing_extensions_install">
+        <item quantity="one">Install %d</item>
+        <item quantity="other">Install %d</item>
+    </plurals>
+</resources>

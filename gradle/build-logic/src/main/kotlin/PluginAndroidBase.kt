@@ -1,15 +1,15 @@
+import app.katari.gradle.configurations.configureAndroidTestVerification
+import app.katari.gradle.configurations.configureKotlin
+import app.katari.gradle.extensions.android
+import app.katari.gradle.extensions.compileSdkFromCatalog
+import app.katari.gradle.extensions.configureTest
+import app.katari.gradle.extensions.coreLibraryDesugaring
+import app.katari.gradle.extensions.katari
+import app.katari.gradle.extensions.libs
 import com.android.build.api.dsl.ApplicationDefaultConfig
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DefaultConfig
-import mihon.gradle.configurations.configureAndroidTestVerification
-import mihon.gradle.configurations.configureKotlin
-import mihon.gradle.extensions.android
-import mihon.gradle.extensions.compileSdkFromMihonx
-import mihon.gradle.extensions.configureTest
-import mihon.gradle.extensions.coreLibraryDesugaring
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.mihonx
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
@@ -23,15 +23,15 @@ class PluginAndroidBase : Plugin<Project> {
 
         android {
             defaultConfig {
-                minSdk = mihonx.versions.android.sdk.min.get().toInt()
+                minSdk = katari.versions.android.sdk.min.get().toInt()
                 if (this is ApplicationDefaultConfig) {
-                    targetSdk = mihonx.versions.android.sdk.target.get().toInt()
+                    targetSdk = katari.versions.android.sdk.target.get().toInt()
                 }
 
-                ndkVersion = mihonx.versions.android.ndk.get()
+                ndkVersion = katari.versions.android.ndk.get()
             }
 
-            compileSdk(compileSdkFromMihonx())
+            compileSdk(compileSdkFromCatalog())
 
             compileOptions {
                 isCoreLibraryDesugaringEnabled = true

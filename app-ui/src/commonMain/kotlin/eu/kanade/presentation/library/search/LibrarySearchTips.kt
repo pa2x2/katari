@@ -10,15 +10,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Lightbulb
-import mihon.presentation.kit.chip.AssistChip
-import mihon.presentation.kit.content.InlineIcon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.GroupCard
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Lightbulb
+import app.katari.presentation.kit.chip.AssistChip
+import app.katari.presentation.kit.content.InlineIcon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.surface.GroupCard
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

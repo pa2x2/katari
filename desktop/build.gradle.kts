@@ -1,17 +1,17 @@
-import mihon.gradle.Config
-import mihon.gradle.appimage.registerDesktopAppImage
-import mihon.gradle.desktopicon.GenerateDesktopIconTask
-import mihon.gradle.extensions.extensionHostJvmArguments
-import mihon.gradle.getAppVersionCode
-import mihon.gradle.getAppVersionName
-import mihon.gradle.getLatestCommitCount
-import mihon.gradle.getLatestCommitSha
-import mihon.gradle.getLatestCommitTime
-import mihon.gradle.tasks.GenerateDesktopBuildInfoTask
+import app.katari.gradle.Config
+import app.katari.gradle.appimage.registerDesktopAppImage
+import app.katari.gradle.desktopicon.GenerateDesktopIconTask
+import app.katari.gradle.extensions.extensionHostJvmArguments
+import app.katari.gradle.getAppVersionCode
+import app.katari.gradle.getAppVersionName
+import app.katari.gradle.getLatestCommitCount
+import app.katari.gradle.getLatestCommitSha
+import app.katari.gradle.getLatestCommitTime
+import app.katari.gradle.tasks.GenerateDesktopBuildInfoTask
 
 plugins {
-    alias(mihonx.plugins.desktop.application)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.desktop.application)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.metro)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutLibraries.jvm)
@@ -19,10 +19,10 @@ plugins {
 
 // The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
 // workflow reads it from this line.
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.3"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
-    packageName.set("mihon.desktop.application")
+    packageName.set("app.katari.desktop.application")
     versionName.set(version.toString())
     androidVersionName.set(getAppVersionName())
     androidVersionCode.set(getAppVersionCode())
@@ -66,38 +66,39 @@ aboutLibraries {
 
 dependencies {
     implementation(projects.appUi)
-    implementation(projects.appUpdate)
-    implementation(projects.backup)
-    implementation(projects.presentationCore)
-    implementation(projects.data)
-    implementation(projects.domain)
-    implementation(projects.entryInteractions)
-    implementation(projects.entryInteractions.host)
-    implementation(projects.entrySourceApi)
-    implementation(projects.entryViewerSettingsUi)
-    implementation(projects.extensionRuntime)
-    implementation(projects.extensionRuntime.jvmHost)
+    implementation(projects.features.appUpdate)
+    implementation(projects.features.backup)
+    implementation(projects.core.presentationCore)
+    implementation(projects.core.data)
+    implementation(projects.core.domain)
+    implementation(projects.features.entryInteractions)
+    implementation(projects.features.entryInteractions.host)
+    implementation(projects.sources.entrySourceApi)
+    implementation(projects.features.entryViewerSettingsUi)
+    implementation(projects.sources.extensionRuntime)
+    implementation(projects.sources.extensionRuntime.jvmHost)
     implementation(projects.core.common)
     implementation(projects.core.image)
     implementation(projects.core.metro)
     implementation(projects.core.platform)
-    implementation(projects.i18n)
-    implementation(projects.libraryUpdate)
-    implementation(projects.icons.materialSymbols)
-    implementation(projects.scriptRuntime)
-    implementation(projects.sourceCompat)
-    implementation(projects.sourceLocal)
-    implementation(projects.trackers)
-    implementation(projects.language.runtime)
-    implementation(projects.modelArtifacts.runtime)
-    implementation(projects.textRecognition.runtime)
-    implementation(projects.translation.api)
-    implementation(projects.translation.runtime)
-    implementation(projects.translation.providers.deepl)
-    implementation(projects.translation.providers.libretranslate)
-    implementation(projects.translation.providers.serverConnection)
-    implementation(projects.tts.runtime)
-    implementation(projects.webView.jcef)
+    implementation(projects.core.i18n)
+    implementation(projects.features.libraryUpdate)
+    implementation(projects.features.sync.client)
+    implementation(projects.core.icons.materialSymbols)
+    implementation(projects.sources.scriptRuntime)
+    implementation(projects.sources.sourceCompat)
+    implementation(projects.sources.sourceLocal)
+    implementation(projects.features.language.runtime)
+    implementation(projects.features.modelArtifacts.runtime)
+    implementation(projects.features.textRecognition.runtime)
+    implementation(projects.features.translation.api)
+    implementation(projects.features.translation.runtime)
+    implementation(projects.features.translation.providers.deepl)
+    implementation(projects.features.translation.providers.libretranslate)
+    implementation(projects.features.translation.providers.serverConnection)
+    implementation(projects.features.tts.runtime)
+    implementation(projects.features.tts.providers.speechDispatcher)
+    implementation(projects.sources.webView.jcef)
 
     implementation(libs.metrox.viewmodel.compose)
     // The window routes the mouse back button to the navigation events the shared screens handle back with.
@@ -116,13 +117,18 @@ dependencies {
     implementation(libs.jna)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
+    // The native libraries the app's modules call, built for the system the app is packaged for, x86_64 Linux:
+    // libarchive with its compression libraries built in, so archives open whatever the system has, as Android does
+    // with its own build, and libmpv, built from the same sources as the Android add-on's
+    runtimeOnly(libs.libarchive.linux.x64)
+    runtimeOnly(libs.libmpv.linux.x64)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 compose.desktop.application {
-    mainClass = "mihon.desktop.MainKt"
+    mainClass = "app.katari.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
 

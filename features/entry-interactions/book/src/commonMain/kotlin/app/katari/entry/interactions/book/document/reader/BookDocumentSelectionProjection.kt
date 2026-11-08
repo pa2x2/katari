@@ -1,0 +1,197 @@
+package app.katari.entry.interactions.book.document.reader
+
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.IntOffset
+
+/** Reader projection of one visible text leaf and the text that follows it in reading order. */
+internal data class BookDocumentSelectableLeaf(
+    val token: String,
+    val chapterId: Long,
+    val fullText: String,
+    val leadingText: String = "",
+    val separatorAfter: String,
+    val insertedBidiOffsets: Set<Int> = emptySet(),
+    /** Language the document declares for this text, such as an HTML `lang` attribute. */
+    val languageTag: String? = null,
+) {
+    fun sourceText(start: Int = 0, end: Int = fullText.length): String =
+        fullText.substring(start, end).filterIndexed { index, _ -> start + index !in insertedBidiOffsets }
+
+    fun sourceOffset(displayOffset: Int): Int = displayOffset - insertedBidiOffsets.count { it < displayOffset }
+}
+
+internal data class BookDocumentSelectionLayout(
+    val textLayout: TextLayoutResult? = null,
+    val positionInWindow: IntOffset? = null,
+)
+
+internal data class BookDocumentSelectionProjection(
+    val chapterId: Long,
+    val selectedTokens: Set<String>,
+    val identity: String,
+    val text: String,
+    val languageContextText: String,
+    /** Languages the document declares for the selected text, in reading order. */
+    val languageTags: List<String>,
+    val boundsInReaderRoot: Rect?,
+)
+
+internal fun projectBookDocumentSelection(
+    ownerIdentity: String,
+    selectedTexts: List<AnnotatedString>,
+    selectableLeaves: Map<String, BookDocumentSelectableLeaf>,
+    layouts: Map<String, BookDocumentSelectionLayout>,
+    readerRootPositionInWindow: Offset,
+): BookDocumentSelectionProjection? {
+    val fragments = selectedTexts.mapNotNull { selectedText ->
+        val token = selectedText
+            .getStringAnnotations(
+                tag = BOOK_DOCUMENT_SELECTION_TOKEN_TAG,
+                start = 0,
+                end = selectedText.length,
+            )
+            .firstOrNull()
+            ?.item
+            ?: return@mapNotNull null
+        val leaf = selectableLeaves[token] ?: return@mapNotNull null
+        BookDocumentSelectionFragment(leaf, selectedText.text)
+    }
+    if (fragments.isEmpty()) return null
+    val chapterId = fragments.first().metadata.chapterId
+    if (fragments.any { it.metadata.chapterId != chapterId }) return null
+
+    val resolvedFragments = fragments.mapIndexed { index, fragment ->
+        fragment.resolveRange(index, fragments.lastIndex)
+    }
+    val text = buildString {
+        resolvedFragments.forEachIndexed { index, fragment ->
+            if (index > 0) append(resolvedFragments[index - 1].fragment.metadata.separatorAfter)
+            if (fragment.start == 0) append(fragment.fragment.metadata.leadingText)
+            append(fragment.selectedText())
+        }
+    }
+    if (text.isBlank()) return null
+    val identity = buildString {
+        append(ownerIdentity)
+        resolvedFragments.forEach { fragment ->
+            append('|')
+            append(fragment.fragment.metadata.token)
+            append(':')
+            append(fragment.start)
+            append(':')
+            append(fragment.endExclusive)
+        }
+    }
+    val languageContextText = resolvedFragments
+        .map(ResolvedBookDocumentSelectionFragment::languageContextText)
+        .distinct()
+        .joinToString(separator = "\n")
+        .takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
+    val bounds = resolvedFragments
+        .mapNotNull { fragment ->
+            fragment.boundsInReaderRoot(
+                layout = layouts[fragment.fragment.metadata.token],
+                readerRootPositionInWindow = readerRootPositionInWindow,
+            )
+        }
+        .reduceOrNull(Rect::unionWith)
+
+    return BookDocumentSelectionProjection(
+        chapterId = chapterId,
+        selectedTokens = fragments.mapTo(linkedSetOf()) { it.metadata.token },
+        identity = identity,
+        text = text,
+        languageContextText = languageContextText,
+        languageTags = fragments.mapNotNull { it.metadata.languageTag }.distinct(),
+        boundsInReaderRoot = bounds,
+    )
+}
+
+private data class BookDocumentSelectionFragment(
+    val metadata: BookDocumentSelectableLeaf,
+    val text: String,
+) {
+    fun resolveRange(index: Int, lastIndex: Int): ResolvedBookDocumentSelectionFragment {
+        val fullText = metadata.fullText
+        val start = when {
+            text == fullText -> 0
+            index == 0 && lastIndex > 0 -> fullText.lastIndexOf(text)
+            else -> fullText.indexOf(text)
+        }.coerceAtLeast(0)
+        return ResolvedBookDocumentSelectionFragment(
+            fragment = this,
+            start = start,
+            endExclusive = (start + text.length).coerceAtMost(fullText.length),
+        )
+    }
+}
+
+private data class ResolvedBookDocumentSelectionFragment(
+    val fragment: BookDocumentSelectionFragment,
+    val start: Int,
+    val endExclusive: Int,
+) {
+    fun selectedText(): String = fragment.text.filterIndexed { index, _ ->
+        start + index !in fragment.metadata.insertedBidiOffsets
+    }
+
+    fun languageContextText(): String {
+        val fullText = fragment.metadata.sourceText()
+        val fullCodePoints = fullText.codePointCount(0, fullText.length)
+        if (fullCodePoints <= MAX_LANGUAGE_CONTEXT_CODE_POINTS) return fullText
+
+        val selectionStart = fullText.codePointCount(0, fragment.metadata.sourceOffset(start))
+        val selectionEnd = fullText.codePointCount(0, fragment.metadata.sourceOffset(endExclusive))
+        val selectionLength = selectionEnd - selectionStart
+        if (selectionLength >= MAX_LANGUAGE_CONTEXT_CODE_POINTS) {
+            return selectedText().takeCodePoints(MAX_LANGUAGE_CONTEXT_CODE_POINTS)
+        }
+
+        val surroundingCapacity = MAX_LANGUAGE_CONTEXT_CODE_POINTS - selectionLength
+        var windowStart = (selectionStart - surroundingCapacity / 2).coerceAtLeast(0)
+        var windowEnd = (windowStart + MAX_LANGUAGE_CONTEXT_CODE_POINTS).coerceAtMost(fullCodePoints)
+        windowStart = (windowEnd - MAX_LANGUAGE_CONTEXT_CODE_POINTS).coerceAtLeast(0)
+        val startOffset = fullText.offsetByCodePoints(0, windowStart)
+        val endOffset = fullText.offsetByCodePoints(0, windowEnd)
+        return fullText.substring(startOffset, endOffset)
+    }
+
+    fun boundsInReaderRoot(
+        layout: BookDocumentSelectionLayout?,
+        readerRootPositionInWindow: Offset,
+    ): Rect? {
+        val textLayout = layout?.textLayout ?: return null
+        val positionInWindow = layout.positionInWindow ?: return null
+        if (endExclusive <= start) return null
+        val localBounds = textLayout.getPathForRange(start, endExclusive).getBounds()
+        if (localBounds.isEmpty) return null
+        val left = localBounds.left + positionInWindow.x - readerRootPositionInWindow.x
+        val top = localBounds.top + positionInWindow.y - readerRootPositionInWindow.y
+        return Rect(
+            left,
+            top,
+            localBounds.right + positionInWindow.x - readerRootPositionInWindow.x,
+            localBounds.bottom + positionInWindow.y - readerRootPositionInWindow.y,
+        )
+    }
+}
+
+// Both are fragment bounds, which are never empty, so the union is their plain bounding box
+private fun Rect.unionWith(other: Rect): Rect = Rect(
+    minOf(left, other.left),
+    minOf(top, other.top),
+    maxOf(right, other.right),
+    maxOf(bottom, other.bottom),
+)
+
+private fun String.takeCodePoints(maximum: Int): String {
+    val count = codePointCount(0, length)
+    if (count <= maximum) return this
+    return substring(0, offsetByCodePoints(0, maximum))
+}
+
+internal const val BOOK_DOCUMENT_SELECTION_TOKEN_TAG = "book-document-selection-token"
+private const val MAX_LANGUAGE_CONTEXT_CODE_POINTS = 1_000

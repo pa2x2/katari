@@ -3,10 +3,10 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
 import eu.kanade.tachiyomi.source.sourceNotInstalledName
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.stats.recap.story
 
+import app.katari.entry.interactions.statistics.EntryStatisticsAccent
+import app.katari.entry.interactions.statistics.EntryStatisticsContribution
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.statistics.EntryStatisticsAccent
-import mihon.entry.interactions.statistics.EntryStatisticsContribution
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.statistics.recap.StatisticsRecapActivity

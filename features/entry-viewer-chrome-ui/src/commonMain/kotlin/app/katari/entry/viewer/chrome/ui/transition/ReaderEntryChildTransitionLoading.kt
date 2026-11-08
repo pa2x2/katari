@@ -1,0 +1,28 @@
+package app.katari.entry.viewer.chrome.ui.transition
+
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.KatariTheme
+
+/**
+ * Minimal progress affordance shown at a chapter boundary while its destination loads. It occupies
+ * the slot the destination content will occupy, so no further interaction is needed once loading
+ * completes.
+ */
+@Composable
+fun ReaderEntryChildTransitionLoadingIndicator(
+    loadingDescription: String,
+    modifier: Modifier = Modifier,
+    indicatorSize: Dp = KatariTheme.sizes.iconLarge,
+) {
+    LoadingIndicator(
+        modifier = modifier
+            .size(indicatorSize)
+            .semantics { contentDescription = loadingDescription },
+    )
+}

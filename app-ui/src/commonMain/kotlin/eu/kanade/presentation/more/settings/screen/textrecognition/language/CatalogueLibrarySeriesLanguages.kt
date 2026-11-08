@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.language
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.language.api.tag.LanguageTag
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.first
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.language.api.tag.LanguageTag
 import tachiyomi.domain.entry.repository.EntryRepository
 
 /** Reads each series' language from the catalogue's description of its source. */

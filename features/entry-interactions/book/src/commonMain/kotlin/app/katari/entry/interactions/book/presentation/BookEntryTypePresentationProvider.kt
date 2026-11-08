@@ -1,0 +1,69 @@
+package app.katari.entry.interactions.book.presentation
+
+import app.katari.entry.interactions.presentation.EntryHistorySubtitlePresentation
+import app.katari.entry.interactions.presentation.EntryNotificationChildNumberPolicy
+import app.katari.entry.interactions.presentation.EntryPartialProgressPresentation
+import app.katari.entry.interactions.presentation.EntryTypePresentation
+import app.katari.entry.interactions.presentation.EntryUpdateNotificationVocabulary
+import app.katari.entry.interactions.runtime.EntryTypePresentationProvider
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Book
+import tachiyomi.i18n.*
+
+internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {
+    override val presentation = EntryTypePresentation(
+        displayNameLabel = MR.strings.entry_type_book,
+        badgeIcon = MaterialSymbols.Rounded.Book,
+        coverOverlayIcon = MaterialSymbols.Rounded.Book,
+        markAsConsumedLabel = MR.strings.action_mark_as_seen,
+        markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
+        markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,
+        unconsumedIndicatorLabel = MR.strings.action_filter_unseen,
+        bookmarkChildLabel = MR.strings.action_bookmark,
+        removeBookmarkChildLabel = MR.strings.action_remove_bookmark,
+        filterUnconsumedLabel = MR.strings.action_filter_unread,
+        fillerChildLabel = MR.strings.chapter_kind_extra,
+        openChildLabel = MR.strings.action_read_chapter,
+        childListTitle = MR.strings.chapters,
+        childCountPlural = MR.plurals.manga_num_chapters,
+        completedChildCountPlural = MR.plurals.activity_completed_chapters,
+        missingChildCountPlural = MR.plurals.missing_chapters,
+        childCountReasonLabel = MR.strings.possible_duplicates_reason_chapter_count,
+        childNumberDisplayLabel = MR.strings.display_mode_chapter,
+        childNumberShortLabel = MR.strings.display_mode_chapter_short,
+        childNumberSettingLabel = MR.strings.show_chapter_number,
+        deleteChildrenConfirmationLabel = MR.strings.confirm_delete_chapters,
+        noChildrenFoundLabel = MR.strings.no_chapters_error,
+        otherChildrenLabel = MR.strings.chapter_group_other_chapters,
+        noChildrenYetLabel = MR.strings.chapter_group_no_chapters_yet,
+        scanlatorLabel = MR.strings.scanlator_translator,
+        excludeScanlatorsLabel = MR.strings.exclude_translators,
+        noScanlatorsFoundLabel = MR.strings.no_translators_found,
+        noNextChildLabel = MR.strings.no_next_chapter,
+        viewerUnavailableLabel = MR.strings.viewer_unavailable_reading,
+        settingsTitle = MR.strings.chapter_settings,
+        setSettingsAsDefaultLabel = MR.strings.set_chapter_settings_as_default,
+        confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_chapter_settings,
+        alsoSetSettingsForLibraryLabel = MR.strings.also_set_chapter_settings_for_library,
+        settingsUpdatedLabel = MR.strings.chapter_settings_updated,
+        downloadAmountPlural = MR.plurals.download_amount,
+        downloadUnconsumedLabel = MR.strings.download_unseen,
+        downloadNumberSortLabel = MR.strings.action_order_by_chapter_number,
+        intervalExpectedUpdateLabel = MR.strings.manga_interval_expected_update,
+        intervalExpectedUpdateNullLabel = MR.strings.manga_interval_expected_update_null,
+        immersiveOpenLabel = MR.strings.action_open,
+        immersiveOpenIcon = MaterialSymbols.Rounded.Book,
+        historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
+        partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
+        updateNotification = EntryUpdateNotificationVocabulary(
+            childGeneric = MR.plurals.notification_chapters_generic,
+            childSingle = MR.strings.notification_chapters_single,
+            childSingleAndMore = MR.strings.notification_chapters_single_and_more,
+            childMultiple = MR.strings.notification_chapters_multiple,
+            childMultipleAndMore = MR.plurals.notification_chapters_multiple_and_more,
+            viewChildrenLabel = MR.strings.action_view_chapters,
+            numberPolicy = EntryNotificationChildNumberPolicy.NON_NEGATIVE,
+            maxDisplayedNumbers = 5,
+        ),
+    )
+}

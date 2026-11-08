@@ -33,9 +33,6 @@ import Task from "../../guide/Task.astro";
         A <strong>Switch</strong> tab can also sit among the tabs; add it under
         <Path>Settings › Appearance › Home screen tabs</Path>.
       </li>
-      <li>
-        <PlatformLabel platform="Linux" lead />Profiles can't be locked yet, and a profile locked on Android stays shut.
-      </li>
     </ul>
     <p>
       Switching back to a profile returns to the tab you left it on. Library updates and downloads already running stay
@@ -51,9 +48,9 @@ import Task from "../../guide/Task.astro";
       <tbody>
         <tr><td>Library, categories, history and statistics, and library update schedule and rules</td> <td>The storage folder and downloads</td></tr>
         <tr><td>Library display, reader and appearance settings</td> <td>Backups</td></tr>
-        <tr><td>Source settings, tracker logins and feeds</td> <td>Networking and privacy settings</td></tr>
-        <tr><td>Translation choices, and on Android text-to-speech and text recognition ones</td> <td>Extension stores, and on Android downloaded models</td></tr>
-        <tr><td>Its startup screen, and on Android its lock</td> <td><PlatformLabel platform="Android" lead />Auto-translate settings for downloads</td></tr>
+        <tr><td>Source settings and feeds</td> <td>Networking and privacy settings</td></tr>
+        <tr><td>Translation and text-to-speech choices, and on Android text recognition ones</td> <td>Extension stores, and on Android downloaded models</td></tr>
+        <tr><td>Its startup screen and its lock</td> <td><PlatformLabel platform="Android" lead />Auto-translate settings for downloads</td></tr>
       </tbody>
     </table>
     <Callout label="Until a restart">
@@ -64,7 +61,7 @@ import Task from "../../guide/Task.astro";
     </Callout>
   </Task>
 
-  <Task id="lock" title="Lock a profile" platform="Android">
+  <Task id="lock" title="Lock a profile">
     <ol>
       <li>Switch to the profile and open <Path>Settings › Security and privacy</Path>.</li>
       <li>Turn on <strong>Require unlock</strong>, then pick how soon it locks again under <strong>Lock when idle</strong>.</li>
@@ -73,6 +70,11 @@ import Task from "../../guide/Task.astro";
       The idle time starts when you leave Katari or switch to another profile. Katari asks again whenever it starts, and with
       <strong>Never</strong> switching to the profile asks only the first time after that. <strong>Require unlock</strong> only shows
       on phones with a screen lock.
+    </p>
+    <p>
+      <PlatformLabel platform="Linux" lead />Unlocking asks for the password you sign in to the computer with, and the idle time also
+      counts while Katari is minimized or the screen is locked. If Katari can't check that password, Security and privacy says
+      <strong>Profile lock isn't available</strong>.
     </p>
   </Task>
 

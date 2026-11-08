@@ -1,8 +1,8 @@
 package eu.kanade.presentation.entry.translation
 
 import androidx.compose.runtime.Composable
-import mihon.entry.interactions.translate.EntryTranslateFailure
-import mihon.entry.interactions.translate.EntryTranslateStatus
+import app.katari.entry.interactions.translate.EntryTranslateFailure
+import app.katari.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

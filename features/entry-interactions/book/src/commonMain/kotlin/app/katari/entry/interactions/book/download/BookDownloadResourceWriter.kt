@@ -1,0 +1,72 @@
+package app.katari.entry.interactions.book.download
+
+import app.katari.entry.interactions.book.content.MaterializedBookResource
+import app.katari.entry.interactions.book.document.resource.BookDocumentResourceDecoding
+import app.katari.entry.interactions.book.document.resource.validateBookDocumentResource
+import app.katari.entry.interactions.book.preparation.BookResourceRequirement
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.security.MessageDigest
+
+/** Writes and describes the actual storage-provider file used by an offline resource. */
+internal class BookDownloadResourceWriter(
+    private val provider: BookDownloadProvider,
+    private val staging: BookDownloadStagingPackage,
+    private val budget: BookDownloadResourceBudgetTracker,
+    private val requirements: Map<String, BookResourceRequirement>,
+    private val decoding: BookDocumentResourceDecoding,
+) {
+    suspend fun write(resourceId: String, resource: MaterializedBookResource): BookDownloadedResource =
+        withContext(Dispatchers.IO) {
+            requirements[resourceId]?.let { requirement ->
+                try {
+                    resource.file.validateBookDocumentResource(resource.metadata.mediaType, requirement, decoding)
+                } catch (error: Exception) {
+                    resource.invalidate()
+                    throw BookResourceValidationException(
+                        "Required BOOK resource $resourceId is invalid: ${error.message}",
+                        error,
+                    )
+                }
+            }
+            // After validation, so an image the download skips as invalid doesn't use up the budget.
+            budget.include(resource.file.length(), resourceId)
+            val requestedName = provider.resourceFileName(resource.metadata.id, resource.metadata.mediaType)
+            val output = staging.directory.createFile(requestedName)
+                ?: throw IOException("Unable to create downloaded BOOK resource")
+            val actualName = output.name
+                ?: throw IOException("Unable to determine downloaded BOOK resource filename")
+            val digest = MessageDigest.getInstance("SHA-256")
+            var copied = 0L
+            resource.file.inputStream().buffered().use { input ->
+                output.openOutputStream().buffered().use { target ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val read = input.read(buffer)
+                        if (read < 0) break
+                        target.write(buffer, 0, read)
+                        digest.update(buffer, 0, read)
+                        copied += read
+                    }
+                }
+            }
+            require(copied > 0L) { "Downloaded BOOK resource is empty" }
+            BookDownloadedResource(
+                id = resource.metadata.id,
+                title = resource.metadata.title,
+                order = resource.metadata.order,
+                groupId = resource.metadata.groupId,
+                mediaType = resource.metadata.mediaType,
+                revision = resource.metadata.revision,
+                fileName = actualName,
+                storedSize = copied,
+                sha256 = digest.digest().joinToString("") { byte ->
+                    (byte.toInt() and 0xff).toString(16).padStart(2, '0')
+                },
+            )
+        }
+}

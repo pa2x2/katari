@@ -3,15 +3,15 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Download
+import app.katari.icons.materialsymbols.rounded.Folder
+import app.katari.presentation.kit.content.Badge
+import app.katari.presentation.kit.content.BadgeTone
+import app.katari.presentation.kit.theme.KatariPreviewTheme
 import eu.kanade.presentation.browse.components.CatalogTypeBadge
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Download
-import mihon.icons.materialsymbols.rounded.Folder
-import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BadgeTone
-import mihon.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.domain.library.model.LibraryItem
 
 @Composable

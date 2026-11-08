@@ -1,0 +1,200 @@
+package tachiyomi.domain.entry.model
+
+import androidx.compose.runtime.Immutable
+import app.katari.core.common.extensions.EMPTY
+import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import tachiyomi.core.common.preference.TriState
+import java.io.ObjectStreamException
+import kotlin.time.Instant
+import java.io.Serializable as JavaSerializable
+
+@Suppress("UnsafeOptInUsageError")
+@Serializable
+@Immutable
+data class Entry(
+    val id: Long,
+    val source: Long,
+    val favorite: Boolean,
+    val libraryPinned: Boolean = false,
+    val lastUpdate: Long,
+    val nextUpdate: Long,
+    val fetchInterval: Int,
+    val dateAdded: Long,
+    val viewerFlags: Long,
+    val chapterFlags: Long,
+    val coverLastModified: Long,
+    val url: String,
+    val title: String,
+    val displayName: String?,
+    val artist: String?,
+    val author: String?,
+    val description: String?,
+    val genre: List<String>?,
+    val status: EntryStatus,
+    val thumbnailUrl: String?,
+    val updateStrategy: EntryUpdateStrategy,
+    val initialized: Boolean,
+    val notes: String,
+    val memo: JsonObject,
+    val type: EntryType,
+    val profileId: Long,
+    /** A title its source made of other titles of that source; it holds no chapters itself. */
+    val mergedBySource: Boolean = false,
+    /** The name the downloads are stored under instead of [title], such as a merged entry's member; null for [title]. */
+    val downloadTitle: String? = null,
+    /** Wide art from the source; a refresh that sends none keeps it. */
+    val backgroundUrl: String? = null,
+) : JavaSerializable {
+
+    val displayTitle: String
+        get() = displayName?.takeIf { it.isNotBlank() } ?: title
+
+    /** The name the download folder is made from; unlike [title], it doesn't change once [downloadTitle] is set. */
+    val downloadFolderTitle: String
+        get() = downloadTitle ?: title
+
+    val expectedNextUpdate: Instant?
+        get() = nextUpdate
+            // Neither a finished title nor one with nothing released has a schedule to predict
+            .takeIf { status != EntryStatus.COMPLETED && status != EntryStatus.UPCOMING }
+            ?.let { Instant.fromEpochMilliseconds(it) }
+
+    val sorting: Long
+        get() = chapterFlags and CHAPTER_SORTING_MASK
+
+    val displayMode: Long
+        get() = chapterFlags and CHAPTER_DISPLAY_MASK
+
+    val unreadFilterRaw: Long
+        get() = chapterFlags and CHAPTER_UNREAD_MASK
+
+    val downloadedFilterRaw: Long
+        get() = chapterFlags and CHAPTER_DOWNLOADED_MASK
+
+    val bookmarkedFilterRaw: Long
+        get() = chapterFlags and CHAPTER_BOOKMARKED_MASK
+
+    val fillerFilterRaw: Long
+        get() = chapterFlags and CHAPTER_FILLER_MASK
+
+    val showsChapterPreviews: Boolean
+        get() = chapterFlags and CHAPTER_HIDE_PREVIEWS == 0L
+
+    val unreadFilter: TriState
+        get() = when (unreadFilterRaw) {
+            CHAPTER_SHOW_UNREAD -> TriState.ENABLED_IS
+            CHAPTER_SHOW_READ -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val downloadedFilter: TriState
+        get() = when (downloadedFilterRaw) {
+            CHAPTER_SHOW_DOWNLOADED -> TriState.ENABLED_IS
+            CHAPTER_SHOW_NOT_DOWNLOADED -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val bookmarkedFilter: TriState
+        get() = when (bookmarkedFilterRaw) {
+            CHAPTER_SHOW_BOOKMARKED -> TriState.ENABLED_IS
+            CHAPTER_SHOW_NOT_BOOKMARKED -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val fillerFilter: TriState
+        get() = when (fillerFilterRaw) {
+            CHAPTER_SHOW_FILLER -> TriState.ENABLED_IS
+            CHAPTER_SHOW_NOT_FILLER -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    fun sortDescending(): Boolean {
+        return chapterFlags and CHAPTER_SORT_DIR_MASK == CHAPTER_SORT_DESC
+    }
+
+    companion object {
+        // Generic filter that does not filter anything
+        const val SHOW_ALL = 0x00000000L
+
+        const val CHAPTER_SORT_DESC = 0x00000000L
+        const val CHAPTER_SORT_ASC = 0x00000001L
+        const val CHAPTER_SORT_DIR_MASK = 0x00000001L
+
+        const val CHAPTER_SHOW_UNREAD = 0x00000002L
+        const val CHAPTER_SHOW_READ = 0x00000004L
+        const val CHAPTER_UNREAD_MASK = 0x00000006L
+
+        const val CHAPTER_SHOW_DOWNLOADED = 0x00000008L
+        const val CHAPTER_SHOW_NOT_DOWNLOADED = 0x00000010L
+        const val CHAPTER_DOWNLOADED_MASK = 0x00000018L
+
+        const val CHAPTER_SHOW_BOOKMARKED = 0x00000020L
+        const val CHAPTER_SHOW_NOT_BOOKMARKED = 0x00000040L
+        const val CHAPTER_BOOKMARKED_MASK = 0x00000060L
+
+        const val CHAPTER_SORTING_SOURCE = 0x00000000L
+        const val CHAPTER_SORTING_NUMBER = 0x00000100L
+        const val CHAPTER_SORTING_UPLOAD_DATE = 0x00000200L
+        const val CHAPTER_SORTING_ALPHABET = 0x00000300L
+        const val CHAPTER_SORTING_MASK = 0x00000300L
+
+        const val CHAPTER_SHOW_FILLER = 0x00000400L
+        const val CHAPTER_SHOW_NOT_FILLER = 0x00000800L
+        const val CHAPTER_FILLER_MASK = 0x00000C00L
+
+        // Set hides the stills and summaries in chapter rows, so entries stored before it existed show them
+        const val CHAPTER_HIDE_PREVIEWS = 0x00001000L
+
+        const val CHAPTER_DISPLAY_NAME = 0x00000000L
+        const val CHAPTER_DISPLAY_NUMBER = 0x00100000L
+        const val CHAPTER_DISPLAY_MASK = 0x00100000L
+
+        const val DEFAULT_CHAPTER_FLAGS = CHAPTER_SORTING_NUMBER
+
+        fun create() = Entry(
+            id = -1L,
+            url = "",
+            title = "",
+            displayName = null,
+            source = -1L,
+            favorite = false,
+            libraryPinned = false,
+            lastUpdate = 0L,
+            nextUpdate = 0L,
+            fetchInterval = 0,
+            dateAdded = 0L,
+            viewerFlags = 0L,
+            chapterFlags = DEFAULT_CHAPTER_FLAGS,
+            coverLastModified = 0L,
+            artist = null,
+            author = null,
+            description = null,
+            genre = null,
+            status = EntryStatus.UNKNOWN,
+            thumbnailUrl = null,
+            updateStrategy = EntryUpdateStrategy.ALWAYS_UPDATE,
+            initialized = false,
+            notes = "",
+            memo = JsonObject.EMPTY,
+            type = EntryType.MANGA,
+            profileId = 0L,
+        )
+    }
+
+    @Throws(ObjectStreamException::class)
+    private fun writeReplace(): Any {
+        return JavaToKotlinXSerializable(Json.encodeToString<Entry>(this))
+    }
+
+    class JavaToKotlinXSerializable(private val data: String) : JavaSerializable {
+
+        @Throws(ObjectStreamException::class)
+        private fun readResolve(): Any {
+            return Json.decodeFromString<Entry>(data)
+        }
+    }
+}

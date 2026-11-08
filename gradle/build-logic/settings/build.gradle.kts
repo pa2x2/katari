@@ -24,7 +24,7 @@ samWithReceiver {
 gradlePlugin {
     plugins {
         register("android-settings") {
-            id = mihonx.plugins.android.settings.get().pluginId
+            id = katari.plugins.android.settings.get().pluginId
             implementationClass = "PluginAndroidSettings"
         }
     }

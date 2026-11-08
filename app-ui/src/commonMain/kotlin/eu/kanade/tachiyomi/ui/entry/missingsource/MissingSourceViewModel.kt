@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.ui.entry.missingsource
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.missingextensions.model.cantInstall
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -20,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.takeWhile
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import kotlin.time.Duration.Companion.seconds
 
@@ -43,8 +44,8 @@ class MissingSourceViewModel(
     val sheetShown: StateFlow<Boolean> = _sheetShown.asStateFlow()
 
     /** `null` when no added store lists it, or none that this app can install from. */
-    val listing: StateFlow<Extension.Available?> = extensions.listingOf(sourceId)
-        .map { listing -> listing?.takeIf { compatibility.isInstallable(it) && !it.isTorrent } }
+    val listing: StateFlow<Extension.Available?> = extensions.listingsBySource
+        .map { listings -> listings[sourceId]?.takeIf { compatibility.cantInstall(it) == null } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     private val _installStep = MutableStateFlow<InstallStep>(InstallStep.Idle)

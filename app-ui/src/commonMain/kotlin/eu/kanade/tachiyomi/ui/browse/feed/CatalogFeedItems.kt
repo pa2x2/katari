@@ -9,6 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.content.CoverBacking
+import app.katari.presentation.kit.content.coverFrame
+import app.katari.presentation.kit.list.CoverRow
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.presentation.browse.components.CatalogBadges
 import eu.kanade.presentation.entry.components.toGridCoverType
@@ -17,10 +21,6 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.presentation.library.components.EntryCompactGridItem
 import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import mihon.presentation.kit.content.CoverBacking
-import mihon.presentation.kit.content.coverFrame
-import mihon.presentation.kit.list.CoverRow
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.CatalogListItem
 import eu.kanade.presentation.entry.components.EntryCover as CoverType
 

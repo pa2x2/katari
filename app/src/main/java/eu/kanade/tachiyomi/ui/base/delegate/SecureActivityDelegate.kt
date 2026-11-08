@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication
 import eu.kanade.tachiyomi.ui.security.UnlockActivity
@@ -15,12 +16,16 @@ import eu.kanade.tachiyomi.util.view.setSecureScreen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.app.di.appGraph
 
 interface SecureActivityDelegate {
-    fun registerSecureActivity(activity: AppCompatActivity)
+    /**
+     * Puts [activity] behind the app lock. The lock's prompt waits while [appUnlockAllowed] is false, for an activity
+     * that first decides itself what to unlock.
+     */
+    fun registerSecureActivity(activity: AppCompatActivity, appUnlockAllowed: () -> Boolean = { true })
 
-    fun shouldRequestAppUnlock(activity: AppCompatActivity): Boolean = true
+    /** Asks for the app unlock when the app is locked and the registered activity allows it. */
+    fun requestAppUnlock()
 
     companion object {
         /**
@@ -54,8 +59,8 @@ interface SecureActivityDelegate {
             // `requireUnlock` can be true on process start or if app was closed in locked state
             if (!BiometricAuthentication.isAuthenticating && !requireUnlock) {
                 requireUnlock = when (val lockDelay = preferences.lockAppAfter.get()) {
-                    -1 -> false // Never
-                    0 -> true // Always
+                    SecurityPreferences.LOCK_NEVER -> false
+                    SecurityPreferences.LOCK_ALWAYS -> true
                     else -> lastClosedPref.get() + lockDelay * 60_000 <= System.currentTimeMillis()
                 }
             }
@@ -72,12 +77,14 @@ interface SecureActivityDelegate {
 class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObserver {
 
     private lateinit var activity: AppCompatActivity
+    private lateinit var appUnlockAllowed: () -> Boolean
 
     private val preferences by lazy { activity.appGraph.basePreferences }
     private val securityPreferences by lazy { activity.appGraph.securityPreferences }
 
-    override fun registerSecureActivity(activity: AppCompatActivity) {
+    override fun registerSecureActivity(activity: AppCompatActivity, appUnlockAllowed: () -> Boolean) {
         this.activity = activity
+        this.appUnlockAllowed = appUnlockAllowed
         activity.lifecycle.addObserver(this)
     }
 
@@ -86,7 +93,25 @@ class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObser
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        requestAppUnlock(activity)
+        requestAppUnlock()
+    }
+
+    override fun requestAppUnlock() {
+        if (!securityPreferences.useAuthenticator.get()) return
+        if (activity.isAuthenticationSupported()) {
+            if (!SecureActivityDelegate.requireUnlock) return
+            if (BiometricAuthentication.isAuthenticating) return
+            if (!appUnlockAllowed()) return
+            activity.startActivity(Intent(activity, UnlockActivity::class.java))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
+            } else {
+                @Suppress("DEPRECATION")
+                activity.overridePendingTransition(0, 0)
+            }
+        } else {
+            securityPreferences.useAuthenticator.set(false)
+        }
     }
 
     private fun setSecureScreen() {
@@ -98,24 +123,5 @@ class SecureActivityDelegateImpl : SecureActivityDelegate, DefaultLifecycleObser
         }
             .onEach(activity.window::setSecureScreen)
             .launchIn(activity.lifecycleScope)
-    }
-}
-
-fun SecureActivityDelegate.requestAppUnlock(activity: AppCompatActivity) {
-    val securityPreferences = activity.appGraph.securityPreferences
-    if (!securityPreferences.useAuthenticator.get()) return
-    if (activity.isAuthenticationSupported()) {
-        if (!SecureActivityDelegate.requireUnlock) return
-        if (BiometricAuthentication.isAuthenticating) return
-        if (!shouldRequestAppUnlock(activity)) return
-        activity.startActivity(Intent(activity, UnlockActivity::class.java))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
-        } else {
-            @Suppress("DEPRECATION")
-            activity.overridePendingTransition(0, 0)
-        }
-    } else {
-        securityPreferences.useAuthenticator.set(false)
     }
 }

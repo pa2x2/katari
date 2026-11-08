@@ -1,0 +1,102 @@
+package app.katari.presentation.kit.window
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+
+/**
+ * What the kit knows about the window a screen is drawn in. Screens never read the screen size, orientation or
+ * configuration themselves: the kit's layouts, navigation, sheets and dialogs adapt from this, and a screen that
+ * needs another arrangement gets it as a kit component.
+ *
+ * [width] is already [WindowWidth.Compact] when the user turned wide layouts off (Settings › Appearance › Tablet UI).
+ * The window can change at any time (folding, rotating, resizing a split screen); nothing may assume it is fixed
+ * for the life of a screen.
+ */
+@Immutable
+data class WindowLayout(
+    val size: DpSize,
+    val width: WindowWidth,
+    /** Under 480 dp tall, such as a phone or a folded foldable in landscape: headers give up their height first. */
+    val isShort: Boolean,
+    /** The hinge or fold crossing this window, or null when there is none. */
+    val fold: WindowFold?,
+    /**
+     * Whether the platform turns the window to an orientation the app asks for, so a rotation setting can only apply
+     * where it does. See [honoursOrientationRequests] for each platform's rule.
+     */
+    val honoursOrientationRequests: Boolean = true,
+) {
+    val usesSideNavigation: Boolean get() = width != WindowWidth.Compact
+    val usesTwoPanes: Boolean get() = width >= WindowWidth.Expanded
+}
+
+/**
+ * How wide the window is, in Material's window size classes, narrowest first so classes compare by width. [Large] and
+ * [ExtraLarge] are a big tablet or a desktop window: they keep the [Expanded] layouts and give the extra room to wider
+ * panes and the screen frame (`ScreenFrame`) rather than to wider rows.
+ */
+enum class WindowWidth { Compact, Medium, Expanded, Large, ExtraLarge }
+
+/**
+ * A fold crossing the window, in the window's coordinates. [start] and [end] bound it along the axis it divides: x for a
+ * vertical fold, y for a horizontal one. A flat fold has no width, so both are the fold line; a hinge between two
+ * screens has width.
+ */
+@Immutable
+data class WindowFold(
+    val isVertical: Boolean,
+    val start: Dp,
+    val end: Dp,
+    /** Bent part way, like a book or a laptop, rather than flat. */
+    val isHalfOpen: Boolean,
+)
+
+val LocalWindowLayout = staticCompositionLocalOf<WindowLayout?> { null }
+
+/** The window layout [ProvideWindowLayout] gives; previews and compositions without it measure the window themselves. */
+@Composable
+@ReadOnlyComposable
+fun currentWindowLayout(): WindowLayout {
+    LocalWindowLayout.current?.let { return it }
+    val size =
+        with(LocalDensity.current) {
+            LocalWindowInfo.current.containerSize.let { DpSize(it.width.toDp(), it.height.toDp()) }
+        }
+    return windowLayoutOf(size, fold = null, wideLayoutsAllowed = true, inMultiWindow = false)
+}
+
+internal fun windowLayoutOf(
+    size: DpSize,
+    fold: WindowFold?,
+    wideLayoutsAllowed: Boolean,
+    inMultiWindow: Boolean,
+): WindowLayout {
+    val width = when {
+        !wideLayoutsAllowed -> WindowWidth.Compact
+        size.width >= ExtraLargeWidthMin -> WindowWidth.ExtraLarge
+        size.width >= LargeWidthMin -> WindowWidth.Large
+        size.width >= ExpandedWidthMin -> WindowWidth.Expanded
+        size.width >= MediumWidthMin -> WindowWidth.Medium
+        else -> WindowWidth.Compact
+    }
+    return WindowLayout(
+        size = size,
+        width = width,
+        isShort = size.height < ShortHeightMax,
+        fold = fold,
+        honoursOrientationRequests = honoursOrientationRequests(size, inMultiWindow),
+    )
+}
+
+private val MediumWidthMin = 600.dp
+private val ExpandedWidthMin = 840.dp
+private val LargeWidthMin = 1200.dp
+private val ExtraLargeWidthMin = 1600.dp
+private val ShortHeightMax = 480.dp

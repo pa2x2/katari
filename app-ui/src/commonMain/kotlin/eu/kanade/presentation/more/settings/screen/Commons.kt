@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
+import app.katari.core.platform.currentPlatformContext
 import eu.kanade.presentation.category.visualName
-import mihon.core.platform.currentPlatformContext
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

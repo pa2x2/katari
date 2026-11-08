@@ -6,13 +6,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Fullscreen
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.navigation.FloatingToolbar
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.feed.FeedViewMode
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Fullscreen
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.navigation.FloatingToolbar
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*

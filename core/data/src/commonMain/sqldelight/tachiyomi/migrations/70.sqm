@@ -1,0 +1,21 @@
+-- Custom covers and imported fonts as synced files (app/katari/sync/data/sync_files.sq).
+
+CREATE TABLE sync_local_files(
+    category TEXT NOT NULL,
+    owner TEXT NOT NULL,
+    wanted_sha256 TEXT,
+    wanted_size INTEGER NOT NULL DEFAULT 0,
+    placed_sha256 TEXT,
+    unavailable_since INTEGER,
+    PRIMARY KEY(category, owner)
+);
+
+CREATE INDEX idx_sync_local_files_placed ON sync_local_files(category, placed_sha256)
+WHERE placed_sha256 IS NOT NULL;
+
+CREATE TABLE sync_file_uploads(
+    category TEXT NOT NULL,
+    sha256 TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    PRIMARY KEY(category, sha256)
+);

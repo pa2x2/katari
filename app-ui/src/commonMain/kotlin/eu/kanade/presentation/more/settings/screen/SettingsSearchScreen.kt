@@ -23,19 +23,19 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.LayoutDirection
+import app.katari.presentation.kit.feedback.NoResults
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.rowGroupItems
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.ui.di.AppUiGraph
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.flow.collectLatest
-import mihon.app.ui.di.AppUiGraph
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.feedback.NoResults
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.list.rowGroupItems
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.navigation.SearchToolbar
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -225,7 +225,6 @@ private val settingScreens = listOf(
     SettingsReaderScreen,
     SettingsPlayerScreen,
     SettingsDownloadScreen,
-    SettingsTrackingScreen,
     SettingsTranslationScreen,
     SettingsTtsScreen,
     SettingsTextRecognitionScreen,

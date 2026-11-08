@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.security
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 
 /**
  * Asks the user to authenticate before a setting that guards the app changes, such as loosening which content shows or

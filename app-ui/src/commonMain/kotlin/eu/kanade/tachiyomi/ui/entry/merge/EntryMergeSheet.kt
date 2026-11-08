@@ -1,13 +1,13 @@
 package eu.kanade.tachiyomi.ui.entry.merge
 
 import androidx.compose.runtime.Immutable
+import app.katari.entry.interactions.merge.EntryMergeEditReference
+import app.katari.entry.interactions.merge.EntryMergeEditorEntryReference
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import mihon.entry.interactions.merge.EntryMergeEditReference
-import mihon.entry.interactions.merge.EntryMergeEditorEntryReference
 import tachiyomi.domain.entry.model.Entry
 
 /**

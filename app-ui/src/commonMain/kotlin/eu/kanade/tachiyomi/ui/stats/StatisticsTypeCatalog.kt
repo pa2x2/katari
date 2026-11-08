@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.stats
 
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.entry.interactions.presentation.EntryTypePresentationResult
+import app.katari.entry.interactions.statistics.EntryStatisticsFeature
 import eu.kanade.presentation.more.stats.data.StatsType
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.presentation.EntryTypePresentationResult
-import mihon.entry.interactions.statistics.EntryStatisticsFeature
 
 fun buildStatisticsTypes(
     statisticsFeature: EntryStatisticsFeature,

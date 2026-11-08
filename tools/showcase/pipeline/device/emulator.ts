@@ -1,0 +1,184 @@
+/**
+ * The dedicated showcase emulator: a rootable Google APIs image, so the pipeline can pin the date and write app state,
+ * wiped on every boot, so no run inherits another's state.
+ */
+import { type ChildProcess, spawn } from "node:child_process";
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync } from "node:fs";
+import { homedir, tmpdir } from "node:os";
+import { join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
+import { run } from "../run-command.ts";
+import { attachedSerials, Device } from "./adb.ts";
+
+const AVD = "Katari_Showcase";
+const SYSTEM_IMAGE = "system-images;android-36.1;google_apis;x86_64";
+const DEVICE_PROFILE = "pixel_9a";
+export const SHOWCASE_SERIAL = "emulator-5554";
+const BOOT_TIMEOUT_MS = 3 * 60_000;
+const SHUTDOWN_TIMEOUT_MS = 60_000;
+// Well inside the 5 s an app has to answer input, so the setting is written before the launcher can miss its deadline.
+const SETTINGS_POLL_MS = 500;
+const BOOT_FAILURE_OUTPUT_LINES = 40;
+// Passed to avdmanager and the emulator alike, so both use the folder this script checks. Without it, avdmanager
+// prefers $XDG_CONFIG_HOME/.android when that exists, as it does on GitHub's runners, and the emulator never looks there.
+const AVD_HOME = process.env.ANDROID_AVD_HOME ?? join(homedir(), ".android", "avd");
+const AVD_ENV = { ...process.env, ANDROID_AVD_HOME: AVD_HOME };
+
+export async function bootShowcaseEmulator(): Promise<Device> {
+  // Scenes find views by text and tap by screen fractions, so a second device would only ever be touched by mistake.
+  const running = attachedSerials().filter((serial) => serial.startsWith("emulator-"));
+  if (running.length > 0) throw new Error(`Stop the running emulators first: ${running.join(", ")}`);
+  // The emulator finds an AVD by its .ini, which avdmanager writes beside the .avd folder.
+  const avdIni = join(AVD_HOME, `${AVD}.ini`);
+  // An AVD made before SYSTEM_IMAGE changed would go on booting the image it was made with.
+  if (!existsSync(avdIni) || avdImage() !== SYSTEM_IMAGE) {
+    // avdmanager ignores an ANDROID_AVD_HOME that does not exist yet.
+    mkdirSync(AVD_HOME, { recursive: true });
+    const command = `echo no | avdmanager create avd --force -n ${AVD} -k '${SYSTEM_IMAGE}' -d ${DEVICE_PROFILE} 2>&1`;
+    const output = run("sh", ["-c", command], AVD_ENV);
+    if (!existsSync(avdIni)) throw new Error(`avdmanager created no ${avdIni}:\n${output}`);
+  }
+  // In a file, since a kept emulator outlives this script and anything reading its output.
+  const log = join(mkdtempSync(join(tmpdir(), "katari-showcase-")), "emulator.log");
+  const output = openSync(log, "w");
+  const emulator = spawn(
+    "emulator",
+    [
+      "-avd", AVD,
+      "-no-window", "-no-audio", "-no-boot-anim", "-no-snapshot", "-wipe-data",
+      // System services keep the time zone they boot with.
+      "-timezone", "Etc/UTC",
+      // Software rendering, as runners have no GPU. The other software modes break apps: the legacy GLES translator
+      // (swiftshader_indirect, lavapipe) crashes the emulator on the recap's drifting gradients, and apps drawing through
+      // the guest's Vulkan driver instead hang now and then in a frame that never finishes, which leaves their window
+      // without an accessibility tree. ANGLE over SwiftShader draws both.
+      "-gpu", "swangle",
+    ],
+    { detached: true, env: AVD_ENV, stdio: ["ignore", output, output] },
+  );
+  closeSync(output);
+  emulator.unref();
+
+  const device = new Device(SHOWCASE_SERIAL);
+  try {
+    const boot = new Boot(emulator);
+    await hideErrorDialogs(device, boot);
+    await awaitBoot(device, boot);
+    await restartAdbdAsRoot(device, boot);
+  } catch (error) {
+    // Left running, it would stop every later run from starting.
+    emulator.kill();
+    const lines = readFileSync(log, "utf8").trimEnd().split("\n").slice(-BOOT_FAILURE_OUTPUT_LINES).join("\n");
+    throw new Error(`${(error as Error).message}. The emulator's last output, all of it in ${log}:\n${lines}`);
+  }
+  // Downloads that wait for an unmetered network treat Wi-Fi as unmetered and mobile data as metered.
+  device.shell("svc wifi enable; svc data disable");
+  // A fresh device explains full-screen mode over the first app that hides the system bars.
+  device.shell("settings put secure immersive_mode_confirmations confirmed");
+  return device;
+}
+
+/** The system image the AVD boots, in sdkmanager's notation, or undefined when there is no AVD yet. */
+function avdImage(): string | undefined {
+  const config = join(AVD_HOME, `${AVD}.avd`, "config.ini");
+  if (!existsSync(config)) return undefined;
+  // avdmanager writes it as a folder of the SDK, such as system-images/android-37.0/google_apis/x86_64/.
+  const folder = readFileSync(config, "utf8").match(/^image\.sysdir\.1=(.*)$/m)?.[1];
+  return folder?.replace(/\/$/, "").replaceAll("/", ";");
+}
+
+export async function shutDown(device: Device): Promise<void> {
+  device.adb("emu", "kill");
+  // The emulator stays attached while it shuts down, and the next run refuses to start beside it.
+  const deadline = Date.now() + SHUTDOWN_TIMEOUT_MS;
+  while (attachedSerials().includes(device.serial)) {
+    if (Date.now() > deadline) throw new Error(`${AVD} did not shut down`);
+    await sleep(1_000);
+  }
+}
+
+/**
+ * One deadline for the whole boot, from launch to a root shell, about three times the longest boot runs have seen. The
+ * waits retry whatever adb answers, since it refuses the emulator until it accepts connections, so any failure that
+ * leaves the emulator running shows only as the deadline passing, and is reported with the last error retried.
+ */
+class Boot {
+  private readonly emulator: ChildProcess;
+  private readonly deadline = Date.now() + BOOT_TIMEOUT_MS;
+  private lastError: unknown;
+
+  constructor(emulator: ChildProcess) {
+    this.emulator = emulator;
+  }
+
+  check(waitingFor: string): void {
+    if (this.emulator.exitCode !== null || this.emulator.signalCode !== null) {
+      throw new Error(`${AVD} exited with ${this.emulator.exitCode ?? this.emulator.signalCode} while ${waitingFor}`);
+    }
+    if (Date.now() > this.deadline) {
+      const last = this.lastError === undefined ? "" : `; adb last answered: ${(this.lastError as Error).message.trim()}`;
+      throw new Error(`${AVD} was still ${waitingFor} after ${BOOT_TIMEOUT_MS / 60_000} minutes${last}`);
+    }
+  }
+
+  retried(error: unknown): void {
+    this.lastError = error;
+  }
+}
+
+/**
+ * `adb root` only asks adbd to restart, and a device that has just booted can drop the request, the emulator still
+ * configuring it over adb: CI saw "unable to connect for root: closed". The old adbd may also answer for a moment after a
+ * request it took. So it asks until a shell runs as root, rather than trusting the command's exit status.
+ */
+async function restartAdbdAsRoot(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for adbd to restart as root");
+    try {
+      device.adb("root");
+    } catch (error) {
+      boot.retried(error);
+    }
+    await awaitBoot(device, boot);
+    try {
+      if (device.shell("id -u").trim() === "0") return;
+    } catch (error) {
+      // adbd went offline to restart after answering for boot_completed.
+      boot.retried(error);
+    }
+    await sleep(2_000);
+  }
+}
+
+/**
+ * A device drawing in software is busy enough for the launcher to miss its input deadline while it starts, and the
+ * system's "isn't responding" dialog would stay over the app; without dialogs, the system restarts the launcher instead.
+ * A dialog raised before the setting stays up, and CI saw the launcher's raised before boot completed, so the setting is
+ * written as soon as the settings service takes it: system_server installs its providers before it starts the launcher.
+ */
+async function hideErrorDialogs(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for the setting that hides error dialogs to take");
+    try {
+      device.shell("settings put global hide_error_dialogs 1");
+      if (device.shell("settings get global hide_error_dialogs").trim() === "1") return;
+    } catch (error) {
+      // adb reports the emulator as offline until it accepts connections, and the settings service starts later still.
+      boot.retried(error);
+    }
+    await sleep(SETTINGS_POLL_MS);
+  }
+}
+
+async function awaitBoot(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for boot to complete");
+    try {
+      if (device.shell("getprop sys.boot_completed").trim() === "1") return;
+    } catch (error) {
+      // adb reports the emulator as offline until it accepts connections.
+      boot.retried(error);
+    }
+    await sleep(2_000);
+  }
+}

@@ -1,0 +1,83 @@
+-- Local edits to synced fields, written by the capture triggers while sync is on and turned into record changes when
+-- the outbox is drained.
+CREATE TABLE sync_outbox(
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    -- A JSON array of the values that locate the edited row, in the order the kind declares.
+    local_ref TEXT NOT NULL,
+    -- Bit n is set when payload field n may have changed; -1 for a row inserted or deleted.
+    fields INTEGER NOT NULL,
+    -- For a deleted row, the record it held, looked up when it was deleted; NULL if it never had one.
+    record_key TEXT,
+    -- Wall-clock milliseconds when the edit was made, read inside SQLite.
+    changed_at INTEGER NOT NULL,
+    -- sync_clock.seen when the edit was made.
+    seen_physical INTEGER NOT NULL,
+    seen_counter INTEGER NOT NULL
+);
+
+batch:
+SELECT seq, kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter
+FROM sync_outbox
+ORDER BY seq
+LIMIT :limit;
+
+deleteThrough:
+DELETE FROM sync_outbox
+WHERE seq <= :seq;
+
+count:
+SELECT count(*)
+FROM sync_outbox;
+
+clear:
+DELETE FROM sync_outbox;
+
+-- An edit SQLite doesn't see, such as of a preference, recorded as the capture triggers record theirs; nothing while
+-- sync is off.
+recordEdit:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT :kind, :localRef, -1, NULL, :changedAt, C.seen_physical, C.seen_counter
+FROM sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
+-- An edit of the payload fields :fields (bit n for field n) of a record whose change SQLite doesn't see, such as an
+-- entry's custom cover file; nothing while sync is off.
+recordFieldEdit:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT :kind, :localRef, :fields, NULL, :changedAt, C.seen_physical, C.seen_counter
+FROM sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
+-- An edit of every record of :kind whose local ref starts with :localRefPrefix, such as each setting of a source whose
+-- settings were cleared.
+recordEditOfEach:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT R.kind, R.local_ref, -1, NULL, :changedAt, C.seen_physical, C.seen_counter
+FROM sync_records R, sync_clock C, sync_state S
+WHERE R.kind = :kind
+AND instr(R.local_ref, :localRefPrefix) = 1
+AND C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
+-- The newest row, 0 when there never was one; rows written later have a higher seq.
+lastSeq:
+SELECT coalesce(max(seq), 0)
+FROM sync_outbox;
+
+deleteAfter:
+DELETE FROM sync_outbox
+WHERE seq > :seq;
+
+after:
+SELECT seq, kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter
+FROM sync_outbox
+WHERE seq > :seq
+ORDER BY seq;
+
+-- A value this device held before sync started, recorded with no edit time: it fills in what the account lacks and
+-- gives way to every edit made anywhere ([app.katari.sync.client.payload.Stamped.UNKNOWN_EDIT]).
+recordUnstamped:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT :kind, :localRef, 0, NULL, 0, C.seen_physical, C.seen_counter
+FROM sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1;

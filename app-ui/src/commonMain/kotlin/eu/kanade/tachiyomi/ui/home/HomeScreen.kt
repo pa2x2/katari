@@ -17,6 +17,14 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.common.CustomPreferences
+import app.katari.core.common.HomeScreenTabs
+import app.katari.core.common.resolveHomeScreenTab
+import app.katari.core.common.toHomeScreenTabs
+import app.katari.presentation.kit.navigation.FloatingDockHost
+import app.katari.presentation.kit.window.currentWindowLayout
+import app.katari.profiles.ui.switcher.LocalProfileSwitcher
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabNavigator
@@ -41,14 +49,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.common.CustomPreferences
-import mihon.core.common.HomeScreenTabs
-import mihon.core.common.resolveHomeScreenTab
-import mihon.core.common.toHomeScreenTabs
-import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
-import mihon.presentation.kit.navigation.FloatingDockHost
-import mihon.presentation.kit.window.currentWindowLayout
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import cafe.adriel.voyager.navigator.tab.Tab as VoyagerTab

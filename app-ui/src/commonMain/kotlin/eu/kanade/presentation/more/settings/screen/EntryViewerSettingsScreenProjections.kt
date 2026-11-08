@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
-import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
+import app.katari.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
 
 /** The application composition root for genuine Viewer Settings screen implementations. */
 fun productionEntryViewerSettingsScreenProjectionResolver(): EntryViewerSettingsScreenProjectionResolver {

@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.library
 
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 import tachiyomi.domain.library.update.model.LibraryUpdateScope
 import tachiyomi.i18n.*

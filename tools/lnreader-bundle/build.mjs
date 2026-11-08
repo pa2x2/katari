@@ -6,7 +6,7 @@ import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const CHUNKS = ['core', 'urlencode', 'protobuf', 'ciphers'];
-const OUT_DIR = '../../source-compat/src/commonMain/resources/eu/kanade/tachiyomi/source/lnreader/libs';
+const OUT_DIR = '../../sources/source-compat/src/commonMain/resources/eu/kanade/tachiyomi/source/lnreader/libs';
 const LICENCES_DIR = '../../app/licences';
 // Licence-screen files this script owns; it rewrites all of them on every build
 const LICENCE_PREFIX = 'lnreader-npm-';

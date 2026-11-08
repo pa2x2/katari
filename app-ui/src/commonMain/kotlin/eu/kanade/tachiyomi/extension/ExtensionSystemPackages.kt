@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.extension
 
 import androidx.compose.runtime.Composable
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 import eu.kanade.tachiyomi.extension.model.Extension
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
 
 /**
  * What the system itself does for extensions it installs as its own apps, as Android does with apks: their page in the

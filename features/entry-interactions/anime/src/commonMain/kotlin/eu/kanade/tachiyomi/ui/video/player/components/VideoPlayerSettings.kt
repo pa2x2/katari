@@ -1,0 +1,91 @@
+package eu.kanade.tachiyomi.ui.video.player.components
+
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.presentation.kit.list.ProvideRowDensity
+import app.katari.presentation.kit.list.RowDensity
+import app.katari.presentation.kit.sheet.OverlayDrawer
+import app.katari.presentation.kit.sheet.OverlayDrawerHeader
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetBackdrop
+import app.katari.presentation.kit.sheet.SheetHeader
+import app.katari.presentation.kit.window.WindowWidth
+import app.katari.presentation.kit.window.currentWindowLayout
+import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * Where the playback settings open. Outside a narrow upright window a sheet would leave room for about two rows, or be
+ * a side sheet that, being a dialog window, brings the system bars back over the video, so they open as a side panel
+ * like the episode list instead. Either way the video stays undimmed, so changes to it show as they are made.
+ */
+@Composable
+internal fun VideoPlayerSettings(
+    visible: Boolean,
+    onDismissRequest: () -> Unit,
+    content: @Composable (VideoPlayerSettingsFrame, Modifier) -> Unit,
+) {
+    val window = currentWindowLayout()
+    if (window.width != WindowWidth.Compact || window.size.width > window.size.height) {
+        val posture = currentVideoPlayerPosture()
+        OverlayDrawer(
+            visible = visible,
+            onDismissRequest = onDismissRequest,
+            // Half-open on a table, the panel opens in the flat half with the controls
+            modifier = if (posture is VideoPlayerPosture.Tabletop) {
+                Modifier.padding(top = posture.controlsTop)
+            } else {
+                Modifier
+            },
+            drawerModifier = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
+            backdrop = SheetBackdrop.Clear,
+        ) {
+            ProvideRowDensity(RowDensity.Compact) {
+                content(VideoPlayerSettingsFrame.Panel, Modifier.fillMaxSize())
+            }
+        }
+    } else if (visible) {
+        Sheet(onDismissRequest = onDismissRequest, capHeight = true, backdrop = SheetBackdrop.Clear) {
+            content(VideoPlayerSettingsFrame.Sheet, Modifier)
+        }
+    }
+}
+
+/** What holds the settings, which decides the header they draw. */
+internal enum class VideoPlayerSettingsFrame { Sheet, Panel }
+
+/**
+ * The settings' title as their [frame] draws it, with [menu] behind the overflow button when given. A page opened from
+ * the settings passes its own [title] and [onBack], which returns to them.
+ */
+@Composable
+internal fun VideoPlayerSettingsHeader(
+    frame: VideoPlayerSettingsFrame,
+    onDismissRequest: () -> Unit,
+    menu: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
+    title: String = stringResource(MR.strings.action_settings),
+    onBack: (() -> Unit)? = null,
+) {
+    when (frame) {
+        VideoPlayerSettingsFrame.Sheet -> SheetHeader(
+            title = title,
+            menu = menu,
+            onBack = onBack,
+        )
+        VideoPlayerSettingsFrame.Panel -> OverlayDrawerHeader(
+            title = title,
+            icon = MaterialSymbols.Rounded.Settings,
+            closeDescription = stringResource(MR.strings.action_close),
+            onClose = onDismissRequest,
+            menu = menu,
+            onBack = onBack,
+        )
+    }
+}

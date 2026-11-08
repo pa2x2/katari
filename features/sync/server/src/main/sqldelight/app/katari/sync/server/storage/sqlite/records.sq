@@ -1,0 +1,79 @@
+import kotlin.Boolean;
+
+-- The newest copy of every record of every account, deletion markers included until retention drops them.
+CREATE TABLE records(
+    account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
+    record_key TEXT NOT NULL,
+    sequence INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    kind_version INTEGER NOT NULL,
+    based_on INTEGER NOT NULL,
+    change_id TEXT NOT NULL,
+    device_id INTEGER NOT NULL,
+    is_deleted INTEGER AS Boolean NOT NULL,
+    payload BLOB NOT NULL,
+    -- RecordEnvelope.group, empty for none.
+    record_group TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (account_id, record_key)
+);
+
+CREATE UNIQUE INDEX records_sequence_index ON records(account_id, sequence);
+CREATE INDEX records_group_index ON records(account_id, record_group) WHERE record_group != '';
+
+sequencesOf:
+SELECT record_key, sequence
+FROM records
+WHERE account_id = :accountId AND record_key IN :recordKeys;
+
+upsert:
+INSERT INTO records(
+    account_id, record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+)
+VALUES (
+    :accountId, :recordKey, :sequence, :kind, :kindVersion, :basedOn, :changeId, :deviceId, :isDeleted, :payload, :recordGroup
+)
+ON CONFLICT(account_id, record_key) DO UPDATE SET
+    sequence = excluded.sequence,
+    kind = excluded.kind,
+    kind_version = excluded.kind_version,
+    based_on = excluded.based_on,
+    change_id = excluded.change_id,
+    device_id = excluded.device_id,
+    is_deleted = excluded.is_deleted,
+    payload = excluded.payload,
+    record_group = excluded.record_group;
+
+page:
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+FROM records
+WHERE account_id = :accountId
+    AND sequence > :after
+    AND sequence <= :through
+    AND (:includeDeleted OR is_deleted = 0)
+ORDER BY sequence
+LIMIT :limit;
+
+inGroup:
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+FROM records
+WHERE account_id = :accountId AND record_group = :recordGroup
+ORDER BY sequence
+LIMIT :limit;
+
+liveTotals:
+SELECT count(*) AS records, coalesce(sum(length(payload)), 0) AS bytes
+FROM records
+WHERE account_id = :accountId AND is_deleted = 0;
+
+newestMarkerThrough:
+SELECT max(sequence) AS sequence
+FROM records
+WHERE account_id = :accountId AND is_deleted = 1 AND sequence <= :through;
+
+deleteMarkersThrough:
+DELETE FROM records
+WHERE account_id = :accountId AND is_deleted = 1 AND sequence <= :through;
+
+deleteAccount:
+DELETE FROM records
+WHERE account_id = :accountId;

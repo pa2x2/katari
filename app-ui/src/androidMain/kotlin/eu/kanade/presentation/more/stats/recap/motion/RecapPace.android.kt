@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.stats.recap.motion
 
+import app.katari.core.platform.PlatformContext
+import app.katari.ui.R
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
-import mihon.app.ui.R
-import mihon.core.platform.PlatformContext
 
 internal actual fun PlatformContext.recapAnimationsRemoved(): Boolean = animatorDurationScale == 0f
 

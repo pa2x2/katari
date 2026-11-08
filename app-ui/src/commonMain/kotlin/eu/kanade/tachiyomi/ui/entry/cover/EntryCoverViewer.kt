@@ -8,16 +8,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.files.DocumentPickerRequest
+import app.katari.presentation.kit.files.rememberDocumentPicker
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.EditCoverAction
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryCoverPage
 import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.ui.entry.EntryCoverViewModel
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.files.DocumentPickerRequest
-import mihon.presentation.kit.files.rememberDocumentPicker
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 
 /** The entry's cover and background art full screen, with Share, Save and Edit as the platform offers them. */

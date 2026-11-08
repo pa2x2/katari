@@ -16,6 +16,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import app.katari.presentation.kit.navigation.Tab
+import app.katari.presentation.kit.navigation.TabRow
+import app.katari.presentation.kit.pager.HorizontalPager
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsRange
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
@@ -27,9 +30,6 @@ import eu.kanade.presentation.more.stats.recap.StatisticsYearRecapBanner
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.navigation.Tab
-import mihon.presentation.kit.navigation.TabRow
-import mihon.presentation.kit.pager.HorizontalPager
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

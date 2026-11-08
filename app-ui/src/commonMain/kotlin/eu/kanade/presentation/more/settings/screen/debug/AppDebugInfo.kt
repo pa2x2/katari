@@ -1,5 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
+import app.katari.domain.app.AppIdentity
+import app.katari.ui.buildinfo.AppBuild
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.InstallationPreferences
 import eu.kanade.tachiyomi.extension.ExtensionManagement
@@ -9,8 +11,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.offsetAt
 import kotlinx.datetime.toLocalDateTime
-import mihon.app.ui.buildinfo.AppBuild
-import mihon.domain.app.AppIdentity
 import kotlin.time.Clock
 
 /**

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.util
 
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.network.NetworkConnectivity
 import dev.zacsweers.metro.Inject
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.network.NetworkConnectivity
 
 /**
  * Words an error that reaching a source raised, such as a failed refresh's, for the user: what an HTTP status, a lost

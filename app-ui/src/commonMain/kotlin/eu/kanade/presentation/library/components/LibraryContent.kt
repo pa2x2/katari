@@ -17,14 +17,14 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
@@ -44,6 +44,7 @@ fun SharedLibraryContent(
     onRefresh: (suspend () -> Boolean)?,
     updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
+    notice: @Composable () -> Unit,
     scrollToTopTarget: LibraryScrollToTopTarget,
     pageContent: @Composable (pagerState: PagerState, page: Int, libraryPage: LibraryPage?) -> Unit,
 ) {
@@ -110,6 +111,7 @@ fun SharedLibraryContent(
         }
 
         LibraryUpdateStrip(state = updateState, onCancel = onCancelUpdate)
+        notice()
 
         PullRefresh(
             refreshing = awaitingUpdate,
@@ -223,6 +225,7 @@ fun LibraryContent(
     onRefresh: (suspend () -> Boolean)?,
     updateState: LibraryUpdateState?,
     onCancelUpdate: () -> Unit,
+    notice: @Composable () -> Unit,
     onGlobalSearchClicked: (() -> Unit)?,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     coverSize: CoverSize,
@@ -286,6 +289,7 @@ fun LibraryContent(
             onRefresh = onRefresh,
             updateState = updateState,
             onCancelUpdate = onCancelUpdate,
+            notice = notice,
             scrollToTopTarget = scrollToTopTarget,
         ) { pagerState, _, _ ->
             LibraryPager(

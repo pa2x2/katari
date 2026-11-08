@@ -3,6 +3,13 @@ package eu.kanade.tachiyomi.ui.browse.migration.sources
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.migration.EntryMigrationAvailability
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.profiles.core.ProfileManager
+import app.katari.sourcemigration.session.SourceMigrationSessionStore
+import app.katari.sourcemigration.session.model.SourceMigrationSessionId
+import app.katari.sourcemigration.session.model.SourceMigrationSessionStage
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -25,14 +32,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.migration.EntryMigrationAvailability
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.feature.migration.session.SourceMigrationSessionStore
-import mihon.feature.migration.session.model.SourceMigrationSessionId
-import mihon.feature.migration.session.model.SourceMigrationSessionStage
-import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.preference.getAndSet
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.model.Source
@@ -81,8 +82,7 @@ class MigrateSourceViewModel(
         }
         migrationSources to activeSessions
     }
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@MigrateSourceViewModel) {
             _channel.send(Event.FailedFetchingSourcesWithCount)
         }
 

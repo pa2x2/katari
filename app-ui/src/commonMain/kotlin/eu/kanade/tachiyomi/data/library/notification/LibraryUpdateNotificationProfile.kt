@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.library.notification
 
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfileStore
 
 /** What the notifications of one profile's update show, which needn't be the active profile. */
 data class LibraryUpdateNotificationProfile(

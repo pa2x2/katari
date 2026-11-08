@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.stats.recap.story
 
+import app.katari.entry.interactions.statistics.EntryStatisticsContribution
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
-import mihon.entry.interactions.statistics.EntryStatisticsContribution
 import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySegment
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline

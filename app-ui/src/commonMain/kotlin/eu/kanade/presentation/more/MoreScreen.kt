@@ -7,29 +7,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.Help
+import app.katari.icons.materialsymbols.automirroredrounded.Label
+import app.katari.icons.materialsymbols.rounded.Download
+import app.katari.icons.materialsymbols.rounded.DownloadDone
+import app.katari.icons.materialsymbols.rounded.Eyeglasses2
+import app.katari.icons.materialsymbols.rounded.Info
+import app.katari.icons.materialsymbols.rounded.Keyboard
+import app.katari.icons.materialsymbols.rounded.QueryStats
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.icons.materialsymbols.rounded.Storage
+import app.katari.presentation.kit.content.NotificationBadge
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.profiles.ui.switcher.ActiveProfileCard
+import app.katari.sync.ui.status.SyncRow
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
-import mihon.feature.profiles.ui.switcher.ActiveProfileCard
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.automirroredrounded.Label
-import mihon.icons.materialsymbols.rounded.CloudOff
-import mihon.icons.materialsymbols.rounded.Download
-import mihon.icons.materialsymbols.rounded.Eyeglasses2
-import mihon.icons.materialsymbols.rounded.Info
-import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.icons.materialsymbols.rounded.QueryStats
-import mihon.icons.materialsymbols.rounded.Settings
-import mihon.icons.materialsymbols.rounded.Storage
-import mihon.icons.materialsymbols.rounded.Sync
-import mihon.presentation.kit.content.NotificationBadge
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -43,7 +43,7 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     onClickDownloadQueue: () -> Unit,
-    onClickTracking: () -> Unit,
+    onClickSync: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
     hasNewRecap: Boolean,
@@ -76,7 +76,7 @@ fun MoreScreen(
                     SwitchPreferenceWidget(
                         title = stringResource(MR.strings.label_downloaded_only),
                         subtitle = stringResource(MR.strings.downloaded_only_summary),
-                        icon = MaterialSymbols.Rounded.CloudOff,
+                        icon = MaterialSymbols.Rounded.DownloadDone,
                         checked = downloadedOnly,
                         onCheckedChanged = onDownloadedOnlyChange,
                     )
@@ -128,11 +128,7 @@ fun MoreScreen(
             }
             item {
                 RowGroupItem(RowGroupPosition.Middle) {
-                    TextPreferenceWidget(
-                        title = stringResource(MR.strings.pref_category_tracking),
-                        icon = MaterialSymbols.Rounded.Sync,
-                        onPreferenceClick = onClickTracking,
-                    )
+                    SyncRow(onClick = onClickSync)
                 }
             }
             item {

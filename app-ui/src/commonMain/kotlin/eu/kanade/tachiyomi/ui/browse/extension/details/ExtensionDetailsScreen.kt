@@ -5,15 +5,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.browse.ExtensionDetailsScreen
 import eu.kanade.presentation.util.Screen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 
 data class ExtensionDetailsScreen(

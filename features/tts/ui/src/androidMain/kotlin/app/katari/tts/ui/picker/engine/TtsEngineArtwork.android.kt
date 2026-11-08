@@ -1,0 +1,84 @@
+package app.katari.tts.ui.picker.engine
+
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
+import app.katari.presentation.kit.surface.ArtworkTile
+import app.katari.presentation.kit.surface.ArtworkTileSize
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.tts.api.engine.TtsEngineArtwork
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+/**
+ * The glyph, or the installed application's icon when there is one, otherwise the bundled drawable. A drawable gets a
+ * wider inset than an application icon, which already carries its own padding.
+ */
+@Composable
+internal actual fun TtsEngineArtwork(
+    artwork: TtsEngineArtwork,
+    size: ArtworkTileSize,
+    modifier: Modifier,
+) {
+    when (artwork) {
+        is TtsEngineArtwork.Glyph -> TtsEngineGlyph(artwork, size, modifier)
+        is TtsEngineArtwork.Bundled -> AndroidArtwork(null, artwork.resourceId, size, modifier)
+        is TtsEngineArtwork.InstalledApplication ->
+            AndroidArtwork(artwork.packageName, artwork.fallbackResourceId, size, modifier)
+    }
+}
+
+/** The icon of the application [packageName] where it is installed, otherwise the drawable [fallbackResource]. */
+@Composable
+private fun AndroidArtwork(
+    packageName: String?,
+    @DrawableRes fallbackResource: Int,
+    size: ArtworkTileSize,
+    modifier: Modifier,
+) {
+    val context = LocalContext.current
+    val displayDensity = LocalDensity.current.density
+    val iconPixels = (size.side.value * displayDensity).toInt().coerceAtLeast(1)
+    val fallbackIcon = remember(context, fallbackResource, iconPixels) {
+        val drawable = checkNotNull(ContextCompat.getDrawable(context, fallbackResource)) {
+            "TTS engine artwork resource $fallbackResource could not be loaded"
+        }
+        drawable.toBitmap(width = iconPixels, height = iconPixels).asImageBitmap()
+    }
+    val installedIcon by produceState<ImageBitmap?>(null, packageName, iconPixels) {
+        value = packageName?.let {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    context.packageManager
+                        .getApplicationIcon(packageName)
+                        .toBitmap(width = iconPixels, height = iconPixels)
+                        .asImageBitmap()
+                }.getOrNull()
+            }
+        }
+    }
+    val inset = if (installedIcon == null) KatariTheme.spacing.m else KatariTheme.spacing.s
+
+    ArtworkTile(size = size, modifier = modifier) {
+        Image(
+            bitmap = installedIcon ?: fallbackIcon,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(inset),
+        )
+    }
+}

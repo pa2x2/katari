@@ -7,6 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FilterList
+import app.katari.icons.materialsymbols.rounded.TravelExplore
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -21,11 +26,6 @@ import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.icons.materialsymbols.rounded.TravelExplore
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.shortcut.ScreenShortcuts
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

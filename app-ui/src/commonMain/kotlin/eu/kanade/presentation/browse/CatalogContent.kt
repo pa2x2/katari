@@ -19,6 +19,25 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import app.katari.core.platform.currentPlatformContext
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.OpenInBrowser
+import app.katari.icons.materialsymbols.rounded.Refresh
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.EmptyScreenAction
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.feedback.SnackbarDuration
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.feedback.SnackbarResult
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.ScrollbarFrame
+import app.katari.presentation.kit.layout.coverGridCells
+import app.katari.presentation.kit.layout.coverListCells
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
 import eu.kanade.presentation.browse.components.CatalogBadges
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
@@ -30,25 +49,6 @@ import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.OpenInBrowser
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.icons.materialsymbols.rounded.Settings
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.EmptyScreenAction
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarDuration
-import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.feedback.SnackbarResult
-import mihon.presentation.kit.layout.RowGridColumn
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.layout.ScrollbarFrame
-import mihon.presentation.kit.layout.coverGridCells
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -151,18 +151,16 @@ fun CatalogContent(
             itemMenu = itemMenu,
             positionState = positionState,
         )
-        LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
-            CatalogComfortableGrid(
-                catalogList = catalogList,
-                columns = rowColumns,
-                contentPadding = rowPadding,
-                sourceItemOrientation = sourceItemOrientation,
-                onItemClick = onItemClick,
-                onItemLongClick = onItemLongClick,
-                itemMenu = itemMenu,
-                positionState = positionState,
-            )
-        }
+        LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
+            catalogList = catalogList,
+            columns = coverListCells(),
+            contentPadding = contentPadding,
+            sourceItemOrientation = sourceItemOrientation,
+            onItemClick = onItemClick,
+            onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
+            positionState = positionState,
+        )
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
             contentPadding = contentPadding,

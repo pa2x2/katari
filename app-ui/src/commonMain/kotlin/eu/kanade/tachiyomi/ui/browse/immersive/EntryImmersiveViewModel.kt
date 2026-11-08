@@ -2,6 +2,18 @@ package eu.kanade.tachiyomi.ui.browse.immersive
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.media.EntryImmersiveAvailability
+import app.katari.entry.interactions.media.EntryImmersiveChildRefreshResult
+import app.katari.entry.interactions.media.EntryImmersiveChildRequirement
+import app.katari.entry.interactions.media.EntryImmersiveContext
+import app.katari.entry.interactions.media.EntryImmersiveFeature
+import app.katari.entry.interactions.media.EntryImmersiveHandle
+import app.katari.entry.interactions.media.EntryImmersiveLoadRequest
+import app.katari.entry.interactions.media.EntryImmersiveLoadResult
+import app.katari.entry.interactions.media.EntryImmersiveProgress
+import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -17,18 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.media.EntryImmersiveAvailability
-import mihon.entry.interactions.media.EntryImmersiveChildRefreshResult
-import mihon.entry.interactions.media.EntryImmersiveChildRequirement
-import mihon.entry.interactions.media.EntryImmersiveContext
-import mihon.entry.interactions.media.EntryImmersiveFeature
-import mihon.entry.interactions.media.EntryImmersiveHandle
-import mihon.entry.interactions.media.EntryImmersiveLoadRequest
-import mihon.entry.interactions.media.EntryImmersiveLoadResult
-import mihon.entry.interactions.media.EntryImmersiveProgress
-import mihon.entry.interactions.media.EntryImmersiveUnavailableReason
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository

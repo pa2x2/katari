@@ -19,6 +19,16 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.LoadState
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.presentation.core.util.collectAsLazyPagingItems
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.AppBarExtension
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.sourcemigration.dialog.MigrateEntryDialog
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -54,18 +64,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.migration.dialog.MigrateEntryDialog
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.presentation.core.util.collectAsLazyPagingItems
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.AppBarExtension
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -205,54 +203,52 @@ data class CatalogScreen(
             Scaffold(
                 frame = ScreenFrame.Wide,
                 topBar = { scrollBehavior ->
-                    Surface(container = SurfaceContainer.Surface) {
-                        Column {
-                            CatalogToolbar(
-                                title = viewModel.sourceName,
-                                searchQuery = state.toolbarQuery,
-                                onSearchQueryChange = viewModel::setToolbarQuery,
-                                displayMode = viewModel.displayMode,
-                                onDisplayModeChange = { viewModel.displayMode = it },
-                                navigateUp = navigateUp,
-                                onWebViewClick = onWebViewClick,
-                                onSettingsClick = onSettingsClick,
-                                onLongPressActionsClick = {
-                                    navigator.push(BrowseLongPressActionsScreen(sourceId))
-                                },
-                                onSearch = viewModel::search,
-                                onEnterImmersive = if (immersiveAvailable) {
-                                    { immersiveMode = true }
-                                } else {
-                                    null
-                                },
-                                onRefresh = catalogList::refresh,
-                                refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
-                                scrollBehavior = scrollBehavior,
-                            )
+                    Column {
+                        CatalogToolbar(
+                            title = viewModel.sourceName,
+                            searchQuery = state.toolbarQuery,
+                            onSearchQueryChange = viewModel::setToolbarQuery,
+                            displayMode = viewModel.displayMode,
+                            onDisplayModeChange = { viewModel.displayMode = it },
+                            navigateUp = navigateUp,
+                            onWebViewClick = onWebViewClick,
+                            onSettingsClick = onSettingsClick,
+                            onLongPressActionsClick = {
+                                navigator.push(BrowseLongPressActionsScreen(sourceId))
+                            },
+                            onSearch = viewModel::search,
+                            onEnterImmersive = if (immersiveAvailable) {
+                                { immersiveMode = true }
+                            } else {
+                                null
+                            },
+                            onRefresh = catalogList::refresh,
+                            refreshEnabled = catalogList.loadState.refresh !is LoadState.Loading,
+                            scrollBehavior = scrollBehavior,
+                        )
 
+                        AppBarExtension {
+                            CatalogListingControls(
+                                listing = state.listing,
+                                supportsLatest = viewModel.supportsLatest,
+                                showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                changedFilterCount = appliedFilterChanges.total.changed,
+                                onListingChange = viewModel::setListing,
+                                onFilterClick = viewModel::onFilterClick,
+                            )
+                        }
+                        if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                             AppBarExtension {
-                                CatalogListingControls(
-                                    listing = state.listing,
-                                    supportsLatest = viewModel.supportsLatest,
-                                    showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
-                                    changedFilterCount = appliedFilterChanges.total.changed,
-                                    onListingChange = viewModel::setListing,
-                                    onFilterClick = viewModel::onFilterClick,
+                                CatalogAppliedFilterChips(
+                                    labels = appliedFilterLabels,
+                                    unused = !viewModel.textSearchUsesFilters &&
+                                        !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
+                                    onOpenFilters = {
+                                        filterFocusPath = it.path
+                                        viewModel.openFilterSheet()
+                                    },
+                                    onRemove = { viewModel.removeAppliedFilter(it.path) },
                                 )
-                            }
-                            if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
-                                AppBarExtension {
-                                    CatalogAppliedFilterChips(
-                                        labels = appliedFilterLabels,
-                                        unused = !viewModel.textSearchUsesFilters &&
-                                            !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
-                                        onOpenFilters = {
-                                            filterFocusPath = it.path
-                                            viewModel.openFilterSheet()
-                                        },
-                                        onRemove = { viewModel.removeAppliedFilter(it.path) },
-                                    )
-                                }
                             }
                         }
                     }

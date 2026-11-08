@@ -9,7 +9,7 @@ ORT_COMMIT=402979ac1bef89dcd55add41eaa7277c407599eb
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(git -C "$here" rev-parse --show-toplevel)
 sdk=${ANDROID_HOME:-$(sed -n 's/^sdk.dir=//p' "$root/local.properties")}
-ndk_version=$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' "$root/gradle/mihon.versions.toml")
+ndk_version=$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' "$root/gradle/katari.versions.toml")
 aar_version=$(sed -n 's/^onnxruntime = "\([^"]*\)".*/\1/p' "$root/gradle/libs.versions.toml")
 ort_version=${aar_version%%-*}
 work=${ONNXRUNTIME_BUILD_DIR:-$HOME/.cache/katari-onnxruntime}

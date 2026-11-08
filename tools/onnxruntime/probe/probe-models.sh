@@ -16,7 +16,7 @@ set -euo pipefail
 aar=$(realpath "$1") abi=$2 serial=$3 models=$(realpath "$4") output=$(realpath -m "$5")
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 sdk=${ANDROID_HOME:-$(sed -n 's/^sdk.dir=//p' "$root/local.properties")}
-ndk_version=$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' "$root/gradle/mihon.versions.toml")
+ndk_version=$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' "$root/gradle/katari.versions.toml")
 toolchain=$sdk/ndk/$ndk_version/toolchains/llvm/prebuilt/linux-x86_64/bin
 case $abi in
     arm64-v8a) target=aarch64-linux-android29 ;;

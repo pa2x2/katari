@@ -6,11 +6,11 @@ import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import app.katari.android.di.appGraph
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import mihon.app.di.appGraph
 import tachiyomi.domain.work.WorkOutcome
 
 /** Runs [LibraryMetadataUpdater] in the foreground for the profile [AndroidMetadataUpdateRunner] started it for. */

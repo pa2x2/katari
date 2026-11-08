@@ -3,11 +3,11 @@ package eu.kanade.tachiyomi.extension.util
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackageInstaller
 import eu.kanade.tachiyomi.util.system.hasMiuiPackageInstaller
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.app.di.appGraph
 import kotlin.time.Duration.Companion.seconds
 
 /**

@@ -1,5 +1,6 @@
 package eu.kanade.domain.extension.interactor
 
+import app.katari.domain.extension.model.ExtensionStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.extension.model.Extensions
 import eu.kanade.domain.source.service.SourcePreferences
@@ -8,7 +9,6 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.store.isServedBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import mihon.domain.extension.model.ExtensionStore
 
 @Inject
 class GetExtensionsByType(

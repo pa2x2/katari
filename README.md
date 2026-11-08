@@ -36,7 +36,7 @@ Katari doesn't come with any extensions. It loads extensions built with these li
 
 | Extensions | Built with | Versions |
 | --- | --- | --- |
-| Katari extensions | Entry SDK | 3.0 |
+| Katari extensions | Entry SDK | 4.0 |
 | Mihon and Tachiyomi extensions | extensions-lib | 1.6 |
 | Aniyomi extensions | extensions-lib | 14, 16, 17 |
 | LNReader plugins | lnreader-plugins | 3.0 |
@@ -44,6 +44,10 @@ Katari doesn't come with any extensions. It loads extensions built with these li
 <!-- extension-compatibility:end -->
 
 Extensions built with any other version aren't loaded. [Extension compatibility](https://pa2x2.github.io/katari/docs/extension-compatibility/) says what to do about them.
+
+## Sync
+
+Katari can keep your library, reading progress, history and settings the same on all your devices, through a sync server you run yourself. [Sync](https://pa2x2.github.io/katari/docs/sync/) explains how to use it, and [Running a sync server](https://pa2x2.github.io/katari/docs/sync-server/) how to set one up with Docker.
 
 ## Disclaimer
 

@@ -32,11 +32,11 @@ import { sitePath } from "../../site/links.ts";
     <ol>
       <li>Open <Path>Settings › Data and storage</Path> and select <strong>Create backup</strong>.</li>
       <li>
-        Tick what to keep: library entries, chapters, tracking, history, categories, all read entries, app settings, extension stores and
+        Tick what to keep: library entries, chapters, history, categories, all read entries, app settings, extension stores and
         source settings.
       </li>
       <li>
-        <strong>Include sensitive settings (e.g., tracker login tokens)</strong> adds logins and other private settings. Keep a backup with
+        <strong>Include sensitive settings (e.g., login tokens)</strong> adds logins and other private settings. Keep a backup with
         them somewhere only you can reach.
       </li>
     </ol>
@@ -60,7 +60,7 @@ import { sitePath } from "../../site/links.ts";
       <code>katari.foss_…</code> from Katari FOSS and <code>katari.desktop_…</code> from Katari for Linux.
     </p>
     <Callout label="No logins">
-      <p>Automatic backups never include sensitive settings. After restoring one, log in to your trackers again.</p>
+      <p>Automatic backups never include sensitive settings. After restoring one, log in to your sources again.</p>
     </Callout>
   </Task>
 
@@ -77,20 +77,23 @@ import { sitePath } from "../../site/links.ts";
         </tr>
         <tr><td><strong>Translation servers and API keys</strong></td> <td>Enter them again</td></tr>
         <tr><td><PlatformLabel platform="Android" lead /><strong>Text recognition models</strong></td> <td>Katari offers to download them again when a page needs them</td></tr>
-        <tr><td><strong>Sensitive settings</strong>, unless ticked</td> <td>Log in to trackers and sources again</td></tr>
+        <tr><td><strong>Sensitive settings</strong>, unless ticked</td> <td>Log in to sources again</td></tr>
       </tbody>
     </table>
   </Task>
 
   <Task id="restore" title="Restore">
     <ol>
-      <li>Select <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
+      <li>
+        Select <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or <strong>I have a backup</strong> in setup,
+        and pick the <code>.tachibk</code> file.
+      </li>
       <li>Choose what to bring back: library, categories, app settings, extension stores, source settings.</li>
       <li>
         If the backup holds several profiles, untick the ones to skip. Each one is either added as a new profile or merges into the profile
         it came from, and locked ones ask to be unlocked first.
       </li>
-      <li>Katari then lists missing sources and trackers you aren't logged into. Install those extensions and log in.</li>
+      <li>Katari lists the extensions the backup's titles need, and after the restore the Library offers to install them.</li>
     </ol>
     <p>Restoring doesn't switch the profile you're using. Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
   </Task>

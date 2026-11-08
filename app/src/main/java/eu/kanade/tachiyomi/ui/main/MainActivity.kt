@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
@@ -35,16 +34,32 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
+import app.katari.android.di.appGraph
+import app.katari.android.sync.SyncNavigation
+import app.katari.appupdate.ui.AppUpdatePrompt
+import app.katari.entry.interactions.source.EntrySourceNavigation
+import app.katari.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import app.katari.presentation.kit.feedback.isLight
+import app.katari.presentation.kit.surface.SurfaceContainer
+import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.surface.isLight
+import app.katari.profiles.core.Profile
+import app.katari.sourcemigration.review.SourceMigrationReviewScreen
+import app.katari.sourcemigration.session.model.SourceMigrationSessionId
+import app.katari.sourcemigration.work.SourceMigrationNotifier
+import app.katari.sync.ui.question.SyncQuestionsScreen
+import app.katari.translation.api.host.TranslationSettingsNavigation
+import app.katari.ui.host.HomeHost
+import app.katari.ui.host.HomeLaunchState
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
-import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
-import eu.kanade.presentation.components.IncognitoModeBannerContainer
-import eu.kanade.presentation.components.IndexingBannerContainer
+import eu.kanade.presentation.components.DownloadedOnlyBannerTone
+import eu.kanade.presentation.components.IncognitoModeBannerTone
+import eu.kanade.presentation.components.IndexingBannerTone
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
@@ -67,20 +82,6 @@ import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.app.di.appGraph
-import mihon.app.ui.host.HomeHost
-import mihon.app.ui.host.HomeLaunchState
-import mihon.entry.interactions.source.EntrySourceNavigation
-import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
-import mihon.feature.appupdate.ui.AppUpdatePrompt
-import mihon.feature.migration.review.SourceMigrationReviewScreen
-import mihon.feature.migration.session.model.SourceMigrationSessionId
-import mihon.feature.migration.work.SourceMigrationNotifier
-import mihon.feature.profiles.core.Profile
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.background
-import mihon.presentation.kit.surface.isLight
-import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -107,11 +108,7 @@ class MainActivity : BaseActivity() {
     private var allowAppUnlockPrompt = true
 
     init {
-        registerSecureActivity(this)
-    }
-
-    override fun shouldRequestAppUnlock(activity: AppCompatActivity): Boolean {
-        return allowAppUnlockPrompt
+        registerSecureActivity(this) { allowAppUnlockPrompt }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -226,13 +223,13 @@ class MainActivity : BaseActivity() {
         }
 
         val isSystemInDarkTheme = isSystemInDarkTheme()
-        val statusBarContainer = when {
-            banners.indexing -> IndexingBannerContainer
-            banners.downloadedOnly -> DownloadedOnlyBannerContainer
-            banners.incognito -> IncognitoModeBannerContainer
-            else -> SurfaceContainer.Surface
+        val statusBarStrip = when {
+            banners.indexing -> IndexingBannerTone
+            banners.downloadedOnly -> DownloadedOnlyBannerTone
+            banners.incognito -> IncognitoModeBannerTone
+            else -> null
         }
-        val lightStatusBar = statusBarContainer.isLight()
+        val lightStatusBar = statusBarStrip?.isLight() ?: SurfaceContainer.Surface.isLight()
         LaunchedEffect(isSystemInDarkTheme, lightStatusBar) {
             applyMainSystemBarStyle(
                 lightStatusBar = lightStatusBar,
@@ -253,8 +250,7 @@ class MainActivity : BaseActivity() {
             startupProfiles = startupSnapshot.visibleProfiles
             setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
 
-            val requiresProfileUnlock =
-                initialProfile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+            val requiresProfileUnlock = initialProfile?.let { startupProfileRequiresAuthNow(it.id) } == true
             val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
             val startupDecision = resolveInitialStartupGateDecision(
                 shouldShowPicker = startupSnapshot.shouldShowPicker,
@@ -271,7 +267,7 @@ class MainActivity : BaseActivity() {
                 requiresProfileUnlock &&
                 shouldSkipProfileAuth
             ) {
-                requestAppUnlock(activity)
+                activity.requestAppUnlock()
             }
         }
 
@@ -281,8 +277,7 @@ class MainActivity : BaseActivity() {
                 gateProfiles.size == 1
             ) {
                 val profile = activeProfile ?: gateProfiles.firstOrNull()
-                val requiresProfileUnlock =
-                    profile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+                val requiresProfileUnlock = profile?.let { startupProfileRequiresAuthNow(it.id) } == true
                 val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
                 val startupDecision = resolvePickerCollapseStartupGateDecision(
                     profile = profile,
@@ -296,7 +291,7 @@ class MainActivity : BaseActivity() {
                 }
                 startupGateState = startupDecision.state
                 if (profile != null && requiresProfileUnlock && shouldSkipProfileAuth) {
-                    requestAppUnlock(activity)
+                    activity.requestAppUnlock()
                 }
             }
         }
@@ -350,7 +345,7 @@ class MainActivity : BaseActivity() {
                 isLocked = { profileManager.profileRequiresUnlock(it.id) },
                 authProfileName = pendingAuthProfile?.name,
                 onProfileSelected = { profile ->
-                    if (profileManager.profileRequiresUnlock(profile.id)) {
+                    if (startupProfileRequiresAuthNow(profile.id)) {
                         pendingSelectedProfileId = profile.id
                         pendingAuthProfileId = profile.id
                         startupGateState = ProfileStartupGateState.Authenticating
@@ -520,6 +515,16 @@ class MainActivity : BaseActivity() {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
                 null
             }
+            SyncNavigation.ACTION_OPEN_SYNC -> {
+                navigator.popUntilRoot()
+                navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
+                null
+            }
+            SyncNavigation.ACTION_OPEN_SYNC_QUESTIONS -> {
+                navigator.popUntilRoot()
+                navigator.push(SyncQuestionsScreen)
+                null
+            }
             LibraryUpdateSettingsNavigation.ACTION_OPEN_SETTINGS -> {
                 navigator.popUntilRoot()
                 navigator.push(SettingsScreen(SettingsScreen.Destination.LibraryUpdates))
@@ -632,6 +637,18 @@ class MainActivity : BaseActivity() {
             title = this.stringResource(MR.strings.unlock_app_title, profile.name),
             subtitle = null,
         )
+    }
+
+    /**
+     * Whether opening [profileId] at start must authenticate now, decided as the in-app profile switch decides it: the
+     * open profile while the app lock holds it, any other once its own "Lock when idle" delay has run out.
+     */
+    private fun startupProfileRequiresAuthNow(profileId: Long): Boolean {
+        return if (profileId == profileManager.activeProfileId) {
+            profileManager.profileRequiresUnlock(profileId) && SecureActivityDelegate.requireUnlock
+        } else {
+            profileManager.profileRequiresAuthNow(profileId)
+        }
     }
 
     private fun shouldSkipStartupProfileAuth(): Boolean {

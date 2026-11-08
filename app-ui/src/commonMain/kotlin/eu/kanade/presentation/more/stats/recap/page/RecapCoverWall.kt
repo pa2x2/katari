@@ -18,13 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.ceil
 
 /**

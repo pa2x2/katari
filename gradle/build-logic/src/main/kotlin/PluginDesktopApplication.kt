@@ -1,10 +1,11 @@
-import mihon.gradle.configurations.configureJvmTestVerification
-import mihon.gradle.configurations.configureKotlin
-import mihon.gradle.extensions.alias
-import mihon.gradle.extensions.configureTest
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.plugins
-import mihon.gradle.jetbrainsruntime.runOnJetBrainsRuntime
+import app.katari.gradle.configurations.configureJvmTestVerification
+import app.katari.gradle.configurations.configureKotlin
+import app.katari.gradle.configurations.verifyDesktopMetroGraph
+import app.katari.gradle.extensions.alias
+import app.katari.gradle.extensions.configureTest
+import app.katari.gradle.extensions.libs
+import app.katari.gradle.extensions.plugins
+import app.katari.gradle.jetbrainsruntime.runOnJetBrainsRuntime
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
@@ -24,6 +25,7 @@ class PluginDesktopApplication : Plugin<Project> {
         configureKotlin()
         configureTest()
         configureJvmTestVerification()
+        verifyDesktopMetroGraph()
 
         val compose = extensions.getByType<ComposeExtension>()
         (compose as ExtensionAware).extensions.getByType<DesktopExtension>().application {
@@ -31,8 +33,6 @@ class PluginDesktopApplication : Plugin<Project> {
             jvmArgs += "--enable-native-access=ALL-UNNAMED"
             // The X11 toolkit's window class, which the app names after its desktop entry (X11WindowClass)
             jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
-            // The native Wayland toolkit's screen scale, which videos render at (the video engine's RenderScale)
-            jvmArgs += "--add-opens=java.desktop/sun.awt.wl=ALL-UNNAMED"
             runOnJetBrainsRuntime(this)
         }
     }

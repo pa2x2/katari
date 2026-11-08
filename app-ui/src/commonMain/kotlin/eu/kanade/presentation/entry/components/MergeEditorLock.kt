@@ -1,9 +1,9 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Immutable
+import app.katari.entry.interactions.merge.EntryMergeEditorProjection
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import mihon.entry.interactions.merge.EntryMergeEditorProjection
 
 /** What a merged entry's source supplies to the merge being edited. */
 @Immutable

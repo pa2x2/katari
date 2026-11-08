@@ -1,7 +1,8 @@
 ---
 import BeforeAfter from "../media/BeforeAfter.astro";
 import Clip from "../media/Clip.astro";
-import Phone from "../media/Phone.astro";
+import { isUpright } from "../media/devices.ts";
+import Still from "../media/Shot.astro";
 import type { Shot } from "./chapters.ts";
 
 interface Props {
@@ -13,12 +14,12 @@ const { shot } = Astro.props;
 
 {
   shot.kind === "still" && (
-    <Phone
+    <Still
       image={shot.image}
       alt={shot.alt}
       caption={shot.caption}
-      landscape={shot.landscape}
-      sizes={shot.landscape ? "(min-width: 44rem) 28rem, 92vw" : "(min-width: 44rem) 17rem, 75vw"}
+      device={shot.device}
+      sizes={isUpright(shot.device ?? "phone") ? "(min-width: 44rem) 17rem, 75vw" : "(min-width: 44rem) 28rem, 92vw"}
     />
   )
 }

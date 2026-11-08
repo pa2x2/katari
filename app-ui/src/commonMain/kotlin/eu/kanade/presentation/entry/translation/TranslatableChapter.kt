@@ -1,6 +1,6 @@
 package eu.kanade.presentation.entry.translation
 
-import mihon.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

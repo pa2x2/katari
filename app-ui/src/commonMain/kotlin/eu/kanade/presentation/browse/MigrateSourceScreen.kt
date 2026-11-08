@@ -5,31 +5,29 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.ArrowDownward
+import app.katari.icons.materialsymbols.rounded.ArrowUpward
+import app.katari.icons.materialsymbols.rounded.Numbers
+import app.katari.icons.materialsymbols.rounded.SortByAlpha
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.content.Badge
+import app.katari.presentation.kit.content.BadgeGroup
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.rowGroupItems
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.sourcemigration.session.model.SourceMigrationSessionStage
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.tachiyomi.ui.browse.migration.sources.MigrateSourceViewModel
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.migration.session.model.SourceMigrationSessionStage
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ArrowDownward
-import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.icons.materialsymbols.rounded.Numbers
-import mihon.icons.materialsymbols.rounded.SortByAlpha
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BadgeGroup
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.list.rowGroupItems
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
@@ -104,38 +102,36 @@ private fun MigrateSourceList(
         }
 
         if (list.isNotEmpty()) {
-            stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
-                Surface(container = SurfaceContainer.Background) {
-                    RowGroupHeader(
-                        text = stringResource(MR.strings.migration_selection_prompt),
-                        actions = {
-                            when (sortingMode) {
-                                SetMigrateSorting.Mode.ALPHABETICAL -> IconButton(
-                                    icon = MaterialSymbols.Rounded.SortByAlpha,
-                                    contentDescription = stringResource(MR.strings.action_sort_alpha),
-                                    onClick = onToggleSortingMode,
-                                )
-                                SetMigrateSorting.Mode.TOTAL -> IconButton(
-                                    icon = MaterialSymbols.Rounded.Numbers,
-                                    contentDescription = stringResource(MR.strings.action_sort_count),
-                                    onClick = onToggleSortingMode,
-                                )
-                            }
-                            when (sortingDirection) {
-                                SetMigrateSorting.Direction.ASCENDING -> IconButton(
-                                    icon = MaterialSymbols.Rounded.ArrowUpward,
-                                    contentDescription = stringResource(MR.strings.action_asc),
-                                    onClick = onToggleSortingDirection,
-                                )
-                                SetMigrateSorting.Direction.DESCENDING -> IconButton(
-                                    icon = MaterialSymbols.Rounded.ArrowDownward,
-                                    contentDescription = stringResource(MR.strings.action_desc),
-                                    onClick = onToggleSortingDirection,
-                                )
-                            }
-                        },
-                    )
-                }
+            stickyRowGroupHeader(key = STICKY_HEADER_KEY_PREFIX) {
+                RowGroupHeader(
+                    text = stringResource(MR.strings.migration_selection_prompt),
+                    actions = {
+                        when (sortingMode) {
+                            SetMigrateSorting.Mode.ALPHABETICAL -> IconButton(
+                                icon = MaterialSymbols.Rounded.SortByAlpha,
+                                contentDescription = stringResource(MR.strings.action_sort_alpha),
+                                onClick = onToggleSortingMode,
+                            )
+                            SetMigrateSorting.Mode.TOTAL -> IconButton(
+                                icon = MaterialSymbols.Rounded.Numbers,
+                                contentDescription = stringResource(MR.strings.action_sort_count),
+                                onClick = onToggleSortingMode,
+                            )
+                        }
+                        when (sortingDirection) {
+                            SetMigrateSorting.Direction.ASCENDING -> IconButton(
+                                icon = MaterialSymbols.Rounded.ArrowUpward,
+                                contentDescription = stringResource(MR.strings.action_asc),
+                                onClick = onToggleSortingDirection,
+                            )
+                            SetMigrateSorting.Direction.DESCENDING -> IconButton(
+                                icon = MaterialSymbols.Rounded.ArrowDownward,
+                                contentDescription = stringResource(MR.strings.action_desc),
+                                onClick = onToggleSortingDirection,
+                            )
+                        }
+                    },
+                )
             }
 
             rowGroupItems(items = list, key = { (source, _) -> "migrate-${source.id}" }) { (source, count) ->

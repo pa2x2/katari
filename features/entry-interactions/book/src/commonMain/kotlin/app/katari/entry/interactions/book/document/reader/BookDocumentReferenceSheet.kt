@@ -1,0 +1,52 @@
+package app.katari.entry.interactions.book.document.reader
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.presentation.kit.layout.ReadingColumn
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.EntryChapter
+
+/** A separate viewport/selection lifetime using the same semantic blocks and position restoration as the reader. */
+@Composable
+internal fun BookDocumentReferenceSheet(
+    section: BookDocumentSection<EntryChapter>,
+    onDismiss: () -> Unit,
+    onLink: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
+    onExternalLink: (String) -> Unit,
+) {
+    Sheet(onDismissRequest = onDismiss, capHeight = true) {
+        key(section.key) {
+            val listState = rememberLazyListState()
+            LaunchedEffect(section.initialPosition, LocalBookDocumentTypography.current) {
+                listState.scrollToBookDocumentPosition(
+                    section.document,
+                    section.initialPosition,
+                    section.viewerBlockIndex(section.initialPosition.blockId),
+                )
+            }
+            BookDocumentChapterSelectionContainer(
+                chapterId = section.owner.id,
+                ownerIdentity = "book-document-reference:${section.key}",
+            ) {
+                ReadingColumn(
+                    state = listState,
+                    maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
+                    modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
+                ) {
+                    items(section.viewerBlocks, key = { it.key }) { item ->
+                        BookDocumentViewerBlock(item, onLink, onExternalLink)
+                    }
+                }
+            }
+        }
+    }
+}

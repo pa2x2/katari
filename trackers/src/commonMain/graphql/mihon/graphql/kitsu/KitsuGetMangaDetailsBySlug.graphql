@@ -1,9 +1,0 @@
-query KitsuGetMangaDetailsBySlug(
-  $slug: String!,
-) {
-  findMangaBySlug(
-    slug: $slug,
-  ) {
-    ...MangaFragment
-  }
-}

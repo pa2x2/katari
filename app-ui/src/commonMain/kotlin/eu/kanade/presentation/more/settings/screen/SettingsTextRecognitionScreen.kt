@@ -4,6 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.presentation.kit.files.DocumentPickerRequest
+import app.katari.presentation.kit.files.rememberDocumentPicker
+import app.katari.ui.di.AppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -16,9 +19,6 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
-import mihon.app.ui.di.AppUiGraph
-import mihon.presentation.kit.files.DocumentPickerRequest
-import mihon.presentation.kit.files.rememberDocumentPicker
 import tachiyomi.i18n.*
 
 object SettingsTextRecognitionScreen : SearchableSettings {

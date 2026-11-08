@@ -11,18 +11,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FilterList
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.control.ConnectedToggleGroup
+import app.katari.presentation.kit.navigation.AppBarExtension
+import app.katari.presentation.kit.navigation.AppBarScrollBehavior
+import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.presentation.kit.progress.LinearProgressIndicator
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.control.ConnectedToggleGroup
-import mihon.presentation.kit.navigation.AppBarExtension
-import mihon.presentation.kit.navigation.AppBarScrollBehavior
-import mihon.presentation.kit.navigation.SearchToolbar
-import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,62 +39,60 @@ fun GlobalSearchToolbar(
     onToggleResults: () -> Unit,
     scrollBehavior: AppBarScrollBehavior,
 ) {
-    Surface(container = SurfaceContainer.Surface) {
-        Column {
-            Box {
-                SearchToolbar(
-                    searchQuery = searchQuery,
-                    onChangeSearchQuery = onChangeSearchQuery,
-                    onSearch = onSearch,
-                    onClickCloseSearch = navigateUp,
-                    navigateUp = navigateUp,
-                    scrollBehavior = scrollBehavior,
-                )
-                if (progress in 1..<total) {
-                    LinearProgressIndicator(
-                        progress = { progress / total.toFloat() },
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .fillMaxWidth(),
-                    )
-                }
-            }
-
-            AppBarExtension {
-                Row(
+    Column {
+        Box {
+            SearchToolbar(
+                searchQuery = searchQuery,
+                onChangeSearchQuery = onChangeSearchQuery,
+                onSearch = onSearch,
+                onClickCloseSearch = navigateUp,
+                navigateUp = navigateUp,
+                scrollBehavior = scrollBehavior,
+            )
+            if (progress in 1..<total) {
+                LinearProgressIndicator(
+                    progress = { progress / total.toFloat() },
                     modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .padding(
-                            start = KatariTheme.spacing.l,
-                            end = KatariTheme.spacing.l,
-                            top = KatariTheme.spacing.xs,
-                            bottom = KatariTheme.spacing.s,
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // TODO: make this UX better; it only applies when triggering a new search
-                    if (!hideSourceFilter) {
-                        ConnectedToggleGroup(
-                            options = listOf(SourceFilter.PinnedOnly, SourceFilter.All),
-                            selected = { it == sourceFilter },
-                            onClick = onChangeSearchFilter,
-                            label = {
-                                when (it) {
-                                    SourceFilter.PinnedOnly -> stringResource(MR.strings.pinned_sources)
-                                    SourceFilter.All -> stringResource(MR.strings.all)
-                                }
-                            },
-                        )
-                    }
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth(),
+                )
+            }
+        }
 
-                    FilterChip(
-                        label = stringResource(MR.strings.has_results),
-                        selected = onlyShowHasResults,
-                        onClick = onToggleResults,
-                        icon = MaterialSymbols.Rounded.FilterList,
+        AppBarExtension {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(
+                        start = KatariTheme.spacing.l,
+                        end = KatariTheme.spacing.l,
+                        top = KatariTheme.spacing.xs,
+                        bottom = KatariTheme.spacing.s,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // TODO: make this UX better; it only applies when triggering a new search
+                if (!hideSourceFilter) {
+                    ConnectedToggleGroup(
+                        options = listOf(SourceFilter.PinnedOnly, SourceFilter.All),
+                        selected = { it == sourceFilter },
+                        onClick = onChangeSearchFilter,
+                        label = {
+                            when (it) {
+                                SourceFilter.PinnedOnly -> stringResource(MR.strings.pinned_sources)
+                                SourceFilter.All -> stringResource(MR.strings.all)
+                            }
+                        },
                     )
                 }
+
+                FilterChip(
+                    label = stringResource(MR.strings.has_results),
+                    selected = onlyShowHasResults,
+                    onClick = onToggleResults,
+                    icon = MaterialSymbols.Rounded.FilterList,
+                )
             }
         }
     }

@@ -17,7 +17,7 @@ export interface GuideEntry {
   /** One line on the manual's index and in the contents' links. */
   summary: string;
   /**
-   * The Material Symbol the app shows for the feature, copied from icons/material-symbols. Pages for extension
+   * The Material Symbol the app shows for the feature, copied from core/icons/material-symbols. Pages for extension
    * developers describe no screen of the app, so they take the nearest symbol from the same set.
    */
   icon: SvgComponent;
@@ -43,7 +43,7 @@ export interface ManualLink {
 export interface Manual {
   id: ManualId;
   name: string;
-  /** What a page's title ends with, such as "Tracking · Katari docs". */
+  /** What a page's title ends with, such as "Profiles · Katari docs". */
   titleSuffix: string;
   /** The path its pages live under, ending in a slash. */
   base: string;
@@ -60,7 +60,7 @@ export function manual(id: ManualId): Manual {
   return manuals.find((candidate) => candidate.id === id)!;
 }
 
-/** The page's path on the site, such as `docs/tracking/`. */
+/** The page's path on the site, such as `docs/profiles/`. */
 export function entryPath(owner: Manual, entry: GuideEntry): string {
   return entry.slug ? `${owner.base}${entry.slug}/` : owner.base;
 }

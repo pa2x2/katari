@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.network.interceptor
 
 import android.content.Context
+import app.katari.core.common.web.AppChallengePage
 import eu.kanade.tachiyomi.network.AndroidCookieJar
-import mihon.core.common.web.AppChallengePage
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response

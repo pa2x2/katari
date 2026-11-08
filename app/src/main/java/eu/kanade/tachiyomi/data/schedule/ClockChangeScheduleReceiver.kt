@@ -3,9 +3,9 @@ package eu.kanade.tachiyomi.data.schedule
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import app.katari.android.di.appGraph
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 
 /**

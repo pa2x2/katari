@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
-import mihon.entry.interactions.statistics.EntryStatisticsAccent
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.entry.interactions.statistics.EntryStatisticsAccent
+import app.katari.presentation.kit.theme.KatariTheme
 
 @Composable
 @ReadOnlyComposable

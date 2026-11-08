@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.libraryupdates
 
-import mihon.feature.library.update.planning.LibraryUpdateSkipRule
+import app.katari.library.update.planning.LibraryUpdateSkipRule
 import tachiyomi.i18n.*
 
 internal val LibraryUpdateSkipRule.titleRes

@@ -10,18 +10,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
+import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
+import app.katari.presentation.kit.button.FloatingActionButton
+import app.katari.presentation.kit.button.SmallFloatingActionButton
+import app.katari.presentation.kit.feedback.Tooltip
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.ui.handoff.HandOffNote
+import app.katari.sync.ui.handoff.ResumeHandOffNote
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.icons.materialsymbols.roundedfilled.PlayArrow
-import mihon.presentation.kit.button.FloatingActionButton
-import mihon.presentation.kit.button.SmallFloatingActionButton
-import mihon.presentation.kit.feedback.Tooltip
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -38,6 +40,7 @@ fun EntryContinueActions(
     visible: Boolean,
     onTargetReached: () -> Unit,
     onContinueReading: () -> Unit,
+    handOffNote: HandOffNote? = null,
 ) {
     val scope = rememberCoroutineScope()
     val targetPosition by remember(listState, continueTargetListIndex, topOcclusionPx) {
@@ -95,12 +98,15 @@ fun EntryContinueActions(
             }
         }
 
+        if (visible && handOffNote != null) ResumeHandOffNote(handOffNote)
+
         FloatingActionButton(
             label = continueLabel(isReading, targetChapter, entryType),
             icon = MaterialSymbols.RoundedFilled.PlayArrow,
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
             visible = visible,
+            loading = handOffNote == HandOffNote.Checking,
         )
     }
 }

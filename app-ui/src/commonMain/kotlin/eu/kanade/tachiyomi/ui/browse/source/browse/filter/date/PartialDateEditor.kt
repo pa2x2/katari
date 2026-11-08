@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter.date
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -24,12 +23,12 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import app.katari.presentation.kit.field.TextField
+import app.katari.presentation.kit.list.currentRowInset
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
-import mihon.presentation.kit.field.TextField
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -44,7 +43,7 @@ internal fun PartialDateEditor(filter: EntryDateFilter, onCancel: () -> Unit, on
     var inputFocused by remember { mutableStateOf(false) }
     val scroll = rememberScrollState()
     LaunchedEffect(state.step, state.typing) { scroll.scrollTo(0) }
-    Column(Modifier.fillMaxHeight(0.9f)) {
+    Column {
         Column(
             Modifier
                 .weight(1f)

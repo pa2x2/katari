@@ -1,0 +1,77 @@
+package eu.kanade.tachiyomi.ui.reader.model
+
+import app.katari.entry.interactions.manga.download.DownloadCache
+import eu.kanade.tachiyomi.source.entry.ChapterKind
+import tachiyomi.domain.chapter.model.Chapter
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.numberKey
+import tachiyomi.source.local.LocalSource
+
+fun EntryChapter.toReaderChapter(): Chapter {
+    return Chapter(
+        id = id,
+        mangaId = entryId,
+        read = read,
+        bookmark = bookmark,
+        dateFetch = dateFetch,
+        sourceOrder = sourceOrder,
+        url = url,
+        name = name,
+        dateUpload = dateUpload,
+        chapterNumber = chapterNumber,
+        scanlator = scanlator,
+        memo = memo,
+    )
+}
+
+internal fun Chapter.toEntryChapter(): EntryChapter {
+    return EntryChapter(
+        id = id,
+        entryId = mangaId,
+        url = url,
+        name = name,
+        read = read,
+        bookmark = bookmark,
+        chapterNumber = chapterNumber,
+        scanlator = scanlator,
+        dateUpload = dateUpload,
+        dateFetch = dateFetch,
+        sourceOrder = sourceOrder,
+        memo = memo,
+        // The legacy chapter doesn't carry them; repository state writes leave the stored ones alone
+        summary = null,
+        previewUrl = null,
+        kind = ChapterKind.REGULAR,
+        groupKey = null,
+        groupPosition = null,
+        dateText = null,
+    )
+}
+
+internal fun List<EntryChapter>.filterDownloaded(
+    mangaById: Map<Long, Entry>,
+    downloadCache: DownloadCache,
+): List<EntryChapter> {
+    return filter { chapter ->
+        val manga = mangaById[chapter.entryId] ?: return@filter false
+        manga.source == LocalSource.ID ||
+            downloadCache.isChapterDownloaded(
+                chapter.name,
+                chapter.scanlator,
+                chapter.url,
+                manga.downloadFolderTitle,
+                manga.source,
+                false,
+            )
+    }
+}
+
+internal fun List<EntryChapter>.removeDuplicates(currentChapter: EntryChapter): List<EntryChapter> {
+    return groupBy { it.entryId to it.numberKey }
+        .map { (_, chapters) ->
+            chapters.find { it.id == currentChapter.id }
+                ?: chapters.find { it.scanlator == currentChapter.scanlator }
+                ?: chapters.first()
+        }
+}

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.sheet.SheetActions
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.sheet.SheetActions
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

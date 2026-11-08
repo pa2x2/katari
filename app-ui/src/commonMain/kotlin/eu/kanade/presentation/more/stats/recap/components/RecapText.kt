@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.recap.motion.recapReveal
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
 
 /** Page text, in the page's ink unless a [tone] says otherwise, entering at step [order]. */
 @Composable

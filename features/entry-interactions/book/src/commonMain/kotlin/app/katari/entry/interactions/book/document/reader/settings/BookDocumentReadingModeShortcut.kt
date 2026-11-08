@@ -1,0 +1,69 @@
+package app.katari.entry.interactions.book.document.reader.settings
+
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import app.katari.entry.interactions.reader.settings.BookDocumentReadingMode
+import app.katari.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
+import app.katari.entry.viewer.chrome.ui.mode.ReaderReadingModeDialog
+import app.katari.entry.viewer.settings.ViewerSettingBinding
+import kotlinx.coroutines.launch
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * Chrome entry point for changing this book's mode or returning to the profile default. [shareWidth] as in
+ * [ReaderChromeBottomBarAction].
+ */
+@Composable
+internal fun RowScope.BookDocumentReadingModeShortcut(
+    binding: ViewerSettingBinding<BookDocumentReadingMode>,
+    shareWidth: Boolean = true,
+) {
+    val mode by binding.state.collectAsState()
+    var open by rememberSaveable { mutableStateOf(false) }
+    val description = stringResource(mode.effectiveValue.stringRes)
+    val scope = rememberCoroutineScope()
+    ReaderChromeBottomBarAction(
+        icon = mode.effectiveValue.icon,
+        contentDescription = stringResource(MR.strings.viewer),
+        onClick = { open = true },
+        modifier = Modifier.semantics { stateDescription = description },
+        shareWidth = shareWidth,
+    )
+    if (open) {
+        val useDefault: () -> Unit = {
+            scope.launch {
+                binding.clearEntryOverride()
+                open = false
+            }
+        }
+        ReaderReadingModeDialog(
+            modes = BookDocumentReadingMode.entries,
+            currentMode = mode.effectiveValue,
+            modeLabel = BookDocumentReadingMode::stringRes,
+            modeIcon = BookDocumentReadingMode::icon,
+            onApply = { selected ->
+                scope.launch {
+                    val current = binding.state.value
+                    if (selected == (current.profileValue ?: current.processorDefault)) {
+                        binding.clearEntryOverride()
+                    } else {
+                        binding.setEntryOverride(selected)
+                    }
+                    open = false
+                }
+            },
+            onUseDefault = useDefault.takeIf { mode.entryOverride != null },
+            onDismissRequest = { open = false },
+        )
+    }
+}

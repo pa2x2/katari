@@ -1,0 +1,51 @@
+package app.katari.upgrade.migrations
+
+import app.katari.library.update.legacy.LegacyUpdateCategoriesConversion
+import app.katari.profiles.core.ProfileConstants
+import app.katari.upgrade.Migration
+import app.katari.upgrade.MigrationContext
+import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.domain.library.service.LibraryPreferences
+
+/**
+ * Moves library update filtering to update rules without changing what existing profiles check.
+ *
+ * New installs skip fewer entries by default, so a profile that never changed its skip rules gets the old default
+ * written explicitly. Category include and exclude lists become category rules. Updates no longer have a switch for
+ * hiding chapters from excluded scanlators because they are always hidden.
+ */
+class LibraryUpdateRulesMigration : Migration {
+    override val version: Float = 69f
+
+    override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
+        val profileStore = migrationContext.profileStore
+        val profileDatabase = migrationContext.profileDatabase
+        val categoryRepository = migrationContext.categoryRepository
+        val rulesRepository = migrationContext.libraryUpdateRulesRepository
+        val categoriesConversion = LegacyUpdateCategoriesConversion(categoryRepository, rulesRepository)
+        val profileIds = profileDatabase.getProfiles(includeArchived = true).map { it.id }
+            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
+
+        profileIds.forEach { profileId ->
+            val store = profileStore.profileStore(profileId)
+            val skipRules = store.getStringSet(LibraryPreferences.UPDATE_SKIP_RULES_PREF_KEY)
+            if (!skipRules.isSet()) {
+                skipRules.set(LEGACY_DEFAULT_SKIP_RULES)
+            }
+            categoriesConversion.convert(profileId, store)
+            store.getBoolean(LEGACY_HIDE_EXCLUDED_SCANLATORS).delete()
+        }
+
+        return@withIOContext true
+    }
+
+    private companion object {
+        val LEGACY_DEFAULT_SKIP_RULES = setOf(
+            LibraryPreferences.SKIP_COMPLETED,
+            LibraryPreferences.SKIP_UNSEEN,
+            LibraryPreferences.SKIP_NOT_STARTED,
+            LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD,
+        )
+        const val LEGACY_HIDE_EXCLUDED_SCANLATORS = "pref_filter_updates_hide_excluded_scanlators"
+    }
+}

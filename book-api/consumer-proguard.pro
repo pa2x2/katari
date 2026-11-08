@@ -1,1 +1,0 @@
--keep class mihon.book.api.** { *; }

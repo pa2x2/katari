@@ -3,17 +3,19 @@ package eu.kanade.presentation.more.onboarding
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Check
+import app.katari.icons.materialsymbols.rounded.VerifiedUser
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.ToggleRow
+import app.katari.presentation.kit.theme.ContentTone
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Check
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.list.ToggleRow
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -27,6 +29,13 @@ internal class PermissionStep(
     private val privacyPreferences: PrivacyPreferences,
     private val telemetryIncluded: Boolean,
 ) : OnboardingStep {
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.VerifiedUser,
+        heading = stringResource(MR.strings.onboarding_permissions_heading),
+        subtitle = stringResource(MR.strings.onboarding_permissions_subtitle, stringResource(MR.strings.app_name)),
+    )
 
     override val isComplete: Boolean = true
 

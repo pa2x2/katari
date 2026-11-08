@@ -3,6 +3,14 @@ package eu.kanade.tachiyomi.ui.history
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.merge.EntryMergeNavigationFeature
+import app.katari.entry.interactions.merge.EntryMergeSubject
+import app.katari.entry.interactions.navigation.EntryContinueFeature
+import app.katari.entry.interactions.navigation.EntryContinueResult
+import app.katari.profiles.core.ProfileScopedStateEvent
+import app.katari.profiles.core.observeProfileScopedState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -34,15 +42,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
-import mihon.entry.interactions.merge.EntryMergeSubject
-import mihon.entry.interactions.navigation.EntryContinueFeature
-import mihon.entry.interactions.navigation.EntryContinueResult
-import mihon.feature.profiles.core.ProfileScopedStateEvent
-import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
@@ -86,8 +87,7 @@ class HistoryViewModel(
                 .groupBy { LocalDate.parse(it.localDate) }
                 .mapValues { (_, buckets) -> buckets.sumOf { it.durationMillis } }
         }
-        .catch { error ->
-            logcat(LogPriority.ERROR, error)
+        .resubscribeOnFailure(this@HistoryViewModel) {
             emit(emptyMap())
         }
         .flowOn(Dispatchers.IO)
@@ -100,8 +100,7 @@ class HistoryViewModel(
                     .flatMapLatest { query ->
                         getHistory.subscribe(query ?: "", profileId)
                             .distinctUntilChanged()
-                            .catch { error ->
-                                logcat(LogPriority.ERROR, error)
+                            .resubscribeOnFailure(this@HistoryViewModel) {
                                 _events.send(Event.InternalError)
                             }
                             .map { history -> history.toHistoryUiModels() }

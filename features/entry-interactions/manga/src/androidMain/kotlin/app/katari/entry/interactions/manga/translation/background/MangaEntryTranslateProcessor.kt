@@ -1,0 +1,99 @@
+package app.katari.entry.interactions.manga.translation.background
+
+import app.katari.entry.interactions.manga.reader.text.session.declaredContentLanguage
+import app.katari.entry.interactions.manga.translation.artifact.MangaChapterTranslationSetup
+import app.katari.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
+import app.katari.entry.interactions.manga.translation.context.mangaWorkContext
+import app.katari.entry.interactions.manga.translation.pages.MangaDownloadedChapterPages
+import app.katari.entry.interactions.translate.EntryTranslateFailure
+import app.katari.entry.interactions.translate.EntryTranslatePreparation
+import app.katari.entry.interactions.translate.EntryTranslateProcessor
+import app.katari.entry.interactions.translate.EntryTranslateProgress
+import app.katari.entry.interactions.translate.EntryTranslateResult
+import app.katari.entry.interactions.translate.EntryTranslateSetup
+import app.katari.entry.interactions.translation.EntryTranslationLanguageChoices
+import app.katari.translation.api.request.ResolvedTranslationRoute
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.service.awaitInitialized
+
+/** Translates downloaded manga chapters into stored translations the reader opens with. */
+internal class MangaEntryTranslateProcessor(
+    private val sourceManager: SourceManager,
+    private val store: () -> MangaChapterTranslationStore,
+    private val pages: () -> MangaDownloadedChapterPages,
+    private val translator: () -> MangaChapterTranslator,
+    private val preparer: () -> MangaChapterTranslationPreparer,
+) : EntryTranslateProcessor {
+
+    override val changes: Flow<Unit> = flow { emitAll(store().changes) }
+
+    override suspend fun prepare(
+        entry: Entry,
+        languages: EntryTranslationLanguageChoices,
+    ): EntryTranslatePreparation {
+        val source = sourceManager.get(entry.source) as? EntryCatalogueSource
+        return preparer().prepare(
+            pageLanguage = languages.contentLanguage ?: declaredContentLanguage(source?.lang),
+            targetLanguage = languages.targetLanguage,
+        )
+    }
+
+    override suspend fun translatedChapters(entry: Entry, chapters: List<EntryChapter>): Set<Long> {
+        val source = sourceManager.get(entry.source) ?: return emptySet()
+        return store().translatedChapters(chapters, entry, source)
+    }
+
+    override suspend fun translate(
+        entry: Entry,
+        chapter: EntryChapter,
+        setup: EntryTranslateSetup,
+        onProgress: (EntryTranslateProgress) -> Unit,
+    ): EntryTranslateResult {
+        val chapterSetup = setup.toChapterSetup()
+            ?: return EntryTranslateResult.Failed(EntryTranslateFailure.SetupRequired)
+        // The queue resumes in the background, possibly as the process starts and before the sources have loaded
+        sourceManager.awaitInitialized()
+        val source = sourceManager.get(entry.source)
+            ?: return EntryTranslateResult.Failed(EntryTranslateFailure.DownloadMissing)
+        val outcome = pages().use(chapter, entry, source) { chapterPages ->
+            onProgress(EntryTranslateProgress(0, chapterPages.size))
+            translator().translate(
+                chapterPages,
+                chapterSetup,
+                mangaWorkContext(entry.title, entry.description),
+            ) { done ->
+                onProgress(EntryTranslateProgress(done, chapterPages.size))
+            }
+        } ?: return EntryTranslateResult.Failed(EntryTranslateFailure.DownloadMissing)
+        return when (outcome) {
+            is MangaChapterTranslationOutcome.Translated -> {
+                store().write(chapter, entry, source, outcome.translation)
+                EntryTranslateResult.Translated
+            }
+            MangaChapterTranslationOutcome.SetupRequired ->
+                EntryTranslateResult.Failed(EntryTranslateFailure.SetupRequired)
+            is MangaChapterTranslationOutcome.NothingRecognized ->
+                EntryTranslateResult.Failed(EntryTranslateFailure.Error(outcome.reason))
+            is MangaChapterTranslationOutcome.TranslationFailed ->
+                EntryTranslateResult.Failed(EntryTranslateFailure.Error(outcome.reason))
+        }
+    }
+
+    override suspend fun deleteTranslation(entry: Entry, chapters: List<EntryChapter>) {
+        val source = sourceManager.get(entry.source) ?: return
+        chapters.forEach { store().delete(it, entry, source) }
+    }
+
+    /** The setup as stored with the translation; `null` when it names no recognition pipeline. */
+    private fun EntryTranslateSetup.toChapterSetup(): MangaChapterTranslationSetup? = MangaChapterTranslationSetup(
+        pageLanguage = contentLanguage,
+        pipeline = recognition ?: return null,
+        route = ResolvedTranslationRoute(contentLanguage, targetLanguage, engine),
+    )
+}

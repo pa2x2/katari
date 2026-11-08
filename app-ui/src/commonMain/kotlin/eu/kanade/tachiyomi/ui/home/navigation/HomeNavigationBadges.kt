@@ -8,12 +8,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
+import app.katari.core.common.HomeScreenTabs
+import app.katari.presentation.kit.content.NotificationBadge
+import app.katari.sync.ui.status.rememberSyncHeadline
+import app.katari.sync.ui.status.rememberSyncStatus
+import app.katari.sync.ui.status.syncHeadlineText
+import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.common.HomeScreenTabs
-import mihon.presentation.kit.content.NotificationBadge
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,7 +34,8 @@ internal sealed interface HomeTabBadge {
 internal fun rememberHomeTabBadge(tab: HomeScreenTabs): HomeTabBadge? = when (tab) {
     HomeScreenTabs.Updates -> rememberUpdatesBadge()
     HomeScreenTabs.Browse -> rememberBrowseBadge()
-    HomeScreenTabs.More, HomeScreenTabs.Statistics -> rememberYearRecapBadge()
+    HomeScreenTabs.More -> rememberSyncAttentionBadge() ?: rememberYearRecapBadge()
+    HomeScreenTabs.Statistics -> rememberYearRecapBadge()
     HomeScreenTabs.Library, HomeScreenTabs.History, HomeScreenTabs.Profiles, HomeScreenTabs.Translator -> null
 }
 
@@ -90,6 +94,15 @@ private fun rememberBrowseBadge(): HomeTabBadge? {
         count = count,
         description = pluralStringResource(MR.plurals.update_check_notification_ext_updates, count = count, count),
     )
+}
+
+/** Questions and sign-out mark More, where the Sync row is (D028); progress never does. */
+@Composable
+private fun rememberSyncAttentionBadge(): HomeTabBadge? {
+    val status = rememberSyncStatus() ?: return null
+    val headline = rememberSyncHeadline() ?: return null
+    if (!status.needsAttention) return null
+    return HomeTabBadge.Dot(syncHeadlineText(headline))
 }
 
 @Composable

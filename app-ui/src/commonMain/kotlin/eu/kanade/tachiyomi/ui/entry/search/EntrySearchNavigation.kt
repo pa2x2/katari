@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.entry.search
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 
 /**
  * Perform a search using the provided query. A global search opens on top; any other goes back to the screen the entry

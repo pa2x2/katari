@@ -17,7 +17,7 @@ const { before, after, beforeLabel, afterLabel, alt, caption } = Astro.props;
 const [beforeImage, afterImage] = await Promise.all(
   [before, after].map((src) => getImage({ src, width: 720, format: "webp" })),
 );
-const height = Math.round(720 / aspectOf(after));
+const height = Math.round(720 / aspectOf(after, "phone"));
 ---
 
 <figure class="shot compare">

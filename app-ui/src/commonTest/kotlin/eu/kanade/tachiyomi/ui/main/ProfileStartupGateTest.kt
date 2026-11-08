@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.main
 
+import app.katari.profiles.core.Profile
 import io.kotest.matchers.shouldBe
-import mihon.feature.profiles.core.Profile
 import org.junit.jupiter.api.Test
 
 class ProfileStartupGateTest {

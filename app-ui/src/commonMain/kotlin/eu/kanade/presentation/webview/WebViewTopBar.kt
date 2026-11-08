@@ -9,26 +9,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalUriHandler
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.ArrowBack
+import app.katari.icons.materialsymbols.automirroredrounded.ArrowForward
+import app.katari.icons.materialsymbols.rounded.Close
+import app.katari.icons.materialsymbols.rounded.Cookie
+import app.katari.icons.materialsymbols.rounded.OpenInBrowser
+import app.katari.icons.materialsymbols.rounded.Refresh
+import app.katari.icons.materialsymbols.rounded.Share
+import app.katari.icons.materialsymbols.rounded.TabClose
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarActions
+import app.katari.presentation.kit.progress.LinearProgressIndicator
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.shortcut.ScreenShortcuts
+import app.katari.presentation.kit.shortcut.ShortcutGroup
+import app.katari.presentation.kit.shortcut.ShortcutKeys
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
-import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.rounded.Cookie
-import mihon.icons.materialsymbols.rounded.OpenInBrowser
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.icons.materialsymbols.rounded.Share
-import mihon.icons.materialsymbols.rounded.TabClose
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarActions
-import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.shortcut.ScreenShortcuts
-import mihon.presentation.kit.shortcut.ShortcutGroup
-import mihon.presentation.kit.shortcut.ShortcutKeys
-import mihon.presentation.kit.surface.WarningCard
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -115,8 +116,9 @@ internal fun WebViewTopBar(
             )
 
             if (showCloudflareHelp) {
-                WarningCard(
+                NoticeCard(
                     text = stringResource(MR.strings.information_cloudflare_help),
+                    tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },
                 )

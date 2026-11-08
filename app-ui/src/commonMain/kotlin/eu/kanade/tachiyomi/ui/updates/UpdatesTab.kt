@@ -9,6 +9,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.platform.currentPlatformContext
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.ui.di.LocalAppUiGraph
+import app.katari.upcoming.UpcomingScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -39,13 +44,7 @@ import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.entry.interactions.download.EntryDownloadState
-import mihon.feature.upcoming.UpcomingScreen
-import mihon.presentation.kit.feedback.EmptyScreen
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withUIContext
+import kotlinx.coroutines.launch
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -197,9 +196,9 @@ data object UpdatesTab : Tab {
                 },
                 isOpenApplicable = viewModel::isOpenApplicable,
                 onClickUpdate = { item ->
-                    scope.launchIO {
-                        val result = viewModel.openUpdate(context, item) ?: return@launchIO
-                        withUIContext { openMessages.report(item.update.entryType, result) }
+                    scope.launch {
+                        val result = viewModel.openUpdate(context, item) ?: return@launch
+                        openMessages.report(item.update.entryType, result)
                     }
                 },
                 onDownloadChapter = viewModel::downloadChapters,

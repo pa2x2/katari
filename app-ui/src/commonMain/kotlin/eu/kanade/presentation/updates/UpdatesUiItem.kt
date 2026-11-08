@@ -6,6 +6,16 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.entry.interactions.translate.EntryTranslateStatus
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.ChapterMarks
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.selection.selectableItem
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
@@ -14,16 +24,6 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.partialProgressLabel
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.tachiyomi.ui.updates.UpdatesItem
-import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.ChapterMarks
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.selection.selectableItem
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -5,6 +5,50 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.common.utils.mutate
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.download.EntryBulkDownloadAction
+import app.katari.entry.interactions.download.EntryBulkDownloadRequest
+import app.katari.entry.interactions.download.EntryBulkDownloadResolutionResult
+import app.katari.entry.interactions.download.EntryDownloadActionAvailability
+import app.katari.entry.interactions.download.EntryDownloadActionFeature
+import app.katari.entry.interactions.download.EntryDownloadActionRequest
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
+import app.katari.entry.interactions.library.EntryLibraryFilterControlAvailability
+import app.katari.entry.interactions.library.EntryLibraryFilterFeature
+import app.katari.entry.interactions.library.EntryLibraryFilterPolicy
+import app.katari.entry.interactions.library.EntryLibraryFilterRequest
+import app.katari.entry.interactions.library.EntryLibraryFilterTarget
+import app.katari.entry.interactions.library.membership.EntryLibraryMembershipFeature
+import app.katari.entry.interactions.library.membership.EntryLibraryRemovalResult
+import app.katari.entry.interactions.lifecycle.profile.EntryProfileMoveConflictResolution
+import app.katari.entry.interactions.lifecycle.profile.EntryProfileMoveFeature
+import app.katari.entry.interactions.lifecycle.profile.EntryProfileMovePreview
+import app.katari.entry.interactions.lifecycle.profile.EntryProfileMoveRequest
+import app.katari.entry.interactions.lifecycle.profile.EntryProfileMoveResult
+import app.katari.entry.interactions.merge.EntryMergeCommitIntent
+import app.katari.entry.interactions.merge.EntryMergeEditReference
+import app.katari.entry.interactions.merge.EntryMergeEditorEntryReference
+import app.katari.entry.interactions.merge.EntryMergeExecutionResult
+import app.katari.entry.interactions.merge.EntryMergeFeature
+import app.katari.entry.interactions.merge.EntryMergePreparationResult
+import app.katari.entry.interactions.merge.EntryMergePrepareIntent
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.entry.interactions.migration.EntryMigrationSelectionResult
+import app.katari.entry.interactions.migration.EntryMigrationSubject
+import app.katari.entry.interactions.navigation.EntryContinueFeature
+import app.katari.entry.interactions.navigation.EntryContinueResult
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.entry.interactions.state.EntryConsumptionFeature
+import app.katari.library.search.LibrarySearchMatcher
+import app.katari.profiles.core.Profile
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.core.ProfileScopedStateEvent
+import app.katari.profiles.core.ProfileStore
+import app.katari.profiles.core.observeProfileScopedState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -41,7 +85,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -50,55 +93,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
-import mihon.app.di.AppUiScope
-import mihon.core.common.utils.mutate
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.download.EntryBulkDownloadAction
-import mihon.entry.interactions.download.EntryBulkDownloadRequest
-import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
-import mihon.entry.interactions.download.EntryDownloadActionAvailability
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.download.EntryDownloadActionRequest
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.library.EntryLibraryFilterAvailability
-import mihon.entry.interactions.library.EntryLibraryFilterControlAvailability
-import mihon.entry.interactions.library.EntryLibraryFilterFeature
-import mihon.entry.interactions.library.EntryLibraryFilterPolicy
-import mihon.entry.interactions.library.EntryLibraryFilterRequest
-import mihon.entry.interactions.library.EntryLibraryFilterTarget
-import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
-import mihon.entry.interactions.library.membership.EntryLibraryRemovalResult
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveConflictResolution
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveFeature
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMovePreview
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveRequest
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveResult
-import mihon.entry.interactions.merge.EntryMergeCommitIntent
-import mihon.entry.interactions.merge.EntryMergeEditReference
-import mihon.entry.interactions.merge.EntryMergeEditorEntryReference
-import mihon.entry.interactions.merge.EntryMergeExecutionResult
-import mihon.entry.interactions.merge.EntryMergeFeature
-import mihon.entry.interactions.merge.EntryMergePreparationResult
-import mihon.entry.interactions.merge.EntryMergePrepareIntent
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.migration.EntryMigrationSelectionResult
-import mihon.entry.interactions.migration.EntryMigrationSubject
-import mihon.entry.interactions.navigation.EntryContinueFeature
-import mihon.entry.interactions.navigation.EntryContinueResult
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
-import mihon.entry.interactions.tracking.EntryTrackingAccount
-import mihon.entry.interactions.tracking.EntryTrackingCollectionTrack
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.feature.library.search.LibrarySearchMatcher
-import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfileScopedStateEvent
-import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.CheckboxState
-import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
@@ -159,7 +154,6 @@ class LibraryViewModel(
     private val entryConsumptionFeature: EntryConsumptionFeature,
     private val entryLibraryFilterFeature: EntryLibraryFilterFeature,
     private val sourceDescriptions: EntrySourceDescriptionResolutionPort,
-    private val trackingFeature: EntryTrackingFeature,
     private val profileStore: ProfileStore,
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
@@ -227,19 +221,12 @@ class LibraryViewModel(
         gatedScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
                 val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
-                val tracking = observeLibraryTrackingCollection(
-                    trackingFilters = getTrackingFiltersFlow(),
-                    categories = getCategories.subscribeForProfile(profileId),
-                    globalSort = scopedLibraryPreferences.sortingMode.changes(),
-                    collection = trackingFeature::observeCollection,
-                )
                 combine(
                     mutableState.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
-                    combine(tracking, getTrackingFiltersFlow(), ::Pair),
                     observeLibraryFilterPreferences(scopedLibraryPreferences),
-                ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
+                ) { searchQuery, categories, favorites, itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
                     val searchMatcher = searchQuery?.let { query ->
@@ -248,7 +235,7 @@ class LibraryViewModel(
                             categoryNamesById = categoryNamesById,
                         )
                     }
-                    val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
+                    val filterResult = favorites.applyFilters(itemPreferences)
                     val filteredFavorites = filterResult.items
                         .let {
                             if (searchMatcher == null) {
@@ -266,8 +253,6 @@ class LibraryViewModel(
                         categories = categories,
                         favorites = filteredFavorites,
                         entryTypes = favorites.mapTo(mutableSetOf()) { it.entry.type },
-                        trackingEntries = tracking.entries,
-                        trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
                         hasActiveFilters = filterResult.hasActiveFilters,
                         filterAvailability = filterResult.availability,
                     )
@@ -336,8 +321,6 @@ class LibraryViewModel(
                         applySort = { pages, data, sortingMode, randomSortSeed ->
                             pages.applySort(
                                 favoritesById = data.favoritesById,
-                                trackingEntries = data.trackingEntries,
-                                trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
                                 globalSort = sortingMode,
                                 randomSortSeed = randomSortSeed,
                             )
@@ -393,8 +376,6 @@ class LibraryViewModel(
     }
 
     private fun List<LibraryItem>.applyFilters(
-        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
-        trackingFilter: Map<Long, TriState>,
         preferences: LibraryFilterPreferences,
     ): AppliedLibraryFilters {
         val targets = map { item ->
@@ -406,8 +387,6 @@ class LibraryViewModel(
                 hasBookmarks = item.hasBookmarks,
                 isCompleted = item.entry.status == EntryStatus.COMPLETED,
                 isOutsideReleasePeriod = item.entry.fetchInterval < 0,
-                trackerIds = trackingEntries[item.key.id].orEmpty()
-                    .mapTo(mutableSetOf()) { it.serviceId.value },
             )
         }
         val result = entryLibraryFilterFeature.filter(
@@ -422,7 +401,6 @@ class LibraryViewModel(
                     completed = preferences.filterCompleted,
                     outsideReleasePeriod = preferences.filterIntervalCustom,
                     outsideReleasePeriodEnabled = releasePeriodFilter.isOffered && preferences.skipOutsideReleasePeriod,
-                    tracking = trackingFilter,
                 ),
             ),
         )
@@ -435,21 +413,9 @@ class LibraryViewModel(
 
     private fun List<LibraryPage>.applySort(
         favoritesById: Map<LibraryItemKey, LibraryItem>,
-        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
-        trackingScoreSupportedEntryTypes: Set<EntryType>,
         globalSort: LibrarySort,
         randomSortSeed: Int,
     ): List<LibraryPage> {
-        val defaultTrackerScoreSortValue = -1.0
-        val trackerScores by lazy {
-            trackingEntries.mapValues { entry ->
-                when {
-                    entry.value.isEmpty() -> null
-                    else -> entry.value.map(EntryTrackingCollectionTrack::normalizedScore).average()
-                }
-            }
-        }
-
         return map { page ->
             val sort = page.category.effectiveLibrarySort(globalSort)
             if (sort.type == LibrarySort.Type.Random) {
@@ -460,18 +426,9 @@ class LibraryViewModel(
                 )
             }
 
-            val comparator = librarySortComparator(
-                sort = sort,
-                trackerScores = trackerScores,
-                defaultTrackerScore = defaultTrackerScoreSortValue,
-            )
+            val comparator = librarySortComparator(sort)
             val itemsWithSortKeys = page.itemIds.mapNotNull { itemId ->
-                favoritesById[itemId]?.let { item ->
-                    itemId to item.toLibrarySortKey(
-                        trackingScoreSupportedEntryTypes,
-                        defaultTrackerScoreSortValue,
-                    )
-                }
+                favoritesById[itemId]?.let { item -> itemId to item.toLibrarySortKey() }
             }
 
             val sortedItemIds = itemsWithSortKeys
@@ -482,10 +439,7 @@ class LibraryViewModel(
         }
     }
 
-    private fun LibraryItem.toLibrarySortKey(
-        trackerSupportedEntryTypes: Set<EntryType>,
-        defaultTrackerScoreSortValue: Double,
-    ): LibrarySortKey {
+    private fun LibraryItem.toLibrarySortKey(): LibrarySortKey {
         return LibrarySortKey(
             id = entry.id,
             title = entry.displayTitle,
@@ -496,7 +450,6 @@ class LibraryViewModel(
             latestUpload = latestUpload,
             entryFetchDate = entry.lastUpdate,
             dateAdded = entry.dateAdded,
-            trackerScore = if (entry.type in trackerSupportedEntryTypes) null else defaultTrackerScoreSortValue,
         )
     }
 
@@ -531,26 +484,6 @@ class LibraryViewModel(
                 isLocal = singleSourceId == LOCAL_SOURCE_ID,
                 downloadCount = item.memberEntries.sumOf { downloadCounts[it.id] ?: 0 },
             )
-        }
-    }
-
-    /**
-     * Flow of tracking filter preferences
-     *
-     * @return map of track id with the filter value
-     */
-    private fun getTrackingFiltersFlow(): Flow<Map<Long, TriState>> {
-        return trackingFeature.observeAccounts().flatMapLatest { snapshot ->
-            val loggedInServices = snapshot.accounts.filter(EntryTrackingAccount::isLoggedIn)
-            if (loggedInServices.isEmpty()) {
-                flowOf(emptyMap())
-            } else {
-                val filterFlows = loggedInServices.map { account ->
-                    val serviceId = account.service.id.value
-                    libraryPreferences.filterTracking(serviceId.toInt()).changes().map { serviceId to it }
-                }
-                combine(filterFlows) { it.toMap() }
-            }
         }
     }
 
@@ -1179,8 +1112,6 @@ class LibraryViewModel(
         val favorites: List<LibraryItem> = emptyList(),
         /** Entry types in the whole library, before filters and search narrow it. */
         val entryTypes: Set<EntryType> = emptySet(),
-        val trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>> = emptyMap(),
-        val trackingScoreSupportedEntryTypes: Set<EntryType> = emptySet(),
         val hasActiveFilters: Boolean = false,
         val filterAvailability: EntryLibraryFilterAvailability = EntryLibraryFilterAvailability(
             progressSummary = EntryLibraryFilterControlAvailability(emptySet(), emptySet()),

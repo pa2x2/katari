@@ -1,13 +1,13 @@
 package eu.kanade.tachiyomi.data.coil
 
 import android.content.Context
+import app.katari.entry.interactions.runtime.EntryInteractionImageComponents
 import coil3.ComponentRegistry
 import coil3.ImageLoader
 import coil3.request.allowRgb565
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
-import mihon.entry.interactions.runtime.EntryInteractionImageComponents
 
 /**
  * The application as the image loader's context, the system's animator duration scale, the entry types' image

@@ -9,13 +9,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
+import app.katari.entry.interactions.download.EntryDownloadSetting
+import app.katari.entry.interactions.translate.EntryTranslatePreferences
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.entry.interactions.download.EntryDownloadSetting
-import mihon.entry.interactions.translate.EntryTranslatePreferences
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.i18n.*

@@ -1,0 +1,246 @@
+package app.katari.presentation.kit.menu
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.ArrowRight
+import app.katari.icons.materialsymbols.rounded.RadioButtonChecked
+import app.katari.icons.materialsymbols.rounded.RadioButtonUnchecked
+import app.katari.presentation.kit.automation.exposeTestTags
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.control.Checkbox
+import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
+import app.katari.presentation.kit.surface.HorizontalDivider
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+import androidx.compose.material3.DropdownMenu as MaterialDropdownMenu
+import androidx.compose.material3.DropdownMenuItem as MaterialDropdownMenuItem
+
+/**
+ * Every app menu has the same fixed width, so menus opened from neighbouring buttons line up. [wide] gives room to
+ * menus whose items carry their own actions, such as saved presets that can each be edited and deleted. Picking an
+ * item closes the menu, so callers only act on the pick; check and radio items keep it open to set several.
+ */
+@Composable
+fun DropdownMenu(
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset.Zero,
+    focusable: Boolean = true,
+    wide: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val width = if (wide) WideMenuWidth else MenuWidth
+    MaterialDropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+        // The menu is a popup, a window of its own, so the app root's exposure of test tags doesn't reach its items.
+        modifier = modifier
+            .sizeIn(minWidth = width, maxWidth = width)
+            .exposeTestTags()
+            .testTag(DROPDOWN_MENU_TEST_TAG),
+        offset = offset,
+        shape = KatariTheme.shapes.medium,
+        containerColor = KatariTheme.colors.surfaceContainerHigh,
+        // A clipped popup is positioned within the window's visible frame, which excludes the system bars, while its
+        // anchor is measured from the edge-to-edge window's top. Material then thinks a menu opened from the dock has
+        // no room above it and pins it to the window bottom, detached from the item.
+        properties = PopupProperties(focusable = focusable, clippingEnabled = false),
+        tonalElevation = MenuDefaults.TonalElevation,
+        shadowElevation = MenuDefaults.ShadowElevation,
+        border = null,
+    ) {
+        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) {
+            // A menu opened over selectable text, such as a reader's, would otherwise give the text's selection its
+            // items, which it can't place: they are in the popup's own window, and a press on one crashes
+            DisableSelection { KeyboardShortcutLayer { content() } }
+        }
+    }
+}
+
+// UI automation, such as the showcase capture scenes, looks for an item inside the open menu by this, apart from the
+// screen behind it, which may show the same text.
+private const val DROPDOWN_MENU_TEST_TAG = "dropdown_menu"
+
+/** Closes the menu the current content sits in, so a submenu can close its parent along with itself. */
+private val LocalDismissMenu = staticCompositionLocalOf<() -> Unit> { {} }
+
+/**
+ * [trailing] holds a control or short label at the item's end, such as a delete button or "Retry". [supportingLabel]
+ * adds a second line that tells similar items apart, such as where a feed comes from; [leading] replaces [icon] with an
+ * image of the item itself, such as a source's icon. [selected] fills the item that is current, such as the open tab.
+ */
+@Composable
+fun DropdownMenuItem(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    supportingLabel: String? = null,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
+) {
+    MenuItem(label, onClick, modifier, icon, enabled, supportingLabel, leading, trailing, selected, closesMenu = true)
+}
+
+@Composable
+private fun MenuItem(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    supportingLabel: String? = null,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
+    closesMenu: Boolean,
+) {
+    val dismissMenu = LocalDismissMenu.current
+    MaterialDropdownMenuItem(
+        text = {
+            if (supportingLabel == null) {
+                Text(label)
+            } else {
+                Column {
+                    Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        supportingLabel,
+                        role = TextRole.Supporting,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        },
+        onClick = {
+            onClick()
+            if (closesMenu) dismissMenu()
+        },
+        modifier = modifier
+            .padding(horizontal = KatariTheme.spacing.xs)
+            .clip(KatariTheme.shapes.small)
+            .then(if (selected) Modifier.background(KatariTheme.colors.selected) else Modifier),
+        leadingIcon = leading ?: icon?.let { { Icon(imageVector = it, contentDescription = null) } },
+        trailingIcon = trailing,
+        enabled = enabled,
+    )
+}
+
+@Composable
+fun CheckMenuItem(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+) {
+    MenuItem(
+        label = label,
+        onClick = { onCheckedChange(!checked) },
+        modifier = modifier,
+        icon = icon,
+        trailing = { Checkbox(checked = checked, onCheckedChange = null) },
+        closesMenu = false,
+    )
+}
+
+@Composable
+fun RadioMenuItem(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    MenuItem(
+        label = label,
+        onClick = onClick,
+        modifier = modifier,
+        closesMenu = false,
+        trailing = {
+            if (selected) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.RadioButtonChecked,
+                    contentDescription = stringResource(MR.strings.selected),
+                    tone = ContentTone.Primary,
+                )
+            } else {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.RadioButtonUnchecked,
+                    contentDescription = stringResource(MR.strings.not_selected),
+                )
+            }
+        },
+    )
+}
+
+/** The break between groups of related items in one menu, such as a list of feeds and the actions that manage them. */
+@Composable
+fun DropdownMenuDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.xs))
+}
+
+/**
+ * An item that opens a submenu. [children] receives a callback for an item that was picked: it closes the submenu and
+ * the menu it opened from. Dismissing the submenu by tapping outside or going back only closes the submenu.
+ */
+@Composable
+fun NestedMenuItem(
+    label: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    children: @Composable ColumnScope.(close: () -> Unit) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val dismissParent = LocalDismissMenu.current
+    val dismissSubmenu = { expanded = false }
+    val close = {
+        dismissSubmenu()
+        dismissParent()
+    }
+    Box {
+        MenuItem(
+            label = label,
+            onClick = { expanded = true },
+            icon = icon,
+            trailing = {
+                Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowRight, contentDescription = null)
+            },
+            closesMenu = false,
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = dismissSubmenu, modifier = modifier) {
+            CompositionLocalProvider(LocalDismissMenu provides close) { children(close) }
+        }
+    }
+}
+
+private val MenuWidth = 196.dp
+private val WideMenuWidth = 280.dp

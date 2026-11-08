@@ -1,0 +1,38 @@
+package app.katari.tts.api.voice
+
+import app.katari.tts.api.engine.TtsEngineId
+
+sealed interface TtsVoiceInspection {
+    data class Available(
+        val engine: TtsEngineId,
+        val voices: List<TtsVoice>,
+        val defaultVoice: TtsVoiceId? = null,
+    ) : TtsVoiceInspection
+
+    data class VoiceDataRequired(
+        val engine: TtsEngineId,
+        val reason: String? = null,
+    ) : TtsVoiceInspection {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
+
+    data class Unavailable(
+        val engine: TtsEngineId,
+        val reason: String? = null,
+    ) : TtsVoiceInspection {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
+
+    data class Failed(
+        val engine: TtsEngineId,
+        val reason: String,
+    ) : TtsVoiceInspection {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+}

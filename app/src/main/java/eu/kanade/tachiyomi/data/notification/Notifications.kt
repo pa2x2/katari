@@ -5,12 +5,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_DEFAULT
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
+import app.katari.entry.interactions.download.EntryDownloadNotifications
+import app.katari.entry.interactions.media.playback.VideoPlaybackNotifications
+import app.katari.entry.interactions.translate.EntryTranslateNotifications
+import app.katari.profiles.core.Profile
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
-import mihon.entry.interactions.download.EntryDownloadNotifications
-import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
-import mihon.entry.interactions.translate.EntryTranslateNotifications
-import mihon.feature.profiles.core.Profile
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -45,7 +45,7 @@ object Notifications {
 
     fun channelLibraryUpdates(profileId: Long) = "$CHANNEL_LIBRARY_UPDATES_PREFIX$profileId"
 
-    fun groupLibraryUpdates(profileId: Long) = "mihon.entry.library_updates.$profileId"
+    fun groupLibraryUpdates(profileId: Long) = "app.katari.entry.library_updates.$profileId"
 
     fun idLibraryUpdates(profileId: Long) = ID_LIBRARY_UPDATES_BASE - profileId.toInt()
 
@@ -87,6 +87,15 @@ object Notifications {
     const val CHANNEL_MONTH_RECAP = "month_recap_channel"
     const val ID_STATISTICS_RECAP = -801
     const val ID_STATISTICS_YEAR_RECAP = -802
+
+    /** Sync's notifications: questions waiting for an answer, and sync having stopped (D028). */
+    const val CHANNEL_SYNC = "sync_channel"
+    const val ID_SYNC_QUESTIONS = -901
+    const val ID_SYNC_STOPPED = -902
+
+    /** The progress of a long run, such as a first sync, while it goes. */
+    const val CHANNEL_SYNC_PROGRESS = "sync_progress_channel"
+    const val ID_SYNC_LONG_RUN = -903
 
     /**
      * Notification channel used for Incognito Mode
@@ -235,6 +244,13 @@ object Notifications {
                 },
                 buildNotificationChannel(VideoPlaybackNotifications.CHANNEL, IMPORTANCE_LOW) {
                     setName(context.stringResource(MR.strings.channel_video_playback))
+                    setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_SYNC, IMPORTANCE_DEFAULT) {
+                    setName(context.stringResource(MR.strings.sync_title))
+                },
+                buildNotificationChannel(CHANNEL_SYNC_PROGRESS, IMPORTANCE_LOW) {
+                    setName(context.stringResource(MR.strings.sync_progress_channel))
                     setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_INCOGNITO_MODE, IMPORTANCE_LOW) {

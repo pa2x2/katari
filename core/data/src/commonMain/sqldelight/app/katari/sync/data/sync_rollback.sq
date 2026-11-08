@@ -1,0 +1,72 @@
+-- Emptying the person's data in some profiles before an account rollback restores a backup over it (D046a). Each
+-- statement leaves what the capture triggers see as the person removing it: an entry leaves the library, a chapter
+-- is marked unread, a history, progress, category or per-entry choice row is deleted. Chapters, downloads,
+-- covers and reading statistics stay: they are not the person's choices, or are kept as last synced (D046a).
+
+leaveLibrary:
+UPDATE entries
+SET favorite = 0, library_pinned = 0
+WHERE profile_id IN :profileIds AND (favorite = 1 OR library_pinned = 1);
+
+clearChapterMarks:
+UPDATE chapters
+SET read = 0, bookmark = 0
+WHERE (read = 1 OR bookmark = 1) AND entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteHistory:
+DELETE FROM history
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteProgress:
+DELETE FROM entry_progress_state
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteCategoryMemberships:
+DELETE FROM entries_categories
+WHERE profile_id IN :profileIds;
+
+deleteCategoryUpdateRules:
+DELETE FROM category_update_rules
+WHERE profile_id IN :profileIds;
+
+-- The uncategorized category (id 0) is the app's own, never the person's.
+deleteCategories:
+DELETE FROM categories
+WHERE profile_id IN :profileIds AND _id != 0;
+
+deleteMerges:
+DELETE FROM merged_entries
+WHERE profile_id IN :profileIds;
+
+deleteExcludedScanlators:
+DELETE FROM excluded_scanlators
+WHERE profile_id IN :profileIds;
+
+deleteUpdateModes:
+DELETE FROM entry_update_modes
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteViewerSettings:
+DELETE FROM viewer_setting_overrides
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteDownloadPreferences:
+DELETE FROM download_preferences
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteTranslationLanguages:
+DELETE FROM entry_translation_languages
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deletePlaybackPreferences:
+DELETE FROM playback_preferences
+WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+-- Matches found automatically are a cache; only the ones the person picked are theirs.
+deleteIntroTimesPicks:
+DELETE FROM intro_times_matches
+WHERE picked_by_user = 1 AND entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteTheIntroDbPicks:
+DELETE FROM theintrodb_matches
+WHERE picked_by_user = 1 AND entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);

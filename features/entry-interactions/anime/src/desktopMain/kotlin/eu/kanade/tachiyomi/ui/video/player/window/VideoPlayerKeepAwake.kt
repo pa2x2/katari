@@ -1,0 +1,41 @@
+package eu.kanade.tachiyomi.ui.video.player.window
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import app.katari.core.platform.power.ScreenIdleInhibitor
+import app.katari.entry.viewer.chrome.ui.window.KeepScreenAwake
+import app.katari.video.engine.spi.player.VideoPlayerState
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * Keeps the screen awake while the watched episode plays, or waits to play, where it is seen: in the main window while
+ * that is shown, or in picture-in-picture ([inPictureInPicture]), whatever the main window does.
+ */
+@Composable
+internal fun VideoPlayerKeepAwake(
+    playback: VideoPlayerPlaybackController,
+    inhibitor: ScreenIdleInhibitor,
+    inPictureInPicture: Boolean,
+) {
+    val player = playback.player
+    val playing by produceState(false, player) {
+        value = false
+        player?.state?.collect { value = it.meansToPlay }
+    }
+    KeepScreenAwake(
+        active = playing,
+        reason = stringResource(MR.strings.anime_playback_keeps_screen_awake),
+        inhibitor = inhibitor,
+        evenWhenHidden = inPictureInPicture,
+    )
+}
+
+// Buffering counts, so a stall doesn't let go of the screen only to take it again a moment later
+private val VideoPlayerState.meansToPlay: Boolean
+    get() = playWhenReady && when (playback) {
+        VideoPlayerState.Playback.Ready, VideoPlayerState.Playback.Buffering -> true
+        VideoPlayerState.Playback.Idle, VideoPlayerState.Playback.Ended -> false
+    }

@@ -1,0 +1,106 @@
+package tachiyomi.data.source
+
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.data.DatabaseHandler
+import tachiyomi.domain.source.model.MissingLibrarySource
+import tachiyomi.domain.source.model.SourceWithCount
+import tachiyomi.domain.source.model.UnifiedStubSource
+import tachiyomi.domain.source.repository.SourceRepository
+import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.source.model.Source as DomainSource
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@Inject
+@SingleIn(AppScope::class)
+class SourceRepositoryImpl(
+    private val sourceManager: SourceManager,
+    private val handler: DatabaseHandler,
+    private val profileProvider: ActiveProfileProvider,
+    private val sourceDescription: EntrySourceDescriptionResolutionPort,
+) : SourceRepository {
+
+    override fun getSources(): Flow<List<DomainSource>> {
+        return sourceManager.sources.map { sources -> sources.map(::mapSourceToDomainSource) }
+    }
+
+    override fun getSourcesWithFavoriteCount(): Flow<List<Pair<DomainSource, Long>>> {
+        return combine(
+            profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+                handler.subscribeToList { entriesQueries.getSourceIdWithFavoriteCount(profileId) }
+            },
+            sourceManager.sources,
+        ) { sourceIdWithFavoriteCount, _ -> sourceIdWithFavoriteCount }
+            .map {
+                it.map { (sourceId, count) ->
+                    val source = sourceManager.getOrStub(sourceId)
+                    val domainSource = mapSourceToDomainSource(source).copy(
+                        isStub = source is UnifiedStubSource,
+                    )
+                    domainSource to count
+                }
+            }
+    }
+
+    override fun getSourcesWithNonLibraryEntries(): Flow<List<SourceWithCount>> {
+        val sourceIdWithNonLibraryEntries = profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
+            handler.subscribeToList { entriesQueries.getSourceIdsWithNonLibraryEntries(profileId) }
+        }
+        return sourceIdWithNonLibraryEntries.map { sourceId ->
+            sourceId.map { (sourceId, count) ->
+                val source = sourceManager.getOrStub(sourceId)
+                val domainSource = mapSourceToDomainSource(source).copy(
+                    isStub = source is UnifiedStubSource,
+                )
+                SourceWithCount(domainSource, count)
+            }
+        }
+    }
+
+    override fun getMissingLibrarySources(): Flow<List<MissingLibrarySource>> {
+        return combine(
+            handler.subscribeToList {
+                entriesQueries.getFavoriteCountsBySourceAndProfile { profileId, source, count ->
+                    Triple(source, profileId, count)
+                }
+            },
+            sourceManager.sources,
+        ) { counts, _ ->
+            counts
+                .groupBy({ it.first }, { it.second to it.third })
+                .mapNotNull { (sourceId, profileCounts) ->
+                    val source =
+                        sourceManager.getDisplayInfo(sourceId).takeIf { it.isMissing } ?: return@mapNotNull null
+                    MissingLibrarySource(
+                        source = source,
+                        countsByProfile = profileCounts.toMap(),
+                    )
+                }
+        }
+    }
+
+    override suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long> {
+        return handler.awaitList { entriesQueries.getSourcesWithEntries(sourceIds) }.toSet()
+    }
+
+    private fun mapSourceToDomainSource(source: UnifiedSource): DomainSource {
+        val description = sourceDescription.describe(source)
+        return DomainSource(
+            id = source.id,
+            lang = description.language,
+            name = source.name,
+            catalogue = description.catalogue,
+            supportedEntryTypes = description.supportedEntryTypes,
+            isStub = false,
+        )
+    }
+}

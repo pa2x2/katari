@@ -3,6 +3,8 @@ import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
+import WideShots from "../../guide/WideShots.astro";
+import { plannedCapture } from "../../media/planned-captures.ts";
 import { leavesSite, sitePath } from "../../site/links.ts";
 ---
 
@@ -40,12 +42,24 @@ import { leavesSite, sitePath } from "../../site/links.ts";
   <Task id="mouse-and-keys" title="Mouse and keys" platform="Linux">
     <p>
       Click the picture to play or pause, double-click for full screen, and hold the button for 2× speed. Right-click opens the
-      settings. The wheel sets the volume, scrolling sideways seeks, and Ctrl with the wheel zooms.
+      settings. The wheel sets the volume, scrolling sideways seeks, and Ctrl with the wheel or a touchpad pinch zooms. Ctrl with the
+      arrow keys moves a zoomed picture.
     </p>
     <p>
       Space plays or pauses, the arrow keys seek and set the volume, F switches full screen, and I moves the episode to a small
       picture-in-picture window. Press ? to list every key. Hovering a button shows its key as well.
     </p>
+    <WideShots
+      shots={[
+        { image: plannedCapture("desktop-keys.png"), alt: "The player listing every key it knows", caption: "Every key the player knows", device: "window" },
+        {
+          image: plannedCapture("desktop-pip.png"),
+          alt: "An episode playing in the picture-in-picture window",
+          caption: "Picture-in-picture",
+          device: "picture-in-picture",
+        },
+      ]}
+    />
   </Task>
 
   <Task id="servers" title="Pick a server, quality and tracks">
@@ -62,6 +76,16 @@ import { leavesSite, sitePath } from "../../site/links.ts";
       If a server fails while an episode loads, the player tells you and tries the next one. It never leaves a server you picked
       yourself; tap <strong>Try another server</strong> instead.
     </p>
+    <WideShots
+      shots={[
+        {
+          image: plannedCapture("player-settings.png"),
+          alt: "The player's settings, with the server, quality and Apply source",
+          caption: "The player's settings",
+          device: "phone-landscape",
+        },
+      ]}
+    />
   </Task>
 
   <Task id="skip" title="Skip intros and credits">
@@ -70,13 +94,21 @@ import { leavesSite, sitePath } from "../../site/links.ts";
       only credits are left and another episode follows, the button says <strong>Next episode</strong>.
     </p>
     <p>
+      When the source marks none, <Path>Settings › Players › Anime player › Find intro and credits times online</Path> looks them up
+      on <strong>AniSkip</strong> and <strong>TheIntroDB</strong>, each with its own switch. Where both have times, AniSkip's are used.
+    </p>
+    <p>
       <Path>Settings › Players › Anime player › Skip intro and credits</Path> chooses between showing the button, skipping
       automatically, or neither. The player's settings have the same row for a single title. An automatic skip can be undone, and an
       intro that is part of the story is never skipped automatically.
     </p>
   </Task>
 
-  <Task id="episodes" title="Filler, stills and summaries">
+  <Task
+    id="episodes"
+    title="Filler, stills and summaries"
+    shot={{ image: plannedCapture("episodes.png"), alt: "Episodes listed with their stills and a summary", caption: "Episodes with stills" }}
+  >
     <p>
       Some sources mark filler episodes, and give episodes a still and a short summary. To hide filler, tap the filter button on the
       title's page and set <strong>Filler</strong> on the <strong>Filter</strong> tab. Continue and the player's next episode then skip

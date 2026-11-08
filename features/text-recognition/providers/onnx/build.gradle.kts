@@ -1,0 +1,28 @@
+plugins {
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.spotless)
+
+    alias(libs.plugins.metro)
+}
+
+android {
+    namespace = "app.katari.text.recognition.provider.onnx"
+
+    defaultConfig {
+        consumerProguardFiles("consumer-proguard.pro")
+    }
+}
+
+dependencies {
+    implementation(projects.features.textRecognition.api)
+    implementation(projects.features.textRecognition.spi)
+    implementation(libs.kotlinx.coroutines.core)
+    // Its GitHub release has no metadata naming the artifact's type.
+    implementation(libs.onnxruntime.android) {
+        artifact { type = "aar" }
+    }
+
+    testImplementation(libs.bundles.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
+}

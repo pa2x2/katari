@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -14,6 +17,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.platform.currentPlatformContext
+import app.katari.missingextensions.ui.MissingExtensionsLibraryNotice
+import app.katari.missingextensions.ui.MissingExtensionsSheet
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.rememberAppBarScrollBehavior
+import app.katari.presentation.kit.selection.ItemSelection
+import app.katari.presentation.kit.selection.SelectableItems
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sourcemigration.config.MigrationConfigScreen
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -36,6 +52,7 @@ import eu.kanade.presentation.library.components.librarySelectionActions
 import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -47,22 +64,11 @@ import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.feature.migration.config.MigrationConfigScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
-import mihon.presentation.kit.selection.ItemSelection
-import mihon.presentation.kit.selection.SelectableItems
-import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
@@ -104,6 +110,7 @@ data object LibraryTab : Tab {
 
         val snackbarHostState = remember { SnackbarHostState() }
         val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
+        var showMissingExtensions by rememberSaveable { mutableStateOf(false) }
 
         // A started update also reports its progress on the library's progress strip.
         val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
@@ -206,6 +213,7 @@ data object LibraryTab : Tab {
                             }
                         }
                     },
+                    onClickSync = { navigator.push(SettingsScreen(SettingsScreen.Destination.Sync)) },
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
                     scrollBehavior = scrollBehavior,
@@ -260,9 +268,9 @@ data object LibraryTab : Tab {
                             navigator.push(EntryScreen(item.entry.id))
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
-                            scope.launchIO {
+                            scope.launch {
                                 val result = viewModel.continueEntry(context, item.entry)
-                                withUIContext { openMessages.report(item.entry.type, result) }
+                                openMessages.report(item.entry.type, result)
                             }
                             Unit
                         }.takeIf { state.showContinueButton },
@@ -277,6 +285,12 @@ data object LibraryTab : Tab {
                         onRefresh = suspend { onClickRefresh(state) }.takeIf { updateQueue.isOffered },
                         updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
+                        notice = {
+                            MissingExtensionsLibraryNotice(
+                                onReview = { showMissingExtensions = true },
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
+                        },
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
@@ -294,6 +308,16 @@ data object LibraryTab : Tab {
                     )
                 }
             }
+        }
+
+        if (showMissingExtensions) {
+            MissingExtensionsSheet(
+                onDismissRequest = { showMissingExtensions = false },
+                onOpenStores = {
+                    showMissingExtensions = false
+                    navigator.push(ExtensionStoresScreen())
+                },
+            )
         }
 
         val onDismissRequest = viewModel::closeDialog

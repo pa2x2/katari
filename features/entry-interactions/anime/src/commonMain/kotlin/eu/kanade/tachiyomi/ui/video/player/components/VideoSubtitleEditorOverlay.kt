@@ -1,0 +1,192 @@
+package eu.kanade.tachiyomi.ui.video.player.components
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.video.engine.spi.player.SubtitleCue
+import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_X
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_Y
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_X
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_Y
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
+import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
+import tachiyomi.domain.entry.model.PictureFraming
+
+/**
+ * The subtitle editor: [previewCues] where the player would draw subtitles of the [draftAppearance] in a picture of
+ * [aspectRatio] framed as [framing], at their real size and place, and the style panel over it. The preview is laid out
+ * over the whole player, as the player lays out its subtitles, so where it sits is where they will show; the panel's
+ * handle slides the panel away to reach a preview under it.
+ */
+@Composable
+internal fun VideoSubtitleEditorOverlay(
+    draftAppearance: VideoSubtitleAppearance,
+    keepInPicture: Boolean,
+    aspectRatio: Float?,
+    framing: PictureFraming,
+    subtitleKeepsOwnStyle: Boolean,
+    previewCues: List<SubtitleCue>,
+    onDraftChange: (VideoSubtitleAppearance) -> Unit,
+    onKeepInPictureChange: (Boolean) -> Unit,
+    onDismissRequest: () -> Unit,
+    onReset: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var pictureAreaSize by remember { mutableStateOf(IntSize.Zero) }
+    var drawerExpanded by remember { mutableStateOf(true) }
+    val normalizedAppearance = draftAppearance.normalized()
+    val gapPx = with(LocalDensity.current) { KatariTheme.spacing.s.toPx() }
+    val layout = videoSubtitleLayout(
+        playerWidth = pictureAreaSize.width.toFloat(),
+        playerHeight = pictureAreaSize.height.toFloat(),
+        aspectRatio = aspectRatio,
+        framing = framing,
+        appearance = normalizedAppearance,
+        keepInPicture = keepInPicture,
+        gapPx = gapPx,
+    )
+    // Half-open on a table the picture, and so the subtitles, keep to the upper half
+    val posture = currentVideoPlayerPosture()
+    val pictureArea = when (posture) {
+        is VideoPlayerPosture.Tabletop -> Modifier.fillMaxWidth().height(posture.pictureBottom)
+        else -> Modifier.fillMaxSize()
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Box(modifier = pictureArea.onSizeChanged { pictureAreaSize = it }) {
+            SubtitleEditorSample(
+                appearance = normalizedAppearance,
+                layout = layout,
+                previewCues = previewCues,
+                onDraftChange = onDraftChange,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight(0.92f)
+                .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true)
+                .padding(end = KatariTheme.spacing.m, top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AnimatedVisibility(
+                visible = drawerExpanded,
+                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
+                exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
+            ) {
+                VideoSubtitleEditorPanel(
+                    appearance = normalizedAppearance,
+                    subtitleKeepsOwnStyle = subtitleKeepsOwnStyle,
+                    keepInPicture = keepInPicture,
+                    onDraftChange = onDraftChange,
+                    onKeepInPictureChange = onKeepInPictureChange,
+                    onReset = onReset,
+                    onCancel = onDismissRequest,
+                    onDone = onDone,
+                    modifier = Modifier.fillMaxHeight(),
+                )
+            }
+
+            VideoSubtitleEditorPanelHandle(
+                expanded = drawerExpanded,
+                onToggle = { drawerExpanded = !drawerExpanded },
+                modifier = Modifier.padding(start = KatariTheme.spacing.s),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubtitleEditorSample(
+    appearance: VideoSubtitleAppearance,
+    layout: VideoSubtitleLayout,
+    previewCues: List<SubtitleCue>,
+    onDraftChange: (VideoSubtitleAppearance) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val latestAppearance by rememberUpdatedState(appearance)
+    val latestLayout by rememberUpdatedState(layout)
+    var sampleBounds by remember { mutableStateOf<Rect?>(null) }
+
+    Box(modifier = modifier) {
+        VideoSubtitles(
+            cues = previewCues,
+            appearance = appearance,
+            layout = { _, _ -> layout },
+            modifier = Modifier
+                .fillMaxSize()
+                .onGloballyPositioned { sampleBounds = it.boundsInRoot() },
+        )
+
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .pointerInput(Unit) {
+                    var dragging = false
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            dragging = sampleBounds?.contains(offset) == true
+                        },
+                        onDragCancel = {
+                            dragging = false
+                        },
+                        onDragEnd = {
+                            dragging = false
+                        },
+                    ) { change, dragAmount ->
+                        if (!dragging) {
+                            return@detectDragGestures
+                        }
+                        val base = latestLayout
+                        if (base.areaWidth > 0f && base.areaHeight > 0f) {
+                            val currentAppearance = latestAppearance
+                            onDraftChange(
+                                currentAppearance.copy(
+                                    offsetX = (currentAppearance.offsetX + (dragAmount.x / base.areaWidth))
+                                        .coerceIn(MIN_SUBTITLE_OFFSET_X, MAX_SUBTITLE_OFFSET_X),
+                                    offsetY = (currentAppearance.offsetY + (dragAmount.y / base.areaHeight))
+                                        .coerceIn(MIN_SUBTITLE_OFFSET_Y, MAX_SUBTITLE_OFFSET_Y),
+                                ),
+                            )
+                            change.consume()
+                        } else {
+                            dragging = false
+                        }
+                    }
+                },
+        )
+    }
+}

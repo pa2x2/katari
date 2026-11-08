@@ -3,6 +3,16 @@ package eu.kanade.tachiyomi.ui.browse.migration.entry
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.common.utils.mutate
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.merge.EntryMergeLibraryGroup
+import app.katari.entry.interactions.merge.EntryMergeLibraryGroupingFeature
+import app.katari.entry.interactions.migration.EntryMigrationAvailability
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.entry.interactions.migration.EntryMigrationSelectionResult
+import app.katari.entry.interactions.migration.EntryMigrationSubject
+import app.katari.sourcemigration.session.model.SourceMigrationGroupSelection
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -35,16 +45,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.core.common.utils.mutate
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.merge.EntryMergeLibraryGroup
-import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
-import mihon.entry.interactions.migration.EntryMigrationAvailability
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.migration.EntryMigrationSelectionResult
-import mihon.entry.interactions.migration.EntryMigrationSubject
-import mihon.feature.migration.session.model.SourceMigrationGroupSelection
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -100,8 +101,7 @@ class MigrateEntriesViewModel(
             }
         }
         .flatMapLatest(::withProgress)
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@MigrateEntriesViewModel) {
             _events.send(MigrationEntriesEvent.FailedFetchingFavorites)
             emit(emptyList())
         }

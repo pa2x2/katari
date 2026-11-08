@@ -3,9 +3,9 @@ package eu.kanade.tachiyomi.ui.more
 import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.onboarding.MihonApp
-import mihon.core.platform.PlatformContext
 
 /** Mihon's release, FOSS and debug builds, by package name. */
 @Inject

@@ -1,0 +1,292 @@
+package app.katari.entry.interactions.book.document.reader.settings
+
+import app.katari.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
+import app.katari.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import app.katari.entry.interactions.reader.settings.BookDocumentLineSpacing
+import app.katari.entry.interactions.reader.settings.BookDocumentMargins
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderFont
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderSettings
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderTheme
+import app.katari.entry.interactions.reader.settings.BookDocumentReadingMode
+import app.katari.entry.interactions.reader.settings.BookDocumentTextAlignment
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.reader.settings.ReaderPageLayout
+import app.katari.entry.viewer.settings.ViewerSettingCodecs
+import app.katari.entry.viewer.settings.ViewerSettingDefinition
+import app.katari.entry.viewer.settings.ViewerSettingId
+import app.katari.entry.viewer.settings.ViewerSettingScope
+import app.katari.entry.viewer.settings.ViewerSettingsCategory
+import app.katari.entry.viewer.settings.shared.StandardReaderSharedSettingIds
+
+internal class BookDocumentReaderSettingsProvider(
+    preferences: BookDocumentReaderPreferences,
+    chapterPreparationPreferences: ReaderChapterPreparationPreferences,
+    automaticTranslationPreferences: BookAutomaticTranslationPreferences,
+) : BookDocumentReaderSettings {
+    override val id = BookDocumentReaderSettings.SURFACE_ID
+    override val category = ViewerSettingsCategory.READER
+    override val displayName = "Book reader"
+
+    override val readingModeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.READING_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReadingMode.SCROLL,
+        profilePreference = preferences.readingMode,
+        codec = ViewerSettingCodecs.codec(encode = BookDocumentReadingMode::name, decode = { encoded ->
+            BookDocumentReadingMode.entries.firstOrNull {
+                it.name ==
+                    encoded
+            }
+        }),
+    )
+
+    override val pageLayoutSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.PAGE_LAYOUT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = ReaderPageLayout.AUTOMATIC,
+        profilePreference = preferences.pageLayout,
+        codec = ViewerSettingCodecs.codec(
+            encode = ReaderPageLayout::name,
+            decode = { encoded -> ReaderPageLayout.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val tapZonesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TAP_ZONES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = 0,
+        profilePreference = preferences.tapZones,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in 0..5 },
+    )
+
+    override val tapInversionSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TAP_INVERSION_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = 0,
+        profilePreference = preferences.tapInversion,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in 0..3 },
+    )
+
+    override val animatePagesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.ANIMATE_PAGES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.animatePages,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val volumeKeysSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.VOLUME_KEYS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.volumeKeys,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val invertVolumeKeysSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.INVERT_VOLUME_KEYS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.invertVolumeKeys,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val themeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.THEME_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderTheme.App,
+        profilePreference = preferences.theme,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentReaderTheme::id,
+            decode = BookDocumentReaderTheme::fromId,
+        ),
+    )
+
+    override val savedColors = preferences.savedColors
+
+    override val textRules = preferences.textRules
+
+    val publisherStylesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.publisherStyles,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val textSizeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_SIZE_PERCENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
+        profilePreference = preferences.textSizePercent,
+        codec = ViewerSettingCodecs.Int,
+        validate = BookDocumentReaderSettings::isValidTextSizePercent,
+    )
+
+    override val fontSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.FONT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderFont.Book,
+        profilePreference = preferences.font,
+        codec = ViewerSettingCodecs.codec(encode = BookDocumentReaderFont::id, decode = BookDocumentReaderFont::fromId),
+    )
+
+    override val lineSpacingSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.LINE_SPACING_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentLineSpacing.BOOK,
+        profilePreference = preferences.lineSpacing,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentLineSpacing::name,
+            decode = { encoded -> BookDocumentLineSpacing.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val marginsSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.MARGINS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentMargins.BOOK,
+        profilePreference = preferences.margins,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentMargins::name,
+            decode = { encoded -> BookDocumentMargins.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val textAlignmentSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_ALIGNMENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentTextAlignment.BOOK,
+        profilePreference = preferences.textAlignment,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentTextAlignment::name,
+            decode = { encoded -> BookDocumentTextAlignment.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val keepScreenAliveSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.KEEP_SCREEN_ALIVE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderSettings.DEFAULT_KEEP_SCREEN_ALIVE,
+        profilePreference = preferences.keepScreenAlive,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showStatusBarSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_STATUS_BAR_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.showStatusBar,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showTimeAndBatterySetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_TIME_AND_BATTERY_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.showTimeAndBattery,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showNavigationBarSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_NAVIGATION_BAR_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.showNavigationBar,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showTextSelectionMenuSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_TEXT_SELECTION_MENU_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.showTextSelectionMenu,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showReadingProgressSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_READING_PROGRESS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.showReadingProgress,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val readingProgressStyleSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.READING_PROGRESS_STYLE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderProgressStyle.PERCENTAGE,
+        profilePreference = preferences.readingProgressStyle,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentReaderProgressStyle::name,
+            decode = { encoded -> BookDocumentReaderProgressStyle.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val chapterTransitionModeSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.CHAPTER_TRANSITION_MODE_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = ChapterTransitionMode.ALWAYS,
+        profilePreference = preferences.chapterTransitionMode,
+        codec = ViewerSettingCodecs.codec(
+            encode = ChapterTransitionMode::name,
+            decode = { encoded -> ChapterTransitionMode.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    private val prepareNextChapterPreference = chapterPreparationPreferences.prepareNextChapter(PROVIDER_ID)
+
+    val prepareNextChapterSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, StandardReaderSharedSettingIds.NextChapterPreparation.value),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = prepareNextChapterPreference.defaultValue(),
+        profilePreference = prepareNextChapterPreference,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    val automaticTranslationSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookAutomaticTranslationPreferences.AUTOMATIC_SELECTION_SETTING_ID.value),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = automaticTranslationPreferences.automaticSelectionEnabled(PROVIDER_ID),
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val settings = listOf(
+        readingModeSetting,
+        pageLayoutSetting,
+        tapZonesSetting,
+        tapInversionSetting,
+        animatePagesSetting,
+        volumeKeysSetting,
+        invertVolumeKeysSetting,
+        themeSetting,
+        publisherStylesSetting,
+        textSizeSetting,
+        fontSetting,
+        lineSpacingSetting,
+        marginsSetting,
+        textAlignmentSetting,
+        keepScreenAliveSetting,
+        showStatusBarSetting,
+        showTimeAndBatterySetting,
+        showNavigationBarSetting,
+        showTextSelectionMenuSetting,
+        showReadingProgressSetting,
+        readingProgressStyleSetting,
+        chapterTransitionModeSetting,
+        prepareNextChapterSetting,
+        automaticTranslationSetting,
+    )
+
+    override val sharedSettingDefinitions = mapOf(
+        StandardReaderSharedSettingIds.NextChapterPreparation to prepareNextChapterSetting,
+        BookAutomaticTranslationPreferences.AUTOMATIC_SELECTION_SETTING_ID to automaticTranslationSetting,
+    )
+
+    companion object {
+        const val PROVIDER_ID = BookDocumentReaderSettings.SURFACE_ID
+    }
+}

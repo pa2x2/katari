@@ -9,11 +9,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.currentPlatformContext
+import app.katari.missingextensions.model.MissingExtension
+import app.katari.missingextensions.restore.BackupMissingExtensions
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.BottomActionBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.surface.GroupCard
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.ui.components.ProfileCheckRow
+import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.status.SyncStatusState
+import app.katari.ui.di.AppUiScope
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metro.AppScope
@@ -24,33 +49,19 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.ui.components.ProfileCheckRow
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.CheckRow
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.BottomActionBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.GroupCard
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -67,6 +78,15 @@ class RestoreBackupScreen(
         val scope = rememberCoroutineScope()
         val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
+        var confirmRollBack by rememberSaveable { mutableStateOf(false) }
+        val restore = {
+            scope.launch {
+                if (profileUnlock.unlock(context, state.lockedSelectedProfileNames)) {
+                    model.startRestore()
+                    navigator.pop()
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -80,14 +100,7 @@ class RestoreBackupScreen(
                 BottomActionBar {
                     Button(
                         label = stringResource(MR.strings.action_restore),
-                        onClick = {
-                            scope.launch {
-                                if (profileUnlock.unlock(context, state.lockedSelectedProfileNames)) {
-                                    model.startRestore()
-                                    navigator.pop()
-                                }
-                            }
-                        },
+                        onClick = { if (state.options.rollBackAccount) confirmRollBack = true else restore() },
                         modifier = Modifier.weight(1f),
                         enabled = state.canRestore && state.options.canRestore() &&
                             (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
@@ -98,11 +111,25 @@ class RestoreBackupScreen(
             RowList(contentPadding = contentPadding) {
                 if (backupSystemWarning.applies) {
                     item {
-                        WarningBanner(MR.strings.restore_miui_warning)
+                        NoticeCard(stringResource(MR.strings.restore_miui_warning), NoticeTone.Warning)
                     }
                 }
 
-                if (state.canRestore && state.profiles.isNotEmpty()) {
+                if (state.canRestore && state.syncLinked) {
+                    item {
+                        RestoreReachSection(
+                            createdAt = state.createdAt,
+                            rollBack = state.options.rollBackAccount,
+                            onRollBackChange = model::setRollBackAccount,
+                        )
+                    }
+                }
+
+                if (state.options.rollBackAccount) {
+                    item { RowGroupNote(stringResource(MR.strings.sync_rollback_needs_everything)) }
+                }
+
+                if (state.canRestore && state.profiles.isNotEmpty() && !state.options.rollBackAccount) {
                     item {
                         BackupSection(
                             title = stringResource(MR.strings.profiles_title),
@@ -128,7 +155,7 @@ class RestoreBackupScreen(
                     }
                 }
 
-                if (state.canRestore) {
+                if (state.canRestore && !state.options.rollBackAccount) {
                     item {
                         BackupSection(
                             rows = RestoreOptions.options.map { option ->
@@ -151,6 +178,17 @@ class RestoreBackupScreen(
                 }
             }
         }
+
+        if (confirmRollBack) {
+            RollBackConfirmDialog(
+                createdAt = state.createdAt,
+                onConfirm = {
+                    confirmRollBack = false
+                    restore()
+                },
+                onDismissRequest = { confirmRollBack = false },
+            )
+        }
     }
 
     private fun LazyListScope.errorMessageItem(
@@ -165,17 +203,26 @@ class RestoreBackupScreen(
                     ) {
                         when (error) {
                             is MissingRestoreComponents -> {
-                                Text(stringResource(MR.strings.backup_restore_content_full))
-                                if (error.sources.isNotEmpty()) {
+                                val (installable, unavailable) = error.extensions.partition { it.cantInstall == null }
+                                Text(
+                                    stringResource(
+                                        if (error.extensions.isEmpty()) {
+                                            MR.strings.backup_restore_content_full
+                                        } else {
+                                            MR.strings.missing_extensions_restore_note
+                                        },
+                                    ),
+                                )
+                                if (installable.isNotEmpty()) {
                                     RestoreErrorSection(
-                                        title = stringResource(MR.strings.backup_restore_missing_sources),
-                                        body = error.sources.joinToString(separator = "\n- ", prefix = "- "),
+                                        title = stringResource(MR.strings.missing_extensions_restore_installable),
+                                        body = installable.lines(),
                                     )
                                 }
-                                if (error.trackers.isNotEmpty()) {
+                                if (unavailable.isNotEmpty()) {
                                     RestoreErrorSection(
-                                        title = stringResource(MR.strings.backup_restore_missing_trackers),
-                                        body = error.trackers.joinToString(separator = "\n- ", prefix = "- "),
+                                        title = stringResource(MR.strings.missing_extensions_unavailable),
+                                        body = unavailable.lines(),
                                     )
                                 }
                             }
@@ -200,6 +247,18 @@ class RestoreBackupScreen(
     }
 
     @Composable
+    private fun List<MissingExtension>.lines(): String = map {
+        val count = it.titleCount.toInt()
+        // Sources only entries outside the library come from have nothing to count
+        if (count == 0) return@map it.name
+        stringResource(
+            MR.strings.missing_extensions_restore_line,
+            it.name,
+            pluralStringResource(MR.plurals.missing_extensions_titles, count, count),
+        )
+    }.joinToString(separator = "\n")
+
+    @Composable
     private fun RestoreErrorSection(title: String, body: String) {
         Column {
             Text(title, role = TextRole.SectionTitle)
@@ -213,7 +272,9 @@ internal class RestoreBackupViewModel(
     @Assisted private val uri: DocumentUri,
     private val backupRestoreRunner: BackupRestoreRunner,
     private val backupFileValidator: BackupFileValidator,
+    private val backupMissingExtensions: BackupMissingExtensions,
     private val profileManager: ProfileManager,
+    syncStatus: SyncStatusState,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -230,6 +291,27 @@ internal class RestoreBackupViewModel(
         viewModelScope.launchIO {
             validate(uri)
         }
+        viewModelScope.launch {
+            syncStatus.status.filterNotNull().collect { status ->
+                val linked = status.link is SyncStatus.Link.Linked
+                state.update {
+                    it.copy(
+                        syncLinked = linked,
+                        options = it.options.copy(rollBackAccount = it.options.rollBackAccount && linked),
+                    )
+                }
+            }
+        }
+    }
+
+    /** An account rollback restores every part of every profile, so choosing it selects them all. */
+    fun setRollBackAccount(rollBack: Boolean) {
+        state.update {
+            it.copy(
+                options = RestoreOptions(rollBackAccount = rollBack),
+                selectedProfileUuids = it.profiles.mapTo(mutableSetOf(), RestoreProfile::uuid),
+            )
+        }
     }
 
     fun toggle(setter: (RestoreOptions, Boolean) -> RestoreOptions, enabled: Boolean) {
@@ -238,6 +320,16 @@ internal class RestoreBackupViewModel(
                 options = setter(it.options, enabled),
             )
         }
+        showMissingExtensions()
+    }
+
+    private var missingExtensions: BackupMissingExtensions.Checked? = null
+
+    /** What's missing, as restoring with the current options leaves it: the backup's stores may list extensions. */
+    private fun showMissingExtensions() {
+        val missing = missingExtensions ?: return
+        val extensions = missing.extensions(withBackupStores = state.value.options.extensionStores)
+        setError(MissingRestoreComponents(uri, extensions), canRestore = true)
     }
 
     fun toggleProfile(uuid: String, selected: Boolean) {
@@ -257,9 +349,13 @@ internal class RestoreBackupViewModel(
         val current = state.value
         backupRestoreRunner.start(
             uri = uri,
-            options = current.options.copy(
-                profileUuids = current.selectedProfileUuids.takeIf { current.profiles.isNotEmpty() },
-            ),
+            options = if (current.options.rollBackAccount) {
+                current.options
+            } else {
+                current.options.copy(
+                    profileUuids = current.selectedProfileUuids.takeIf { current.profiles.isNotEmpty() },
+                )
+            },
         )
     }
 
@@ -289,13 +385,13 @@ internal class RestoreBackupViewModel(
             )
         }
         val allUuids = profiles.mapTo(mutableSetOf(), RestoreProfile::uuid)
-        state.update { it.copy(profiles = profiles, selectedProfileUuids = allUuids) }
+        state.update {
+            it.copy(profiles = profiles, selectedProfileUuids = allUuids, createdAt = results.createdAt)
+        }
 
-        if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
-            setError(
-                error = MissingRestoreComponents(uri, results.missingSources, results.missingTrackers),
-                canRestore = true,
-            )
+        if (results.missingSources.isNotEmpty()) {
+            missingExtensions = backupMissingExtensions.check(results.missingSources, results.extensionStores)
+            showMissingExtensions()
             return
         }
 
@@ -318,6 +414,10 @@ internal class RestoreBackupViewModel(
         val options: RestoreOptions = RestoreOptions(),
         val profiles: List<RestoreProfile> = emptyList(),
         val selectedProfileUuids: Set<String> = emptySet(),
+        /** When the backup was made, in epoch milliseconds; 0 when it doesn't say. */
+        val createdAt: Long = 0,
+        /** Whether the device syncs, which offers rolling the account back. */
+        val syncLinked: Boolean = false,
     ) {
         val lockedSelectedProfileNames: List<String>
             get() = profiles
@@ -339,8 +439,7 @@ internal enum class RestoreProfileTarget { New, Merge, Locked }
 
 private data class MissingRestoreComponents(
     val uri: DocumentUri,
-    val sources: List<String>,
-    val trackers: List<String>,
+    val extensions: List<MissingExtension>,
 )
 
 private data class InvalidRestore(

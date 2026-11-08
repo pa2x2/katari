@@ -1,10 +1,10 @@
 package tachiyomi.core.common.preference
 
+import app.katari.core.common.storage.replaceAtomically
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
-import mihon.core.common.storage.replaceAtomically
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
 import java.nio.file.Files

@@ -1,11 +1,6 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -15,22 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.StatusStrip
+import app.katari.presentation.kit.feedback.StatusStripTone
 import eu.kanade.tachiyomi.data.library.label
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -90,38 +76,14 @@ private fun LibraryUpdateStripContent(
         is LibraryUpdateState.Running -> remember(state.progress, context) { state.progress.label(context) }
         is LibraryUpdateState.Waiting -> stringResource(MR.strings.library_update_waiting, state.runningProfileName)
     }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.Default,
-    ) {
-        Row(
-            modifier = Modifier.padding(start = KatariTheme.spacing.l, end = KatariTheme.spacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            ) {
-                Text(
-                    text = label,
-                    role = TextRole.Supporting,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (progress != null && progress.total > 0) {
-                    LinearProgressIndicator(
-                        progress = { progress.completed.toFloat() / progress.total },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                } else {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                }
-            }
-            IconButton(
-                icon = MaterialSymbols.Rounded.Close,
-                contentDescription = stringResource(MR.strings.library_update_cancel),
-                onClick = onCancel,
-            )
-        }
-    }
+    val fraction = progress?.takeIf { it.total > 0 }?.let { it.completed.toFloat() / it.total }
+    StatusStrip(
+        text = label,
+        tone = StatusStripTone.Neutral,
+        modifier = modifier,
+        waiting = fraction == null,
+        progress = fraction?.let { { it } },
+        actionLabel = stringResource(MR.strings.action_cancel),
+        onAction = onCancel,
+    )
 }

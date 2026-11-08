@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import app.katari.android.di.appGraph
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -13,7 +14,6 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
-import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.storage.DocumentUri
@@ -37,6 +37,7 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
             RestoreOptions.fromBooleanArray(
                 it,
                 inputData.getNullableStringArray(PROFILES_KEY)?.filterNotNullTo(mutableSetOf()),
+                inputData.getBoolean(ROLL_BACK_ACCOUNT_KEY, false),
             )
         }
 
@@ -82,5 +83,6 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
         internal const val SYNC_KEY = "sync" // Boolean
         internal const val OPTIONS_KEY = "options" // BooleanArray
         internal const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile
+        internal const val ROLL_BACK_ACCOUNT_KEY = "roll_back_account" // Boolean
     }
 }

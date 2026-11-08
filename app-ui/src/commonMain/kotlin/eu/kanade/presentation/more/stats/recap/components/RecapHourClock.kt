@@ -12,13 +12,13 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.content.drawingStyle
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.ambientWave
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.content.drawingStyle
-import mihon.presentation.kit.theme.TextRole
 import kotlin.math.cos
 import kotlin.math.sin
 

@@ -1,6 +1,6 @@
 package eu.kanade.presentation.util
 
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import kotlin.time.Duration

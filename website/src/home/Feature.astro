@@ -21,7 +21,7 @@ const { feature, flip } = Astro.props;
     <DocsLinks paths={feature.docs} />
   </div>
   <div class="shots">
-    <ShotStack shots={feature.shots} arrangement="overlap" />
+    <ShotStack shots={feature.shots} arrangement={feature.arrangement ?? "overlap"} />
   </div>
 </section>
 

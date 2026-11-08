@@ -1,0 +1,145 @@
+package app.katari.entry.interactions.book.reader.speech
+
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.ui.presentation.TranslationResultSpeechSide
+import app.katari.translation.ui.presentation.TranslationResultSpeechTarget
+import app.katari.tts.api.TtsFeature
+import app.katari.tts.api.engine.TtsEngineId
+import app.katari.tts.api.engine.TtsProviderId
+import app.katari.tts.api.playback.TtsPlaybackSession
+import app.katari.tts.api.playback.TtsPlaybackStart
+import app.katari.tts.api.playback.TtsPlaybackState
+import app.katari.tts.api.playback.TtsStopReason
+import app.katari.tts.api.playback.TtsStopResult
+import app.katari.tts.api.preparation.ReadyTts
+import app.katari.tts.api.preparation.TtsPreparation
+import app.katari.tts.api.provider.TtsProviderPresentation
+import app.katari.tts.api.provider.TtsVoiceProcessing
+import app.katari.tts.api.request.ResolvedTtsRequest
+import app.katari.tts.api.request.TtsLanguageSelection
+import app.katari.tts.api.request.TtsParameters
+import app.katari.tts.api.request.TtsRequest
+import app.katari.tts.api.voice.TtsVoice
+import app.katari.tts.api.voice.TtsVoiceId
+import app.katari.tts.ui.playback.ShortFormSpeechFailure
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import org.junit.jupiter.api.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class BookShortFormSpeechControllerTest {
+
+    @Test
+    fun `late obsolete preparation cannot replace the current speech owner`() = runTest {
+        val feature = DeferredFirstPreparationFeature()
+        val failures = mutableListOf<ShortFormSpeechFailure>()
+        val controller = BookShortFormSpeechController(feature, backgroundScope, failures::add)
+        val selection = request(BookShortFormSpeechOwner.Selection("selection"), "first")
+        val translationTarget = TranslationResultSpeechTarget(
+            side = TranslationResultSpeechSide.Target,
+            text = "second",
+            language = ENGLISH,
+        )
+        val translation = request(
+            BookShortFormSpeechOwner.TranslationResult(translationTarget),
+            translationTarget.text,
+        )
+
+        controller.toggle(selection)
+        runCurrent()
+        controller.toggle(translation)
+        runCurrent()
+
+        feature.playedTexts shouldContainExactly listOf("second")
+        controller.state.value shouldBe BookShortFormSpeechState(
+            phase = BookShortFormSpeechPhase.Speaking,
+            owner = translation.owner,
+        )
+
+        feature.releaseFirstPreparation.complete(Unit)
+        runCurrent()
+
+        feature.playedTexts shouldContainExactly listOf("second")
+        failures shouldBe emptyList()
+        controller.close()
+        runCurrent()
+        feature.sessions.getValue("second").stopCount shouldBe 1
+    }
+
+    private fun request(owner: BookShortFormSpeechOwner, text: String) = BookShortFormSpeechRequest(
+        owner = owner,
+        text = text,
+        language = TtsLanguageSelection.Explicit(ENGLISH),
+    )
+
+    private class DeferredFirstPreparationFeature : TtsFeature {
+        val releaseFirstPreparation = CompletableDeferred<Unit>()
+        val playedTexts = mutableListOf<String>()
+        val sessions = mutableMapOf<String, RecordingSession>()
+
+        override suspend fun prepare(request: TtsRequest): TtsPreparation {
+            if (request.text == "first") {
+                withContext(NonCancellable) { releaseFirstPreparation.await() }
+            }
+            return ready(request)
+        }
+
+        override suspend fun play(ready: ReadyTts): TtsPlaybackStart {
+            val text = (ready as TestReadyTts).text
+            playedTexts += text
+            return TtsPlaybackStart.Started(sessions.getOrPut(text, ::RecordingSession))
+        }
+    }
+
+    private class RecordingSession : TtsPlaybackSession {
+        private val mutableState = MutableStateFlow<TtsPlaybackState>(TtsPlaybackState.Speaking())
+        override val state: StateFlow<TtsPlaybackState> = mutableState
+        var stopCount = 0
+            private set
+
+        override suspend fun stop(): TtsStopResult {
+            stopCount += 1
+            mutableState.value = TtsPlaybackState.Stopped(TtsStopReason.Requested)
+            return TtsStopResult.Stopped
+        }
+    }
+
+    private companion object {
+        val ENGLISH = LanguageTag.require("en-US")
+        val PROVIDER = TtsProviderId("test")
+        val ENGINE = TtsEngineId("test-engine")
+        val VOICE = TtsVoice(
+            id = TtsVoiceId(PROVIDER, ENGINE, "voice"),
+            name = "Voice",
+            language = ENGLISH,
+            processing = TtsVoiceProcessing.OnDevice,
+        )
+        val PRESENTATION = TtsProviderPresentation(PROVIDER, "Test provider", "Test engine")
+
+        fun ready(request: TtsRequest): TtsPreparation.Ready {
+            val language = (request.language as TtsLanguageSelection.Explicit).language
+            return TtsPreparation.Ready(
+                speech = TestReadyTts(request.text),
+                request = ResolvedTtsRequest(
+                    text = request.text,
+                    language = language,
+                    engine = ENGINE,
+                    voice = VOICE,
+                    parameters = TtsParameters(),
+                    networkProcessingAllowed = false,
+                ),
+                presentation = PRESENTATION,
+            )
+        }
+    }
+
+    private data class TestReadyTts(val text: String) : ReadyTts
+}

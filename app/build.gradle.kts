@@ -1,25 +1,25 @@
+import app.katari.gradle.Config
+import app.katari.gradle.getCurrentTime
+import app.katari.gradle.getLatestCommitCount
+import app.katari.gradle.getLatestCommitSha
+import app.katari.gradle.getLatestCommitTime
+import app.katari.gradle.licences.GenerateLibmpvLicencesTask
+import app.katari.gradle.platformparity.exposeAndroidPlatformApiLibraries
+import app.katari.gradle.tasks.CheckApkNativeLibrariesTask
+import app.katari.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
-import mihon.gradle.Config
-import mihon.gradle.getCurrentTime
-import mihon.gradle.getLatestCommitCount
-import mihon.gradle.getLatestCommitSha
-import mihon.gradle.getLatestCommitTime
-import mihon.gradle.licences.GenerateLibmpvLicencesTask
-import mihon.gradle.platformparity.exposeAndroidPlatformApiLibraries
-import mihon.gradle.tasks.CheckApkNativeLibrariesTask
-import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(mihonx.plugins.android.application)
-    alias(mihonx.plugins.artifact.sanitizer)
-    alias(mihonx.plugins.compose)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.application)
+    alias(katari.plugins.artifact.sanitizer)
+    alias(katari.plugins.compose)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)
@@ -49,8 +49,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 91
-        versionName = "2.0.6"
+        versionCode = 92
+        versionName = "3.0.0"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
@@ -249,60 +249,62 @@ dependencies {
         implementation(libs.androidx.concurrent.futures.ktx)
     }
 
-    baselineProfile(dependencies.project(mapOf("path" to projects.baselineProfile.path)))
+    baselineProfile(dependencies.project(mapOf("path" to projects.tools.baselineProfile.path)))
 
-    implementation(dependencies.project(mapOf("path" to projects.aniyomiSourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.aniyomiSourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.appUi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.appUpdate.path)))
-    implementation(dependencies.project(mapOf("path" to projects.backup.path)))
-    implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
-    implementation(dependencies.project(mapOf("path" to projects.libraryUpdate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.appUpdate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.backup.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.i18n.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.libraryUpdate.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.image.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
-    implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
-    implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
-    implementation(dependencies.project(mapOf("path" to projects.entryInteractions.host.path)))
-    implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.extensionRuntime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
-    implementation(dependencies.project(mapOf("path" to projects.scriptRuntime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
-    implementation(dependencies.project(mapOf("path" to projects.data.path)))
-    implementation(dependencies.project(mapOf("path" to projects.domain.path)))
-    implementation(dependencies.project(mapOf("path" to projects.icons.customMaterialSymbols.path)))
-    implementation(dependencies.project(mapOf("path" to projects.icons.materialSymbols.path)))
-    implementation(dependencies.project(mapOf("path" to projects.icons.simpleIcons.path)))
-    implementation(dependencies.project(mapOf("path" to projects.entryViewerChromeUi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.entryViewerSettingsUi.path)))
-    implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
-    implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
-    implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
-    implementation(dependencies.project(mapOf("path" to projects.language.runtime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.runtime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
-    implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.textRecognition.providers.onnx.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.coreMetadata.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.entryInteractions.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.entryInteractions.host.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.entrySourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.extensionRuntime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.sourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.sourceCompat.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.scriptRuntime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.sourceLocal.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.sync.client.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.data.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.domain.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.icons.customMaterialSymbols.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.icons.materialSymbols.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.icons.simpleIcons.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.entryViewerChromeUi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.entryViewerSettingsUi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.presentationCore.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.presentationWidget.path)))
+    implementation(dependencies.project(mapOf("path" to projects.core.telemetry.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.language.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.modelArtifacts.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.modelArtifacts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.textRecognition.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.textRecognition.providers.onnx.path)))
     // ML Kit needs Google Play services, so FOSS builds only list it.
-    "fossImplementation"(dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.catalog.path)))
+    "fossImplementation"(
+        dependencies.project(mapOf("path" to projects.features.textRecognition.providers.mlkit.notIncluded.path)),
+    )
     listOf("debug", "release", "preview", "benchmark").forEach { buildType ->
         "${buildType}Implementation"(
-            dependencies.project(mapOf("path" to projects.textRecognition.providers.mlkit.path)),
+            dependencies.project(mapOf("path" to projects.features.textRecognition.providers.mlkit.path)),
         )
     }
-    implementation(dependencies.project(mapOf("path" to projects.textRecognition.ui.path)))
-    implementation(dependencies.project(mapOf("path" to projects.translation.runtime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
-    implementation(dependencies.project(mapOf("path" to projects.translation.providers.deepl.path)))
-    implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
-    implementation(dependencies.project(mapOf("path" to projects.translation.providers.serverConnection.path)))
-    implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
-    implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
-    implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
-    implementation(dependencies.project(mapOf("path" to projects.trackers.path)))
-    implementation(dependencies.project(mapOf("path" to projects.videoEngine.mpv.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.textRecognition.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.translation.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.translation.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.translation.providers.deepl.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.translation.providers.libretranslate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.translation.providers.serverConnection.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.tts.runtime.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.tts.providers.android.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.tts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.features.videoEngine.mpv.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -313,7 +315,7 @@ dependencies {
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
     implementation(libs.androidx.navigationEvent)
-    // Painters for the Compose resources of multiplatform modules, such as the trackers' logos
+    // Painters for the Compose resources of multiplatform modules, such as the translation engines' artwork
     implementation(libs.compose.multiplatform.resources)
 
     implementation(libs.androidx.interpolator)

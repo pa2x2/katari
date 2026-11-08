@@ -1,0 +1,76 @@
+package app.katari.tts.api.engine
+
+import app.katari.tts.api.provider.TtsProviderCapabilities
+import app.katari.tts.api.provider.TtsProviderDisclosure
+import app.katari.tts.api.provider.TtsProviderPresentation
+
+data class TtsEngineInspection(
+    val engines: List<TtsEngineState>,
+    val selectedEngine: TtsEngineId?,
+    val selectionResolved: Boolean = true,
+)
+
+data class TtsEngineState(
+    val engine: KnownTtsEngine,
+    val presentation: TtsProviderPresentation?,
+    val status: TtsEngineStatus,
+    val action: TtsEngineAction? = null,
+    val capabilities: TtsProviderCapabilities? = null,
+)
+
+sealed interface TtsEngineStatus {
+    data object Checking : TtsEngineStatus
+
+    data object Ready : TtsEngineStatus
+
+    /** [reason] tells the user what to install, when the engine knows. */
+    data class NotInstalled(
+        val reason: String? = null,
+    ) : TtsEngineStatus {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
+
+    data class ConfigurationRequired(
+        val reason: String,
+    ) : TtsEngineStatus {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+
+    data class ProviderDisclosureRequired(
+        val disclosure: TtsProviderDisclosure,
+    ) : TtsEngineStatus
+
+    data class VoiceDataRequired(
+        val reason: String? = null,
+    ) : TtsEngineStatus {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
+
+    data class Unavailable(
+        val reason: String? = null,
+    ) : TtsEngineStatus {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
+
+    data class Failed(
+        val reason: String,
+    ) : TtsEngineStatus {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+}
+
+enum class TtsEngineAction {
+    Install,
+    Configure,
+    SetupVoiceData,
+}

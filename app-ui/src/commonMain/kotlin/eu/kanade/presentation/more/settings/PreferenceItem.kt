@@ -13,19 +13,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.control.Stepper
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.list.SliderRow
 import eu.kanade.presentation.more.settings.widget.EditTextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.InfoWidget
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.MultiSelectListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import eu.kanade.presentation.more.settings.widget.TrackingPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.preferenceHighlight
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.control.Stepper
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.list.SliderRow
 import tachiyomi.presentation.core.util.collectAsState
 
 /** Whether the preference being composed is the one settings search opened its screen for. */
@@ -202,16 +201,6 @@ internal fun PreferenceItem(
                         if (accepted) item.preference.set(it)
                         accepted
                     },
-                )
-            }
-            is Preference.PreferenceItem.TrackingAccountPreference -> {
-                TrackingPreferenceWidget(
-                    service = item.account.service,
-                    isLoggedIn = item.account.isLoggedIn,
-                    displayUsername = item.account.displayUsername,
-                    isRefreshing = item.isRefreshing,
-                    onRefresh = item.refresh,
-                    onClick = { if (item.account.isLoggedIn) item.logout() else item.login() },
                 )
             }
             is Preference.PreferenceItem.InfoPreference -> {

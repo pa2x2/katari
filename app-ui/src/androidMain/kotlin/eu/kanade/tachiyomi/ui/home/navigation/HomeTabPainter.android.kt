@@ -6,9 +6,9 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
+import app.katari.core.common.HomeScreenTabs
+import app.katari.ui.R
 import eu.kanade.presentation.util.rememberAnimatedVectorPainter
-import mihon.app.ui.R
-import mihon.core.common.HomeScreenTabs
 
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable

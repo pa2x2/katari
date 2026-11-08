@@ -6,18 +6,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.tts.ui.picker.engine.TtsEnginePickerList
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.RefreshTtsSettingsOnResume
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.tts.ui.picker.engine.TtsEnginePickerList
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

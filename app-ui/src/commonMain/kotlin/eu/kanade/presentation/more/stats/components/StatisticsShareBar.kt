@@ -9,9 +9,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import mihon.presentation.kit.content.StatisticsMetrics
-import mihon.presentation.kit.content.chartBar
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.content.StatisticsMetrics
+import app.katari.presentation.kit.content.chartBar
+import app.katari.presentation.kit.theme.KatariTheme
 
 /** A rounded bar filled to [fraction] of its width in the series [color], over the empty track. */
 @Composable

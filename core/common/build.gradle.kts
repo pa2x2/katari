@@ -1,12 +1,12 @@
-import mihon.gradle.extensions.compileDesktopCodeAgainstAndroidApi
-import mihon.gradle.extensions.desktop
-import mihon.gradle.extensions.keepKotlinModuleName
-import mihon.gradle.extensions.skipDesktopPublication
+import app.katari.gradle.extensions.compileDesktopCodeAgainstAndroidApi
+import app.katari.gradle.extensions.desktop
+import app.katari.gradle.extensions.keepKotlinModuleName
+import app.katari.gradle.extensions.skipDesktopPublication
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
     id("maven-publish")

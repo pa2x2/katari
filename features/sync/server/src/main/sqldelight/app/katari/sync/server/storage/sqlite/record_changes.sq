@@ -1,0 +1,27 @@
+-- The changes the server has applied, so a push retried after a lost answer is recognised instead of refused as
+-- stale. Dropped with the deletion markers, once every device has pulled past them.
+CREATE TABLE record_changes(
+    account_id INTEGER NOT NULL REFERENCES accounts(_id) ON DELETE CASCADE,
+    change_id TEXT NOT NULL,
+    sequence INTEGER NOT NULL,
+    PRIMARY KEY (account_id, change_id)
+);
+
+CREATE INDEX record_changes_sequence_index ON record_changes(account_id, sequence);
+
+sequencesOf:
+SELECT change_id, sequence
+FROM record_changes
+WHERE account_id = :accountId AND change_id IN :changeIds;
+
+insert:
+INSERT INTO record_changes(account_id, change_id, sequence)
+VALUES (:accountId, :changeId, :sequence);
+
+deleteThrough:
+DELETE FROM record_changes
+WHERE account_id = :accountId AND sequence <= :through;
+
+deleteAccount:
+DELETE FROM record_changes
+WHERE account_id = :accountId;

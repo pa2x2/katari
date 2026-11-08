@@ -6,24 +6,21 @@ import androidx.compose.runtime.remember
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.sync.ui.signin.SyncJoinOrigin
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.onboarding.OnboardingScreen
-import eu.kanade.presentation.more.settings.screen.SearchableSettings
-import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-class OnboardingScreen : Screen(), FullWindowScreen {
+class OnboardingScreen : Screen(), FullWindowScreen, SyncJoinOrigin {
 
     @Composable
     override fun Content() {
@@ -45,14 +42,11 @@ class OnboardingScreen : Screen(), FullWindowScreen {
             navigator.pop()
         }
 
+        // The restore runs in the background while the guide goes on, so its screen opens over the guide.
         val chooseMihonBackup = rememberBackupFilePicker(mimeType = "application/*") { uri ->
             if (uri == null) return@rememberBackupFilePicker
-
-            finishOnboarding()
             navigator.push(RestoreBackupScreen(uri))
         }
-
-        val restoreSettingKey = stringResource(SettingsDataScreen.restorePreferenceKeyString)
 
         // Prevent exiting if onboarding hasn't been completed
         NavigationBackHandler(
@@ -63,20 +57,13 @@ class OnboardingScreen : Screen(), FullWindowScreen {
 
         OnboardingScreen(
             onComplete = finishOnboarding,
-            onRestoreBackup = {
-                finishOnboarding()
-                SearchableSettings.highlightKey = restoreSettingKey
-                navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage))
-            },
-            showMihonMigration = showMihonMigration,
+            offersMihon = showMihonMigration,
             onOpenMihon = {
                 if (installedMihon == null || !mihonApp.open(context, installedMihon)) {
                     messages.show(MR.strings.app_not_available)
                 }
             },
-            onMigrateFromMihon = {
-                chooseMihonBackup()
-            },
+            onChooseMihonBackup = chooseMihonBackup,
         )
     }
 }

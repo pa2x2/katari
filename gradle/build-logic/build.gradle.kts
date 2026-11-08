@@ -40,7 +40,7 @@ dependencies {
 
     // These allow us to reference the dependency catalog inside our compiled plugins
     compileOnly(files(libs::class.java.superclass.protectionDomain.codeSource.location))
-    compileOnly(files(mihonx::class.java.superclass.protectionDomain.codeSource.location))
+    compileOnly(files(katari::class.java.superclass.protectionDomain.codeSource.location))
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.assertions)
@@ -65,43 +65,43 @@ samWithReceiver {
 gradlePlugin {
     plugins {
         register("artifact-sanitizer") {
-            id = mihonx.plugins.artifact.sanitizer.get().pluginId
+            id = katari.plugins.artifact.sanitizer.get().pluginId
             implementationClass = "PluginArtifactSanitizer"
         }
         register("android-application") {
-            id = mihonx.plugins.android.application.get().pluginId
+            id = katari.plugins.android.application.get().pluginId
             implementationClass = "PluginAndroidApplication"
         }
         register("android-base") {
-            id = mihonx.plugins.android.base.get().pluginId
+            id = katari.plugins.android.base.get().pluginId
             implementationClass = "PluginAndroidBase"
         }
         register("android-library") {
-            id = mihonx.plugins.android.library.get().pluginId
+            id = katari.plugins.android.library.get().pluginId
             implementationClass = "PluginAndroidLibrary"
         }
         register("android-test") {
-            id = mihonx.plugins.android.test.get().pluginId
+            id = katari.plugins.android.test.get().pluginId
             implementationClass = "PluginAndroidTest"
         }
         register("compose") {
-            id = mihonx.plugins.compose.get().pluginId
+            id = katari.plugins.compose.get().pluginId
             implementationClass = "PluginCompose"
         }
         register("desktop-application") {
-            id = mihonx.plugins.desktop.application.get().pluginId
+            id = katari.plugins.desktop.application.get().pluginId
             implementationClass = "PluginDesktopApplication"
         }
         register("kotlin-jvm") {
-            id = mihonx.plugins.kotlin.jvm.get().pluginId
+            id = katari.plugins.kotlin.jvm.get().pluginId
             implementationClass = "PluginKotlinJvm"
         }
         register("kotlin-multiplatform") {
-            id = mihonx.plugins.kotlin.multiplatform.get().pluginId
+            id = katari.plugins.kotlin.multiplatform.get().pluginId
             implementationClass = "PluginKotlinMultiplatform"
         }
         register("spotless") {
-            id = mihonx.plugins.spotless.get().pluginId
+            id = katari.plugins.spotless.get().pluginId
             implementationClass = "PluginSpotless"
         }
     }

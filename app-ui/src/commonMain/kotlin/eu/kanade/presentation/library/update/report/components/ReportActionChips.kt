@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.PlayArrow
-import mihon.presentation.kit.chip.AssistChip
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.PlayArrow
+import app.katari.presentation.kit.chip.AssistChip
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

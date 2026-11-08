@@ -5,12 +5,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.tachiyomi.ui.translator.presentation.TranslatorScreenContent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorEvent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -31,7 +31,8 @@ internal fun TranslatorRoute(
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
-                TranslatorEvent.SpeechFailed -> snackbarHostState.showSnackbar(speechFailureMessage)
+                is TranslatorEvent.SpeechFailed ->
+                    snackbarHostState.showSnackbar(event.explanation ?: speechFailureMessage)
                 TranslatorEvent.SwapUnavailable -> snackbarHostState.showSnackbar(swapUnavailableMessage)
             }
         }

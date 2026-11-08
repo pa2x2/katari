@@ -1,0 +1,3 @@
+-- Synced records that failed to apply, held aside until the app is updated (app/katari/sync/data/sync_pending.sq).
+
+ALTER TABLE sync_pending ADD COLUMN failed_on TEXT;

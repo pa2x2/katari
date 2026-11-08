@@ -1,9 +1,9 @@
-import mihon.gradle.configurations.configureJvmTestVerification
-import mihon.gradle.configurations.configureKotlin
-import mihon.gradle.extensions.alias
-import mihon.gradle.extensions.configureTest
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.plugins
+import app.katari.gradle.configurations.configureJvmTestVerification
+import app.katari.gradle.configurations.configureKotlin
+import app.katari.gradle.extensions.alias
+import app.katari.gradle.extensions.configureTest
+import app.katari.gradle.extensions.libs
+import app.katari.gradle.extensions.plugins
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 

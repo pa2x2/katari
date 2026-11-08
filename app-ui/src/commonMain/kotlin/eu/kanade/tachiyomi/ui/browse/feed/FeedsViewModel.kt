@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.feed
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.model.LibraryDisplayMode

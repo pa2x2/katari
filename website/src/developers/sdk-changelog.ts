@@ -1,16 +1,16 @@
-import changelog from "../../../SDK-CHANGELOG.md?raw";
+import changelog from "../../../sources/entry-source-api/CHANGELOG.md?raw";
 import { inlineMarkdown } from "../changelog/inline-markdown.ts";
 import { type Release, releases } from "../changelog/release-notes.ts";
 import { pathOnSite, sitePath } from "../site/links.ts";
 import { guidePaths } from "../guide/contents.ts";
 
-/** Every SDK release in SDK-CHANGELOG.md, newest first. */
+/** Every SDK release in sources/entry-source-api/CHANGELOG.md, newest first. */
 export const sdkReleases: Release[] = releases(changelog);
 
 /**
- * One line of SDK-CHANGELOG.md as HTML. The file is read on GitHub too, so it links pages of this site by their full
- * address; those links stay on the site, and the build fails on one that names no page of the guide, so a renamed or
- * misspelled guide can't publish a dead link.
+ * One line of sources/entry-source-api/CHANGELOG.md as HTML. The file is read on GitHub too, so it links pages of this
+ * site by their full address; those links stay on the site, and the build fails on one that names no page of the guide,
+ * so a renamed or misspelled guide can't publish a dead link.
  */
 export function sdkChangelogHtml(line: string): string {
   return inlineMarkdown(line, (url) => {
@@ -18,7 +18,7 @@ export function sdkChangelogHtml(line: string): string {
     if (path === undefined) return `href="${url}" target="_blank" rel="noopener"`;
     const page = path.replace(/#.*$/, "");
     if (!guidePaths.some((guide) => guide.path === page)) {
-      throw new Error(`SDK-CHANGELOG.md links to ${url}, which is no page of the guide`);
+      throw new Error(`sources/entry-source-api/CHANGELOG.md links to ${url}, which is no page of the guide`);
     }
     return `href="${sitePath(path)}"`;
   });

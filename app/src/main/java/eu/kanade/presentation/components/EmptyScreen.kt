@@ -2,13 +2,13 @@ package eu.kanade.presentation.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.EmptyScreenAction
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.theme.KatariPreviewTheme
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.Help
+import app.katari.icons.materialsymbols.rounded.Refresh
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.EmptyScreenAction
+import app.katari.presentation.kit.surface.Surface
+import app.katari.presentation.kit.theme.KatariPreviewTheme
 import tachiyomi.i18n.*
 
 @PreviewLightDark

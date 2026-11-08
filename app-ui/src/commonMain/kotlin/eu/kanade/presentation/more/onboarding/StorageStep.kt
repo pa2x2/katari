@@ -9,15 +9,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Folder
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.list.ControlRow
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupGap
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.data.collectPickedStorageDirectory
 import eu.kanade.presentation.more.settings.screen.data.storageLocationDisplayPath
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.list.ControlRow
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupGap
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -28,6 +31,13 @@ internal class StorageStep(
 ) : OnboardingStep {
 
     private var _isComplete by mutableStateOf(false)
+
+    @Composable
+    override fun heading() = GuidePageHeading(
+        icon = MaterialSymbols.Rounded.Folder,
+        heading = stringResource(MR.strings.onboarding_storage_heading),
+        subtitle = stringResource(MR.strings.onboarding_storage_subtitle),
+    )
 
     override val isComplete: Boolean
         get() = _isComplete

@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.ui.entry
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -22,9 +25,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry

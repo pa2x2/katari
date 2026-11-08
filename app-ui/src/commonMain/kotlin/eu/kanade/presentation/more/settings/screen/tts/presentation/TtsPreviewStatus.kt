@@ -3,17 +3,18 @@ package eu.kanade.presentation.more.settings.screen.tts.presentation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
-import mihon.tts.api.playback.TtsPlaybackFailureReason
-import mihon.tts.api.preparation.TtsPreparation
-import mihon.tts.api.preparation.TtsSystemSetupReason
-import mihon.tts.api.provider.TtsProviderDisclosure
-import mihon.tts.ui.settings.TtsPreviewState
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.tts.api.playback.TtsPlaybackFailureReason
+import app.katari.tts.api.preparation.TtsPreparation
+import app.katari.tts.api.preparation.TtsSystemSetupReason
+import app.katari.tts.api.provider.TtsProviderDisclosure
+import app.katari.tts.ui.engine.engineExplanation
+import app.katari.tts.ui.settings.TtsPreviewState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -43,19 +44,21 @@ internal fun TtsPreviewStatus(
                 onClick = onOpenSetup,
             )
             else -> TtsPreviewAction(
-                message = stringResource(MR.strings.tts_settings_preview_failed),
+                message = preparation.engineExplanation() ?: stringResource(MR.strings.tts_settings_preview_failed),
                 action = stringResource(MR.strings.action_retry),
                 onClick = onRetry,
             )
         }
         is TtsPreviewState.Failed -> TtsPreviewAction(
-            message = when (preview.reason) {
+            message = when (val reason = preview.reason) {
                 TtsPlaybackFailureReason.AudioFocusUnavailable ->
                     stringResource(MR.strings.tts_settings_audio_focus_unavailable)
                 TtsPlaybackFailureReason.InvalidReadyTts,
                 is TtsPlaybackFailureReason.ProviderFailure,
                 null,
-                -> preview.message ?: stringResource(MR.strings.tts_settings_provider_failed)
+                -> reason?.engineExplanation()
+                    ?: preview.message
+                    ?: stringResource(MR.strings.tts_settings_provider_failed)
             },
             action = stringResource(MR.strings.action_retry),
             onClick = onRetry,

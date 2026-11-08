@@ -2,13 +2,13 @@ package eu.kanade.presentation.more.settings.screen.textrules
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
-import mihon.entry.interactions.reader.settings.BookTextRule
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
-import mihon.icons.materialsymbols.rounded.Edit
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.control.Switch
-import mihon.presentation.kit.list.SettingsRow
+import app.katari.entry.interactions.reader.settings.BookTextRule
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Delete
+import app.katari.icons.materialsymbols.rounded.Edit
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.control.Switch
+import app.katari.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

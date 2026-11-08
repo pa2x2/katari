@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.download
 
-import mihon.entry.interactions.download.EntryDownloadQueueGroup
-import mihon.entry.interactions.download.EntryDownloadQueueItem
+import app.katari.entry.interactions.download.EntryDownloadQueueGroup
+import app.katari.entry.interactions.download.EntryDownloadQueueItem
 
 /*
  * The queue is shown in source groups, and a download never leaves its group: edits reorder items within a group or

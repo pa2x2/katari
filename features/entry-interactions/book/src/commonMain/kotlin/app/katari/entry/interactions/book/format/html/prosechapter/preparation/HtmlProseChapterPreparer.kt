@@ -1,0 +1,179 @@
+package app.katari.entry.interactions.book.format.html.prosechapter.preparation
+
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookReadingDirection
+import app.katari.book.api.BookResource
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentPublicationModel
+import app.katari.entry.interactions.book.content.BookContentSession
+import app.katari.entry.interactions.book.content.BookContentSessionResourceLoader
+import app.katari.entry.interactions.book.content.BookLinkedResourceKind
+import app.katari.entry.interactions.book.content.isReadableBookResource
+import app.katari.entry.interactions.book.content.normalizedBookContentLanguages
+import app.katari.entry.interactions.book.content.normalizedBookMediaType
+import app.katari.entry.interactions.book.content.readBoundedBookResource
+import app.katari.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import app.katari.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
+import app.katari.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
+import app.katari.entry.interactions.book.format.html.prosechapter.css.CssViewport
+import app.katari.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
+import app.katari.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy
+import app.katari.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
+import app.katari.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
+import app.katari.entry.interactions.book.preparation.BookContentPreparer
+import app.katari.entry.interactions.book.preparation.BookOpeningProgress
+import app.katari.entry.interactions.book.preparation.BookPreparationResult
+import eu.kanade.tachiyomi.network.HttpException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.SocketException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+
+internal class HtmlProseChapterPreparer(
+    private val viewport: () -> CssViewport = ::currentReaderViewport,
+) : BookContentPreparer {
+    override val id = "html.prose-chapter"
+    override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
+
+    override fun supports(descriptor: app.katari.book.api.BookContentDescriptor): Boolean =
+        HtmlProseChapterContract.supports(descriptor)
+
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
+        if (!supports(content.descriptor)) {
+            return failure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported prose chapter descriptor")
+        }
+        val resourceId = content.primaryResourceIds.singleOrNull()
+            ?: return failure(
+                BookFailureReason.MALFORMED_CONTENT,
+                "A prose chapter must declare exactly one primary HTML resource",
+            )
+        return try {
+            val resource = content.getResource(resourceId).getOrElse { error ->
+                return failure(
+                    BookFailureReason.CONTENT_UNAVAILABLE,
+                    error.message ?: "The prose chapter resource is unavailable",
+                    canRetry = error.isTransientBookAccessFailure(),
+                )
+            }
+            if (!resource.isReadableBookResource()) {
+                return failure(BookFailureReason.CONTENT_UNAVAILABLE, "The prose chapter resource is not readable")
+            }
+            if (resource.mediaType.normalizedBookMediaType()?.let { it != HtmlProseChapterContract.FORMAT } == true) {
+                return failure(BookFailureReason.FORMAT_UNSUPPORTED, "The primary resource is not text/html")
+            }
+            if (resource.size?.let { it > HtmlProseChapterContract.MAX_RAW_BYTES } == true) {
+                return failure(BookFailureReason.MALFORMED_CONTENT, "The prose chapter exceeds its byte limit")
+            }
+            val prepared = content.openResource(resourceId).getOrElse { error ->
+                return failure(
+                    BookFailureReason.CONTENT_UNAVAILABLE,
+                    error.message ?: "The prose chapter resource could not be opened",
+                    canRetry = error.isTransientBookAccessFailure(),
+                )
+            }.use { opened ->
+                require(opened.metadata.id == resourceId) { "The opened prose resource identity changed" }
+                require(
+                    opened.metadata.mediaType.normalizedBookMediaType()
+                        ?.let { it == HtmlProseChapterContract.FORMAT } != false,
+                ) { "The opened prose resource is not text/html" }
+                val bytes = withContext(Dispatchers.IO) {
+                    opened.stream.readBoundedBookResource(HtmlProseChapterContract.MAX_RAW_BYTES)
+                }
+                withContext(Dispatchers.Default) {
+                    val body = HtmlProseSanitizer.sanitize(
+                        bytes = bytes,
+                        policy = HtmlProseSanitizationPolicy(
+                            resolveImageResource = { source ->
+                                content.resolveLinkedReference(source, BookLinkedResourceKind.IMAGE)
+                            },
+                            resolveFontSource = { source ->
+                                content.resolveLinkedReference(source, BookLinkedResourceKind.FONT)
+                            },
+                            viewport = viewport(),
+                            bookStyleSheets = content.styleSheets,
+                        ),
+                    )
+                    PreparedHtmlProseChapter(
+                        document = HtmlProseDocumentParser().parse(
+                            resourceId,
+                            resource.revision ?: content.revision,
+                            body,
+                        ),
+                        readingDirection = if (body.attr("dir").equals("rtl", true)) {
+                            BookReadingDirection.RIGHT_TO_LEFT
+                        } else {
+                            BookReadingDirection.LEFT_TO_RIGHT
+                        },
+                        language = body.attr("lang").takeIf(String::isNotBlank),
+                    )
+                }
+            }
+            val publication = BookPublication(
+                id = content.publicationId,
+                revision = content.revision,
+                title = resource.title,
+                languages = (listOf(prepared.language) + content.languages)
+                    .filterNotNull()
+                    .normalizedBookContentLanguages(),
+                readingDirection = prepared.readingDirection,
+                readingOrder = listOf(BookResource(resource.id, HtmlProseChapterContract.FORMAT, resource.title)),
+                // Single-resource chapters are already reachable through their chapter row.
+                // Exposing a single start item would duplicate that row as nested navigation.
+                navigation = emptyList(),
+            )
+            BookPreparationResult.Success(
+                PreparedBookDocumentPublication(
+                    publication = publication,
+                    model = BookDocumentPublicationModel(listOf(prepared.document)),
+                    resourceLoader = BookContentSessionResourceLoader(content),
+                ),
+            )
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: HtmlProseLimitExceededException) {
+            failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The prose chapter exceeds a safety limit")
+        } catch (error: IllegalArgumentException) {
+            failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The prose chapter is malformed")
+        } catch (error: Exception) {
+            failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The prose chapter could not be prepared")
+        }
+    }
+
+    private fun failure(
+        reason: BookFailureReason,
+        message: String,
+        canRetry: Boolean = false,
+    ): BookPreparationResult.Failure = BookPreparationResult.Failure(BookFailure(reason, message), canRetry)
+}
+
+private fun Throwable.isTransientBookAccessFailure(): Boolean {
+    return generateSequence(this) { it.cause }.any { error ->
+        when (error) {
+            is SocketTimeoutException,
+            is UnknownHostException,
+            is ConnectException,
+            is NoRouteToHostException,
+            is SocketException,
+            -> true
+            is HttpException -> error.code in RETRYABLE_HTTP_STATUS_CODES
+            else -> false
+        }
+    }
+}
+
+private val RETRYABLE_HTTP_STATUS_CODES = setOf(408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524)
+
+private data class PreparedHtmlProseChapter(
+    val document: BookDocument,
+    val readingDirection: BookReadingDirection,
+    val language: String?,
+)

@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats.recap.delivery
 
+import app.katari.core.platform.PlatformContext
 import eu.kanade.presentation.more.stats.components.statisticsDurationFormatter
-import mihon.core.platform.PlatformContext
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.platform.pluralStringResource
 import tachiyomi.i18n.platform.stringResource

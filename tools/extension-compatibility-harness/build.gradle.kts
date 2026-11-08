@@ -2,18 +2,18 @@
 // the extensions of the stores in a list through the desktop host, on folders of its own, calls each source and writes
 // a report. It has no tests, since all it does needs the network and live stores.
 // Run: ./gradlew :tools:extension-compatibility-harness:run --args="--stores <file> --reports <directory> [options]"
-import mihon.gradle.extensions.extensionHostJvmArguments
-import mihon.gradle.jetbrainsruntime.launchOnJetBrainsRuntime
+import app.katari.gradle.extensions.extensionHostJvmArguments
+import app.katari.gradle.jetbrainsruntime.launchOnJetBrainsRuntime
 
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
     application
 }
 
 application {
-    mainClass = "mihon.tools.extensioncompatibility.MainKt"
+    mainClass = "app.katari.tools.extensioncompatibility.MainKt"
     applicationDefaultJvmArgs = extensionHostJvmArguments + listOf(
         // A few hundred extensions loaded at once, and a few converted at a time
         "-Xmx2g",
@@ -32,11 +32,11 @@ tasks.distTar { enabled = false }
 
 dependencies {
     implementation(projects.desktop)
-    implementation(projects.extensionRuntime)
-    implementation(projects.extensionRuntime.jvmHost)
+    implementation(projects.sources.extensionRuntime)
+    implementation(projects.sources.extensionRuntime.jvmHost)
     implementation(projects.core.common)
-    implementation(projects.domain)
-    implementation(projects.entrySourceApi)
+    implementation(projects.core.domain)
+    implementation(projects.sources.entrySourceApi)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

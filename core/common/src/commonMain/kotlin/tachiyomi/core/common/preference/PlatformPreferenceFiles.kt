@@ -1,6 +1,6 @@
 package tachiyomi.core.common.preference
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * The preference files each platform keeps beside the profiles' stores, opened by what they hold. Each platform names
@@ -18,8 +18,8 @@ enum class PlatformPreferenceFile {
      */
     DEFAULT,
 
-    /** Tracking updates waiting to be sent. */
-    TRACKING_QUEUE,
+    /** Tracker updates queued by versions that had trackers, which upgrading empties. */
+    LEGACY_TRACKING_QUEUE,
 
     /** The manga chapters queued for download. */
     MANGA_DOWNLOAD_QUEUE,

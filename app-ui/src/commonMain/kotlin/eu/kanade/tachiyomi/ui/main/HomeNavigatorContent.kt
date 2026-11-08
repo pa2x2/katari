@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.profiles.ui.switcher.ProfileSwitcherHost
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.components.AppStateBanners
-import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -25,16 +28,11 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
-import mihon.presentation.kit.feedback.AppMessagesHost
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.Scaffold
 
 /**
  * The screens of [navigator], a window's root navigator around [HomeScreen], as the window shows them once a profile
- * is open: the app state banners above them, the side dock beside them, the profile switcher and app-wide messages
- * over them. [overlay] draws over the screens, such as a scrim behind a see-through system navigation bar.
+ * is open: the app state banners above them, the side dock beside them, the profile switcher over them. [overlay]
+ * draws over the screens, such as a scrim behind a see-through system navigation bar.
  */
 @Composable
 fun HomeNavigatorContent(
@@ -50,39 +48,34 @@ fun HomeNavigatorContent(
             .collectLatest { banners.incognito = it }
     }
 
-    AppMessagesHost(graph.appMessages) {
-        // The switcher sits above every screen, so the side dock can open it from any of them
-        ProfileSwitcherHost(
-            navigator = navigator,
-            onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
-        ) {
-            val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-            Scaffold(
-                frame = ScreenFrame.Window,
-                topBar = {
-                    AppStateBanners(
-                        downloadedOnlyMode = banners.downloadedOnly,
-                        incognitoMode = banners.incognito,
-                        indexing = banners.indexing,
-                        modifier = Modifier.windowInsetsPadding(scaffoldInsets),
-                    )
-                },
-                contentWindowInsets = scaffoldInsets,
-            ) { contentPadding ->
-                // Consume insets already used by app state banners
-                Box {
-                    HomeSideNavigationHost(
-                        navigator = navigator,
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding),
-                    ) {
-                        // Shows current screen
-                        DefaultNavigatorScreenTransition(navigator = navigator)
-                    }
+    // The switcher sits above every screen, so the side dock can open it from any of them
+    ProfileSwitcherHost(
+        navigator = navigator,
+        onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
+    ) {
+        val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+        Scaffold(
+            frame = ScreenFrame.Window,
+            topBar = {
+                AppStateBanners(
+                    downloadedOnlyMode = banners.downloadedOnly,
+                    incognitoMode = banners.incognito,
+                    indexing = banners.indexing,
+                    modifier = Modifier.windowInsetsPadding(scaffoldInsets),
+                )
+            },
+            contentWindowInsets = scaffoldInsets,
+        ) { contentPadding ->
+            // Consume insets already used by app state banners
+            Box {
+                HomeSideNavigationHost(
+                    navigator = navigator,
+                    modifier = Modifier
+                        .padding(contentPadding)
+                        .consumeWindowInsets(contentPadding),
+                )
 
-                    overlay()
-                }
+                overlay()
             }
         }
     }

@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.library
 
-import mihon.feature.profiles.core.ProfileStore
+import app.katari.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.service.LibraryUpdateQueue
 

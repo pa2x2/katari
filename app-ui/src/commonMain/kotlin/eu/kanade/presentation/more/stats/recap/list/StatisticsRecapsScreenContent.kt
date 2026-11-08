@@ -4,18 +4,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.AutoStories
+import app.katari.presentation.kit.content.Badge
+import app.katari.presentation.kit.content.BadgeTone
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.list.rowGroupItems
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsViewModel
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.AutoStories
-import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BadgeTone
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.list.rowGroupItems
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

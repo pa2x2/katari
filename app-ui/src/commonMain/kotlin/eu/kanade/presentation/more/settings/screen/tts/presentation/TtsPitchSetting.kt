@@ -3,10 +3,10 @@ package eu.kanade.presentation.more.settings.screen.tts.presentation
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.control.SegmentedButtons
+import app.katari.presentation.kit.list.ControlRow
+import app.katari.tts.api.provider.TtsParameterRange
 import eu.kanade.presentation.more.settings.widget.preferenceHighlight
-import mihon.presentation.kit.control.SegmentedButtons
-import mihon.presentation.kit.list.ControlRow
-import mihon.tts.api.provider.TtsParameterRange
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.abs

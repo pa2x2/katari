@@ -1,0 +1,99 @@
+package app.katari.entry.interactions.book.document.reader
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
+import app.katari.entry.interactions.book.document.reader.box.bookDocumentBoxes
+import app.katari.entry.interactions.book.document.reader.box.textBackdrop
+import app.katari.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
+import app.katari.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
+import app.katari.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import app.katari.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
+import app.katari.entry.interactions.book.preparation.BookPublicationResourceLoader
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.LocalContentColor
+import app.katari.presentation.kit.theme.TextRole
+
+/** Expandable recursive semantic disclosure renderer. */
+@Composable
+internal fun BookDocumentDisclosureRenderer(
+    content: BookDocumentBlockContent.Disclosure,
+    block: BookDocumentBlock,
+    selectionIdentity: String,
+    sectionKey: String,
+    resourceLoader: BookPublicationResourceLoader?,
+    onAnchorClick: (BookDocumentLinkTarget) -> Unit,
+    onExternalLinkClick: (String) -> Unit,
+    preserveTerminalSpacing: Boolean,
+) {
+    val palette = LocalBookDocumentReaderPalette.current
+    val textScale = LocalBookDocumentTypography.current.textScale
+    val selection = LocalBookDocumentChapterSelection.current
+    var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                selection?.handleReaderTap { expanded = !expanded } ?: run { expanded = !expanded }
+            }
+            .padding(vertical = KatariTheme.spacing.s),
+    ) {
+        DisableSelection {
+            CompositionLocalProvider(LocalContentColor provides palette.foreground) {
+                Text(text = if (expanded) "▾ " else "▸ ", role = TextRole.ItemTitle)
+            }
+        }
+        BookDocumentRichTextRenderer(
+            value = content.summary,
+            identity = "$selectionIdentity:disclosure-summary",
+            block = block,
+            onAnchorClick = onAnchorClick,
+            onExternalLinkClick = onExternalLinkClick,
+            separatorAfter = if (expanded) "\n" else "\n\n",
+            baseFontSizeSp = 14f,
+            modifier = Modifier.weight(1f),
+        )
+    }
+    if (expanded) {
+        val styling = LocalBookDocumentAuthoredStyling.current
+        val boxIndex = remember(content.body) { BookDocumentBoxIndex(content.body) }
+        val bodyStart = LocalBookDocumentContentStart.current + block.logicalStart + content.bodyStartWithinBlock
+        val surface = LocalBookDocumentTextBackdrop.current
+        content.body.blocks.forEachIndexed { index, nested ->
+            val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
+            CompositionLocalProvider(
+                LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, surface),
+                LocalBookDocumentContentStart provides bodyStart,
+            ) {
+                BookDocumentBlockRenderer(
+                    block = nested,
+                    owningContent = content.body,
+                    sectionKey = sectionKey,
+                    resourceLoader = resourceLoader,
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    selectionIdentity = "$selectionIdentity:body:$index:${nested.id.value}",
+                    preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
+                    modifier = Modifier
+                        .padding(start = (12 * textScale).dp)
+                        .bookDocumentBoxes(slices, styling, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale, surface),
+                )
+            }
+        }
+    }
+}

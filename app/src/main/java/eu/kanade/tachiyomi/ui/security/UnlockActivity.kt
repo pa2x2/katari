@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.security
 
 import android.os.Bundle
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import logcat.LogPriority
-import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource

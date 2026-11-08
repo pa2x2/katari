@@ -1,0 +1,14 @@
+package app.katari.entry.interactions.download
+
+/** Feature-owned boundary for specialized downloader settings exposed by contributed providers. */
+interface EntryDownloadSettingsFeature {
+    val availableSettings: Set<EntryDownloadSetting>
+
+    fun isAvailable(setting: EntryDownloadSetting): Boolean = setting in availableSettings
+}
+
+enum class EntryDownloadSetting {
+    ARCHIVE_PACKAGING,
+    PARALLEL_SOURCE_TRANSFERS,
+    PARALLEL_ITEM_TRANSFERS,
+}

@@ -7,20 +7,22 @@ description: Bring the Katari website's pages up to date with app and extension 
 
 Leave these alone; they follow the release without edits here:
 
-- The home page's What's new card reads `CHANGELOG.md` when the site builds.
+- The home page's What's new tabs read `CHANGELOG.md`, `desktop/CHANGELOG.md` and
+  `features/sync/server/CHANGELOG.md` when the site builds.
 - `showcase.yml` recaptures every still and clip from a published release and proposes the changed ones against the
   `assets` branch. Never edit `website/src/captures` by hand.
-- `website-release.yml` redeploys the site when a release is published.
+- `website-release.yml` redeploys the site when an app release is published, and `sync-server-image.yml` does once a
+  published server release's image is pushed.
 
 What drifts is the prose: the home page and the pages under `website/src/pages`, which name the app's labels and
 describe what it does.
 
 ## Collect the changes
 
-1. When the release-notes skill hands off, take its new `CHANGELOG.md` and `SDK-CHANGELOG.md` outcomes as the list
-   to check. Otherwise derive outcomes from `git log main..HEAD` and `git diff main...HEAD`, the same way release-notes
-   does, keeping only those a user or extension developer would notice.
-2. Inspect `git diff main...HEAD -- i18n/src/commonMain/moko-resources/base/strings.xml`. Every changed or removed
+1. When the release-notes skill hands off, take its new `CHANGELOG.md` and `sources/entry-source-api/CHANGELOG.md`
+   outcomes as the list to check. Otherwise derive outcomes from `git log main..HEAD` and `git diff main...HEAD`, the
+   same way release-notes does, keeping only those a user or extension developer would notice.
+2. Inspect `git diff main...HEAD -- core/i18n/src/commonMain/moko-resources/base/strings.xml`. Every changed or removed
    string is a label the site may still quote.
 3. Create a temporary file to track each outcome and its verdict.
 
@@ -47,10 +49,10 @@ describe what it does.
    `website/src/pages/developers/upgrade/<major.minor>.astro`, listed first after the SDK changelog in the developer
    contents' "SDK releases" group. Follow `upgrade/3.0.astro`: build changes, then what no longer compiles, then what still
    compiles but behaves differently, each change as a diff `Snippet` with a link to the section that explains it. Write
-   its versions out instead of reading `sdk.ts`. The SDK changelog page renders `SDK-CHANGELOG.md` itself, and the
-   build fails when the file links a guide page that doesn't exist.
+   its versions out instead of reading `sdk.ts`. The SDK changelog page renders `sources/entry-source-api/CHANGELOG.md`
+   itself, and the build fails when the file links a guide page that doesn't exist.
 4. When a page needs a still or clip that does not exist, do not make one by hand. Report the scene it needs so it can
-   be added to `showcase/capture` and `showcase/pipeline/scenes.ts`.
+   be added to `tools/showcase/capture` and `tools/showcase/pipeline/scenes.ts`.
 
 ## Writing rules
 

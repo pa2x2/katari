@@ -2,10 +2,10 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.list.CollapsibleRowGroupHeader
+import app.katari.presentation.kit.list.CollapsibleRowGroupSubheader
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.presentation.kit.list.CollapsibleRowGroupHeader
-import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

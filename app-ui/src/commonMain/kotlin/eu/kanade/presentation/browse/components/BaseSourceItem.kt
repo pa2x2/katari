@@ -2,11 +2,11 @@ package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.content.LogoSize
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.content.LogoSize
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.domain.source.model.Source
 
 /**

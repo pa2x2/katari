@@ -9,9 +9,9 @@ import android.webkit.WebView
 import androidx.webkit.UserAgentMetadata
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
+import app.katari.core.common.web.webViewSafeHeaders
 import kotlinx.coroutines.suspendCancellableCoroutine
 import logcat.LogPriority
-import mihon.core.common.web.webViewSafeHeaders
 import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
 import kotlin.coroutines.resume

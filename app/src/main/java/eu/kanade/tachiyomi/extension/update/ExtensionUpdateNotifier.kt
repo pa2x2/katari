@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 class ExtensionUpdateNotifier(
     private val context: Context,

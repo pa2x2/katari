@@ -3,6 +3,9 @@ package eu.kanade.tachiyomi.ui.stats.earlier
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.entry.interactions.statistics.EntryStatisticsFeature
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -18,9 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.statistics.EntryStatisticsFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider

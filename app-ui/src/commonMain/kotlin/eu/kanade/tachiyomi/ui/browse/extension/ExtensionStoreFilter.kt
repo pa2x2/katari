@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import androidx.compose.runtime.Immutable
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension
-import mihon.domain.extension.model.ExtensionStore
 
 @Immutable
 data class ExtensionStoreFilter(

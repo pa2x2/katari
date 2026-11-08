@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.about
 
 import androidx.compose.runtime.Composable
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /** The app updating itself, which About checks for and configures. */
 @PlatformFacility

@@ -2,11 +2,11 @@ package eu.kanade.presentation.more.settings.screen.debug
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.files.DocumentPickerRequest
+import app.katari.presentation.kit.files.rememberDocumentPicker
+import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.files.DocumentPickerRequest
-import mihon.presentation.kit.files.rememberDocumentPicker
 
 /**
  * Dumps the app's logs, with [exception] when the crash screen reports one, the way the platform hands them over:

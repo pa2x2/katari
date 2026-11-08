@@ -2,6 +2,16 @@ package eu.kanade.tachiyomi.ui.download.translation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.download.EntryDownloadActionFeature
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.translate.EntryTranslateFeature
+import app.katari.entry.interactions.translate.EntryTranslateQueueItem
+import app.katari.entry.interactions.translate.EntryTranslateWaiting
+import app.katari.entry.interactions.translation.EntryTranslationLanguagesFeature
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -16,16 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.download.EntryDownloadState
-import mihon.entry.interactions.translate.EntryTranslateFeature
-import mihon.entry.interactions.translate.EntryTranslateQueueItem
-import mihon.entry.interactions.translate.EntryTranslateWaiting
-import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository

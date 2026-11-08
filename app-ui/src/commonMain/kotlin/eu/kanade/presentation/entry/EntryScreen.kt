@@ -42,6 +42,24 @@ import androidx.compose.ui.util.fastMap
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.entry.interactions.child.EntryChildProgressLabel
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.translate.EntryTranslateStatus
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.layout.TwoPanes
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.presentation.kit.selection.ItemSelection
+import app.katari.presentation.kit.selection.SelectableItems
+import app.katari.presentation.kit.selection.SelectionActions
+import app.katari.presentation.kit.window.currentWindowLayout
+import app.katari.sync.ui.entry.EntrySync
+import app.katari.sync.ui.question.EntryQuestionBanner
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.ChapterGroupHeader
@@ -73,22 +91,6 @@ import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.entry.interactions.child.EntryChildProgressLabel
-import mihon.entry.interactions.download.EntryDownloadState
-import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.layout.TwoPanes
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.refresh.PullRefresh
-import mihon.presentation.kit.selection.ItemSelection
-import mihon.presentation.kit.selection.SelectableItems
-import mihon.presentation.kit.selection.SelectionActions
-import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -104,6 +106,7 @@ fun EntryScreen(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -115,7 +118,6 @@ fun EntryScreen(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -198,6 +200,7 @@ fun EntryScreen(
             updatesLabel = updatesLabel,
             activity = activity,
             onActivityClicked = onActivityClicked,
+            sync = sync,
             chapterSwipeStartAction = chapterSwipeStartAction,
             chapterSwipeEndAction = chapterSwipeEndAction,
             navigateUp = navigateUp,
@@ -209,7 +212,6 @@ fun EntryScreen(
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
-            onTrackingClicked = onTrackingClicked,
             onDuplicatesClicked = onDuplicatesClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -260,6 +262,7 @@ fun EntryScreen(
             updatesLabel = updatesLabel,
             activity = activity,
             onActivityClicked = onActivityClicked,
+            sync = sync,
             navigateUp = navigateUp,
             onChapterClicked = onChapterClicked,
             onDownloadChapter = onDownloadChapter,
@@ -269,7 +272,6 @@ fun EntryScreen(
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
-            onTrackingClicked = onTrackingClicked,
             onDuplicatesClicked = onDuplicatesClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -321,6 +323,7 @@ private fun EntryScreenSmallImpl(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -332,7 +335,6 @@ private fun EntryScreenSmallImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -491,6 +493,7 @@ private fun EntryScreenSmallImpl(
                         chapterHighlightGeneration++
                     },
                     onContinueReading = continueAction,
+                    handOffNote = sync.handOffNote,
                 )
             }
         },
@@ -560,15 +563,14 @@ private fun EntryScreenSmallImpl(
                         // The activity line shares the action row's item so the continue target's list index, which
                         // counts the items above the chapters, stays the same whether or not the line is shown.
                         Column {
+                            sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                             EntryActionRow(
                                 favorite = state.entry.favorite,
-                                trackingCount = state.trackingCount,
                                 updatesLabel = updatesLabel,
                                 onAddToLibraryClicked = onAddToLibraryClicked,
                                 onAddToMergeClicked = onAddToMergeClicked,
                                 onWebViewClicked = onWebViewClicked,
                                 onWebViewLongClicked = onWebViewLongClicked,
-                                onTrackingClicked = onTrackingClicked,
                                 onDuplicatesClicked = onDuplicatesClicked,
                                 onUpdatesClicked = onUpdatesClicked,
                                 onEditCategory = onEditCategoryClicked,
@@ -671,6 +673,7 @@ fun EntryScreenLargeImpl(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
+    sync: EntrySync,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -682,7 +685,6 @@ fun EntryScreenLargeImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -837,6 +839,7 @@ fun EntryScreenLargeImpl(
                         chapterHighlightGeneration++
                     },
                     onContinueReading = continueAction,
+                    handOffNote = sync.handOffNote,
                 )
             }
         },
@@ -887,15 +890,14 @@ fun EntryScreenLargeImpl(
                                 onManageMerge = onManageMergeClicked,
                             )
                         }
+                        sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                         EntryActionRow(
                             favorite = state.entry.favorite,
-                            trackingCount = state.trackingCount,
                             updatesLabel = updatesLabel,
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onAddToMergeClicked = onAddToMergeClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
                             onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,

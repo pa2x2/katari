@@ -8,9 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.app.ui.di.LocalAppUiGraph
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
 /** Which app state banners show over a window's screens. */

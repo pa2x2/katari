@@ -24,6 +24,21 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.TravelExplore
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.layout.RowGridColumn
+import app.katari.presentation.kit.layout.columnCount
+import app.katari.presentation.kit.layout.coverGridCells
+import app.katari.presentation.kit.layout.coverListCells
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.components.BindScrollToTop
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
@@ -37,20 +52,6 @@ import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.displayTitle
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.TravelExplore
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.layout.RowGridColumn
-import mihon.presentation.kit.layout.columnCount
-import mihon.presentation.kit.layout.coverGridCells
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
@@ -95,7 +96,6 @@ internal fun LibrarySearchResults(
         return
     }
     val displayMode by getDisplayMode(0)
-    val isListMode = displayMode == LibraryDisplayMode.List || displayMode == LibraryDisplayMode.ComfortableList
     val gridPadding = if (displayMode == LibraryDisplayMode.List) KatariTheme.sizes.none else KatariTheme.spacing.s
 
     val gridState = rememberLazyGridState()
@@ -119,12 +119,16 @@ internal fun LibrarySearchResults(
                 onGlobalSearchClicked = onGlobalSearchClicked,
             )
         }
-    if (isListMode) {
+    if (displayMode == LibraryDisplayMode.List) {
         RowGridColumn(contentPadding, modifier.fillMaxSize()) { cells, rowPadding -> results(cells, 1, rowPadding) }
     } else {
         BoxWithConstraints(modifier = modifier.fillMaxSize()) {
             val direction = LocalLayoutDirection.current
-            val cells = coverGridCells(coverSize)
+            val cells = if (displayMode == LibraryDisplayMode.ComfortableList) {
+                coverListCells()
+            } else {
+                coverGridCells(coverSize)
+            }
             // The width the grid lays its columns across, so the preview fills whole lines of them
             val gridWidth = maxWidth - contentPadding.calculateStartPadding(direction) -
                 contentPadding.calculateEndPadding(direction) - gridPadding * 2
@@ -150,7 +154,6 @@ private fun LibrarySearchResultsGrid(
     onSeeAll: (LibraryPage) -> Unit,
     onGlobalSearchClicked: (() -> Unit)?,
 ) {
-    val isListMode = displayMode == LibraryDisplayMode.List || displayMode == LibraryDisplayMode.ComfortableList
     val defaultCategoryTitle = stringResource(MR.strings.label_default)
     FastScrollLazyVerticalGrid(
         columns = cells,
@@ -179,7 +182,7 @@ private fun LibrarySearchResultsGrid(
             val preview = searchResultPreview(
                 items = items,
                 columns = columns,
-                rows = if (isListMode) LIST_PREVIEW_ROWS else GRID_PREVIEW_ROWS,
+                rows = if (columns == 1) SINGLE_COLUMN_PREVIEW_ROWS else GRID_PREVIEW_ROWS,
             )
             item(
                 key = "search_header:${page.id}",
@@ -338,4 +341,4 @@ private fun LibraryItem.gridSpan(columns: Int): Int {
 }
 
 private const val GRID_PREVIEW_ROWS = 2
-private const val LIST_PREVIEW_ROWS = 4
+private const val SINGLE_COLUMN_PREVIEW_ROWS = 4

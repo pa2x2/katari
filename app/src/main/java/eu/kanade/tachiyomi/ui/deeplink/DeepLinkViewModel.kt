@@ -4,6 +4,10 @@ import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.source.EntryDeepLinkFeature
+import app.katari.entry.interactions.source.EntryDeepLinkResolution
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -15,10 +19,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.entry.interactions.source.EntryDeepLinkFeature
-import mihon.entry.interactions.source.EntryDeepLinkResolution
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry

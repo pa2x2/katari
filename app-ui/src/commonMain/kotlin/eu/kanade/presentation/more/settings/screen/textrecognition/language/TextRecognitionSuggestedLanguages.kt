@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.language
 
-import mihon.language.api.tag.LanguageTag
+import app.katari.language.api.tag.LanguageTag
 
 /**
  * Languages worth offering above the full list when picking a text language: the device language, then the languages

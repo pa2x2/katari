@@ -1,0 +1,332 @@
+package tachiyomi.domain.library.service
+
+import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.TriState
+import tachiyomi.core.common.preference.getEnum
+import tachiyomi.core.common.preference.getEnumSet
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.model.CoverSize
+import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryGroupType
+import tachiyomi.domain.library.model.LibraryGrouping
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
+import tachiyomi.domain.library.model.LibrarySort
+import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
+import tachiyomi.domain.library.update.model.SourceUpdatePause
+
+class LibraryPreferences(
+    private val preferenceStore: PreferenceStore,
+) {
+
+    val downloadedOnly: Preference<Boolean> = preferenceStore.getBoolean(
+        Preference.appStateKey("pref_downloaded_only"),
+        false,
+    )
+
+    val displayMode: Preference<LibraryDisplayMode> = preferenceStore.getObjectFromString(
+        "pref_display_mode_library",
+        LibraryDisplayMode.default,
+        LibraryDisplayMode.Serializer::serialize,
+        LibraryDisplayMode.Serializer::deserialize,
+    )
+
+    val pinnedDisplayStyle: Preference<LibraryPinnedDisplayStyle> = preferenceStore.getEnum(
+        "pref_library_pinned_display_style",
+        LibraryPinnedDisplayStyle.TonalGroup,
+    )
+
+    val sortingMode: Preference<LibrarySort> = preferenceStore.getObjectFromString(
+        "library_sorting_mode",
+        LibrarySort.default,
+        LibrarySort.Serializer::serialize,
+        LibrarySort.Serializer::deserialize,
+    )
+
+    val randomSortSeed: Preference<Int> = preferenceStore.getInt("library_random_sort_seed", 0)
+
+    val coverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_library_cover_size", CoverSize.Auto)
+
+    val lastUpdatedTimestamp: Preference<Long> = preferenceStore.getLong(
+        Preference.appStateKey("library_update_last_timestamp"),
+        0L,
+    )
+    val autoUpdateInterval: Preference<Int> = preferenceStore.getInt("pref_library_update_interval_key", 0)
+
+    val autoUpdateDeviceRestrictions: Preference<Set<String>> = preferenceStore.getStringSet(
+        "library_update_restriction",
+        setOf(
+            DEVICE_ONLY_ON_WIFI,
+        ),
+    )
+    val updateSkipRules: Preference<Set<String>> = preferenceStore.getStringSet(
+        UPDATE_SKIP_RULES_PREF_KEY,
+        setOf(
+            SKIP_COMPLETED,
+            SKIP_OUTSIDE_RELEASE_PERIOD,
+        ),
+    )
+
+    val updatePausedSources: Preference<Set<SourceUpdatePause>> = preferenceStore.getObjectSetFromStringSet(
+        UPDATE_PAUSED_SOURCES_PREF_KEY,
+        emptySet(),
+        SourceUpdatePause::serialize,
+        SourceUpdatePause::deserialize,
+    )
+
+    val updateExcludedEntryTypes: Preference<Set<EntryType>> = preferenceStore.getEnumSet(
+        "library_update_excluded_entry_types",
+        emptySet(),
+    )
+
+    val autoUpdateMetadata: Preference<Boolean> = preferenceStore.getBoolean("auto_update_metadata", false)
+
+    val showContinueReadingButton: Preference<Boolean> = preferenceStore.getBoolean(
+        "display_continue_reading_button",
+        false,
+    )
+
+    // region Filter
+
+    val filterDownloaded: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_downloaded_v2",
+        TriState.DISABLED,
+    )
+
+    val filterUnread: Preference<TriState> = preferenceStore.getEnum("pref_filter_library_unread_v2", TriState.DISABLED)
+
+    val filterBookmarked: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_bookmarked_v2",
+        TriState.DISABLED,
+    )
+
+    val filterCompleted: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_completed_v2",
+        TriState.DISABLED,
+    )
+
+    val filterNotStarted: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_not_started",
+        TriState.DISABLED,
+    )
+
+    val filterIntervalCustom: Preference<TriState> = preferenceStore.getEnum(
+        "pref_filter_library_interval_custom",
+        TriState.DISABLED,
+    )
+
+    // endregion
+
+    // region Group
+
+    // Compatibility accessor for existing callers and the legacy serialized enum names.
+    val groupType: Preference<LibraryGroupType> = preferenceStore.getEnum(
+        "pref_group_library_type",
+        LibraryGroupType.Category,
+    )
+
+    val grouping: Preference<LibraryGrouping> = preferenceStore.getObjectFromString(
+        "pref_group_library_type",
+        LibraryGrouping.default,
+        LibraryGrouping.Serializer::serialize,
+        LibraryGrouping.Serializer::deserialize,
+    )
+
+    // endregion
+
+    // region Badges
+
+    val downloadBadge: Preference<Boolean> = preferenceStore.getBoolean("display_download_badge", false)
+
+    val unreadBadge: Preference<Boolean> = preferenceStore.getBoolean("display_unread_badge", true)
+
+    val localBadge: Preference<Boolean> = preferenceStore.getBoolean("display_local_badge", true)
+
+    val languageBadge: Preference<Boolean> = preferenceStore.getBoolean("display_language_badge", false)
+
+    val entryTypeBadge: Preference<Boolean> = preferenceStore.getBoolean("display_entry_type_badge", true)
+
+    val mergedBadge: Preference<Boolean> = preferenceStore.getBoolean("display_merged_badge", true)
+
+    val newShowUpdatesCount: Preference<Boolean> = preferenceStore.getBoolean("library_show_updates_count", true)
+    val newUpdatesCount: Preference<Int> = preferenceStore.getInt(
+        Preference.appStateKey("library_unseen_updates_count"),
+        0,
+    )
+
+    // endregion
+
+    // region Category
+
+    val defaultCategory: Preference<Int> = preferenceStore.getInt(DEFAULT_CATEGORY_PREF_KEY, -1)
+
+    val lastUsedCategory: Preference<Int> = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
+
+    val lastUsedPageId: Preference<String> = preferenceStore.getString(
+        Preference.appStateKey("last_used_library_page_id"),
+    )
+
+    val categoryTabs: Preference<Boolean> = preferenceStore.getBoolean("display_category_tabs", true)
+
+    val categoryNumberOfItems: Preference<Boolean> = preferenceStore.getBoolean("display_number_of_items", false)
+
+    val categorizedDisplaySettings: Preference<Boolean> = preferenceStore.getBoolean("categorized_display", false)
+
+    // endregion
+
+    // region Chapter
+
+    val filterChapterByRead: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_filter_by_read",
+        Entry.SHOW_ALL,
+    )
+
+    val filterChapterByDownloaded: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_filter_by_downloaded",
+        Entry.SHOW_ALL,
+    )
+
+    val filterChapterByBookmarked: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_filter_by_bookmarked",
+        Entry.SHOW_ALL,
+    )
+
+    val filterChapterByFiller: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_filter_by_filler",
+        Entry.SHOW_ALL,
+    )
+
+    val showChapterPreviews: Preference<Boolean> = preferenceStore.getBoolean(
+        "default_chapter_show_previews",
+        true,
+    )
+
+    // and upload date
+    val sortChapterBySourceOrNumber: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_sort_by_source_or_number",
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_SORTING_MASK,
+    )
+
+    val displayChapterByNameOrNumber: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_display_by_name_or_number",
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_DISPLAY_MASK,
+    )
+
+    val sortChapterByAscendingOrDescending: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_sort_by_ascending_or_descending",
+        Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_SORT_DIR_MASK,
+    )
+
+    fun setChapterSettingsDefault(entry: Entry) {
+        filterChapterByRead.set(entry.unreadFilterRaw)
+        filterChapterByDownloaded.set(entry.downloadedFilterRaw)
+        filterChapterByBookmarked.set(entry.bookmarkedFilterRaw)
+        filterChapterByFiller.set(entry.fillerFilterRaw)
+        sortChapterBySourceOrNumber.set(entry.sorting)
+        displayChapterByNameOrNumber.set(entry.displayMode)
+        sortChapterByAscendingOrDescending.set(
+            if (entry.sortDescending()) Entry.CHAPTER_SORT_DESC else Entry.CHAPTER_SORT_ASC,
+        )
+        showChapterPreviews.set(entry.showsChapterPreviews)
+    }
+
+    /** The chapter flags an entry gets when it joins the library or is reset to the saved defaults. */
+    fun defaultChapterFlags(): Long {
+        return filterChapterByRead.get() or
+            filterChapterByDownloaded.get() or
+            filterChapterByBookmarked.get() or
+            filterChapterByFiller.get() or
+            sortChapterBySourceOrNumber.get() or
+            displayChapterByNameOrNumber.get() or
+            sortChapterByAscendingOrDescending.get() or
+            if (showChapterPreviews.get()) Entry.SHOW_ALL else Entry.CHAPTER_HIDE_PREVIEWS
+    }
+
+    val hideMissingChapters: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_hide_missing_chapter_indicators",
+        false,
+    )
+    // endregion
+
+    // region Swipe Actions
+
+    val swipeToStartAction: Preference<ChapterSwipeAction> = preferenceStore.getEnum(
+        "pref_chapter_swipe_end_action",
+        ChapterSwipeAction.ToggleBookmark,
+    )
+
+    val swipeToEndAction: Preference<ChapterSwipeAction> = preferenceStore.getEnum(
+        "pref_chapter_swipe_start_action",
+        ChapterSwipeAction.ToggleRead,
+    )
+
+    val updateMangaTitles: Preference<Boolean> = preferenceStore.getBoolean("pref_update_library_manga_titles", false)
+
+    // endregion
+
+    enum class ChapterSwipeAction {
+        ToggleRead,
+        ToggleBookmark,
+        Download,
+        Disabled,
+    }
+
+    companion object {
+        const val DEVICE_ONLY_ON_WIFI = "wifi"
+        const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
+        const val DEVICE_CHARGING = "ac"
+
+        const val UPDATE_SKIP_RULES_PREF_KEY = "library_update_manga_restriction"
+        const val SKIP_COMPLETED = "manga_ongoing"
+        const val SKIP_UNSEEN = "manga_fully_read"
+        const val SKIP_NOT_STARTED = "manga_started"
+        const val SKIP_OUTSIDE_RELEASE_PERIOD = "manga_outside_release_period"
+
+        fun skipRulesOf(values: Set<String>) = LibraryUpdateSkipRules(
+            skipCompleted = SKIP_COMPLETED in values,
+            skipUnseen = SKIP_UNSEEN in values,
+            skipNotStarted = SKIP_NOT_STARTED in values,
+            skipOutsideReleasePeriod = SKIP_OUTSIDE_RELEASE_PERIOD in values,
+        )
+
+        fun skipRulesValues(rules: LibraryUpdateSkipRules): Set<String> = buildSet {
+            if (rules.skipCompleted) add(SKIP_COMPLETED)
+            if (rules.skipUnseen) add(SKIP_UNSEEN)
+            if (rules.skipNotStarted) add(SKIP_NOT_STARTED)
+            if (rules.skipOutsideReleasePeriod) add(SKIP_OUTSIDE_RELEASE_PERIOD)
+        }
+
+        const val MARK_DUPLICATE_CHAPTER_READ_NEW = "new"
+        const val MARK_DUPLICATE_CHAPTER_READ_EXISTING = "existing"
+
+        const val DEFAULT_CATEGORY_PREF_KEY = "default_category"
+
+        /**
+         * Category ids that library updates used to be limited to and to leave out. They are now category update
+         * rules, but older backups still carry them and restoring converts them.
+         */
+        const val LEGACY_UPDATE_CATEGORIES_PREF_KEY = "library_update_categories"
+        const val LEGACY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY = "library_update_categories_exclude"
+
+        /**
+         * Ids of sources that library updates left out until resumed, from before a pause could end on its own. Older
+         * backups still carry them and restoring converts them.
+         */
+        const val LEGACY_UPDATE_EXCLUDED_SOURCES_PREF_KEY = "library_update_excluded_sources"
+        const val UPDATE_PAUSED_SOURCES_PREF_KEY = "library_update_paused_sources"
+
+        /**
+         * Items per row in portrait and in landscape, 0 for automatic, from before the grid kept a cover size. Older
+         * backups still carry them and restoring converts them.
+         */
+        const val LEGACY_PORTRAIT_COLUMNS_PREF_KEY = "pref_library_columns_portrait_key"
+        const val LEGACY_LANDSCAPE_COLUMNS_PREF_KEY = "pref_library_columns_landscape_key"
+
+        val categoryPreferenceKeys = setOf(
+            DEFAULT_CATEGORY_PREF_KEY,
+            LEGACY_UPDATE_CATEGORIES_PREF_KEY,
+            LEGACY_UPDATE_CATEGORIES_EXCLUDE_PREF_KEY,
+        )
+    }
+}

@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.network
 
-import mihon.core.common.network.cookie.AppCookieStore
+import app.katari.core.common.network.cookie.AppCookieStore
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl

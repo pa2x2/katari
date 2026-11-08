@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
 import androidx.compose.runtime.Composable
+import app.katari.core.common.platform.PlatformFacility
 import eu.kanade.presentation.more.settings.Preference
-import mihon.core.common.platform.PlatformFacility
 
 /** The choice of how extensions are installed, which the advanced settings offer among the extension settings. */
 @PlatformFacility

@@ -17,7 +17,7 @@
 #
 # Left out, as in the Android build: the mpv player, Lua and JavaScript scripting, libcurl, FFmpeg's encoders, muxers
 # and devices. Also left out on the desktop: TLS, since the app hands mpv every stream through its loopback HTTP proxy
-# (video-engine/mpv's StreamProxy); X11 and Wayland, which an LGPL mpv builds no video output or VA-API display for (mpv
+# (features/video-engine/mpv's StreamProxy); X11 and Wayland, which an LGPL mpv builds no video output or VA-API display for (mpv
 # opens VA-API on the GPU's DRM render node instead, which the render API's DRM display parameter or a standalone
 # hwdec=vaapi-copy uses under X11 and Wayland alike); and mpv's Vulkan renderer, which the render API cannot use.
 #
@@ -423,10 +423,8 @@ strip --strip-unneeded "$library"
 python3 -I "$here/check-library.py" "$library" "$GLIBC_FLOOR" "$here/system-libraries.txt"
 python3 -I "$here/verify-library.py" "$library" "$work/test-media" "$toolchain/cc"
 
-mpv_commit=${mpv##*mpv-}
-mpv_description="$(fork_version mpv_base) (git ${mpv_commit:0:9}, $(fork_version mpv_date))"
 licences=(
-    "mpv=$mpv_description=$mpv"
+    "mpv=$(fork_version mpv)=$mpv"
     "FFmpeg=$(fork_version ffmpeg)=$ffmpeg"
     "dav1d=$(fork_version dav1d)=$dav1d"
     "libxml2=$(fork_version libxml2)=$libxml2"

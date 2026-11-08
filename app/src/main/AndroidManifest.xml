@@ -34,6 +34,12 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
+    <!-- For scanning a linked device's sync code; devices without a camera type the code instead -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <queries>
         <package android:name="app.mihon" />
         <package android:name="app.mihon.debug" />
@@ -194,44 +200,12 @@
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <activity
-            android:name=".data.track.oauth.TrackLoginActivity"
-            android:exported="true"
-            android:label="@string/track_activity_name">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="mihon" />
-
-                <data android:host="anilist-auth" />
-                <data android:host="bangumi-auth" />
-                <data android:host="mangabaka-auth" />
-                <data android:host="myanimelist-auth" />
-                <data android:host="shikimori-auth" />
-                <data android:host="hikka-auth" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- Comick requires native reverse-domain schemes  -->
-                <data android:scheme="app.mihon" />
-                <data android:host="comick-auth" />
-            </intent-filter>
-        </activity>
-
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />
 
         <receiver
-            android:name="mihon.feature.migration.work.SourceMigrationActionReceiver"
+            android:name="app.katari.sourcemigration.work.SourceMigrationActionReceiver"
             android:exported="false" />
 
         <receiver
@@ -269,6 +243,16 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
+        </provider>
+
+        <!-- WorkManager starts on first use, with the configuration App provides -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                tools:node="remove" />
         </provider>
 
         <provider

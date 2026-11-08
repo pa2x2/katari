@@ -1,0 +1,49 @@
+package tachiyomi.domain.chapter.model
+
+import app.katari.core.common.extensions.EMPTY
+import kotlinx.serialization.json.JsonObject
+
+data class Chapter(
+    val id: Long,
+    val mangaId: Long,
+    val read: Boolean,
+    val bookmark: Boolean,
+    val dateFetch: Long,
+    val sourceOrder: Long,
+    val url: String,
+    val name: String,
+    val dateUpload: Long,
+    val chapterNumber: Double,
+    val scanlator: String?,
+    val memo: JsonObject,
+) {
+    val isRecognizedNumber: Boolean
+        get() = chapterNumber >= 0f
+
+    fun copyFrom(other: Chapter): Chapter {
+        return copy(
+            name = other.name,
+            url = other.url,
+            dateUpload = other.dateUpload,
+            chapterNumber = other.chapterNumber,
+            scanlator = other.scanlator?.ifBlank { null },
+        )
+    }
+
+    companion object {
+        fun create() = Chapter(
+            id = -1,
+            mangaId = -1,
+            read = false,
+            bookmark = false,
+            dateFetch = 0,
+            sourceOrder = 0,
+            url = "",
+            name = "",
+            dateUpload = -1,
+            chapterNumber = -1.0,
+            scanlator = null,
+            memo = JsonObject.EMPTY,
+        )
+    }
+}

@@ -1,0 +1,69 @@
+import kotlin.Boolean;
+
+-- Records pulled from the server that can't be applied yet: a kind or kind version this app doesn't read, a parent
+-- record not here yet, a timestamp too far ahead of this device's clock, or an apply that failed. Kept as received
+-- and applied once what they wait for arrives.
+CREATE TABLE sync_pending(
+    record_key TEXT NOT NULL PRIMARY KEY,
+    -- The protocol's SequencedRecord as pulled, envelope and payload unchanged.
+    record BLOB NOT NULL,
+    reason TEXT NOT NULL,
+    -- The record key it waits for, when it waits for a parent.
+    waits_for TEXT,
+    received_at INTEGER NOT NULL,
+    kind TEXT NOT NULL DEFAULT '',
+    -- The app version that held it, for a record that waits for an update ('unreadable', 'failed'): retried once the
+    -- app differs.
+    held_on TEXT
+);
+
+CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;
+
+hold:
+INSERT INTO sync_pending(record_key, record, reason, waits_for, received_at, kind, held_on)
+VALUES (:recordKey, :record, :reason, :waitsFor, :receivedAt, :kind, :heldOn)
+ON CONFLICT(record_key) DO UPDATE SET
+    record = excluded.record,
+    reason = excluded.reason,
+    waits_for = excluded.waits_for,
+    received_at = excluded.received_at,
+    kind = excluded.kind,
+    held_on = excluded.held_on;
+
+get:
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+FROM sync_pending
+WHERE record_key = :recordKey;
+
+waitingFor:
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+FROM sync_pending
+WHERE waits_for = :recordKey
+ORDER BY received_at, record_key;
+
+-- Everything held for a reason that may have gone away since: a newer app, a clock caught up, a reference arrived.
+-- What waits for an update, a record this app can't read or one that failed to apply, is tried again only by another
+-- app version than the one that held it.
+retryable:
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+FROM sync_pending
+WHERE waits_for IS NULL AND (reason NOT IN ('unreadable', 'failed') OR held_on IS NOT :appVersion)
+ORDER BY received_at, record_key;
+
+release:
+DELETE FROM sync_pending
+WHERE record_key = :recordKey;
+
+failedCount:
+SELECT count(*)
+FROM sync_pending
+WHERE reason = 'failed';
+
+unreadableKinds:
+SELECT DISTINCT kind
+FROM sync_pending
+WHERE reason = 'unreadable'
+ORDER BY kind;
+
+clear:
+DELETE FROM sync_pending;

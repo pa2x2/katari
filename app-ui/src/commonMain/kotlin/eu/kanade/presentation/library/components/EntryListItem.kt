@@ -6,13 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.presentation.kit.content.BadgeGroup
+import app.katari.presentation.kit.content.CoverFrame
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.CoverRow
+import app.katari.presentation.kit.theme.TextRole
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryCover
-import mihon.presentation.kit.content.BadgeGroup
-import mihon.presentation.kit.content.CoverFrame
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.CoverRow
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverModel
 

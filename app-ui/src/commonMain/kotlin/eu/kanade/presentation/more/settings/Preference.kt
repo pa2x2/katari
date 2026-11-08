@@ -3,8 +3,7 @@ package eu.kanade.presentation.more.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.entry.interactions.tracking.EntryTrackingAccount
-import mihon.feature.profiles.core.ProfileStore
+import app.katari.profiles.core.ProfileStore
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.core.common.preference.Preference as PreferenceData
@@ -194,25 +193,6 @@ sealed class Preference {
         ) : PreferenceItem<String, Boolean>() {
             override val icon: ImageVector? = null
             override val storedPreference: PreferenceData<*> = preference
-        }
-
-        /**
-         * A [PreferenceItem] for individual tracker.
-         */
-        data class TrackingAccountPreference(
-            val account: EntryTrackingAccount,
-            val login: () -> Unit,
-            val logout: () -> Unit,
-            /** Null when the account has no remote profile to refresh. */
-            val refresh: (() -> Unit)? = null,
-            val isRefreshing: Boolean = false,
-            override val isProfileSpecific: Boolean = false,
-        ) : PreferenceItem<String, Unit>() {
-            override val title: String = ""
-            override val visible: Boolean = true
-            override val subtitle: String? = null
-            override val icon: ImageVector? = null
-            override val onValueChanged: suspend (value: String) -> Unit = {}
         }
 
         data class InfoPreference(

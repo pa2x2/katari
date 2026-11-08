@@ -1,27 +1,21 @@
 package eu.kanade.presentation.library.update.report.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.library.update.report.LibraryUpdateReport
+import app.katari.presentation.kit.list.CollapsibleRowGroupHeader
+import app.katari.presentation.kit.list.CollapsibleRowGroupSubheader
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupItem
+import app.katari.presentation.kit.list.RowGroupPosition
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.library.update.labelRes
-import mihon.feature.library.update.report.LibraryUpdateReport
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.i18n.*
@@ -38,14 +32,12 @@ internal fun CollapsibleReportSection(
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column {
-        ReportSectionHeader(
+        CollapsibleRowGroupHeader(
+            title = stringResource(title),
+            summary = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
+            expanded = expanded,
+            onClick = { expanded = !expanded },
             icon = icon,
-            title = title,
-            count = items.size,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded },
-            trailing = { ExpandIcon(expanded) },
         )
         if (expanded) {
             RowGroup(rows = items.map { item -> { FoldedItem(item = item, onClickEntry = onClickEntry) } })
@@ -105,10 +97,10 @@ private fun CollapsibleGroup(
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column {
-        SettingsRow(
+        CollapsibleRowGroupSubheader(
             title = title,
-            subtitle = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
-            trailing = { ExpandIcon(expanded) },
+            summary = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
+            expanded = expanded,
             onClick = { expanded = !expanded },
         )
         if (expanded) {
@@ -131,17 +123,5 @@ private fun FoldedItem(
         subtitle = if (item.isRechecked) stringResource(MR.strings.library_update_report_rechecked) else null,
         onClick = { onClickEntry(item.entry) },
         trailing = itemTrailing?.let { { it(item) } },
-    )
-}
-
-@Composable
-private fun ExpandIcon(expanded: Boolean) {
-    Icon(
-        imageVector = if (expanded) {
-            MaterialSymbols.Rounded.KeyboardArrowUp
-        } else {
-            MaterialSymbols.Rounded.KeyboardArrowDown
-        },
-        contentDescription = null,
     )
 }

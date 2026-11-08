@@ -14,10 +14,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
-import mihon.presentation.kit.content.StatisticsMetrics
-import mihon.presentation.kit.content.drawingStyle
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.StatisticsMetrics
+import app.katari.presentation.kit.content.drawingStyle
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 
 /**
  * Evenly spaced vertical bars with optional labels centered under individual bars. The [highlightIndex] bar

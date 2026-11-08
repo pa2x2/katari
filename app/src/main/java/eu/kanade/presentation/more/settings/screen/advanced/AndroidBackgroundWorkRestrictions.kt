@@ -5,9 +5,9 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
 import androidx.core.net.toUri
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.powerManager
-import mihon.core.platform.PlatformContext
 
 /** Android's battery optimisation, which the app asks to be exempted from. */
 @Inject

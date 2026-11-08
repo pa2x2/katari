@@ -1,9 +1,9 @@
 package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
+import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
+import app.katari.presentation.kit.sheet.TabbedSheet
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
-import mihon.entry.interactions.library.EntryLibraryFilterAvailability
-import mihon.presentation.kit.sheet.TabbedSheet
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

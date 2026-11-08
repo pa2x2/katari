@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.stats.data
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.entry.interactions.statistics.EntryStatisticsAccent
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.statistics.EntryStatisticsAccent
 
 data class StatsType(
     val type: EntryType,

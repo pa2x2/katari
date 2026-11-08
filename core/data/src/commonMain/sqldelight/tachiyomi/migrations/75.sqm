@@ -1,0 +1,10 @@
+-- Katari no longer supports trackers: their bindings go, with the merge follow-ups that bound a merged entry to them
+-- and the sync records of the bindings.
+DROP INDEX IF EXISTS idx_entry_sync_entry_id;
+DROP TABLE IF EXISTS entry_sync;
+
+DELETE FROM merge_consequences WHERE participant_id = 'entry.merge.library-initialization';
+
+DELETE FROM sync_records WHERE kind = 'tracker.binding';
+DELETE FROM sync_outbox WHERE kind = 'tracker.binding';
+DELETE FROM sync_pending WHERE kind = 'tracker.binding';

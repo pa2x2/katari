@@ -3,14 +3,14 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import app.katari.ui.di.AppUiGraph
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.core.screen.Screen
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.belongsToProfile
 import eu.kanade.presentation.util.LocalBackPress
-import mihon.app.ui.di.AppUiGraph
-import mihon.app.ui.di.LocalAppUiGraph
 
 interface SearchableSettings : Screen {
 

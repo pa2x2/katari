@@ -2,6 +2,33 @@ package eu.kanade.tachiyomi.ui.translator.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.TranslationFeature
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.engine.TranslationEngineSelection
+import app.katari.translation.api.engine.TranslationEngineStatus
+import app.katari.translation.api.host.TranslationHostActions
+import app.katari.translation.api.request.TranslationRequest
+import app.katari.translation.api.request.TranslationSourceLanguageSelection
+import app.katari.translation.api.request.TranslationTargetLanguageSelection
+import app.katari.translation.ui.picker.language.supportsPair
+import app.katari.translation.ui.presentation.TranslationResultSpeechPhase
+import app.katari.translation.ui.presentation.TranslationResultSpeechState
+import app.katari.translation.ui.presentation.TranslationResultSpeechTarget
+import app.katari.translation.ui.presentation.TranslationSessionExternalAction
+import app.katari.translation.ui.presentation.speechTargets
+import app.katari.translation.ui.session.TranslationLanguageSupportState
+import app.katari.translation.ui.session.TranslationSessionExecutionMode
+import app.katari.translation.ui.session.TranslationSessionHostCoordinator
+import app.katari.translation.ui.session.TranslationSessionInput
+import app.katari.translation.ui.session.TranslationSessionState
+import app.katari.translation.ui.session.displayedSessionResult
+import app.katari.tts.api.TtsFeature
+import app.katari.tts.api.request.TtsLanguageSelection
+import app.katari.tts.ui.playback.ShortFormSpeechController
+import app.katari.tts.ui.playback.ShortFormSpeechPhase
+import app.katari.tts.ui.playback.ShortFormSpeechRequest
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -15,33 +42,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.TranslationFeature
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.engine.TranslationEngineStatus
-import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.request.TranslationRequest
-import mihon.translation.api.request.TranslationSourceLanguageSelection
-import mihon.translation.api.request.TranslationTargetLanguageSelection
-import mihon.translation.ui.picker.language.supportsPair
-import mihon.translation.ui.presentation.TranslationResultSpeechPhase
-import mihon.translation.ui.presentation.TranslationResultSpeechState
-import mihon.translation.ui.presentation.TranslationResultSpeechTarget
-import mihon.translation.ui.presentation.TranslationSessionExternalAction
-import mihon.translation.ui.presentation.speechTargets
-import mihon.translation.ui.session.TranslationLanguageSupportState
-import mihon.translation.ui.session.TranslationSessionExecutionMode
-import mihon.translation.ui.session.TranslationSessionHostCoordinator
-import mihon.translation.ui.session.TranslationSessionInput
-import mihon.translation.ui.session.TranslationSessionState
-import mihon.translation.ui.session.displayedSessionResult
-import mihon.tts.api.TtsFeature
-import mihon.tts.api.request.TtsLanguageSelection
-import mihon.tts.ui.playback.ShortFormSpeechController
-import mihon.tts.ui.playback.ShortFormSpeechPhase
-import mihon.tts.ui.playback.ShortFormSpeechRequest
 
 @AssistedInject
 internal class TranslatorViewModel(
@@ -84,7 +84,7 @@ internal class TranslatorViewModel(
     private val speechController = ShortFormSpeechController<TranslationResultSpeechTarget>(
         feature = ttsFeature,
         scope = viewModelScope,
-        onFailure = { eventChannel.trySend(TranslatorEvent.SpeechFailed) },
+        onFailure = { eventChannel.trySend(TranslatorEvent.SpeechFailed(it.explanation)) },
     )
     init {
         observeSession()

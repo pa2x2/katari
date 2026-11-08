@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetHeader
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

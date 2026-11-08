@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.data.notification
 
+import app.katari.core.metro.AppCoroutineScope
+import app.katari.entry.interactions.download.EntryDownloadActionFeature
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.entry.interactions.merge.EntryMergeNavigationFeature
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.state.EntryConsumptionFeature
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.metro.AppCoroutineScope
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository

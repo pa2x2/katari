@@ -1,0 +1,180 @@
+package eu.kanade.tachiyomi.source
+
+import app.katari.entry.interactions.download.EntryDownloadMaintenanceFeature
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.launch
+import tachiyomi.domain.source.model.SourceDisplayInfo
+import tachiyomi.domain.source.model.StubSource
+import tachiyomi.domain.source.model.UnifiedStubSource
+import tachiyomi.domain.source.repository.StubSourceRepository
+import tachiyomi.domain.source.service.SourceManager
+import java.util.concurrent.ConcurrentHashMap
+
+/** @param localSource makes the local source, which is made again with every change to the loaded extensions. */
+@ContributesBinding(AppScope::class)
+class DefaultSourceManager(
+    private val extensionManager: ExtensionManager,
+    private val sourceRepository: StubSourceRepository,
+    private val scope: CoroutineScope,
+    private val downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
+    private val localSource: () -> UnifiedSource,
+) : SourceManager {
+
+    private val _isInitialized = MutableStateFlow(false)
+    override val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
+
+    private val sourcesMap = ConcurrentHashMap<Long, UnifiedSource>()
+    private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
+    private val storedStubsLoaded = CompletableDeferred<Unit>()
+
+    private val _sources = MutableStateFlow<List<UnifiedSource>>(emptyList())
+    override val sources: Flow<List<UnifiedSource>> = _sources.asStateFlow()
+
+    init {
+        scope.launch {
+            extensionManager.loadedExtensionsFlow
+                .collectLatest { extensions ->
+                    val extensionSources = mapUnifiedSources(extensions)
+                    val localSource = localSource()
+                    val allSources = extensionSources + (localSource.id to localSource)
+
+                    sourcesMap.clear()
+                    sourcesMap.putAll(allSources)
+
+                    _sources.value = allSources.values.toList()
+
+                    extensionSources.values.forEach { source ->
+                        registerStubSource(source)
+                    }
+
+                    // Callers waiting for the sources also expect a missing source to come with its stored name
+                    storedStubsLoaded.await()
+                    _isInitialized.value = true
+                }
+        }
+
+        scope.launch {
+            sourceRepository.subscribeAll()
+                .onCompletion { storedStubsLoaded.complete(Unit) }
+                .collectLatest { sources ->
+                    sources.forEach {
+                        stubSourcesMap[it.id] = it
+                    }
+                    storedStubsLoaded.complete(Unit)
+                }
+        }
+
+        // A stub looked up before the extension repository loaded has no name and would otherwise keep showing its id.
+        scope.launch {
+            extensionManager.availableExtensionsFlow
+                .collect { extensions ->
+                    val repositorySources = extensions.flatMap { it.sources }.associateBy { it.id }
+                    stubSourcesMap.replaceAll { id, stub ->
+                        stub.takeIf { it.name.isNotBlank() } ?: repositorySources[id]?.toStubSource() ?: stub
+                    }
+                }
+        }
+    }
+
+    override fun get(sourceKey: Long): UnifiedSource? {
+        return sourcesMap[sourceKey]
+    }
+
+    override fun getOrStub(sourceKey: Long): UnifiedSource {
+        return sourcesMap[sourceKey] ?: UnifiedStubSource(stubSource(sourceKey))
+    }
+
+    override fun getAll(): List<UnifiedSource> {
+        return sourcesMap.values.toList()
+    }
+
+    override fun getStubSources(): List<UnifiedSource> {
+        val installedSourceIds = sourcesMap.keys
+        return stubSourcesMap.values
+            .filterNot { it.id in installedSourceIds }
+            .map(::UnifiedStubSource)
+    }
+
+    override fun getDisplayInfo(sourceKey: Long): SourceDisplayInfo {
+        val source = sourcesMap[sourceKey]
+        if (source != null) {
+            return SourceDisplayInfo(
+                id = source.id,
+                name = source.name,
+                lang = (source as? EntryCatalogueSource)?.lang ?: "",
+                isMissing = false,
+                hasKnownName = true,
+            )
+        }
+
+        val stub = stubSource(sourceKey)
+        return SourceDisplayInfo(
+            id = stub.id,
+            name = stub.name.ifBlank { stub.id.toString() },
+            lang = stub.lang,
+            isMissing = true,
+            hasKnownName = stub.name.isNotBlank(),
+        )
+    }
+
+    private fun registerStubSource(source: UnifiedSource) {
+        scope.launch {
+            val stub = StubSource(
+                id = source.id,
+                lang = (source as? EntryCatalogueSource)?.lang ?: "",
+                name = source.name,
+            )
+            val dbSource = sourceRepository.getStubSource(stub.id)
+            if (dbSource == stub) return@launch
+            sourceRepository.upsertStubSource(stub.id, stub.lang, stub.name)
+            if (dbSource != null) {
+                downloadMaintenance.value.renameSource(UnifiedStubSource(dbSource), UnifiedStubSource(stub))
+            }
+        }
+    }
+
+    /**
+     * Stored stubs are loaded as soon as the manager starts, so this misses only for a source never seen before or a
+     * lookup in the first moments after startup. Those get a nameless stub right away and the stored or listed name
+     * once it's found, rather than blocking the caller on the database.
+     */
+    private fun stubSource(id: Long): StubSource {
+        stubSourcesMap[id]?.let { return it }
+        val nameless = StubSource(id = id, lang = "", name = "")
+        stubSourcesMap.putIfAbsent(id, nameless)?.let { return it }
+        scope.launch {
+            stubSourcesMap.replace(id, nameless, createStubSource(id))
+        }
+        return nameless
+    }
+
+    private suspend fun createStubSource(id: Long): StubSource {
+        sourceRepository.getStubSource(id)?.let {
+            return it
+        }
+        extensionManager.getSourceData(id)?.let {
+            return it
+        }
+        return StubSource(id = id, lang = "", name = "")
+    }
+}
+
+// SourceClaims already left every key with one source, the local source's included
+private fun mapUnifiedSources(
+    extensions: List<Extension.Loaded>,
+): Map<Long, UnifiedSource> {
+    return extensions.flatMap { it.sources }.associateBy { it.id }
+}

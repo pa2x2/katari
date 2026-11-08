@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.stats.recap.delivery
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import java.time.LocalDate

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.data
 
+import app.katari.entry.interactions.media.EntryMediaCacheFeature
 import eu.kanade.tachiyomi.data.backup.create.BackupFileNames
 import eu.kanade.tachiyomi.data.export.LibraryExportDocuments
-import mihon.entry.interactions.media.EntryMediaCacheFeature
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.backup.service.BackupRestoreRunner

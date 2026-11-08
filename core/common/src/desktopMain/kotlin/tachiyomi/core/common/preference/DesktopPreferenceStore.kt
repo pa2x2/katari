@@ -14,12 +14,12 @@ import tachiyomi.core.common.preference.DesktopPreference.BooleanPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.FloatPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.IntPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.LongPrimitive
-import tachiyomi.core.common.preference.DesktopPreference.ObjectAsInt
 import tachiyomi.core.common.preference.DesktopPreference.ObjectAsString
 import tachiyomi.core.common.preference.DesktopPreference.ObjectSetAsStringSet
 import tachiyomi.core.common.preference.DesktopPreference.StringPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.StringSetPrimitive
 import java.nio.file.Path
+import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -34,6 +34,7 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
     private val unwritten = AtomicBoolean(false)
     private val writeRequests = Channel<Unit>(Channel.CONFLATED)
     private val writeLock = Any()
+    private val writeListeners = CopyOnWriteArraySet<(String) -> Unit>()
 
     internal val values: StateFlow<Map<String, Any>> = state.asStateFlow()
 
@@ -46,12 +47,29 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
 
     internal fun put(key: String, value: Any) {
         val previous = state.getAndUpdate { it + (key to value) }
-        if (previous[key] != value) requestWrite()
+        if (previous[key] != value) changed(key)
     }
 
     internal fun remove(key: String) {
         val previous = state.getAndUpdate { it - key }
-        if (key in previous) requestWrite()
+        if (key in previous) changed(key)
+    }
+
+    /**
+     * Has [listener] called with the key of every value a write changes or removes from now on, on the writing thread
+     * once the new value can be read.
+     */
+    fun addWriteListener(listener: (String) -> Unit) {
+        writeListeners += listener
+    }
+
+    fun removeWriteListener(listener: (String) -> Unit) {
+        writeListeners -= listener
+    }
+
+    private fun changed(key: String) {
+        requestWrite()
+        writeListeners.forEach { it(key) }
     }
 
     /**
@@ -73,10 +91,10 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
      * finishes first, so it cannot bring the file back afterwards.
      */
     fun clear() {
-        synchronized(writeLock) {
-            state.value = emptyMap()
-            unwritten.set(!file.delete())
+        val removed = synchronized(writeLock) {
+            state.getAndUpdate { emptyMap() }.keys.also { unwritten.set(!file.delete()) }
         }
+        removed.forEach { key -> writeListeners.forEach { it(key) } }
     }
 
     private fun requestWrite() {
@@ -115,15 +133,6 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
         deserializer: (String) -> T,
     ): Preference<T> {
         return ObjectAsString(this, key, defaultValue, serializer, deserializer)
-    }
-
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> {
-        return ObjectAsInt(this, key, defaultValue, serializer, deserializer)
     }
 
     override fun <T> getObjectSetFromStringSet(

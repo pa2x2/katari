@@ -2,39 +2,29 @@ package eu.kanade.presentation.entry.updates
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.PauseCircle
+import app.katari.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetHeader
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.library.update.labelRes
 import eu.kanade.presentation.library.update.sourcePauseEndText
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Info
-import mihon.icons.materialsymbols.rounded.PauseCircle
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.ChoiceRow
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
@@ -74,14 +64,20 @@ fun EntryUpdatesSheet(
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
             ) {
                 if (mode == EntryUpdateMode.FOLLOW_RULES) {
-                    DecisionCard(text = decisionText(status, categories))
+                    NoticeCard(text = decisionText(status, categories), tone = NoticeTone.Info)
                     // Always check overrides a paused source, so the pause only matters while the entry follows the rules.
                     pausedSources.forEach { source ->
-                        PausedSourceCard(source = source, onResume = { onResumeSource(source.id) })
+                        NoticeCard(
+                            text = pausedSourceText(source),
+                            tone = NoticeTone.Info,
+                            icon = MaterialSymbols.Rounded.PauseCircle,
+                            actionLabel = stringResource(MR.strings.library_update_report_resume),
+                            onAction = { onResumeSource(source.id) },
+                        )
                     }
                 }
                 if (entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE) {
-                    DecisionCard(text = stringResource(MR.strings.entry_updates_fetch_once))
+                    NoticeCard(text = stringResource(MR.strings.entry_updates_fetch_once), tone = NoticeTone.Info)
                 }
                 RowGroup {
                     EntryUpdateMode.entries.forEach { option ->
@@ -115,65 +111,10 @@ fun EntryUpdatesSheet(
 }
 
 @Composable
-private fun UpdatesNoticeCard(content: @Composable RowScope.() -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
-    ) {
-        Row(
-            modifier = Modifier.padding(start = KatariTheme.spacing.m),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-            content = content,
-        )
-    }
-}
-
-@Composable
-private fun DecisionCard(text: String) {
-    UpdatesNoticeCard {
-        Icon(
-            imageVector = MaterialSymbols.Rounded.Info,
-            contentDescription = null,
-            tone = ContentTone.Primary,
-        )
-        Text(
-            text = text,
-            role = TextRole.Body,
-            modifier = Modifier.padding(vertical = KatariTheme.spacing.m).padding(end = KatariTheme.spacing.m),
-        )
-    }
-}
-
-@Composable
-private fun PausedSourceCard(source: EntryUpdatesViewModel.PausedSource, onResume: () -> Unit) {
-    UpdatesNoticeCard {
-        Icon(
-            imageVector = MaterialSymbols.Rounded.PauseCircle,
-            contentDescription = null,
-            tone = ContentTone.Primary,
-        )
-        Text(
-            text = if (source.until == null) {
-                stringResource(MR.strings.entry_updates_source_paused, source.name)
-            } else {
-                stringResource(
-                    MR.strings.entry_updates_source_paused_until,
-                    source.name,
-                    sourcePauseEndText(source.until),
-                )
-            },
-            role = TextRole.Body,
-            modifier = Modifier.weight(1f),
-        )
-        Button(
-            label = stringResource(MR.strings.library_update_report_resume),
-            onClick = onResume,
-            modifier = Modifier.padding(KatariTheme.spacing.xs),
-            style = ButtonStyle.Text,
-        )
-    }
+private fun pausedSourceText(source: EntryUpdatesViewModel.PausedSource): String = if (source.until == null) {
+    stringResource(MR.strings.entry_updates_source_paused, source.name)
+} else {
+    stringResource(MR.strings.entry_updates_source_paused_until, source.name, sourcePauseEndText(source.until))
 }
 
 private val EntryUpdateMode.titleRes

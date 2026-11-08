@@ -2,6 +2,10 @@ package eu.kanade.tachiyomi.ui.download
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.download.EntryDownloadQueueGroup
+import app.katari.entry.interactions.download.EntryDownloadQueueItem
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -15,10 +19,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.download.EntryDownloadQueueGroup
-import mihon.entry.interactions.download.EntryDownloadQueueItem
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import kotlin.time.Duration.Companion.seconds
 
 @Inject

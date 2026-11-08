@@ -3,7 +3,7 @@ package eu.kanade.presentation.more.settings.widget
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.presentation.kit.list.ToggleRow
+import app.katari.presentation.kit.list.ToggleRow
 
 @Composable
 fun SwitchPreferenceWidget(

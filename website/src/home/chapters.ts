@@ -1,5 +1,5 @@
 /**
- * What the home page tells, in order: three chapters of features, each with its copy and screenshots. The components
+ * What the home page tells, in order: four chapters of features, each with its copy and screenshots. The components
  * in this directory only lay it out.
  */
 import type { ImageMetadata } from "astro";
@@ -23,9 +23,11 @@ import translationBefore from "../captures/translation-before.png";
 import translationPopup from "../captures/translation-popup.png";
 import translator from "../captures/translator.png";
 import updates from "../captures/updates.png";
+import type { Device } from "../media/devices.ts";
+import { type CaptureImage, plannedCapture } from "../media/planned-captures.ts";
 
 export type Shot =
-  | { kind: "still"; image: ImageMetadata; alt: string; caption: string; landscape?: boolean }
+  | { kind: "still"; image: CaptureImage; alt: string; caption: string; /** A phone when unset. */ device?: Exclude<Device, "browser"> }
   | { kind: "compare"; before: ImageMetadata; after: ImageMetadata; beforeLabel: string; afterLabel: string; alt: string; caption: string }
   | { kind: "clip"; src: string; poster: ImageMetadata; label: string; caption: string };
 
@@ -40,6 +42,11 @@ export interface Feature {
   docs: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
+  /**
+   * How the shots stand beside the text when not overlapping phones: in a scene the wide shot stands behind and the
+   * upright ones in front of its lower edge; with windows the first window stands behind and the others in front of it.
+   */
+  arrangement?: "scene" | "windows";
 }
 
 export interface Chapter {
@@ -119,9 +126,10 @@ export const chapters: Chapter[] = [
         text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
         highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
         shots: [
+          { kind: "still", image: plannedCapture("comic-reader.png"), alt: "A comic page in the reader", caption: "A comic in the reader" },
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
-          { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", landscape: true },
+          { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", device: "phone-landscape" },
         ],
       },
       {
@@ -183,6 +191,89 @@ export const chapters: Chapter[] = [
         shots: [
           { kind: "clip", src: recapClip, poster: recapTop, label: "The year's recap playing as a story, page by page", caption: "The recap plays as a story" },
           { kind: "still", image: recapShare, alt: "The year's recap as a picture to share", caption: "Shared as a picture" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "everywhere",
+    numeral: "四",
+    title: "Everywhere",
+    intro: "One library on all your devices.",
+    features: [
+      {
+        id: "desktop",
+        docs: ["docs/install/", "docs/comic-reader/", "docs/book-reader/", "docs/video/"],
+        title: "Katari on your computer",
+        text: "The Linux app has the same library, readers and player, laid out for a wide window and at home with a mouse and keys.",
+        highlights: [
+          "More columns and bigger covers as the window grows",
+          "Every reader and the player list their keys with ?",
+          "Keep an episode playing in a small window while you work",
+          "The desktop's media controls pause it and change episodes",
+        ],
+        arrangement: "windows",
+        shots: [
+          {
+            kind: "still",
+            image: plannedCapture("desktop-book.png"),
+            alt: "A book in Katari for Linux, two pages side by side on a wide window",
+            caption: "A book two pages at a time",
+            device: "window",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("desktop-pip.png"),
+            alt: "An episode playing in the small picture-in-picture window",
+            caption: "An episode in a small window",
+            device: "picture-in-picture",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("desktop-keys.png"),
+            alt: "The player listing every key it knows",
+            caption: "Every key, one ? away",
+            device: "window",
+          },
+        ],
+      },
+      {
+        id: "sync",
+        docs: ["docs/sync/", "docs/sync-server/"],
+        title: "Your library on every device",
+        text: "Your library, progress and history stay the same across your devices, through a server you run yourself.",
+        highlights: [
+          "Every device keeps its whole library and works offline",
+          "Pick up on one device where you stopped on another",
+          "Link a new device by scanning a code",
+        ],
+        arrangement: "scene",
+        shots: [
+          {
+            kind: "still",
+            image: plannedCapture("sync-desktop.png"),
+            alt: "The same library in Katari for Linux",
+            caption: "The same library on Linux",
+            device: "window",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-page.png"),
+            alt: "The Sync page listing the account's devices",
+            caption: "The Sync page",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-link-code.png"),
+            alt: "Link a device showing a code to scan",
+            caption: "Link a device",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-handoff.png"),
+            alt: "The reader offering to go where another device got to",
+            caption: "Pick up where you stopped",
+          },
         ],
       },
     ],

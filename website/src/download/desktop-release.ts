@@ -1,10 +1,10 @@
 /**
- * The desktop app's release the site offers, read from GitHub while the site builds: the newest stable release, or,
- * while it has none, the newest pre-release, so an alpha is offered until the first stable version and a later beta
- * never replaces a stable one. The site rebuilds when a release of either app is published.
+ * The desktop app's release the site offers (see offeredRelease), read from GitHub while the site builds. The site
+ * rebuilds when a release is published.
  */
+import type { Platform } from "../guide/platforms.ts";
 import type { GitHubRelease } from "./github.ts";
-import { publishedReleases } from "./published-releases.ts";
+import { offeredRelease } from "./published-releases.ts";
 import type { ReleaseFile } from "./release-format.ts";
 
 export interface DesktopRelease {
@@ -34,8 +34,7 @@ export function desktopRelease(): Promise<DesktopRelease | undefined> {
 }
 
 async function fetchDesktopRelease(): Promise<DesktopRelease | undefined> {
-  const desktop = (await publishedReleases()).filter((candidate) => candidate.tag_name.startsWith(TAG_PREFIX));
-  const offered = desktop.find((candidate) => !candidate.prerelease) ?? desktop[0];
+  const offered = await offeredRelease(TAG_PREFIX);
   return offered && toDesktopRelease(offered);
 }
 
@@ -51,4 +50,9 @@ function toDesktopRelease(release: GitHubRelease): DesktopRelease {
     page: release.html_url,
     appImage: { url: appImage.browser_download_url, bytes: appImage.size },
   };
+}
+
+/** Where Katari runs, as the home page and link previews name it; Linux joins once the desktop app has a release. */
+export async function offeredPlatforms(): Promise<Platform[]> {
+  return ["Android", ...((await desktopRelease()) ? (["Linux"] as const) : [])];
 }

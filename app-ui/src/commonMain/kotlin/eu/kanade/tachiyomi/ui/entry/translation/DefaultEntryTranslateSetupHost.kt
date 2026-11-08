@@ -1,21 +1,21 @@
 package eu.kanade.tachiyomi.ui.entry.translation
 
+import app.katari.core.platform.PlatformContext
+import app.katari.language.api.tag.LanguageTag
+import app.katari.model.artifacts.api.ModelArtifactStore
+import app.katari.model.artifacts.api.descriptor.ModelArtifactDescriptor
+import app.katari.model.artifacts.api.download.ModelArtifactDownloadApproval
+import app.katari.model.artifacts.api.state.ModelArtifactState
+import app.katari.text.recognition.api.component.TextRecognitionComponentId
+import app.katari.text.recognition.api.host.TextRecognitionHostActions
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.host.TranslationHostActions
+import app.katari.translation.api.model.TranslationModelDescriptor
+import app.katari.translation.api.provider.TranslationProviderDisclosure
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
-import mihon.core.platform.PlatformContext
-import mihon.language.api.tag.LanguageTag
-import mihon.model.artifacts.api.ModelArtifactStore
-import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
-import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
-import mihon.model.artifacts.api.state.ModelArtifactState
-import mihon.text.recognition.api.component.TextRecognitionComponentId
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.host.TranslationHostActions
-import mihon.translation.api.model.TranslationModelDescriptor
-import mihon.translation.api.provider.TranslationProviderDisclosure
 
 @Inject
 @ContributesBinding(AppScope::class)

@@ -1,0 +1,29 @@
+import app.katari.sync.protocol.file.FileCategory;
+
+-- The files the newest copy of each live record lists, which is what keeps a stored file from being removed.
+CREATE TABLE record_files(
+    account_id INTEGER NOT NULL,
+    record_key TEXT NOT NULL,
+    category TEXT AS FileCategory NOT NULL,
+    sha256 TEXT NOT NULL,
+    -- As the record lists it, so a pull can hand the reference back unchanged.
+    size INTEGER NOT NULL,
+    PRIMARY KEY (account_id, record_key, category, sha256),
+    FOREIGN KEY (account_id, record_key) REFERENCES records(account_id, record_key) ON DELETE CASCADE
+);
+
+CREATE INDEX record_files_file_index ON record_files(account_id, category, sha256);
+
+insert:
+INSERT OR IGNORE INTO record_files(account_id, record_key, category, sha256, size)
+VALUES (:accountId, :recordKey, :category, :sha256, :size);
+
+deleteForRecord:
+DELETE FROM record_files
+WHERE account_id = :accountId AND record_key = :recordKey;
+
+forRecords:
+SELECT record_key, category, sha256, size
+FROM record_files
+WHERE account_id = :accountId AND record_key IN :recordKeys
+ORDER BY record_key, category, sha256;

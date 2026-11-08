@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.crash
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * Opens the crash screen for a crash the app can't go on from, in a process of its own that outlives the crashing one.

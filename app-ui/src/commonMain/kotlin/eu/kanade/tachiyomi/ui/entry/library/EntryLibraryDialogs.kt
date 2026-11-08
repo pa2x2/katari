@@ -3,12 +3,12 @@ package eu.kanade.tachiyomi.ui.entry.library
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.sourcemigration.dialog.MigrateEntryDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
-import mihon.feature.migration.dialog.MigrateEntryDialog
 
 /** Shows [model]'s dialog; [onOpenEntry] opens another entry and [onEditCategories] the category settings. */
 @Composable

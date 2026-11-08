@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings
 
-import mihon.presentation.kit.list.RowGroupPosition
+import app.katari.presentation.kit.list.RowGroupPosition
 
 /**
  * The card slice each preference draws, or null for one that sits outside the cards. Consecutive rows share a card;

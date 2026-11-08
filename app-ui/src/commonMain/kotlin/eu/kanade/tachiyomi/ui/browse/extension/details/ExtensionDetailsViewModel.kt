@@ -2,6 +2,13 @@ package eu.kanade.tachiyomi.ui.browse.extension.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceResolution
+import app.katari.entry.interactions.source.EntrySourceHomeFeature
+import app.katari.entry.interactions.source.EntrySourceHomeResolution
+import app.katari.profiles.core.ProfileManager
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -34,15 +41,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
-import mihon.entry.interactions.source.EntrySourceHomeFeature
-import mihon.entry.interactions.source.EntrySourceHomeResolution
-import mihon.feature.profiles.core.ProfileManager
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import kotlin.time.Duration.Companion.seconds
@@ -128,8 +129,7 @@ class ExtensionDetailsViewModel(
                     }
                     .toImmutableList()
             }
-            .catch { throwable ->
-                logcat(LogPriority.ERROR, throwable)
+            .resubscribeOnFailure(this@ExtensionDetailsViewModel) {
                 emit(persistentListOf())
             }
     }

@@ -1,0 +1,328 @@
+package eu.kanade.tachiyomi.ui.video.player.screen
+
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.presentation.kit.theme.KatariTheme
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerPicturePill
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
+import eu.kanade.tachiyomi.ui.video.player.components.problemExplanation
+import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.skippedLabel
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
+import eu.kanade.tachiyomi.ui.video.player.picture.icon
+import eu.kanade.tachiyomi.ui.video.player.picture.label
+import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
+import eu.kanade.tachiyomi.ui.video.player.server.playingServer
+import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
+import kotlinx.coroutines.delay
+import tachiyomi.domain.entry.model.PictureFraming
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
+ * the held speed boost, a zoom, episode and source switching (an episode change can be cancelled there), a failed
+ * episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch that
+ * failed and the first-run gesture guide, which waits for a frame and steps aside for a problem screen.
+ * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
+ */
+@Composable
+internal fun BoxScope.VideoPlayerStatusOverlays(
+    current: VideoPlayerViewModel.State.Ready,
+    ui: VideoPlayerWatchUiState,
+    host: VideoPlayerScreenHost,
+    viewModel: VideoPlayerViewModel,
+    actions: VideoPlayerWatchActions,
+    engine: WatchedPlayerEngine,
+    temporarySpeedBoost: Float?,
+    isInPictureInPictureMode: Boolean,
+    endScreenVisible: Boolean,
+    seekStepSeconds: Int,
+    markerSkip: VideoPlayerMarkerSkip,
+    onUndoSkip: (Long) -> Unit,
+) {
+    if (ui.startupOverlayVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        val playbackData = current.playback.playbackData
+        VideoPlayerLoadingOverlay(
+            videoTitle = current.entryTitle,
+            episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
+            onBack = host.onClose,
+            step = current.serverNotice?.let(VideoPlayerViewModel.LoadingStep::FallingBack)
+                ?: VideoPlayerViewModel.LoadingStep.Opening(server = playingServer(playbackData)?.label),
+            sourceChoice = playbackData.sourceChoice()?.let { choice ->
+                SourceChoiceAction(choice) { actions.openSettings(choice.settingsSection) }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    val episodeChange = current.episodeChange
+    val failedEpisodeId = (episodeChange as? VideoPlayerViewModel.EpisodeChange.Failed)?.episodeId
+    var episodePickerVisible by remember(failedEpisodeId) { mutableStateOf(false) }
+    val switchingLabel = when {
+        episodeChange is VideoPlayerViewModel.EpisodeChange.Loading ->
+            stringResource(MR.strings.anime_playback_loading_episode, episodeChange.episodeName)
+        current.isSourceSwitching -> stringResource(MR.strings.anime_playback_switching_source)
+        else -> null
+    }
+    if (temporarySpeedBoost != null && !isInPictureInPictureMode) {
+        VideoPlayerSpeedBoostPill(
+            speedLabel = videoPlaybackSpeedLabel(temporarySpeedBoost),
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+    val pictureFraming = rememberPicturePillFraming(ui)
+    if (pictureFraming != null && !isInPictureInPictureMode) {
+        VideoPlayerPicturePill(
+            label = pictureFraming.label(),
+            icon = pictureFraming.icon,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+    if (switchingLabel != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        VideoPlayerSwitchingOverlay(
+            label = switchingLabel,
+            modifier = Modifier.align(Alignment.TopCenter),
+            onCancel = viewModel::cancelEpisodeChange.takeIf {
+                episodeChange is VideoPlayerViewModel.EpisodeChange.Loading
+            },
+        )
+    }
+
+    if (
+        episodeChange is VideoPlayerViewModel.EpisodeChange.Failed &&
+        !isInPictureInPictureMode &&
+        !ui.subtitleEditorVisible
+    ) {
+        val choices = episodeChange.choices
+        val sourceChoice = choices?.sourceChoice()?.let { SourceChoiceAction(it) { episodePickerVisible = true } }
+        VideoPlayerEpisodeChangeError(
+            episodeName = episodeChange.episodeName,
+            title = stringResource(episodeChange.problem.cause.title),
+            explanation = problemExplanation(
+                cause = episodeChange.problem.cause,
+                choice = sourceChoice?.choice,
+                failedServers = choices?.servers.orEmpty()
+                    .filter { it.key in episodeChange.failedServerKeys }
+                    .map { it.label },
+            ),
+            sourceChoice = sourceChoice,
+            onDismiss = viewModel::dismissEpisodeChange,
+            onOpenWebView = episodeChange.webView?.let { webView ->
+                {
+                    host.onOpenWebView(
+                        EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                        webView,
+                        current.entryTitle,
+                    )
+                }
+            },
+            onRetry = viewModel::retryEpisodeChange,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .videoPlayerSafeContentPadding(includeTop = true)
+                .padding(
+                    top = KatariTheme.sizes.touchTarget + KatariTheme.spacing.xl,
+                    start = KatariTheme.spacing.l,
+                    end = KatariTheme.spacing.l,
+                ),
+        )
+        if (choices != null) {
+            VideoPlayerSourcePicker(
+                visible = episodePickerVisible,
+                options = VideoSourceOptions(
+                    listed = choices,
+                    current = choices.selection,
+                    active = choices.selection,
+                    preview = episodeChange.preview,
+                    failedServerKeys = episodeChange.failedServerKeys,
+                ),
+                onPreview = viewModel::previewEpisodeChangeSelection,
+                onApply = viewModel::retryEpisodeChangeWith,
+                onDismissRequest = { episodePickerVisible = false },
+            )
+        }
+    }
+
+    // Held until the first frame, so it doesn't cover the loading heading and its time on screen counts from then.
+    val serverNotice = current.serverNotice?.takeIf { !ui.startupOverlayVisible }
+    if (serverNotice != null) {
+        LaunchedEffect(serverNotice) {
+            delay(SERVER_NOTICE_MS)
+            viewModel.dismissServerNotice()
+        }
+    }
+    if (
+        serverNotice != null &&
+        current.switchFailure == null &&
+        engine.notice == null &&
+        engine.problem == null &&
+        !isInPictureInPictureMode &&
+        !ui.subtitleEditorVisible
+    ) {
+        VideoPlayerNoticePill(
+            label = stringResource(
+                MR.strings.anime_playback_server_fallback,
+                serverNotice.failedServer,
+                serverNotice.playingServer,
+            ),
+            modifier = Modifier.align(Alignment.TopCenter),
+            actionLabel = stringResource(MR.strings.anime_playback_change),
+            onAction = {
+                viewModel.dismissServerNotice()
+                actions.openSettings(VideoPlayerSettingsSection.Server)
+            },
+            onDismiss = viewModel::dismissServerNotice,
+        )
+    }
+
+    val skipped = markerSkip.skipped
+    if (
+        skipped != null &&
+        serverNotice == null &&
+        current.switchFailure == null &&
+        engine.notice == null &&
+        engine.problem == null &&
+        !isInPictureInPictureMode &&
+        !ui.subtitleEditorVisible
+    ) {
+        VideoPlayerNoticePill(
+            label = stringResource(skipped.marker.kind.skippedLabel),
+            modifier = Modifier.align(Alignment.TopCenter),
+            actionLabel = stringResource(MR.strings.action_undo),
+            onAction = {
+                markerSkip.dismissSkipped()
+                onUndoSkip(skipped.fromMs)
+            },
+            onDismiss = markerSkip::dismissSkipped,
+        )
+    }
+
+    val shownNotice = engine.notice
+    if (shownNotice != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible && engine.problem == null) {
+        VideoPlayerEngineNotice(
+            notice = shownNotice,
+            engine = engine,
+            host = host,
+            positionMs = { ui.playbackSnapshot.positionMs },
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+
+    val shownProblem = engine.problem
+    if (shownProblem != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        VideoPlayerEngineProblem(
+            problem = shownProblem,
+            current = current,
+            ui = ui,
+            host = host,
+            viewModel = viewModel,
+            actions = actions,
+            engine = engine,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+
+    // After the problem screen, so a retry from it that fails again says so over it.
+    val switchFailure = current.switchFailure
+    if (switchFailure != null) {
+        LaunchedEffect(switchFailure) {
+            delay(SWITCH_FAILURE_MS)
+            viewModel.dismissSwitchFailure()
+        }
+    }
+    if (switchFailure != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        val section = (switchFailure.target?.choice ?: current.playback.playbackData.sourceChoice())?.settingsSection
+        // Asking again for a pick the source doesn't offer gets the same answer.
+        val notOffered = switchFailure.problem.cause == VideoPlayerProblem.Cause.NotOffered
+        VideoPlayerNoticePill(
+            label = switchFailure.target?.label
+                ?.let {
+                    val message = if (notOffered) {
+                        MR.strings.anime_playback_switch_not_offered
+                    } else {
+                        MR.strings.anime_playback_switch_failed
+                    }
+                    stringResource(message, it)
+                }
+                ?: stringResource(switchFailure.problem.cause.title),
+            modifier = Modifier.align(Alignment.TopCenter),
+            actionLabel = stringResource(MR.strings.action_retry).takeUnless { notOffered },
+            onAction = {
+                viewModel.dismissSwitchFailure()
+                viewModel.retrySwitch()
+            },
+            secondActionLabel = section?.let { stringResource(MR.strings.anime_playback_change) },
+            onSecondAction = {
+                viewModel.dismissSwitchFailure()
+                section?.let(actions.openSettings)
+            },
+            onDismiss = viewModel::dismissSwitchFailure,
+            failure = true,
+        )
+    }
+
+    if (
+        host.visit.gestureGuideVisible &&
+        ui.frameShown &&
+        !ui.startupOverlayVisible &&
+        engine.problem == null &&
+        !endScreenVisible &&
+        !isInPictureInPictureMode &&
+        !ui.subtitleEditorVisible
+    ) {
+        host.input.Guide(
+            seekStepSeconds = seekStepSeconds,
+            onDismiss = {
+                host.visit.gestureGuideVisible = false
+                host.preferences.gestureGuideShown.set(true)
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+private const val SERVER_NOTICE_MS = 8_000L
+private const val SWITCH_FAILURE_MS = 8_000L
+
+/**
+ * The framing the picture pill shows: a gesture's preview, held a moment after it is saved so that a step the keys
+ * save at once can be read too; null once that moment is over.
+ */
+@Composable
+private fun rememberPicturePillFraming(ui: VideoPlayerWatchUiState): PictureFraming? {
+    var shown by remember { mutableStateOf<PictureFraming?>(null) }
+    val preview = ui.picturePreview
+    LaunchedEffect(preview) {
+        if (preview != null) {
+            shown = preview
+        } else {
+            delay(PICTURE_PILL_HOLD_MS)
+            shown = null
+        }
+    }
+    return preview ?: shown
+}
+
+private const val PICTURE_PILL_HOLD_MS = 900L

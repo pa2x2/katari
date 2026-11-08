@@ -1,9 +1,9 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.menu.DropdownMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
 import eu.kanade.presentation.entry.components.EntryActionIcons
-import mihon.presentation.kit.menu.DropdownMenu
-import mihon.presentation.kit.menu.DropdownMenuItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

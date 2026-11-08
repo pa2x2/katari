@@ -15,14 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.StoryPalette
+import app.katari.presentation.kit.theme.StoryTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapText
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.StoryPalette
-import mihon.presentation.kit.theme.StoryTheme
-import mihon.presentation.kit.theme.TextRole
 
 /**
  * A page at the size it's shared at: [StoryMetrics.pageWidth] by [StoryMetrics.pageHeight] drawn at three pixels per

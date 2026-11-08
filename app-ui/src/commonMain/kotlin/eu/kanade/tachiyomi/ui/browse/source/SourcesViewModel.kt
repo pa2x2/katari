@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.source
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -31,7 +32,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
+import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.model.Source
 import java.util.SortedMap
@@ -66,8 +67,7 @@ class SourcesViewModel(
         )
         listState to contentTypeFilter
     }
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@SourcesViewModel) {
             _events.send(Event.FailedFetchingSources)
         }
 
@@ -84,8 +84,7 @@ class SourcesViewModel(
             contentTypeFilter = contentTypeFilter,
         )
     }
-        .catch {
-            logcat(LogPriority.ERROR, it)
+        .resubscribeOnFailure(this@SourcesViewModel) {
             _events.send(Event.FailedFetchingSources)
         }
         // The source list must not wait for the filter sheet's data
