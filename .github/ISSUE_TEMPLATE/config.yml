@@ -6,6 +6,9 @@ contact_links:
   - name: 🛠️ Troubleshooting
     url: https://pa2x2.github.io/katari/docs/troubleshooting/
     about: Fixes for common problems, including source and extension errors
+  - name: 🗄️ Running a sync server
+    url: https://pa2x2.github.io/katari/docs/sync-server/
+    about: Setup, HTTPS, accounts and updates for the sync server
   - name: ⬇️ Katari releases
     url: https://github.com/pa2x2/katari/releases/latest
     about: Download the latest standard or FOSS release before reporting an issue
