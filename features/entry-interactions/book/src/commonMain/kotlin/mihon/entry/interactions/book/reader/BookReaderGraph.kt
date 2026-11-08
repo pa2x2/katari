@@ -24,6 +24,7 @@ import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
+import mihon.tts.api.host.TtsHostActions
 import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
@@ -60,6 +61,7 @@ class BookReaderDependencies internal constructor(
     translationHostActions: Lazy<TranslationHostActions>,
     translationLanguagesFeature: Lazy<EntryTranslationLanguagesFeature>,
     ttsFeature: Lazy<TtsFeature>,
+    ttsHostActions: Lazy<TtsHostActions>,
     chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
     fontStore: Lazy<BookDocumentReaderFontStore>,
     textClipboard: Lazy<TextClipboard>,
@@ -88,6 +90,7 @@ class BookReaderDependencies internal constructor(
     internal val translationHostActions by translationHostActions
     internal val translationLanguagesFeature by translationLanguagesFeature
     internal val ttsFeature by ttsFeature
+    internal val ttsHostActions by ttsHostActions
     internal val chapterHeadingLoader by chapterHeadingLoader
     internal val fontStore by fontStore
     internal val textClipboard by textClipboard

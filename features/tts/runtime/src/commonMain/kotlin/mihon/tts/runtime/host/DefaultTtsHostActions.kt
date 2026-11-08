@@ -68,7 +68,7 @@ internal class DefaultTtsHostActions(
                 engine = known,
                 presentation = engine?.presentation,
                 status = status,
-                action = status.action(),
+                action = status.action()?.takeIf { supportsSetup(known.id) },
                 capabilities = engine?.capabilities,
             )
         }

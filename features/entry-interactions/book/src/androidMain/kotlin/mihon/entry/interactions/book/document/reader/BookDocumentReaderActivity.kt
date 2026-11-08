@@ -53,7 +53,6 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val host = BookDocumentReaderHost(
             context = this,
             webViewActions = EntryChildWebViewAction.entries,
-            speaksSelections = true,
             showMessage = { message -> toast(message) },
             onClose = ::finish,
             onChildWebViewAction = { action, resolution, title ->

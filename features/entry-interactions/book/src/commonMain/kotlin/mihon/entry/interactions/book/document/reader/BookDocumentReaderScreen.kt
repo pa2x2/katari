@@ -261,7 +261,7 @@ internal fun BookDocumentReaderScreen(
             selectionMenuOnRightClick = !dependencies.deviceControls.textSelectionToolbar,
             selectionActions = if (observeSelections) {
                 buildSet {
-                    if (host.speaksSelections) add(BookDocumentSelectionAction.Listen)
+                    if (dependencies.ttsHostActions.isOffered) add(BookDocumentSelectionAction.Listen)
                     if (!automaticTranslationEnabled) add(BookDocumentSelectionAction.Translate)
                 }
             } else {
@@ -320,7 +320,7 @@ internal fun BookDocumentReaderScreen(
                 openLink = { url -> dependencies.linkOpener.open(host.context, url) },
                 translationSpeechState = translationSpeechState,
                 onTranslationSpeechToggle = selectionCoordinator?.takeIf {
-                    host.speaksSelections
+                    dependencies.ttsHostActions.isOffered
                 }?.let { it::toggleTranslationSpeech },
                 onTranslationPopupBoundsChanged = host.onTranslationPopupBoundsChanged,
                 translationSnackbarHostState = translationSnackbarHostState,
