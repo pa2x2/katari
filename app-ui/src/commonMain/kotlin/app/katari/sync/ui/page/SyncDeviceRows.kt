@@ -19,7 +19,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The account's devices, this one first, each with its platform, app version and last sync, and a menu that renames
- * this device (D005) or removes any other; then Link a device (D050). A device leaves by disconnecting, so its own
+ * this device or removes any other; then Link a device (D050). A device leaves by disconnecting, so its own
  * menu doesn't remove it.
  */
 @Composable

@@ -17,7 +17,7 @@ import tachiyomi.domain.work.WorkOutcome
 
 /**
  * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off or the long run its input names. A long
- * run goes in the foreground, showing its progress as it goes (D007).
+ * run goes in the foreground, showing its progress as it goes.
  */
 class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
 

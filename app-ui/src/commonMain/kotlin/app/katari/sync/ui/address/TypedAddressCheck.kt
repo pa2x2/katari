@@ -42,7 +42,7 @@ internal class TypedAddressCheck(
 
     /**
      * Checks the address again, keeping what the last check found on screen meanwhile; the server may have changed
-     * since, such as an empty one whose admin account the person just made on its web page (D025).
+     * since, such as an empty one whose admin account the person just made on its web page.
      */
     fun recheck() {
         val address = checkedAddress ?: return

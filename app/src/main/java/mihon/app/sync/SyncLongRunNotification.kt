@@ -12,7 +12,7 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
- * The notification a long run shows while it goes (D007), opening the Sync page. Only long runs show one; ordinary
+ * The notification a long run shows while it goes, opening the Sync page. Only long runs show one; ordinary
  * syncs take seconds and stay quiet.
  */
 @Inject

@@ -24,7 +24,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * An entry migrated on two devices (D016): one row for each edition it went to, with its cover, title and source, who
+ * An entry migrated on two devices: one row for each edition it went to, with its cover, title and source, who
  * moved it there and when, and its own Keep. An edition in the profile in use opens on tap.
  */
 @Composable

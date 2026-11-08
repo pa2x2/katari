@@ -6,7 +6,7 @@ import java.net.InetAddress
 
 /**
  * A sync server's address as the person typed it, checked before anything is sent there (D027). A missing scheme
- * means HTTPS, and on a local network plain HTTP after it (D002): a home server often has no certificate, and its
+ * means HTTPS, and on a local network plain HTTP after it: a home server often has no certificate, and its
  * address is typed bare. Plain `http://` is accepted only on a local network, and the screen warns when a server is
  * reached that way: on any other network a password and every synced record would cross the internet readable.
  */

@@ -5,7 +5,7 @@ import app.katari.sync.protocol.device.DeviceDescription
 import dev.zacsweers.metro.Inject
 
 /**
- * How this device presents itself in its account's device list (D005): the name the person gave it here, else the
+ * How this device presents itself in its account's device list: the name the person gave it here, else the
  * platform's name for it, with its platform and the app's version. The description goes with every pull, so a new
  * name reaches the account with the next sync and needs nothing new of the server.
  */

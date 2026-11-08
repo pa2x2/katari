@@ -11,7 +11,7 @@ sealed interface ServerCheck {
     /**
      * A sync server this app can sync with; on a local network over plain HTTP when [isPlainHttp], to warn about.
      * [instanceId] names its storage ([app.katari.sync.protocol.server.ServerInfo.instanceId]), which tells the server a
-     * device syncs with at another address apart from another server (D004).
+     * device syncs with at another address apart from another server.
      */
     data class Ready(val server: HttpUrl, val isPlainHttp: Boolean, val instanceId: String) : ServerCheck
 
@@ -32,7 +32,7 @@ sealed interface ServerCheck {
     data object NotASyncServer : ServerCheck
 }
 
-/** How following this device's server to another address ended (D004). */
+/** How following this device's server to another address ended. */
 sealed interface ServerMove {
     /** The device syncs with the server at its new address now, keeping its sign-in. */
     data object Moved : ServerMove

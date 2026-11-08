@@ -56,7 +56,7 @@ class SyncAccount(
 
     /**
      * What [address] leads to. A local-network address typed without a scheme that finds no sync server over HTTPS is
-     * tried over plain HTTP (D002); when nothing answers there, the HTTPS answer says why.
+     * tried over plain HTTP; when nothing answers there, the HTTPS answer says why.
      */
     suspend fun checkServer(address: String): ServerCheck {
         val parsed = when (val parsed = ServerAddress.parse(address)) {
@@ -143,7 +143,7 @@ class SyncAccount(
     }
 
     /**
-     * Numbers this device's name when another device of the account has it (D005), before the first pull tells the
+     * Numbers this device's name when another device of the account has it, before the first pull tells the
      * account. A server that can't be reached for the list leaves the name as it is.
      */
     private suspend fun setNameApart(client: SyncServerClient, device: DeviceId) {
@@ -248,13 +248,13 @@ class SyncAccount(
     }
 
     /**
-     * Whether [check] found the server this device syncs with (D004): the same storage, by its instance, whatever its
+     * Whether [check] found the server this device syncs with: the same storage, by its instance, whatever its
      * address. A server that started over, or another one, is not.
      */
     suspend fun isThisServer(check: ServerCheck.Ready): Boolean = connection.state().instanceId == check.instanceId
 
     /**
-     * Follows this device's server to [address] (D004), such as a new IP address or domain, keeping the sign-in when
+     * Follows this device's server to [address], such as a new IP address or domain, keeping the sign-in when
      * the server answering there is the one it syncs with ([isThisServer]), and syncs there. Any other server is
      * refused: joining it is signing in anew, which the person does after disconnecting.
      */

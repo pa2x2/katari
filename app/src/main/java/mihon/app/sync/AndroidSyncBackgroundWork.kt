@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Sync's background work as WorkManager jobs, which also run while the app is closed. The hand-off is ordinary
  * one-time work: expedited work would need a foreground notification below Android 12, for a run of a few seconds. A
- * long run goes in the foreground with a progress notification, since it can take many minutes (D007).
+ * long run goes in the foreground with a progress notification, since it can take many minutes.
  */
 @Inject
 class AndroidSyncBackgroundWork(private val application: Application) : SyncBackgroundWork {

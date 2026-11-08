@@ -196,7 +196,7 @@ class SyncSignInScreen(
 
 /**
  * What checking the address found, under the address: a warning, a refusal, or that it is being checked. An empty
- * server at [resetServer], the one this device synced with before it was reset, says so (D022).
+ * server at [resetServer], the one this device synced with before it was reset, says so.
  */
 @Composable
 private fun AddressNote(check: AddressCheck, resetServer: HttpUrl?) {

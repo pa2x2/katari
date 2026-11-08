@@ -34,7 +34,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * Needs your answer (D029): one card per question, saying what happened, on which devices, and what every device
  * shows until it is answered, with the answers that settle it. Opened from the Sync rows and an entry's banner, it goes
- * back there once the last question is answered (D025).
+ * back there once the last question is answered.
  */
 data object SyncQuestionsScreen : Screen() {
 

@@ -37,7 +37,7 @@ class SyncJoinViewModel(private val account: SyncAccount) : ViewModel() {
     /** Checks [address] once typing has paused. */
     fun addressChanged(address: String) = typedAddress.changed(address)
 
-    /** Checks the address again, such as when the person comes back from the server's web page (D025). */
+    /** Checks the address again, such as when the person comes back from the server's web page. */
     fun recheckAddress() = typedAddress.recheck()
 
     fun signIn(address: String, username: String, password: String) = joining(JoinPath.PASSWORD) {

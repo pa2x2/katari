@@ -53,7 +53,7 @@ enum class SyncStage(internal val stored: String) {
     /**
      * Whether the device moves its whole library to or from the account now: in its first sync, or a full resync. The
      * run that carries it on also uploads the library once it is ready, often for minutes: the long run whose progress
-     * the platform shows and which it keeps going in the background (D007).
+     * the platform shows and which it keeps going in the background.
      */
     val movesLibrary: Boolean
         get() = isFirstDownload || this == RESYNC || this == RESYNC_WITHOUT_DELETIONS
@@ -73,7 +73,7 @@ enum class SyncStop(internal val stored: String) {
 
     /**
      * As [SIGN_IN_AGAIN], from a server whose storage started over (another instance), such as one replaced by an
-     * empty one: the account the device signed in to is gone and is made again on the server before signing in (D022).
+     * empty one: the account the device signed in to is gone and is made again on the server before signing in.
      */
     SERVER_RESET("server-reset"),
 

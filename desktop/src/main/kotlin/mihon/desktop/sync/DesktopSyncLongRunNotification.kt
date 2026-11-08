@@ -13,7 +13,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.localized.stringResource
 import tachiyomi.i18n.sync_long_run_progress
 
-/** The notification a long run shows while it goes (D007), as Android's does, opening the Sync page. */
+/** The notification a long run shows while it goes, as Android's does, opening the Sync page. */
 @Inject
 class DesktopSyncLongRunNotification(private val notifications: DesktopNotifications) {
     fun show(status: SyncStatus) {

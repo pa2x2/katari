@@ -97,7 +97,7 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
     )
 
     /**
-     * [local] as it counts once it meets [incoming] (D001). A device joining an account records the time read on each
+     * [local] as it counts once it meets [incoming]. A device joining an account records the time read on each
      * chapter before sync as its own share, never seen edited ([Stamped.UNKNOWN_EDIT]). When that copy first meets the
      * account's record of the chapter, which holds none of its devices' shares, the time counts as the larger of the
      * two rather than their sum: a device restored from a backup of the same library holds that same time again. Its

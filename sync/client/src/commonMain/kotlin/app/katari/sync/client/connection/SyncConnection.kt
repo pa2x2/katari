@@ -62,7 +62,7 @@ class SyncConnection(
         }
     }
 
-    /** Keeps [server] as where this device's server is now, the same one at another address (D004). */
+    /** Keeps [server] as where this device's server is now, the same one at another address. */
     suspend fun moveTo(server: HttpUrl) {
         handler.await(inTransaction = true) {
             val device = sync_stateQueries.get().awaitAsOne().device_id

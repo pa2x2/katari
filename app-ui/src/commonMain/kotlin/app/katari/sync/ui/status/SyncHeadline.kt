@@ -18,7 +18,7 @@ sealed interface SyncHeadline {
 
     data object SignInAgain : SyncHeadline
 
-    /** The server started over and its accounts are gone: one is made again there before signing in (D022). */
+    /** The server started over and its accounts are gone: one is made again there before signing in. */
     data object ServerReset : SyncHeadline
 
     data object AppTooOld : SyncHeadline
@@ -38,7 +38,7 @@ sealed interface SyncHeadline {
     data class Downloading(val percent: Int?) : SyncHeadline
 
     /**
-     * A full resync filling in a server that lost what it had, such as one restored from an older copy (D021);
+     * A full resync filling in a server that lost what it had, such as one restored from an older copy;
      * [percent] of the account taken so far, or null when unknown.
      */
     data class CatchingUp(val percent: Int?) : SyncHeadline

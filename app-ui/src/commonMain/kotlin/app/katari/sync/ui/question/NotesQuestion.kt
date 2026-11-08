@@ -13,7 +13,7 @@ import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Notes edited on two devices before they synced (D008), with Choose opening the versions. */
+/** Notes edited on two devices before they synced, with Choose opening the versions. */
 @Composable
 internal fun NotesQuestionCard(question: NamedQuestion.Notes, onChoose: () -> Unit) {
     EntryQuestionHeader(
@@ -26,8 +26,8 @@ internal fun NotesQuestionCard(question: NamedQuestion.Notes, onChoose: () -> Un
 }
 
 /**
- * Each version of the notes as its device wrote it, this device's marked (D005); choosing one keeps it everywhere, and
- * Keep both keeps them together, the later first (D008).
+ * Each version of the notes as its device wrote it, this device's marked; choosing one keeps it everywhere, and
+ * Keep both keeps them together, the later first.
  */
 @Composable
 internal fun NotesVersionsDialog(

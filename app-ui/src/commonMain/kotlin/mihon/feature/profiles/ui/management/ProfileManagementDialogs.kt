@@ -21,7 +21,7 @@ sealed interface ProfileManagementDialog {
 
 /**
  * Shows [dialog] and carries out what it confirms; [onDismissRequest] closes it, also after a confirmed change. While
- * [syncLinked], deleting a profile says it goes from every linked device too (D025), as sync deletes it there.
+ * [syncLinked], deleting a profile says it goes from every linked device too, as sync deletes it there.
  */
 @Composable
 fun ProfileManagementDialogs(

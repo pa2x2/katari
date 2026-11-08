@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The device as a caption names it, such as "This device" before when it wrote the notes (D005). */
+/** The device as a caption names it, such as "This device" before when it wrote the notes. */
 @Composable
 internal fun MadeOn.label(): String = when (this) {
     MadeOn.ThisDevice -> stringResource(MR.strings.sync_this_device)

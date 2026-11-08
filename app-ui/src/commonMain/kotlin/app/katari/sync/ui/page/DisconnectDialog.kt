@@ -15,7 +15,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Asks before this device leaves its account (D030). While changes made here wait to be sent, it says how many and
- * that the other devices won't get them, and offers Sync now to send them first (D003). The count follows the status,
+ * that the other devices won't get them, and offers Sync now to send them first. The count follows the status,
  * so the warning goes once they are sent; Disconnect still leaves at once.
  */
 @Composable

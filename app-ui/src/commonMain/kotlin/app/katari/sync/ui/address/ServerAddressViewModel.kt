@@ -18,7 +18,7 @@ import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 
 /**
- * Following this device's server to a new address (D004): the address is checked as it is typed, as at sign-in, and
+ * Following this device's server to a new address: the address is checked as it is typed, as at sign-in, and
  * the server found there is told apart from the one the device syncs with before it moves.
  */
 @Inject

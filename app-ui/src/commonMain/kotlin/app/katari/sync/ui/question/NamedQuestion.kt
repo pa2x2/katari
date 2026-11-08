@@ -5,7 +5,7 @@ import tachiyomi.domain.entry.model.Entry
 
 /**
  * A [Question] with everything it names resolved for the person (D029): entries by title in whichever profile holds
- * them (D017), migration targets by their entry and source, profiles and devices by name. A name that can't be found
+ * them, migration targets by their entry and source, profiles and devices by name. A name that can't be found
  * is null, and the screen words it generically.
  */
 sealed interface NamedQuestion {
@@ -45,7 +45,7 @@ data class QuestionProfile(val name: String, val isActive: Boolean)
 /** A change a question names, where and when (epoch milliseconds) it was made. */
 data class Made(val on: MadeOn, val atMillis: Long)
 
-/** The device a change was made on: this one (D005), or another, named while the account lists it. */
+/** The device a change was made on: this one, or another, named while the account lists it. */
 sealed interface MadeOn {
     data object ThisDevice : MadeOn
 

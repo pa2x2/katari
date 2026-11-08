@@ -30,7 +30,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Changes the address of this device's server (D004), such as after it moved to a new IP address or domain. The new
+ * Changes the address of this device's server, such as after it moved to a new IP address or domain. The new
  * address is checked as at sign-in, and the device keeps its sign-in only when the same server answers there; another
  * server is refused, and joining it is signing in anew.
  */

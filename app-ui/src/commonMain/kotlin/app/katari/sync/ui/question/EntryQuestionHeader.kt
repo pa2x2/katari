@@ -11,7 +11,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The top of a question about an entry: what happened to it, the profile it is in, named on every question since the
- * entry may be in one other than the profile in use (D017), and what every device shows until it is answered.
+ * entry may be in one other than the profile in use, and what every device shows until it is answered.
  */
 @Composable
 internal fun EntryQuestionHeader(title: String, profile: QuestionProfile?, text: String, icon: ImageVector) {

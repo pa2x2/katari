@@ -176,7 +176,7 @@ private fun attentionRows(
     }
 }
 
-/** Where this device's server is, opening the dialog that follows it to a new address (D004). */
+/** Where this device's server is, opening the dialog that follows it to a new address. */
 @Composable
 private fun serverAddressRow(
     link: SyncStatus.Link.Linked,

@@ -14,7 +14,7 @@ import tachiyomi.domain.source.service.SourceManager
 /**
  * Resolves what questions name (D029). Sync keeps entries by record key and profiles by uuid; entries are found
  * through the local row their record maps to, which a question's entries always have once its records were applied,
- * in whichever profile holds them (D017), and profiles by uuid, a profile kept for now included. Other devices are
+ * in whichever profile holds them, and profiles by uuid, a profile kept for now included. Other devices are
  * named from the account's device list.
  */
 @Inject

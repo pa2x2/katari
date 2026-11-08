@@ -93,7 +93,7 @@ object Notifications {
     const val ID_SYNC_QUESTIONS = -901
     const val ID_SYNC_STOPPED = -902
 
-    /** The progress of a long run, such as a first sync, while it goes (D007). */
+    /** The progress of a long run, such as a first sync, while it goes. */
     const val CHANNEL_SYNC_PROGRESS = "sync_progress_channel"
     const val ID_SYNC_LONG_RUN = -903
 

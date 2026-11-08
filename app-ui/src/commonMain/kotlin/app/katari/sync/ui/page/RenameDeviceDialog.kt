@@ -14,7 +14,7 @@ import mihon.presentation.kit.field.TextField
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Names this device for the account's device list (D005); saving an empty name goes back to [platformName]. */
+/** Names this device for the account's device list; saving an empty name goes back to [platformName]. */
 @Composable
 internal fun RenameDeviceDialog(
     name: String,

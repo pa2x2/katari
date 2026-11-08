@@ -32,7 +32,7 @@ import tachiyomi.data.ActiveProfileProvider
  * like any edit that settles the question on every device once synced. Devices are named from the account's list,
  * read once as the screen opens; without the server they are named generically.
  *
- * Deleting a profile waits out an undo window first (D025): the question is hidden meanwhile, and nothing is written,
+ * Deleting a profile waits out an undo window first: the question is hidden meanwhile, and nothing is written,
  * so nothing reaches the server, until the window passes.
  */
 @Inject
@@ -63,7 +63,7 @@ class SyncQuestionsViewModel(
         names.name(shown, devices, account.thisDevice(), activeProfileId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_AFTER_MILLIS), null)
 
-    /** Hears once an answer settled the last open question (D025), so the screen goes back to where it came from. */
+    /** Hears once an answer settled the last open question, so the screen goes back to where it came from. */
     val allAnswered: Flow<Unit> = finished.receiveAsFlow()
 
     init {

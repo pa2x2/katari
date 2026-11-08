@@ -91,7 +91,7 @@ class SyncViewModel(
         }
     }
 
-    /** Names this device [name] (D005), in its row at once and in the account with the sync this starts. */
+    /** Names this device [name], in its row at once and in the account with the sync this starts. */
     fun renameThisDevice(name: String) {
         viewModelScope.launchIO {
             naming.rename(name)

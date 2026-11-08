@@ -6,7 +6,7 @@ import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 
 /**
- * What the notification of a long run says (D007), such as "Uploading your library" over "127.0.0.1 · 42%": [title]
+ * What the notification of a long run says, such as "Uploading your library" over "127.0.0.1 · 42%": [title]
  * for what it is doing, [server] it syncs with and [percent] it got through, each null while unknown.
  */
 data class SyncLongRunNotice(val title: StringResource, val server: String?, val percent: Int?) {
