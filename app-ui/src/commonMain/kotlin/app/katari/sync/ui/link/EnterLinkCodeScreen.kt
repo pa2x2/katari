@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import app.katari.sync.client.account.LinkCodeLink
 import app.katari.sync.client.account.ServerCheck
+import app.katari.sync.ui.address.AddressCheck
 import app.katari.sync.ui.signin.JoinPath
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
@@ -66,7 +67,7 @@ class EnterLinkCodeScreen : Screen() {
         LaunchedEffect(join) {
             (join as? SyncJoinViewModel.JoinState.Joined)?.let(navigator::leaveJoined)
         }
-        val server = ((check as? SyncJoinViewModel.AddressCheck.Checked)?.check as? ServerCheck.Ready)?.server
+        val server = ((check as? AddressCheck.Checked)?.check as? ServerCheck.Ready)?.server
 
         Scaffold(
             topBar = {
@@ -131,7 +132,7 @@ class EnterLinkCodeScreen : Screen() {
                 }
                 item {
                     when (val shown = check) {
-                        is SyncJoinViewModel.AddressCheck.Checked -> {
+                        is AddressCheck.Checked -> {
                             val result = shown.check
                             if (result is ServerCheck.Ready && result.isPlainHttp) {
                                 RowGroupNote(
@@ -142,9 +143,9 @@ class EnterLinkCodeScreen : Screen() {
                                 serverCheckProblemText(result)?.let { RowGroupNote(it, tone = ContentTone.Error) }
                             }
                         }
-                        SyncJoinViewModel.AddressCheck.Checking ->
+                        AddressCheck.Checking ->
                             RowGroupNote(stringResource(MR.strings.sync_server_checking))
-                        SyncJoinViewModel.AddressCheck.Empty -> Unit
+                        AddressCheck.Empty -> Unit
                     }
                 }
             }
