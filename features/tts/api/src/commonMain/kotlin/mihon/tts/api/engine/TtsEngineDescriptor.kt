@@ -1,6 +1,7 @@
 package mihon.tts.api.engine
 
 import androidx.annotation.DrawableRes
+import org.jetbrains.compose.resources.DrawableResource
 
 data class KnownTtsEngine(
     val id: TtsEngineId,
@@ -20,6 +21,12 @@ data class KnownTtsEngine(
 }
 
 sealed interface TtsEngineArtwork {
+    /** A glyph drawn in the colour of the text around it, which every platform can show. */
+    data class Glyph(
+        val resource: DrawableResource,
+    ) : TtsEngineArtwork
+
+    /** An Android drawable, drawn as it is. */
     data class Bundled(
         @DrawableRes val resourceId: Int,
     ) : TtsEngineArtwork {
@@ -28,6 +35,7 @@ sealed interface TtsEngineArtwork {
         }
     }
 
+    /** The icon of the Android application [packageName], or the Android drawable [fallbackResourceId] without it. */
     data class InstalledApplication(
         val packageName: String,
         @DrawableRes val fallbackResourceId: Int,
