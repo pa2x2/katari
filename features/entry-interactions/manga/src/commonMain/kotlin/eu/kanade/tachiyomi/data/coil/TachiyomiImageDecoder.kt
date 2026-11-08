@@ -11,6 +11,7 @@ import coil3.request.Options
 import mihon.core.image.decode.ImageRegionDecoder
 import mihon.core.image.decode.detectImageType
 import mihon.core.image.progressive.ProgressiveImageFormat
+import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
 import okio.BufferedSource
 
 /** A [Decoder] for the formats the platform's own image decoding lacks, through the app's native image decoder. */
@@ -18,7 +19,7 @@ internal class TachiyomiImageDecoder(private val resources: ImageSource, private
 
     override suspend fun decode(): DecodeResult {
         val decoder = resources.sourceOrNull()?.use {
-            ImageRegionDecoder.open(it.inputStream(), options.cropBorders, displayProfile)
+            ImageRegionDecoder.open(it.inputStream(), options.cropBorders, DisplayProfile.bytes)
         }
 
         check(decoder != null && decoder.width > 0 && decoder.height > 0) { "Failed to initialize decoder" }
@@ -70,10 +71,6 @@ internal class TachiyomiImageDecoder(private val resources: ImageSource, private
         override fun equals(other: Any?) = other is Factory
 
         override fun hashCode() = this::class.hashCode()
-    }
-
-    companion object {
-        var displayProfile: ByteArray? = null
     }
 }
 

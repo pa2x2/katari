@@ -5,12 +5,12 @@ import dev.zacsweers.metro.Binds
 import eu.kanade.presentation.more.settings.screen.advanced.AppNotifications
 import eu.kanade.presentation.more.settings.screen.advanced.BackgroundWorkRestrictions
 import eu.kanade.presentation.more.settings.screen.advanced.ExtensionInstallerSetting
-import eu.kanade.presentation.more.settings.screen.advanced.ReaderDecodingSettings
+import eu.kanade.presentation.more.settings.screen.advanced.HardwareBitmapSetting
 import eu.kanade.presentation.more.settings.screen.debug.DeviceDiagnostics
 import mihon.desktop.advanced.DesktopAppNotifications
 import mihon.desktop.advanced.NoBackgroundWorkRestrictions
 import mihon.desktop.advanced.NoExtensionInstallerSetting
-import mihon.desktop.advanced.NoReaderDecodingSettings
+import mihon.desktop.advanced.NoHardwareBitmapSetting
 import mihon.desktop.debug.DesktopDeviceDiagnostics
 
 @BindingContainer
@@ -22,7 +22,7 @@ interface AdvancedSettingsBindings {
     val NoBackgroundWorkRestrictions.backgroundWorkRestrictions: BackgroundWorkRestrictions
 
     @Binds
-    val NoReaderDecodingSettings.readerDecodingSettings: ReaderDecodingSettings
+    val NoHardwareBitmapSetting.hardwareBitmapSetting: HardwareBitmapSetting
 
     @Binds
     val NoExtensionInstallerSetting.extensionInstallerSetting: ExtensionInstallerSetting

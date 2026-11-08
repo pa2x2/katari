@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.page
 
 import androidx.compose.ui.unit.IntSize
-import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlinx.coroutines.CancellationException
@@ -11,6 +10,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.manga.reader.image.background.PageBackground
 import mihon.entry.interactions.manga.reader.image.background.chooseBackground
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
+import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.source.openPageImage
 import tachiyomi.core.common.util.lang.launchIO
@@ -78,7 +78,7 @@ private suspend fun openShown(page: ReaderPage, request: PageRequest): PageConte
     var image: PageImage? = null
     return try {
         val bytes = withIOContext { stream().use { it.readBytes() } }
-        image = openPageImage(bytes, request.cropBorders, TachiyomiImageDecoder.displayProfile)
+        image = openPageImage(bytes, request.cropBorders, DisplayProfile.bytes)
             ?: return PageContent.Failed(null)
         val layout = request.layout(page, image.size)
         val background = if (request.automaticBackground && image is PageImage.Still) {

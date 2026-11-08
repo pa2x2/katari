@@ -36,6 +36,9 @@ import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.media.EntryViewerSettingsResetResult
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.files.DocumentAccess
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -357,11 +360,34 @@ object SettingsAdvancedScreen : SearchableSettings {
 
     @Composable
     private fun getReaderGroup(): Preference.PreferenceGroup {
-        val decodingSettings = LocalAppUiGraph.current.readerDecodingSettings
+        val graph = LocalAppUiGraph.current
+        val displayProfile = graph.readerBasePreferences.displayProfile
+        val displayProfileUri by displayProfile.collectAsState()
+        val chooseDisplayProfile = rememberDocumentPicker(
+            // ICC profiles have no media type of their own
+            DocumentPickerRequest.OpenDocument(listOf("*/*"), keepAccess = DocumentAccess.Read),
+        ) { pick ->
+            pick?.let { displayProfile.set(it.uri.value) }
+        }
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reader),
-            visible = decodingSettings.isOffered,
-            preferenceItems = if (decodingSettings.isOffered) decodingSettings.preferenceItems() else emptyList(),
+            preferenceItems = listOfNotNull(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = graph.progressiveImagePreferences.enabled,
+                    title = stringResource(MR.strings.pref_progressive_image_loading),
+                    subtitle = stringResource(MR.strings.pref_progressive_image_loading_summary),
+                    onValueChanged = { enabled ->
+                        if (!enabled) graph.progressiveImageEngine.disableActiveSessions()
+                        true
+                    },
+                ),
+                graph.hardwareBitmapSetting.preferenceItem(),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.pref_display_profile),
+                    subtitle = displayProfileUri,
+                    onClick = { chooseDisplayProfile.launch() },
+                ),
+            ),
         )
     }
 

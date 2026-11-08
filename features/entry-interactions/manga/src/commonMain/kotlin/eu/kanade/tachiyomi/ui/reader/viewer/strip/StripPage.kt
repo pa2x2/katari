@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
-import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageProblem
@@ -22,6 +21,7 @@ import mihon.core.image.progressive.rememberProgressivePreview
 import mihon.entry.interactions.manga.reader.image.animation.AnimatedPageImage
 import mihon.entry.interactions.manga.reader.image.layout.PageBitmap
 import mihon.entry.interactions.manga.reader.image.layout.displayedSize
+import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.strips.StripPageImage
 import mihon.entry.interactions.manga.reader.text.surface.PageTextLayer
@@ -90,7 +90,7 @@ internal fun StripPage(
                 is PageImage.Animated -> AnimatedPageImage(
                     image = image,
                     layout = shown.layout,
-                    displayProfile = TachiyomiImageDecoder.displayProfile,
+                    displayProfile = DisplayProfile.bytes,
                     onFailed = contentState::fail,
                     modifier = Modifier.fillMaxSize(),
                 )
