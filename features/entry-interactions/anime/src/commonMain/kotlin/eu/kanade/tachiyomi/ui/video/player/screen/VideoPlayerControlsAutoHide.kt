@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import mihon.presentation.kit.pointer.LocalAppPointerPresence
 
-private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
+internal const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 
 /**
  * Hides the controls once they have been left alone a while, playing or paused, and at once when the mouse leaves the

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBarReach
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
@@ -50,6 +51,9 @@ internal class VideoPlayerWatchUiState(
 
     /** A mouse rests on one of the controls, which keeps them from hiding after a while. */
     var pointerOverControls by mutableStateOf(false)
+
+    /** How far the bars reach in from the player's edges, for a mouse; null until they have been laid out. */
+    var barReach by mutableStateOf<VideoPlayerBarReach?>(null)
 
     /** Where a mouse is over the timeline; null while it isn't. */
     var timelinePointerMs by mutableStateOf<Long?>(null)

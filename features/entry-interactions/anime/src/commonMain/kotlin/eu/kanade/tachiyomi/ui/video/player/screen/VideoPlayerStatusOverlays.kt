@@ -36,14 +36,15 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
- * the held speed boost, a pinch's zoom, episode and source switching (an episode change can be cancelled there), a
- * failed episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch
- * that failed and the first-run gesture guide, which waits for a frame and steps aside for a problem screen.
+ * the held speed boost, a zoom, episode and source switching (an episode change can be cancelled there), a failed
+ * episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch that
+ * failed and the first-run gesture guide, which waits for a frame and steps aside for a problem screen.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -91,11 +92,11 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }
-    val picturePreview = ui.picturePreview
-    if (picturePreview != null && !isInPictureInPictureMode) {
+    val pictureFraming = rememberPicturePillFraming(ui)
+    if (pictureFraming != null && !isInPictureInPictureMode) {
         VideoPlayerPicturePill(
-            label = picturePreview.label(),
-            icon = picturePreview.icon,
+            label = pictureFraming.label(),
+            icon = pictureFraming.icon,
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }
@@ -304,3 +305,24 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
 
 private const val SERVER_NOTICE_MS = 8_000L
 private const val SWITCH_FAILURE_MS = 8_000L
+
+/**
+ * The framing the picture pill shows: a gesture's preview, held a moment after it is saved so that a step the keys
+ * save at once can be read too; null once that moment is over.
+ */
+@Composable
+private fun rememberPicturePillFraming(ui: VideoPlayerWatchUiState): PictureFraming? {
+    var shown by remember { mutableStateOf<PictureFraming?>(null) }
+    val preview = ui.picturePreview
+    LaunchedEffect(preview) {
+        if (preview != null) {
+            shown = preview
+        } else {
+            delay(PICTURE_PILL_HOLD_MS)
+            shown = null
+        }
+    }
+    return preview ?: shown
+}
+
+private const val PICTURE_PILL_HOLD_MS = 900L

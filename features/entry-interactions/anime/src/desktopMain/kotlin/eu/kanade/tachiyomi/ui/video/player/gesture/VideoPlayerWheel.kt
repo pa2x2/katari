@@ -16,12 +16,13 @@ import kotlin.math.roundToLong
  * Scrolling over the picture. The wheel sets the volume, one percent a notch, with the side volume feedback
  * of Android's swipe; scrolling sideways, as a touchpad or a tilting wheel does, moves a target time as Android's
  * sideways swipe does, and seeks there once scrolling stops; with Ctrl held the wheel zooms the picture about the
- * pointer. Notches come as whole units of scrolling and touchpads as fractions of one, which add up.
+ * [pointer], which shows. Notches come as whole units of scrolling and touchpads as fractions of one, which add up.
  */
 internal fun Modifier.videoPlayerWheel(
     target: VideoPlayerInputTarget,
     geometry: () -> VideoPictureGeometry?,
-): Modifier = pointerInput(target) {
+    pointer: VideoPlayerPointer,
+): Modifier = pointerInput(target, pointer) {
     coroutineScope {
         var volumeSteps = 0f
         var seekUnits = 0f
@@ -38,6 +39,7 @@ internal fun Modifier.videoPlayerWheel(
                 when {
                     event.keyboardModifiers.isCtrlPressed -> {
                         val picture = geometry() ?: continue
+                        pointer.moved()
                         val factor = PICTURE_ZOOM_STEP.pow(-delta.y)
                         target.previewPictureFraming(
                             picture.zoom(target.pictureFraming, factor, change.position.x, change.position.y),

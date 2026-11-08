@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.gesture
 
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBarReach
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
@@ -50,9 +51,13 @@ internal interface VideoPlayerInputTarget {
     /** The video's shape, null until it has one. */
     val videoAspectRatio: Float?
 
+    /** How far the controls' bars reach in from the player's edges, null until they have been laid out. */
+    val barReach: VideoPlayerBarReach?
+
     /** The framing on screen, a pinch's preview included. */
     val pictureFraming: PictureFraming
 
+    /** Shows [framing] while a gesture sets it, hiding the controls, which would cover the picture being framed. */
     fun previewPictureFraming(framing: PictureFraming)
 
     fun commitPictureFraming(framing: PictureFraming)
