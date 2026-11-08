@@ -14,7 +14,7 @@ import tachiyomi.core.common.util.lang.withIOContext
  * Database migration 75 deletes what they kept in the database.
  */
 class TrackerDataCleanupMigration : Migration {
-    override val version: Float = 93f
+    override val version: Float = 92f
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
         val profileStore = migrationContext.profileStore
