@@ -26,8 +26,8 @@ internal class ProfileLockGate(
         if (!security.useAuthenticator.get()) return false
         if (profileId !in authenticated) return true
         return when (val lockDelay = security.lockAppAfter.get()) {
-            LOCK_NEVER -> false
-            LOCK_ALWAYS -> true
+            SecurityPreferences.LOCK_NEVER -> false
+            SecurityPreferences.LOCK_ALWAYS -> true
             else -> {
                 // Unlocked but never left, as when the switch that followed the unlock didn't happen; fail closed.
                 val deactivatedAt = inactiveSince[profileId] ?: return true
@@ -47,8 +47,6 @@ internal class ProfileLockGate(
     }
 
     private companion object {
-        const val LOCK_ALWAYS = 0
-        const val LOCK_NEVER = -1
         const val MINUTE_MILLIS = 60_000L
     }
 }

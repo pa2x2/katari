@@ -21,7 +21,9 @@ import mihon.desktop.extension.dialog.WindowExtensionDialogs
 import mihon.desktop.home.HomeDestinations
 import mihon.desktop.notification.DesktopNotifications
 import mihon.desktop.player.WindowAnimePlayer
+import mihon.desktop.presence.AppPresence
 import mihon.desktop.profile.ActiveProfileLock
+import mihon.desktop.profile.ProfileRelock
 import mihon.desktop.security.signin.SignInPrompts
 import mihon.desktop.security.signin.SystemSignIn
 import mihon.desktop.storage.DesktopDirectories
@@ -108,6 +110,8 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val appUpdateController: AppUpdateController
     val windowAnimePlayer: WindowAnimePlayer
     val activeProfileLock: ActiveProfileLock
+    val profileRelock: ProfileRelock
+    val appPresence: AppPresence
     val signInPrompts: SignInPrompts
     val systemSignIn: SystemSignIn
 

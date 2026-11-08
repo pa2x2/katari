@@ -1,5 +1,15 @@
 package mihon.desktop.dbus
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
@@ -42,6 +52,25 @@ internal open class Gdbus(private val bus: Bus, private val destination: String,
 
     fun monitor(): Monitor? =
         start("monitor", bus.option, "--dest", destination, "--object-path", objectPath)?.let(::Monitor)
+
+    /**
+     * [read] now and again on each [signal] of the object, such as `org.freedesktop.DBus.Properties.PropertiesChanged`,
+     * while anyone collects it. One monitor serves every collector at once; it starts for the first collector and
+     * stops after the last, so a new one never gets a stale value.
+     */
+    fun <T> watch(scope: CoroutineScope, signal: String, read: () -> T): Flow<T> = callbackFlow {
+        val monitor = monitor()
+        send(read())
+        if (monitor != null) {
+            launch(Dispatchers.IO) {
+                monitor.signals.filter { signal in it }.forEach { send(read()) }
+            }
+        }
+        awaitClose { monitor?.stop() }
+    }
+        .flowOn(Dispatchers.IO)
+        .distinctUntilChanged()
+        .shareIn(scope, SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
     private fun start(vararg arguments: String): Process? = try {
         ProcessBuilder("gdbus", *arguments)

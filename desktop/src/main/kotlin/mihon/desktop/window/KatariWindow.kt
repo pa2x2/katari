@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ApplicationScope
@@ -23,6 +25,7 @@ import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
 import mihon.desktop.extension.dialog.ExtensionDialogsHost
+import mihon.desktop.presence.ReportsPresence
 import mihon.desktop.security.signin.SignInPromptHost
 import mihon.desktop.work.WorkCloseGuardDialog
 import mihon.presentation.kit.files.LocalSystemFileChooser
@@ -38,17 +41,18 @@ import javax.swing.JFrame
 
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
- * screen's title, carrying the app's icon, brought forward when the app is launched again and opening what that launch
- * opens, and closing the app when it closes, after asking while background work runs (see
+ * screen's title unless the profile is locked, carrying the app's icon, brought forward when the app is launched again
+ * and opening what that launch opens, and closing the app when it closes, after asking while background work runs (see
  * [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame Compose draws into where the
- * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it what only
- * a desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
+ * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it what only a
+ * desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
  * as the player enter, the desktop's file chooser, which the screens' document pickers open, and the density of the
  * session's scale and the interface size. While it is open, extensions find the activity that stands for it in the
  * foreground ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity
- * open in it. Its focus is the app's foreground for sync ([ReportsForeground]).
+ * open in it. Its focus is the app's foreground for sync ([ReportsForeground]), and whether it is minimized counts
+ * toward the user being away, which locks the open profile again ([ReportsPresence]).
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -61,7 +65,9 @@ fun ApplicationScope.KatariWindow(
     val shortcuts = remember { KeyboardShortcutRegistry() }
     val screenTitles = remember { ScreenTitles() }
     val appName = DesktopAppVariant.current.displayName
-    val screenTitle = screenTitles.current
+    // A locked profile's screen stays out of the title, which the taskbar and window switcher show
+    val profileLocked by graph.activeProfileLock.isHeld.collectAsState()
+    val screenTitle = screenTitles.current.takeUnless { profileLocked }
     val title = screenTitle?.let { stringResource(MR.strings.window_title_with_screen, appName, it) } ?: appName
     val icon = remember { AppIcon.painter() }
     val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }
@@ -126,6 +132,7 @@ private fun WindowContent(
         onDispose { graph.windowActivity.onWindowClosed() }
     }
     ReportsForeground(window, graph)
+    ReportsPresence(window, graph.windowAnimePlayer, graph.appPresence)
     AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,

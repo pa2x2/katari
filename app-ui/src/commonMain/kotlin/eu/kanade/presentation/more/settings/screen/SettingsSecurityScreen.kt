@@ -67,8 +67,8 @@ object SettingsSecurityScreen : SearchableSettings {
                     entries = LockAfterValues
                         .associateWith {
                             when (it) {
-                                -1 -> stringResource(MR.strings.lock_never)
-                                0 -> stringResource(MR.strings.lock_always)
+                                SecurityPreferences.LOCK_NEVER -> stringResource(MR.strings.lock_never)
+                                SecurityPreferences.LOCK_ALWAYS -> stringResource(MR.strings.lock_always)
                                 else -> pluralStringResource(MR.plurals.lock_after_mins, count = it, it)
                             }
                         },
@@ -124,12 +124,12 @@ object SettingsSecurityScreen : SearchableSettings {
 }
 
 private val LockAfterValues = listOf(
-    0, // Always
+    SecurityPreferences.LOCK_ALWAYS,
     1,
     2,
     5,
     10,
-    -1, // Never
+    SecurityPreferences.LOCK_NEVER,
 )
 
 private val SecurityPreferences.SecureScreenMode.titleRes: StringResource

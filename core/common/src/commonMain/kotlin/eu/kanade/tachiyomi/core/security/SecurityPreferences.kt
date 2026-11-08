@@ -10,7 +10,8 @@ class SecurityPreferences(
 
     val useAuthenticator: Preference<Boolean> = preferenceStore.getBoolean("use_biometric_lock", false)
 
-    val lockAppAfter: Preference<Int> = preferenceStore.getInt("lock_app_after", 0)
+    /** Minutes away from the app before it locks, or [LOCK_ALWAYS] or [LOCK_NEVER]. */
+    val lockAppAfter: Preference<Int> = preferenceStore.getInt("lock_app_after", LOCK_ALWAYS)
 
     val secureScreen: Preference<SecureScreenMode> = preferenceStore.getEnum(
         "secure_screen_v2",
@@ -32,5 +33,10 @@ class SecurityPreferences(
         ALWAYS,
         INCOGNITO,
         NEVER,
+    }
+
+    companion object {
+        const val LOCK_ALWAYS = 0
+        const val LOCK_NEVER = -1
     }
 }
