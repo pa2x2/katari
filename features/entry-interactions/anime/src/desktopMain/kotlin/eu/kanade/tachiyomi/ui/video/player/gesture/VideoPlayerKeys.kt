@@ -28,7 +28,7 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.Episodes, enabled) { target.openEpisodes() }
     Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
     Key(VideoPlayerShortcuts.ZoomOut, enabled) { target.zoomBy(geometry(), 1f / PICTURE_ZOOM_STEP) }
-    Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.commitPictureFraming(PictureFraming.Fit) }
+    Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.frame(PictureFraming.Fit) }
     val registry = LocalKeyboardShortcuts.current
     Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
 }
@@ -75,7 +75,11 @@ private fun VideoPlayerInputTarget.stepVolume(by: Int) {
 
 private fun VideoPlayerInputTarget.zoomBy(geometry: VideoPictureGeometry?, factor: Float) {
     geometry ?: return
-    val framing = geometry.zoom(pictureFraming, factor)
+    frame(geometry.zoom(pictureFraming, factor))
+}
+
+// Through the preview, as a gesture goes, so a key hides the controls and shows the picture pill as gestures do
+private fun VideoPlayerInputTarget.frame(framing: PictureFraming) {
     previewPictureFraming(framing)
     commitPictureFraming(framing)
 }

@@ -65,7 +65,7 @@ internal fun VideoPlayerSpeedBoostPill(
     )
 }
 
-/** How the picture is framed while a pinch zooms it, which shows what the fingers will leave once they lift. */
+/** How the picture is framed while a gesture or key zooms or moves it, so the framing can be read without controls. */
 @Composable
 internal fun VideoPlayerPicturePill(
     label: String,
