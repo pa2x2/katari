@@ -13,6 +13,8 @@ import tachiyomi.i18n.context.stringResource
 class AndroidProfileUnlock : ProfileUnlock {
     override fun isAvailable(context: PlatformContext): Boolean = context.isAuthenticationSupported()
 
+    override val lockSettingsWording: ProfileLockWording? = null
+
     override suspend fun unlock(context: PlatformContext, profileNames: List<String>): Boolean {
         if (profileNames.isEmpty()) return true
         return context is FragmentActivity &&

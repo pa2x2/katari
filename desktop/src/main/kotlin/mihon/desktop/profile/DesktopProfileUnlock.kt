@@ -4,6 +4,7 @@ import dev.zacsweers.metro.Inject
 import mihon.core.platform.PlatformContext
 import mihon.desktop.security.signin.SignInPrompts
 import mihon.desktop.security.signin.SystemSignIn
+import mihon.feature.profiles.ui.ProfileLockWording
 import mihon.feature.profiles.ui.ProfileUnlock
 import mihon.presentation.kit.feedback.AppMessages
 import tachiyomi.i18n.*
@@ -20,6 +21,12 @@ class DesktopProfileUnlock(
     private val messages: AppMessages,
 ) : ProfileUnlock {
     override fun isAvailable(context: PlatformContext): Boolean = signIn.isAvailable
+
+    override val lockSettingsWording = ProfileLockWording(
+        requireUnlock = MR.strings.lock_with_sign_in_summary,
+        lockWhenIdle = MR.strings.lock_when_idle_desktop_summary,
+        unavailable = MR.strings.profile_lock_unavailable_summary,
+    )
 
     override suspend fun unlock(context: PlatformContext, profileNames: List<String>): Boolean {
         if (profileNames.isEmpty()) return true

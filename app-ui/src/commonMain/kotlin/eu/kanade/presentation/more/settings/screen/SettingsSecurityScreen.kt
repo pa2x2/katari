@@ -42,6 +42,7 @@ object SettingsSecurityScreen : SearchableSettings {
         val graph = LocalAppUiGraph.current
         val authentication = graph.settingChangeAuthentication
         val authSupported = remember { graph.profileUnlock.isAvailable(context) }
+        val wording = graph.profileUnlock.lockSettingsWording
         val secureScreenOffered = graph.secureScreen.isOffered
         val notificationsOffered = graph.appNotifications.isOffered
         val useAuthPref = securityPreferences.useAuthenticator
@@ -49,11 +50,18 @@ object SettingsSecurityScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_security),
-            visible = authSupported || notificationsOffered || secureScreenOffered,
+            visible = authSupported || wording != null || notificationsOffered || secureScreenOffered,
             preferenceItems = listOfNotNull(
+                wording?.takeUnless { authSupported }?.let {
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.profile_lock_unavailable),
+                        subtitle = stringResource(it.unavailable),
+                    )
+                },
                 Preference.PreferenceItem.SwitchPreference(
                     preference = useAuthPref,
                     title = stringResource(MR.strings.lock_with_biometrics),
+                    subtitle = wording?.let { stringResource(it.requireUnlock) },
                     visible = authSupported,
                     onValueChanged = {
                         authentication.authenticate(
@@ -73,6 +81,10 @@ object SettingsSecurityScreen : SearchableSettings {
                             }
                         },
                     title = stringResource(MR.strings.lock_when_idle),
+                    subtitleProvider = { value, entries ->
+                        val chosen = entries[value].orEmpty()
+                        wording?.let { stringResource(it.lockWhenIdle, chosen) } ?: chosen
+                    },
                     visible = authSupported && useAuth,
                     onValueChanged = {
                         authentication.authenticate(
