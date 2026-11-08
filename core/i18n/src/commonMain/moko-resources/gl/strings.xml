@@ -74,7 +74,7 @@
     <string name="pref_page_transitions">Animar transición de páxinas</string>
     <string name="pref_cutout_short">Mostrar contido na área recortada</string>
     <string name="obsolete_extension_message">Esta extensión xa non está dispoñible. Pode que non funcione ben e cause problemas na aplicación. Recoméndase desinstalala.</string>
-    <string name="untrusted_extension_message">Unha extensión maliciosa podería ler calquera credencial de inicio de sesión gardada en Mihon ou executar calquera tipo de código. \n \nSe confías nesta extensión, aceptas estes riscos.</string>
+    <string name="untrusted_extension_message">Unha extensión maliciosa podería ler calquera credencial de inicio de sesión gardada en Katari ou executar calquera tipo de código. \n \nSe confías nesta extensión, aceptas estes riscos.</string>
     <string name="untrusted_extension">Extensión non confiable</string>
     <string name="ext_untrusted">Non confiable</string>
     <string name="ext_uninstall">Desinstalar</string>
@@ -540,7 +540,7 @@
     <string name="show_chapter_number">Número do capítulo</string>
     <string name="download_notifier_split_page_path_not_found">Non se atopou a ruta do ficheiro da páxina %d</string>
     <string name="channel_complete">Rematada</string>
-    <string name="information_webview_required">Mihon necesita WebView</string>
+    <string name="information_webview_required">Katari necesita WebView</string>
     <string name="channel_common">Xeral</string>
     <string name="crash_screen_title">Vaia!</string>
     <string name="download_notifier_cache_renewal">Comprobando as descargas</string>
