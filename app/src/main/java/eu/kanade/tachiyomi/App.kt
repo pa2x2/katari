@@ -14,6 +14,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
+import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import dev.zacsweers.metro.createGraphFactory
@@ -38,6 +39,7 @@ import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.app.ui.host.AppProcessStart
 import mihon.app.ui.host.AppVisibility
+import mihon.app.work.RetiredWorkerFactory
 import mihon.core.metro.GraphProvider
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
@@ -51,7 +53,12 @@ import uy.kohesive.injekt.api.InjektScope
 import kotlin.concurrent.thread
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
-class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory, GraphProvider<AppGraph> {
+class App :
+    Application(),
+    DefaultLifecycleObserver,
+    SingletonImageLoader.Factory,
+    GraphProvider<AppGraph>,
+    Configuration.Provider {
 
     // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
     override val graph: AppGraph by lazy {
@@ -62,6 +69,11 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Extensions resolve their services through Injekt, and the graph can load them before onCreate runs
         Injekt = InjektScope(MetroInjektRegistrar(application = this, graph = { graph }))
     }
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(RetiredWorkerFactory { graph.retiredWorkers })
+            .build()
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
     private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
@@ -82,7 +94,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // CrashActivity has a process of its own so that it outlives the crash it reports, and that process sets up only
         // what the crash screen needs. The rest of this startup belongs to the main process: run again beside it, it
         // would restore download queues, retry merge and migration consequences and run migrations a second time, and
-        // the libraries androidx.startup initialises, WorkManager among them, are not set up in any other process.
+        // the libraries androidx.startup initialises are not set up in any other process.
         val process = getProcessName()
         if (process != packageName) {
             onCreateCrashProcess(process)

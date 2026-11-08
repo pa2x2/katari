@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.sync.SyncWorkGraph
 import mihon.app.ui.di.AppUiGraph
+import mihon.app.work.RetiredWorkerGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.host.AndroidEntryHostBindings
@@ -86,6 +87,7 @@ interface AppGraph :
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,
     SyncWorkGraph,
+    RetiredWorkerGraph,
     TabletUiGraph,
     WidgetGraph {
     @DependencyGraph.Factory

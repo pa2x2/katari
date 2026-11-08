@@ -2,14 +2,18 @@ package mihon.entry.interactions.download
 
 import android.app.Application
 import android.app.Notification
+import androidx.work.ListenableWorker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metro.StringKey
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
 import mihon.entry.interactions.download.notification.entryDownloadForegroundNotification
+import kotlin.reflect.KClass
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -39,6 +43,16 @@ object AndroidEntryDownloadBindings {
         run = run,
         notificationProvider = notificationProvider,
     )
+
+    @Provides
+    @IntoMap
+    @StringKey("mihon.entry.interactions.manga.download.DownloadJob")
+    fun retiredMangaDownloadJob(): KClass<out ListenableWorker> = LegacyDownloadJob::class
+
+    @Provides
+    @IntoMap
+    @StringKey("mihon.entry.interactions.book.download.BookDownloadJob")
+    fun retiredBookDownloadJob(): KClass<out ListenableWorker> = LegacyDownloadJob::class
 
     // The download worker's foreground notification, under the progress notification's id so the progress replaces it
     @Provides
