@@ -320,13 +320,13 @@ internal class DefaultEntryMigrationFeature(
                             intent,
                             member,
                             refreshedTarget,
-                            EntryMigrationChildPairing.ByPosition(reference.source, offset),
+                            EntryMigrationChildPairing.ByPosition(offset),
                         )
                         if (result !is EntryMigrationExecutionResult.Applied) return result
                     }
                     offset += count
                 }
-                EntryMigrationChildPairing.ByPosition(reference.source, offset = 0)
+                EntryMigrationChildPairing.ByPosition(offset = 0)
             }
         }
         val result = migrate(
