@@ -4,14 +4,14 @@ package mihon.webview.jcef.runtime
  * Chromium's switches: the JetBrains Runtime's own ([runtimeSwitches], from `JCefAppConfig`) with its scale replaced,
  * and the app's. Chromium keeps the last value of a repeated switch, so each switch here appears once.
  */
-internal fun chromiumSwitches(runtimeSwitches: List<String>, display: JcefDisplay, deviceScaleFactor: Double) =
+internal fun chromiumSwitches(runtimeSwitches: List<String>, deviceScaleFactor: Double) =
     runtimeSwitches.filterNot { it.startsWith(DEVICE_SCALE_FACTOR) } + listOf(
         // The runtime passes AWT's scale, which on X11 is a whole number (1 at 125 %) while the app applies the
         // session's scale itself.
         "$DEVICE_SCALE_FACTOR$deviceScaleFactor",
-        // Chromium otherwise picks its display system from the environment: native Wayland whenever the session is
-        // Wayland, even when the app's windows go through XWayland.
-        "--ozone-platform=${display.ozonePlatform}",
+        // The app's windows go through X11, which Chromium otherwise leaves for native Wayland whenever the session
+        // is Wayland.
+        "--ozone-platform=x11",
         // Extensions installed for the system's Chromium, such as a desktop's browser integration in
         // /usr/share/chromium/extensions, would otherwise load into every page.
         "--disable-extensions",
@@ -24,9 +24,3 @@ internal fun chromiumSwitches(runtimeSwitches: List<String>, display: JcefDispla
     )
 
 private const val DEVICE_SCALE_FACTOR = "--force-device-scale-factor="
-
-private val JcefDisplay.ozonePlatform: String
-    get() = when (this) {
-        JcefDisplay.X11 -> "x11"
-        JcefDisplay.WAYLAND -> "wayland"
-    }

@@ -26,8 +26,7 @@ import kotlin.concurrent.withLock
  * show them then. mpv renders whole frames into memory, [FrameSlots], that the attached output's window draws from:
  * only when it has a new frame, or the output changed, and the window draws again only then. It renders with OpenGL
  * off any window ([EglFrames]), where VA-API's frames need no copy and the GPU scales, and with its software renderer
- * where that can't start. On a screen the toolkit draws at a larger scale than the screen's, frames render at the
- * screen's ([renderSize]). With no output, frames still render, into a few pixels nothing reads: mpv's output waits
+ * where that can't start. Frames render at the output's size in pixels. With no output, frames still render, into a few pixels nothing reads: mpv's output waits
  * for each frame to be rendered before showing the next.
  *
  * Compose draws a window's frame by recording it on the UI thread and replaying the recording later inside its own
@@ -160,7 +159,7 @@ internal class MpvRenderer(
                 }
                 continue
             }
-            val size = targetSize(output)
+            val size = output.width to output.height
             if (size.first <= 0 || size.second <= 0 || !hasFrame || (!newFrame && rendered == output to size)) continue
             val current = slots?.takeIf { it.width == size.first && it.height == size.second }
                 ?: FrameSlots(size.first, size.second).also { replacement ->
@@ -177,11 +176,6 @@ internal class MpvRenderer(
         }
         mpv.renderContextSetUpdateCallback(frames.renderContext, null, null)
         frames.free()
-    }
-
-    private fun targetSize(output: ComposeVideoOutput): Pair<Int, Int> {
-        val configuration = output.window.graphicsConfiguration ?: return output.width to output.height
-        return renderSize(output.width, output.height, configuration.effectiveScale, configuration.screenScale)
     }
 
     private companion object {

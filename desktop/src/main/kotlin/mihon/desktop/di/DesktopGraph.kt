@@ -13,7 +13,6 @@ import mihon.data.di.RepositoryBindings
 import mihon.desktop.appearance.PreferenceAppLocaleStore
 import mihon.desktop.application.AppRestart
 import mihon.desktop.display.backend.DisplayBackend
-import mihon.desktop.display.backend.DisplayBackendPreferences
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
@@ -92,7 +91,6 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend
-    val displayBackendPreferences: DisplayBackendPreferences
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart

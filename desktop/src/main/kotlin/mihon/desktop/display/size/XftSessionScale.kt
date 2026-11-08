@@ -1,7 +1,6 @@
 package mihon.desktop.display.size
 
 import logcat.LogPriority
-import mihon.desktop.display.backend.DisplayBackend
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Toolkit
 import java.io.IOException
@@ -11,12 +10,10 @@ import java.util.concurrent.TimeUnit
  * Linux: on X11, and XWayland, AWT draws in physical pixels and scales only by whole numbers, so a scale such as 1.25
  * is left to the app. X11 sessions publish their scale as `Xft.dpi` in the X resources, 96 being 1:1, which KDE,
  * GNOME, XFCE and setups loading `~/.Xresources` set; it is read once with `xrdb`, or from the `Xft/DPI` XSETTINGS
- * AWT reads where xrdb isn't installed. Where neither is published, AWT's own scale stays. The native Wayland toolkit
- * applies each output's scale itself.
+ * AWT reads where xrdb isn't installed. Where neither is published, AWT's own scale stays.
  */
-class XftSessionScale(private val backend: DisplayBackend) : SessionScale {
+class XftSessionScale : SessionScale {
     override val pixelsPerDp: Float? by lazy {
-        if (backend.isNativeWayland) return@lazy null
         val dpi = resourcesDpi() ?: xsettingsDpi()
         if (dpi == null) logcat(LogPriority.DEBUG) { "The X session publishes no Xft.dpi" }
         dpi?.takeIf { it > 0f }?.div(UNSCALED_DPI)
