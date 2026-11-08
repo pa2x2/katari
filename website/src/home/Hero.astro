@@ -1,15 +1,14 @@
 ---
 import bookPaper from "../captures/book-paper.png";
-import library from "../captures/library.png";
 import player from "../captures/player.png";
 import translationAfter from "../captures/translation-after.png";
+import { offeredPlatforms } from "../download/desktop-release.ts";
 import Callout from "../guide/Callout.astro";
-import { desktopRelease } from "../download/desktop-release.ts";
+import { plannedCapture } from "../media/planned-captures.ts";
 import Shot from "../media/Shot.astro";
 import { sitePath } from "../site/links.ts";
 
-// Where Katari runs; the desktop app joins once it has a release to download.
-const platforms = ["Android", ...((await desktopRelease()) ? ["Linux"] : [])];
+const platforms = await offeredPlatforms();
 ---
 
 <section class="hero">
@@ -40,14 +39,21 @@ const platforms = ["Android", ...((await desktopRelease()) ? ["Linux"] : [])];
     </div>
   </div>
   <div class="fan">
+    <div class="desktop">
+      <Shot
+        image={plannedCapture("sync-desktop.png")}
+        alt="A library holding comics, books, and films in Katari for Linux"
+        device="window"
+        zoomable={false}
+        eager
+        sizes="(min-width: 60rem) 36rem, 100vw"
+      />
+    </div>
     <div class="comic">
-      <Shot image={translationAfter} alt="A comic page translated into English" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
+      <Shot image={translationAfter} alt="A comic page translated into English" zoomable={false} eager sizes="(min-width: 60rem) 11rem, 31vw" />
     </div>
     <div class="book">
-      <Shot image={bookPaper} alt="A book in the paper theme" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
-    </div>
-    <div class="library">
-      <Shot image={library} alt="A library holding comics, books, and films" zoomable={false} eager sizes="(min-width: 60rem) 15rem, 40vw" />
+      <Shot image={bookPaper} alt="A book in the paper theme" zoomable={false} eager sizes="(min-width: 60rem) 11rem, 31vw" />
     </div>
     <div class="film">
       <Shot image={player} alt="Sintel playing in the video player" device="phone-landscape" zoomable={false} eager sizes="(min-width: 60rem) 23rem, 60vw" />
@@ -132,28 +138,36 @@ const platforms = ["Android", ...((await desktopRelease()) ? ["Linux"] : [])];
     --shot-width: 100%;
   }
 
+  /* The Linux window stands behind, and the phones in front of it cover its sides and lower edge but leave the middle of
+     the library showing. */
+  .desktop {
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  /* The phones cover the middle of the window, so a labelled frame standing in for it says what it is above them. */
+  .desktop :global(.planned) {
+    justify-content: flex-start;
+    padding-top: 8%;
+  }
+
   /* Tilting a phone this tall swings its corners out by about 6% of the fan's width, so the tilted ones sit that far in. */
   .comic,
   .book {
-    top: 10%;
-    width: 34%;
+    top: 28%;
+    z-index: 1;
+    width: 31%;
   }
 
   .comic {
-    left: 6%;
-    transform: rotate(-8deg);
+    left: 5%;
+    transform: rotate(-7deg);
   }
 
   .book {
-    right: 6%;
-    transform: rotate(8deg);
-  }
-
-  .library {
-    top: 0;
-    left: 29%;
-    z-index: 1;
-    width: 42%;
+    right: 5%;
+    transform: rotate(7deg);
   }
 
   .film {

@@ -42,8 +42,11 @@ export interface Feature {
   docs: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
-  /** Beside the text, the wide shot stands behind and the upright ones in front of its lower edge. */
-  scene?: boolean;
+  /**
+   * How the shots stand beside the text when not overlapping phones: in a scene the wide shot stands behind and the
+   * upright ones in front of its lower edge; with windows the first window stands behind and the others in front of it.
+   */
+  arrangement?: "scene" | "windows";
 }
 
 export interface Chapter {
@@ -123,6 +126,7 @@ export const chapters: Chapter[] = [
         text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
         highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
         shots: [
+          { kind: "still", image: plannedCapture("comic-reader.png"), alt: "A comic page in the reader", caption: "A comic in the reader" },
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
           { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", device: "phone-landscape" },
@@ -198,6 +202,42 @@ export const chapters: Chapter[] = [
     intro: "One library on all your devices.",
     features: [
       {
+        id: "desktop",
+        docs: ["docs/install/", "docs/comic-reader/", "docs/book-reader/", "docs/video/"],
+        title: "Katari on your computer",
+        text: "The Linux app has the same library, readers and player, laid out for a wide window and at home with a mouse and keys.",
+        highlights: [
+          "More columns and bigger covers as the window grows",
+          "Every reader and the player list their keys with ?",
+          "Keep an episode playing in a small window while you work",
+          "The desktop's media controls pause it and change episodes",
+        ],
+        arrangement: "windows",
+        shots: [
+          {
+            kind: "still",
+            image: plannedCapture("desktop-book.png"),
+            alt: "A book in Katari for Linux, two pages side by side on a wide window",
+            caption: "A book two pages at a time",
+            device: "window",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("desktop-pip.png"),
+            alt: "An episode playing in the small picture-in-picture window",
+            caption: "An episode in a small window",
+            device: "picture-in-picture",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("desktop-keys.png"),
+            alt: "The player listing every key it knows",
+            caption: "Every key, one ? away",
+            device: "window",
+          },
+        ],
+      },
+      {
         id: "sync",
         docs: ["docs/sync/", "docs/sync-server/"],
         title: "Your library on every device",
@@ -207,7 +247,7 @@ export const chapters: Chapter[] = [
           "Pick up on one device where you stopped on another",
           "Link a new device by scanning a code",
         ],
-        scene: true,
+        arrangement: "scene",
         shots: [
           {
             kind: "still",

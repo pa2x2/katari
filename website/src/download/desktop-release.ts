@@ -2,6 +2,7 @@
  * The desktop app's release the site offers (see offeredRelease), read from GitHub while the site builds. The site
  * rebuilds when a release is published.
  */
+import type { Platform } from "../guide/platforms.ts";
 import type { GitHubRelease } from "./github.ts";
 import { offeredRelease } from "./published-releases.ts";
 import type { ReleaseFile } from "./release-format.ts";
@@ -49,4 +50,9 @@ function toDesktopRelease(release: GitHubRelease): DesktopRelease {
     page: release.html_url,
     appImage: { url: appImage.browser_download_url, bytes: appImage.size },
   };
+}
+
+/** Where Katari runs, as the home page and link previews name it; Linux joins once the desktop app has a release. */
+export async function offeredPlatforms(): Promise<Platform[]> {
+  return ["Android", ...((await desktopRelease()) ? (["Linux"] as const) : [])];
 }
