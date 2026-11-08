@@ -33,6 +33,17 @@
     "coverCredit": null
   },
   {
+    "title": "Caminandes",
+    "language": "en",
+    "author": "Blender Foundation",
+    "license": {
+      "name": "CC BY 3.0",
+      "url": "https://creativecommons.org/licenses/by/3.0/"
+    },
+    "attribution": "© copyright Blender Foundation | caminandes.com; Gran Dillama as on Wikimedia Commons, under CC BY-SA 3.0",
+    "coverCredit": null
+  },
+  {
     "title": "Frankenstein; or, The Modern Prometheus",
     "language": "en",
     "author": "Mary Wollstonecraft Shelley",
