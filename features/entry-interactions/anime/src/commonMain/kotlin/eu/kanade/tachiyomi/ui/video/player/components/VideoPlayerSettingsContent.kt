@@ -77,6 +77,11 @@ internal fun VideoPlayerSettingsContent(
     onSelectChapter: (VideoPlayerChapter) -> Unit,
     /** The title's skip choice and where its times come from; null when nothing in the episode is marked to skip. */
     markerSkip: (@Composable () -> Unit)?,
+    /**
+     * The episode opening over this one, if any. Its source is being asked meanwhile, so the dub, server, stream and
+     * quality, which ask it again, wait until that episode plays or fails, and Reset with them.
+     */
+    openingEpisodeName: String?,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -115,11 +120,12 @@ internal fun VideoPlayerSettingsContent(
     val showAudioTracks = draftMatchesPlaying && playback.audioTracks.size > 1
     // Mirrors the order of the items below, so a section can be scrolled to by index.
     val sectionKeys = buildList {
+        if (openingEpisodeName != null && sourceRows.showsAny) add(VideoSourceRowKeys.WAITING)
         if (sourceRows.showDubs) add(VideoSourceRowKeys.DUB)
         if (sourceRows.showServers) add(VideoSourceRowKeys.SERVER)
         if (sourceRows.showStreams) add(VideoSourceRowKeys.STREAM)
         if (sourceRows.showQualities) add(VideoSourceRowKeys.SOURCE_QUALITY)
-        if (sourceRows.changed) add(VideoSourceRowKeys.APPLY)
+        if (sourceRows.changed && openingEpisodeName == null) add(VideoSourceRowKeys.APPLY)
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
         add(PICTURE_ITEM)
@@ -165,6 +171,7 @@ internal fun VideoPlayerSettingsContent(
                 onDismissRequest()
             },
             icon = MaterialSymbols.Rounded.RestartAlt,
+            enabled = openingEpisodeName == null,
         )
     }
 
@@ -204,6 +211,7 @@ internal fun VideoPlayerSettingsContent(
                     onApplySource(sourceDraft, subtitle)
                     onDismissRequest()
                 },
+                openingEpisodeName = openingEpisodeName,
             )
 
             if (playback.showsAdaptiveQualitySelector) {

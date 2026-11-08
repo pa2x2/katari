@@ -91,8 +91,9 @@ internal interface VideoPlayerInputTarget {
 
     fun stepFrame(forward: Boolean)
 
-    val hasPreviousEpisode: Boolean
-    val hasNextEpisode: Boolean
+    /** Whether Previous and Next can ask for an episode now: there is one, and no other is opening. */
+    val canPlayPreviousEpisode: Boolean
+    val canPlayNextEpisode: Boolean
 
     fun previousEpisode()
 

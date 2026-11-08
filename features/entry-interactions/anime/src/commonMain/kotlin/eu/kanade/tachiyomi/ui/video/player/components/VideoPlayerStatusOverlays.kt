@@ -28,11 +28,15 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A pill under the top bar while the stream or episode changes behind the one still playing. */
+/**
+ * A pill under the top bar while the stream or episode changes behind the one still playing. [onCancel] stops an
+ * episode change, the only way past it: until it plays or fails, nothing else asks for another episode.
+ */
 @Composable
 internal fun VideoPlayerSwitchingOverlay(
     label: String,
     modifier: Modifier = Modifier,
+    onCancel: (() -> Unit)? = null,
 ) {
     VideoPlayerStatusPill(
         label = label,
@@ -42,6 +46,15 @@ internal fun VideoPlayerSwitchingOverlay(
                 modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                 tone = ContentTone.OnMedia,
             )
+        },
+        trailing = onCancel?.let {
+            {
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Close,
+                    contentDescription = stringResource(MR.strings.action_cancel),
+                    onClick = it,
+                )
+            }
         },
     )
 }

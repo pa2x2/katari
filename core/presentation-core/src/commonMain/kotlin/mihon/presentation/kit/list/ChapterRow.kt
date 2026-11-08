@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +38,7 @@ import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.theme.color
 import tachiyomi.i18n.*
@@ -57,7 +59,8 @@ import androidx.compose.ui.semantics.selected as selectedState
  * while the pointer is over the row.
  *
  * Chapter lists on screens run edge to edge, so the row takes the content inset there; inside a sheet it takes the
- * sheet's row inset. [depth] indents the nested entries of a table of contents.
+ * sheet's row inset. [depth] indents the nested entries of a table of contents. A row that isn't [enabled] is dimmed and
+ * can't be tapped, such as the episodes in a player's list while another one opens.
  *
  * @param read null when the entry has no read state of its own, which shows neither the unread mark nor dimming.
  * @param progress where reading stopped, dimmed further than the other details since it is only a hint.
@@ -86,88 +89,92 @@ fun ChapterRow(
     onLongClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     progressFraction: Float? = null,
+    enabled: Boolean = true,
 ) {
     val spacing = KatariTheme.spacing
     val inset = if (LocalRowDensity.current == RowDensity.Compact) LocalRowInset.current else spacing.contentInset
     val onInfoClick = onPreviewClick?.takeIf { summary != null && preview == null }
-    TrailingControlsLayout(
-        modifier = modifier
-            .selectionFill(selected)
-            .semantics { selectedState = selected }
-            .clickCursor()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(start = inset + spacing.l * depth, top = spacing.m, end = inset, bottom = spacing.m),
-        leading = {
-            if (preview != null) {
-                ChapterPreview(
-                    preview = preview,
-                    onClick = onPreviewClick,
-                    modifier = Modifier
-                        .padding(end = spacing.xs)
-                        .width(ChapterRowPreviewWidth),
-                )
-            }
-        },
-        words = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
-                Text(
-                    text = title,
-                    role = TextRole.Body,
-                    tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            ChapterDetails(
-                read = read == true,
-                kind = kind,
-                date = date,
-                duration = duration,
-                progress = progress,
-                scanlator = scanlator,
-            )
-            if (progressFraction != null) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = spacing.xs),
-                    progress = { progressFraction },
-                    onContainer = selected,
-                )
-            }
-            if (summary != null) {
-                Text(
-                    text = summary,
-                    role = TextRole.Supporting,
-                    tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
-                    maxLines = SUMMARY_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        },
-        trailing = {
-            if (onInfoClick != null || trailing != null || LocalRowHoverActions.current?.shown == true) {
-                RowTrailing {
-                    RowHoverActionButtons()
-                    if (onInfoClick != null) {
-                        IconButton(
-                            icon = MaterialSymbols.Rounded.Info,
-                            contentDescription = stringResource(MR.strings.action_details),
-                            onClick = onInfoClick,
-                        )
-                    }
-                    trailing?.invoke()
+    val contentColor = if (enabled) LocalContentColor.current else KatariTheme.colors.disabledContent
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        TrailingControlsLayout(
+            modifier = modifier
+                .selectionFill(selected)
+                .semantics { selectedState = selected }
+                .clickCursor(enabled)
+                .combinedClickable(enabled = enabled, onClick = onClick, onLongClick = onLongClick)
+                .padding(start = inset + spacing.l * depth, top = spacing.m, end = inset, bottom = spacing.m),
+            leading = {
+                if (preview != null) {
+                    ChapterPreview(
+                        preview = preview,
+                        onClick = onPreviewClick,
+                        modifier = Modifier
+                            .padding(end = spacing.xs)
+                            .width(ChapterRowPreviewWidth),
+                    )
                 }
-            }
-        },
-        leadingGap = spacing.s,
-        trailingGap = spacing.s,
-        lineGap = spacing.xs,
-    )
+            },
+            words = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
+                    Text(
+                        text = title,
+                        role = TextRole.Body,
+                        tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                ChapterDetails(
+                    read = read == true,
+                    kind = kind,
+                    date = date,
+                    duration = duration,
+                    progress = progress,
+                    scanlator = scanlator,
+                )
+                if (progressFraction != null) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = spacing.xs),
+                        progress = { progressFraction },
+                        onContainer = selected,
+                    )
+                }
+                if (summary != null) {
+                    Text(
+                        text = summary,
+                        role = TextRole.Supporting,
+                        tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
+                        maxLines = SUMMARY_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            },
+            trailing = {
+                if (onInfoClick != null || trailing != null || LocalRowHoverActions.current?.shown == true) {
+                    RowTrailing {
+                        RowHoverActionButtons()
+                        if (onInfoClick != null) {
+                            IconButton(
+                                icon = MaterialSymbols.Rounded.Info,
+                                contentDescription = stringResource(MR.strings.action_details),
+                                onClick = onInfoClick,
+                            )
+                        }
+                        trailing?.invoke()
+                    }
+                }
+            },
+            leadingGap = spacing.s,
+            trailingGap = spacing.s,
+            lineGap = spacing.xs,
+        )
+    }
 }
 
 /**

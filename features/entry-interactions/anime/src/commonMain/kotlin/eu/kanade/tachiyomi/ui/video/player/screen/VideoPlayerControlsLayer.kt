@@ -82,6 +82,7 @@ internal fun VideoPlayerControlsLayer(
             sourceAvailable = current.sourceAvailable,
             hasPreviousEpisode = current.previousChapterId != null,
             hasNextEpisode = current.nextChapterId != null,
+            openingEpisodeId = (current.episodeChange as? VideoPlayerViewModel.EpisodeChange.Loading)?.episodeId,
             seekStepSeconds = seekStepSeconds,
             playbackSpeedLabel = videoPlaybackSpeedLabel(current.playback.sessionPlaybackSpeed),
             picture = current.playback.pictureFraming,

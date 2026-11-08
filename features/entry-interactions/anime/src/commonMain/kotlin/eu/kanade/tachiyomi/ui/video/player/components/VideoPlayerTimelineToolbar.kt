@@ -27,11 +27,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The row under the timeline: episode skipping, where playback is (the time and the chapter playing) and the settings
- * people change mid-episode on the left, the episode list on the right. A missing previous or next episode drops its button, and Subtitles shows only when the stream has
- * subtitles to pick from. Rotate is null where the window doesn't turn or ignores the app's orientation, which drops it
- * too. The picture button switches between Fit and Fill, and takes a pinch's zoom back to Fit. [volume] follows it
- * where the controls set the volume, and the full-screen button closes the row where the window has a full screen
- * ([fullScreen] says whether it is in it): both desktop's, which Android's row never shows.
+ * people change mid-episode on the left, the episode list on the right. A missing previous or next episode drops its
+ * button, both are dimmed while [episodeNavigationEnabled] is false (another episode is opening), and Subtitles shows
+ * only when the stream has subtitles to pick from. Rotate is null where the window doesn't turn or ignores the app's
+ * orientation, which drops it too. The picture button switches between Fit and Fill, and takes a pinch's zoom back to
+ * Fit. [volume] follows it where the controls set the volume, and the full-screen button closes the row where the
+ * window has a full screen ([fullScreen] says whether it is in it): both desktop's, which Android's row never shows.
  */
 @Composable
 internal fun VideoPlayerTimelineToolbar(
@@ -41,6 +42,7 @@ internal fun VideoPlayerTimelineToolbar(
     chapter: (@Composable (Modifier) -> Unit)?,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,
+    episodeNavigationEnabled: Boolean,
     playbackSpeedLabel: String,
     picture: PictureFraming,
     showSubtitles: Boolean,
@@ -63,6 +65,7 @@ internal fun VideoPlayerTimelineToolbar(
                 contentDescription = stringResource(MR.strings.anime_playback_previous_episode),
                 onClick = onPreviousEpisode,
                 modifier = Modifier.videoPlayerControl(),
+                enabled = episodeNavigationEnabled,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.PreviousEpisode,
@@ -74,6 +77,7 @@ internal fun VideoPlayerTimelineToolbar(
                 contentDescription = stringResource(MR.strings.anime_playback_next_episode),
                 onClick = onNextEpisode,
                 modifier = Modifier.videoPlayerControl(),
+                enabled = episodeNavigationEnabled,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.NextEpisode,

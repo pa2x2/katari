@@ -119,7 +119,7 @@ private fun Controls(scene: VideoPlayerPictureInPictureScene, onReturn: () -> Un
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
                 label = stringResource(MR.strings.anime_playback_previous_episode),
                 shortcut = VideoPlayerShortcuts.PreviousEpisode,
-                enabled = input.hasPreviousEpisode,
+                enabled = input.canPlayPreviousEpisode,
                 onClick = input::previousEpisode,
             )
             ControlButton(
@@ -149,7 +149,7 @@ private fun Controls(scene: VideoPlayerPictureInPictureScene, onReturn: () -> Un
                 icon = MaterialSymbols.RoundedFilled.SkipNext,
                 label = stringResource(MR.strings.anime_playback_next_episode),
                 shortcut = VideoPlayerShortcuts.NextEpisode,
-                enabled = input.hasNextEpisode,
+                enabled = input.canPlayNextEpisode,
                 onClick = input::nextEpisode,
             )
         }

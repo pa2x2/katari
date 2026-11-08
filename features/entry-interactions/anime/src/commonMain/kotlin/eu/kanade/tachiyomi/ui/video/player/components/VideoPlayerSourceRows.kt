@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
+import mihon.presentation.kit.list.RowGroupNote
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -54,6 +55,7 @@ internal data class VideoSourceRows(
     val showStreams: Boolean get() = streams.size > 1
     val showQualities: Boolean
         get() = qualitiesLoading || qualities.isNotEmpty() || (previewUnlisted && dubMatchesCurrent && !matchesCurrent)
+    val showsAny: Boolean get() = showDubs || showServers || showStreams || showQualities
 }
 
 /**
@@ -109,6 +111,7 @@ internal fun VideoSourcePreviewEffect(
 /**
  * The dub, server, stream and source quality rows, each keyed by its section, and the Apply row once [rows] differ
  * from the active selection. [onDraft] gets each pick; [onRetryPreview] asks again for options that failed to load.
+ * While [openingEpisodeName] opens over the playing episode the rows are dimmed under a note saying so.
  */
 internal fun LazyListScope.videoSourceRowItems(
     rows: VideoSourceRows,
@@ -118,13 +121,23 @@ internal fun LazyListScope.videoSourceRowItems(
     onRetryPreview: () -> Unit,
     onCancel: () -> Unit,
     onApply: () -> Unit,
+    openingEpisodeName: String? = null,
 ) {
+    val enabled = openingEpisodeName == null
+    if (!enabled && rows.showsAny) {
+        item(key = VideoSourceRowKeys.WAITING) {
+            RowGroupNote(
+                stringResource(MR.strings.anime_playback_source_waits_for_episode, openingEpisodeName.orEmpty()),
+            )
+        }
+    }
     if (rows.showDubs) {
         item(key = VideoSourceRowKeys.DUB) {
             PlaybackOptionRow(
                 options = rows.dubs,
                 titleRes = MR.strings.anime_playback_dub,
                 selectedKey = draft.dubKey,
+                enabled = enabled,
                 onSelect = { onDraft(draft.withSelectedDub(it, options.active)) },
             )
         }
@@ -146,6 +159,7 @@ internal fun LazyListScope.videoSourceRowItems(
                     options = rows.servers,
                     titleRes = MR.strings.anime_playback_server,
                     selectedKey = draft.serverKey,
+                    enabled = enabled,
                     // Failures are the current dub's; another dub lists its own servers.
                     tags = stringResource(MR.strings.anime_playback_server_failed).let { failed ->
                         options.failedServerKeys.takeIf { rows.dubMatchesCurrent }.orEmpty().associateWith { failed }
@@ -161,7 +175,7 @@ internal fun LazyListScope.videoSourceRowItems(
                 options = rows.streams,
                 titleRes = MR.strings.anime_playback_stream,
                 selectedKey = draft.streamKey,
-                enabled = rows.streamsEnabled,
+                enabled = enabled && rows.streamsEnabled,
                 onSelect = { onDraft(draft.withSelectedStream(it)) },
             )
         }
@@ -184,12 +198,13 @@ internal fun LazyListScope.videoSourceRowItems(
                     options = rows.qualities,
                     titleRes = MR.strings.anime_playback_source_quality,
                     selectedKey = draft.sourceQualityKey,
+                    enabled = enabled,
                     onSelect = { onDraft(draft.withSelectedSourceQuality(it, options.active)) },
                 )
             }
         }
     }
-    if (rows.changed) {
+    if (rows.changed && enabled) {
         item(key = VideoSourceRowKeys.APPLY) {
             ApplySourceRow(onCancel = onCancel, onApply = onApply, applyEnabled = !rows.previewNotOffered)
         }
@@ -202,4 +217,5 @@ internal object VideoSourceRowKeys {
     const val STREAM = "stream"
     const val SOURCE_QUALITY = "source_quality"
     const val APPLY = "apply_source"
+    const val WAITING = "source_waits_for_episode"
 }

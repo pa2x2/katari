@@ -116,6 +116,7 @@ internal fun VideoPlayerSettingsLayer(
         VideoPlayerSettingsContent(
             frame = settingsFrame,
             playback = current.playback,
+            openingEpisodeName = (current.episodeChange as? VideoPlayerViewModel.EpisodeChange.Loading)?.episodeName,
             initialSection = settingsSection,
             onDismissRequest = actions.dismissSettings,
             onSelectSpeed = { speed ->

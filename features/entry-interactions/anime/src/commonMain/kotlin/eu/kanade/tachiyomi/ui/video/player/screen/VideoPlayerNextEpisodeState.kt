@@ -24,15 +24,13 @@ private const val NEXT_EPISODE_COUNTDOWN_TICK_MS = 33L
 
 /**
  * The way on to the next episode: it is preloaded near the end, the end screen offers it with an auto-play countdown,
- * and the system's picture-in-picture window, which has no end screen, plays it straight away when auto-play is on. [advanceInFlight] is
- * set once an episode change has been asked for, so neither path asks twice, and cleared when the change fails or the
- * next playback starts.
+ * and the system's picture-in-picture window, which has no end screen, plays it straight away when auto-play is on.
+ * Neither path asks twice: the view model turns a request away while another episode opens.
  */
 @Stable
 internal class VideoPlayerNextEpisodeState(
     countdownElapsedMs: MutableState<Long>,
     endScreenDismissed: MutableState<Boolean>,
-    advanceInFlight: MutableState<Boolean>,
 ) {
     // Time the end screen's countdown has run; it only runs while nothing else is open over the video.
     var countdownElapsedMs by countdownElapsedMs
@@ -41,7 +39,6 @@ internal class VideoPlayerNextEpisodeState(
     // episode ends again. An episode that fails to open leaves this one on screen, still ended, and must not bring back
     // a countdown that already ran out.
     var endScreenDismissed by endScreenDismissed
-    var advanceInFlight by advanceInFlight
 
     /** Asking for another episode deals with this one's end, as Cancel or Close on the end screen does. */
     fun leaveEpisodeEnd(playbackEnded: Boolean) {
@@ -146,13 +143,12 @@ internal class VideoPlayerNextEpisodeState(
     }
 }
 
-/** The countdown and dismissal start over with each episode; an episode change in flight carries across them. */
+/** The countdown and dismissal start over with each episode. */
 @Composable
 internal fun rememberVideoPlayerNextEpisodeState(chapterId: Long): VideoPlayerNextEpisodeState {
     val countdownElapsedMs = remember(chapterId) { mutableStateOf(0L) }
     val endScreenDismissed = remember(chapterId) { mutableStateOf(false) }
-    val advanceInFlight = remember { mutableStateOf(false) }
-    return remember(countdownElapsedMs, endScreenDismissed, advanceInFlight) {
-        VideoPlayerNextEpisodeState(countdownElapsedMs, endScreenDismissed, advanceInFlight)
+    return remember(countdownElapsedMs, endScreenDismissed) {
+        VideoPlayerNextEpisodeState(countdownElapsedMs, endScreenDismissed)
     }
 }

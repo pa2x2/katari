@@ -59,8 +59,8 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
     Key(VideoPlayerShortcuts.Faster, enabled) { target.stepSpeed(faster = true) }
     Key(VideoPlayerShortcuts.PreviousFrame, enabled) { target.stepFrame(forward = false) }
     Key(VideoPlayerShortcuts.NextFrame, enabled) { target.stepFrame(forward = true) }
-    Key(VideoPlayerShortcuts.PreviousEpisode, enabled && target.hasPreviousEpisode) { target.previousEpisode() }
-    Key(VideoPlayerShortcuts.NextEpisode, enabled && target.hasNextEpisode) { target.nextEpisode() }
+    Key(VideoPlayerShortcuts.PreviousEpisode, enabled && target.canPlayPreviousEpisode) { target.previousEpisode() }
+    Key(VideoPlayerShortcuts.NextEpisode, enabled && target.canPlayNextEpisode) { target.nextEpisode() }
     Key(VideoPlayerShortcuts.Subtitles, enabled && target.hasSubtitles) { target.toggleSubtitles() }
 }
 

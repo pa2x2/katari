@@ -16,6 +16,7 @@ internal class VideoPlayerBackgroundPlayback(
     var enabled = false
         private set
     private var mediaSession: VideoPlayerMediaSession? = null
+    private var canPlayNext = false
 
     // The session outlives each episode's composition, so its next-episode button calls whichever handler is current.
     override var onNextEpisode: () -> Unit = {}
@@ -32,14 +33,17 @@ internal class VideoPlayerBackgroundPlayback(
         player: VideoPlayer,
         metadata: VideoMetadata,
         seekStepSeconds: Int,
-        hasPreviousEpisode: Boolean,
-        hasNextEpisode: Boolean,
     ) {
         val session = mediaSession
             ?: VideoPlayerMediaSession(context) { onNextEpisode() }
                 .also { mediaSession = it }
-        session.setPlayer(player, metadata, seekStepSeconds, hasNextEpisode = hasNextEpisode)
+        session.setPlayer(player, metadata, seekStepSeconds, nextEpisodeButton = canPlayNext)
         syncHosting()
+    }
+
+    override fun setEpisodeNavigation(canPlayPrevious: Boolean, canPlayNext: Boolean) {
+        this.canPlayNext = canPlayNext
+        mediaSession?.setNextEpisodeButton(canPlayNext)
     }
 
     fun release() {

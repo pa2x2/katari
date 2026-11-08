@@ -39,6 +39,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -218,6 +220,9 @@ internal class VideoPlayerViewModel(
     // Opening the episode the player started on, or one picked on its problem or loading screen.
     private var loadJob: Job? = null
 
+    // Opening another episode over the one on screen, which the viewer may cancel.
+    private var episodeChangeJob: Job? = null
+
     // Auto's move to mpv, carried into the streams and episodes opened after it so each doesn't fail first again.
     private var sessionEngineRun: VideoPlayerEngineRun? = null
 
@@ -269,7 +274,7 @@ internal class VideoPlayerViewModel(
     }
 
     fun retryCurrentPlayback(positionMs: Long) {
-        val current = mutableState.value as? State.Ready ?: return
+        val current = settledReady() ?: return
         // The link that failed may have expired; ask the source for fresh ones.
         resolvedStreams.clear()
         viewModelScope.launch {
@@ -282,7 +287,7 @@ internal class VideoPlayerViewModel(
     }
 
     fun applySourceSelection(selection: PlaybackSelection) {
-        val current = mutableState.value as? State.Ready ?: return
+        val current = settledReady() ?: return
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
         // A server the viewer picks is the one they want to see fail, if it does.
@@ -386,7 +391,7 @@ internal class VideoPlayerViewModel(
 
     private fun sourcePreviewTarget(): PreviewTarget? {
         val listed = when (val current = mutableState.value) {
-            is State.Ready -> current.playback.sourceSelection
+            is State.Ready -> settledReady()?.playback?.sourceSelection
             is State.Error -> current.choices?.selection
             is State.Loading -> current.choices?.selection
         } ?: return null
@@ -433,6 +438,13 @@ internal class VideoPlayerViewModel(
 
     private fun failedEpisodeChange(): EpisodeChange.Failed? =
         (mutableState.value as? State.Ready)?.episodeChange as? EpisodeChange.Failed
+
+    /**
+     * The episode on screen while no other episode is opening. Asking for streams again, or for another episode, waits
+     * until that one plays, fails or is cancelled, so one request runs at a time and none answers for the wrong one.
+     */
+    private fun settledReady(): State.Ready? =
+        (mutableState.value as? State.Ready)?.takeIf { it.episodeChange !is EpisodeChange.Loading }
 
     /**
      * Opens the episode that failed or is still opening with [selection], picked on its problem or loading screen,
@@ -517,7 +529,7 @@ internal class VideoPlayerViewModel(
     }
 
     fun resetPlayerSettings() {
-        val current = mutableState.value as? State.Ready ?: return
+        val current = settledReady() ?: return
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
         sessionPlaybackSpeed = defaultPlaybackSpeed
@@ -707,16 +719,13 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return null
         progressOffers.dismiss()
         if (offer.episodeId == current.chapterId) return offer.positionMs
-        playEpisode(current.visibleEntryId, offer.ownerEntryId, offer.episodeId)
+        changeEpisode(offer.episodeId, current.visibleEntryId, offer.ownerEntryId)
         return null
     }
 
     fun playPreviousEpisode() {
         val current = mutableState.value as? State.Ready ?: return
-        val previousEpisodeId = current.childWindow.adjacent(EntryChildDirection.PREVIOUS)?.id ?: return
-        viewModelScope.launch {
-            changeEpisode(previousEpisodeId)
-        }
+        changeEpisode(current.childWindow.adjacent(EntryChildDirection.PREVIOUS)?.id ?: return)
     }
 
     /**
@@ -724,7 +733,7 @@ internal class VideoPlayerViewModel(
      * stops here, and the failure should be shown.
      */
     fun tryNextServer(positionMs: Long): Boolean {
-        val current = mutableState.value as? State.Ready ?: return false
+        val current = settledReady() ?: return false
         val retry = nextServer(current.playback.playbackData) ?: return false
         viewModelScope.launch {
             resolvePlayback(
@@ -832,10 +841,7 @@ internal class VideoPlayerViewModel(
 
     fun playNextEpisode() {
         val current = mutableState.value as? State.Ready ?: return
-        val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
-        viewModelScope.launch {
-            changeEpisode(nextEpisodeId)
-        }
+        changeEpisode(current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return)
     }
 
     /** Lists the next episode's streams ahead of time. Its link is resolved only once it plays: resolved links expire. */
@@ -892,9 +898,7 @@ internal class VideoPlayerViewModel(
         ownerEntryId: Long,
         episodeId: Long,
     ) {
-        viewModelScope.launch {
-            changeEpisode(episodeId, visibleEntryId, ownerEntryId)
-        }
+        changeEpisode(episodeId, visibleEntryId, ownerEntryId)
     }
 
     /**
@@ -925,23 +929,26 @@ internal class VideoPlayerViewModel(
         mutableState.value = when {
             previousReady == null -> loadingState
             changingEpisode != null -> previousReady.copy(
-                episodeChange = EpisodeChange.Loading(changingEpisode.episodeName),
+                episodeChange = EpisodeChange.Loading(changingEpisode.episodeId, changingEpisode.episodeName),
             )
             showLoading -> loadingState
             else -> previousReady.copy(isSourceSwitching = true)
         }
 
         val targetSelection = selection ?: previousReady?.playback?.persistedSourceSelection
+        val targetVisibleEntryId = changingEpisode?.visibleEntryId ?: visibleEntryId
+        val targetOwnerEntryId = changingEpisode?.ownerEntryId ?: ownerEntryId
+        val targetEpisodeId = changingEpisode?.episodeId ?: chapterId
         val listed = consumeMatchingPreload(
-            visibleEntryId = this@VideoPlayerViewModel.visibleEntryId,
-            ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
-            chapterId = this@VideoPlayerViewModel.chapterId,
+            visibleEntryId = targetVisibleEntryId,
+            ownerEntryId = targetOwnerEntryId,
+            chapterId = targetEpisodeId,
             selection = targetSelection,
         ) ?: withContext(resolveDispatcher) {
             resolveVideoStream(
-                entryId = this@VideoPlayerViewModel.visibleEntryId,
-                chapterId = this@VideoPlayerViewModel.chapterId,
-                ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
+                entryId = targetVisibleEntryId,
+                chapterId = targetEpisodeId,
+                ownerEntryId = targetOwnerEntryId,
                 selection = targetSelection,
             )
         }
@@ -977,7 +984,7 @@ internal class VideoPlayerViewModel(
                 return
             }
         }
-        mutableState.value = when (result) {
+        val outcome = when (result) {
             is ResolveVideoStream.Result.Success -> {
                 cacheSelectionResult(result.chapter.id, result.playbackData.selection, result)
                 buildReadyState(
@@ -992,13 +999,11 @@ internal class VideoPlayerViewModel(
             }
             is ResolveVideoStream.Result.Error -> {
                 if (changingEpisode != null && previousReady != null) {
-                    val failedOwnerEntryId = ownerEntryId
-                    changingEpisode.restore()
                     previousReady.copy(
                         episodeChange = EpisodeChange.Failed(
                             episodeId = changingEpisode.episodeId,
                             visibleEntryId = changingEpisode.visibleEntryId,
-                            ownerEntryId = failedOwnerEntryId,
+                            ownerEntryId = changingEpisode.ownerEntryId,
                             episodeName = changingEpisode.episodeName,
                             problem = result.reason.toProblem(),
                             webView = episodeWebView(changingEpisode.episodeId),
@@ -1036,8 +1041,15 @@ internal class VideoPlayerViewModel(
             }
         }
 
+        // The lookups above catch their own failures, cancellation included, so a request stopped meanwhile ends here
+        // instead of overwriting what replaced it.
+        currentCoroutineContext().ensureActive()
+        mutableState.value = outcome
+        if (result is ResolveVideoStream.Result.Success) changingEpisode?.arrive()
+
         val current = mutableState.value
-        if (current is State.Ready) {
+        // An episode that couldn't be opened leaves the one on screen counting where it was.
+        if (current is State.Ready && current.episodeChange !is EpisodeChange.Failed) {
             val session = playbackSession?.takeIf { !initial }
                 ?: VideoPlaybackSession(
                     current.ownerEntryId,
@@ -1112,7 +1124,11 @@ internal class VideoPlayerViewModel(
         }
     }
 
-    private suspend fun changeEpisode(
+    /**
+     * Opens another episode over the one on screen, which plays on until the new one is ready. Nothing else is asked
+     * of the source meanwhile: another request is turned away until this one plays, fails or is cancelled.
+     */
+    private fun changeEpisode(
         targetEpisodeId: Long,
         targetVisibleEntryId: Long = visibleEntryId,
         targetOwnerEntryId: Long = ownerEntryId,
@@ -1121,7 +1137,7 @@ internal class VideoPlayerViewModel(
         fallback: ServerFallback = ServerFallback(),
         explicitStreamPick: Boolean = false,
     ) {
-        val current = mutableState.value as? State.Ready ?: return
+        val current = settledReady() ?: return
         applySelectionJob?.cancel()
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
@@ -1130,59 +1146,62 @@ internal class VideoPlayerViewModel(
         }
         clearSelectionResultCache(preserveNextEpisodeId = targetEpisodeId)
         serverFallback = fallback
-        val targetChapter = entryChapterRepository.getChapterById(targetEpisodeId)
-        val change = PendingEpisodeChange(
-            episodeId = targetEpisodeId,
-            visibleEntryId = targetVisibleEntryId,
-            episodeName = targetChapter?.name
-                ?: current.allChapters.firstOrNull { it.id == targetEpisodeId }?.name.orEmpty(),
-            previousVisibleEntryId = visibleEntryId,
-            previousOwnerEntryId = ownerEntryId,
-            previousChapterId = chapterId,
-            previousSession = playbackSession,
+        val listedName = current.allChapters.firstOrNull { it.id == targetEpisodeId }?.name.orEmpty()
+        // Shown before the source is asked, so every control sees the change from the tap on.
+        mutableState.value = current.copy(
+            episodeChange = EpisodeChange.Loading(targetEpisodeId, listedName),
+            switchFailure = null,
+            isSourceSwitching = false,
+            playback = current.playback.copy(preview = VideoPlaybackPreviewState()),
         )
-        visibleEntryId = targetVisibleEntryId
-        ownerEntryId = targetChapter?.entryId ?: targetOwnerEntryId
-        chapterId = targetEpisodeId
-        saveEpisodeIds()
-        playbackSession = null
-        resolvePlayback(
-            selection = selection,
-            pickedFrom = pickedFrom,
-            initial = true,
-            changingEpisode = change,
-            explicitStreamPick = explicitStreamPick,
-        )
+        episodeChangeJob = viewModelScope.launch {
+            val targetChapter = entryChapterRepository.getChapterById(targetEpisodeId)
+            resolvePlayback(
+                selection = selection,
+                pickedFrom = pickedFrom,
+                initial = true,
+                changingEpisode = PendingEpisodeChange(
+                    episodeId = targetEpisodeId,
+                    visibleEntryId = targetVisibleEntryId,
+                    ownerEntryId = targetChapter?.entryId ?: targetOwnerEntryId,
+                    episodeName = targetChapter?.name ?: listedName,
+                ),
+                explicitStreamPick = explicitStreamPick,
+            )
+        }
+    }
+
+    /** Stops opening another episode; the one on screen plays on as if none had been asked for. */
+    fun cancelEpisodeChange() {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.episodeChange !is EpisodeChange.Loading) return
+        episodeChangeJob?.cancel()
+        mutableState.value = current.copy(episodeChange = null)
     }
 
     fun retryEpisodeChange() {
-        val failed = (mutableState.value as? State.Ready)?.episodeChange as? EpisodeChange.Failed ?: return
-        viewModelScope.launch {
-            changeEpisode(failed.episodeId, failed.visibleEntryId)
-        }
+        val failed = failedEpisodeChange() ?: return
+        changeEpisode(failed.episodeId, failed.visibleEntryId, failed.ownerEntryId)
     }
 
     /** Opens the episode that couldn't be opened again with [selection], picked from what its source listed. */
     fun retryEpisodeChangeWith(selection: PlaybackSelection) {
         val failed = failedEpisodeChange() ?: return
         val listed = failed.choices?.selection ?: return
-        previewSelectionJob?.cancel()
         val fallback = if (selection.dubKey == listed.dubKey) {
             ServerFallback(tried = failed.failedServerKeys, explicitPick = selection.serverKey != listed.serverKey)
         } else {
             ServerFallback()
         }
-        viewModelScope.launch {
-            changeEpisode(
-                targetEpisodeId = failed.episodeId,
-                targetVisibleEntryId = failed.visibleEntryId,
-                targetOwnerEntryId = failed.ownerEntryId,
-                selection = selection,
-                pickedFrom = listed,
-                fallback = fallback,
-                explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
-            )
-        }
+        changeEpisode(
+            targetEpisodeId = failed.episodeId,
+            targetVisibleEntryId = failed.visibleEntryId,
+            targetOwnerEntryId = failed.ownerEntryId,
+            selection = selection,
+            pickedFrom = listed,
+            fallback = fallback,
+            explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
+        )
     }
 
     fun dismissEpisodeChange() {
@@ -1203,22 +1222,22 @@ internal class VideoPlayerViewModel(
         savedState[EPISODE_ID_KEY] = chapterId
     }
 
-    /** An episode being opened over the one still playing, with what to put back if it can't be. */
+    /**
+     * An episode being opened over the one still playing. The player's own ids stay on the episode on screen until
+     * this one [arrive]s, so a failure or cancel has nothing to put back and the saved ids never name an episode that
+     * isn't playing.
+     */
     private inner class PendingEpisodeChange(
         val episodeId: Long,
         val visibleEntryId: Long,
+        val ownerEntryId: Long,
         val episodeName: String,
-        private val previousVisibleEntryId: Long,
-        private val previousOwnerEntryId: Long,
-        private val previousChapterId: Long,
-        private val previousSession: VideoPlaybackSession?,
     ) {
-        fun restore() {
-            this@VideoPlayerViewModel.visibleEntryId = previousVisibleEntryId
-            ownerEntryId = previousOwnerEntryId
-            chapterId = previousChapterId
+        fun arrive() {
+            this@VideoPlayerViewModel.visibleEntryId = visibleEntryId
+            this@VideoPlayerViewModel.ownerEntryId = ownerEntryId
+            chapterId = episodeId
             saveEpisodeIds()
-            playbackSession = previousSession
         }
     }
 
@@ -1539,6 +1558,13 @@ internal class VideoPlayerViewModel(
             val nextChapterId: Long?
                 get() = childWindow.next?.id
 
+            /** Previous and Next wait while another episode opens, so they never start a second request. */
+            val canPlayPrevious: Boolean
+                get() = previousChapterId != null && episodeChange !is EpisodeChange.Loading
+
+            val canPlayNext: Boolean
+                get() = nextChapterId != null && episodeChange !is EpisodeChange.Loading
+
             val playingGroupId: ChapterGroupId
                 get() = childWindow.current.groupId
         }
@@ -1576,7 +1602,7 @@ internal class VideoPlayerViewModel(
     sealed interface EpisodeChange {
         val episodeName: String
 
-        data class Loading(override val episodeName: String) : EpisodeChange
+        data class Loading(val episodeId: Long, override val episodeName: String) : EpisodeChange
 
         /**
          * [choices] are the dubs, servers, streams and qualities the episode's source listed before it failed, when
