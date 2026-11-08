@@ -22,8 +22,8 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Sync's background work as WorkManager jobs, which also run while the app is closed. The hand-off is ordinary
- * one-time work: expedited work would need a foreground notification below Android 12, for a run of a few seconds. The
- * first download runs in the foreground with a progress notification, since it can take many minutes.
+ * one-time work: expedited work would need a foreground notification below Android 12, for a run of a few seconds. A
+ * long run goes in the foreground with a progress notification, since it can take many minutes (D007).
  */
 @Inject
 class AndroidSyncBackgroundWork(private val application: Application) : SyncBackgroundWork {
@@ -55,17 +55,21 @@ class AndroidSyncBackgroundWork(private val application: Application) : SyncBack
         application.workManager.enqueueUniqueWork(HAND_OFF, ExistingWorkPolicy.REPLACE, request)
     }
 
-    override fun firstDownload(onMetered: Boolean) {
+    override fun longRun(onMetered: Boolean) {
         val request = OneTimeWorkRequestBuilder<SyncJob>()
             .setConstraints(
                 Constraints(requiredNetworkType = if (onMetered) NetworkType.CONNECTED else NetworkType.UNMETERED),
             )
-            .setInputData(workDataOf(SyncJob.KIND to SyncJob.FIRST_DOWNLOAD))
-            .setBackoffCriteria(FIRST_DOWNLOAD_BACKOFF)
-            .addTag(FIRST_DOWNLOAD)
+            .setInputData(workDataOf(SyncJob.KIND to SyncJob.LONG_RUN))
+            .setBackoffCriteria(LONG_RUN_BACKOFF)
+            .addTag(LONG_RUN)
             .build()
-        // The work already going carries the download on; a second one would only wait for the same run.
-        application.workManager.enqueueUniqueWork(FIRST_DOWNLOAD, ExistingWorkPolicy.KEEP, request)
+        // The work already going carries the run on; a second one would only wait for the same run.
+        application.workManager.enqueueUniqueWork(LONG_RUN, ExistingWorkPolicy.KEEP, request)
+    }
+
+    override fun dropLongRun() {
+        application.workManager.cancelUniqueWork(LONG_RUN)
     }
 
     override fun allowsBackgroundSync(): Boolean {
@@ -78,7 +82,7 @@ class AndroidSyncBackgroundWork(private val application: Application) : SyncBack
         const val PERIODIC = "SyncPeriodic"
         const val HAND_OFF = "SyncHandOff"
         val HAND_OFF_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
-        const val FIRST_DOWNLOAD = "SyncFirstDownload"
-        val FIRST_DOWNLOAD_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
+        const val LONG_RUN = "SyncLongRun"
+        val LONG_RUN_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
     }
 }

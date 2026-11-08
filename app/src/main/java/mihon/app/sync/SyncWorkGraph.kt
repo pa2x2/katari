@@ -7,5 +7,5 @@ import app.katari.sync.client.trigger.SyncBackgroundRun
 interface SyncWorkGraph {
     val syncBackgroundRun: SyncBackgroundRun
     val syncStatusFlow: SyncStatusFlow
-    val syncFirstDownloadNotification: SyncFirstDownloadNotification
+    val syncLongRunNotification: SyncLongRunNotification
 }

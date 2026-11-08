@@ -46,12 +46,17 @@ enum class SyncStage(internal val stored: String) {
     /** Whether the device takes everything from the account now, which pushes wait for. */
     val isDownloading: Boolean get() = this == DOWNLOADING || this == RESYNC || this == RESYNC_WITHOUT_DELETIONS
 
-    /**
-     * Whether the device is in its first sync with the account, from recording what it held to its settings: the long
-     * download whose progress the platform shows and which it keeps going in the background.
-     */
+    /** Whether the device is in its first sync with the account, from recording what it held to its settings. */
     val isFirstDownload: Boolean
         get() = this == RECORDING || this == RECORDING_KEPT || this == DOWNLOADING || this == SETTINGS
+
+    /**
+     * Whether the device moves its whole library to or from the account now: in its first sync, or a full resync. The
+     * run that carries it on also uploads the library once it is ready, often for minutes: the long run whose progress
+     * the platform shows and which it keeps going in the background (D007).
+     */
+    val movesLibrary: Boolean
+        get() = isFirstDownload || this == RESYNC || this == RESYNC_WITHOUT_DELETIONS
 
     internal companion object {
         fun of(stored: String): SyncStage = entries.firstOrNull { it.stored == stored } ?: READY
