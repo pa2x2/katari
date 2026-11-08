@@ -75,7 +75,7 @@ internal class ApplySession(
         val envelope = record.record
         if (failing[envelope.key] == FailedStage.STORING) return hold(record, HoldReason.FAILED)
         val kind = SyncKinds.named(envelope.kind)
-        if (kind == null || envelope.kindVersion != kind.version) return hold(record, HoldReason.UNREADABLE)
+        if (kind == null || !kind.reads(envelope.kindVersion)) return hold(record, HoldReason.UNREADABLE)
         receive(kind, record)
     }
 

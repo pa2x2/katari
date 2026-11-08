@@ -81,7 +81,7 @@ class FirstSync(
     /** This device's profiles, each paired with the one of the account's [records] it is, or one of its name. */
     suspend fun proposal(records: List<RecordEnvelope>): List<ProfilePairing> {
         val account = records
-            .filter { it.kind == ProfileKind.name && it.kindVersion == ProfileKind.version && !it.deleted }
+            .filter { it.kind == ProfileKind.name && ProfileKind.reads(it.kindVersion) && !it.deleted }
             .map { ProfileKind.decode(it.payload) }
             .map { AccountProfile(it.uuid, it.name.value) }
         val librarySizes = handler.await {

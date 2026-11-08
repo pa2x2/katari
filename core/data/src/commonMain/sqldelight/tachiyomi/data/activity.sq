@@ -65,9 +65,15 @@ ON activity_completion_events(entry_id, occurred_at);
 CREATE INDEX idx_activity_completion_local_date
 ON activity_completion_events(local_date, entry_id);
 
+-- When a profile's statistics start counting: from the first activity any of the person's devices recorded, or from
+-- when history was last cleared, whichever is later. They are kept apart because syncing merges them differently: the
+-- earliest start is kept, so no device's activity is hidden behind another's later start, while a clear on any device
+-- moves the start forward on every one.
 CREATE TABLE statistics_epochs(
     profile_id INTEGER NOT NULL PRIMARY KEY,
     started_at INTEGER NOT NULL,
+    -- NULL until history is cleared.
+    cleared_at INTEGER,
     FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE,
     CHECK(started_at >= 0)
 );
@@ -138,16 +144,16 @@ FROM entries
 WHERE _id = :entryId;
 
 resetStatisticsEpoch:
-INSERT INTO statistics_epochs(profile_id, started_at)
-VALUES (:profileId, :startedAt)
-ON CONFLICT(profile_id) DO UPDATE SET started_at = excluded.started_at;
+INSERT INTO statistics_epochs(profile_id, started_at, cleared_at)
+VALUES (:profileId, :clearedAt, :clearedAt)
+ON CONFLICT(profile_id) DO UPDATE SET cleared_at = excluded.cleared_at;
 
 deleteActivityByProfile:
 DELETE FROM activity_sessions
 WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 
 getStatisticsEpoch:
-SELECT started_at
+SELECT coalesce(max(started_at, cleared_at), started_at)
 FROM statistics_epochs
 WHERE profile_id = :profileId;
 
@@ -431,4 +437,5 @@ restoreStatisticsEpoch:
 INSERT INTO statistics_epochs(profile_id, started_at)
 VALUES (:profileId, :startedAt)
 ON CONFLICT(profile_id) DO UPDATE SET
-    started_at = min(statistics_epochs.started_at, excluded.started_at);
+    started_at = min(statistics_epochs.started_at, excluded.started_at),
+    cleared_at = min(statistics_epochs.cleared_at, excluded.started_at);

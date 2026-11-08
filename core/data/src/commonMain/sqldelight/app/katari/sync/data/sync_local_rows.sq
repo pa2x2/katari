@@ -95,7 +95,7 @@ FROM activity_completion_events
 WHERE event_id = :eventId;
 
 statisticsEpochRow:
-SELECT profile_id, started_at
+SELECT profile_id, started_at, cleared_at
 FROM statistics_epochs
 WHERE profile_id = :profileId;
 

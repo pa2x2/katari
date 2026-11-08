@@ -202,9 +202,9 @@ INSERT OR IGNORE INTO activity_completion_events(
 VALUES (:eventId, :entryId, :chapterId, :sessionId, :occurredAt, :localDate, :timeZoneId, :cause);
 
 upsertStatisticsEpoch:
-INSERT INTO statistics_epochs(profile_id, started_at)
-VALUES (:profileId, :startedAt)
-ON CONFLICT(profile_id) DO UPDATE SET started_at = excluded.started_at;
+INSERT INTO statistics_epochs(profile_id, started_at, cleared_at)
+VALUES (:profileId, :startedAt, :clearedAt)
+ON CONFLICT(profile_id) DO UPDATE SET started_at = excluded.started_at, cleared_at = excluded.cleared_at;
 
 -- Categories
 
