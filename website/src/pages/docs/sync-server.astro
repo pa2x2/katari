@@ -6,15 +6,12 @@ import Snippet from "../../guide/Snippet.astro";
 import Task from "../../guide/Task.astro";
 import Phone from "../../media/Phone.astro";
 import { plannedCapture, WINDOW_ASPECT } from "../../media/planned-captures.ts";
-import { RELEASES, SYNC_SERVER_IMAGE, leavesSite, sitePath } from "../../site/links.ts";
+import { SYNC_SERVER_IMAGE, SYNC_SERVER_RUN } from "../../download/sync-server-release.ts";
+import { RELEASES, leavesSite, sitePath } from "../../site/links.ts";
 
-const image = `${SYNC_SERVER_IMAGE}:latest`;
-const run = `docker run -d --name katari-sync --restart unless-stopped \\
-  -p 8080:8080 -v katari-sync:/data \\
-  ${image}`;
 const compose = `services:
   katari-sync:
-    image: ${image}
+    image: ${SYNC_SERVER_IMAGE}
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -45,7 +42,7 @@ volumes:
 
   <Task id="start" title="Start the server">
     <p>With Docker:</p>
-    <Snippet lang="shell" code={run} />
+    <Snippet lang="shell" code={SYNC_SERVER_RUN} />
     <p>Or with Docker Compose, in a <code>compose.yaml</code>, started with <code>docker compose up -d</code>:</p>
     <Snippet lang="yaml" file="compose.yaml" code={compose} />
     <p>
@@ -176,9 +173,9 @@ docker start katari-sync`}
     <p>With Docker, pull the new image and start the container again with the same command as before:</p>
     <Snippet
       lang="shell"
-      code={`docker pull ${image}
+      code={`docker pull ${SYNC_SERVER_IMAGE}
 docker rm -f katari-sync
-${run}`}
+${SYNC_SERVER_RUN}`}
     />
     <p>With Docker Compose:</p>
     <Snippet lang="shell" code="docker compose pull && docker compose up -d" />

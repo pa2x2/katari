@@ -14,6 +14,14 @@ export interface SyncServerRelease {
 
 const TAG_PREFIX = "sync-server-v";
 
+/** The tag that sync-server-image.yml moves to each published release, so commands naming it stay current. */
+export const SYNC_SERVER_IMAGE = "ghcr.io/pa2x2/katari-sync-server:latest";
+
+/** Starts the server with its data in a named volume, as the docs and the download page show it. */
+export const SYNC_SERVER_RUN = `docker run -d --name katari-sync --restart unless-stopped \\
+  -p 8080:8080 -v katari-sync:/data \\
+  ${SYNC_SERVER_IMAGE}`;
+
 let release: Promise<SyncServerRelease | undefined> | undefined;
 
 /**

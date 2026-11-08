@@ -111,10 +111,15 @@ const label = file ?? LANGUAGE_NAMES[lang];
     color: var(--text-strong);
   }
 
+  /* Complete in itself, so a snippet outside the guide's pages, such as on the download page, reads the same. */
   .snippet :global(pre) {
     margin: 0;
+    padding: 0.9rem 1.1rem;
+    overflow-x: auto;
     border: none;
     border-radius: 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
   }
 
   .snippet :global(pre span) {
