@@ -30,6 +30,7 @@ import mihon.desktop.security.signin.SignInPromptHost
 import mihon.desktop.work.WorkCloseGuardDialog
 import mihon.presentation.kit.feedback.AppMessagesHost
 import mihon.presentation.kit.files.LocalSystemFileChooser
+import mihon.presentation.kit.pointer.LocalAppPointerPresence
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
 import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.window.LocalScreenTitles
@@ -49,9 +50,10 @@ import javax.swing.JFrame
  * desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
- * as the player enter, the desktop's file chooser, which the screens' document pickers open, the app's messages, which
- * show on the screen the user is on, the profile picker included, and the density of the session's scale and the
- * interface size. While it is open, extensions find the activity that stands for it in the foreground
+ * as the player enter, whether the mouse is over the app, which the player's controls leave with, the desktop's file
+ * chooser, which the screens' document pickers open, the app's messages, which show on the screen the user is on, the
+ * profile picker included, and the density of the session's scale and the interface size. While it is open,
+ * extensions find the activity that stands for it in the foreground
  * ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity open in it.
  * Its focus is the app's foreground for sync ([ReportsForeground]), and whether it is minimized counts toward the user
  * being away, which locks the open profile again ([ReportsPresence]).
@@ -123,6 +125,10 @@ private fun WindowContent(
 ) {
     val platformContext = remember(window) { WindowPlatformContext(window) }
     val fullScreen = remember(state) { PlacementFullScreen(state) }
+    val pointerPresence = remember { AwtAppPointerPresence() }
+    DisposableEffect(pointerPresence) {
+        onDispose(pointerPresence::close)
+    }
     DisposableEffect(platformContext) {
         graph.openWindow.context = platformContext
         onDispose {
@@ -141,6 +147,7 @@ private fun WindowContent(
         LocalPlatformContext provides platformContext,
         LocalScreenTitles provides screenTitles,
         LocalWindowFullScreen provides fullScreen,
+        LocalAppPointerPresence provides pointerPresence,
         LocalSystemFileChooser provides graph.systemFileChooser,
     ) {
         ProvideInterfaceDensity(graph.sessionScale, graph.interfaceSizePreferences) {

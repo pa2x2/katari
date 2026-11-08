@@ -55,7 +55,6 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
-import kotlinx.coroutines.delay
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -71,7 +70,6 @@ import kotlin.math.abs
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
-private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 
 /**
  * The screen while an episode plays: the video and its input, the controls, the end screen, the settings and the
@@ -339,35 +337,7 @@ internal fun VideoPlayerWatchScreen(
     )
     val scrub = rememberVideoPlayerScrub(ui, seekPreview, pictureInPicture, currentPlayer)
 
-    LaunchedEffect(
-        controlsPinned,
-        ui.controlsVisible,
-        ui.controllerInteractionSequence,
-        ui.playbackSnapshot.isPlaying,
-        ui.playbackSnapshot.isLoading,
-        ui.isScrubbing,
-        ui.settingsVisible,
-        ui.episodesDrawerVisible,
-        ui.startupOverlayVisible,
-        ui.pointerOverControls,
-    ) {
-        if (
-            ui.pointerOverControls ||
-            controlsPinned ||
-            !ui.controlsVisible ||
-            !ui.playbackSnapshot.isPlaying ||
-            ui.playbackSnapshot.isLoading ||
-            ui.isScrubbing ||
-            ui.settingsVisible ||
-            ui.episodesDrawerVisible ||
-            ui.startupOverlayVisible
-        ) {
-            return@LaunchedEffect
-        }
-
-        delay(CONTROLS_AUTO_HIDE_DELAY_MS)
-        ui.controlsVisible = false
-    }
+    VideoPlayerControlsAutoHide(ui, controlsPinned)
 
     val displayedPositionMs = if (ui.isScrubbing) {
         ui.scrubPositionMs.coerceToPlaybackDuration(ui.playbackSnapshot.durationMs)
