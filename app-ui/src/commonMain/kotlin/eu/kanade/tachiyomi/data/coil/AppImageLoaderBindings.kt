@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.data.coil
 
 import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
+import coil3.compose.preferEndFirstIntrinsicSize
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
@@ -30,6 +32,7 @@ import tachiyomi.core.common.storage.StorageFileResolver
 object AppImageLoaderBindings {
     @Provides
     @SingleIn(AppScope::class)
+    @OptIn(ExperimentalCoilApi::class)
     fun imageLoader(
         platform: ImageLoaderPlatform,
         iconSource: ExtensionIconSource,
@@ -71,6 +74,10 @@ object AppImageLoaderBindings {
         )
 
         crossfade((CROSSFADE_MILLIS * platform.animatorDurationScale).toInt())
+        // A fading image is drawn by a painter that otherwise has no size of its own and centres the image in its frame
+        // itself, half a pixel off wherever the image overhangs the frame by an odd number of pixels, which leaves it
+        // soft. With the image's size it lands on whole pixels, as an image from memory that doesn't fade does.
+        preferEndFirstIntrinsicSize(true)
         if (networkPreferences.verboseLogging.get()) logger(DebugLogger())
 
         // Coil spawns a new thread for every image load by default
