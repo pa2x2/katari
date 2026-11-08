@@ -66,23 +66,25 @@ internal fun LoadingPlaybackOptionRow(
     }
 }
 
-/** A drafted dub's or server's options that the source couldn't list, with a way to ask again. */
+/**
+ * A drafted dub's or server's options that the source didn't list, with [message] saying why, and a way to ask again
+ * when asking again may help.
+ */
 @Composable
-internal fun FailedPlaybackOptionRow(
+internal fun UnlistedPlaybackOptionRow(
     titleRes: StringResource,
-    onRetry: () -> Unit,
+    message: StringResource,
+    onRetry: (() -> Unit)? = null,
 ) {
     ChipsRow(title = stringResource(titleRes)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
-            Text(
-                text = stringResource(MR.strings.anime_playback_options_failed),
-                role = TextRole.Supporting,
-                tone = ContentTone.Error,
-            )
-            Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Text)
+            Text(text = stringResource(message), role = TextRole.Supporting, tone = ContentTone.Error)
+            if (onRetry != null) {
+                Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Text)
+            }
         }
     }
 }
@@ -170,6 +172,7 @@ private fun mpvOnlyTracksLine(trackPick: MpvTrackPick, hasMpvOnlyTracks: Boolean
 internal fun ApplySourceRow(
     onCancel: () -> Unit,
     onApply: () -> Unit,
+    applyEnabled: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -185,6 +188,7 @@ internal fun ApplySourceRow(
         Button(
             label = stringResource(MR.strings.action_apply),
             onClick = onApply,
+            enabled = applyEnabled,
         )
     }
 }
