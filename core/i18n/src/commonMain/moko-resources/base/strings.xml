@@ -3443,12 +3443,12 @@
     <!-- %1$s is a device's name, %2$s when, such as "2 minutes ago" -->
     <string name="sync_handoff_from">From %1$s · %2$s</string>
     <string name="sync_handoff_own">Can\'t reach your other devices</string>
-    <!-- %1$s is a device's name, %2$s where it is, such as "Ch. 12, page 18" -->
-    <string name="sync_handoff_further">%1$s is further: %2$s</string>
-    <!-- %1$s is where another device is, such as "Chapter 12, page 18", when the device's name isn't known -->
-    <string name="sync_handoff_further_unknown">Another device is further: %1$s</string>
-    <!-- %1$s is a chapter, such as "Chapter 12", %2$d the page -->
-    <string name="sync_handoff_position_page">%1$s, page %2$d</string>
+    <!-- The heading of an offer to go where another device got to, with the place under it. %1$s is the device's name -->
+    <string name="sync_handoff_further">%1$s is further</string>
+    <!-- The heading of an offer to go where another device got to, when the device's name isn't known -->
+    <string name="sync_handoff_further_unknown">Another device is further</string>
+    <!-- %1$s is a chapter, such as "Chapter 12", %2$d the page. A no-break space keeps "page" and its number on one line -->
+    <string name="sync_handoff_position_page">%1$s, page %2$d</string>
     <!-- %1$s is an episode, such as "Episode 5", %2$s the time in it, such as "12:34" -->
     <string name="sync_handoff_position_time">%1$s, %2$s</string>
     <!-- %1$s is a chapter, such as "Chapter 12", %2$d how far through it in percent -->

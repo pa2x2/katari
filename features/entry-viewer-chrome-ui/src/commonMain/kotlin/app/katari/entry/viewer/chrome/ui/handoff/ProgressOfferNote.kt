@@ -9,8 +9,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * A reader's or the player's offer to go where another device got to (D053), such as "Fedora desktop is further:
- * Chapter 12, page 18". [place] says where, in the reader's own terms.
+ * A reader's or the player's offer to go where another device got to (D053), such as "Fedora desktop is further" over
+ * "Chapter 12, page 18". [place] says where, in the reader's own terms.
  */
 @Composable
 fun ProgressOfferNote(
@@ -21,9 +21,10 @@ fun ProgressOfferNote(
     modifier: Modifier = Modifier,
 ) {
     OfferNote(
-        text = deviceName
-            ?.let { stringResource(MR.strings.sync_handoff_further, it, place) }
-            ?: stringResource(MR.strings.sync_handoff_further_unknown, place),
+        heading = deviceName
+            ?.let { stringResource(MR.strings.sync_handoff_further, it) }
+            ?: stringResource(MR.strings.sync_handoff_further_unknown),
+        text = place,
         actionLabel = stringResource(MR.strings.sync_action_go_there),
         onAction = onGoThere,
         onDismiss = onDismiss,
