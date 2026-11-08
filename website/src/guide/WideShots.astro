@@ -1,7 +1,8 @@
 ---
 /*
  * Shots too wide for the column beside a section's steps, such as desktop windows and the player on its side, placed
- * across the text column after the text they show. Several share one row and one height; on a phone they stack.
+ * across the text column after the text they show. Several share one row and one height; on a phone they stack. One alone
+ * is narrower than the column and sits in its middle.
  */
 import { aspectOf } from "../media/aspect.ts";
 import type { Device } from "../media/devices.ts";
@@ -37,7 +38,7 @@ const several = shots.length > 1;
     align-items: flex-start;
     gap: 1.5rem;
     max-width: 36rem;
-    margin: 0.5rem 0 1.5rem;
+    margin: 0.5rem auto 1.5rem;
   }
 
   .several {
