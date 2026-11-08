@@ -44,6 +44,7 @@ interface HandlesOwnBackPress
 fun DefaultNavigatorScreenTransition(
     navigator: Navigator,
     modifier: Modifier = Modifier,
+    content: ScreenTransitionContent = { it.Content() },
 ) {
     val slideDistance = rememberSlideDistance()
     ScreenTransition(
@@ -55,6 +56,7 @@ fun DefaultNavigatorScreenTransition(
             )
         },
         modifier = modifier,
+        content = content,
     )
 }
 

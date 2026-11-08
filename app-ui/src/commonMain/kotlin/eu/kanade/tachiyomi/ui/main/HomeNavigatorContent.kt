@@ -14,7 +14,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.components.AppStateBanners
-import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -74,10 +73,7 @@ fun HomeNavigatorContent(
                     modifier = Modifier
                         .padding(contentPadding)
                         .consumeWindowInsets(contentPadding),
-                ) {
-                    // Shows current screen
-                    DefaultNavigatorScreenTransition(navigator = navigator)
-                }
+                )
 
                 overlay()
             }
