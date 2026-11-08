@@ -9,7 +9,8 @@ internal enum class VideoPlayerSeekDirection {
 
 internal data class VideoPlayerSeekFeedbackState(
     val direction: VideoPlayerSeekDirection,
-    val totalSeconds: Int,
+    /** How far the burst has moved the position, which a seek clamped at either end leaves short of its steps. */
+    val totalMs: Long,
     val hidePlayerChrome: Boolean,
     val sequence: Long,
     val updatedAtMillis: Long,
@@ -44,7 +45,7 @@ internal fun resolveVideoPlayerSeekPosition(
 internal fun nextVideoPlayerSeekFeedbackState(
     previousState: VideoPlayerSeekFeedbackState?,
     direction: VideoPlayerSeekDirection,
-    stepSeconds: Int,
+    movedMs: Long,
     hidePlayerChrome: Boolean,
     sequence: Long,
     updatedAtMillis: Long,
@@ -54,11 +55,7 @@ internal fun nextVideoPlayerSeekFeedbackState(
         updatedAtMillis - previousState.updatedAtMillis <= VIDEO_PLAYER_SEEK_FEEDBACK_BURST_WINDOW_MS
     return VideoPlayerSeekFeedbackState(
         direction = direction,
-        totalSeconds = if (isBurstContinuation) {
-            previousState.totalSeconds + stepSeconds
-        } else {
-            stepSeconds
-        },
+        totalMs = if (isBurstContinuation) previousState.totalMs + movedMs else movedMs,
         hidePlayerChrome = hidePlayerChrome,
         sequence = sequence,
         updatedAtMillis = updatedAtMillis,

@@ -67,6 +67,7 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.abs
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -195,10 +196,7 @@ internal fun VideoPlayerWatchScreen(
         ui.settingsVisible = true
         registerControllerInteraction(true)
     }
-    val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
-        ui.triggerSeekFeedback(direction, seekStepSeconds, hidePlayerChrome)
-    }
-    val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
+    val seekInDirection: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
         val durationMs = ui.playbackSnapshot.durationMs.takeIf { it > 0L }
             ?: currentPlayer.state.value.durationMs?.coerceAtLeast(0L)
             ?: 0L
@@ -214,12 +212,12 @@ internal fun VideoPlayerWatchScreen(
         ui.scrubPositionMs = targetPositionMs
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = targetPositionMs)
         currentPlayer.seekTo(targetPositionMs)
+        ui.triggerSeekFeedback(direction, abs(targetPositionMs - basePositionMs), hidePlayerChrome)
     }
     val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
         if (!controlsPinned) ui.controlsVisible = false
         registerControllerInteraction(false)
-        seekInDirection(direction)
-        triggerSeekFeedback(direction, true)
+        seekInDirection(direction, true)
     }
     val togglePlayback = {
         registerControllerInteraction(true)
@@ -412,14 +410,12 @@ internal fun VideoPlayerWatchScreen(
         togglePlayback = togglePlayback,
         seekFromControls = { direction ->
             registerControllerInteraction(true)
-            seekInDirection(direction)
-            triggerSeekFeedback(direction, false)
+            seekInDirection(direction, false)
         },
         gestureSeek = performGestureSeek,
         seekStep = { direction ->
             registerControllerInteraction(false)
-            seekInDirection(direction)
-            triggerSeekFeedback(direction, false)
+            seekInDirection(direction, false)
         },
         toggleFullScreen = {
             host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }

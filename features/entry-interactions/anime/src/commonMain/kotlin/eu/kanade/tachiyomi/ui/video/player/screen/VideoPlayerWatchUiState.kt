@@ -70,12 +70,12 @@ internal class VideoPlayerWatchUiState(
         controllerInteractionSequence += 1L
     }
 
-    fun triggerSeekFeedback(direction: VideoPlayerSeekDirection, stepSeconds: Int, hidePlayerChrome: Boolean) {
+    fun triggerSeekFeedback(direction: VideoPlayerSeekDirection, movedMs: Long, hidePlayerChrome: Boolean) {
         seekFeedbackSequence += 1L
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
-            stepSeconds = stepSeconds,
+            movedMs = movedMs,
             hidePlayerChrome = hidePlayerChrome,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),

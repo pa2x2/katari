@@ -99,7 +99,7 @@ internal fun VideoPlayerSeekFeedback(
         ) {
             VideoPlayerSeekIndicator(
                 direction = activeFeedback.direction,
-                totalSeconds = activeFeedback.totalSeconds,
+                totalMs = activeFeedback.totalMs,
             )
         }
     }
@@ -108,7 +108,7 @@ internal fun VideoPlayerSeekFeedback(
 @Composable
 private fun VideoPlayerSeekIndicator(
     direction: VideoPlayerSeekDirection,
-    totalSeconds: Int,
+    totalMs: Long,
     modifier: Modifier = Modifier,
 ) {
     val spacing = KatariTheme.spacing
@@ -119,7 +119,10 @@ private fun VideoPlayerSeekIndicator(
             verticalArrangement = Arrangement.spacedBy(spacing.xs),
         ) {
             VideoPlayerSeekChevrons(direction = direction)
-            Text(text = stringResource(MR.strings.seconds_short, totalSeconds), role = TextRole.SectionTitle)
+            Text(
+                text = stringResource(MR.strings.seconds_short, ((totalMs + 500L) / 1_000L).toInt()),
+                role = TextRole.SectionTitle,
+            )
         }
     }
 }
