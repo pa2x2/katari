@@ -84,7 +84,7 @@ class SyncAccount(
         return when {
             compatibility != ProtocolCompatibility.SUPPORTED -> ServerCheck.Incompatible(compatibility)
             info.needsSetup -> ServerCheck.NeedsSetup(url)
-            else -> ServerCheck.Ready(url, isPlainHttp = !url.isHttps)
+            else -> ServerCheck.Ready(url, isPlainHttp = !url.isHttps, instanceId = info.instanceId)
         }
     }
 
@@ -245,6 +245,31 @@ class SyncAccount(
 
     suspend fun syncNow() {
         runs.request()
+    }
+
+    /**
+     * Whether [check] found the server this device syncs with (D004): the same storage, by its instance, whatever its
+     * address. A server that started over, or another one, is not.
+     */
+    suspend fun isThisServer(check: ServerCheck.Ready): Boolean = connection.state().instanceId == check.instanceId
+
+    /**
+     * Follows this device's server to [address] (D004), such as a new IP address or domain, keeping the sign-in when
+     * the server answering there is the one it syncs with ([isThisServer]), and syncs there. Any other server is
+     * refused: joining it is signing in anew, which the person does after disconnecting.
+     */
+    suspend fun moveServer(address: String): ServerMove {
+        val check = checkServer(address)
+        if (check !is ServerCheck.Ready) return ServerMove.NotReady(check)
+        val moved = runs.exclusive {
+            val state = connection.state()
+            val same = state.isLinked && state.instanceId == check.instanceId
+            if (same) connection.moveTo(check.server)
+            same
+        }
+        if (!moved) return ServerMove.OtherServer
+        runs.request()
+        return ServerMove.Moved
     }
 
     /** Forgets why the device stopped syncing once the person has read it. */

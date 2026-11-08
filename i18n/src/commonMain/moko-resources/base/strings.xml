@@ -3361,6 +3361,8 @@
     <!-- %1$s is the server's address -->
     <string name="sync_disconnect_text">This device stops syncing with %1$s. Your library, history and settings stay here, and the app works on its own again. Your account and other devices are not affected; deleting the account or its data is done on the server\'s web page.</string>
     <string name="sync_action_disconnect">Disconnect</string>
+    <string name="sync_server_address_text">If your server moved, such as to a new IP address or domain, enter where it is now. This device stays signed in when the same server answers there.</string>
+    <string name="sync_server_other">Another sync server answers at this address, not the one this device syncs with. To sync with it, disconnect this device and sign in there.</string>
     <string name="sync_removed_title">This device was removed from your account</string>
     <string name="sync_account_disabled_title">Your sync account was disabled</string>
     <!-- %1$s is the server's address -->

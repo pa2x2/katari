@@ -14,6 +14,7 @@ import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import mihon.feature.missingextensions.model.MissingExtension
 import mihon.feature.missingextensions.ui.noticeText
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Dns
 import mihon.icons.materialsymbols.rounded.Extension
 import mihon.icons.materialsymbols.rounded.Logout
 import mihon.icons.materialsymbols.rounded.SyncProblem
@@ -53,7 +54,7 @@ internal fun linkedPreferences(
             status.activity != SyncStatus.Activity.Offline
         add(devicesGroup(devices, reachable, actions))
     }
-    add(syncOptionsGroup(preferences, knowsWifi))
+    add(syncOptionsGroup(preferences, knowsWifi, serverAddressRow(link, actions)))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
             TextPreferenceWidget(
@@ -161,14 +162,37 @@ private fun attentionRows(
     }
 }
 
+/** Where this device's server is, opening the dialog that follows it to a new address (D004). */
+@Composable
+private fun serverAddressRow(
+    link: SyncStatus.Link.Linked,
+    actions: SyncPageActions,
+): Preference.PreferenceItem<out Any, out Any> {
+    val title = stringResource(MR.strings.sync_server_address)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = link.server.shownAddress,
+            icon = MaterialSymbols.Rounded.Dns,
+            onPreferenceClick = actions.changeServer,
+        )
+    }
+}
+
 /**
- * The device's own sync options, which every device sets for itself (D022, D050). Where the platform can't tell Wi-Fi
- * ([knowsWifi] false), the mobile data switch holds files back on networks the system marks metered, and says so.
+ * The device's own sync options, which every device sets for itself (D022, D050), led by [serverAddress] once linked.
+ * Where the platform can't tell Wi-Fi ([knowsWifi] false), the mobile data switch holds files back on networks the
+ * system marks metered, and says so.
  */
 @Composable
-internal fun syncOptionsGroup(preferences: SyncPreferences, knowsWifi: Boolean) = Preference.PreferenceGroup(
+internal fun syncOptionsGroup(
+    preferences: SyncPreferences,
+    knowsWifi: Boolean,
+    serverAddress: Preference.PreferenceItem<out Any, out Any>? = null,
+) = Preference.PreferenceGroup(
     title = stringResource(MR.strings.sync_options),
-    preferenceItems = listOf(
+    preferenceItems = listOfNotNull(
+        serverAddress,
         Preference.PreferenceItem.SwitchPreference(
             preference = preferences.useMobileData,
             title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),

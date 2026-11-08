@@ -8,8 +8,12 @@ import okhttp3.HttpUrl
 
 /** What checking a server address found, before anyone signs in (D027). */
 sealed interface ServerCheck {
-    /** A sync server this app can sync with; on a local network over plain HTTP when [isPlainHttp], to warn about. */
-    data class Ready(val server: HttpUrl, val isPlainHttp: Boolean) : ServerCheck
+    /**
+     * A sync server this app can sync with; on a local network over plain HTTP when [isPlainHttp], to warn about.
+     * [instanceId] names its storage ([app.katari.sync.protocol.server.ServerInfo.instanceId]), which tells the server a
+     * device syncs with at another address apart from another server (D004).
+     */
+    data class Ready(val server: HttpUrl, val isPlainHttp: Boolean, val instanceId: String) : ServerCheck
 
     /** A sync server with no accounts yet: they are made on its web page at [webPage], with its setup code. */
     data class NeedsSetup(val webPage: HttpUrl) : ServerCheck
@@ -26,6 +30,18 @@ sealed interface ServerCheck {
 
     /** Something answered at the address, but not a Katari sync server. */
     data object NotASyncServer : ServerCheck
+}
+
+/** How following this device's server to another address ended (D004). */
+sealed interface ServerMove {
+    /** The device syncs with the server at its new address now, keeping its sign-in. */
+    data object Moved : ServerMove
+
+    /** The address didn't pass [ServerCheck] as [ServerCheck.Ready]. */
+    data class NotReady(val check: ServerCheck) : ServerMove
+
+    /** A sync server answers there, but not the one this device syncs with; joining it is signing in anew. */
+    data object OtherServer : ServerMove
 }
 
 /** How signing in, redeeming a link code or redeeming an invite ended. */

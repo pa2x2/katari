@@ -12,5 +12,7 @@ internal sealed interface SyncPageDialog : Serializable {
 
     data object Disconnect : SyncPageDialog
 
+    data object ServerAddress : SyncPageDialog
+
     data object MissingExtensions : SyncPageDialog
 }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.address.ServerAddressDialog
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.link.LinkDeviceDialog
 import app.katari.sync.ui.link.linkCodeEntryScreen
@@ -77,6 +78,7 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
             disconnect = { dialog = SyncPageDialog.Disconnect },
+            changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
             openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
         )
@@ -136,6 +138,9 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
                     navigator.push(ExtensionStoresScreen())
                 },
             )
+            SyncPageDialog.ServerAddress -> (status?.link as? SyncStatus.Link.Linked)?.let { link ->
+                ServerAddressDialog(current = link.server, onDismissRequest = { dialog = null })
+            }
             SyncPageDialog.Disconnect -> DisconnectDialog(
                 status = status,
                 onSyncNow = model::syncNow,
@@ -161,6 +166,7 @@ internal class SyncPageActions(
     val renameDevice: () -> Unit,
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
     val disconnect: () -> Unit,
+    val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,
     val openMissingExtensions: () -> Unit,
 )
