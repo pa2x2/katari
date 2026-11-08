@@ -4,6 +4,7 @@ import app.katari.sync.client.connection.ThisDevice
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.settings.screen.about.versionText
 import mihon.app.ui.buildinfo.AppBuild
+import mihon.core.common.platform.DesktopOperatingSystem
 import java.net.InetAddress
 import java.net.UnknownHostException
 
@@ -12,10 +13,13 @@ import java.net.UnknownHostException
  * names it.
  */
 @Inject
-class DesktopThisDevice(private val build: AppBuild) : ThisDevice {
+class DesktopThisDevice(
+    private val build: AppBuild,
+    private val operatingSystem: DesktopOperatingSystem,
+) : ThisDevice {
     override fun platformName(): String = hostName() ?: platform
 
-    override val platform: String get() = "Linux"
+    override val platform: String get() = operatingSystem.displayName
 
     override val appVersion: String get() = build.versionText()
 
