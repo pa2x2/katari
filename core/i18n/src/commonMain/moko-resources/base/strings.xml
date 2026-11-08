@@ -2922,7 +2922,7 @@
     <string name="migrationListScreen.migrateDialog.migrateLabel">Migrate</string>
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.migrateDialog.copyMergedExplanation">Copying keeps selected members and matches in their current merged entries.</string>
-    <string name="migrationListScreen.migrateDialog.replaceRootExplanation">Each selected root is replaced by its match, which becomes the new root. Other members remain.</string>
+    <string name="migrationListScreen.migrateDialog.replaceRootExplanation">Each selected root is replaced by its match, which becomes the new root. Members you added stay with the new root; those that came from the old source leave with the old one.</string>
     <string name="migrationListScreen.migrateDialog.replaceMemberExplanation">Each selected member is replaced in place. Its root and the other members remain.</string>
     <string name="migrationListScreen.migrateDialog.sameGroupTargetExplanation">A match already belongs to the same merged entry. Replacing it removes the selected duplicate and may dissolve a two-member group.</string>
     <string name="migrationListScreen.migrateDialog.otherGroupTargetExplanation">A match belongs to another merged entry. It moves into the selected member’s group, and its previous group may be dissolved.</string>

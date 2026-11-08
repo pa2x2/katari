@@ -14,6 +14,9 @@ interface EntryMergeMigrationFeature {
      * merged entries: by position when both list as many, otherwise by title. Members without a pair are left out.
      */
     suspend fun pairLockedMembers(current: Entry, replacement: Entry): List<EntryMergeMemberPair>
+
+    /** The members [root]'s source supplies, in the order it lists them; empty unless [root] is a merged entry. */
+    suspend fun lockedMembers(root: Entry): List<Entry>
 }
 
 data class EntryMergeMemberPair(
