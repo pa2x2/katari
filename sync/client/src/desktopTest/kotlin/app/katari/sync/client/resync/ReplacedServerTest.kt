@@ -117,13 +117,8 @@ class ReplacedServerTest {
                         val refilled = server.account("reader")
                         a.join(server, refilled)
                         a.sync() shouldBe SyncOutcome.SYNCED
+                        // Every profile of b's is the account's already, so b has nothing to choose and syncs at once
                         b.join(server, refilled)
-                        b.sync() shouldBe SyncOutcome.IDLE
-                        val proposal = b.account.firstSyncProposal()
-                            .shouldBeInstanceOf<AccountCall.Done<List<ProfilePairing>>>().value
-                        b.account.answerFirstSync(
-                            proposal.map { ProfileChoice(it.profileId, it.pairedWith?.uuid, SettingsWinner.ACCOUNT) },
-                        )
                         b.sync() shouldBe SyncOutcome.SYNCED
                         a.sync() shouldBe SyncOutcome.SYNCED
 

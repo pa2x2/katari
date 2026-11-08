@@ -13,8 +13,9 @@ import dev.zacsweers.metro.Inject
  * so a first sync interrupted anywhere, by the app being killed or the network dropping, carries on from that stage.
  * Capture started when the device signed in, so edits made meanwhile are captured as edits.
  *
- * - [join]: the first device of an empty account, and a device with no data of its own (D047), pair as proposed and
- *   take the account's settings without asking; any other device waits at [SyncStage.CHOOSING] for [choose].
+ * - [join]: the first device of an empty account, a device with no data of its own (D047), and a device returning to
+ *   the account whose profiles all are the account's already (D023), pair as proposed without asking; any other
+ *   device waits at [SyncStage.CHOOSING] for [choose].
  * - [recordRows]: the device's rows, custom covers and fonts, before anything of the account's is applied.
  * - The account's records come by the run's pull, a page at a time, each committed with the position.
  * - [recordSettings]: the device's preferences, after the account's settings are in place.
@@ -36,8 +37,8 @@ class FirstSyncSteps(
     suspend fun join(client: SyncServerClient) {
         val snapshot = client.snapshot()
         val accountIsEmpty = snapshot.recordCount == 0L
-        if (accountIsEmpty || !firstSync.hasOwnData()) {
-            val pairings = firstSync.proposal(if (accountIsEmpty) emptyList() else accountProfiles(client))
+        val pairings = firstSync.proposal(if (accountIsEmpty) emptyList() else accountProfiles(client))
+        if (accountIsEmpty || !firstSync.hasOwnData() || returnsWithNothingToChoose(pairings)) {
             val recording = recordingStage()
             firstSync.pair(pairings.map { ProfileChoice(it.profileId, it.pairedWith?.uuid, SettingsWinner.ACCOUNT) })
             connection.setStage(recording, target = snapshot.server.sequence)
@@ -45,6 +46,14 @@ class FirstSyncSteps(
             connection.setStage(SyncStage.CHOOSING, target = snapshot.server.sequence)
         }
     }
+
+    /**
+     * Whether this device synced with the account before, as one signing in again after its server was reset does,
+     * and every profile of it is one of the account's already: nothing is left to pair, and the settings it kept merge
+     * with the account's by when each was changed, as any other change does (D023).
+     */
+    private suspend fun returnsWithNothingToChoose(pairings: List<ProfilePairing>): Boolean =
+        firstSync.keepsRecords() && pairings.all { it.sameProfile }
 
     /** This device's profiles, each paired with the account profile it is or one of its name, to confirm. */
     suspend fun proposal(client: SyncServerClient): List<ProfilePairing> = firstSync.proposal(accountProfiles(client))
