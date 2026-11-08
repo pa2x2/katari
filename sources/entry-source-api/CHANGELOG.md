@@ -1,12 +1,13 @@
 # SDK Changelog
 
-## [4.0.0] - Unreleased
+## [4.0.0] - 2026-11-08
 
 > From SDK 3.0, [Upgrade to SDK 4.0](https://pa2x2.github.io/katari/developers/upgrade/4.0/) walks through the changes.
 
 ### 🔄 Changed
 
 - The book API moved from `mihon.book.api` to `app.katari.book.api`, with the same classes in it. `EntryMedia.Book.descriptor`, `BookResourceCatalog.coverage` and `BookSourceResource.availability` take their types from the new package.
+- The supporting `core-common` library moved from `mihon.core.common` to `app.katari.core.common`, so `JsonObject.EMPTY` comes from `app.katari.core.common.extensions`.
 - Katari loads only extensions built with SDK 4.0. It reads the SDK version from the major and minor of an extension's `versionName`, so a 4.0 build needs a `versionName` of `4.0.x`. Extensions built with SDK 3.x show as needing an update.
 
 ### 🐛 Fixed
@@ -98,6 +99,7 @@
 - Included BOOK content descriptors, resource catalogs, availability and access metadata, and resource locations for source chapters, HTTP requests, inline content, local content URIs, and app-owned references.
 - Included shared BOOK publication and document models for structured text, styles, images, tables, links, table-of-contents navigation, and reading positions.
 
+[4.0.0]: https://github.com/pa2x2/katari/tree/sdk-4.0.0
 [3.0.0]: https://github.com/pa2x2/katari/tree/sdk-3.0.0
 [2.6.0]: https://github.com/pa2x2/katari/tree/sdk-2.6.0
 [2.5.0]: https://github.com/pa2x2/katari/tree/sdk-2.5.0
