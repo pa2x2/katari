@@ -206,27 +206,31 @@ internal fun VideoPlayerOverlay(
                         onScrubStarted = onScrubStarted,
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
-                        showsRemainingTime = showsRemainingTime,
-                        onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
                         onlineMarkers = onlineMarkers,
-                        chapter = chapter,
-                        onOpenChapters = onOpenChapters,
                         onHover = onTimelineHover,
                         hoverPositionMs = timelineHoverMs,
                         hoverChapter = timelineHoverChapter,
-                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
-                            {
-                                VideoPlayerSkipButton(
-                                    offer = offer,
-                                    service = skipService,
-                                    countdown = skipCountdown,
-                                    onClick = onSkip,
-                                )
-                            }
-                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
+                                position = { slot ->
+                                    VideoPlayerPositionButton(
+                                        positionMs = displayedPositionMs,
+                                        durationMs = playbackSnapshot.durationMs,
+                                        showsRemainingTime = showsRemainingTime,
+                                        onToggleRemainingTime = onToggleRemainingTime,
+                                        modifier = slot,
+                                    )
+                                },
+                                chapter = chapter?.let { playing ->
+                                    { slot ->
+                                        VideoPlayerChapterLabel(
+                                            chapter = playing,
+                                            onClick = onOpenChapters,
+                                            modifier = slot,
+                                        )
+                                    }
+                                },
                                 hasPreviousEpisode = hasPreviousEpisode,
                                 hasNextEpisode = hasNextEpisode,
                                 playbackSpeedLabel = playbackSpeedLabel,
@@ -379,9 +383,9 @@ private fun BoxScope.VideoPlayerControls(
                 Spacer(modifier = Modifier.weight(1f))
             }
 
-            // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
+            // Above the timeline's end while the controls show, at the bottom while they don't
             AnimatedVisibility(
-                visible = skipVisible && !transportVisible,
+                visible = skipVisible,
                 modifier = Modifier.align(Alignment.End),
                 enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
                 exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
@@ -393,8 +397,11 @@ private fun BoxScope.VideoPlayerControls(
                         countdown = skipCountdown,
                         onClick = onSkip,
                         modifier = Modifier
-                            .videoPlayerSafeContentPadding(includeBottom = true)
-                            .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
+                            .videoPlayerSafeContentPadding(includeBottom = !transportVisible)
+                            .padding(
+                                end = KatariTheme.spacing.l,
+                                bottom = if (transportVisible) KatariTheme.sizes.none else KatariTheme.spacing.l,
+                            ),
                     )
                 }
             }

@@ -1,9 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -13,13 +10,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import eu.kanade.tachiyomi.ui.video.player.introtimes.markSource
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.entry.interactions.anime.introtimes.OnlineMarker
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.MediaMarkedSpan
 import mihon.presentation.kit.control.MediaTimeline
 import mihon.presentation.kit.surface.MediaScrim
@@ -27,13 +22,15 @@ import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.surface.MediaScrimWeight
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToLong
 
+/**
+ * The controls along the bottom of the player on their shade: the timeline with its marked parts, the frame at the
+ * scrubbed or hovered position floating above it, and [footerContent], the toolbar under it.
+ */
 @Composable
 internal fun VideoPlayerTimeline(
     positionMs: Long,
@@ -46,18 +43,13 @@ internal fun VideoPlayerTimeline(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
-    showsRemainingTime: Boolean,
-    onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long> = emptyList(),
     onlineMarkers: List<OnlineMarker> = emptyList(),
-    chapter: VideoPlayerChapter?,
-    onOpenChapters: () -> Unit,
     /** Where a mouse hovers over the bar, null once it leaves; null where nothing hovers. */
     onHover: ((Long?) -> Unit)? = null,
     /** A position a mouse hovers at, previewed as scrubbing is, named with its [hoverChapter]. */
     hoverPositionMs: Long? = null,
     hoverChapter: VideoPlayerChapter? = null,
-    timeLabelTrailing: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -66,11 +58,6 @@ internal fun VideoPlayerTimeline(
     val clampedBufferedPositionMs = bufferedPositionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val playedFraction = clampedPositionMs.fractionOf(effectiveDurationMs)
     val durationLabel = if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--"
-    val timeLabel = if (showsRemainingTime && effectiveDurationMs > 0L) {
-        "\u2212${formatPlaybackTimestamp(effectiveDurationMs - clampedPositionMs)}"
-    } else {
-        "${formatPlaybackTimestamp(clampedPositionMs)} / $durationLabel"
-    }
     val spacing = KatariTheme.spacing
 
     MediaScrim(
@@ -95,32 +82,6 @@ internal fun VideoPlayerTimeline(
             val hoverChapterName = hoverChapter?.name?.text()
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .videoPlayerControl()
-                            .clickable(
-                                onClickLabel = stringResource(
-                                    if (showsRemainingTime) {
-                                        MR.strings.anime_playback_show_elapsed_time
-                                    } else {
-                                        MR.strings.anime_playback_show_remaining_time
-                                    },
-                                ),
-                                role = Role.Button,
-                                onClick = onToggleRemainingTime,
-                            )
-                            // Vertical room makes the label easier to hit without moving the timeline below it.
-                            .padding(vertical = spacing.s),
-                    ) {
-                        Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (chapter != null) VideoPlayerChapterLabel(chapter = chapter, onClick = onOpenChapters)
-                    }
-                    timeLabelTrailing?.invoke()
-                }
-
                 MediaTimeline(
                     played = playedFraction,
                     buffered = clampedBufferedPositionMs.fractionOf(effectiveDurationMs),
