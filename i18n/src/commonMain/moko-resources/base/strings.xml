@@ -773,7 +773,7 @@
     <string name="onboarding_permission_notifications">Notification permission</string>
     <string name="onboarding_permission_notifications_description">Get notified for library updates and more.</string>
     <string name="onboarding_permission_ignore_battery_opts">Background battery usage</string>
-    <string name="onboarding_permission_ignore_battery_opts_description">Avoid interruptions to long-running library updates, downloads, and backup restores.</string>
+    <string name="onboarding_permission_ignore_battery_opts_description">Avoid interruptions to long-running library updates, downloads, backup restores, and syncs.</string>
     <string name="onboarding_permission_crashlytics">Send crash logs</string>
     <string name="onboarding_permission_crashlytics_description">Send anonymized crash logs to the developers.</string>
     <string name="onboarding_permission_analytics">Allow analytics</string>
