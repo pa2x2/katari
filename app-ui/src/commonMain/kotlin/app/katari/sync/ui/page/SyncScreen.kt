@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
 import app.katari.sync.ui.firstsync.FirstSyncScreen
+import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.link.LinkDeviceDialog
 import app.katari.sync.ui.link.linkCodeEntryScreen
 import app.katari.sync.ui.question.SyncQuestionsScreen
@@ -20,6 +21,7 @@ import app.katari.sync.ui.status.rememberSyncHeadline
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
@@ -86,6 +88,7 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
 
         PreferenceScaffold(
             titleRes = getTitleRes(),
+            actions = { GuideButton(page = SyncGuide.SYNC) },
             onBackPressed = backPress,
             itemsProvider = {
                 when (val link = status?.link) {

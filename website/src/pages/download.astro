@@ -4,13 +4,18 @@ import DownloadButtons from "../download/DownloadButtons.astro";
 import { latestRelease } from "../download/latest-release.ts";
 import { megabytes, releaseDate } from "../download/release-format.ts";
 import { mpvAddon } from "../download/mpv-addon-release.ts";
+import { SYNC_SERVER_RUN, syncServerRelease } from "../download/sync-server-release.ts";
+import Snippet from "../guide/Snippet.astro";
 import Page from "../site/Page.astro";
 import { leavesSite, RELEASES, sitePath } from "../site/links.ts";
 
 const release = await latestRelease();
 const addon = await mpvAddon();
-// The desktop app's section waits for its first release.
+// The desktop app's and the sync server's sections wait for their first release.
 const desktop = await desktopRelease();
+const server = await syncServerRelease();
+const offered = [desktop ? "Katari for Android and Linux" : "Katari for Android", "the optional mpv add-on", server && "the sync server"];
+const description = `Download ${new Intl.ListFormat("en", { type: "conjunction" }).format(offered.filter((part) => part !== undefined))}.`;
 
 // Which phones each processor type is for, in the words a reader can match against their phone.
 const abiHints: Record<string, string> = {
@@ -19,10 +24,7 @@ const abiHints: Record<string, string> = {
 };
 ---
 
-<Page
-  title="Download · Katari"
-  description={desktop ? "Download Katari for Android and Linux, and the optional mpv add-on." : "Download Katari and its optional mpv add-on for Android."}
->
+<Page title="Download · Katari" description={description}>
   <main class:list={{ both: desktop }} data-pagefind-body data-pagefind-filter="section:Download">
     <h1>Download Katari</h1>
     <p class="lead">The newest release, straight from GitHub. After installing, Katari keeps itself up to date.</p>
@@ -121,6 +123,20 @@ const abiHints: Record<string, string> = {
           </section>
         )
       }
+      {
+        server && (
+          <section id="sync-server" class="server" aria-labelledby="sync-server-title">
+            <h2 id="sync-server-title">Sync server</h2>
+            <p class="meta">Keeps your library, progress and settings the same on all your devices. You run it yourself, in Docker.</p>
+            <Snippet lang="shell" code={SYNC_SERVER_RUN} />
+            <p class="meta">{server.version} · {releaseDate(server.publishedAt)} · Docker image for x86_64 and arm64.</p>
+            <p>
+              <a href={sitePath("docs/sync-server/")}>Running a sync server</a> explains setting it up, HTTPS, adding people and updating.{" "}
+              <a href={server.page} {...leavesSite()}>What's new in {server.version}</a>
+            </p>
+          </section>
+        )
+      }
     </div>
   </main>
 </Page>
@@ -145,6 +161,19 @@ const abiHints: Record<string, string> = {
 
   .both .apps {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
+  }
+
+  /* Under both apps, as wide as the two together. */
+  .server {
+    grid-column: 1 / -1;
+  }
+
+  .server .meta {
+    margin-bottom: 0;
+  }
+
+  .server :global(.snippet) {
+    margin: 1rem 0 0.75rem;
   }
 
   .get svg {

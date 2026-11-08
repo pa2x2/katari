@@ -31,6 +31,7 @@ import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.AddressCheck
+import app.katari.sync.ui.guide.ServerFixAction
 import app.katari.sync.ui.status.rememberSyncStatus
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -171,11 +172,7 @@ class SyncSignInScreen(
                     }
                 }
                 (join as? SyncJoinViewModel.JoinState.Failed)?.let { failed ->
-                    item {
-                        joinProblemText(failed.result, failed.path)?.let {
-                            RowGroupNote(it, tone = ContentTone.Error)
-                        }
-                    }
+                    item { JoinProblemNote(failed.result, failed.path) }
                 }
                 item {
                     RowGroupAction(
@@ -223,8 +220,9 @@ private fun AddressNote(check: AddressCheck, resetServer: HttpUrl?) {
                     label = stringResource(MR.strings.action_open_in_browser),
                     onClick = { uriHandler.openUri(result.webPage.toString()) },
                 )
+                serverCheckFix(result)?.let { ServerFixAction(it) }
             }
-            else -> serverCheckProblemText(result)?.let { RowGroupNote(it, tone = ContentTone.Error) }
+            else -> ServerCheckProblemNote(result)
         }
     }
 }

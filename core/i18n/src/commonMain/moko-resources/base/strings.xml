@@ -750,6 +750,7 @@
     <string name="onboarding_sync_subtitle">Keep your library, progress and settings the same everywhere, through a sync server you run yourself.</string>
     <string name="onboarding_sync_code_summary">On a linked device, Sync → Link a device shows it</string>
     <string name="onboarding_sync_sign_in_summary">For the first device of an account</string>
+    <string name="onboarding_sync_no_server">No server yet? How to run one</string>
     <string name="onboarding_sync_linked_heading">This device is linked</string>
     <string name="onboarding_sync_linked_account">%1$s on %2$s</string>
     <string name="onboarding_appearance_heading">Appearance</string>
@@ -3300,6 +3301,9 @@
     <string name="sync_join_unreachable">Can\'t reach the server. Try again.</string>
     <string name="sync_action_use_invite">I have an invite code</string>
     <string name="sync_action_use_account">I already have an account</string>
+    <string name="sync_guide_no_server">No server yet? Running a sync server</string>
+    <string name="sync_guide_update_server">How to update the server</string>
+    <string name="sync_guide_admin_account">Setting up the admin account</string>
     <string name="sync_invite_code">Invite code</string>
     <string name="sync_choose_username">Choose a username</string>
     <string name="sync_choose_password">Choose a password</string>

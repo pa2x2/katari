@@ -12,8 +12,8 @@ permissions: {}
 jobs:
   deploy:
     name: Start the website deployment
-    # Only app releases, tagged v<version> or desktop-v<version>: the onnxruntime-<version> and sdk releases hold other
-    # things.
+    # Only app releases, tagged v<version> or desktop-v<version>. A sync server release deploys the website from
+    # sync-server-image.yml once its image is pushed, and the onnxruntime-<version> and sdk releases hold other things.
     if: startsWith(github.event.release.tag_name, 'v') || startsWith(github.event.release.tag_name, 'desktop-v')
     runs-on: ubuntu-26.04
     permissions:

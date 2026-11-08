@@ -5,7 +5,8 @@
  * through. Wherever upright shots stand in a row, they share one height whatever their proportions.
  *
  * A landscape shot, such as the player, can't share a height with phones, so it has a row of its own under the others,
- * below their captions.
+ * below their captions. In a scene it stands behind instead, as wide as the column, with the upright shots in a row in
+ * front of its lower edge; on a phone the scene becomes the landscape shot over the row to swipe through.
  */
 import { aspectOf } from "../media/aspect.ts";
 import type { Shot } from "./chapters.ts";
@@ -13,7 +14,7 @@ import ShotView from "./ShotView.astro";
 
 interface Props {
   shots: Shot[];
-  arrangement: "overlap" | "row";
+  arrangement: "overlap" | "row" | "scene";
 }
 
 const { shots, arrangement } = Astro.props;
@@ -30,7 +31,20 @@ const placed = upright.map((shot, index) => ({ shot, place: places[index] ?? "ri
 const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : shot.kind === "compare" ? shot.after : shot.poster);
 ---
 
-<div class:list={["stack", arrangement, `upright-${upright.length}`]} data-zoom-group data-reveal>
+<div
+  class:list={["stack", arrangement, `upright-${upright.length}`]}
+  style={arrangement === "scene" && wide[0] ? `--back-aspect: ${aspect(wide[0])}` : undefined}
+  data-zoom-group
+  data-reveal
+>
+  {
+    arrangement === "scene" &&
+      wide.map((shot) => (
+        <div class="wide">
+          <ShotView shot={shot} />
+        </div>
+      ))
+  }
   <div class="shots">
     {
       placed.map(({ shot, place }) => (
@@ -52,11 +66,12 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     )
   }
   {
-    wide.map((shot) => (
-      <div class="wide">
-        <ShotView shot={shot} />
-      </div>
-    ))
+    arrangement !== "scene" &&
+      wide.map((shot) => (
+        <div class="wide">
+          <ShotView shot={shot} />
+        </div>
+      ))
   }
 </div>
 
@@ -194,6 +209,43 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       margin-top: 0.6rem;
     }
 
+    /* The phones would cover the caption of the shot behind them; screen readers still read it. */
+    .scene .wide :global(figcaption) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* The phones cover the middle of the shot behind, so a labelled frame standing in for it says what it is higher up. */
+    .scene .wide :global(.planned) {
+      justify-content: flex-start;
+      padding-top: 14%;
+    }
+
+    /* The row rises over the lower 45% of the shot behind, whose height follows from the column's width. The phones
+       hang from one top edge, so a caption that wraps doesn't lift its phone. */
+    .scene .shots {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 1rem;
+      width: 58%;
+      margin: calc(-45cqi / var(--back-aspect)) 4% 0 auto;
+    }
+
+    .scene .slot {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .scene .slot > :global(*) {
+      --shot-width: 100%;
+    }
+
     .row .shots {
       display: flex;
       align-items: flex-start;
@@ -235,6 +287,10 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
 
     .wide {
       margin-top: 0.5rem;
+    }
+
+    .scene .wide {
+      margin: 0 0 0.5rem;
     }
   }
 </style>

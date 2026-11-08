@@ -81,7 +81,8 @@ const { id, title, shot, platform } = Astro.props;
     gap: 3rem;
   }
 
-  .body :global(.shot) {
+  /* The shot beside the steps; one placed among them sets its own width. */
+  .body > :global(.shot) {
     --shot-width: 15rem;
   }
 
@@ -96,7 +97,7 @@ const { id, title, shot, platform } = Astro.props;
       justify-self: stretch;
     }
 
-    .body :global(.shot) {
+    .body > :global(.shot) {
       --shot-width: min(16rem, 70vw);
     }
   }

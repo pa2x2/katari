@@ -18,10 +18,11 @@ import app.katari.sync.client.account.LinkCodeLink
 import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.ui.address.AddressCheck
 import app.katari.sync.ui.signin.JoinPath
+import app.katari.sync.ui.signin.JoinProblemNote
+import app.katari.sync.ui.signin.ServerCheckProblemNote
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
 import app.katari.sync.ui.signin.leaveJoined
-import app.katari.sync.ui.signin.serverCheckProblemText
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -124,11 +125,7 @@ class EnterLinkCodeScreen : Screen() {
                     }
                 }
                 (lookUp as? SyncJoinViewModel.LookUpState.Failed)?.let { failed ->
-                    item {
-                        joinProblemText(failed.result, JoinPath.LINK_CODE)?.let {
-                            RowGroupNote(it, tone = ContentTone.Error)
-                        }
-                    }
+                    item { JoinProblemNote(failed.result, JoinPath.LINK_CODE) }
                 }
                 item {
                     when (val shown = check) {
@@ -140,7 +137,7 @@ class EnterLinkCodeScreen : Screen() {
                                     tone = ContentTone.Warning,
                                 )
                             } else {
-                                serverCheckProblemText(result)?.let { RowGroupNote(it, tone = ContentTone.Error) }
+                                ServerCheckProblemNote(result)
                             }
                         }
                         AddressCheck.Checking ->

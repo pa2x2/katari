@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.guide.SyncGuide
+import app.katari.sync.ui.guide.SyncGuideAction
 import app.katari.sync.ui.link.linkCodeScanning
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
@@ -64,6 +66,11 @@ internal fun setUpPreferences(canKeepSignIn: Boolean, actions: SyncPageActions):
         )
     }
     add(Preference.PreferenceItem.CustomPreference(title = "ways-in", framed = false) { WaysIn(actions, null) })
+    add(
+        Preference.PreferenceItem.CustomPreference(title = "no-server", framed = false) {
+            SyncGuideAction(stringResource(MR.strings.sync_guide_no_server), SyncGuide.SERVER)
+        },
+    )
 }
 
 /** A device removed from its account, or whose account was disabled (D030): standalone again, and why. */

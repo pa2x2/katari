@@ -45,6 +45,10 @@ Katari doesn't come with any extensions. It loads extensions built with these li
 
 Extensions built with any other version aren't loaded. [Extension compatibility](https://pa2x2.github.io/katari/docs/extension-compatibility/) says what to do about them.
 
+## Sync
+
+Katari can keep your library, reading progress, history and settings the same on all your devices, through a sync server you run yourself. [Sync](https://pa2x2.github.io/katari/docs/sync/) explains how to use it, and [Running a sync server](https://pa2x2.github.io/katari/docs/sync-server/) how to set one up with Docker.
+
 ## Disclaimer
 
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.

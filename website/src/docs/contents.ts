@@ -1,7 +1,9 @@
 import accountCircle from "../guide/icons/account_circle.svg";
 import callMerge from "../guide/icons/call_merge.svg";
 import chromeReaderMode from "../guide/icons/chrome_reader_mode.svg";
+import cloudSync from "../guide/icons/cloud_sync.svg";
 import compareArrows from "../guide/icons/compare_arrows.svg";
+import dns from "../guide/icons/dns.svg";
 import download from "../guide/icons/download.svg";
 import explore from "../guide/icons/explore.svg";
 import extension from "../guide/icons/extension.svg";
@@ -170,6 +172,25 @@ export const docs: Manual = {
           summary: "What a backup keeps, where files go, and restoring one.",
           icon: storage,
           related: ["docs/coming-from-mihon/", "docs/profiles/", "docs/local-source/"],
+        },
+      ],
+    },
+    {
+      title: "Sync",
+      pages: [
+        {
+          slug: "sync",
+          title: "Sync",
+          summary: "Your library, progress and settings on every device.",
+          icon: cloudSync,
+          related: ["docs/sync-server/", "docs/profiles/", "docs/backups-and-storage/"],
+        },
+        {
+          slug: "sync-server",
+          title: "Running a sync server",
+          summary: "Set it up with Docker, add people, and keep it updated.",
+          icon: dns,
+          related: ["docs/sync/"],
         },
       ],
     },

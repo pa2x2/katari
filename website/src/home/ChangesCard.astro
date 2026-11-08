@@ -1,4 +1,5 @@
 ---
+import { inlineMarkdown } from "../changelog/inline-markdown.ts";
 import type { ReleaseNotes } from "../changelog/release-notes.ts";
 import { releaseDate } from "../download/release-format.ts";
 import { leavesSite } from "../site/links.ts";
@@ -12,23 +13,23 @@ interface Props {
   published: Date;
   /** The release's page on GitHub, with all its notes. */
   page: string;
-  /** Alone on the row: the title beside the notes, as the home page showed its single card. */
-  alone?: boolean;
 }
 
 /** The card stays short; the rest is a click away on the release page. */
 const MAX_CHANGES = 4;
 
-const { app, release, published, page, alone = false } = Astro.props;
+const { app, release, published, page } = Astro.props;
 let room = MAX_CHANGES;
 const shown = release.sections.flatMap((section) => {
   const changes = section.changes.slice(0, room);
   room -= changes.length;
   return changes.length > 0 ? [{ kind: section.kind, changes }] : [];
 });
+// A change can name a command or variable as `code`, and the card should show it as code, not with its backticks.
+const html = (change: string) => inlineMarkdown(change, (url) => `href="${url}" target="_blank" rel="noopener"`);
 ---
 
-<article class:list={["card", { alone }]}>
+<article class="card">
   <div>
     <p class="kicker">What's new</p>
     <h2>{app} <span class="version">{release.version}</span></h2>
@@ -39,7 +40,7 @@ const shown = release.sections.flatMap((section) => {
       shown.map((section) => (
         <div class="kind">
           <h3>{section.kind}</h3>
-          <Highlights items={section.changes} />
+          <Highlights items={section.changes.map(html)} html />
         </div>
       ))
     }
@@ -48,21 +49,15 @@ const shown = release.sections.flatMap((section) => {
 </article>
 
 <style>
+  /* The title beside the notes, in columns that don't move when another product's card replaces this one. */
   .card {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 2.5rem;
     padding: 1.75rem 2.25rem;
     border: 1px solid var(--border);
     border-radius: 1rem;
     background: var(--surface);
-  }
-
-  .alone {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 2.5rem;
-  }
-
-  .alone .date {
-    margin-bottom: 0;
   }
 
   .kicker {
@@ -75,7 +70,7 @@ const shown = release.sections.flatMap((section) => {
   }
 
   .date {
-    margin: 0.3rem 0 1rem;
+    margin: 0.3rem 0 0;
     color: var(--text-muted);
     font-size: 0.9rem;
   }
@@ -112,12 +107,9 @@ const shown = release.sections.flatMap((section) => {
 
   @media (max-width: 44rem) {
     .card {
-      padding: 1.5rem 1.25rem;
-    }
-
-    .alone {
       grid-template-columns: minmax(0, 1fr);
       gap: 1rem;
+      padding: 1.5rem 1.25rem;
     }
   }
 </style>

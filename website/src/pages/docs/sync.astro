@@ -1,0 +1,202 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<GuidePage
+  manual="docs"
+  slug="sync"
+  lead="Sync keeps your library, reading progress, history and settings the same on your phone, tablet and computer, through a server you run yourself. Every device keeps its own full copy and works offline."
+>
+  <Task id="what-syncs" title="What syncs">
+    <table>
+      <thead>
+        <tr><th>Synced</th> <th>Stays on each device</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Library, categories, read state and reading progress</td> <td>Downloads</td></tr>
+        <tr><td>History and statistics</td> <td>Logins to sites and trackers</td></tr>
+        <tr><td>Profiles, merged entries and tracker links</td> <td>Screen and storage settings</td></tr>
+        <tr><td>Your settings, custom covers and fonts, extension repositories</td> <td>The device's own sync options</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Each profile syncs as itself, so a family's profiles stay apart on every device. Titles whose extension isn't installed on a device are
+      listed under <strong>Install extensions for your titles</strong> on its Sync page.
+    </p>
+    <p>
+      Sync needs a server. One person runs it, and everyone with an account on it can sync;
+      <a href={sitePath("docs/sync-server/")}>Running a sync server</a> explains how.
+    </p>
+  </Task>
+
+  <Task id="sign-in" title="Sign in the first device">
+    <ol>
+      <li>Open <Path>Settings › Sync</Path> and select <strong>Sign in with server address</strong>.</li>
+      <li>Enter the server's address, such as <code>https://sync.example.com</code>.</li>
+      <li>
+        Sign in with the username and password the server's admin gave you, or select <strong>I have an invite code</strong>, enter the code
+        and choose your own.
+      </li>
+    </ol>
+    <p>
+      The first sync uploads this device's library, or downloads the account's. Covers, fonts and the first download wait for Wi-Fi unless
+      <strong>Use mobile data for covers, fonts and first download</strong> is on; changes sync on any network.
+    </p>
+    <p>
+      When this device and the account both have data, <strong>Before the first sync</strong> shows how they come together: libraries, read
+      state, history and progress are merged and nothing is deleted. Each of this device's profiles either pairs with one of the account's
+      or is added as new; where only the name matches, choose <strong>Same as</strong> that profile or <strong>Add as new</strong>. For each
+      paired profile, choose whether the account's settings or this device's settings are kept. Settings tied to the device, such as screen,
+      storage and network ones, are never replaced.
+    </p>
+    <Callout label="Plain http://">
+      <p>
+        An <code>http://</code> address works only on your local network, and the address field says <strong>Not encrypted.</strong> From
+        anywhere else, use the server's <code>https://</code> address.
+      </p>
+    </Callout>
+    <p>
+      <PlatformLabel platform="Linux" lead />Katari keeps the sign-in in the desktop's keyring. Without one running, such as GNOME Keyring or
+      KWallet, the Sync page asks you to start one.
+    </p>
+  </Task>
+
+  <Task id="link" title="Link more devices">
+    <ol>
+      <li>On a device that already syncs, open <Path>Settings › Sync › Link a device</Path>. It shows a code that works for two minutes.</li>
+      <li>
+        On the new device, open <Path>Settings › Sync</Path> and select <strong>Scan a code from a linked device</strong>. Without a camera,
+        select <strong>Enter a code from a linked device</strong> and type the server address and code instead.
+      </li>
+      <li>Confirm <strong>Join</strong>.</li>
+    </ol>
+    <p>Signing in with your username and password on the new device works too.</p>
+  </Task>
+
+  <Task id="offline" title="Offline, and picking up on another device">
+    <p>
+      Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
+      the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs every hour with
+      <strong>Sync in the background</strong> on.
+    </p>
+    <p>
+      When another device got further in a title, opening it in the reader or player offers to go there, such as
+      <strong>Desktop is further: Chapter 12, page 18</strong>. Select <strong>Go there</strong> to jump, or dismiss it to stay.
+    </p>
+  </Task>
+
+  <Task id="questions" title="Needs your answer">
+    <p>
+      Most changes on two devices merge on their own. A few can't, so Katari keeps both and asks: the entry shows a banner, a notification
+      says <strong>Open Sync to choose</strong>, and the Sync page offers <strong>Review and answer</strong>.
+    </p>
+    <ul>
+      <li>
+        <strong>Migrated on two devices:</strong> a title was migrated to different sources on two devices. Both editions stay in your library
+        until you choose one.
+      </li>
+      <li>
+        <strong>Notes edited on two devices:</strong> the later notes show for now. Choose <strong>Keep these</strong> for one version, or
+        <strong>Keep both</strong>.
+      </li>
+      <li>
+        <strong>A deleted profile:</strong> a profile was deleted on one device while another device still changed things in it. It's kept
+        until you choose <strong>Keep profile</strong> or delete it.
+      </li>
+    </ul>
+  </Task>
+
+  <Task id="restore" title="Restore a backup while syncing">
+    <p>
+      Restoring a backup on a device that syncs asks <strong>How far the restore reaches</strong> (see
+      <a href={sitePath("docs/backups-and-storage/")}>Backups and storage</a>):
+    </p>
+    <ul>
+      <li>
+        <strong>Restore on this device</strong> fills in what's missing or older. Changes made on your other devices after the backup was made
+        are kept.
+      </li>
+      <li>
+        <strong>Roll back the whole account</strong> returns every device to the backup. Libraries, progress, history and settings changed
+        anywhere after it are lost; profiles the backup doesn't have, downloads and reading statistics stay.
+      </li>
+    </ul>
+  </Task>
+
+  <Task id="status" title="What the status means">
+    <table>
+      <thead>
+        <tr><th>The Sync page says</th> <th>What to do</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Can't reach</strong> the server</td>
+          <td>Check the connection and that the server is running. Changes wait on the device and nothing is lost.</td>
+        </tr>
+        <tr>
+          <td><strong>First download waits for Wi-Fi</strong></td>
+          <td>Connect to Wi-Fi, or turn on <strong>Use mobile data for covers, fonts and first download</strong>.</td>
+        </tr>
+        <tr>
+          <td><strong>Sync failed on this device</strong></td>
+          <td>
+            Something on the device stopped the sync, not the connection. <strong>Sync now</strong> tries again; if it keeps failing, update
+            Katari, and share crash logs from <Path>Settings › Advanced</Path> to report it.
+          </td>
+        </tr>
+        <tr>
+          <td>The server <strong>needs a server update</strong></td>
+          <td>
+            This version of Katari needs a newer server. Whoever runs it follows
+            <a href={sitePath("docs/sync-server/#update")}>Update the server</a>.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Update Katari to keep syncing</strong>, or <strong>Update Katari to sync</strong> something</td>
+          <td>Another device or the server is newer than this app. Update Katari on this device.</td>
+        </tr>
+        <tr>
+          <td><strong>Catching the server up</strong></td>
+          <td>The server went back to an older copy, and this device is sending it what it's missing. Let it finish.</td>
+        </tr>
+        <tr>
+          <td><strong>Your sync server was reset</strong></td>
+          <td>
+            The server has no accounts now. Once its admin account exists again, <strong>Set it up again</strong> signs in, and this device fills
+            the server in.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>This device was removed</strong>, or the account was <strong>disabled</strong></td>
+          <td>The device keeps everything and works on its own. <strong>Sign in again</strong> when you want it back.</td>
+        </tr>
+      </tbody>
+    </table>
+  </Task>
+
+  <Task id="remove" title="Remove a device or disconnect">
+    <ul>
+      <li>
+        Under <strong>Devices</strong> on the Sync page, <strong>Remove</strong> another device. It stops syncing and keeps what it holds; it
+        has to be linked again to rejoin.
+      </li>
+      <li><strong>Rename</strong> this device to change the name your other devices show.</li>
+      <li>
+        <strong>Disconnect this device</strong> stops it syncing. Its library, history and settings stay, and your account and other devices
+        carry on.
+      </li>
+      <li>
+        If the server moved to a new address, enter it under <strong>Server address</strong>; the device stays signed in when the same server
+        answers there.
+      </li>
+    </ul>
+    <p>
+      Deleting your synced data or your account is done on the server's web page, under <strong>My account</strong>.
+    </p>
+  </Task>
+</GuidePage>

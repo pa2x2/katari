@@ -6,6 +6,10 @@ import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.client.server.Refusal
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.protocol.version.ProtocolCompatibility
+import app.katari.sync.ui.guide.ServerFix
+import app.katari.sync.ui.guide.ServerFixAction
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -57,6 +61,39 @@ fun serverCheckProblemText(check: ServerCheck): String? = when (check) {
     ServerCheck.PlainHttpOutsideLocalNetwork -> stringResource(MR.strings.sync_server_plain_http_refused)
     ServerCheck.Unreachable -> stringResource(MR.strings.sync_server_unreachable)
     ServerCheck.NotASyncServer -> stringResource(MR.strings.sync_server_not_sync)
+}
+
+/** Why joining failed, as an error note between row group cards, with how to fix the server when it needs fixing. */
+@Composable
+fun JoinProblemNote(result: JoinResult, path: JoinPath) {
+    val text = joinProblemText(result, path) ?: return
+    RowGroupNote(text, tone = ContentTone.Error)
+    val fix = when (result) {
+        is JoinResult.ServerNotReady -> serverCheckFix(result.check)
+        is JoinResult.Refused -> (result.reason as? Refusal.Incompatible)?.let { compatibilityFix(it.compatibility) }
+        else -> null
+    }
+    fix?.let { ServerFixAction(it) }
+}
+
+/** What checking a server address found, as an error note with how to fix the server; nothing when it is ready. */
+@Composable
+fun ServerCheckProblemNote(check: ServerCheck) {
+    val text = serverCheckProblemText(check) ?: return
+    RowGroupNote(text, tone = ContentTone.Error)
+    serverCheckFix(check)?.let { ServerFixAction(it) }
+}
+
+/** The guide section for a server [check] found wanting, such as one without its admin account yet. */
+fun serverCheckFix(check: ServerCheck): ServerFix? = when (check) {
+    is ServerCheck.NeedsSetup -> ServerFix.SET_UP_ADMIN
+    is ServerCheck.Incompatible -> compatibilityFix(check.compatibility)
+    else -> null
+}
+
+private fun compatibilityFix(compatibility: ProtocolCompatibility): ServerFix? = when (compatibility) {
+    ProtocolCompatibility.APP_TOO_OLD -> null
+    ProtocolCompatibility.SERVER_TOO_OLD, ProtocolCompatibility.SUPPORTED -> ServerFix.UPDATE
 }
 
 @Composable

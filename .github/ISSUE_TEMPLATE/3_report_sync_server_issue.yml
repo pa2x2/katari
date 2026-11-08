@@ -1,0 +1,102 @@
+name: 🗄️ Sync server issue
+description: Report a problem with the sync server
+labels: [bug]
+body:
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide a minimal, specific example of the problem, on the server's web page or in Katari's Sync page.
+      placeholder: |
+        Example:
+          1. Open the server's web page as an admin
+          2. Select Invite
+          3. The problem occurs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: Explain what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: Explain what happened instead, including any message Katari or the web page showed.
+    validations:
+      required: true
+
+  - type: input
+    id: server-version
+    attributes:
+      label: Server version
+      description: The footer of the server's web page shows it to admins.
+      placeholder: 'Example: "1.0.0-beta.1"'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: how-it-runs
+    attributes:
+      label: How the server runs
+      options:
+        - docker run
+        - Docker Compose
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: reverse-proxy
+    attributes:
+      label: Reverse proxy
+      description: Which one, if any, whether it serves HTTPS, and the value of KATARI_SYNC_TRUSTED_PROXIES.
+      placeholder: 'Example: "Caddy with HTTPS, KATARI_SYNC_TRUSTED_PROXIES=1" or "None"'
+    validations:
+      required: true
+
+  - type: textarea
+    id: devices
+    attributes:
+      label: Devices involved
+      description: The Katari version and platform of each device the problem involves. Find the version in **More → About**.
+      placeholder: |
+        Example:
+          - Katari 2.1.0 on Android 15, Google Pixel 9
+          - Katari for Linux 1.0.0 on Fedora 43
+    validations:
+      required: true
+
+  - type: textarea
+    id: server-log
+    attributes:
+      label: Server log
+      description: |
+        The lines around the problem from `docker logs katari-sync`. Review them for private information, such as usernames and addresses, before sharing them.
+      render: text
+
+  - type: textarea
+    id: other-details
+    attributes:
+      label: Other details
+      description: Add screenshots, recordings, or any other useful context.
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      description: Please confirm each item before submitting the report.
+      options:
+        - label: I have searched the existing issues and this is not a duplicate of an open or closed issue.
+          required: true
+        - label: I have written a short, informative title.
+          required: true
+        - label: I have gone through [Running a sync server](https://pa2x2.github.io/katari/docs/sync-server/) and [updated the server](https://pa2x2.github.io/katari/docs/sync-server/#update) and Katari to their latest releases.
+          required: true
+        - label: I have provided specific version numbers and all other information requested by this form.
+          required: true
