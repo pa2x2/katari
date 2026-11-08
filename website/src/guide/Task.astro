@@ -1,6 +1,6 @@
 ---
 import type { ImageMetadata } from "astro";
-import Phone from "../media/Phone.astro";
+import Shot from "../media/Shot.astro";
 import PlatformLabel from "./PlatformLabel.astro";
 import type { Platform } from "./platforms.ts";
 
@@ -27,7 +27,7 @@ const { id, title, shot, platform } = Astro.props;
   </h2>
   <div class="body">
     <div class="text"><slot /></div>
-    {shot && <Phone image={shot.image} alt={shot.alt} caption={shot.caption} sizes="(min-width: 44rem) 15rem, 60vw" />}
+    {shot && <Shot image={shot.image} alt={shot.alt} caption={shot.caption} sizes="(min-width: 44rem) 15rem, 60vw" />}
   </div>
 </section>
 

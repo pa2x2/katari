@@ -5,7 +5,7 @@ import player from "../captures/player.png";
 import translationAfter from "../captures/translation-after.png";
 import Callout from "../guide/Callout.astro";
 import { desktopRelease } from "../download/desktop-release.ts";
-import Phone from "../media/Phone.astro";
+import Shot from "../media/Shot.astro";
 import { sitePath } from "../site/links.ts";
 
 // Where Katari runs; the desktop app joins once it has a release to download.
@@ -41,16 +41,16 @@ const platforms = ["Android", ...((await desktopRelease()) ? ["Linux"] : [])];
   </div>
   <div class="fan">
     <div class="comic">
-      <Phone image={translationAfter} alt="A comic page translated into English" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
+      <Shot image={translationAfter} alt="A comic page translated into English" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
     </div>
     <div class="book">
-      <Phone image={bookPaper} alt="A book in the paper theme" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
+      <Shot image={bookPaper} alt="A book in the paper theme" zoomable={false} eager sizes="(min-width: 60rem) 13rem, 34vw" />
     </div>
     <div class="library">
-      <Phone image={library} alt="A library holding comics, books, and films" zoomable={false} eager sizes="(min-width: 60rem) 15rem, 40vw" />
+      <Shot image={library} alt="A library holding comics, books, and films" zoomable={false} eager sizes="(min-width: 60rem) 15rem, 40vw" />
     </div>
     <div class="film">
-      <Phone image={player} alt="Sintel playing in the video player" landscape zoomable={false} eager sizes="(min-width: 60rem) 23rem, 60vw" />
+      <Shot image={player} alt="Sintel playing in the video player" device="phone-landscape" zoomable={false} eager sizes="(min-width: 60rem) 23rem, 60vw" />
     </div>
   </div>
 </section>

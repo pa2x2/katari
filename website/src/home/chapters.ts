@@ -23,10 +23,11 @@ import translationBefore from "../captures/translation-before.png";
 import translationPopup from "../captures/translation-popup.png";
 import translator from "../captures/translator.png";
 import updates from "../captures/updates.png";
-import { type CaptureImage, PHONE_ASPECT, plannedCapture, WINDOW_ASPECT } from "../media/planned-captures.ts";
+import type { Device } from "../media/devices.ts";
+import { type CaptureImage, plannedCapture } from "../media/planned-captures.ts";
 
 export type Shot =
-  | { kind: "still"; image: CaptureImage; alt: string; caption: string; landscape?: boolean }
+  | { kind: "still"; image: CaptureImage; alt: string; caption: string; /** A phone when unset. */ device?: Exclude<Device, "browser"> }
   | { kind: "compare"; before: ImageMetadata; after: ImageMetadata; beforeLabel: string; afterLabel: string; alt: string; caption: string }
   | { kind: "clip"; src: string; poster: ImageMetadata; label: string; caption: string };
 
@@ -41,7 +42,7 @@ export interface Feature {
   docs: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
-  /** Beside the text, the landscape shot stands behind and the upright ones in front of its lower edge. */
+  /** Beside the text, the wide shot stands behind and the upright ones in front of its lower edge. */
   scene?: boolean;
 }
 
@@ -124,7 +125,7 @@ export const chapters: Chapter[] = [
         shots: [
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
-          { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", landscape: true },
+          { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", device: "phone-landscape" },
         ],
       },
       {
@@ -210,26 +211,26 @@ export const chapters: Chapter[] = [
         shots: [
           {
             kind: "still",
-            image: plannedCapture("sync-desktop.png", WINDOW_ASPECT),
+            image: plannedCapture("sync-desktop.png"),
             alt: "The same library in Katari for Linux",
             caption: "The same library on Linux",
-            landscape: true,
+            device: "window",
           },
           {
             kind: "still",
-            image: plannedCapture("sync-page.png", PHONE_ASPECT),
+            image: plannedCapture("sync-page.png"),
             alt: "The Sync page listing the account's devices",
             caption: "The Sync page",
           },
           {
             kind: "still",
-            image: plannedCapture("sync-link-code.png", PHONE_ASPECT),
+            image: plannedCapture("sync-link-code.png"),
             alt: "Link a device showing a code to scan",
             caption: "Link a device",
           },
           {
             kind: "still",
-            image: plannedCapture("sync-handoff.png", PHONE_ASPECT),
+            image: plannedCapture("sync-handoff.png"),
             alt: "The reader offering to go where another device got to",
             caption: "Pick up where you stopped",
           },

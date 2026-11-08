@@ -1,0 +1,223 @@
+---
+import { getImage, Picture } from "astro:assets";
+import { type Device, deviceAspect, isUpright } from "./devices.ts";
+import { type CaptureImage, isPlanned } from "./planned-captures.ts";
+
+type Props = {
+  /** A capture still to come shows as a labelled frame of its size (planned-captures.ts). */
+  image: CaptureImage;
+  alt: string;
+  caption?: string;
+  /** Loaded with the page instead of when scrolled near, for the first screen. */
+  eager?: boolean;
+  /** Whether a click opens the shot in the viewer (Viewer.astro) at full height. */
+  zoomable?: boolean;
+  /** The frame's width as the page lays it out, for picking the image size. */
+  sizes: string;
+} & ({ device?: Exclude<Device, "browser"> } | { device: "browser"; /** What the toolbar's address field shows. */ address: string });
+
+const { image, alt, caption, device = "phone", eager = false, zoomable = true, sizes } = Astro.props;
+const address = Astro.props.device === "browser" ? Astro.props.address : undefined;
+const upright = isUpright(device);
+const enlarged = zoomable && !isPlanned(image) ? await getImage({ src: image, width: upright ? 900 : 1800, format: "webp" }) : undefined;
+const Frame = enlarged ? "button" : "div";
+---
+
+<figure class:list={["shot", device]}>
+  <Frame
+    class="frame"
+    {...enlarged ? { type: "button", "data-zoom": enlarged.src, "data-caption": caption ?? alt } : {}}
+  >
+    {
+      device === "window" && (
+        <span class="title-bar" aria-hidden="true">
+          Katari
+          <svg viewBox="0 0 54 12">
+            <path d="M1 6.5h9M22.5 2.5h7v7h-7zM43 2.5l7 7m0-7-7 7" />
+          </svg>
+        </span>
+      )
+    }
+    {
+      address && (
+        <span class="toolbar" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <span class="address">{address}</span>
+        </span>
+      )
+    }
+    {
+      isPlanned(image) ? (
+        <div class="planned" role="img" aria-label={alt} style={`aspect-ratio: ${deviceAspect[device]}`}>
+          <span>{caption ?? alt}</span>
+          <code>{image.file}</code>
+        </div>
+      ) : (
+        <Picture
+          src={image}
+          alt={alt}
+          formats={["avif"]}
+          fallbackFormat="webp"
+          widths={upright ? [320, 480, 720] : [640, 960, 1280]}
+          sizes={sizes}
+          loading={eager ? "eager" : "lazy"}
+        />
+      )
+    }
+    {enlarged && <span class="visually-hidden" data-pagefind-ignore>Enlarge</span>}
+  </Frame>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .shot {
+    /* Keeps the hidden label inside the shot, so a row that scrolls sideways clips it. */
+    position: relative;
+    margin: 0;
+    width: var(--shot-width, 17rem);
+  }
+
+  .frame {
+    display: block;
+    width: 100%;
+    padding: 0.45rem;
+    border: 0;
+    border-radius: 1.6rem;
+    background: var(--device);
+    color: var(--on-device);
+    box-shadow:
+      0 0 0 1px var(--device-edge),
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  .phone-landscape .frame {
+    border-radius: 1.4rem;
+  }
+
+  /* Windows and the browser frame their screen with a bar across the top and a hairline elsewhere, as a desktop draws
+     them; the picture-in-picture window has no decorations at all. */
+  :is(.window, .picture-in-picture, .browser) .frame {
+    padding: 0 0.2rem 0.2rem;
+    border-radius: 0.7rem;
+  }
+
+  .picture-in-picture .frame {
+    padding: 0;
+  }
+
+  .title-bar,
+  .toolbar {
+    display: flex;
+    align-items: center;
+    height: 1.7rem;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .title-bar {
+    position: relative;
+    justify-content: center;
+    color: color-mix(in srgb, var(--on-device) 70%, transparent);
+  }
+
+  .title-bar svg {
+    position: absolute;
+    right: 0.6rem;
+    width: 2.6rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+  }
+
+  .toolbar {
+    gap: 0.3rem;
+    padding: 0 0.4rem;
+  }
+
+  .toolbar i {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--device-edge);
+  }
+
+  .address {
+    flex: 1;
+    margin-left: 0.5rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.4rem;
+    background: color-mix(in srgb, var(--on-device) 10%, transparent);
+    color: color-mix(in srgb, var(--on-device) 70%, transparent);
+    font-weight: 500;
+  }
+
+  button.frame {
+    cursor: zoom-in;
+    transition: box-shadow 0.2s;
+  }
+
+  button.frame:hover,
+  button.frame:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 1.5rem 3rem -1rem #000c;
+  }
+
+  button.frame:focus-visible {
+    outline: none;
+  }
+
+  .frame :global(img),
+  .planned {
+    display: block;
+    width: 100%;
+    border-radius: 1.2rem;
+  }
+
+  .frame :global(img) {
+    height: auto;
+  }
+
+  :is(.window, .browser) :is(.frame :global(img), .planned) {
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  .picture-in-picture :is(.frame :global(img), .planned) {
+    border-radius: 0.7rem;
+  }
+
+  .planned {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    border: 1.5px dashed var(--device-edge);
+    color: color-mix(in srgb, var(--on-device) 75%, transparent);
+    font-size: 0.85rem;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  /* Prose styles code as an inline token, which would light up the dark frame. */
+  .planned code {
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-size: 0.72rem;
+    overflow-wrap: break-word;
+  }
+
+  figcaption {
+    margin-top: 0.8rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+</style>
