@@ -143,6 +143,7 @@ internal class VideoPlayerWatchInputTarget(
     override val pictureFraming get() = ui.picturePreview ?: ready.playback.pictureFraming
 
     override fun previewPictureFraming(framing: PictureFraming) {
+        hideControls()
         ui.picturePreview = framing
     }
 

@@ -53,6 +53,7 @@ internal interface VideoPlayerInputTarget {
     /** The framing on screen, a pinch's preview included. */
     val pictureFraming: PictureFraming
 
+    /** Shows [framing] while a gesture sets it, hiding the controls, which would cover the picture being framed. */
     fun previewPictureFraming(framing: PictureFraming)
 
     fun commitPictureFraming(framing: PictureFraming)
