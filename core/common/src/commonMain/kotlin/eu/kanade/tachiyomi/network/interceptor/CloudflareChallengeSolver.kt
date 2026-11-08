@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.network.interceptor
 
+import app.katari.core.common.web.ChallengeOutcome
+import app.katari.core.common.web.ChallengePage
+import app.katari.core.common.web.ChallengePageEvents
+import app.katari.core.common.web.ChallengeUnsolved
+import app.katari.core.common.web.ChallengeUnsolvedException
+import app.katari.core.common.web.webViewSafeHeaders
 import eu.kanade.tachiyomi.network.AndroidCookieJar
-import mihon.core.common.web.ChallengeOutcome
-import mihon.core.common.web.ChallengePage
-import mihon.core.common.web.ChallengePageEvents
-import mihon.core.common.web.ChallengeUnsolved
-import mihon.core.common.web.ChallengeUnsolvedException
-import mihon.core.common.web.webViewSafeHeaders
 import okhttp3.Cookie
 import okhttp3.HttpUrl
 import okhttp3.Interceptor

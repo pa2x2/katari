@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.engine
 
+import app.katari.video.engine.spi.player.VideoPlayerError
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
-import mihon.video.engine.spi.player.VideoPlayerError
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 
 /*

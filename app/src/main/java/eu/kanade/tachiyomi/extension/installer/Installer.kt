@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension.installer
 import android.app.Service
 import android.net.Uri
 import androidx.annotation.CallSuper
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
@@ -15,7 +16,6 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
 import java.util.Collections
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi

@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.screen
 
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
-import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.viewer.settings.ViewerSettingBinder
-import mihon.entry.viewer.settings.ViewerSettingBinding
+import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.viewer.settings.ViewerSettingBinder
+import app.katari.entry.viewer.settings.ViewerSettingBinding
 
 /**
  * The player settings the player's host and its screen read, each bound to the profile on first use. The skip mode

@@ -11,14 +11,14 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import mihon.presentation.kit.content.SubtitleEdge
-import mihon.presentation.kit.content.SubtitleLook
-import mihon.presentation.kit.content.SubtitleTextLayout
-import mihon.presentation.kit.content.drawSubtitleText
-import mihon.presentation.kit.content.measureSubtitleText
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.SubtitleImage
-import mihon.video.engine.spi.player.SubtitleTextAlignment
+import app.katari.presentation.kit.content.SubtitleEdge
+import app.katari.presentation.kit.content.SubtitleLook
+import app.katari.presentation.kit.content.SubtitleTextLayout
+import app.katari.presentation.kit.content.drawSubtitleText
+import app.katari.presentation.kit.content.measureSubtitleText
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.SubtitleImage
+import app.katari.video.engine.spi.player.SubtitleTextAlignment
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 import kotlin.math.roundToInt
 

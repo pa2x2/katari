@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.coil
 
+import app.katari.core.common.platform.PlatformFacility
 import coil3.fetch.FetchResult
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
-import mihon.core.common.platform.PlatformFacility
 import java.io.File
 
 /** How the platform draws the icons of installed extensions, for [ExtensionIconFetcher]. */

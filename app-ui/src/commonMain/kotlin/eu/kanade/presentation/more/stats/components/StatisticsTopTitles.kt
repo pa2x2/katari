@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.surface.DashboardCard
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.more.stats.data.StatsTopTitle
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.presentation.kit.surface.DashboardCard
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

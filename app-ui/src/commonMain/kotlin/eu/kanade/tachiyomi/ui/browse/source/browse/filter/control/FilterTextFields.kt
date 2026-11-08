@@ -9,12 +9,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.field.TextField
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Close
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.field.TextField
+import app.katari.presentation.kit.list.currentRowInset
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

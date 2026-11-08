@@ -6,7 +6,7 @@ import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
-import mihon.presentation.kit.shortcut.ContextMenuKey
+import app.katari.presentation.kit.shortcut.ContextMenuKey
 
 /**
  * What the reader's keys do, on every platform. The arrows turn toward their side of the screen, so in right to left

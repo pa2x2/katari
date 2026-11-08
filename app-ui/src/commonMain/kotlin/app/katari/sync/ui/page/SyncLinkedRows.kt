@@ -1,6 +1,16 @@
 package app.katari.sync.ui.page
 
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Dns
+import app.katari.icons.materialsymbols.rounded.Extension
+import app.katari.icons.materialsymbols.rounded.Logout
+import app.katari.icons.materialsymbols.rounded.SyncProblem
+import app.katari.missingextensions.model.MissingExtension
+import app.katari.missingextensions.ui.noticeText
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonSize
+import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.server.shownAddress
@@ -14,16 +24,6 @@ import app.katari.sync.ui.status.stopsSync
 import app.katari.sync.ui.status.syncHeadlineText
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import mihon.feature.missingextensions.model.MissingExtension
-import mihon.feature.missingextensions.ui.noticeText
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Dns
-import mihon.icons.materialsymbols.rounded.Extension
-import mihon.icons.materialsymbols.rounded.Logout
-import mihon.icons.materialsymbols.rounded.SyncProblem
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonSize
-import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.video.player.gesture
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.input.key.Key
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.shortcut.ShortcutGroup
-import mihon.presentation.kit.shortcut.ShortcutKeys
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.shortcut.ShortcutGroup
+import app.katari.presentation.kit.shortcut.ShortcutKeys
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

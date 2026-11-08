@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.coil
 
+import app.katari.entry.interactions.source.EntryCoverNetworkFeature
+import app.katari.entry.interactions.source.EntryCoverNetworkResolution
 import coil3.Extras
 import coil3.ImageLoader
 import coil3.decode.DataSource
@@ -14,8 +16,6 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher.Companion.USE_CUSTOM_COVER_KEY
 import eu.kanade.tachiyomi.network.await
 import logcat.LogPriority
-import mihon.entry.interactions.source.EntryCoverNetworkFeature
-import mihon.entry.interactions.source.EntryCoverNetworkResolution
 import okhttp3.CacheControl
 import okhttp3.Call
 import okhttp3.Request

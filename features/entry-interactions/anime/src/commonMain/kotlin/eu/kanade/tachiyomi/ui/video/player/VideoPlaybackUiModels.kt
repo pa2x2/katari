@@ -1,5 +1,10 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
+import app.katari.entry.interactions.anime.stream.automaticSubtitle
+import app.katari.entry.interactions.anime.stream.sourceDefaultSubtitle
+import app.katari.entry.interactions.anime.stream.subtitlePreferenceKey
+import app.katari.video.engine.spi.tracks.subtitleChoiceKey
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
@@ -7,11 +12,6 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
-import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
-import mihon.entry.interactions.anime.stream.automaticSubtitle
-import mihon.entry.interactions.anime.stream.sourceDefaultSubtitle
-import mihon.entry.interactions.anime.stream.subtitlePreferenceKey
-import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride

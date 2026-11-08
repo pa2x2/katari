@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.aniyomi
 
+import app.katari.aniyomi.runtime.AniyomiExtensionClassLoading
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceFactory
 import eu.kanade.tachiyomi.extension.kind.ExtensionDescription
@@ -11,7 +12,6 @@ import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
 import eu.kanade.tachiyomi.source.aniyomi.toUnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import mihon.aniyomi.runtime.AniyomiExtensionClassLoading
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceProviderKind

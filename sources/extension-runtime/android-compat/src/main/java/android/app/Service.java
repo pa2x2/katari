@@ -24,7 +24,7 @@ import android.content.res.Configuration;
 import android.os.IBinder;
 import android.util.Log;
 import kotlin.NotImplementedError;
-import mihon.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.AndroidCompatEnvironment;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;

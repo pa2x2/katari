@@ -10,7 +10,7 @@ import android.view.WindowManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import kotlin.math.pow
 import kotlin.math.roundToInt
 

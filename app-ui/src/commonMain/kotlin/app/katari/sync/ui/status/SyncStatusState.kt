@@ -1,5 +1,6 @@
 package app.katari.sync.ui.status
 
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.client.status.SyncStatusFlow
 import dev.zacsweers.metro.AppScope
@@ -9,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
-import mihon.core.metro.AppCoroutineScope
 
 /**
  * The one [SyncStatus] every place that shows sync reads (the Sync rows, the Library toolbar, the dot on More, the

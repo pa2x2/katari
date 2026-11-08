@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BadgeTone
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.content.Badge
+import app.katari.presentation.kit.content.BadgeTone
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

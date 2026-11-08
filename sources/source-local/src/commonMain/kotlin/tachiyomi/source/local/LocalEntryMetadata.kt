@@ -1,11 +1,11 @@
 package tachiyomi.source.local
 
+import app.katari.core.common.extensions.EMPTY
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 internal data class LocalEntryMetadata(
     var url: String,

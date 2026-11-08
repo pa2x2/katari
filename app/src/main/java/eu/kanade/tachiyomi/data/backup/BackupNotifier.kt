@@ -24,7 +24,7 @@ import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
 import java.io.File
 import kotlin.time.Duration.Companion.milliseconds
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 @Inject
 class BackupNotifier(

@@ -1,13 +1,13 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 }
 
 kotlin {
     android {
-        namespace = "mihon.language.api"
+        namespace = "app.katari.language.api"
     }
     desktop()
 }

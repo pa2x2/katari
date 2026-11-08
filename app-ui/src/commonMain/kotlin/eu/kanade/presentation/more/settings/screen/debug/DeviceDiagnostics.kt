@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 import eu.kanade.presentation.util.Screen
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
 import tachiyomi.domain.storage.DocumentUri
 
 /**

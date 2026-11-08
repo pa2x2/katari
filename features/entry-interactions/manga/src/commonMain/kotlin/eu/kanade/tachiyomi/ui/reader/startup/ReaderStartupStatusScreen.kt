@@ -3,12 +3,12 @@ package eu.kanade.tachiyomi.ui.reader.startup
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Error
-import mihon.presentation.kit.feedback.InfoScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Error
+import app.katari.presentation.kit.feedback.InfoScreen
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.surface.Surface
+import app.katari.presentation.kit.surface.SurfaceContainer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

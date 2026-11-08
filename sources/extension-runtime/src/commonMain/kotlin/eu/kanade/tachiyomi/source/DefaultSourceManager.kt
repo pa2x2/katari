@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.source
 
+import app.katari.entry.interactions.download.EntryDownloadMaintenanceFeature
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.model.UnifiedStubSource

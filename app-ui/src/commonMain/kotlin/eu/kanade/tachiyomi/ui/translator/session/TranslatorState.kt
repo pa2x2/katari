@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.engine.TranslationEngineSelection
-import mihon.translation.api.engine.TranslationEngineState
-import mihon.translation.api.language.TranslationDefaultTarget
-import mihon.translation.api.request.TranslationSourceLanguageSelection
-import mihon.translation.api.request.TranslationTargetLanguageSelection
-import mihon.translation.ui.presentation.TranslationResultSpeechState
-import mihon.translation.ui.session.TranslationLanguageSupportState
-import mihon.translation.ui.session.TranslationSessionState
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.engine.TranslationEngineSelection
+import app.katari.translation.api.engine.TranslationEngineState
+import app.katari.translation.api.language.TranslationDefaultTarget
+import app.katari.translation.api.request.TranslationSourceLanguageSelection
+import app.katari.translation.api.request.TranslationTargetLanguageSelection
+import app.katari.translation.ui.presentation.TranslationResultSpeechState
+import app.katari.translation.ui.session.TranslationLanguageSupportState
+import app.katari.translation.ui.session.TranslationSessionState
 
 internal enum class TranslatorPicker {
     SourceLanguage,

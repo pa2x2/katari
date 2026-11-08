@@ -6,15 +6,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.OpenInBrowser
+import app.katari.icons.materialsymbols.rounded.Update
+import app.katari.icons.materialsymbols.roundedfilled.Warning
+import app.katari.presentation.kit.button.ActionButton
+import app.katari.presentation.kit.button.ActionButtonRow
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.OpenInBrowser
-import mihon.icons.materialsymbols.rounded.Update
-import mihon.icons.materialsymbols.roundedfilled.Warning
-import mihon.presentation.kit.button.ActionButton
-import mihon.presentation.kit.button.ActionButtonRow
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

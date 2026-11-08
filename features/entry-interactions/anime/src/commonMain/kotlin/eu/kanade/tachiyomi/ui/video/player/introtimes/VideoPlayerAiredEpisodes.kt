@@ -1,14 +1,14 @@
 package eu.kanade.tachiyomi.ui.video.player.introtimes
 
+import app.katari.entry.interactions.anime.introtimes.theintrodb.AiredEpisode
+import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbCandidate
+import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.anime.introtimes.theintrodb.AiredEpisode
-import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbCandidate
-import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 
 internal sealed interface VideoPlayerAiredEpisodesState {
     data object Loading : VideoPlayerAiredEpisodesState

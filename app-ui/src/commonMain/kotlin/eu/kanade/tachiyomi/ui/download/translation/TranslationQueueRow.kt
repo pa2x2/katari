@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.download.translation
 
 import androidx.compose.runtime.Immutable
-import mihon.entry.interactions.translate.EntryTranslateStatus
+import app.katari.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 

@@ -1,11 +1,11 @@
 package app.katari.sync.ui.question
 
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
-import mihon.presentation.kit.list.RowAction
-import mihon.presentation.kit.list.RowActions
-import mihon.presentation.kit.list.SettingsRow
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Delete
+import app.katari.presentation.kit.list.RowAction
+import app.katari.presentation.kit.list.RowActions
+import app.katari.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

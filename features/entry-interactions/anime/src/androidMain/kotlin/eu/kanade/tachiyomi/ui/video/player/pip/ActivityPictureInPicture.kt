@@ -18,13 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import app.katari.video.engine.spi.player.VideoPlayer
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 /**
  * Android's system picture-in-picture for the player activity: the params the system gets (the video's shape, previous episode,

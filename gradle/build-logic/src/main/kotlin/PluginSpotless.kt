@@ -1,20 +1,20 @@
+import app.katari.gradle.extensioncompatibility.CheckReadmeExtensionTableTask
+import app.katari.gradle.extensioncompatibility.UpdateReadmeExtensionTableTask
+import app.katari.gradle.extensions.alias
+import app.katari.gradle.extensions.libs
+import app.katari.gradle.extensions.plugins
+import app.katari.gradle.platformparity.ANDROID_PLATFORM_API_LIBRARIES
+import app.katari.gradle.platformparity.HostParityCheckTask
+import app.katari.gradle.platformparity.PLATFORM_API_LIBRARIES_ATTRIBUTE
+import app.katari.gradle.platformparity.PlatformApiIndexTask
+import app.katari.gradle.platformparity.PlatformFacilityCheckTask
+import app.katari.gradle.platformparity.PlatformPlacementCheckTask
+import app.katari.gradle.preferencescope.PreferenceScopeCheckTask
+import app.katari.gradle.tasks.EntryInteractionBoundaryCheckTask
+import app.katari.gradle.tasks.MetroContributionVisibilityCheckTask
+import app.katari.gradle.tasks.UiKitBoundaryCheckTask
+import app.katari.gradle.tasks.VendoredScriptsCheckTask
 import com.diffplug.gradle.spotless.SpotlessExtension
-import mihon.gradle.extensioncompatibility.CheckReadmeExtensionTableTask
-import mihon.gradle.extensioncompatibility.UpdateReadmeExtensionTableTask
-import mihon.gradle.extensions.alias
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.plugins
-import mihon.gradle.platformparity.ANDROID_PLATFORM_API_LIBRARIES
-import mihon.gradle.platformparity.HostParityCheckTask
-import mihon.gradle.platformparity.PLATFORM_API_LIBRARIES_ATTRIBUTE
-import mihon.gradle.platformparity.PlatformApiIndexTask
-import mihon.gradle.platformparity.PlatformFacilityCheckTask
-import mihon.gradle.platformparity.PlatformPlacementCheckTask
-import mihon.gradle.preferencescope.PreferenceScopeCheckTask
-import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
-import mihon.gradle.tasks.MetroContributionVisibilityCheckTask
-import mihon.gradle.tasks.UiKitBoundaryCheckTask
-import mihon.gradle.tasks.VendoredScriptsCheckTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -45,22 +45,22 @@ class PluginSpotless : Plugin<Project> {
                 endWithNewline()
                 forbidRegex(
                     "materialSymbolsRImport",
-                    "(?m)^import mihon\\.icons\\.materialsymbols\\.R(?! as MaterialSymbolsR$)\\b.*$",
-                    "Import mihon.icons.materialsymbols.R as MaterialSymbolsR",
+                    "(?m)^import app\\.katari\\.icons\\.materialsymbols\\.R(?! as MaterialSymbolsR$)\\b.*$",
+                    "Import app.katari.icons.materialsymbols.R as MaterialSymbolsR",
                 )
                 forbidRegex(
                     "materialSymbolsRQualified",
-                    "(?m)^(?!import ).*\\bmihon\\.icons\\.materialsymbols\\.R\\.",
+                    "(?m)^(?!import ).*\\bapp\\.katari\\.icons\\.materialsymbols\\.R\\.",
                     "Use the MaterialSymbolsR import alias instead of the qualified name",
                 )
                 forbidRegex(
                     "customMaterialSymbolsRImport",
-                    "(?m)^import mihon\\.icons\\.custommaterialsymbols\\.R(?! as CustomMaterialSymbolsR$)\\b.*$",
-                    "Import mihon.icons.custommaterialsymbols.R as CustomMaterialSymbolsR",
+                    "(?m)^import app\\.katari\\.icons\\.custommaterialsymbols\\.R(?! as CustomMaterialSymbolsR$)\\b.*$",
+                    "Import app.katari.icons.custommaterialsymbols.R as CustomMaterialSymbolsR",
                 )
                 forbidRegex(
                     "customMaterialSymbolsRQualified",
-                    "(?m)^(?!import ).*\\bmihon\\.icons\\.custommaterialsymbols\\.R\\.",
+                    "(?m)^(?!import ).*\\bapp\\.katari\\.icons\\.custommaterialsymbols\\.R\\.",
                     "Use the CustomMaterialSymbolsR import alias instead of the qualified name",
                 )
             }

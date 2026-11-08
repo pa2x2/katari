@@ -1,13 +1,13 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 }
 
 kotlin {
     android {
-        namespace = "mihon.video.engine.dash"
+        namespace = "app.katari.video.engine.dash"
 
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }

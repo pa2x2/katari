@@ -1,5 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.setting
 
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.interactions.reader.settings.ReaderOrientation
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.viewer.settings.ViewerSettingSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -8,10 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.settings.ViewerSettingSource
 
 internal class ReaderSettingsScreenModel(
     /** The reading mode the pages show in, with the default resolved, which picks the viewer's own settings. */

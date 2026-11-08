@@ -1,10 +1,10 @@
 plugins {
-    alias(mihonx.plugins.android.library)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.spotless)
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.mlkit.catalog"
+    namespace = "app.katari.text.recognition.provider.mlkit.catalog"
 }
 
 dependencies {

@@ -5,8 +5,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import mihon.presentation.kit.window.WindowLayout
-import mihon.presentation.kit.window.currentWindowLayout
+import app.katari.presentation.kit.window.WindowLayout
+import app.katari.presentation.kit.window.currentWindowLayout
 
 /**
  * How a half-open fold splits the player. The bent screen's crease is hard to tap and splits the picture, so the player

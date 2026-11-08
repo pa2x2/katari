@@ -10,6 +10,7 @@ import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncStatusState
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -21,7 +22,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 
 /** The Sync page (D050): the status, the account's devices, the options, and leaving. */

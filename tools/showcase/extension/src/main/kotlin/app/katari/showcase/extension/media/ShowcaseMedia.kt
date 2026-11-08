@@ -1,5 +1,8 @@
 package app.katari.showcase.extension.media
 
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookResourceAvailability
 import app.katari.showcase.extension.catalog.ShowcaseChapter
 import app.katari.showcase.extension.catalog.ShowcaseEntryType
 import app.katari.showcase.extension.catalog.ShowcaseVideoVersion
@@ -15,9 +18,6 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookResourceAvailability
 
 internal fun ShowcaseWork.media(chapter: ShowcaseChapter, selection: PlaybackSelection, baseUrl: String): EntryMedia =
     when (type) {

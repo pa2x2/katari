@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import app.katari.presentation.kit.pointer.TouchpadPinch
+import app.katari.presentation.kit.pointer.touchpadPinch
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPicturePlacement
-import mihon.presentation.kit.pointer.TouchpadPinch
-import mihon.presentation.kit.pointer.touchpadPinch
 
 /**
  * A touchpad pinch over the picture zooms it about the [pointer], which shows, and moves it as the fingers slide, as

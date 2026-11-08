@@ -1,11 +1,11 @@
-import mihon.gradle.extensions.desktop
-import mihon.gradle.tasks.GenerateAppLocaleTagsTask
-import mihon.gradle.tasks.GenerateLocalesConfigTask
+import app.katari.gradle.extensions.desktop
+import app.katari.gradle.tasks.GenerateAppLocaleTagsTask
+import app.katari.gradle.tasks.GenerateLocalesConfigTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.moko.resources)
 }

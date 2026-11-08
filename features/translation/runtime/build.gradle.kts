@@ -1,15 +1,15 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.metro)
 }
 
 kotlin {
     android {
-        namespace = "mihon.translation.runtime"
+        namespace = "app.katari.translation.runtime"
         // The Android robot of the system engine is an Android resource.
         androidResources {
             enable = true

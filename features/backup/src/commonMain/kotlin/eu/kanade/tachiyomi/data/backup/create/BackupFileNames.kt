@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.create
 
+import app.katari.domain.app.AppIdentity
 import dev.zacsweers.metro.Inject
-import mihon.domain.app.AppIdentity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

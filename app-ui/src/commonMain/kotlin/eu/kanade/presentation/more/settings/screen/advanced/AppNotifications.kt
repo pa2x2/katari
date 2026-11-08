@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 
 /**
  * The notifications the app posts, such as for library updates and downloads. Where the platform shows none, the rows

@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.preview
 
 import androidx.compose.runtime.Immutable
-import mihon.entry.interactions.media.EntryPreviewPage
+import app.katari.entry.interactions.media.EntryPreviewPage
 
 @Immutable
 data class EntryPreviewState(

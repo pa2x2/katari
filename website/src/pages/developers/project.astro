@@ -157,7 +157,7 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
     </p>
     <p>
       Of the SDK itself, use <code>eu.kanade.tachiyomi.source.*</code>, <code>eu.kanade.tachiyomi.network.*</code> and
-      <code>mihon.book.api.*</code>. Its other packages, and libraries it depends on but that aren't listed above, such as logcat, are
+      <code>app.katari.book.api.*</code>. Its other packages, and libraries it depends on but that aren't listed above, such as logcat, are
       Katari's own code: they compile, but its release build may have removed or changed them, and the extension then fails with
       <code>NoClassDefFoundError</code> or <code>NoSuchMethodError</code> only in users' copies of Katari. On Linux, an Android class or
       member Katari doesn't provide there shows as <strong>Not on desktop yet</strong> instead. Log with <code>android.util.Log</code>.

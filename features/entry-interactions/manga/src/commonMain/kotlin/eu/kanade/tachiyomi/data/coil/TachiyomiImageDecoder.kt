@@ -1,6 +1,10 @@
 package eu.kanade.tachiyomi.data.coil
 
 import androidx.compose.ui.unit.IntRect
+import app.katari.core.image.decode.ImageRegionDecoder
+import app.katari.core.image.decode.detectImageType
+import app.katari.core.image.progressive.ProgressiveImageFormat
+import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
 import coil3.ImageLoader
 import coil3.decode.DecodeResult
 import coil3.decode.DecodeUtils
@@ -8,10 +12,6 @@ import coil3.decode.Decoder
 import coil3.decode.ImageSource
 import coil3.fetch.SourceFetchResult
 import coil3.request.Options
-import mihon.core.image.decode.ImageRegionDecoder
-import mihon.core.image.decode.detectImageType
-import mihon.core.image.progressive.ProgressiveImageFormat
-import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
 import okio.BufferedSource
 
 /** A [Decoder] for the formats the platform's own image decoding lacks, through the app's native image decoder. */

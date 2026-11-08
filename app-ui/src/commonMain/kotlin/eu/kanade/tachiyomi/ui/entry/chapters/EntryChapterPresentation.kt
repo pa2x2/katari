@@ -1,18 +1,18 @@
 package eu.kanade.tachiyomi.ui.entry.chapters
 
+import app.katari.entry.interactions.child.EntryChildListFeature
+import app.katari.entry.interactions.child.EntryChildListRequest
+import app.katari.entry.interactions.child.EntryChildListResult
+import app.katari.entry.interactions.child.EntryChildListRow
+import app.katari.entry.interactions.child.EntryScanlatorFilterFeature
+import app.katari.entry.interactions.child.EntryScanlatorFilterResult
+import app.katari.entry.interactions.child.EntryScanlatorFilterStateResult
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
-import mihon.entry.interactions.child.EntryChildListFeature
-import mihon.entry.interactions.child.EntryChildListRequest
-import mihon.entry.interactions.child.EntryChildListResult
-import mihon.entry.interactions.child.EntryChildListRow
-import mihon.entry.interactions.child.EntryScanlatorFilterFeature
-import mihon.entry.interactions.child.EntryScanlatorFilterResult
-import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

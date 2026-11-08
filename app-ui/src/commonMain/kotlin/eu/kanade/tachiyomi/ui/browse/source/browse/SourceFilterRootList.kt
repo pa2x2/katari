@@ -3,6 +3,9 @@ package eu.kanade.tachiyomi.ui.browse.source.browse
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupItem
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -12,9 +15,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiStates
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterBody
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterTools
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupItem
 
 /**
  * The scrolling list of the root filter page.

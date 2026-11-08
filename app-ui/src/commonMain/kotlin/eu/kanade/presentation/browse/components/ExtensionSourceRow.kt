@@ -3,14 +3,14 @@ package eu.kanade.presentation.browse.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import app.katari.core.platform.currentPlatformContext
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.control.Switch
+import app.katari.presentation.kit.list.SettingsRow
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Settings
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.control.Switch
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

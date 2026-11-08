@@ -1,12 +1,12 @@
 package tachiyomi.domain.entry.model
 
 import androidx.compose.runtime.Immutable
+import app.katari.core.common.extensions.EMPTY
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 import tachiyomi.core.common.preference.TriState
 import java.io.ObjectStreamException
 import kotlin.time.Instant

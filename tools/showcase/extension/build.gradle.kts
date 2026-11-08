@@ -1,6 +1,6 @@
 plugins {
-    alias(mihonx.plugins.android.application)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.application)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
 }
@@ -12,7 +12,7 @@ android {
         applicationId = "app.katari.showcase.extension"
         versionCode = 1
         // The extension loader reads the source API version from versionName's major.minor.
-        versionName = "3.0.0"
+        versionName = "4.0.0"
 
         // tools/showcase/content/content-server.ts: the content server on the host's loopback interface, which the
         // emulator reaches through adb reverse.

@@ -1,5 +1,6 @@
 package app.katari.sync.ui.notice
 
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.question.Question
 import app.katari.sync.client.status.SyncStatus
@@ -10,7 +11,6 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import mihon.core.metro.AppCoroutineScope
 import kotlin.concurrent.Volatile
 
 /**

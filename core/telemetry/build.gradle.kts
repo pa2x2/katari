@@ -1,12 +1,12 @@
-import mihon.gradle.Config
+import app.katari.gradle.Config
 
 plugins {
-    alias(mihonx.plugins.android.library)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.spotless)
 }
 
 android {
-    namespace = "mihon.telemetry"
+    namespace = "app.katari.telemetry"
 
     sourceSets {
         getByName("main") {

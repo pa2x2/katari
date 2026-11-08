@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.extension.update
 
+import app.katari.core.metro.LaunchTask
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import logcat.LogPriority
-import mihon.core.metro.LaunchTask
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 

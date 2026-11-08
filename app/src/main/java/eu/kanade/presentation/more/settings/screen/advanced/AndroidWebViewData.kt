@@ -2,12 +2,12 @@ package eu.kanade.presentation.more.settings.screen.advanced
 
 import android.webkit.WebStorage
 import android.webkit.WebView
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.core.platform.PlatformContext
 import java.io.File
 
 @Inject

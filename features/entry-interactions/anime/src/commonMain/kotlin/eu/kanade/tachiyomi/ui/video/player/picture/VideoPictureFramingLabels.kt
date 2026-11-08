@@ -3,10 +3,10 @@ package eu.kanade.tachiyomi.ui.video.player.picture
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FitScreen
-import mihon.icons.materialsymbols.rounded.Fullscreen
-import mihon.icons.materialsymbols.rounded.ZoomIn
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FitScreen
+import app.katari.icons.materialsymbols.rounded.Fullscreen
+import app.katari.icons.materialsymbols.rounded.ZoomIn
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

@@ -1,0 +1,280 @@
+package app.katari.entry.interactions.book.format.epub.preparation
+
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
+import app.katari.book.api.BookNavigationItem
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookReadingDirection
+import app.katari.book.api.BookResource
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
+import app.katari.book.api.BookResourceCapability
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentPublicationModel
+import app.katari.entry.interactions.book.content.BookContentSession
+import app.katari.entry.interactions.book.content.normalizedBookContentLanguages
+import app.katari.entry.interactions.book.content.normalizedBookMediaType
+import app.katari.entry.interactions.book.document.preparation.BookDocumentCachedRemoteResource
+import app.katari.entry.interactions.book.document.preparation.BookDocumentCachedResource
+import app.katari.entry.interactions.book.document.preparation.BookDocumentPreparedCache
+import app.katari.entry.interactions.book.document.preparation.BookDocumentPreparedCacheKey
+import app.katari.entry.interactions.book.document.preparation.BookDocumentPreparedCacheValue
+import app.katari.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import app.katari.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
+import app.katari.entry.interactions.book.format.epub.EpubContract
+import app.katari.entry.interactions.book.format.epub.archive.EpubArchive
+import app.katari.entry.interactions.book.format.epub.navigation.EpubNavigationParser
+import app.katari.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
+import app.katari.entry.interactions.book.format.epub.packageinfo.EpubPackageParser
+import app.katari.entry.interactions.book.format.epub.resource.EpubArchiveResourceLoader
+import app.katari.entry.interactions.book.format.html.prosechapter.css.CssViewport
+import app.katari.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
+import app.katari.entry.interactions.book.preparation.BookContentPreparer
+import app.katari.entry.interactions.book.preparation.BookOpeningProgress
+import app.katari.entry.interactions.book.preparation.BookPreparationResult
+import app.katari.entry.interactions.book.preparation.BookPublicationResource
+import app.katari.entry.interactions.book.preparation.BookRemoteResourceReference
+import app.katari.entry.interactions.book.preparation.BookRemoteResourceType
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.security.MessageDigest
+
+internal class EpubBookPreparer(
+    private val preparedCache: BookDocumentPreparedCache? = null,
+    private val resourceGatewayFactory: BookPublicationResourceGatewayFactory? = null,
+    private val documentPreparer: EpubDocumentPreparer = EpubDocumentPreparer(),
+    private val viewport: () -> CssViewport = ::currentReaderViewport,
+) : BookContentPreparer {
+    override val id = "epub"
+    override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
+
+    override fun supports(descriptor: app.katari.book.api.BookContentDescriptor): Boolean =
+        descriptor.format.substringBefore(';').trim().equals(EpubContract.FORMAT, true) &&
+            descriptor.protection.equals("none", true)
+
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
+        if (!supports(
+                content.descriptor,
+            )
+        ) {
+            return failure(BookFailureReason.FORMAT_UNSUPPORTED, "Unsupported EPUB descriptor")
+        }
+        val resourceId = content.primaryResourceIds.singleOrNull()
+            ?: return failure(BookFailureReason.MALFORMED_CONTENT, "An EPUB must declare exactly one primary resource")
+        var ownedArchive: EpubArchive? = null
+        var ownedMaterialization: app.katari.entry.interactions.book.content.MaterializedBookResource? = null
+        return try {
+            val resource = content.getResource(resourceId).getOrElse { error ->
+                return failure(BookFailureReason.CONTENT_UNAVAILABLE, error.message ?: "The EPUB is unavailable", true)
+            }
+            require(
+                resource.availability == BookResourceAvailability.UNKNOWN ||
+                    resource.availability == BookResourceAvailability.AVAILABLE,
+            ) { "The EPUB is not currently readable" }
+            require(BookResourceCapability.MATERIALIZE in resource.capabilities) {
+                "The EPUB cannot be materialized for reading"
+            }
+            require(resource.mediaType.normalizedBookMediaType()?.let { it == EpubContract.FORMAT } != false) {
+                "The primary resource is not an EPUB"
+            }
+            val fetched = resource.cacheState != BookResourceCacheState.CACHED
+            val materialized = content.materializeResource(resourceId) { bytesRead, totalBytes ->
+                if (fetched) {
+                    onProgress(
+                        BookOpeningProgress.Downloading(
+                            totalBytes?.takeIf { it > 0 }?.let { (bytesRead.toFloat() / it).coerceIn(0f, 1f) },
+                        ),
+                    )
+                }
+            }.getOrThrow()
+            ownedMaterialization = materialized
+            val contentDigest = withContext(Dispatchers.IO) { materialized.file.sha256() }
+            val archive = withContext(Dispatchers.IO) { EpubArchive(materialized.file) }
+            ownedArchive = archive
+            val packageInfo = withContext(Dispatchers.Default) { EpubPackageParser(archive).parse() }
+            val pageViewport = viewport()
+            val cacheKey = BookDocumentPreparedCacheKey(
+                publicationId = content.publicationId,
+                revision = contentDigest,
+                viewportWidth = pageViewport.widthPx.toInt(),
+            )
+            val cached = withContext(Dispatchers.IO) {
+                preparedCache?.read(cacheKey) { fraction -> onProgress(BookOpeningProgress.Restoring(fraction)) }
+            }
+            val derivedResources = cached?.derivedResources
+                ?.associateTo(linkedMapOf()) { resource ->
+                    resource.resourceId to BookPublicationResource(
+                        resource.resourceId,
+                        resource.mediaType,
+                        resource.bytes,
+                    )
+                }
+                ?: linkedMapOf()
+            val remoteResources = cached?.remoteResources
+                ?.associateTo(linkedMapOf()) { resource ->
+                    resource.resourceId to BookRemoteResourceReference(
+                        resource.resourceId,
+                        resource.url,
+                        BookRemoteResourceType.valueOf(resource.type),
+                    )
+                }
+                ?: linkedMapOf()
+            val preparedDocuments = cached?.model?.documents?.map { document ->
+                EpubPreparedDocument(
+                    document = document,
+                    title = cached.documentTitles[document.resourceId],
+                    hasReadableContent = document.blocks.any { it.content !is BookDocumentBlockContent.Unsupported },
+                )
+            } ?: packageInfo.documents.mapIndexed { index, item ->
+                onProgress(BookOpeningProgress.Preparing(index.toFloat() / packageInfo.documents.size))
+                if (!item.isRemote && documentPreparer.supports(item.mediaType)) {
+                    documentPreparer.prepare(
+                        archive,
+                        packageInfo,
+                        item,
+                        contentDigest,
+                        derivedResources,
+                        remoteResources,
+                        pageViewport,
+                    )
+                } else {
+                    EpubPreparedDocument(
+                        document = documentPreparer.unsupported(item.resourceId, contentDigest),
+                        title = null,
+                        hasReadableContent = false,
+                    )
+                }
+            }.also { generated ->
+                if (preparedCache != null) onProgress(BookOpeningProgress.Saving)
+                withContext(Dispatchers.IO) {
+                    preparedCache?.write(
+                        cacheKey,
+                        BookDocumentPreparedCacheValue(
+                            model = BookDocumentPublicationModel(generated.map(EpubPreparedDocument::document)),
+                            documentTitles = generated.associate { it.document.resourceId to it.title },
+                            derivedResources = derivedResources.values.map { resource ->
+                                BookDocumentCachedResource(
+                                    resource.resourceId,
+                                    requireNotNull(resource.mediaType),
+                                    resource.bytes,
+                                )
+                            },
+                            remoteResources = remoteResources.values.map { resource ->
+                                BookDocumentCachedRemoteResource(
+                                    resource.resourceId,
+                                    resource.url,
+                                    resource.type.name,
+                                )
+                            },
+                        ),
+                    )
+                }
+            }
+            val documents = preparedDocuments.map(EpubPreparedDocument::document)
+            val readingOrderIds = packageInfo.readingOrder.map(EpubManifestItem::resourceId).toSet()
+            require(preparedDocuments.any { it.hasReadableContent && it.document.resourceId in readingOrderIds }) {
+                "The EPUB contains no readable linear documents"
+            }
+            val titles = preparedDocuments.associate { it.document.resourceId to it.title?.withoutEnclosingQuotes() }
+            val publication = BookPublication(
+                id = content.publicationId,
+                revision = contentDigest,
+                title = null,
+                languages = (packageInfo.languages + content.languages).normalizedBookContentLanguages(),
+                readingDirection = if (packageInfo.rightToLeft) {
+                    BookReadingDirection.RIGHT_TO_LEFT
+                } else {
+                    BookReadingDirection.LEFT_TO_RIGHT
+                },
+                readingOrder = packageInfo.readingOrder.map { item ->
+                    BookResource(item.resourceId, item.mediaType, titles[item.resourceId])
+                },
+                navigation = withContext(Dispatchers.Default) {
+                    EpubNavigationParser(archive).parse(packageInfo)
+                }.withDocumentTitles(titles),
+            )
+            val packagedResourceLoader = EpubArchiveResourceLoader(
+                archive,
+                packageInfo,
+                derivedResources,
+            )
+            val resourceLoader = if (remoteResources.isNotEmpty()) {
+                requireNotNull(resourceGatewayFactory) { "No remote publication resource gateway is available" }
+                    .create(content.publicationId, contentDigest, packagedResourceLoader, remoteResources.values)
+            } else {
+                packagedResourceLoader
+            }
+            val prepared = PreparedBookDocumentPublication(
+                publication = publication,
+                model = BookDocumentPublicationModel(documents),
+                resourceLoader = resourceLoader,
+                locatorRevision = contentDigest,
+                requiredResourceIds = emptySet(),
+                resourceRequirements = emptyMap(),
+                closeAction = {
+                    archive.close()
+                    materialized.close()
+                },
+            )
+            ownedArchive = null
+            ownedMaterialization = null
+            BookPreparationResult.Success(prepared)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: IllegalArgumentException) {
+            failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The EPUB is malformed")
+        } catch (error: Exception) {
+            failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The EPUB could not be prepared")
+        } finally {
+            ownedArchive?.close()
+            ownedMaterialization?.close()
+        }
+    }
+
+    private fun failure(
+        reason: BookFailureReason,
+        message: String,
+        canRetry: Boolean = false,
+    ) = BookPreparationResult.Failure(BookFailure(reason, message), canRetry)
+}
+
+private fun List<BookNavigationItem>.withDocumentTitles(titles: Map<String, String?>): List<BookNavigationItem> =
+    map { item ->
+        item.copy(
+            title = item.title ?: titles[item.target.resourceId],
+            children = item.children.withDocumentTitles(titles),
+        )
+    }
+
+/**
+ * A document `<title>` is metadata, not prose, yet generators such as Project Gutenberg's
+ * Ebookmaker write it quoted (`"Cover"`). Shown as a navigation label, the quotes are noise.
+ */
+private fun String.withoutEnclosingQuotes(): String {
+    val inner = when {
+        length > 2 && startsWith('"') && endsWith('"') -> substring(1, lastIndex)
+        length > 2 && startsWith('“') && endsWith('”') -> substring(1, lastIndex)
+        else -> return this
+    }
+    return inner.takeUnless { it.any { char -> char == '"' || char == '“' || char == '”' } }?.trim() ?: this
+}
+
+private fun File.sha256(): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    inputStream().buffered().use { input ->
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (true) {
+            val read = input.read(buffer)
+            if (read < 0) break
+            digest.update(buffer, 0, read)
+        }
+    }
+    return digest.digest().joinToString("") { byte ->
+        (byte.toInt() and 0xFF).toString(16).padStart(2, '0')
+    }
+}

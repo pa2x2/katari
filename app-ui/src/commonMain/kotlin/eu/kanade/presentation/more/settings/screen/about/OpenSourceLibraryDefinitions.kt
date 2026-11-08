@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.about
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /** AboutLibraries' definitions of the libraries the app is built with, which each platform's build generates. */
 @PlatformFacility

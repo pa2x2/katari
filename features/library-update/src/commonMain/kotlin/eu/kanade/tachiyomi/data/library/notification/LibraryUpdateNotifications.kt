@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.library.notification
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

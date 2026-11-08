@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.main
 
+import app.katari.entry.interactions.media.EntryMediaCacheClearResult
+import app.katari.entry.interactions.media.EntryMediaCacheFeature
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.IncognitoPreferences
 import kotlinx.coroutines.CoroutineScope
 import logcat.LogPriority
-import mihon.entry.interactions.media.EntryMediaCacheClearResult
-import mihon.entry.interactions.media.EntryMediaCacheFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 

@@ -1,0 +1,63 @@
+---
+import GuidePage from "../../../guide/GuidePage.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
+
+// This page moves extensions from one release to the next, so it names both versions itself rather than following the
+// newest SDK as the other extension pages do.
+
+const build = `
+  defaultConfig {
+-     versionCode = 9
+-     versionName = "3.0.2"
++     versionCode = 10
++     versionName = "4.0.0"
+  }
+
+  dependencies {
+-     compileOnly("com.github.pa2x2.katari:entry-source-api:sdk-3.0.0")
++     compileOnly("com.github.pa2x2.katari:entry-source-api:sdk-4.0.0")
+  }
+`;
+
+const imports = `
+- import mihon.book.api.BookCatalogCoverage
+- import mihon.book.api.BookContentDescriptor
+- import mihon.book.api.BookResourceAvailability
++ import app.katari.book.api.BookCatalogCoverage
++ import app.katari.book.api.BookContentDescriptor
++ import app.katari.book.api.BookResourceAvailability
+`;
+---
+
+<GuidePage
+  manual="developers"
+  slug="upgrade/4.0"
+  lead="SDK 4.0 moved the book classes to a new package, and Katari no longer loads extensions built with SDK 3.x. Every extension needs a rebuild, and only one that uses the book classes needs a code change."
+>
+  <Task id="build" title="Build against 4.0">
+    <p>
+      Move the SDK to <code>sdk-4.0.0</code> and start the release count over at <code>4.0.0</code>, as
+      <a href={sitePath("developers/project/#versions")}>Version numbers</a> describes.
+    </p>
+    <Snippet file="build.gradle.kts" lang="kotlin" code={build} diff />
+    <p>
+      In your store's index, set the extension's <code>extensionLib</code> to <code>"4.0"</code> along with its new version, as
+      <a href={sitePath("developers/store/#index")}>The index</a> describes.
+    </p>
+  </Task>
+
+  <Task id="compile-errors" title="Fix what no longer compiles">
+    <h3>Book classes come from <code>app.katari.book.api</code></h3>
+    <p>
+      The package <code>mihon.book.api</code> is now <code>app.katari.book.api</code>, with the same classes and subpackages in it.
+      Change the imports; nothing else in a book source changes. More in <a href={sitePath("developers/media/#books")}>Books</a>.
+    </p>
+    <Snippet lang="kotlin" code={imports} diff />
+  </Task>
+
+  <p>
+    The <a href={sitePath("developers/sdk-changelog/#4.0.0")}>SDK changelog</a> lists every change in 4.0.
+  </p>
+</GuidePage>

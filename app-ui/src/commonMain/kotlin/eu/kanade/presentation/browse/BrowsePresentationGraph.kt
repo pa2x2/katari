@@ -1,10 +1,10 @@
 package eu.kanade.presentation.browse
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.profiles.core.ProfileManager
 import eu.kanade.tachiyomi.extension.ExtensionSystemPackages
 import eu.kanade.tachiyomi.extension.kind.ExtensionCompatibility
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.feature.profiles.core.ProfileManager
 
 /** Graph entry points of the browse composables. */
 interface BrowsePresentationGraph {

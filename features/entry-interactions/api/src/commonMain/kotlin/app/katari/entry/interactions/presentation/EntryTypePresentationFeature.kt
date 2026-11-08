@@ -1,0 +1,173 @@
+@file:JvmName("EntryTypePresentationModels")
+
+package app.katari.entry.interactions.presentation
+
+import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Info
+import app.katari.icons.materialsymbols.rounded.OpenInFull
+import dev.icerock.moko.resources.PluralsResource
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.i18n.*
+
+/** Type-owned vocabulary and imagery. These values describe a type; they never authorize product behavior. */
+data class EntryTypePresentation(
+    val displayNameLabel: StringResource,
+    val badgeIcon: ImageVector,
+    val coverOverlayIcon: ImageVector?,
+    val markAsConsumedLabel: StringResource,
+    val markAsUnconsumedLabel: StringResource,
+    val markPreviousAsConsumedLabel: StringResource,
+    val unconsumedIndicatorLabel: StringResource,
+    val bookmarkChildLabel: StringResource,
+    val removeBookmarkChildLabel: StringResource,
+    val filterUnconsumedLabel: StringResource,
+    /** Names a [eu.kanade.tachiyomi.source.entry.ChapterKind.FILLER] child, such as a filler episode or an omake. */
+    val fillerChildLabel: StringResource,
+    /** Opens one child from its details, such as Play for an episode. */
+    val openChildLabel: StringResource,
+    val childListTitle: StringResource,
+    val childCountPlural: PluralsResource,
+    val completedChildCountPlural: PluralsResource,
+    val missingChildCountPlural: PluralsResource,
+    val childCountReasonLabel: StringResource,
+    val childNumberDisplayLabel: StringResource,
+    val childNumberShortLabel: StringResource,
+    val childNumberSettingLabel: StringResource,
+    val deleteChildrenConfirmationLabel: StringResource,
+    val noChildrenFoundLabel: StringResource,
+    /** Heads the children in none of the entry's groups. */
+    val otherChildrenLabel: StringResource,
+    /** Stands under the header of a group with no children yet. */
+    val noChildrenYetLabel: StringResource,
+    /** Who made a child, such as a manga's scanlator, as the chapter filter names it. */
+    val scanlatorLabel: StringResource,
+    val excludeScanlatorsLabel: StringResource,
+    val noScanlatorsFoundLabel: StringResource,
+    val noNextChildLabel: StringResource,
+    /** Says a child didn't open because this platform doesn't have the type's reader or player yet. */
+    val viewerUnavailableLabel: StringResource,
+    val settingsTitle: StringResource,
+    val setSettingsAsDefaultLabel: StringResource,
+    val confirmSetSettingsAsDefaultLabel: StringResource,
+    val alsoSetSettingsForLibraryLabel: StringResource,
+    val settingsUpdatedLabel: StringResource,
+    val downloadAmountPlural: PluralsResource,
+    val downloadUnconsumedLabel: StringResource,
+    val downloadNumberSortLabel: StringResource,
+    val intervalExpectedUpdateLabel: StringResource,
+    val intervalExpectedUpdateNullLabel: StringResource,
+    val immersiveOpenLabel: StringResource,
+    val immersiveOpenIcon: ImageVector,
+    val historySubtitle: EntryHistorySubtitlePresentation,
+    val partialProgress: EntryPartialProgressPresentation,
+    val updateNotification: EntryUpdateNotificationVocabulary,
+)
+
+sealed interface EntryHistorySubtitlePresentation {
+    data class NumberAndTimestamp(val label: StringResource) : EntryHistorySubtitlePresentation
+    data object NameTimestampAndDuration : EntryHistorySubtitlePresentation
+    data object NameAndTimestamp : EntryHistorySubtitlePresentation
+}
+
+sealed interface EntryPartialProgressPresentation {
+    data class NumberedPosition(val label: StringResource) : EntryPartialProgressPresentation
+    data class Fixed(val label: StringResource) : EntryPartialProgressPresentation
+}
+
+/** Vocabulary for library-update notifications; routing, identity, actions, and applicability remain notification-owned. */
+data class EntryUpdateNotificationVocabulary(
+    val childGeneric: PluralsResource,
+    val childSingle: StringResource,
+    val childSingleAndMore: StringResource,
+    val childMultiple: StringResource,
+    val childMultipleAndMore: PluralsResource,
+    val viewChildrenLabel: StringResource,
+    val numberPolicy: EntryNotificationChildNumberPolicy,
+    val maxDisplayedNumbers: Int,
+)
+
+enum class EntryNotificationChildNumberPolicy {
+    RECOGNIZED_ONLY,
+    NON_NEGATIVE,
+}
+
+sealed interface EntryTypePresentationResult {
+    val presentation: EntryTypePresentation
+
+    data class Contributed(
+        val type: EntryType,
+        override val presentation: EntryTypePresentation,
+    ) : EntryTypePresentationResult
+
+    /** Explicit emergency vocabulary. The requested type is retained so absence remains observable. */
+    data class Generic(
+        val type: EntryType?,
+        override val presentation: EntryTypePresentation,
+    ) : EntryTypePresentationResult
+}
+
+/** Application-facing projection boundary. Provider presence selects presentation and no behavioral capability. */
+interface EntryTypePresentationFeature {
+    val genericPresentation: EntryTypePresentation
+
+    fun presentation(type: EntryType?): EntryTypePresentationResult
+}
+
+/** Explicit neutral vocabulary for mixed/no-type surfaces; never a fallback for a concrete contributed type. */
+val genericEntryTypePresentation = EntryTypePresentation(
+    displayNameLabel = MR.strings.entry_type_generic,
+    badgeIcon = MaterialSymbols.Rounded.Info,
+    coverOverlayIcon = MaterialSymbols.Rounded.Info,
+    markAsConsumedLabel = MR.strings.action_mark_as_seen,
+    markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
+    markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,
+    unconsumedIndicatorLabel = MR.strings.action_filter_unseen,
+    bookmarkChildLabel = MR.strings.action_bookmark_item,
+    removeBookmarkChildLabel = MR.strings.action_remove_bookmark_item,
+    filterUnconsumedLabel = MR.strings.action_filter_unseen,
+    fillerChildLabel = MR.strings.chapter_kind_filler,
+    openChildLabel = MR.strings.action_open,
+    childListTitle = MR.strings.items,
+    childCountPlural = MR.plurals.entry_num_items,
+    completedChildCountPlural = MR.plurals.activity_completed_items,
+    missingChildCountPlural = MR.plurals.missing_items,
+    childCountReasonLabel = MR.strings.possible_duplicates_reason_item_count,
+    childNumberDisplayLabel = MR.strings.display_mode_item,
+    childNumberShortLabel = MR.strings.display_mode_item_short,
+    childNumberSettingLabel = MR.strings.show_item_number,
+    deleteChildrenConfirmationLabel = MR.strings.confirm_delete_items,
+    noChildrenFoundLabel = MR.strings.no_items_error,
+    otherChildrenLabel = MR.strings.chapter_group_other_items,
+    noChildrenYetLabel = MR.strings.chapter_group_no_items_yet,
+    scanlatorLabel = MR.strings.scanlator,
+    excludeScanlatorsLabel = MR.strings.exclude_scanlators,
+    noScanlatorsFoundLabel = MR.strings.no_scanlators_found,
+    noNextChildLabel = MR.strings.no_next_item,
+    viewerUnavailableLabel = MR.strings.viewer_unavailable_items,
+    settingsTitle = MR.strings.item_settings,
+    setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,
+    confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_item_settings,
+    alsoSetSettingsForLibraryLabel = MR.strings.also_set_item_settings_for_library,
+    settingsUpdatedLabel = MR.strings.item_settings_updated,
+    downloadAmountPlural = MR.plurals.download_amount_items,
+    downloadUnconsumedLabel = MR.strings.download_unseen,
+    downloadNumberSortLabel = MR.strings.action_order_by_item_number,
+    intervalExpectedUpdateLabel = MR.strings.item_interval_expected_update,
+    intervalExpectedUpdateNullLabel = MR.strings.item_interval_expected_update_null,
+    immersiveOpenLabel = MR.strings.action_open,
+    immersiveOpenIcon = MaterialSymbols.Rounded.OpenInFull,
+    historySubtitle = EntryHistorySubtitlePresentation.NameAndTimestamp,
+    partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
+    updateNotification = EntryUpdateNotificationVocabulary(
+        childGeneric = MR.plurals.notification_items_generic,
+        childSingle = MR.strings.notification_items_single,
+        childSingleAndMore = MR.strings.notification_items_single_and_more,
+        childMultiple = MR.strings.notification_items_multiple,
+        childMultipleAndMore = MR.plurals.notification_items_multiple_and_more,
+        viewChildrenLabel = MR.strings.action_view_items,
+        numberPolicy = EntryNotificationChildNumberPolicy.NON_NEGATIVE,
+        maxDisplayedNumbers = 5,
+    ),
+)

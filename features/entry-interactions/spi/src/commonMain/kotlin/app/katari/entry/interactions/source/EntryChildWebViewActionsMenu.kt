@@ -1,0 +1,93 @@
+package app.katari.entry.interactions.source
+
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.MoreVert
+import app.katari.icons.materialsymbols.rounded.OpenInBrowser
+import app.katari.icons.materialsymbols.rounded.Public
+import app.katari.icons.materialsymbols.rounded.Share
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.button.IconButtonSize
+import app.katari.presentation.kit.menu.DropdownMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.theme.ContentTone
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+enum class EntryChildWebViewAction {
+    OPEN_IN_WEB_VIEW,
+    OPEN_IN_BROWSER,
+    SHARE,
+}
+
+/**
+ * Shared child-WebView actions gated by an available [EntryWebViewFeature] result.
+ *
+ * Reader and player hosts must not infer availability from source types or child URLs. Passing the
+ * Feature resolution keeps visibility and execution behind the canonical Feature relationship.
+ */
+@Composable
+fun EntryChildWebViewActionsMenu(
+    resolution: EntryChildWebViewResolution.Available?,
+    onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    tone: ContentTone = ContentTone.Inherit,
+    size: IconButtonSize = IconButtonSize.Standard,
+    actions: List<EntryChildWebViewAction> = EntryChildWebViewAction.entries,
+) {
+    if (resolution == null || actions.isEmpty()) return
+
+    var expanded by remember(resolution) { mutableStateOf(false) }
+
+    IconButton(
+        icon = MaterialSymbols.Rounded.MoreVert,
+        contentDescription = stringResource(MR.strings.label_more),
+        onClick = { expanded = true },
+        size = size,
+        tone = tone,
+    )
+
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+    ) {
+        EntryChildWebViewActionItems(resolution, onAction, close = { expanded = false }, actions = actions)
+    }
+}
+
+/**
+ * The child-WebView actions as items of a menu the host owns, for a host that adds items of its own; [close] closes it.
+ * [actions] are those the platform can carry out, such as no sharing where there is no share sheet.
+ */
+@Composable
+fun ColumnScope.EntryChildWebViewActionItems(
+    resolution: EntryChildWebViewResolution.Available,
+    onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    close: () -> Unit,
+    actions: List<EntryChildWebViewAction> = EntryChildWebViewAction.entries,
+) {
+    actions.forEach { action ->
+        DropdownMenuItem(
+            label = stringResource(
+                when (action) {
+                    EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MR.strings.action_open_in_web_view
+                    EntryChildWebViewAction.OPEN_IN_BROWSER -> MR.strings.action_open_in_browser
+                    EntryChildWebViewAction.SHARE -> MR.strings.action_share
+                },
+            ),
+            onClick = {
+                close()
+                onAction(action, resolution)
+            },
+            icon = when (action) {
+                EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MaterialSymbols.Rounded.Public
+                EntryChildWebViewAction.OPEN_IN_BROWSER -> MaterialSymbols.Rounded.OpenInBrowser
+                EntryChildWebViewAction.SHARE -> MaterialSymbols.Rounded.Share
+            },
+        )
+    }
+}

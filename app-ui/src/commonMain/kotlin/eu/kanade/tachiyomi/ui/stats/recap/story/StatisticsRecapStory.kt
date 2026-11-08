@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.stats.recap.story
 
 import androidx.compose.runtime.Immutable
+import app.katari.entry.interactions.statistics.EntryStatisticsContribution
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.story.pages.biggestDayPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.pages.bookendPage
@@ -19,7 +20,6 @@ import eu.kanade.tachiyomi.ui.stats.recap.story.pages.summary
 import eu.kanade.tachiyomi.ui.stats.recap.story.pages.topFivePage
 import eu.kanade.tachiyomi.ui.stats.recap.story.pages.topTitlePage
 import eu.kanade.tachiyomi.ui.stats.recap.story.pages.typesPage
-import mihon.entry.interactions.statistics.EntryStatisticsContribution
 import tachiyomi.domain.statistics.recap.StatisticsRecapActivity
 import tachiyomi.domain.statistics.recap.StatisticsRecapPeriodTotals
 

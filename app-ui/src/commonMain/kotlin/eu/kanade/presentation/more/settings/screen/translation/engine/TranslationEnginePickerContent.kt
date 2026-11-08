@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.translation.api.engine.KnownTranslationEngine
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.engine.TranslationEngineState
-import mihon.translation.ui.picker.engine.TranslationEnginePickerList
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.translation.api.engine.KnownTranslationEngine
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.engine.TranslationEngineState
+import app.katari.translation.ui.picker.engine.TranslationEnginePickerList
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -10,9 +10,9 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.katari.core.platform.currentPlatformContext
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.ui.UiPreferences
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
 import tachiyomi.presentation.core.util.collectAsState
 import java.time.format.DateTimeFormatter
 

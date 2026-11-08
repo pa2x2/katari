@@ -1,0 +1,29 @@
+package app.katari.entry.interactions.runtime
+
+import app.katari.entry.interactions.statistics.EntryChapterRuntimeReader
+import app.katari.entry.interactions.statistics.EntryStatisticsAccent
+import dev.icerock.moko.resources.PluralsResource
+import dev.icerock.moko.resources.StringResource
+
+interface EntryStatisticsProvider {
+    val accent: EntryStatisticsAccent
+    val consumedUnitLabel: StringResource
+
+    /** [consumedUnitLabel]'s items as a lowercase plural noun, such as "chapters", for compact labels and lists. */
+    val consumedUnitName: StringResource
+
+    /** The average time spent per finished item, such as "~40m per chapter". */
+    val timePerItemLabel: StringResource
+
+    /** A count of [consumedUnitLabel]'s items, such as "3 chapters read". */
+    val consumedCountPlural: PluralsResource
+
+    /** Null when the type's progress doesn't record how long an item runs. */
+    val chapterRuntime: EntryChapterRuntimeReader?
+
+    /** Names one item by its number, such as "Chapter 98". */
+    val itemNumberLabel: StringResource
+
+    /** Names a run of items by their first and last numbers, such as "chapters 412 to 506". */
+    val itemRangeLabel: StringResource
+}

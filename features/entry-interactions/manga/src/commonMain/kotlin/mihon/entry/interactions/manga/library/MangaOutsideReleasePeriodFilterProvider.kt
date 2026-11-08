@@ -1,5 +1,0 @@
-package mihon.entry.interactions.manga.library
-
-import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
-
-internal class MangaOutsideReleasePeriodFilterProvider : EntryOutsideReleasePeriodFilterProvider

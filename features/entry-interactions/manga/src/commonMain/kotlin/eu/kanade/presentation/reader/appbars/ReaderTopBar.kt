@@ -2,18 +2,18 @@ package eu.kanade.presentation.reader.appbars
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewActionItems
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.chrome.ui.bars.ReaderChromeTopBar
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Bookmark
-import mihon.icons.materialsymbols.rounded.SwapHoriz
-import mihon.icons.materialsymbols.roundedfilled.Bookmark
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.menu.DropdownMenuDivider
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.menu.OverflowMenu
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewActionItems
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.chrome.ui.bars.ReaderChromeTopBar
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Bookmark
+import app.katari.icons.materialsymbols.rounded.SwapHoriz
+import app.katari.icons.materialsymbols.roundedfilled.Bookmark
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.menu.DropdownMenuDivider
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.menu.OverflowMenu
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

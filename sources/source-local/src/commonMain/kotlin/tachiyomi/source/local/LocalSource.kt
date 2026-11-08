@@ -1,5 +1,9 @@
 package tachiyomi.source.local
 
+import app.katari.core.archive.ArchiveOpener
+import app.katari.core.archive.ArchiveReader
+import app.katari.core.archive.EpubReader
+import app.katari.core.archive.LibarchiveUnavailableException
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
@@ -21,10 +25,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import logcat.LogPriority
-import mihon.core.archive.ArchiveOpener
-import mihon.core.archive.ArchiveReader
-import mihon.core.archive.EpubReader
-import mihon.core.archive.LibarchiveUnavailableException
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.extension

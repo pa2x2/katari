@@ -8,6 +8,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FilterListOff
+import app.katari.icons.materialsymbols.rounded.MoreVert
+import app.katari.icons.materialsymbols.rounded.RestartAlt
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.content.TonedSpan
+import app.katari.presentation.kit.list.CollapsibleRowGroupSubheader
+import app.katari.presentation.kit.list.RowGroupSeparator
+import app.katari.presentation.kit.menu.DropdownMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.theme.ContentTone
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterGroupSummary
 import eu.kanade.tachiyomi.source.entry.filter.validationIssues
@@ -17,17 +28,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeBad
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.clearSelection
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.metadata
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FilterListOff
-import mihon.icons.materialsymbols.rounded.MoreVert
-import mihon.icons.materialsymbols.rounded.RestartAlt
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.TonedSpan
-import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
-import mihon.presentation.kit.list.RowGroupSeparator
-import mihon.presentation.kit.menu.DropdownMenu
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

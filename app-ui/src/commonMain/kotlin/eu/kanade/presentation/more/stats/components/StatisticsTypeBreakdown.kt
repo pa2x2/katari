@@ -10,13 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import app.katari.presentation.kit.content.LegendSwatch
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.content.lineHeight
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.presentation.kit.content.LegendSwatch
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.content.lineHeight
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 
 data class StatisticsTypeShare(
     val label: String,

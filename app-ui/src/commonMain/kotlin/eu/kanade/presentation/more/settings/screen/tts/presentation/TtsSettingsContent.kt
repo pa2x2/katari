@@ -1,16 +1,16 @@
 package eu.kanade.presentation.more.settings.screen.tts.presentation
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarTitle
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.tts.api.provider.TtsParameterSupport
+import app.katari.tts.api.provider.TtsProviderDisclosure
+import app.katari.tts.ui.settings.TtsSettingsState
 import eu.kanade.presentation.more.settings.PreferenceScreen
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarTitle
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.tts.api.provider.TtsParameterSupport
-import mihon.tts.api.provider.TtsProviderDisclosure
-import mihon.tts.ui.settings.TtsSettingsState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

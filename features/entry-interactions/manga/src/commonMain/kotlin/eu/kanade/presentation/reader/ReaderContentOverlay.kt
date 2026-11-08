@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
-import mihon.presentation.kit.theme.PageOverlayColors
+import app.katari.presentation.kit.theme.PageOverlayColors
 import kotlin.math.abs
 
 @Composable

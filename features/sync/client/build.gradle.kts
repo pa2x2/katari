@@ -1,4 +1,4 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 // The app's half of sync, the same on every platform: record keys, capture of local edits to rows and preferences into
 // the outbox while sync is on, the outbox drain that stamps them with hybrid timestamps, the payload of every synced
@@ -6,8 +6,8 @@ import mihon.gradle.extensions.desktop
 // they happen. Platforms supply only their facilities (background work, the device's name). The tables it keeps its
 // state in are part of the app database in :data.
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)

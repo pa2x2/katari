@@ -6,16 +6,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.presentation.kit.content.PageBackground
+import app.katari.presentation.kit.content.PageCanvas
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.Content
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagedViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerDirection
 import eu.kanade.tachiyomi.ui.reader.viewer.strip.Content
 import eu.kanade.tachiyomi.ui.reader.viewer.strip.StripViewer
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.presentation.kit.content.PageBackground
-import mihon.presentation.kit.content.PageCanvas
 
 /**
  * The viewer for [mode], a resolved reading mode, showing the pages for [controller]. [openPageInWebView] opens a

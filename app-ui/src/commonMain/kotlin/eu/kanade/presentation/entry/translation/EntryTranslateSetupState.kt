@@ -1,13 +1,13 @@
 package eu.kanade.presentation.entry.translation
 
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.translate.EntryTranslatePreparation
-import mihon.language.api.tag.LanguageTag
-import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
-import mihon.text.recognition.api.component.TextRecognitionComponentId
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.model.TranslationModelDescriptor
-import mihon.translation.api.provider.TranslationProviderDisclosure
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.translate.EntryTranslatePreparation
+import app.katari.language.api.tag.LanguageTag
+import app.katari.model.artifacts.api.download.ModelArtifactDownloadApproval
+import app.katari.text.recognition.api.component.TextRecognitionComponentId
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.model.TranslationModelDescriptor
+import app.katari.translation.api.provider.TranslationProviderDisclosure
 import tachiyomi.domain.entry.model.Entry
 
 /**

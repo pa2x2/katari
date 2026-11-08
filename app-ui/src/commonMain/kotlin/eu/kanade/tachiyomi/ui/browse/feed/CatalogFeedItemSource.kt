@@ -1,6 +1,10 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.paging.PagingSource
+import app.katari.entry.interactions.catalogue.EntryCatalogueBrowseRequest
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.catalogue.EntryCatalogueNoResultsException
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -11,10 +15,6 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogFilterLoader
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.source.model.CatalogListItem
 

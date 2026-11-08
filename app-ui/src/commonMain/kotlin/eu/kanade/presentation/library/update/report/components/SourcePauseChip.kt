@@ -6,11 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.menu.DropdownMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.library.update.sourcePauseEndText
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.menu.DropdownMenu
-import mihon.presentation.kit.menu.DropdownMenuItem
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

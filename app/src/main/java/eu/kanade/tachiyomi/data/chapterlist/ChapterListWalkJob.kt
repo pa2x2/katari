@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.data.chapterlist
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import app.katari.android.di.appGraph
 import dev.zacsweers.metro.Inject
-import mihon.app.di.appGraph
 import tachiyomi.domain.entry.interactor.WalkPendingChapterLists
 import tachiyomi.domain.work.WorkOutcome
 

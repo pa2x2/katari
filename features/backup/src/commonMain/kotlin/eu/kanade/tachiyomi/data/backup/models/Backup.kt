@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import app.katari.profiles.core.ProfileScopedBackup
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import mihon.feature.profiles.core.ProfileScopedBackup
 
 /**
  * A backup file's layout. Reading or writing one leaves the entry lists of it and its profiles empty: BackupReader and

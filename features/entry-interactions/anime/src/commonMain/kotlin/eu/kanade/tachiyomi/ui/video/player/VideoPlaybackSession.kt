@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import mihon.entry.interactions.anime.state.animeProgressState
-import mihon.entry.interactions.anime.state.positionMs
-import mihon.entry.interactions.media.session.EntryMediaSessionActivity
-import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
+import app.katari.entry.interactions.anime.state.animeProgressState
+import app.katari.entry.interactions.anime.state.positionMs
+import app.katari.entry.interactions.media.session.EntryMediaSessionActivity
+import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
 import tachiyomi.domain.entry.model.EntryProgressState
 
 internal class VideoPlaybackSession(

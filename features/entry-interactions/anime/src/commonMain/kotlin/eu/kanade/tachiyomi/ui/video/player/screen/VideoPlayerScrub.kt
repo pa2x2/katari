@@ -6,9 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
-import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * Moving the playback position by dragging, along the timeline or by swiping sideways on the video. While it lasts

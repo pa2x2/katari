@@ -1,7 +1,7 @@
 package eu.kanade.domain.source.service
 
+import app.katari.profiles.core.ProfileStore
 import kotlinx.serialization.json.Json
-import mihon.feature.profiles.core.ProfileStore
 
 class ProfileSourcePreferences(
     private val profileStore: ProfileStore,

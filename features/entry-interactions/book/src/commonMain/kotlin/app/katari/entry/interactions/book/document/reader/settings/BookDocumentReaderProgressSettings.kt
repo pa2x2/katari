@@ -1,0 +1,87 @@
+package app.katari.entry.interactions.book.document.reader.settings
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.entry.viewer.settings.ViewerSettingBinding
+import app.katari.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.ToggleRow
+import kotlinx.coroutines.launch
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+@Composable
+internal fun BookDocumentReaderShowProgressSetting(binding: ViewerSettingBinding<Boolean>) {
+    val setting by binding.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    val profileDefault = setting.profileValue ?: setting.processorDefault
+    ToggleRow(
+        title = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
+        checked = setting.effectiveValue,
+        onCheckedChange = { target ->
+            scope.launch {
+                if (target == profileDefault) {
+                    binding.clearEntryOverride()
+                } else {
+                    binding.setEntryOverride(target)
+                }
+            }
+        },
+    )
+}
+
+/** How progress is drawn, offered while it is shown and [available] for the reading mode. */
+@Composable
+internal fun BookDocumentReaderProgressStyleSettings(
+    showProgressBinding: ViewerSettingBinding<Boolean>,
+    styleBinding: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
+    available: Boolean,
+) {
+    val showProgressSetting by showProgressBinding.state.collectAsState()
+    val styleSetting by styleBinding.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    val styleProfileDefault = styleSetting.profileValue ?: styleSetting.processorDefault
+    AnimatedVisibility(visible = showProgressSetting.effectiveValue && available) {
+        Column {
+            RowGroupHeader(stringResource(MR.strings.pref_book_document_reader_reading_progress_style))
+            RowGroup {
+                BookDocumentReaderProgressStyle.entries.forEach { style ->
+                    row(key = style) {
+                        ChoiceRow(
+                            title = style.label(),
+                            selected = styleSetting.effectiveValue == style,
+                            onClick = {
+                                scope.launch {
+                                    if (style == styleProfileDefault) {
+                                        styleBinding.clearEntryOverride()
+                                    } else {
+                                        styleBinding.setEntryOverride(style)
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BookDocumentReaderProgressStyle.label(): String = stringResource(
+    when (this) {
+        BookDocumentReaderProgressStyle.EDGE_FILL_RAIL ->
+            MR.strings.book_document_reader_progress_edge_fill_rail
+        BookDocumentReaderProgressStyle.EDGE_POSITION_MARKER ->
+            MR.strings.book_document_reader_progress_edge_position_marker
+        BookDocumentReaderProgressStyle.BOTTOM_HAIRLINE ->
+            MR.strings.book_document_reader_progress_bottom_hairline
+        BookDocumentReaderProgressStyle.PERCENTAGE ->
+            MR.strings.book_document_reader_progress_percentage
+    },
+)

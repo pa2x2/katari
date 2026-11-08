@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.source.lnreader.runtime
 
+import app.katari.script.runtime.ScriptRuntime
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
-import mihon.script.runtime.ScriptRuntime
 
 /** A loaded plugin. Calls fail with a `ScriptException`; a plugin's own error is `ScriptException.Thrown`. */
 class LnReaderPlugin internal constructor(private val runtime: ScriptRuntime) {

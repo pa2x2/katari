@@ -1,1 +1,1 @@
--keep class mihon.book.api.** { *; }
+-keep class app.katari.book.api.** { *; }

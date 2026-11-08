@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
 import eu.kanade.domain.source.model.FeedListingMode
@@ -7,8 +9,6 @@ import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.latestFeedPreset
 import eu.kanade.domain.source.model.popularFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 
 /**
  * Helpers for feed presets in the unified catalog screen.

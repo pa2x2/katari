@@ -3,11 +3,11 @@ package eu.kanade.presentation.more.settings.screen.translation.language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.translation.ui.picker.language.TranslationLanguageRole
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsViewModel
 import eu.kanade.presentation.util.Screen
-import mihon.translation.ui.picker.language.TranslationLanguageRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

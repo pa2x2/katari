@@ -1,12 +1,12 @@
 plugins {
-    alias(mihonx.plugins.android.library)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.metro)
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.mlkit"
+    namespace = "app.katari.text.recognition.provider.mlkit"
 
     defaultConfig {
         consumerProguardFiles("consumer-proguard.pro")

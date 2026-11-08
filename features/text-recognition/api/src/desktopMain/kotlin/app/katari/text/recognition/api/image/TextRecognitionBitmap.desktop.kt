@@ -1,0 +1,13 @@
+package app.katari.text.recognition.api.image
+
+/**
+ * Desktop has no recognition engine yet, so no image region is ever decoded for one; the type gets its pixels once
+ * desktop has an engine to read them.
+ */
+actual class TextRecognitionBitmap private constructor()
+
+actual fun TextRecognitionBitmap.release() = Unit
+
+actual fun TextRecognitionBitmap.readArgbPixels(): IntArray {
+    throw UnsupportedOperationException("Desktop decodes no recognition bitmaps")
+}

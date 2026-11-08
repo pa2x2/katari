@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.stats.recap.motion
 
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 
 /** Whether the system has animations removed, which stops recap motion with entrances finished. */
 internal expect fun PlatformContext.recapAnimationsRemoved(): Boolean

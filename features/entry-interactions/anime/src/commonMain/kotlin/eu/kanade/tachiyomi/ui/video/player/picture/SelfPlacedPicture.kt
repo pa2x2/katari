@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.picture
 
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerCapabilities
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerCapabilities
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

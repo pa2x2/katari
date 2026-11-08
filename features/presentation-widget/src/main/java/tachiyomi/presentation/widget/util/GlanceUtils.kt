@@ -4,7 +4,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.cornerRadius
-import mihon.presentation.kit.widget.WidgetMetrics
+import app.katari.presentation.kit.widget.WidgetMetrics
 import tachiyomi.presentation.widget.R
 
 fun GlanceModifier.appWidgetBackgroundRadius(): GlanceModifier {

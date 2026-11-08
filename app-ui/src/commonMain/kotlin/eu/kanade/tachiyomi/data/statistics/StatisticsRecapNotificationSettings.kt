@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.statistics
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.newYearRecap
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
 import java.time.LocalDate

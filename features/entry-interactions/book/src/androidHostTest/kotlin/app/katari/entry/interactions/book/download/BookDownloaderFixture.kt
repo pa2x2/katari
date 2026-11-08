@@ -1,0 +1,175 @@
+package app.katari.entry.interactions.book.download
+
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookPublication
+import app.katari.book.api.model.BookPublicationModel
+import app.katari.book.api.model.BookPublicationModelDescriptor
+import app.katari.entry.interactions.book.content.BookContentSession
+import app.katari.entry.interactions.book.content.BookContentSessionResourceLoader
+import app.katari.entry.interactions.book.content.BookMaterializationCache
+import app.katari.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
+import app.katari.entry.interactions.book.download.model.BookDownload
+import app.katari.entry.interactions.book.download.model.BookDownloadFailure
+import app.katari.entry.interactions.book.preparation.BookContentPreparer
+import app.katari.entry.interactions.book.preparation.BookContentPreparerRegistry
+import app.katari.entry.interactions.book.preparation.BookOpeningProgress
+import app.katari.entry.interactions.book.preparation.BookPreparationResult
+import app.katari.entry.interactions.book.preparation.BookPublicationResourceDependencies
+import app.katari.entry.interactions.book.preparation.PreparedBookPublication
+import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
+import eu.kanade.tachiyomi.source.entry.BookResourceLocation
+import eu.kanade.tachiyomi.source.entry.BookSourceResource
+import eu.kanade.tachiyomi.source.entry.EntryMedia
+import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.TestScope
+import okhttp3.OkHttpClient
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import java.nio.file.Files
+
+@RunWith(RobolectricTestRunner::class)
+internal abstract class BookDownloaderFixture {
+    protected suspend fun TestScope.downloadWithBudget(
+        budget: BookDownloadResourceBudget,
+        primaryBytes: ByteArray = "<p>Budgeted</p>".encodeToByteArray(),
+        assetBytes: ByteArray = byteArrayOf(1, 2, 3, 4),
+    ): BudgetDownloadResult {
+        val application = RuntimeEnvironment.getApplication()
+        val downloadRoot = Files.createTempDirectory("book-budget-download").toFile()
+        val provider = BookDownloadProvider(
+            downloadsDirectory = { UniFileStorageFile(UniFile.fromFile(downloadRoot)!!) },
+        )
+        val cache = BookDownloadCache(provider, backgroundScope)
+        val entry = Entry.create().copy(
+            id = 101L,
+            profileId = 2L,
+            source = 142L,
+            url = "/books/budget",
+            title = "Budget Book",
+            type = EntryType.BOOK,
+        )
+        val chapter = EntryChapter.create().copy(
+            id = 110L,
+            entryId = entry.id,
+            url = "/books/budget/chapter",
+            name = "Budget Chapter",
+        )
+        val descriptor = BookContentDescriptor("text/html", profile = "prose")
+        val media = EntryMedia.Book(
+            descriptor = descriptor,
+            catalog = BookResourceCatalog(
+                resources = listOf(
+                    BookSourceResource(
+                        id = "chapter",
+                        title = "Chapter",
+                        mediaType = "text/html",
+                        location = BookResourceLocation.InlineBytes(primaryBytes),
+                    ),
+                    BookSourceResource(
+                        id = "asset",
+                        title = "Asset",
+                        mediaType = "application/octet-stream",
+                        location = BookResourceLocation.InlineBytes(assetBytes),
+                    ),
+                ),
+            ),
+            initialResourceId = "chapter",
+        )
+        val source = mockk<UnifiedSource> {
+            every { id } returns entry.source
+            every { name } returns "Fixture"
+            coEvery { getMedia(any(), any()) } returns media
+        }
+        val downloader = BookDownloader(
+            files = UniFileStorageFileResolver(application),
+            provider = provider,
+            cache = cache,
+            sourceManager = mockk {
+                every { isInitialized } returns MutableStateFlow(true)
+                every { get(entry.source) } returns source
+            },
+            networkHelper = mockk {
+                every { client } returns OkHttpClient()
+            },
+            materializationStore = BookMaterializationCache(
+                Files.createTempDirectory("book-budget-materialization").toFile(),
+            ),
+            preparerRegistry = BookContentPreparerRegistry(
+                listOf(
+                    ValidatingPreparer(
+                        descriptor = descriptor,
+                        expectedContent = primaryBytes.decodeToString(),
+                        requiredResourceIds = setOf("asset"),
+                    ),
+                ),
+            ),
+            decoding = HostBookDocumentResourceDecoding,
+            resourceBudget = budget,
+        )
+
+        val failure = downloader.download(BookDownload(entry, chapter))
+        return BudgetDownloadResult(
+            failure = failure,
+            completedPackage = cache.get(BookDownloadPackageKey(entry.source, entry.url, chapter.url)),
+        )
+    }
+}
+internal data class BudgetDownloadResult(
+    val failure: BookDownloadFailure?,
+    val completedPackage: VerifiedBookDownloadPackage?,
+)
+
+internal class ValidatingPreparer(
+    private val descriptor: BookContentDescriptor,
+    private val expectedContent: String,
+    private val requiredResourceIds: Set<String>,
+) : BookContentPreparer {
+    override val id = "validating"
+    override val outputModel = ValidatingPublicationModel.descriptor
+
+    override fun supports(descriptor: BookContentDescriptor): Boolean = descriptor == this.descriptor
+
+    override suspend fun prepare(
+        content: BookContentSession,
+        onProgress: (BookOpeningProgress) -> Unit,
+    ): BookPreparationResult {
+        content.openResource("chapter").getOrThrow().use { resource ->
+            check(resource.stream.reader().readText() == expectedContent)
+        }
+        return BookPreparationResult.Success(
+            object : PreparedBookPublication, BookPublicationResourceDependencies {
+                override val model = ValidatingPublicationModel
+                override val resourceLoader = BookContentSessionResourceLoader(content)
+                override val requiredResourceIds = this@ValidatingPreparer.requiredResourceIds
+                override val publication = BookPublication(
+                    id = content.publicationId,
+                    revision = content.revision,
+                    title = "Test Book",
+                    languages = emptyList(),
+                    readingDirection = null,
+                    readingOrder = emptyList(),
+                    navigation = emptyList(),
+                )
+
+                override fun validate(locator: BookLocator) = true
+                override fun close() = Unit
+            },
+        )
+    }
+}
+
+private object ValidatingPublicationModel : BookPublicationModel {
+    override val descriptor = BookPublicationModelDescriptor("test.validating")
+}

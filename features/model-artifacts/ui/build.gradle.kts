@@ -1,14 +1,14 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.compose)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.compose)
+    alias(katari.plugins.spotless)
 }
 
 kotlin {
     android {
-        namespace = "mihon.model.artifacts.ui"
+        namespace = "app.katari.model.artifacts.ui"
     }
     desktop()
 

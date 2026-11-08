@@ -13,8 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mihon.presentation.kit.layout.ScrollbarFrame
-import mihon.presentation.kit.pointer.LocalWindowHasMouse
+import app.katari.presentation.kit.layout.ScrollbarFrame
+import app.katari.presentation.kit.pointer.LocalWindowHasMouse
 
 @Composable
 fun FastScrollLazyVerticalGrid(

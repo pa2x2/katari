@@ -4,7 +4,7 @@ import android.media.AudioManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayer
 import kotlin.math.roundToInt
 
 /**

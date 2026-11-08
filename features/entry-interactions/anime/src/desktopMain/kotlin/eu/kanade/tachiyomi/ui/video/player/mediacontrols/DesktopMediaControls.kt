@@ -1,18 +1,18 @@
 package eu.kanade.tachiyomi.ui.video.player.mediacontrols
 
+import app.katari.entry.interactions.player.AnimePlayerMediaArtwork
+import app.katari.entry.interactions.player.AnimePlayerMediaCommands
+import app.katari.entry.interactions.player.AnimePlayerMediaControls
+import app.katari.entry.interactions.player.AnimePlayerMediaSession
+import app.katari.entry.interactions.player.AnimePlayerMediaState
+import app.katari.entry.interactions.player.AnimePlayerNavigation
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.player.AnimePlayerMediaArtwork
-import mihon.entry.interactions.player.AnimePlayerMediaCommands
-import mihon.entry.interactions.player.AnimePlayerMediaControls
-import mihon.entry.interactions.player.AnimePlayerMediaSession
-import mihon.entry.interactions.player.AnimePlayerMediaState
-import mihon.entry.interactions.player.AnimePlayerNavigation
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerState
 
 /**
  * The desktop's [VideoPlayerMediaControls]: the player in the desktop's own media controls ([AnimePlayerMediaControls])

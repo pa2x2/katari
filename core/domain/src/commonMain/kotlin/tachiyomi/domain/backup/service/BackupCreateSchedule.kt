@@ -1,6 +1,6 @@
 package tachiyomi.domain.backup.service
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.storage.DocumentUri
 

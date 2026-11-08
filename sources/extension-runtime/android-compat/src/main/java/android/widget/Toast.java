@@ -22,7 +22,7 @@ public class Toast {
     }
 
     public void show() {
-        mihon.extension.compat.AndroidCompatEnvironment.current().getShowToast().invoke(text);
+        app.katari.extension.compat.AndroidCompatEnvironment.current().getShowToast().invoke(text);
     }
 
     public void cancel() {

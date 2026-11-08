@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.source.lnreader.chapter
 
+import app.katari.book.api.BookContentDescriptor
 import eu.kanade.tachiyomi.source.entry.BookLinkedResources
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
-import mihon.book.api.BookContentDescriptor
 
 /**
  * The HTML `parseChapter` gives for the chapter at [path], as a prose chapter. Katari keeps the reader's place in a

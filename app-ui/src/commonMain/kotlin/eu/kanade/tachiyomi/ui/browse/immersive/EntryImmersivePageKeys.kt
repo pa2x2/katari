@@ -4,11 +4,11 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.key.Key
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
+import app.katari.presentation.kit.shortcut.ShortcutGroup
+import app.katari.presentation.kit.shortcut.ShortcutKeys
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
-import mihon.presentation.kit.shortcut.ShortcutGroup
-import mihon.presentation.kit.shortcut.ShortcutKeys
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

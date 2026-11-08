@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.preferences
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import tachiyomi.core.common.preference.PreferenceStore
 
 /** The settings sources keep for themselves, which each profile has its own of. */

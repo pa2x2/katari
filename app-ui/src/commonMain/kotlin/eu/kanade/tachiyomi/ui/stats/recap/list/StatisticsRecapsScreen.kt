@@ -3,15 +3,15 @@ package eu.kanade.tachiyomi.ui.stats.recap.list
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.stats.recap.list.StatisticsRecapsScreenContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

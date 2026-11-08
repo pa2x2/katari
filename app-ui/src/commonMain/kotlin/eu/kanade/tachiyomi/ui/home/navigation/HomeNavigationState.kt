@@ -6,12 +6,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import app.katari.core.common.HomeScreenTabs
+import app.katari.core.common.navigation.HomeNavigationConfiguration
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import mihon.core.common.HomeScreenTabs
-import mihon.core.common.navigation.HomeNavigationConfiguration
 
 /**
  * Connects the home destinations shown beside every screen of a wide window to the home tabs, which aren't composed

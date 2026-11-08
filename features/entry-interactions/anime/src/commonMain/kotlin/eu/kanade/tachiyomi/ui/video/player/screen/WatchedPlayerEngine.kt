@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.video.engine.spi.player.VideoPlayerError
+import app.katari.video.engine.spi.tracks.VideoTracks
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailureOutcome
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
@@ -23,8 +25,6 @@ import eu.kanade.tachiyomi.ui.video.player.engine.startEngineRun
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.toProblem
 import kotlinx.coroutines.delay
-import mihon.video.engine.spi.player.VideoPlayerError
-import mihon.video.engine.spi.tracks.VideoTracks
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 
 /** What the player says over the video about its engine; each fades on its own. */

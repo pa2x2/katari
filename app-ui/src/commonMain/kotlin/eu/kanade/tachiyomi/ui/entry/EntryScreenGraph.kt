@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.ui.entry
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.child.EntryRelatedEntriesFeature
+import app.katari.entry.interactions.download.EntryDownloadActionFeature
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.source.EntryWebViewFeature
+import app.katari.entry.interactions.state.EntryBookmarkFeature
+import app.katari.entry.interactions.state.EntryConsumptionFeature
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdateIntervalAvailability
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.child.EntryRelatedEntriesFeature
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.entry.interactions.source.EntryWebViewFeature
-import mihon.entry.interactions.state.EntryBookmarkFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
 
 /** Graph services the entry screen reads outside a view model. */
 interface EntryScreenGraph {

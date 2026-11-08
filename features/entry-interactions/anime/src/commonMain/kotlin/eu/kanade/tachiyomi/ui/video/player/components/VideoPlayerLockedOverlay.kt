@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.presentation.kit.surface.MediaScrim
-import mihon.presentation.kit.surface.MediaScrimEdge
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.presentation.kit.surface.MediaScrim
+import app.katari.presentation.kit.surface.MediaScrimEdge
+import app.katari.presentation.kit.theme.KatariTheme
 
 @Composable
 internal fun VideoPlayerLockedOverlay(

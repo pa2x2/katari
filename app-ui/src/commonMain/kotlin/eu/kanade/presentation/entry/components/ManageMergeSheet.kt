@@ -1,9 +1,9 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.dialog.DialogAction
 import eu.kanade.tachiyomi.ui.entry.merge.MergeMember
 import kotlinx.collections.immutable.toPersistentList
-import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

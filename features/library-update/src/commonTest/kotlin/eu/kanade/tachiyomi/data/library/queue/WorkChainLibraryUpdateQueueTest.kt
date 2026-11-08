@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.data.library.queue
 
+import app.katari.core.platform.storage.AppPrivateDirectories
+import app.katari.profiles.core.Profile
+import app.katari.profiles.core.ProfileDatabase
 import eu.kanade.tachiyomi.data.library.LibraryUpdateInput
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSelectionFile
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -10,9 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import mihon.core.platform.storage.AppPrivateDirectories
-import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.core.ProfileDatabase
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import tachiyomi.data.ActiveProfileProvider

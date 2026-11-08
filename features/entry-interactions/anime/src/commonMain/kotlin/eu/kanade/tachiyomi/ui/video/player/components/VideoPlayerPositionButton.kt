@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.navigation.MediaToolbarPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
-import mihon.presentation.kit.navigation.MediaToolbarPosition
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

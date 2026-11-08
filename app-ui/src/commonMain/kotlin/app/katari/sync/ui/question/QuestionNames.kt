@@ -1,11 +1,11 @@
 package app.katari.sync.ui.question
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.profiles.core.ProfileDatabase
 import app.katari.sync.client.question.Question
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
-import mihon.feature.profiles.core.ProfileDatabase
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper
 import tachiyomi.domain.entry.model.Entry

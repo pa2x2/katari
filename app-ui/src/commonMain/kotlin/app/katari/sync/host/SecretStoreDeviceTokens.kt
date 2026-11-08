@@ -1,11 +1,11 @@
 package app.katari.sync.host
 
 import app.katari.sync.client.connection.DeviceTokenStore
+import app.katari.translation.provider.server.SecretStore
+import app.katari.translation.provider.server.ServerConnectionId
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
-import mihon.translation.provider.server.SecretStore
-import mihon.translation.provider.server.ServerConnectionId
 
 /**
  * The sync device token in the platform's store for secrets, where translation servers' API keys are kept too:

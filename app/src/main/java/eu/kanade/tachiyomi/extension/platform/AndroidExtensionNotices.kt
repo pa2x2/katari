@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 /** A toast for the stores, and notifications for updates and a backup's reinstalled extensions. */
 @Inject

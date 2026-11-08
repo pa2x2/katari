@@ -4,6 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.child.EntryRelatedEntriesFeature
+import app.katari.entry.interactions.child.EntryRelatedEntriesLoadResult
+import app.katari.entry.interactions.child.EntryRelatedEntriesUnavailableReason
+import app.katari.entry.interactions.child.EntryRelatedEntryGroup
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -24,11 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.child.EntryRelatedEntriesFeature
-import mihon.entry.interactions.child.EntryRelatedEntriesLoadResult
-import mihon.entry.interactions.child.EntryRelatedEntriesUnavailableReason
-import mihon.entry.interactions.child.EntryRelatedEntryGroup
 import tachiyomi.domain.entry.model.Entry
 
 @AssistedInject

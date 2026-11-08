@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.source.EntryChildWebViewAction
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
@@ -15,7 +16,6 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
-import mihon.entry.interactions.source.EntryChildWebViewAction
 
 /**
  * An episode that couldn't open: its problem screen, and the picker for the dubs, servers, streams and qualities the

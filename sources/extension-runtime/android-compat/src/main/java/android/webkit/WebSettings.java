@@ -16,14 +16,14 @@
 
 // Modified for Katari's desktop extension host from the Android Open Source Project's WebSettings: the SDK's members
 // without their documentation and deprecation marks, which are for apps and which AOSP's has, and without hidden ones.
-// Each web view's settings are mihon.extension.compat.webkit.PageWebSettings, which keeps the deprecated ones too, and
+// Each web view's settings are app.katari.extension.compat.webkit.PageWebSettings, which keeps the deprecated ones too, and
 // the default user agent is the one the host's pages send where an extension sets none.
 
 package android.webkit;
 
 import android.content.Context;
 
-import mihon.extension.compat.webkit.PageWebSettings;
+import app.katari.extension.compat.webkit.PageWebSettings;
 
 public abstract class WebSettings {
     public enum LayoutAlgorithm {

@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
-import mihon.presentation.kit.surface.groupCardBehind
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.surface.groupCardBehind
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 

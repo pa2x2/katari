@@ -8,6 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import app.katari.entry.interactions.anime.introtimes.IntroTimesResult
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.interactions.anime.introtimes.matched
+import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
+import app.katari.entry.viewer.settings.ViewerSettingBinding
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAniSkipPage
@@ -29,12 +35,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.anime.introtimes.IntroTimesResult
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.entry.interactions.anime.introtimes.matched
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
-import mihon.entry.viewer.settings.ViewerSettingBinding
-import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The player settings: speed, picture, quality, subtitles, audio, source, the episode's chapters, and the title's skip

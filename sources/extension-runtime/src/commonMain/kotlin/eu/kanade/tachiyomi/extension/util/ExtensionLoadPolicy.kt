@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.extension.util
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.domain.source.service.SourcePreferences
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
 
 /**
  * What decides whether an extension may load, read once for every extension loaded together.

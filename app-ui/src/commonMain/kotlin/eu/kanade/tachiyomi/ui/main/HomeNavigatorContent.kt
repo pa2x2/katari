@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.profiles.ui.switcher.ProfileSwitcherHost
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
@@ -24,10 +28,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.Scaffold
 
 /**
  * The screens of [navigator], a window's root navigator around [HomeScreen], as the window shows them once a profile

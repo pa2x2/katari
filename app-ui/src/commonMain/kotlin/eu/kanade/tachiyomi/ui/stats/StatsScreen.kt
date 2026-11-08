@@ -10,6 +10,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.AutoStories
+import app.katari.icons.materialsymbols.rounded.Share
+import app.katari.icons.materialsymbols.rounded.Tune
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarActions
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -26,16 +36,6 @@ import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.AutoStories
-import mihon.icons.materialsymbols.rounded.Share
-import mihon.icons.materialsymbols.rounded.Tune
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarActions
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,11 +1,11 @@
 package app.katari.sync.ui.handoff
 
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CloudOff
+import app.katari.icons.materialsymbols.rounded.Devices
+import app.katari.presentation.kit.chip.FloatingNote
 import eu.kanade.presentation.util.relativeTimeSpanString
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CloudOff
-import mihon.icons.materialsymbols.rounded.Devices
-import mihon.presentation.kit.chip.FloatingNote
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.field.SearchField
+import app.katari.presentation.kit.list.currentRowInset
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.field.SearchField
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

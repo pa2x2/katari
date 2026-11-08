@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.updates
 
 import androidx.lifecycle.ViewModel
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getAndSet

@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import mihon.entry.interactions.viewer.EntryChildWindow
-import mihon.entry.interactions.viewer.entryChildWindow
+import app.katari.entry.interactions.viewer.EntryChildWindow
+import app.katari.entry.interactions.viewer.entryChildWindow
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.service.sortedForReading

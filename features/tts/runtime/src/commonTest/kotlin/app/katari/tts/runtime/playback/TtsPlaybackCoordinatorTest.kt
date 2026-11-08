@@ -1,0 +1,218 @@
+package app.katari.tts.runtime.playback
+
+import app.katari.language.api.tag.LanguageTag
+import app.katari.tts.api.engine.KnownTtsEngine
+import app.katari.tts.api.engine.TtsEngineArtwork
+import app.katari.tts.api.engine.TtsEngineBuildAvailability
+import app.katari.tts.api.engine.TtsEngineDetails
+import app.katari.tts.api.engine.TtsEngineId
+import app.katari.tts.api.engine.TtsProviderId
+import app.katari.tts.api.playback.TtsPlaybackFailureReason
+import app.katari.tts.api.playback.TtsPlaybackStart
+import app.katari.tts.api.playback.TtsPlaybackState
+import app.katari.tts.api.playback.TtsStopReason
+import app.katari.tts.api.playback.TtsStopResult
+import app.katari.tts.api.provider.TtsInputLimit
+import app.katari.tts.api.provider.TtsOptionalCapability
+import app.katari.tts.api.provider.TtsParameterSupport
+import app.katari.tts.api.provider.TtsProviderCapabilities
+import app.katari.tts.api.provider.TtsProviderPresentation
+import app.katari.tts.api.provider.TtsVoiceProcessing
+import app.katari.tts.api.request.ResolvedTtsRequest
+import app.katari.tts.api.request.TtsParameters
+import app.katari.tts.api.voice.TtsVoice
+import app.katari.tts.api.voice.TtsVoiceId
+import app.katari.tts.api.voice.TtsVoiceInspection
+import app.katari.tts.runtime.audio.TtsAudioFocus
+import app.katari.tts.runtime.request.TtsTextSegment
+import app.katari.tts.spi.engine.ReadyTtsEngineRequest
+import app.katari.tts.spi.engine.TtsEngine
+import app.katari.tts.spi.engine.TtsEngineDeviceAvailability
+import app.katari.tts.spi.engine.TtsEngineExecution
+import app.katari.tts.spi.engine.TtsEnginePlayback
+import app.katari.tts.spi.engine.TtsEnginePlaybackEvent
+import app.katari.tts.spi.engine.TtsEnginePreparation
+import app.katari.tts.spi.engine.TtsEngineStopResult
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
+import org.junit.jupiter.api.Test
+
+class TtsPlaybackCoordinatorTest {
+
+    @Test
+    fun `completion and provider failure release focus and publish terminal state`() = runBlocking<Unit> {
+        val completedPlayback = RecordingPlayback()
+        val failedPlayback = RecordingPlayback()
+        val engine = RecordingEngine(ArrayDeque(listOf(completedPlayback, failedPlayback)))
+        val focus = RecordingAudioFocus()
+        val coordinator = coordinator(engine, focus)
+
+        val completedSession = coordinator.play(ready(engine))
+            .shouldBeInstanceOf<TtsPlaybackStart.Started>()
+            .session
+        completedPlayback.emit(TtsEnginePlaybackEvent.Started)
+        settle()
+        completedSession.state.value shouldBe TtsPlaybackState.Speaking()
+        completedPlayback.emit(TtsEnginePlaybackEvent.Completed)
+        settle()
+        completedSession.state.value shouldBe TtsPlaybackState.Completed
+        focus.abandonCount shouldBe 1
+
+        val failedSession = coordinator.play(ready(engine))
+            .shouldBeInstanceOf<TtsPlaybackStart.Started>()
+            .session
+        failedPlayback.emit(TtsEnginePlaybackEvent.Failed("provider failed"))
+        settle()
+        failedSession.state.value shouldBe TtsPlaybackState.Failed(
+            TtsPlaybackFailureReason.ProviderFailure(ENGINE_ID, "provider failed"),
+        )
+        focus.abandonCount shouldBe 2
+    }
+
+    @Test
+    fun `replacement and stale stop cannot affect the current session`() = runBlocking<Unit> {
+        val firstPlayback = RecordingPlayback()
+        val secondPlayback = RecordingPlayback()
+        val engine = RecordingEngine(ArrayDeque(listOf(firstPlayback, secondPlayback)))
+        val focus = RecordingAudioFocus()
+        val coordinator = coordinator(engine, focus)
+
+        val firstSession = coordinator.play(ready(engine))
+            .shouldBeInstanceOf<TtsPlaybackStart.Started>()
+            .session
+        firstPlayback.emit(TtsEnginePlaybackEvent.Started)
+        settle()
+
+        val secondSession = coordinator.play(ready(engine))
+            .shouldBeInstanceOf<TtsPlaybackStart.Started>()
+            .session
+        firstPlayback.stopCount shouldBe 1
+        firstSession.state.value shouldBe TtsPlaybackState.Stopped(TtsStopReason.Replaced)
+        firstSession.stop() shouldBe TtsStopResult.AlreadyTerminal
+
+        secondPlayback.emit(TtsEnginePlaybackEvent.Started)
+        settle()
+        secondSession.state.value shouldBe TtsPlaybackState.Speaking()
+        secondSession.stop() shouldBe TtsStopResult.Stopped
+        secondPlayback.stopCount shouldBe 1
+        secondSession.state.value shouldBe TtsPlaybackState.Stopped(TtsStopReason.Requested)
+    }
+
+    private fun kotlinx.coroutines.CoroutineScope.coordinator(
+        engine: RecordingEngine,
+        focus: RecordingAudioFocus,
+    ) = TtsPlaybackCoordinator(
+        scope = this,
+        audioFocus = focus,
+        mapPreparation = { _, _ -> error("Revalidation is expected to stay ready") },
+    )
+
+    private suspend fun settle() {
+        repeat(3) { yield() }
+    }
+
+    private fun ready(engine: RecordingEngine) = RuntimeReadyTts(
+        owner = this,
+        engine = engine,
+        request = REQUEST,
+        segments = listOf(TtsTextSegment(REQUEST.text, 0)),
+        firstProviderRequest = PROVIDER_READY,
+    )
+
+    private class RecordingEngine(
+        private val playbacks: ArrayDeque<RecordingPlayback>,
+    ) : TtsEngine {
+        override val catalogEntry = ENGINE
+        override val presentation = PRESENTATION
+        override val capabilities = CAPABILITIES
+
+        override suspend fun inspectDevice() = TtsEngineDeviceAvailability.Available
+
+        override suspend fun inspectVoices() = TtsVoiceInspection.Available(ENGINE_ID, listOf(VOICE), VOICE.id)
+
+        override suspend fun prepare(request: ResolvedTtsRequest) = TtsEnginePreparation.Ready(PROVIDER_READY)
+
+        override suspend fun revalidate(ready: ReadyTtsEngineRequest) = TtsEnginePreparation.Ready(PROVIDER_READY)
+
+        override suspend fun play(ready: ReadyTtsEngineRequest): TtsEngineExecution {
+            return TtsEngineExecution.Started(playbacks.removeFirst())
+        }
+    }
+
+    private class RecordingPlayback : TtsEnginePlayback {
+        private val channel = Channel<TtsEnginePlaybackEvent>(Channel.UNLIMITED)
+        override val events: Flow<TtsEnginePlaybackEvent> = channel.receiveAsFlow()
+        var stopCount = 0
+            private set
+
+        suspend fun emit(event: TtsEnginePlaybackEvent) {
+            channel.send(event)
+        }
+
+        override suspend fun stop(): TtsEngineStopResult {
+            stopCount += 1
+            return TtsEngineStopResult.Stopped
+        }
+    }
+
+    private class RecordingAudioFocus : TtsAudioFocus {
+        private var held = false
+        var abandonCount = 0
+            private set
+
+        override val isOffered = true
+
+        override fun request(onLost: () -> Unit): Boolean {
+            held = true
+            return true
+        }
+
+        override fun abandon() {
+            if (!held) return
+            held = false
+            abandonCount += 1
+        }
+    }
+
+    private companion object {
+        val LANGUAGE = LanguageTag.require("en-US")
+        val PROVIDER_ID = TtsProviderId("test")
+        val ENGINE_ID = TtsEngineId("test-engine")
+        val ENGINE = KnownTtsEngine(
+            id = ENGINE_ID,
+            providerId = PROVIDER_ID,
+            providerName = "Test provider",
+            engineName = "Test engine",
+            buildAvailability = TtsEngineBuildAvailability.Included,
+            artwork = TtsEngineArtwork.Bundled(1),
+            details = TtsEngineDetails("Test engine", "Test processing", "Test privacy"),
+        )
+        val PRESENTATION = TtsProviderPresentation(PROVIDER_ID, "Test provider", "Test engine")
+        val CAPABILITIES = TtsProviderCapabilities(
+            rangeProgress = TtsOptionalCapability.Unsupported,
+            speechRate = TtsParameterSupport.Unsupported,
+            pitch = TtsParameterSupport.Unsupported,
+            inputLimit = TtsInputLimit.Unspecified,
+        )
+        val VOICE = TtsVoice(
+            id = TtsVoiceId(PROVIDER_ID, ENGINE_ID, "voice"),
+            name = "Voice",
+            language = LANGUAGE,
+            processing = TtsVoiceProcessing.OnDevice,
+        )
+        val REQUEST = ResolvedTtsRequest(
+            text = "Text",
+            language = LANGUAGE,
+            engine = ENGINE_ID,
+            voice = VOICE,
+            parameters = TtsParameters(),
+            networkProcessingAllowed = false,
+        )
+        val PROVIDER_READY = object : ReadyTtsEngineRequest {}
+    }
+}

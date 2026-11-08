@@ -1,7 +1,7 @@
 package tachiyomi.domain.chapter.model
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 data class Chapter(
     val id: Long,

@@ -2,6 +2,8 @@ package app.katari.sync.client.firstsync
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.domain.profile.ProfileSeedPreferences
+import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.record.LocalRef
@@ -10,8 +12,6 @@ import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
-import mihon.domain.profile.ProfileSeedPreferences
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock

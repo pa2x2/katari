@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.source.lnreader
 
 import android.content.SharedPreferences
+import app.katari.script.runtime.ScriptNetwork
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceScreen
@@ -10,7 +11,6 @@ import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginCalls
 import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
 import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPlugins
 import eu.kanade.tachiyomi.source.lnreader.settings.lnReaderSettings
-import mihon.script.runtime.ScriptNetwork
 
 /** Makes book sources of LNReader plugins, for the extension loader. */
 @Inject

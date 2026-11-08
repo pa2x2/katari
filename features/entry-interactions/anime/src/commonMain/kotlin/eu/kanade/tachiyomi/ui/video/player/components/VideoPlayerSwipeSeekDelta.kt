@@ -3,12 +3,12 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.surface.OverlayPill
+import app.katari.presentation.kit.surface.OverlayStyle
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.OverlayPill
-import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import kotlin.math.abs
 
 /** How far a sideways swipe moves playback, such as "+1:15" or "−0:20", while the timeline shows where it lands. */

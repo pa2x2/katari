@@ -1,11 +1,11 @@
 package eu.kanade.presentation.util
 
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.network.NetworkConnectivity
+import app.katari.entry.interactions.catalogue.EntryCatalogueNoResultsException
+import app.katari.script.runtime.ScriptException
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.failure.ExtensionCodeException
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.network.NetworkConnectivity
-import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
-import mihon.script.runtime.ScriptException
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource

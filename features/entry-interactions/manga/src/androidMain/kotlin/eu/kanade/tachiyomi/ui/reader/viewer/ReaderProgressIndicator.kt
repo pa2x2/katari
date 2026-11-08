@@ -13,9 +13,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.view.isVisible
+import app.katari.entry.interactions.runtime.EntryInteractionTheme
+import app.katari.presentation.kit.progress.CombinedCircularProgressIndicator
 import com.google.android.material.progressindicator.CircularProgressIndicator
-import mihon.entry.interactions.runtime.EntryInteractionTheme
-import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 
 /**
  * A wrapper for [CircularProgressIndicator] that always rotates.

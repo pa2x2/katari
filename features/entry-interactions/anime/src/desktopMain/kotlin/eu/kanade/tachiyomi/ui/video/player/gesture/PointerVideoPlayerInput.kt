@@ -10,9 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
-import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The desktop's mouse, touchpad and keys: the mouse's buttons ([videoPlayerMouse]), scrolling ([videoPlayerWheel]) and

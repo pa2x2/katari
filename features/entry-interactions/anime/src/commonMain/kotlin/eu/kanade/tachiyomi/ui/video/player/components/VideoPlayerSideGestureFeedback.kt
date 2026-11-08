@@ -19,20 +19,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.VolumeOff
+import app.katari.icons.materialsymbols.automirroredrounded.VolumeUp
+import app.katari.icons.materialsymbols.rounded.Brightness6
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.progress.MediaLevelIndicator
+import app.katari.presentation.kit.surface.OverlayPill
+import app.katari.presentation.kit.surface.OverlayStyle
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import kotlinx.coroutines.delay
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
-import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
-import mihon.icons.materialsymbols.rounded.Brightness6
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.progress.MediaLevelIndicator
-import mihon.presentation.kit.surface.OverlayPill
-import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import java.text.NumberFormat
 
 private const val SIDE_GESTURE_FEEDBACK_VISIBLE_DURATION_MS = 900L

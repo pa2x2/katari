@@ -6,9 +6,9 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.net.toUri
+import app.katari.text.recognition.api.image.ImageContentKey
+import app.katari.text.recognition.ui.playground.BitmapTextRecognitionImage
 import dev.zacsweers.metro.Inject
-import mihon.text.recognition.api.image.ImageContentKey
-import mihon.text.recognition.ui.playground.BitmapTextRecognitionImage
 import tachiyomi.domain.storage.DocumentUri
 
 /** Reads the picked content once for its key and decodes it into a software bitmap, which recognition reads whole. */

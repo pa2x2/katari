@@ -1,14 +1,14 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
 import androidx.compose.runtime.saveable.Saver
-import mihon.core.common.CustomPreferences
-import mihon.core.common.HomeScreenTabs
-import mihon.core.common.homeScreenContentTabOrder
-import mihon.core.common.navigation.HomeNavigationConfiguration
-import mihon.core.common.navigation.defaultHomeNavigationConfiguration
-import mihon.core.common.navigation.resolveHomeNavigationConfiguration
-import mihon.core.common.resolveHomeScreenTab
-import mihon.core.common.toHomeScreenTabs
+import app.katari.core.common.CustomPreferences
+import app.katari.core.common.HomeScreenTabs
+import app.katari.core.common.homeScreenContentTabOrder
+import app.katari.core.common.navigation.HomeNavigationConfiguration
+import app.katari.core.common.navigation.defaultHomeNavigationConfiguration
+import app.katari.core.common.navigation.resolveHomeNavigationConfiguration
+import app.katari.core.common.resolveHomeScreenTab
+import app.katari.core.common.toHomeScreenTabs
 
 internal data class HomeNavigationEditorDraft(
     val configuration: HomeNavigationConfiguration,

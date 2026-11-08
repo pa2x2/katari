@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen
 
-import mihon.core.platform.network.NetworkConnectivity
-import mihon.entry.interactions.download.EntryDownloadSettingsFeature
-import mihon.entry.interactions.translate.EntryTranslateFeature
-import mihon.entry.interactions.translate.EntryTranslatePreferences
+import app.katari.core.platform.network.NetworkConnectivity
+import app.katari.entry.interactions.download.EntryDownloadSettingsFeature
+import app.katari.entry.interactions.translate.EntryTranslateFeature
+import app.katari.entry.interactions.translate.EntryTranslatePreferences
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 

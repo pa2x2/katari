@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.subtitle
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asComposeImageBitmap
-import mihon.video.engine.spi.player.SubtitleImage
+import app.katari.video.engine.spi.player.SubtitleImage
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.ColorAlphaType
 import org.jetbrains.skia.ColorType

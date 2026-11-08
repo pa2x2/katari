@@ -4,6 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.entry.interactions.migration.EntryMigrationSubject
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.sourcemigration.dialog.MigrateEntryDialog
+import app.katari.sourcemigration.list.MigrationListScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -12,10 +16,6 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.migration.EntryMigrationSubject
-import mihon.feature.migration.dialog.MigrateEntryDialog
-import mihon.feature.migration.list.MigrationListScreen
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 
 class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen() {

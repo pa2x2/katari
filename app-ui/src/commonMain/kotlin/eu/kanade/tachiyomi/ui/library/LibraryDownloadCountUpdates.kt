@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.library
 
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.entry.interactions.download.EntryDownloadStatus
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.scan
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.entry.interactions.download.EntryDownloadStatus
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 

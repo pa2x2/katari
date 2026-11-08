@@ -1,5 +1,10 @@
 package eu.kanade.tachiyomi.ui.video.player.screen
 
+import app.katari.core.platform.clipboard.TextClipboard
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.presentation.kit.window.WindowFullScreen
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerOrientationRequests
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngines
@@ -11,11 +16,6 @@ import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.surface.SeekPreviewSurface
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolumeControl
-import mihon.core.platform.clipboard.TextClipboard
-import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.presentation.kit.window.WindowFullScreen
 
 /**
  * What the player screen gets from the platform that hosts it: the owners that outlive each episode's composition, the

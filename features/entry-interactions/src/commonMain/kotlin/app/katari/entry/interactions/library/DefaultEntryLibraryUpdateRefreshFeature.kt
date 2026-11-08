@@ -1,0 +1,73 @@
+package app.katari.entry.interactions.library
+
+import app.katari.entry.interactions.download.EntryAutomaticDownloadBatch
+import app.katari.entry.interactions.download.EntryAutomaticDownloadCoordinator
+import app.katari.entry.interactions.source.EntrySourceRefreshFailure
+import app.katari.entry.interactions.source.EntrySourceRefreshFeature
+import app.katari.entry.interactions.source.EntrySourceRefreshRequest
+import app.katari.entry.interactions.source.EntrySourceRefreshResult
+import app.katari.entry.interactions.source.EntrySourceRefreshWindow
+
+internal class DefaultEntryLibraryUpdateRefreshFeature(
+    private val sourceRefresh: EntrySourceRefreshFeature,
+    private val automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
+) : EntryLibraryUpdateRefreshFeature {
+    override fun newSession(): EntryLibraryUpdateRefreshSession {
+        return DefaultEntryLibraryUpdateRefreshSession(this)
+    }
+
+    private suspend fun refresh(
+        request: EntryLibraryUpdateRefreshRequest,
+        automaticDownloadBatch: EntryAutomaticDownloadBatch,
+    ): EntryLibraryUpdateRefreshResult {
+        return when (
+            val result = sourceRefresh.refresh(
+                EntrySourceRefreshRequest(
+                    entry = request.entry,
+                    fetchDetails = request.fetchMetadata,
+                    fetchChildren = true,
+                    manual = false,
+                    fetchWindow = EntrySourceRefreshWindow(
+                        lowerBound = request.fetchWindowLowerBound,
+                        upperBound = request.fetchWindowUpperBound,
+                    ),
+                    firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
+                    recordsUpdateCheck = false,
+                ),
+            )
+        ) {
+            is EntrySourceRefreshResult.Refreshed -> {
+                val newChildren = result.insertedChildren.sortedByDescending { it.sourceOrder }
+                if (newChildren.isNotEmpty()) {
+                    automaticDownloadBatch.enqueue(request.entry, newChildren)
+                }
+                EntryLibraryUpdateRefreshResult.Updated(newChildren, result.joinedEntryIds)
+            }
+            is EntrySourceRefreshResult.SourceUnavailable -> EntryLibraryUpdateRefreshResult.SourceUnavailable
+            is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
+                EntrySourceRefreshFailure.NoChildren -> EntryLibraryUpdateRefreshResult.NoChildren
+                is EntrySourceRefreshFailure.Operation -> {
+                    EntryLibraryUpdateRefreshResult.OperationalFailure(reason.error)
+                }
+            }
+        }
+    }
+
+    private class DefaultEntryLibraryUpdateRefreshSession(
+        private val feature: DefaultEntryLibraryUpdateRefreshFeature,
+    ) : EntryLibraryUpdateRefreshSession {
+        private val automaticDownloadBatch = feature.automaticDownloads().newLibraryUpdateBatch()
+        private var completed = false
+
+        override suspend fun refresh(request: EntryLibraryUpdateRefreshRequest): EntryLibraryUpdateRefreshResult {
+            check(!completed) { "Cannot refresh after the Library update session completed" }
+            return feature.refresh(request, automaticDownloadBatch)
+        }
+
+        override fun complete() {
+            if (completed) return
+            completed = true
+            automaticDownloadBatch.complete()
+        }
+    }
+}

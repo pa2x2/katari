@@ -1,11 +1,11 @@
 plugins {
-    alias(mihonx.plugins.android.library)
-    alias(mihonx.plugins.compose)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.compose)
+    alias(katari.plugins.spotless)
 }
 
 android {
-    namespace = "mihon.entry.interactions.download.notification"
+    namespace = "app.katari.entry.interactions.download.notification"
 }
 
 dependencies {

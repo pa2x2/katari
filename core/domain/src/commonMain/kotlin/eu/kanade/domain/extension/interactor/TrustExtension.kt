@@ -1,5 +1,7 @@
 package eu.kanade.domain.extension.interactor
 
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.repository.ExtensionStoreRepository
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import kotlinx.coroutines.flow.Flow
@@ -7,8 +9,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.preference.getAndSet
 
 @Inject

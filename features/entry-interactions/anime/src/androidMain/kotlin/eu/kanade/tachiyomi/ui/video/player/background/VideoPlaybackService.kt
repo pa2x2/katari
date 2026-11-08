@@ -7,9 +7,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
+import app.katari.entry.interactions.media.playback.VideoPlaybackNotifications
 import tachiyomi.i18n.*
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 /**
  * Keeps an episode playing after the player leaves the screen. VideoPlayerActivity still owns the player and its

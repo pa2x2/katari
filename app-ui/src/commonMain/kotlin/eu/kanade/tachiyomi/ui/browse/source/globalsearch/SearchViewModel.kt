@@ -4,6 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.catalogue.EntryCatalogueSearchRequest
+import app.katari.entry.interactions.catalogue.EntryCatalogueSearchResult
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.SourceExtensionPackages
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
@@ -20,10 +24,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueSearchRequest
-import mihon.entry.interactions.catalogue.EntryCatalogueSearchResult
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry

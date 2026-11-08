@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen.appearance
 
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.ThemeMode
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
 
 /** How the platform puts the theme the user picks into effect, beyond storing it. */
 @PlatformFacility

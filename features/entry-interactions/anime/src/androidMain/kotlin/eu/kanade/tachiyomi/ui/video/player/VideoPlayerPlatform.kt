@@ -8,10 +8,10 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.core.content.getSystemService
+import app.katari.entry.interactions.reader.settings.ReaderBasePreferences
+import app.katari.entry.interactions.runtime.registerEntryInteractionSecureScreen
+import app.katari.entry.interactions.runtime.setEntryInteractionContent
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
-import mihon.entry.interactions.runtime.setEntryInteractionContent
 
 internal fun AppCompatActivity.registerAnimePlayerSecureScreen(
     readerPreferences: ReaderBasePreferences,

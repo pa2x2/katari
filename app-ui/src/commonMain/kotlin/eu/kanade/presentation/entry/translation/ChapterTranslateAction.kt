@@ -1,8 +1,8 @@
 package eu.kanade.presentation.entry.translation
 
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.translate.EntryTranslateStatus
 import dev.icerock.moko.resources.StringResource
-import mihon.entry.interactions.download.EntryDownloadState
-import mihon.entry.interactions.translate.EntryTranslateStatus
 import tachiyomi.i18n.*
 
 /** What a chapter's translation menu can ask for. */

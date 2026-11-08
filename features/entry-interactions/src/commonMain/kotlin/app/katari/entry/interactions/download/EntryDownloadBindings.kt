@@ -1,0 +1,167 @@
+package app.katari.entry.interactions.download
+
+import app.katari.core.metro.AppCoroutineScope
+import app.katari.core.platform.network.NetworkConnectivity
+import app.katari.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
+import app.katari.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
+import app.katari.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
+import app.katari.entry.interactions.download.host.EntryDownloadSourceAccessResolver
+import app.katari.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
+import app.katari.entry.interactions.download.maintenance.merge.EntryDownloadMergeParticipant
+import app.katari.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
+import app.katari.entry.interactions.durable.EntryDurableParticipant
+import app.katari.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import app.katari.entry.interactions.merge.consequence.EntryMergeDurableEvent
+import app.katari.entry.interactions.migration.consequence.EntryMigrationDurableEvent
+import app.katari.entry.interactions.persistence.backup.EntryBackupStateParticipant
+import app.katari.entry.interactions.runtime.EntryInteractions
+import app.katari.entry.interactions.state.EntryBookmarkProcessor
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.IntoSet
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.plus
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.source.service.SourceManager
+
+@ContributesTo(AppScope::class)
+@BindingContainer
+object EntryDownloadBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun runtimeCoordinator(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        interactions: EntryInteractions,
+        @AppCoroutineScope scope: CoroutineScope,
+    ): EntryDownloadRuntimeCoordinator = DefaultEntryDownloadRuntimeFeature(
+        applicableTypes = downloadProcessors.keys,
+        interaction = interactions.download,
+        scope = scope + Dispatchers.Default,
+    )
+
+    @Provides
+    internal fun runtimeFeature(coordinator: EntryDownloadRuntimeCoordinator): EntryDownloadRuntimeFeature =
+        coordinator
+
+    @Provides
+    internal fun run(
+        downloads: EntryDownloadRuntimeCoordinator,
+        downloadPreferences: DownloadPreferences,
+        network: NetworkConnectivity,
+    ): EntryDownloadRun = EntryDownloadRun(
+        downloads = downloads,
+        downloadPreferences = downloadPreferences,
+        network = network,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun sourceAccessResolver(sourceManager: SourceManager): EntryDownloadSourceAccessResolver =
+        SourceManagerEntryDownloadSourceAccessResolver(sourceManager)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun actionFeature(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bulkCandidateProcessors: Map<EntryType, EntryBulkDownloadCandidateProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
+        interactions: EntryInteractions,
+        sourceAccessResolver: EntryDownloadSourceAccessResolver,
+    ): EntryDownloadActionFeature = DefaultEntryDownloadActionFeature(
+        types = EntryDownloadActionTypes(
+            individual = downloadProcessors.keys,
+            bulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys,
+            bookmarkedBulk = downloadProcessors.keys intersect bulkCandidateProcessors.keys intersect
+                bookmarkProcessors.keys,
+        ),
+        interaction = interactions.download,
+        sourceAccessResolver = sourceAccessResolver,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun lifecycleEventSink(feature: () -> EntryDownloadLifecycleFeature): EntryDownloadLifecycleEventSink =
+        EntryDownloadLifecycleEventSink { event -> feature().onEvent(event) }
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun lifecycleFeature(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        bookmarkProcessors: Map<EntryType, EntryBookmarkProcessor>,
+        downloadPreferences: DownloadPreferences,
+        getCategories: GetCategories,
+        getEntryWithChapters: GetEntryWithChapters,
+        entryRepository: EntryRepository,
+        interactions: EntryInteractions,
+        globalLibraryPreferences: GlobalLibraryPreferences,
+    ): EntryDownloadLifecycleFeature = DefaultEntryDownloadLifecycleFeature(
+        downloadTypes = downloadProcessors.keys,
+        bookmarkProtectedTypes = downloadProcessors.keys intersect bookmarkProcessors.keys,
+        downloadPreferences = downloadPreferences,
+        getCategories = getCategories,
+        getEntryWithChapters = getEntryWithChapters,
+        entryRepository = entryRepository,
+        downloads = interactions.download,
+        globalLibraryPreferences = globalLibraryPreferences,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun optionsFeature(
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
+        interactions: EntryInteractions,
+    ): EntryDownloadOptionsFeature = DefaultEntryDownloadOptionsFeature(
+        applicableTypes = optionsProcessors.keys,
+        interaction = interactions.download,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun configurationBackupFeature(
+        optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
+        repository: DownloadPreferencesRepository,
+    ): EntryDownloadConfigurationBackupFeature = DefaultEntryDownloadConfigurationBackupFeature(
+        applicableTypes = optionsProcessors.keys,
+        repository = repository,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun maintenanceFeature(
+        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
+        interactions: EntryInteractions,
+        ownership: EntryMergeDownloadOwnershipProjection,
+    ): EntryDownloadMaintenanceFeature = DefaultEntryDownloadMaintenanceFeature(
+        types = downloadProcessors.keys,
+        interaction = interactions.download,
+        ownership = ownership,
+    )
+
+    @Provides
+    @IntoSet
+    internal fun migrationDurableParticipant(
+        feature: () -> EntryDownloadMaintenanceFeature,
+    ): EntryDurableParticipant<EntryMigrationDurableEvent> = EntryDownloadMigrationParticipant(feature)
+
+    @Provides
+    @IntoSet
+    internal fun mergeDurableParticipant(
+        feature: () -> EntryDownloadMaintenanceFeature,
+    ): EntryDurableParticipant<EntryMergeDurableEvent> = EntryDownloadMergeParticipant(feature)
+
+    @Provides
+    @IntoSet
+    internal fun configurationBackupState(
+        feature: () -> EntryDownloadConfigurationBackupFeature,
+    ): EntryBackupStateParticipant = EntryDownloadConfigurationBackupParticipant(feature)
+}

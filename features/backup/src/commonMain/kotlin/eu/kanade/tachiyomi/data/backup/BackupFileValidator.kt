@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.data.backup
 
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.profiles.core.ProfileBackup
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.CancellationException
-import mihon.domain.extension.model.ExtensionStore
-import mihon.feature.profiles.core.ProfileBackup
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.StubSource

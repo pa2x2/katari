@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.settings.widget
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.theme.ContentTone
 
 @Composable
 fun TextPreferenceWidget(

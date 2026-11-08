@@ -1,12 +1,12 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

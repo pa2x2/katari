@@ -2,8 +2,8 @@ package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.surface.pulsingHighlight
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.surface.pulsingHighlight
 
 @Composable
 fun PreferenceGroupHeader(

@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.model.ExtensionStoreFormat
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.ExtensionStoreFormat
 
 @Serializable
 class BackupExtensionStore(

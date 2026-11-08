@@ -1,0 +1,61 @@
+package app.katari.entry.interactions.media
+
+import app.katari.entry.viewer.settings.ViewerSettingScope
+import app.katari.entry.viewer.settings.ViewerSettingsProvider
+import eu.kanade.tachiyomi.source.entry.EntryType
+
+/** Type-owned collection of genuine viewer engines and their settings definitions. */
+interface EntryViewerSettingsProvider {
+    val surfaces: List<ViewerSettingsProvider>
+
+    /** Removes type-owned legacy viewer state while preserving unrelated flags. */
+    fun normalizeLegacyViewerFlags(flags: Long): Long = flags
+}
+
+class DefaultEntryViewerSettingsProvider(
+    override val surfaces: List<ViewerSettingsProvider>,
+    private val legacyViewerFlagsNormalization: (Long) -> Long = { it },
+) : EntryViewerSettingsProvider {
+    init {
+        require(surfaces.isNotEmpty()) { "A Viewer Settings provider must contribute at least one surface" }
+        val duplicateSurfaceIds = surfaces.groupingBy(ViewerSettingsProvider::id)
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
+        require(duplicateSurfaceIds.isEmpty()) {
+            "Duplicate Viewer Settings surfaces: $duplicateSurfaceIds"
+        }
+        surfaces.forEach { surface ->
+            require(surface.id.isNotBlank()) { "Viewer Settings surface ID must not be blank" }
+            val duplicateSettingIds = surface.settings.groupingBy { it.id }.eachCount().filterValues { it > 1 }.keys
+            require(duplicateSettingIds.isEmpty()) {
+                "Duplicate Viewer Settings definitions for ${surface.id}: $duplicateSettingIds"
+            }
+            surface.settings.forEach { setting ->
+                require(setting.id.providerId == surface.id) {
+                    "Viewer setting ${setting.id} must belong to surface ${surface.id}"
+                }
+            }
+            surface.sharedSettingDefinitions.forEach { (sharedSettingId, definition) ->
+                require(definition in surface.settings) {
+                    "Shared reader setting ${sharedSettingId.value} must be included in surface ${surface.id} settings"
+                }
+                require(definition.scope == ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE) {
+                    "Shared reader setting ${sharedSettingId.value} must support entry overrides"
+                }
+            }
+        }
+    }
+
+    override fun normalizeLegacyViewerFlags(flags: Long): Long = legacyViewerFlagsNormalization(flags)
+}
+
+interface EntryViewerSettingsInteraction {
+    fun provider(type: EntryType): EntryViewerSettingsProvider?
+}
+
+internal class ProviderBackedEntryViewerSettingsInteraction(
+    private val providers: Map<EntryType, EntryViewerSettingsProvider>,
+) : EntryViewerSettingsInteraction {
+    override fun provider(type: EntryType): EntryViewerSettingsProvider? = providers[type]
+}

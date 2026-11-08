@@ -1,12 +1,12 @@
 import com.android.build.api.dsl.ManagedVirtualDevice
 
 plugins {
-    alias(mihonx.plugins.android.test)
+    alias(katari.plugins.android.test)
     alias(libs.plugins.androidx.baselineProfile)
 }
 
 android {
-    namespace = "mihon.baselineprofile"
+    namespace = "app.katari.baselineprofile"
 
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

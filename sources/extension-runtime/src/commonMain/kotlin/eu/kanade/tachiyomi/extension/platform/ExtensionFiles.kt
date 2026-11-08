@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.extension.platform
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import java.io.File
 
 /** The folders extensions are kept in, which survive until the app is uninstalled, apart from [downloadDir]. */

@@ -3,10 +3,10 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.button.ResumeButton
+import app.katari.presentation.kit.button.ResumeButtonSize
+import app.katari.presentation.kit.control.SelectionMark
 import dev.icerock.moko.resources.StringResource
-import mihon.presentation.kit.button.ResumeButton
-import mihon.presentation.kit.button.ResumeButtonSize
-import mihon.presentation.kit.control.SelectionMark
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**

@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import androidx.media3.common.PlaybackException
-import mihon.video.engine.spi.player.VideoPlayerError
+import app.katari.video.engine.spi.player.VideoPlayerError
 
 internal fun PlaybackException.toVideoPlayerError(): VideoPlayerError = VideoPlayerError(
     category = when (errorCode) {

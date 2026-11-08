@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.presentation
 
 import androidx.compose.runtime.Composable
-import mihon.text.recognition.api.configuration.TextRecognitionPipelineOrigin
-import mihon.text.recognition.api.configuration.TextRecognitionPipelineResolution
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
-import mihon.text.recognition.ui.settings.componentNames
+import app.katari.text.recognition.api.configuration.TextRecognitionPipelineOrigin
+import app.katari.text.recognition.api.configuration.TextRecognitionPipelineResolution
+import app.katari.text.recognition.api.host.TextRecognitionHostActions
+import app.katari.text.recognition.api.pipeline.TextRecognitionPipelineSelection
+import app.katari.text.recognition.ui.settings.componentNames
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

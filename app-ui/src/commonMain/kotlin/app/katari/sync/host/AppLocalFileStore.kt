@@ -1,13 +1,13 @@
 package app.katari.sync.host
 
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderFont
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.LocalFileStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.cache.CoverCache
-import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
-import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import java.io.File
 
 /** The files sync carries where the app keeps them: custom covers in the cover cache, fonts in the font library. */

@@ -17,10 +17,10 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.skiaCanvas
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import app.katari.presentation.kit.surface.MediaBackdrop
+import app.katari.video.engine.spi.player.ComposeVideoOutput
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.picture.placeSelfPlacedPicture
-import mihon.presentation.kit.surface.MediaBackdrop
-import mihon.video.engine.spi.player.ComposeVideoOutput
-import mihon.video.engine.spi.player.VideoPlayer
 import org.jetbrains.skia.FilterMipmap
 import org.jetbrains.skia.FilterMode
 import org.jetbrains.skia.MipmapMode

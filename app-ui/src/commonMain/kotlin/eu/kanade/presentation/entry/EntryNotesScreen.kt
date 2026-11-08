@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarTitle
+import app.katari.presentation.kit.navigation.Scaffold
 import eu.kanade.presentation.entry.components.EntryNotesTextArea
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarTitle
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

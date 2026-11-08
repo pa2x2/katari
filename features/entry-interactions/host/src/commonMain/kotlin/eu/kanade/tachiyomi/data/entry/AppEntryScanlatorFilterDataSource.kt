@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.data.entry
 
+import app.katari.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery

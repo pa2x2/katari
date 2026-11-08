@@ -2,10 +2,10 @@ package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.list.ThemeChoiceRow
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.ui.model.AppTheme
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.list.ThemeChoiceRow
 
 @Composable
 fun AppThemePreferenceWidget(

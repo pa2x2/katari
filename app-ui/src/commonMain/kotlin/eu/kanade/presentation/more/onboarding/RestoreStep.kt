@@ -3,13 +3,13 @@ package eu.kanade.presentation.more.onboarding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.SettingsBackupRestore
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.list.ControlRow
+import app.katari.presentation.kit.list.RowGroup
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.SettingsBackupRestore
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.feedback.GuidePageHeading
-import mihon.presentation.kit.list.ControlRow
-import mihon.presentation.kit.list.RowGroup
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

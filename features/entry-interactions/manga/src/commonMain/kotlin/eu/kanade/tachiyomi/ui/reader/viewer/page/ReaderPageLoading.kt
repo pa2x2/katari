@@ -1,18 +1,18 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.page
 
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.manga.reader.image.background.PageBackground
+import app.katari.entry.interactions.manga.reader.image.background.chooseBackground
+import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
+import app.katari.entry.interactions.manga.reader.image.source.PageImage
+import app.katari.entry.interactions.manga.reader.image.source.openPageImage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
-import mihon.entry.interactions.manga.reader.image.background.PageBackground
-import mihon.entry.interactions.manga.reader.image.background.chooseBackground
-import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
-import mihon.entry.interactions.manga.reader.image.source.PageImage
-import mihon.entry.interactions.manga.reader.image.source.openPageImage
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat

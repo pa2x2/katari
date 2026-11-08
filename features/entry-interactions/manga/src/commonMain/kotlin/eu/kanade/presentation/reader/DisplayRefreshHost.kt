@@ -12,10 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.viewer.settings.ViewerSettingBinding
+import app.katari.presentation.kit.theme.PageOverlayColors
 import kotlinx.coroutines.delay
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.viewer.settings.ViewerSettingBinding
-import mihon.presentation.kit.theme.PageOverlayColors
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable

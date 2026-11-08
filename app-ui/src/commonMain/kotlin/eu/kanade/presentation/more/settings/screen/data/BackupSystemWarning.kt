@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.data
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * A system setting known to keep backups from being created or restored properly, such as MIUI with its optimisation

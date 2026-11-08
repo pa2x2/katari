@@ -7,12 +7,12 @@ import app.katari.sync.client.account.LinkCodeLookup
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.ui.address.AddressCheck
 import app.katari.sync.ui.address.TypedAddressCheck
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 
 /**

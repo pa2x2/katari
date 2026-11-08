@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension.lnreader
 
+import app.katari.data.extension.model.lnreader.NetworkLnReaderPlugin
+import app.katari.profiles.core.ProfileStore
 import eu.kanade.tachiyomi.extension.file.FileExtensionKind
 import eu.kanade.tachiyomi.extension.file.FileExtensionStorage
 import eu.kanade.tachiyomi.extension.file.InstalledFileExtension
@@ -13,8 +15,6 @@ import eu.kanade.tachiyomi.source.lnreader.LnReaderSource
 import eu.kanade.tachiyomi.source.lnreader.LnReaderSourceFactory
 import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
 import kotlinx.serialization.encodeToString
-import mihon.data.extension.model.lnreader.NetworkLnReaderPlugin
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceProviderKind

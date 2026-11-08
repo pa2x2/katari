@@ -11,12 +11,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.StatusStrip
+import app.katari.presentation.kit.feedback.StatusStripTone
 import eu.kanade.tachiyomi.data.library.label
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.StatusStrip
-import mihon.presentation.kit.feedback.StatusStripTone
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

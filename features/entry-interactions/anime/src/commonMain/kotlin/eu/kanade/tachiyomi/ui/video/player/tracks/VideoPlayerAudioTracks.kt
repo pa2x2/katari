@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.tracks.AudioTrackSelection
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTrackGroup
+import app.katari.video.engine.spi.tracks.VideoTracks
+import app.katari.video.engine.spi.tracks.externalAudioTrackOf
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.tracks.AudioTrackSelection
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTrackGroup
-import mihon.video.engine.spi.tracks.VideoTracks
-import mihon.video.engine.spi.tracks.externalAudioTrackOf
 import java.util.Locale
 
 /**

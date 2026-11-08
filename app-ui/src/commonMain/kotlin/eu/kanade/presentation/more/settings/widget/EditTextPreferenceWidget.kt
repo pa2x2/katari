@@ -11,15 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Close
+import app.katari.icons.materialsymbols.roundedfilled.Error
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.field.TextField
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.roundedfilled.Error
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.field.TextField
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.surface.MediaBackdrop
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel.LoadingStep
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.surface.MediaBackdrop
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

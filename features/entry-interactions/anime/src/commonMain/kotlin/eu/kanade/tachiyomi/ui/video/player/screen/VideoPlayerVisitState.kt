@@ -4,7 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.entry.interactions.settings.AnimePlayerOrientation
+import app.katari.entry.interactions.settings.AnimePlayerOrientation
 
 /** Player screen state that lasts the whole visit to the player rather than one episode. */
 @Stable

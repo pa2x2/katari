@@ -1,16 +1,16 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.compose)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.compose)
 
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.valkyrie)
 }
 
 kotlin {
     android {
-        namespace = "mihon.icons.custommaterialsymbols"
+        namespace = "app.katari.icons.custommaterialsymbols"
     }
     desktop()
 
@@ -32,7 +32,7 @@ spotless {
 }
 
 valkyrie {
-    packageName = "mihon.icons.custommaterialsymbols"
+    packageName = "app.katari.icons.custommaterialsymbols"
     generateAtSync = true
 
     imageVector {

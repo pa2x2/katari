@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SelectRow
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.SelectRow
+import app.katari.presentation.kit.list.currentRowInset
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 
 private const val MAX_CHIP_OPTIONS = 5
 private const val MAX_CHIP_LABEL_LENGTH = 16

@@ -1,5 +1,11 @@
 package eu.kanade.tachiyomi.data.backup.models.compatibility
 
+import app.katari.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
+import app.katari.entry.interactions.media.backup.EntryViewerSettingsBackupState
+import app.katari.entry.interactions.persistence.backup.EntryBackupStateCodec
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.state.EntryProgressSnapshot
+import app.katari.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
@@ -7,12 +13,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupViewerSettingOverride
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
-import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupState
-import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.state.EntryProgressSnapshot
-import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 

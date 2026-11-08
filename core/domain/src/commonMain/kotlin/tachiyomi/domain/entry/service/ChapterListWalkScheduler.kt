@@ -1,6 +1,6 @@
 package tachiyomi.domain.entry.service
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /** Starts reading the older parts of chapter lists in the background, for every entry whose walk goes on. */
 @PlatformFacility

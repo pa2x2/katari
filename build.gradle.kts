@@ -1,7 +1,7 @@
-import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
-import mihon.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
-import mihon.gradle.extensionabi.ExtensionAbiCheckTask
-import mihon.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
+import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import app.katari.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
+import app.katari.gradle.extensionabi.ExtensionAbiCheckTask
+import app.katari.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
 import org.gradle.api.attributes.Bundling
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
@@ -91,7 +91,7 @@ plugins {
     alias(libs.plugins.moko.resources) apply false
     alias(libs.plugins.sqldelight) apply false
 
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
 }
 
 val buildLogic: IncludedBuild = gradle.includedBuild("build-logic")
@@ -299,27 +299,27 @@ fun registerEntrySdkAbiCheck(
     excludedElements = emptyList(),
 )
 
-val verifyEntrySourceApiAbi30 = registerEntrySdkAbiCheck(
-    taskName = "verifyEntrySourceApiAbi30",
-    baseline = "entry-source-api-sdk-3.0.0",
-    baselineLabel = "Entry SDK 3.0.0 entry-source-api",
-    expectedSha256Value = "c564e9494978a0fae1183421d199f1408025bbfaf855c8980e32cc7ab4aa33c3",
+val verifyEntrySourceApiAbi40 = registerEntrySdkAbiCheck(
+    taskName = "verifyEntrySourceApiAbi40",
+    baseline = "entry-source-api-sdk-4.0.0",
+    baselineLabel = "Entry SDK 4.0.0 entry-source-api",
+    expectedSha256Value = "f628ee7b88a6ab6efe377cafb72811fd069617a8ef4a5580f7b7aa669fb152b6",
     includedElements = listOf("eu.kanade.tachiyomi.source.entry.*"),
 )
-val verifyBookApiAbi30 = registerEntrySdkAbiCheck(
-    taskName = "verifyBookApiAbi30",
-    baseline = "book-api-sdk-3.0.0",
-    baselineLabel = "Entry SDK 3.0.0 book-api",
-    expectedSha256Value = "a71b395f6cb24d6d901a9350c2cf4e8ceb0f1597f823621f57d45df7c0af8dba",
-    includedElements = listOf("mihon.book.api.*"),
+val verifyBookApiAbi40 = registerEntrySdkAbiCheck(
+    taskName = "verifyBookApiAbi40",
+    baseline = "book-api-sdk-4.0.0",
+    baselineLabel = "Entry SDK 4.0.0 book-api",
+    expectedSha256Value = "50b16e30ba233bb06e3adb51e719367098fa70a2cc4a9007017aeff4b896bee2",
+    includedElements = listOf("app.katari.book.api.*"),
 )
 // Only the part extensions use: the rest of core-common is the app's own code, which the SDK publishes because
 // entry-source-api depends on the module.
-val verifyCoreCommonAbi30 = registerEntrySdkAbiCheck(
-    taskName = "verifyCoreCommonAbi30",
-    baseline = "core-common-sdk-3.0.0",
-    baselineLabel = "Entry SDK 3.0.0 core-common",
-    expectedSha256Value = "f3ebde6363a72e63a8269554c579142f7626667a7a523ac5eb248f0610d09d58",
+val verifyCoreCommonAbi40 = registerEntrySdkAbiCheck(
+    taskName = "verifyCoreCommonAbi40",
+    baseline = "core-common-sdk-4.0.0",
+    baselineLabel = "Entry SDK 4.0.0 core-common",
+    expectedSha256Value = "e79a4ebce2500e2bc169e7593396f2c21971b5c6e0409869640590e055b50802",
     includedElements = listOf(
         "eu.kanade.tachiyomi.network.*",
         "eu.kanade.tachiyomi.util.*",
@@ -329,8 +329,8 @@ val verifyCoreCommonAbi30 = registerEntrySdkAbiCheck(
 
 tasks.register("verifyEntrySdkAbi") {
     group = "verification"
-    description = "Checks runtime ABI compatibility with Katari extensions built against Entry SDK 3.0"
-    dependsOn(verifyEntrySourceApiAbi30, verifyBookApiAbi30, verifyCoreCommonAbi30)
+    description = "Checks runtime ABI compatibility with Katari extensions built against Entry SDK 4.0"
+    dependsOn(verifyEntrySourceApiAbi40, verifyBookApiAbi40, verifyCoreCommonAbi40)
 }
 
 tasks.register("verifyLegacySourceAbi") {

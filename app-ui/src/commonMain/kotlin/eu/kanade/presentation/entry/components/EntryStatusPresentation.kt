@@ -2,15 +2,15 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.EventUpcoming
-import mihon.icons.materialsymbols.automirroredrounded.Help
-import mihon.icons.materialsymbols.rounded.Check
-import mihon.icons.materialsymbols.rounded.Close
-import mihon.icons.materialsymbols.rounded.DoneAll
-import mihon.icons.materialsymbols.rounded.Schedule
-import mihon.icons.materialsymbols.rounded.Verified
-import mihon.icons.materialsymbols.roundedfilled.Pause
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.EventUpcoming
+import app.katari.icons.materialsymbols.automirroredrounded.Help
+import app.katari.icons.materialsymbols.rounded.Check
+import app.katari.icons.materialsymbols.rounded.Close
+import app.katari.icons.materialsymbols.rounded.DoneAll
+import app.katari.icons.materialsymbols.rounded.Schedule
+import app.katari.icons.materialsymbols.rounded.Verified
+import app.katari.icons.materialsymbols.roundedfilled.Pause
 import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

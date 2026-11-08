@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.util.system
 
+import app.katari.core.platform.PlatformContext
 import eu.kanade.domain.source.interactor.SourceListState
-import mihon.core.platform.PlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import java.util.Locale

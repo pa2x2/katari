@@ -7,12 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import mihon.presentation.kit.feedback.HoverTooltip
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.surface.OverlayPill
-import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.feedback.HoverTooltip
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.surface.OverlayPill
+import app.katari.presentation.kit.surface.OverlayStyle
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 
 /**
  * A round button on the media shade; [content] fills [contentSize] in the tone for its enabled state. Hovered with a

@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import mihon.entry.interactions.settings.AnimePlayerOrientation
+import app.katari.entry.interactions.settings.AnimePlayerOrientation
 
 /** Requests the player activity's orientation from the system. */
 internal class ActivityOrientationRequests(private val activity: Activity) : VideoPlayerOrientationRequests {

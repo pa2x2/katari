@@ -10,16 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.OverlayPanel
+import app.katari.presentation.kit.surface.OverlayPill
+import app.katari.presentation.kit.surface.OverlayStyle
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.OverlayPanel
-import mihon.presentation.kit.surface.OverlayPill
-import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
-import mihon.presentation.kit.window.currentWindowLayout
 
 internal data class VideoPlayerSeekPreviewState(
     val positionMs: Long = 0L,

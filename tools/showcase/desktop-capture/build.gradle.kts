@@ -3,8 +3,8 @@
 // accessibility trees and Compose semantics, clicks and types with AWT's Robot, and captures windows from the screen.
 // tools/showcase/pipeline/desktop starts the app with it.
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
 }
 
 tasks.jar {

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.extension.store
 
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
-import mihon.domain.extension.model.ExtensionStore
 
 /**
  * Whether [store]'s listings are of this very extension, as opposed to another build under the same name: an apk is

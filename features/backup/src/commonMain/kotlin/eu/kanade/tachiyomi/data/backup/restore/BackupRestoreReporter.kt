@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.restore
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /** Where a restore reports how far it got and how it ended, such as Android's notifications. */
 @PlatformFacility

@@ -11,13 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.viewer.chrome.ui.tap.ReaderTapAction
+import app.katari.entry.viewer.chrome.ui.tap.readerTapRegions
+import app.katari.presentation.kit.gesture.TapZone
+import app.katari.presentation.kit.gesture.TapZoneOverlay
+import app.katari.presentation.kit.gesture.TapZoneRole
 import eu.kanade.tachiyomi.ui.reader.viewer.current
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
-import mihon.entry.viewer.chrome.ui.tap.readerTapRegions
-import mihon.presentation.kit.gesture.TapZone
-import mihon.presentation.kit.gesture.TapZoneOverlay
-import mihon.presentation.kit.gesture.TapZoneRole
 
 /**
  * The tap zones of a viewer, shown over its pages for a moment so a reader learns where to tap: when the viewer opens

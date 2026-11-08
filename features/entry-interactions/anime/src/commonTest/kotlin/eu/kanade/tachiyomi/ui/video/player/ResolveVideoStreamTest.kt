@@ -1,5 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.entry.interactions.anime.download.AnimeDownloadProvider
+import app.katari.entry.interactions.anime.download.model.AnimeDownloadManifest
+import app.katari.entry.interactions.anime.download.model.DownloadedSubtitle
+import app.katari.entry.interactions.anime.download.model.DownloadedVideo
+import app.katari.entry.interactions.anime.download.model.EpisodePackage
+import app.katari.entry.interactions.anime.stream.StreamTypeProbe
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
@@ -19,12 +25,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.anime.download.AnimeDownloadProvider
-import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
-import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
-import mihon.entry.interactions.anime.download.model.DownloadedVideo
-import mihon.entry.interactions.anime.download.model.EpisodePackage
-import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.storage.ListedStorageFile

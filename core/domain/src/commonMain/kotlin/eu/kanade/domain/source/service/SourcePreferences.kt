@@ -1,5 +1,6 @@
 package eu.kanade.domain.source.service
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.domain.source.interactor.SetMigrateSorting
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedAnchor
@@ -8,7 +9,6 @@ import eu.kanade.domain.source.model.SourceFeedTimeline
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern

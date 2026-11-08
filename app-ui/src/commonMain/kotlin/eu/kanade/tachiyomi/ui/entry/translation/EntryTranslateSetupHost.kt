@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.ui.entry.translation
 
+import app.katari.core.platform.PlatformContext
+import app.katari.language.api.tag.LanguageTag
+import app.katari.model.artifacts.api.descriptor.ModelArtifactDescriptor
+import app.katari.model.artifacts.api.download.ModelArtifactDownloadApproval
+import app.katari.model.artifacts.api.state.ModelArtifactState
+import app.katari.text.recognition.api.component.TextRecognitionComponentId
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.model.TranslationModelDescriptor
+import app.katari.translation.api.provider.TranslationProviderDisclosure
 import kotlinx.coroutines.flow.Flow
-import mihon.core.platform.PlatformContext
-import mihon.language.api.tag.LanguageTag
-import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
-import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
-import mihon.model.artifacts.api.state.ModelArtifactState
-import mihon.text.recognition.api.component.TextRecognitionComponentId
-import mihon.translation.api.engine.TranslationEngineId
-import mihon.translation.api.model.TranslationModelDescriptor
-import mihon.translation.api.provider.TranslationProviderDisclosure
 
 /**
  * Where the fixes of the translation setup sheet are carried out: the platform's translation engines, text recognition

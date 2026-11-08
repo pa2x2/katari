@@ -1,7 +1,7 @@
 package tachiyomi.domain.library.service
 
+import app.katari.core.common.platform.PlatformFacility
 import kotlinx.coroutines.flow.Flow
-import mihon.core.common.platform.PlatformFacility
 
 /**
  * Automatic library updates, one schedule per profile, at the profile's own interval and device restrictions. A due

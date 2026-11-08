@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.strip
 
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.image.layout.isSpread
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import eu.kanade.tachiyomi.ui.reader.viewer.current
-import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.image.layout.isSpread
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import tachiyomi.core.common.util.system.SpreadSide
 
 /**

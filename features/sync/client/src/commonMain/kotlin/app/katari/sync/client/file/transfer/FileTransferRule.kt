@@ -1,10 +1,10 @@
 package app.katari.sync.client.file.transfer
 
+import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.sync.client.preference.SyncPreferences
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import mihon.core.platform.network.NetworkConnectivity
 
 /**
  * When custom covers and fonts may move (D022): on Wi-Fi, or on any network once the person allows mobile data.

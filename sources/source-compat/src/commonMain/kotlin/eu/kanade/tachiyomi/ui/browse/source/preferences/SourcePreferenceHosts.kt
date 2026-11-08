@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.source.preferences
 
 import android.content.Context
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.source.EntrySourceSettingsFeature
-import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.source.EntrySourceSettingsFeature
+import app.katari.entry.interactions.source.EntrySourceSettingsResolution
 
 /**
  * Opens sources' settings for the settings screen.

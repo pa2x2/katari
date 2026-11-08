@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.extension.kind
 
-import mihon.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ContentWarning
 
 /*
  * Manifest entries every ecosystem forked from Tachiyomi writes the same way, whatever it names their keys.

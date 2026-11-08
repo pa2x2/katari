@@ -1,17 +1,17 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
+import app.katari.core.archive.ArchiveOpener
+import app.katari.core.archive.openEpub
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.manga.download.DownloadManager
+import app.katari.entry.interactions.manga.download.DownloadProvider
+import app.katari.entry.interactions.manga.page.MangaPageStore
+import app.katari.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupStep
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.archive.ArchiveOpener
-import mihon.core.archive.openEpub
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.manga.download.DownloadProvider
-import mihon.entry.interactions.manga.page.MangaPageStore
-import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry

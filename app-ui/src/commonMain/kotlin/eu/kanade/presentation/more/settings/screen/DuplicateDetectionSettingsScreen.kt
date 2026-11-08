@@ -4,12 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.duplicate.DuplicateTitleExclusionsScreen
 import kotlinx.collections.immutable.persistentListOf
-import mihon.app.ui.di.LocalAppUiGraph
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource

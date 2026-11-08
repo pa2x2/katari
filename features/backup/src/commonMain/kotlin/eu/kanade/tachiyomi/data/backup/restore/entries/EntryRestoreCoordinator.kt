@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore.entries
 
+import app.katari.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
+import app.katari.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
@@ -9,8 +11,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.chunked
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import tachiyomi.data.Database
 
 internal class EntryRestoreCoordinator(

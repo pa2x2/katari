@@ -4,12 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import app.katari.video.engine.mpv.MpvVideoEngine
+import app.katari.video.engine.mpv.addon.MpvAddon
+import app.katari.video.engine.mpv.install.MpvAddonInstallation
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAddonProblemOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
-import mihon.video.engine.mpv.MpvVideoEngine
-import mihon.video.engine.mpv.addon.MpvAddon
-import mihon.video.engine.mpv.install.MpvAddonInstallation
 
 /**
  * Android's mpv, played from the add-on APK the viewer installs through [installation] or from the anime player

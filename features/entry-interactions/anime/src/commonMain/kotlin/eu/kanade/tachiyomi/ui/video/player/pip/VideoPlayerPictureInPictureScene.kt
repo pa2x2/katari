@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.video.player.pip
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerInputTarget
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
-import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * What the watch screen hands a picture-in-picture window of the player's own: the episode's [player], whose picture

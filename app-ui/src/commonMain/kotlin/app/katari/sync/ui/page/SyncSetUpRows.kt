@@ -2,6 +2,19 @@ package app.katari.sync.ui.page
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CheckCircle
+import app.katari.icons.materialsymbols.rounded.Dns
+import app.katari.icons.materialsymbols.rounded.Keyboard
+import app.katari.icons.materialsymbols.rounded.PhonelinkErase
+import app.katari.icons.materialsymbols.rounded.QrCodeScanner
+import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.presentation.kit.button.PageAction
+import app.katari.presentation.kit.button.PageActions
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
@@ -10,19 +23,6 @@ import app.katari.sync.ui.guide.SyncGuideAction
 import app.katari.sync.ui.link.linkCodeScanning
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CheckCircle
-import mihon.icons.materialsymbols.rounded.Dns
-import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.icons.materialsymbols.rounded.PhonelinkErase
-import mihon.icons.materialsymbols.rounded.QrCodeScanner
-import mihon.icons.materialsymbols.rounded.Smartphone
-import mihon.presentation.kit.button.PageAction
-import mihon.presentation.kit.button.PageActions
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.surface.NoticeCard
-import mihon.presentation.kit.surface.NoticeTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

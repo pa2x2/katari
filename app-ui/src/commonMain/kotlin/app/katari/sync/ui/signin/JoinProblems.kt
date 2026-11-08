@@ -1,6 +1,8 @@
 package app.katari.sync.ui.signin
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.client.server.Refusal
@@ -8,8 +10,6 @@ import app.katari.sync.client.server.shownAddress
 import app.katari.sync.protocol.version.ProtocolCompatibility
 import app.katari.sync.ui.guide.ServerFix
 import app.katari.sync.ui.guide.ServerFixAction
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

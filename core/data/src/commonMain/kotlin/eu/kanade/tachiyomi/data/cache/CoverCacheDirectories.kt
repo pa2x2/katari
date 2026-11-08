@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.cache
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import java.io.File
 
 /** Where [CoverCache] keeps its files on the platform it runs on. Each directory exists by the time its getter returns. */

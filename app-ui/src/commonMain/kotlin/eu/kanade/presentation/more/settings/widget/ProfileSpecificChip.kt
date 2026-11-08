@@ -3,12 +3,12 @@ package eu.kanade.presentation.more.settings.widget
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.profiles.ui.components.ProfileAvatar
-import mihon.presentation.kit.surface.AvatarSize
-import mihon.presentation.kit.surface.Pill
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.surface.AvatarSize
+import app.katari.presentation.kit.surface.Pill
+import app.katari.presentation.kit.surface.SurfaceContainer
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.profiles.ui.components.ProfileAvatar
+import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

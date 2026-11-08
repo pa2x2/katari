@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.cover
 
 import android.net.Uri
+import app.katari.core.platform.PlatformContext
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -11,7 +12,6 @@ import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.toShareIntent
-import mihon.core.platform.PlatformContext
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.storage.DocumentUri

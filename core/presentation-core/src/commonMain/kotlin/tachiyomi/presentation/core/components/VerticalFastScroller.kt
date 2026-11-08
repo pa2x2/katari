@@ -45,13 +45,13 @@ import androidx.compose.ui.util.fastFirstOrNull
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastLastOrNull
 import androidx.compose.ui.util.fastMaxBy
+import app.katari.presentation.kit.gesture.excludeFromSystemGestures
+import app.katari.presentation.kit.navigation.rememberAppBarExpander
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.sample
-import mihon.presentation.kit.gesture.excludeFromSystemGestures
-import mihon.presentation.kit.navigation.rememberAppBarExpander
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
 import tachiyomi.presentation.core.util.ScrollbarFadeDurationMillis
 import kotlin.math.abs

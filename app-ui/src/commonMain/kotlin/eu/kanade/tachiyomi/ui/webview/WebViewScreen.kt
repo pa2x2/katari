@@ -2,13 +2,13 @@ package eu.kanade.tachiyomi.ui.webview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
-import mihon.app.ui.di.LocalAppUiGraph
 
 /**
  * The web view screen in the main window's navigation. It reads the platform's browser from the app graph, as a screen

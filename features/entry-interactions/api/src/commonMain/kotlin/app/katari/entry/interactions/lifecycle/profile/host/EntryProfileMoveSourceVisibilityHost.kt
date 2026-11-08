@@ -1,0 +1,5 @@
+package app.katari.entry.interactions.lifecycle.profile.host
+
+fun interface EntryProfileMoveSourceVisibilityHost {
+    fun makeSourcesVisible(profileId: Long, sourceIds: Set<Long>)
+}

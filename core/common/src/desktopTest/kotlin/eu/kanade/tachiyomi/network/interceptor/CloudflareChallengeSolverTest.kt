@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.network.interceptor
 
+import app.katari.core.common.network.cookie.AppCookieStore
+import app.katari.core.common.web.ChallengePage
+import app.katari.core.common.web.ChallengePageEvents
 import eu.kanade.tachiyomi.network.AndroidCookieJar
-import mihon.core.common.network.cookie.AppCookieStore
-import mihon.core.common.web.ChallengePage
-import mihon.core.common.web.ChallengePageEvents
 import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer

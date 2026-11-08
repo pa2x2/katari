@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.handoff
 
+import app.katari.entry.interactions.media.handoff.EntryProgressOffer
+import app.katari.entry.interactions.media.handoff.ReadingPlace
+import app.katari.entry.interactions.media.handoff.isWorthOffering
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
-import mihon.entry.interactions.media.handoff.EntryProgressOffer
-import mihon.entry.interactions.media.handoff.ReadingPlace
-import mihon.entry.interactions.media.handoff.isWorthOffering
 
 /** Where another device got to, offered while reading (D053): [chapterName], at the page of [pageIndex]. */
 internal data class ReaderProgressOffer(

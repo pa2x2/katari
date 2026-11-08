@@ -6,11 +6,11 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import app.katari.video.engine.spi.VideoEngine
+import app.katari.video.engine.spi.VideoPlayerRole
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import mihon.video.engine.spi.VideoEngine
-import mihon.video.engine.spi.VideoPlayerRole
-import mihon.video.engine.spi.player.VideoPlayer
 
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180

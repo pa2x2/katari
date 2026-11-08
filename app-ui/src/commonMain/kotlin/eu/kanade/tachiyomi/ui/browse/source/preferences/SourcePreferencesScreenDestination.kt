@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.browse.source.preferences
 
+import app.katari.entry.interactions.source.EntrySourceSettingsFeature
+import app.katari.entry.interactions.source.EntrySourceSettingsResolution
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.util.Screen
-import mihon.entry.interactions.source.EntrySourceSettingsFeature
-import mihon.entry.interactions.source.EntrySourceSettingsResolution
 
 @Inject
 @ContributesBinding(AppScope::class)

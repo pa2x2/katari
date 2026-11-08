@@ -1,10 +1,10 @@
 package eu.kanade.presentation.util
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
-import mihon.core.platform.PlatformContext
 
 /** A platform's own words for source errors that only it recognises, which [SourceErrorMessages] asks first. */
 fun interface SourceErrorExplanation {

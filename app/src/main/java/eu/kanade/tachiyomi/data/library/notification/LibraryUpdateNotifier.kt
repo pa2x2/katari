@@ -9,6 +9,14 @@ import android.graphics.BitmapFactory
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationAction
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationDestination
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationFeature
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationGroup
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationInput
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationItem
+import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationText
+import app.katari.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -28,14 +36,6 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getBitmapOrNull
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationAction
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationDestination
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationFeature
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationGroup
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationInput
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationItem
-import mihon.entry.interactions.library.EntryLibraryUpdateNotificationText
-import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -47,7 +47,7 @@ import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
 import java.math.RoundingMode
 import java.text.NumberFormat
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 /** The notifications of one library update or metadata refresh, in the shade. */
 @Inject

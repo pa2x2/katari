@@ -4,8 +4,8 @@ import android.content.Context
 import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
+import app.katari.core.common.web.webViewSafeHeaders
 import kotlinx.coroutines.suspendCancellableCoroutine
-import mihon.core.common.web.webViewSafeHeaders
 import okhttp3.Headers
 import kotlin.coroutines.resume
 

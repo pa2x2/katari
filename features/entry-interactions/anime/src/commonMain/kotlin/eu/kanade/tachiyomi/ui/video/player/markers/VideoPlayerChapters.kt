@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player.markers
 
+import app.katari.video.engine.spi.chapters.FileChapter
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind
-import mihon.video.engine.spi.chapters.FileChapter
 import kotlin.math.abs
 
 /** One part of the episode the player names and lists, from [startMs] up to [endMs]. */

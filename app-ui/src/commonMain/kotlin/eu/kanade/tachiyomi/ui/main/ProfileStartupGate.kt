@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.main
 
-import mihon.feature.profiles.core.Profile
+import app.katari.profiles.core.Profile
 
 data class ProfileStartupDecision(
     val allowAppUnlockPrompt: Boolean,

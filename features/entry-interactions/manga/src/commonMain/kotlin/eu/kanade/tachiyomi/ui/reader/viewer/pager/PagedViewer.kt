@@ -9,6 +9,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import app.katari.entry.interactions.manga.reader.text.surface.ViewerTextSurfaces
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.reader.settings.ReaderPageLayout
+import app.katari.entry.interactions.viewer.EntryChildDirection
+import app.katari.entry.interactions.viewer.EntryChildTransition
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -23,13 +30,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.page.pageWebViewAction
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
-import mihon.entry.interactions.manga.reader.text.surface.ViewerTextSurfaces
-import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.ReaderPageLayout
-import mihon.entry.interactions.viewer.EntryChildDirection
-import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
 
 /** The page that became current and whether reading moved forward to it. */

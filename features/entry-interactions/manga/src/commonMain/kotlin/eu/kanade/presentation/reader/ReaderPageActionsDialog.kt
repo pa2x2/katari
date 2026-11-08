@@ -9,15 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ContentCopy
-import mihon.icons.materialsymbols.rounded.Photo
-import mihon.icons.materialsymbols.rounded.Save
-import mihon.icons.materialsymbols.rounded.Share
-import mihon.presentation.kit.button.StackedActionButton
-import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.ContentCopy
+import app.katari.icons.materialsymbols.rounded.Photo
+import app.katari.icons.materialsymbols.rounded.Save
+import app.katari.icons.materialsymbols.rounded.Share
+import app.katari.presentation.kit.button.StackedActionButton
+import app.katari.presentation.kit.dialog.ConfirmDialog
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

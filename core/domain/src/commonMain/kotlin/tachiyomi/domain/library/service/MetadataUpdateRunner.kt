@@ -1,6 +1,6 @@
 package tachiyomi.domain.library.service
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /** Refreshes the details of every entry in the active profile's library, without their chapter lists. */
 @PlatformFacility

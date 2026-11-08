@@ -1,9 +1,9 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.compose)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.compose)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.metro)
     alias(libs.plugins.kotlin.serialization)
@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.translation.provider.deepl"
+        namespace = "app.katari.translation.provider.deepl"
         // The engine's glyph is a Compose resource, which Android packages as the module's assets.
         androidResources {
             enable = true
@@ -48,5 +48,5 @@ kotlin {
 }
 
 compose.resources {
-    packageOfResClass = "mihon.translation.provider.deepl.resources"
+    packageOfResClass = "app.katari.translation.provider.deepl.resources"
 }

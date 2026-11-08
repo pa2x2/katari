@@ -16,6 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.TwoPanes
+import app.katari.presentation.kit.window.currentWindowLayout
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -26,9 +29,6 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberScreenHostFinish
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.layout.TwoPanes
-import mihon.presentation.kit.window.currentWindowLayout
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(

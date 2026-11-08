@@ -23,19 +23,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
+import app.katari.entry.interactions.reader.settings.ReaderOrientation
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.chrome.ui.bars.ReaderChrome
+import app.katari.entry.viewer.chrome.ui.bars.ReaderChromeBottomBar
+import app.katari.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
+import app.katari.entry.viewer.chrome.ui.position.ReaderReturnPositionBar
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.window.WindowWidth
+import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.presentation.reader.components.ChapterNavigator
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
-import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.chrome.ui.bars.ReaderChrome
-import mihon.entry.viewer.chrome.ui.bars.ReaderChromeBottomBar
-import mihon.entry.viewer.chrome.ui.bars.ReaderFloatingControlRow
-import mihon.entry.viewer.chrome.ui.position.ReaderReturnPositionBar
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.window.WindowWidth
-import mihon.presentation.kit.window.currentWindowLayout
 
 private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
 private val readerBarsFadeAnimationSpec = tween<Float>(150)

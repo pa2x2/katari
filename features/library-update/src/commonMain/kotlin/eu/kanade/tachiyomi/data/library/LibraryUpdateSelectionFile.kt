@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.data.library
 
+import app.katari.core.platform.storage.AppPrivateDirectories
 import dev.zacsweers.metro.Inject
-import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.util.UUID
 

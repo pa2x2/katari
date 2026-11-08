@@ -2,23 +2,23 @@ package eu.kanade.presentation.more.settings.screen.tts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.locale.AppLocaleStore
+import app.katari.language.api.tag.LanguageTag
+import app.katari.tts.api.TtsFeature
+import app.katari.tts.api.engine.TtsEngineId
+import app.katari.tts.api.host.TtsHostActionResult
+import app.katari.tts.api.host.TtsHostActions
+import app.katari.tts.api.provider.TtsProviderDisclosure
+import app.katari.tts.api.voice.TtsDefaultVoiceSelection
+import app.katari.tts.api.voice.TtsVoice
+import app.katari.tts.api.voice.TtsVoiceId
+import app.katari.tts.ui.settings.TtsSettingsController
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.core.platform.locale.AppLocaleStore
-import mihon.language.api.tag.LanguageTag
-import mihon.tts.api.TtsFeature
-import mihon.tts.api.engine.TtsEngineId
-import mihon.tts.api.host.TtsHostActionResult
-import mihon.tts.api.host.TtsHostActions
-import mihon.tts.api.provider.TtsProviderDisclosure
-import mihon.tts.api.voice.TtsDefaultVoiceSelection
-import mihon.tts.api.voice.TtsVoice
-import mihon.tts.api.voice.TtsVoiceId
-import mihon.tts.ui.settings.TtsSettingsController
 import java.util.Locale
 
 @Inject

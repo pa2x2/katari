@@ -1,8 +1,8 @@
 package eu.kanade.presentation.entry.components
 
-import mihon.entry.interactions.download.EntryDownloadOptionGroup
-import mihon.entry.interactions.download.EntryDownloadOptionSelection
-import mihon.entry.interactions.download.EntryDownloadOptions
+import app.katari.entry.interactions.download.EntryDownloadOptionGroup
+import app.katari.entry.interactions.download.EntryDownloadOptionSelection
+import app.katari.entry.interactions.download.EntryDownloadOptions
 
 /**
  * What the download sheet offers and what is picked in it. Groups come in the order they depend on each other: a pick

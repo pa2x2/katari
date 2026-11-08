@@ -1,8 +1,8 @@
 package tachiyomi.i18n.platform
 
+import app.katari.core.platform.PlatformContext
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
-import mihon.core.platform.PlatformContext
 import tachiyomi.i18n.localized.pluralStringResource as localizedPluralStringResource
 import tachiyomi.i18n.localized.stringResource as localizedStringResource
 

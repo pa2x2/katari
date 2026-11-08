@@ -1,0 +1,241 @@
+package app.katari.entry.interactions.manga.download
+
+import app.katari.entry.interactions.download.EntryBulkDownloadCandidateProcessor
+import app.katari.entry.interactions.download.EntryDownloadOwnerResolver
+import app.katari.entry.interactions.download.EntryDownloadProcessor
+import app.katari.entry.interactions.download.EntryDownloadQueueGroup
+import app.katari.entry.interactions.download.EntryDownloadQueueItem
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.download.EntryDownloadStatus
+import app.katari.entry.interactions.download.observeEntryDownloadQueue
+import app.katari.entry.interactions.manga.download.model.DownloadState
+import app.katari.entry.interactions.manga.runtime.requireManga
+import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.source.service.SourceManager
+
+internal class MangaDownloadProcessor(
+    private val downloadManager: DownloadManager,
+    private val downloadCache: DownloadCache,
+    private val sourceManager: SourceManager,
+    private val entryChapterRepository: EntryChapterRepository,
+    entryRepository: EntryRepository,
+) : EntryDownloadProcessor,
+    EntryBulkDownloadCandidateProcessor {
+    private val ownerResolver = EntryDownloadOwnerResolver(entryRepository)
+
+    override val changes: Flow<Unit> = downloadCache.changes
+    override val isInitializing: Flow<Boolean> = downloadCache.isInitializing
+    override val isRunning: Flow<Boolean> = downloadManager.isDownloaderRunning
+    override val queueState: Flow<List<EntryDownloadQueueGroup>> = observeEntryDownloadQueue(
+        queue = downloadManager.queueState,
+        statusUpdates = downloadManager.statusFlow(),
+        progressUpdates = downloadManager.progressFlow(),
+    ) { downloads -> downloads.toMangaEntryDownloadQueueGroups().map { it.requireManga() } }
+    override val events = downloadManager.events
+
+    override fun updates(): Flow<EntryDownloadStatus> {
+        return merge(
+            downloadManager.statusFlow().map { it.toEntryDownloadStatus() },
+            downloadManager.progressFlow().map { it.toEntryDownloadStatus() },
+        ).map { it.requireManga() }
+    }
+
+    override suspend fun hasPendingDownloads(): Boolean = downloadManager.hasPendingDownloads()
+
+    override suspend fun runDownloadsUntilIdle() {
+        downloadManager.runDownloadsUntilIdle()
+    }
+
+    override fun startDownloads() {
+        downloadManager.startDownloads()
+    }
+
+    override fun pauseDownloads() {
+        downloadManager.pauseDownloads()
+    }
+
+    override fun clearQueue() {
+        downloadManager.clearQueue()
+    }
+
+    override fun invalidateCache() {
+        downloadCache.invalidateCache()
+    }
+
+    override fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource) {
+        downloadManager.renameSource(oldSource, newSource)
+    }
+
+    override suspend fun renameEntry(entry: Entry, newTitle: String) {
+        entry.requireManga()
+        downloadManager.renameManga(entry, newTitle)
+    }
+
+    override fun reorderQueue(items: List<EntryDownloadQueueItem>) {
+        items.requireManga()
+        downloadManager.reorderQueue(
+            items.mapNotNull { item ->
+                downloadManager.queueState.value.firstOrNull { it.chapter.id == item.childId }
+            },
+        )
+    }
+
+    override fun reorderSeries(entryId: Long, moveToTop: Boolean) {
+        downloadManager.reorderSeries(entryId, moveToTop)
+    }
+
+    override fun cancelQueuedDownloads(items: List<EntryDownloadQueueItem>) {
+        items.requireManga()
+        val chapterIds = items.map { it.childId }.toSet()
+        val downloads = downloadManager.queueState.value.filter { it.chapter.id in chapterIds }
+        if (downloads.isNotEmpty()) {
+            downloadManager.cancelQueuedDownloads(downloads)
+        }
+    }
+
+    override suspend fun queue(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
+        entry.requireManga()
+        queueByOwner(entry, chapters, autoStart)
+    }
+
+    override suspend fun download(entry: Entry, chapters: List<EntryChapter>, startNow: Boolean) {
+        entry.requireManga()
+        queueByOwner(entry, chapters, autoStart = false)
+        if (startNow) {
+            downloadManager.startDownloadsNow(chapters.map(EntryChapter::id))
+        } else {
+            downloadManager.startDownloads()
+        }
+    }
+
+    override suspend fun resolveBulkDownloadCandidatePool(
+        entry: Entry,
+        candidates: List<EntryChapter>?,
+    ): List<EntryChapter> {
+        entry.requireManga()
+        if (candidates != null) return candidates
+        val chapters = entryChapterRepository.getChaptersByEntryIdAwait(
+            entry.id,
+            applyScanlatorFilter = true,
+        )
+        val downloadedChapterIds = downloadManager.getDownloadedChapterIds(chapters, entry)
+        return chapters.filterNot { it.id in downloadedChapterIds }
+    }
+
+    override suspend fun delete(entry: Entry, chapters: List<EntryChapter>) {
+        entry.requireManga()
+        downloadManager.deleteChapters(chapters, entry, sourceManager.getOrStub(entry.source))
+    }
+
+    override suspend fun cleanup(entry: Entry, chapters: List<EntryChapter>) {
+        entry.requireManga()
+        downloadManager.enqueueChaptersToDelete(chapters, entry)
+    }
+
+    override suspend fun deleteEntryDownloads(entry: Entry): Boolean {
+        entry.requireManga()
+        return downloadManager.deleteManga(entry, sourceManager.getOrStub(entry.source))
+    }
+
+    override fun hasDownloads(entry: Entry): Boolean {
+        entry.requireManga()
+        return downloadManager.getDownloadCount(entry) > 0
+    }
+
+    override fun getDownloadCount(entry: Entry): Int {
+        entry.requireManga()
+        return downloadManager.getDownloadCount(entry)
+    }
+
+    override fun getDownloadCounts(entries: List<Entry>): Map<Long, Int> {
+        entries.forEach { it.requireManga() }
+        return downloadManager.getDownloadCounts(entries)
+    }
+
+    override fun getTotalDownloadCount(): Int {
+        return downloadManager.getDownloadCount()
+    }
+
+    override fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean): Boolean {
+        entry.requireManga()
+        return downloadManager.isChapterDownloaded(
+            chapterName = chapter.name,
+            chapterScanlator = chapter.scanlator,
+            chapterUrl = chapter.url,
+            mangaTitle = entry.downloadFolderTitle,
+            sourceId = entry.source,
+            skipCache = skipCache,
+        )
+    }
+
+    override fun getStatus(
+        chapterId: Long,
+        chapterName: String,
+        chapterScanlator: String?,
+        chapterUrl: String,
+        entryTitle: String,
+        sourceId: Long,
+    ): EntryDownloadStatus {
+        return downloadManager.getQueuedDownloadOrNull(chapterId)?.toEntryDownloadStatus()
+            ?: EntryDownloadStatus(
+                entryType = EntryType.MANGA,
+                chapterId = chapterId,
+                state = if (
+                    downloadManager.isChapterDownloaded(
+                        chapterName = chapterName,
+                        chapterScanlator = chapterScanlator,
+                        chapterUrl = chapterUrl,
+                        mangaTitle = entryTitle,
+                        sourceId = sourceId,
+                    )
+                ) {
+                    EntryDownloadState.DOWNLOADED
+                } else {
+                    EntryDownloadState.NOT_DOWNLOADED
+                },
+            )
+    }
+
+    override fun getStatuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus> {
+        entry.requireManga()
+        val queuedDownloads = downloadManager.getQueuedDownloadsByChapterId()
+        val downloadedChapterIds = downloadManager.getDownloadedChapterIds(chapters, entry)
+        return chapters.associate { chapter ->
+            chapter.id to (
+                queuedDownloads[chapter.id]?.toEntryDownloadStatus()
+                    ?: EntryDownloadStatus(
+                        entryType = EntryType.MANGA,
+                        chapterId = chapter.id,
+                        state = if (chapter.id in downloadedChapterIds) {
+                            EntryDownloadState.DOWNLOADED
+                        } else {
+                            EntryDownloadState.NOT_DOWNLOADED
+                        },
+                    )
+                )
+        }
+    }
+
+    override fun cancelQueuedDownload(chapterId: Long): EntryDownloadStatus? {
+        val download = downloadManager.getQueuedDownloadOrNull(chapterId) ?: return null
+        downloadManager.cancelQueuedDownloads(listOf(download))
+        download.status = DownloadState.NOT_DOWNLOADED
+        return download.toEntryDownloadStatus().requireManga()
+    }
+
+    private suspend fun queueByOwner(entry: Entry, chapters: List<EntryChapter>, autoStart: Boolean) {
+        val owners = ownerResolver.resolve(entry, chapters)
+        owners.forEach { owner ->
+            downloadManager.downloadChapters(owner.entry, owner.children, autoStart = false)
+        }
+        if (autoStart && owners.isNotEmpty()) downloadManager.startDownloads()
+    }
+}

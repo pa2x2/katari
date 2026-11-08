@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.entry.chapters
 
+import app.katari.entry.interactions.state.EntryBookmarkFeature
+import app.katari.entry.interactions.state.EntryConsumptionFeature
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import eu.kanade.tachiyomi.ui.entry.EntryStateAccess
 import kotlinx.coroutines.CoroutineScope
-import mihon.entry.interactions.state.EntryBookmarkFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository

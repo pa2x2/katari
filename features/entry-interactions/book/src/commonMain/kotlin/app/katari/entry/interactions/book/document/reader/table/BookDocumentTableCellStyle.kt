@@ -1,0 +1,11 @@
+package app.katari.entry.interactions.book.document.reader.table
+
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentTableCell
+
+/** Keeps authored text flow when applying header emphasis in both measurement and rendering. */
+internal fun BookDocumentBlock.forTableCell(cell: BookDocumentTableCell): BookDocumentBlock = if (cell.header) {
+    copy(style = style.copy(bold = true))
+} else {
+    this
+}

@@ -1,5 +1,7 @@
 package app.katari.sync.host
 
+import app.katari.entry.interactions.media.handoff.EntryProgressOffer
+import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.sync.client.handoff.EntryHandOff
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -7,8 +9,6 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapNotNull
-import mihon.entry.interactions.media.handoff.EntryProgressOffer
-import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 /**

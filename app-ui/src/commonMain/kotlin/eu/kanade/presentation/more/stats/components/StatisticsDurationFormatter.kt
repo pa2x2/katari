@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLocale
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.currentPlatformContext
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.currentPlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 

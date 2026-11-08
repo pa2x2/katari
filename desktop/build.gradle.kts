@@ -1,17 +1,17 @@
-import mihon.gradle.Config
-import mihon.gradle.appimage.registerDesktopAppImage
-import mihon.gradle.desktopicon.GenerateDesktopIconTask
-import mihon.gradle.extensions.extensionHostJvmArguments
-import mihon.gradle.getAppVersionCode
-import mihon.gradle.getAppVersionName
-import mihon.gradle.getLatestCommitCount
-import mihon.gradle.getLatestCommitSha
-import mihon.gradle.getLatestCommitTime
-import mihon.gradle.tasks.GenerateDesktopBuildInfoTask
+import app.katari.gradle.Config
+import app.katari.gradle.appimage.registerDesktopAppImage
+import app.katari.gradle.desktopicon.GenerateDesktopIconTask
+import app.katari.gradle.extensions.extensionHostJvmArguments
+import app.katari.gradle.getAppVersionCode
+import app.katari.gradle.getAppVersionName
+import app.katari.gradle.getLatestCommitCount
+import app.katari.gradle.getLatestCommitSha
+import app.katari.gradle.getLatestCommitTime
+import app.katari.gradle.tasks.GenerateDesktopBuildInfoTask
 
 plugins {
-    alias(mihonx.plugins.desktop.application)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.desktop.application)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.metro)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutLibraries.jvm)
@@ -22,7 +22,7 @@ plugins {
 version = "1.0.0-beta.3"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
-    packageName.set("mihon.desktop.application")
+    packageName.set("app.katari.desktop.application")
     versionName.set(version.toString())
     androidVersionName.set(getAppVersionName())
     androidVersionCode.set(getAppVersionCode())
@@ -128,7 +128,7 @@ dependencies {
 }
 
 compose.desktop.application {
-    mainClass = "mihon.desktop.MainKt"
+    mainClass = "app.katari.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
 

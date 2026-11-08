@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import app.katari.presentation.kit.content.CoverFrame
+import app.katari.presentation.kit.content.storyCoverFrame
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
-import mihon.presentation.kit.content.CoverFrame
-import mihon.presentation.kit.content.storyCoverFrame
 
 /** A title's cover as recap pages show it: lifted off the page, and holdable to hide the title. */
 @Composable

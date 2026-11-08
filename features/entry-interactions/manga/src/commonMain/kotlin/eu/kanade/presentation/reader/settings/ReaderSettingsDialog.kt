@@ -1,12 +1,12 @@
 package eu.kanade.presentation.reader.settings
 
 import androidx.compose.runtime.Composable
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import app.katari.entry.viewer.settings.ui.ReaderSettingsDialogHost
+import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
-import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
-import mihon.presentation.kit.sheet.SheetBackdrop
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

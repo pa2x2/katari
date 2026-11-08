@@ -32,7 +32,7 @@ import android.os.*;
 import android.view.Display;
 import android.view.DisplayAdjustments;
 import android.util.Log;
-import mihon.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.AndroidCompatEnvironment;
 import org.jetbrains.annotations.NotNull;
 import xyz.nulldev.androidcompat.info.ApplicationInfoImpl;
 import xyz.nulldev.androidcompat.io.AndroidFiles;

@@ -18,6 +18,9 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.paging.PagingSource
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import app.katari.presentation.kit.sheet.Sheet
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -38,9 +41,6 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.filterApplyBlockedReason
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetChip
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.presentation.kit.sheet.Sheet
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
 

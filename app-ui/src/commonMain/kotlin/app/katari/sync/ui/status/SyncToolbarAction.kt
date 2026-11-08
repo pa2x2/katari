@@ -1,18 +1,18 @@
 package app.katari.sync.ui.status
 
 import androidx.compose.runtime.Composable
-import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
-import mihon.icons.custommaterialsymbols.rounded.CloudSyncArrows
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Cloud
-import mihon.icons.materialsymbols.rounded.CloudDone
-import mihon.icons.materialsymbols.rounded.CloudOff
-import mihon.icons.materialsymbols.rounded.CloudUpload
-import mihon.icons.materialsymbols.rounded.SyncProblem
-import mihon.icons.materialsymbols.rounded.Wifi
-import mihon.presentation.kit.content.Spin
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.theme.ContentTone
+import app.katari.icons.custommaterialsymbols.CustomMaterialSymbols
+import app.katari.icons.custommaterialsymbols.rounded.CloudSyncArrows
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Cloud
+import app.katari.icons.materialsymbols.rounded.CloudDone
+import app.katari.icons.materialsymbols.rounded.CloudOff
+import app.katari.icons.materialsymbols.rounded.CloudUpload
+import app.katari.icons.materialsymbols.rounded.SyncProblem
+import app.katari.icons.materialsymbols.rounded.Wifi
+import app.katari.presentation.kit.content.Spin
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.theme.ContentTone
 
 /**
  * Sync's icon in the Library toolbar (D028, D055), always there once the device is set up: a cloud whose arrows turn

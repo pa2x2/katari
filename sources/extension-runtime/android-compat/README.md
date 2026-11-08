@@ -75,15 +75,15 @@ and limited to what extensions use:
 - `androidx/core/content/ContextCompat`, which Katari's Android app ships, so extensions call it without bundling it:
   `getMainExecutor`.
 - `android/webkit/CookieManager`: AOSP's class with an implementation after Android's WebView one, over the app's own
-  cookie store, which the host provides as `mihon.extension.compat.WebViewCookies`; so the cookies an extension sets are
+  cookie store, which the host provides as `app.katari.extension.compat.WebViewCookies`; so the cookies an extension sets are
   the ones the app's HTTP clients and web view send. URLs are normalised by `WebAddress`, an unparsable URL or cookie
   and a `Secure` cookie for a URL that isn't HTTPS are ignored, and callbacks run on the calling thread's `Looper`,
   which a call with a callback needs. AOSP's hidden `getCookie` and `hasCookies` overloads are left out. File scheme
   cookies are never kept.
 - `android/webkit/WebView`, `WebSettings`, `WebViewClient`, `WebChromeClient`, `WebResourceResponse`,
   `WebResourceError`, `ConsoleMessage` and `RenderProcessGoneDetail`, from AOSP's (each file says what changed): a web
-  view runs on one of the host's hidden pages, which the host provides as `mihon.core.common.web.ExtensionPages` and
-  `mihon.extension.compat.webkit.WebViewPage` drives. It loads URLs with their headers and documents at a base URL,
+  view runs on one of the host's hidden pages, which the host provides as `app.katari.core.common.web.ExtensionPages` and
+  `app.katari.extension.compat.webkit.WebViewPage` drives. It loads URLs with their headers and documents at a base URL,
   runs scripts and hands back their values, gives its pages the objects of `addJavascriptInterface` and passes their
   calls on, asks its client to answer requests, and tells its clients of loads, titles, errors, console messages and its
   renderer's end, on the main looper's thread as Android does; a visual state callback comes once the page has taken
@@ -102,15 +102,15 @@ and limited to what extensions use:
   activity for the app's window as it opens and destroys it as it closes; its lifecycle reaches the application's
   lifecycle callbacks, and `ActivityThread` (a hidden class) answers the reflection extensions use to find an activity
   resumed before they registered those callbacks. A dialog over a running activity whose content is a `WebView` opens in
-  the app's window, which the host provides as `mihon.extension.compat.ExtensionDialogs`, showing that web view's page;
+  the app's window, which the host provides as `app.katari.extension.compat.ExtensionDialogs`, showing that web view's page;
   any other content throws as the dialog is shown. The dialog has no `Window` (`getWindow()` is null, as the SDK
   allows), so what an extension sets on one is never asked for. The user closing it is a back press, which cancels a
   cancelable dialog; its listeners run on the thread it was made on.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
-  `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
+  `app.katari.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
   Android's runtime sets for an app (`http.agent`, Dalvik's user agent).
 - SLF4J and kotlin-logging: `android.util.Log` writes to the host's logcat loggers through
-  `mihon.extension.compat.LogcatLog`, and the other copied classes log through `android.util.Log`.
+  `app.katari.extension.compat.LogcatLog`, and the other copied classes log through `android.util.Log`.
 
 ### Changed in copied files
 

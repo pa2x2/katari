@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player.handoff
 
-import mihon.entry.interactions.media.handoff.EntryProgressOffer
-import mihon.entry.interactions.media.handoff.ReadingPlace
-import mihon.entry.interactions.media.handoff.isWorthOffering
+import app.katari.entry.interactions.media.handoff.EntryProgressOffer
+import app.katari.entry.interactions.media.handoff.ReadingPlace
+import app.katari.entry.interactions.media.handoff.isWorthOffering
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.time.Duration.Companion.minutes
 

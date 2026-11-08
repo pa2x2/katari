@@ -3,6 +3,7 @@ package app.katari.sync.client.file.transfer
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.platform.storage.AppPrivateDirectories
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.OwnedFiles
 import app.katari.sync.client.file.local.contentOf
@@ -17,7 +18,6 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.core.platform.storage.AppPrivateDirectories
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
 import java.io.File

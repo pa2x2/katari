@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.engine
 
+import app.katari.video.engine.spi.player.VideoPlayerError
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import mihon.video.engine.spi.player.VideoPlayerError
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 

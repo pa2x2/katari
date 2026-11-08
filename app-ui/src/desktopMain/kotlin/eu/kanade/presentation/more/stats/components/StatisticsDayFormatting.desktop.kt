@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.stats.components
 
+import app.katari.core.platform.PlatformContext
 import com.ibm.icu.text.DateFormat
 import com.ibm.icu.text.DateIntervalFormat
 import com.ibm.icu.util.DateInterval
-import mihon.core.platform.PlatformContext
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.Date

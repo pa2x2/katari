@@ -2,14 +2,14 @@ package app.katari.sync.ui.question
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.EditNote
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.list.RowAction
+import app.katari.presentation.kit.list.RowActions
+import app.katari.presentation.kit.list.SettingsRow
 import eu.kanade.presentation.util.relativeTimeSpanString
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.EditNote
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.list.RowAction
-import mihon.presentation.kit.list.RowActions
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

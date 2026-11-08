@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.loader.scheduling
 
-import mihon.core.platform.network.NetworkConnectivity
+import app.katari.core.platform.network.NetworkConnectivity
 
 /**
  * Whether an online chapter may load the whole chapter around the page being read. When the user limits loading

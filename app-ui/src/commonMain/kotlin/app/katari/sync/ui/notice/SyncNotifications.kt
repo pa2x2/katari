@@ -1,8 +1,8 @@
 package app.katari.sync.ui.notice
 
+import app.katari.core.common.platform.PlatformFacility
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.trigger.SyncBackgroundWork
-import mihon.core.common.platform.PlatformFacility
 import okhttp3.HttpUrl
 
 /**

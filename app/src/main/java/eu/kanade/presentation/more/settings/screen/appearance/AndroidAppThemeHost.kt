@@ -2,12 +2,12 @@ package eu.kanade.presentation.more.settings.screen.appearance
 
 import android.app.Activity
 import androidx.core.app.ActivityCompat
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
-import mihon.core.platform.PlatformContext
 
 /** AppCompat keeps the night mode, and an activity reads its theme when it is created, so it is recreated. */
 @Inject

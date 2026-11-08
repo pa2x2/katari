@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 
 /**
  * What the system web view keeps for the app, such as its cache, form data and site storage. Where the platform has no

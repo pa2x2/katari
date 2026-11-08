@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.textrules
 
 import androidx.compose.runtime.Composable
-import mihon.entry.interactions.reader.settings.BookTextRuleScope
+import app.katari.entry.interactions.reader.settings.BookTextRuleScope
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

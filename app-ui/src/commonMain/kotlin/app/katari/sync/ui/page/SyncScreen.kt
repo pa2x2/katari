@@ -8,6 +8,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import app.katari.missingextensions.ui.MissingExtensionsNoticeViewModel
+import app.katari.missingextensions.ui.MissingExtensionsSheet
+import app.katari.presentation.kit.dialog.ConfirmDialog
+import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
 import app.katari.sync.ui.firstsync.FirstSyncScreen
@@ -18,6 +22,7 @@ import app.katari.sync.ui.question.SyncQuestionsScreen
 import app.katari.sync.ui.signin.SyncJoinOrigin
 import app.katari.sync.ui.signin.SyncSignInScreen
 import app.katari.sync.ui.status.rememberSyncHeadline
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -27,11 +32,6 @@ import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.LocalBackPress
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.feature.missingextensions.ui.MissingExtensionsNoticeViewModel
-import mihon.feature.missingextensions.ui.MissingExtensionsSheet
-import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

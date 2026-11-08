@@ -6,9 +6,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.theme.StoryPalette
 import eu.kanade.presentation.more.stats.recap.motion.ambientSwing
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.theme.StoryPalette
 
 /**
  * What a page is drawn over: its gradient, with soft glows in its colours drifting across it on loops of 17 to 53

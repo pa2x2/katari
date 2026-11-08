@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGestureGuide
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.video.engine.spi.player.VideoPlayer
 
 /** Android's touch gestures, set on the video's own view so they reach it before anything drawn over it. */
 internal object TouchVideoPlayerInput : VideoPlayerInput {

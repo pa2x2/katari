@@ -2,11 +2,11 @@ package eu.kanade.presentation.entry
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 
-typealias EntryTypePresentation = mihon.entry.interactions.presentation.EntryTypePresentation
+typealias EntryTypePresentation = app.katari.entry.interactions.presentation.EntryTypePresentation
 
 /**
  * Resolves contributed type vocabulary. Generic resolution retains the requested type so missing projection evidence

@@ -4,6 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.core.common.FeatureFlags
+import app.katari.core.platform.currentPlatformContext
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Autorenew
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -13,13 +20,6 @@ import eu.kanade.presentation.more.settings.screen.about.versionText
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberDateTimeFormatter
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.common.FeatureFlags
-import mihon.core.platform.currentPlatformContext
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Autorenew
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 

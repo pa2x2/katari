@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -11,7 +12,6 @@ import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.SourcePreferenceBackupStores
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 
 @Inject

@@ -4,6 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import app.katari.video.engine.spi.VideoPlayerRole
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerError
+import app.katari.video.engine.spi.player.VideoPlayerEvent
+import app.katari.video.engine.spi.player.VideoPlayerListener
+import app.katari.video.engine.spi.player.VideoSize
+import app.katari.video.engine.spi.tracks.VideoTracks
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
@@ -20,13 +27,6 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.availableAudioTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableSubtitleTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.resolveAppliedSubtitleSelection
 import logcat.LogPriority
-import mihon.video.engine.spi.VideoPlayerRole
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerError
-import mihon.video.engine.spi.player.VideoPlayerEvent
-import mihon.video.engine.spi.player.VideoPlayerListener
-import mihon.video.engine.spi.player.VideoSize
-import mihon.video.engine.spi.tracks.VideoTracks
 import tachiyomi.core.common.util.system.logcat
 
 /**

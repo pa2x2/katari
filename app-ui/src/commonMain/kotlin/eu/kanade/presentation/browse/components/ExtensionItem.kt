@@ -14,6 +14,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.content.LogoSize
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.Pill
+import app.katari.presentation.kit.surface.SurfaceContainer
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
@@ -21,17 +32,6 @@ import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.content.LogoSize
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Pill
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

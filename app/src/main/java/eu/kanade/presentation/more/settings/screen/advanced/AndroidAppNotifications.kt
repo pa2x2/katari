@@ -2,8 +2,8 @@ package eu.kanade.presentation.more.settings.screen.advanced
 
 import android.content.Intent
 import android.provider.Settings
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
-import mihon.core.platform.PlatformContext
 
 @Inject
 class AndroidAppNotifications : AppNotifications {

@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player.introtimes
 
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.presentation.kit.control.MediaMarkSource
 import dev.icerock.moko.resources.StringResource
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.presentation.kit.control.MediaMarkSource
 import tachiyomi.i18n.*
 
 internal val IntroTimesService.label: StringResource

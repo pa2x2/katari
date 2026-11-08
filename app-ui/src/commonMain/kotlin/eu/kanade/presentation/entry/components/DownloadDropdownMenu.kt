@@ -2,14 +2,14 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Download
+import app.katari.presentation.kit.menu.DropdownMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.selection.ItemAction
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Download
-import mihon.presentation.kit.menu.DropdownMenu
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.selection.ItemAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

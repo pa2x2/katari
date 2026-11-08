@@ -1,6 +1,12 @@
 package eu.kanade.tachiyomi.ui.webview
 
 import androidx.lifecycle.ViewModel
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.link.LinkOpener
+import app.katari.core.platform.share.LinkSharing
+import app.katari.entry.interactions.source.EntryWebViewFeature
+import app.katari.entry.interactions.source.EntryWebViewHeadersResolution
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -9,12 +15,6 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.network.NetworkHelper
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.link.LinkOpener
-import mihon.core.platform.share.LinkSharing
-import mihon.entry.interactions.source.EntryWebViewFeature
-import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import tachiyomi.core.common.util.system.logcat
 

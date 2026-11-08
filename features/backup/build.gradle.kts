@@ -1,8 +1,8 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)
@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.backup"
+        namespace = "app.katari.backup"
 
         // Old backups' reader settings convert to reading modes, which load their labels from i18n's Android resources.
         withHostTest {

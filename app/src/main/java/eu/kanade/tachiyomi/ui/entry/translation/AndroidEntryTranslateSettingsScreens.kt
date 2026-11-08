@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.entry.translation
 
+import app.katari.core.platform.PlatformContext
+import app.katari.language.api.tag.LanguageTag
+import app.katari.text.recognition.api.host.openTextRecognitionPipelineChoice
+import app.katari.translation.api.host.openTranslationSettings
 import dev.zacsweers.metro.Inject
-import mihon.core.platform.PlatformContext
-import mihon.language.api.tag.LanguageTag
-import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
-import mihon.translation.api.host.openTranslationSettings
 
 /** Opens the settings screens in the settings activity, over the screen the call comes from. */
 @Inject

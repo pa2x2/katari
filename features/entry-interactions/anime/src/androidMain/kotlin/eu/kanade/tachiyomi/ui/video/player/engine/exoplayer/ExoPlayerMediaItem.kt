@@ -4,12 +4,12 @@ import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import app.katari.video.engine.spi.loading.resolvedRequest
+import app.katari.video.engine.spi.tracks.subtitleChoiceKey
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
-import mihon.video.engine.spi.loading.resolvedRequest
-import mihon.video.engine.spi.tracks.subtitleChoiceKey
 
 internal fun VideoStream.toMediaItem(): MediaItem {
     return MediaItem.Builder()

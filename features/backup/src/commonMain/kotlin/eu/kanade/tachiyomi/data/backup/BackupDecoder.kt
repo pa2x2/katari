@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.protobuf.ProtoBuf
-import mihon.core.platform.PlatformContext
 import okio.BufferedSource
 import okio.buffer
 import okio.gzip

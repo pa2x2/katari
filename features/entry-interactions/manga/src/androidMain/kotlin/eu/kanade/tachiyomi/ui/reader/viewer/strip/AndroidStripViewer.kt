@@ -4,13 +4,13 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import androidx.compose.ui.platform.ComposeView
+import app.katari.entry.interactions.runtime.EntryInteractionTheme
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPages
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderThemedContent
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.ui.reader.viewer.current
-import mihon.entry.interactions.runtime.EntryInteractionTheme
 
 /**
  * The shared long strip in the activity's view tree, with the volume keys the activity hands to its viewer, which

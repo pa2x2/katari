@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.runtime.Composable
+import app.katari.sourcemigration.dialog.MigrateEntryDialog
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
@@ -13,7 +14,6 @@ import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.browse.components
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.presentation.kit.theme.ContentTone
 import dev.icerock.moko.resources.StringResource
-import mihon.domain.extension.model.ContentWarning
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 
 internal data class ContentWarningLabel(

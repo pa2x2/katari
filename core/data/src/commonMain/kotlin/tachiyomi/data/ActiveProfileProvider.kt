@@ -1,7 +1,7 @@
 package tachiyomi.data
 
+import app.katari.core.common.platform.PlatformFacility
 import kotlinx.coroutines.flow.Flow
-import mihon.core.common.platform.PlatformFacility
 
 @PlatformFacility
 interface ActiveProfileProvider {

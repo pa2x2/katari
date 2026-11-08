@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.volume
 
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayer
 
 /**
  * The volume button and slider in the controls, where the player's own volume is the one people set, as on desktop.

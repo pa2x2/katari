@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.library.queue
 
+import app.katari.core.common.platform.PlatformFacility
 import eu.kanade.tachiyomi.data.library.LibraryUpdateInput
 import kotlinx.coroutines.flow.Flow
-import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 
 /**

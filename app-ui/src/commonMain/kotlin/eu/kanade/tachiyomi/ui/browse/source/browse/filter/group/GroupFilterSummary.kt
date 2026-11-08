@@ -1,13 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.group
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.content.TonedSpan
+import app.katari.presentation.kit.theme.ContentTone
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabel
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.displayText
-import mihon.presentation.kit.content.TonedSpan
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

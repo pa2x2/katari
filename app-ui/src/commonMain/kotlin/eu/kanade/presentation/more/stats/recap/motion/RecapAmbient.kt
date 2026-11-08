@@ -3,7 +3,7 @@ package eu.kanade.presentation.more.stats.recap.motion
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import mihon.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.content.StoryMetrics
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

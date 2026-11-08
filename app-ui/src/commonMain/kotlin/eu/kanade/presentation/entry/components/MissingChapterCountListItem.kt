@@ -7,14 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.MarkerLine
+import app.katari.presentation.kit.surface.Surface
+import app.katari.presentation.kit.theme.KatariPreviewTheme
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.MarkerLine
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.theme.KatariPreviewTheme
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
 /** Marks a gap in a chapter list's numbering with how many chapters are missing there. */

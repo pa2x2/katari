@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.main
 
+import app.katari.entry.interactions.merge.EntryMergeNavigationFeature
+import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.core.ProfilePendingIntent
+import app.katari.sourcemigration.session.SourceMigrationSessionStore
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
-import mihon.feature.migration.session.SourceMigrationSessionStore
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfilePendingIntent
 
 interface MainGraph {
     val uiPreferences: UiPreferences

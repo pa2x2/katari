@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.stats.components
 
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 import java.time.LocalDate
 
 /*

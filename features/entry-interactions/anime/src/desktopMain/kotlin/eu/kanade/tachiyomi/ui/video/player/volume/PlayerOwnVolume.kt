@@ -4,8 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
+import app.katari.video.engine.spi.player.VideoPlayer
 
 /**
  * The desktop's volume: the player's own, in percent, up to 150 % with the boost above 100 %, as mpv counts it. The

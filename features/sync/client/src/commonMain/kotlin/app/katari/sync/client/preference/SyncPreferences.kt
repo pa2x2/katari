@@ -1,7 +1,7 @@
 package app.katari.sync.client.preference
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 
 /** Sync's own options (D050), the device's alone like every setting about how this device syncs. */

@@ -2,10 +2,10 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLocale
+import app.katari.core.platform.currentPlatformContext
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.core.platform.currentPlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat

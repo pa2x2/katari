@@ -1,0 +1,198 @@
+package app.katari.sourcemigration.list.components
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import app.katari.presentation.kit.content.Badge
+import app.katari.presentation.kit.content.BadgeGroup
+import app.katari.presentation.kit.content.BrowseMetrics
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.content.coverFrame
+import app.katari.presentation.kit.content.entryCoverScale
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.CoverCell
+import app.katari.presentation.kit.surface.MediaScrim
+import app.katari.presentation.kit.surface.MediaScrimEdge
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.sourcemigration.list.models.MigratingEntry
+import app.katari.sourcemigration.list.models.MigrationMergeContext
+import app.katari.ui.resources.Res
+import app.katari.ui.resources.cover_error
+import eu.kanade.presentation.entry.components.EntryCover
+import eu.kanade.presentation.util.formatChapterNumber
+import org.jetbrains.compose.resources.painterResource
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/** One side of a migration row: an entry's cover with its title and chapter count, then its source and progress. */
+@Composable
+fun MigrationListItem(
+    modifier: Modifier,
+    entry: Entry,
+    source: String,
+    chapterCount: Int,
+    latestChapter: Double?,
+    mergeContext: MigrationMergeContext?,
+    onClick: () -> Unit,
+) {
+    CoverCell(
+        onClick = onClick,
+        modifier = modifier
+            .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
+            .fillMaxWidth(),
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(EntryCover.Book.ratio),
+            ) {
+                EntryCover.Book(
+                    modifier = Modifier.fillMaxWidth(),
+                    data = entry,
+                )
+                MediaScrim(
+                    edge = MediaScrimEdge.Bottom,
+                    modifier = Modifier
+                        .coverFrame()
+                        .fillMaxHeight(TITLE_SCRIM_FRACTION)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                ) {}
+                Text(
+                    text = entry.title,
+                    modifier = Modifier
+                        .padding(KatariTheme.spacing.s)
+                        .align(Alignment.BottomStart),
+                    role = TextRole.CoverTitle,
+                    tone = ContentTone.OnMedia,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                )
+                BadgeGroup(modifier = Modifier.padding(KatariTheme.spacing.s)) {
+                    Badge(text = "$chapterCount")
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(KatariTheme.spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+            ) {
+                Text(
+                    text = source,
+                    role = TextRole.Label,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+                mergeContext?.let {
+                    Text(
+                        text = migrationMergeContextLabel(it),
+                        role = TextRole.Badge,
+                        tone = ContentTone.Primary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                val formattedLatestChapters = remember(latestChapter) {
+                    latestChapter?.let(::formatChapterNumber)
+                }
+                Text(
+                    text = stringResource(
+                        MR.strings.migrationListScreen_latestChapterLabel,
+                        formattedLatestChapters ?: stringResource(MR.strings.migrationListScreen_unknownLatestChapter),
+                    ),
+                    role = TextRole.Body,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/** The match side of a migration row: a wait indicator while searching, the match, or a note that there is none. */
+@Composable
+fun MigrationListItemResult(
+    modifier: Modifier,
+    result: MigratingEntry.SearchResult,
+    onItemClick: (Entry, MigrationMergeContext?) -> Unit,
+) {
+    Box(modifier.height(IntrinsicSize.Min)) {
+        when (result) {
+            MigratingEntry.SearchResult.Searching -> {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
+                        .fillMaxSize()
+                        .aspectRatio(EntryCover.Book.ratio),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    LoadingIndicator()
+                }
+            }
+            MigratingEntry.SearchResult.NotFound -> {
+                Column(
+                    Modifier
+                        .widthIn(max = BrowseMetrics.migrationCoverMaxWidth * entryCoverScale())
+                        .fillMaxSize()
+                        .padding(KatariTheme.spacing.xs),
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.cover_error),
+                        contentDescription = stringResource(MR.strings.label_more),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(EntryCover.Book.ratio)
+                            .coverFrame(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Text(
+                        text = stringResource(MR.strings.migrationListScreen_noMatchFoundText),
+                        modifier = Modifier.padding(KatariTheme.spacing.xs),
+                        role = TextRole.Label,
+                    )
+                }
+            }
+            is MigratingEntry.SearchResult.Success -> {
+                MigrationListItem(
+                    modifier = Modifier.fillMaxSize(),
+                    entry = result.entry,
+                    source = result.source,
+                    chapterCount = result.chapterCount,
+                    latestChapter = result.latestChapter,
+                    mergeContext = result.mergeContext,
+                    onClick = { onItemClick(result.entry, result.mergeContext) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun migrationMergeContextLabel(context: MigrationMergeContext): String {
+    return if (context.isRoot) {
+        stringResource(MR.strings.migrationListScreen_mergeRootLabel)
+    } else {
+        stringResource(MR.strings.migrationListScreen_mergeMemberLabel, context.rootTitle)
+    }
+}
+
+private const val TITLE_SCRIM_FRACTION = 0.4f

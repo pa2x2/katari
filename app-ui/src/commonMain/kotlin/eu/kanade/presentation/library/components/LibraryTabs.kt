@@ -1,10 +1,10 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.navigation.PillTabRow
+import app.katari.presentation.kit.navigation.Tab
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import eu.kanade.tachiyomi.ui.library.displayTitle
-import mihon.presentation.kit.navigation.PillTabRow
-import mihon.presentation.kit.navigation.Tab
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

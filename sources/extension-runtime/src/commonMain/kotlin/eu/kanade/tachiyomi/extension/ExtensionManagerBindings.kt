@@ -1,5 +1,11 @@
 package eu.kanade.tachiyomi.extension
 
+import app.katari.core.common.GlobalCustomPreferences
+import app.katari.core.metro.AppCoroutineScope
+import app.katari.domain.extension.interactor.UpdateExtensionStores
+import app.katari.domain.extension.repository.ExtensionStoreRepository
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -17,12 +23,6 @@ import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.common.GlobalCustomPreferences
-import mihon.core.metro.AppCoroutineScope
-import mihon.domain.extension.interactor.UpdateExtensionStores
-import mihon.domain.extension.repository.ExtensionStoreRepository
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.SourceRepository
 

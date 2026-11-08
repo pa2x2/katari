@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.gesture
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayer
 
 /**
  * How the viewer acts on the watched picture. Android's are the touch gestures on the video's own view; desktop's are

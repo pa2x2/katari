@@ -5,11 +5,11 @@
          anything open (sheets, search, a selection, the controls) stays open. -->
     <application>
         <activity
-            android:name="mihon.entry.interactions.book.reader.BookReaderHostActivity"
+            android:name="app.katari.entry.interactions.book.reader.BookReaderHostActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="false" />
         <activity
-            android:name="mihon.entry.interactions.book.document.reader.BookDocumentReaderActivity"
+            android:name="app.katari.entry.interactions.book.document.reader.BookDocumentReaderActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="false" />
     </application>

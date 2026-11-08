@@ -1,5 +1,6 @@
 package app.katari.sync.client.trigger
 
+import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.sync.client.account.DeviceListChanges
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mihon.core.platform.network.NetworkConnectivity
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration

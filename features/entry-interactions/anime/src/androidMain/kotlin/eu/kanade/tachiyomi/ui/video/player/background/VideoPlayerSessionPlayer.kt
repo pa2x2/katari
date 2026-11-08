@@ -14,6 +14,9 @@ import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerError
+import app.katari.video.engine.spi.player.VideoPlayerState
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
@@ -23,9 +26,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerError
-import mihon.video.engine.spi.player.VideoPlayerState
 
 /**
  * The playing episode's [VideoPlayer], whichever engine plays it, as the Media3 player Android's media session runs on:

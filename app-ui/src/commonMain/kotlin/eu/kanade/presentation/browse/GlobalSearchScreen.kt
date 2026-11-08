@@ -6,6 +6,15 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.TravelExplore
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.EmptyScreenAction
+import app.katari.presentation.kit.layout.CardFlow
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchItemCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
@@ -18,15 +27,6 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.TravelExplore
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.EmptyScreenAction
-import mihon.presentation.kit.layout.CardFlow
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.plus
 

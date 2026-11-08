@@ -1,5 +1,13 @@
 package eu.kanade.tachiyomi.ui.entry.members
 
+import app.katari.entry.interactions.merge.EntryMergeEditorProjection
+import app.katari.entry.interactions.merge.EntryMergeFeature
+import app.katari.entry.interactions.merge.EntryMergeMetadataRefreshFeature
+import app.katari.entry.interactions.merge.EntryMergeNavigationFeature
+import app.katari.entry.interactions.merge.EntryMergePreparationResult
+import app.katari.entry.interactions.merge.EntryMergePrepareIntent
+import app.katari.entry.interactions.merge.EntryMergeSubject
+import app.katari.library.search.librarySearchQuery
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -13,14 +21,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import mihon.entry.interactions.merge.EntryMergeEditorProjection
-import mihon.entry.interactions.merge.EntryMergeFeature
-import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
-import mihon.entry.interactions.merge.EntryMergeNavigationFeature
-import mihon.entry.interactions.merge.EntryMergePreparationResult
-import mihon.entry.interactions.merge.EntryMergePrepareIntent
-import mihon.entry.interactions.merge.EntryMergeSubject
-import mihon.feature.library.search.librarySearchQuery
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry

@@ -1,8 +1,8 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.dialog.ConfirmDialog
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionReplacement
-import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

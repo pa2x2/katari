@@ -3,7 +3,7 @@ package eu.kanade.core.util
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import mihon.app.ui.di.LocalAppUiGraph
+import app.katari.ui.di.LocalAppUiGraph
 
 @Composable
 fun ifSourcesLoaded(): Boolean {

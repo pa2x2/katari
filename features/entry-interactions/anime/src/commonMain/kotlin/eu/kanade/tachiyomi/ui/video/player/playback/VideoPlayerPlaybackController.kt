@@ -3,13 +3,13 @@ package eu.kanade.tachiyomi.ui.video.player.playback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.video.engine.spi.player.VideoPlayer
 import java.util.IdentityHashMap
 
 /**

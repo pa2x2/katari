@@ -4,11 +4,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 
 /** A filter group's header with a line under it saying what the group decides. */
 @Composable

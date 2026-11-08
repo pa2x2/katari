@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.video.player.gesture
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
+import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
-import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

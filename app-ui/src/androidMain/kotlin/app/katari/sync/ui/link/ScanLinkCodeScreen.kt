@@ -16,6 +16,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Keyboard
+import app.katari.presentation.kit.content.ScanFrame
+import app.katari.presentation.kit.content.ScanFrameNote
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupAction
+import app.katari.presentation.kit.list.RowGroupNote
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.sync.client.account.LinkCodeLink
 import app.katari.sync.protocol.link.InviteLink
 import app.katari.sync.ui.signin.SyncJoinViewModel
@@ -26,16 +36,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.util.Screen
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.presentation.kit.content.ScanFrame
-import mihon.presentation.kit.content.ScanFrameNote
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupAction
-import mihon.presentation.kit.list.RowGroupNote
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.claims
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -9,7 +10,6 @@ import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import mihon.domain.extension.model.ContentWarning
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.identity.RegisteredSource
 import tachiyomi.domain.source.identity.SourceIdScheme

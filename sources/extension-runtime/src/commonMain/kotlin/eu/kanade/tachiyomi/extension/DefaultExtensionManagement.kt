@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension
 
+import app.katari.profiles.core.ProfileStore
+import app.katari.profiles.sourcepreferences.SourcePreferenceFiles
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -7,8 +9,6 @@ import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import kotlinx.coroutines.flow.Flow
-import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.getAndSet
 
 /** The apks and files the extension manager loads, installs and lists from the stores. */

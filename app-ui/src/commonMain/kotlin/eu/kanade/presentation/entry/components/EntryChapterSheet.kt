@@ -1,10 +1,10 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.sheet.ChapterSheet
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.sheet.ChapterSheet
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.presentation.core.i18n.stringResource
 

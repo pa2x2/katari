@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextEdit
@@ -13,7 +14,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 
 internal class FilterAutocompleteController(
     private val filter: EntryFilter.Autocomplete,

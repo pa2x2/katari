@@ -1,13 +1,13 @@
+import app.katari.gradle.configurations.configureKotlin
+import app.katari.gradle.configurations.configureMultiplatformTestVerification
+import app.katari.gradle.extensions.alias
+import app.katari.gradle.extensions.compileSdkFromCatalog
+import app.katari.gradle.extensions.configureTest
+import app.katari.gradle.extensions.coreLibraryDesugaring
+import app.katari.gradle.extensions.katari
+import app.katari.gradle.extensions.libs
+import app.katari.gradle.extensions.plugins
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
-import mihon.gradle.configurations.configureKotlin
-import mihon.gradle.configurations.configureMultiplatformTestVerification
-import mihon.gradle.extensions.alias
-import mihon.gradle.extensions.compileSdkFromMihonx
-import mihon.gradle.extensions.configureTest
-import mihon.gradle.extensions.coreLibraryDesugaring
-import mihon.gradle.extensions.libs
-import mihon.gradle.extensions.mihonx
-import mihon.gradle.extensions.plugins
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -33,8 +33,8 @@ class PluginKotlinMultiplatform : Plugin<Project> {
             applyDefaultHierarchyTemplate()
 
             android {
-                minSdk = mihonx.versions.android.sdk.min.get().toInt()
-                compileSdk(compileSdkFromMihonx())
+                minSdk = katari.versions.android.sdk.min.get().toInt()
+                compileSdk(compileSdkFromCatalog())
                 enableCoreLibraryDesugaring = true
             }
         }

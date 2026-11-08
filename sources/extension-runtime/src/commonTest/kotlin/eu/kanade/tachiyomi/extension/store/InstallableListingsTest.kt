@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.extension.store
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.model.ExtensionStoreFormat
 import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -7,9 +10,6 @@ import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import io.kotest.matchers.collections.shouldContainExactly
 import io.mockk.mockk
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.ExtensionStoreFormat
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.identity.SourceIdScheme
 
@@ -25,8 +25,9 @@ class InstallableListingsTest {
             availableExtension(name = "Entry 2.6", libVersionName = "2.6.0"),
             availableExtension(name = "Entry 2.7", libVersionName = "2.7.0"),
             availableExtension(name = "Entry 3.0", libVersionName = "3.0.0"),
-            availableExtension(name = "Entry 3.0 patch", libVersionName = "3.0.1"),
-            availableExtension(name = "Future Entry 3.1", libVersionName = "3.1.0"),
+            availableExtension(name = "Entry 4.0", libVersionName = "4.0.0"),
+            availableExtension(name = "Entry 4.0 patch", libVersionName = "4.0.1"),
+            availableExtension(name = "Future Entry 4.1", libVersionName = "4.1.0"),
             availableExtension(name = "Aniyomi 14", libVersionName = "14", sourceIdScheme = SourceIdScheme.ANIYOMI),
             availableExtension(
                 name = "Future Aniyomi 18",
@@ -40,8 +41,8 @@ class InstallableListingsTest {
             .map { it.name } shouldContainExactly listOf(
             "Legacy 1.6",
             "Legacy 1.6 patch",
-            "Entry 3.0",
-            "Entry 3.0 patch",
+            "Entry 4.0",
+            "Entry 4.0 patch",
             "Aniyomi 14",
         )
     }

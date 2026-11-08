@@ -1,5 +1,17 @@
 package eu.kanade.tachiyomi.ui.entry.preview
 
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.media.EntryPreviewAvailability
+import app.katari.entry.interactions.media.EntryPreviewChildCandidate
+import app.katari.entry.interactions.media.EntryPreviewConfig
+import app.katari.entry.interactions.media.EntryPreviewContext
+import app.katari.entry.interactions.media.EntryPreviewFeature
+import app.katari.entry.interactions.media.EntryPreviewHandle
+import app.katari.entry.interactions.media.EntryPreviewLoadRequest
+import app.katari.entry.interactions.media.EntryPreviewLoadResult
+import app.katari.entry.interactions.media.EntryPreviewOpenTargetResult
+import app.katari.entry.interactions.media.EntryPreviewPageStatus
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -18,18 +30,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.media.EntryPreviewAvailability
-import mihon.entry.interactions.media.EntryPreviewChildCandidate
-import mihon.entry.interactions.media.EntryPreviewConfig
-import mihon.entry.interactions.media.EntryPreviewContext
-import mihon.entry.interactions.media.EntryPreviewFeature
-import mihon.entry.interactions.media.EntryPreviewHandle
-import mihon.entry.interactions.media.EntryPreviewLoadRequest
-import mihon.entry.interactions.media.EntryPreviewLoadResult
-import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
-import mihon.entry.interactions.media.EntryPreviewPageStatus
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.model.Entry

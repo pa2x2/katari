@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.video.engine.spi.player.VideoPlayerError
 import dev.icerock.moko.resources.StringResource
-import mihon.video.engine.spi.player.VideoPlayerError
 import tachiyomi.i18n.*
 import java.net.ConnectException
 import java.net.NoRouteToHostException
