@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,7 +18,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.presentation.kit.window.currentWindowLayout
@@ -64,9 +62,6 @@ internal fun VideoPlayerControlsLayer(
         skipOffer?.let { offer -> onlineMarkers.firstOrNull { it.marker == offer.marker }?.service }
     }
     val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
-    LaunchedEffect(shown) {
-        if (!shown) ui.controlsFootprint = VideoControlsFootprint.None
-    }
     if (shown) {
         VideoPlayerOverlay(
             visible = ui.controlsVisible,
@@ -187,7 +182,6 @@ internal fun VideoPlayerControlsLayer(
             skipService = skipService,
             skipCountdown = skipCountdown,
             onSkip = onSkip,
-            onControlsFootprintChange = { ui.controlsFootprint = it },
             onPointerOverControlsChange = { over: Boolean ->
                 ui.pointerOverControls = over
             }.takeIf { host.input.hovers },

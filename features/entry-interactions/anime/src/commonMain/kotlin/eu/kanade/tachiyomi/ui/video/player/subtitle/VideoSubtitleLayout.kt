@@ -8,8 +8,8 @@ import tachiyomi.domain.entry.model.PictureFraming
  *
  * Their size and drag offsets stay a share of the picture's size, as when they were always drawn over it. A fitted
  * picture leaves bands above and below it; when the band under it holds two lines, the subtitles move into it unless
- * the viewer keeps them in the picture. Whenever the controls show, the subtitles rise above their bottom row, which
- * lifts band subtitles back over the bottom of the picture until the row hides.
+ * the viewer keeps them in the picture. They keep that place whatever the player's controls do: the controls and their
+ * shade are laid over them rather than moving them.
  *
  * Cues their file places go in the area [areaLeft], [areaTop], [areaWidth] by [areaHeight]: the fitted picture, or the
  * whole player once the picture fills or is zoomed past it. Every cue is moved by [shiftX] and [shiftY], the
@@ -29,17 +29,7 @@ internal data class VideoSubtitleLayout(
     val shiftY: Float,
 )
 
-/**
- * Where the shown controls sit over the bottom of the player, in pixels up from its bottom edge: the top of their
- * bottom row and the bottom of the centre buttons, zero for what doesn't show.
- */
-internal data class VideoControlsFootprint(val bottomRowTopPx: Float, val centreButtonsBottomPx: Float) {
-    companion object {
-        val None = VideoControlsFootprint(bottomRowTopPx = 0f, centreButtonsBottomPx = 0f)
-    }
-}
-
-/** [gapPx] keeps the subtitles off the picture's edge and the controls. */
+/** [gapPx] keeps band subtitles off the picture's edge. */
 internal fun videoSubtitleLayout(
     playerWidth: Float,
     playerHeight: Float,
@@ -47,7 +37,6 @@ internal fun videoSubtitleLayout(
     framing: PictureFraming,
     appearance: VideoSubtitleAppearance,
     keepInPicture: Boolean,
-    controls: VideoControlsFootprint,
     gapPx: Float,
 ): VideoSubtitleLayout {
     val normalizedAppearance = appearance.normalized()
@@ -61,21 +50,10 @@ internal fun videoSubtitleLayout(
     val band = (playerHeight - baseHeight) / 2f
     val twoLinesPx = textSizePx * TWO_LINES_HEIGHT
     val inBand = fitted && !keepInPicture && band >= twoLinesPx + gapPx * 2f
-    val restingBottom = if (inBand) {
+    val bottomPx = if (inBand) {
         band - gapPx - twoLinesPx
     } else {
         band + baseHeight * DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION
-    }
-    val bottomPx = if (controls.bottomRowTopPx > 0f) {
-        val aboveRow = controls.bottomRowTopPx + gapPx
-        // A short window leaves no room for two lines between the row and the centre buttons, so the lines stop
-        // under the buttons and overlap the row's top, which holds the time and chapter at its start and a skip
-        // button at its end
-        val underButtons = controls.centreButtonsBottomPx - gapPx - twoLinesPx
-        val lifted = if (controls.centreButtonsBottomPx > 0f) minOf(aboveRow, underButtons) else aboveRow
-        maxOf(restingBottom, lifted)
-    } else {
-        restingBottom
     }
     return VideoSubtitleLayout(
         playerWidth = playerWidth,

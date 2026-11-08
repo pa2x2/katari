@@ -27,7 +27,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackSt
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
@@ -196,7 +195,6 @@ internal fun AnimeImmersivePlayerSurface(
                     framing = PictureFraming.Fit,
                     appearance = DEFAULT_APPEARANCE,
                     keepInPicture = true,
-                    controls = VideoControlsFootprint.None,
                     gapPx = subtitleGapPx,
                 )
             },

@@ -49,7 +49,6 @@ import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
@@ -484,7 +483,6 @@ internal fun VideoPlayerWatchScreen(
                 ui = ui,
                 aspectRatio = inputTarget.videoAspectRatio,
                 framing = inputTarget.pictureFraming,
-                controls = ui.controlsFootprint,
                 keepSubtitlesInPicture = visit.subtitlesInPicture,
                 modifier = pictureArea,
             )
@@ -512,7 +510,6 @@ internal fun VideoPlayerWatchScreen(
                             ui = ui,
                             aspectRatio = inputTarget.videoAspectRatio,
                             framing = PictureFraming.Fit,
-                            controls = VideoControlsFootprint.None,
                             keepSubtitlesInPicture = visit.subtitlesInPicture,
                             modifier = modifier,
                         )

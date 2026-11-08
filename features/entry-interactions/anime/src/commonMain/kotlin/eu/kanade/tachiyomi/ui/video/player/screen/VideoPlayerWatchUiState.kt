@@ -10,7 +10,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbac
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import tachiyomi.domain.entry.model.PictureFraming
 
@@ -48,8 +47,6 @@ internal class VideoPlayerWatchUiState(
     var seekFeedbackState by mutableStateOf<VideoPlayerSeekFeedbackState?>(null)
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
-
-    var controlsFootprint by mutableStateOf(VideoControlsFootprint.None)
 
     /** A mouse rests on one of the controls, which keeps them from hiding after a while. */
     var pointerOverControls by mutableStateOf(false)
