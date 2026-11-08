@@ -1,6 +1,6 @@
 # Sync Server Changelog
 
-## [1.0.0-beta.1] - 2026-11-06
+## [1.0.0] - 2026-11-08
 
 ### ✨ Added
 
@@ -9,5 +9,5 @@
 - All data lives in one volume at `/data`, and deleted records and unused files are cleaned up on their own.
 - `reset-password` gives a locked-out admin a new password from inside the container.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.0.0-beta.1...HEAD
-[1.0.0-beta.1]: https://github.com/pa2x2/katari/tree/sync-server-v1.0.0-beta.1
+[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.0.0...HEAD
+[1.0.0]: https://github.com/pa2x2/katari/tree/sync-server-v1.0.0
