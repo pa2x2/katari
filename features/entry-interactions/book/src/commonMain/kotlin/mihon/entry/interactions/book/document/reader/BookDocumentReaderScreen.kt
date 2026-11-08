@@ -86,6 +86,7 @@ import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.presentation.kit.feedback.ScreenMessagesOverlay
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.sheet.SheetBackdrop
@@ -483,6 +484,11 @@ internal fun BookDocumentReaderScreen(
                                     WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
                                 ),
                             ),
+                    )
+                    // The reader has no Scaffold to show the screen's messages, which would otherwise wait for the screen
+                    // under it. Where there is no screen, as in Android's activity, they are toasts and this draws nothing.
+                    ScreenMessagesOverlay(
+                        modifier = Modifier.padding(bottom = KatariTheme.sizes.touchTarget + KatariTheme.spacing.s),
                     )
                 },
             )

@@ -5,6 +5,7 @@ import mihon.tts.api.engine.TtsEngineAction
 import mihon.tts.api.engine.TtsEngineId
 import mihon.tts.api.engine.TtsEngineState
 import mihon.tts.api.engine.TtsEngineStatus
+import mihon.tts.ui.engine.engineExplanation
 
 internal enum class TtsEngineStatusLabel {
     Checking,
@@ -46,46 +47,17 @@ internal fun projectTtsEngineCard(
 }
 
 private fun TtsEngineStatus.toPresentation(): TtsEngineStatusPresentation {
-    return when (this) {
-        TtsEngineStatus.Checking -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.Checking,
-            StatusTone.Checking,
-            null,
-        )
-        TtsEngineStatus.Ready -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.Ready,
-            StatusTone.Ready,
-            null,
-        )
-        is TtsEngineStatus.NotInstalled -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.NotInstalled,
-            StatusTone.ActionRequired,
-            reason,
-        )
-        is TtsEngineStatus.ConfigurationRequired -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.SetupRequired,
-            StatusTone.ActionRequired,
-            reason,
-        )
-        is TtsEngineStatus.ProviderDisclosureRequired -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.SetupRequired,
-            StatusTone.ActionRequired,
-            disclosure.message,
-        )
-        is TtsEngineStatus.VoiceDataRequired -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.VoiceDataRequired,
-            StatusTone.ActionRequired,
-            reason,
-        )
-        is TtsEngineStatus.Unavailable -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.Unavailable,
-            StatusTone.Unavailable,
-            reason,
-        )
-        is TtsEngineStatus.Failed -> TtsEngineStatusPresentation(
-            TtsEngineStatusLabel.Unavailable,
-            StatusTone.Unavailable,
-            reason,
-        )
+    val (label, tone) = when (this) {
+        TtsEngineStatus.Checking -> TtsEngineStatusLabel.Checking to StatusTone.Checking
+        TtsEngineStatus.Ready -> TtsEngineStatusLabel.Ready to StatusTone.Ready
+        is TtsEngineStatus.NotInstalled -> TtsEngineStatusLabel.NotInstalled to StatusTone.ActionRequired
+        is TtsEngineStatus.ConfigurationRequired,
+        is TtsEngineStatus.ProviderDisclosureRequired,
+        -> TtsEngineStatusLabel.SetupRequired to StatusTone.ActionRequired
+        is TtsEngineStatus.VoiceDataRequired -> TtsEngineStatusLabel.VoiceDataRequired to StatusTone.ActionRequired
+        is TtsEngineStatus.Unavailable,
+        is TtsEngineStatus.Failed,
+        -> TtsEngineStatusLabel.Unavailable to StatusTone.Unavailable
     }
+    return TtsEngineStatusPresentation(label, tone, engineExplanation())
 }

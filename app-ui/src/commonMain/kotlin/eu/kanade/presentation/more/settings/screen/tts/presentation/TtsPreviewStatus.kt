@@ -13,7 +13,7 @@ import mihon.tts.api.playback.TtsPlaybackFailureReason
 import mihon.tts.api.preparation.TtsPreparation
 import mihon.tts.api.preparation.TtsSystemSetupReason
 import mihon.tts.api.provider.TtsProviderDisclosure
-import mihon.tts.ui.playback.engineExplanation
+import mihon.tts.ui.engine.engineExplanation
 import mihon.tts.ui.settings.TtsPreviewState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
