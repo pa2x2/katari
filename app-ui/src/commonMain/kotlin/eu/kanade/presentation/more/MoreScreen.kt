@@ -15,8 +15,8 @@ import mihon.feature.profiles.ui.switcher.ActiveProfileCard
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.automirroredrounded.Label
-import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.DownloadDone
 import mihon.icons.materialsymbols.rounded.Eyeglasses2
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.Keyboard
@@ -78,7 +78,7 @@ fun MoreScreen(
                     SwitchPreferenceWidget(
                         title = stringResource(MR.strings.label_downloaded_only),
                         subtitle = stringResource(MR.strings.downloaded_only_summary),
-                        icon = MaterialSymbols.Rounded.CloudOff,
+                        icon = MaterialSymbols.Rounded.DownloadDone,
                         checked = downloadedOnly,
                         onCheckedChanged = onDownloadedOnlyChange,
                     )
