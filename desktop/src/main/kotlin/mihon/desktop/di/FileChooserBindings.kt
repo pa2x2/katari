@@ -4,9 +4,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.filechooser.portal.PortalFileChooser
 import mihon.desktop.filechooser.toolkit.ToolkitFileChooser
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.presentation.kit.files.SystemFileChooser
 
 @BindingContainer

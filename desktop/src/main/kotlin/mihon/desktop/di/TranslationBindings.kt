@@ -7,7 +7,7 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSettingsScreens
-import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.secrets.SecretServiceStore
 import mihon.desktop.translation.InProcessEntryTranslateWorkController
 import mihon.desktop.translation.WindowEntryTranslateSettingsScreens

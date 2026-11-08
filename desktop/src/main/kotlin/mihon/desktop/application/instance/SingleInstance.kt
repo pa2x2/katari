@@ -1,7 +1,7 @@
 package mihon.desktop.application.instance
 
 import kotlinx.coroutines.flow.Flow
-import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.storage.DesktopDirectories
 
 /**

@@ -1,7 +1,7 @@
 package mihon.desktop.storage
 
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.application.DesktopAppVariant
-import mihon.desktop.platform.DesktopOperatingSystem
 
 /** The [DesktopDirectories] of [operatingSystem], this build's own. */
 fun systemDesktopDirectories(operatingSystem: DesktopOperatingSystem): DesktopDirectories {

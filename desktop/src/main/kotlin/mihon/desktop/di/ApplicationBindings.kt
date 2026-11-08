@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.app.ui.host.LogDestinations
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.platform.PlatformContext
 import mihon.desktop.application.ApplicationPlatformContext
 import mihon.desktop.application.DesktopAppVariant
@@ -13,7 +14,6 @@ import mihon.desktop.application.DesktopBuildInfo
 import mihon.desktop.application.installation.AppInstallation
 import mihon.desktop.application.installation.systemAppInstallation
 import mihon.desktop.logging.DesktopLogDestinations
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.domain.app.AppIdentity
 
 @BindingContainer

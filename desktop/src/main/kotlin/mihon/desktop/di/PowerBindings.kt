@@ -5,10 +5,10 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.power.PowerSource
 import mihon.core.platform.power.ScreenIdleInhibitor
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.power.PortalScreenIdleInhibitor
 import mihon.desktop.power.UPowerPowerSource
 

@@ -1,6 +1,6 @@
 package mihon.desktop.application.installation
 
-import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.core.common.platform.DesktopOperatingSystem
 import java.io.File
 
 /**

@@ -7,6 +7,7 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.appearance.InterfaceSizeSetting
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.display.backend.LinuxDisplayBackend
@@ -14,7 +15,6 @@ import mihon.desktop.display.size.DesktopInterfaceSizeSetting
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.display.size.XftSessionScale
-import mihon.desktop.platform.DesktopOperatingSystem
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller

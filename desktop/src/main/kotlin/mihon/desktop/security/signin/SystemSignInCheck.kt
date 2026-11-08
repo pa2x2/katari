@@ -1,10 +1,10 @@
 package mihon.desktop.security.signin
 
-import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.security.pam.PamSignInCheck
 
 /**
- * How [operatingSystem] checks the user's sign-in. The app finds the [configuration] the system checks with, and
+ * How the operating system checks the user's sign-in. The app finds the [configuration] the system checks with, and
  * the sign-in check process ([SignInCheckProcess]) started with it runs the [check].
  */
 interface SystemSignInCheck {

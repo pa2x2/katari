@@ -6,11 +6,11 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.home.HomeDestinations
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.OpenWindow
 import mihon.presentation.kit.feedback.AppMessages

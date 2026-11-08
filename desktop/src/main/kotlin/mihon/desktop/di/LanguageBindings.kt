@@ -6,11 +6,11 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.util.SystemClockFormat
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.platform.locale.AppLocaleStore
 import mihon.desktop.appearance.PortalClockFormat
 import mihon.desktop.appearance.PortalSettings
 import mihon.desktop.appearance.PreferenceAppLocaleStore
-import mihon.desktop.platform.DesktopOperatingSystem
 
 @BindingContainer
 interface LanguageBindings {

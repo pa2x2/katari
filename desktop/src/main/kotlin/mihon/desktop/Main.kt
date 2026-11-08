@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import mihon.app.ui.host.AppProcessStart
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.application.AppRelaunch
 import mihon.desktop.application.installation.systemAppInstallation
 import mihon.desktop.application.instance.InstanceClaim
@@ -26,7 +27,6 @@ import mihon.desktop.di.createDesktopGraph
 import mihon.desktop.extension.prepareExtensionHost
 import mihon.desktop.extension.startExtensionHost
 import mihon.desktop.home.HomeWindowContent
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.player.Host
 import mihon.desktop.security.signin.SignInCheckProcess
 import mihon.desktop.security.signin.systemSignInCheck

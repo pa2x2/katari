@@ -6,9 +6,9 @@ import eu.kanade.presentation.more.settings.screen.debug.DeviceDiagnostics
 import eu.kanade.presentation.more.settings.screen.debug.DeviceFact
 import eu.kanade.presentation.util.Screen
 import logcat.LogPriority
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.platform.PlatformContext
 import mihon.desktop.logging.DesktopLogFiles
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.presentation.kit.feedback.AppMessages
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat

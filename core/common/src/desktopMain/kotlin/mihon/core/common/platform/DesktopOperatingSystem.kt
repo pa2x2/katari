@@ -1,4 +1,4 @@
-package mihon.desktop.platform
+package mihon.core.common.platform
 
 /**
  * The operating systems Katari on desktop runs on. Everything that differs between them sits behind an interface with
@@ -13,7 +13,7 @@ enum class DesktopOperatingSystem(
 
     companion object {
         fun current(): DesktopOperatingSystem {
-            val osName = System.getProperty("os.name")
+            val osName = System.getProperty("os.name").orEmpty()
             return when {
                 osName.startsWith("Linux") -> LINUX
                 else -> error("Katari on desktop runs on Linux only, not on $osName")

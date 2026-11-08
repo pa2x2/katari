@@ -6,8 +6,8 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.metro.AppCoroutineScope
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.player.WindowAnimePlayer
 import mihon.desktop.player.mediacontrols.MprisAnimePlayerMediaControls
 import mihon.desktop.player.mediacontrols.PlayerArtworkFiles

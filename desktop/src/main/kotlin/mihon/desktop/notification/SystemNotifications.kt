@@ -1,10 +1,10 @@
 package mihon.desktop.notification
 
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.desktop.notification.freedesktop.DbusNotificationServer
 import mihon.desktop.notification.freedesktop.FreedesktopNotifications
 import mihon.desktop.notification.freedesktop.NotificationIconFile
 import mihon.desktop.notification.freedesktop.ShownNotificationsRecord
-import mihon.desktop.platform.DesktopOperatingSystem
 import java.nio.file.Path
 
 /**

@@ -7,13 +7,13 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.appearance.AppThemeHost
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.appearance.DesktopAppThemeHost
 import mihon.desktop.appearance.FontconfigInterfaceFont
 import mihon.desktop.appearance.PortalAccentColor
 import mihon.desktop.appearance.PortalColorScheme
 import mihon.desktop.appearance.PortalSettings
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.presentation.kit.theme.SystemAccentColor
 import mihon.presentation.kit.theme.SystemColorScheme
 import mihon.presentation.kit.theme.SystemInterfaceFont

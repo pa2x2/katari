@@ -6,8 +6,8 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.common.platform.DesktopOperatingSystem
 import mihon.core.metro.AppCoroutineScope
-import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.presence.FreedesktopScreenLock
 import mihon.desktop.presence.ScreenLock
 import mihon.desktop.profile.DesktopProfileStore
