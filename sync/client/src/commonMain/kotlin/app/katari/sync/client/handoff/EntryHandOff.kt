@@ -68,6 +68,10 @@ class EntryHandOff(
 
     val arrivals: SharedFlow<ProgressArrival> = arrived.asSharedFlow()
 
+    /** Whether a check was told unreachable and no run has got through since ([pulled]). */
+    val toldUnreachable: Boolean
+        get() = HandOffCheck.Unreachable in checkStates.value.values
+
     /** Starts checking [entryIds]; one already being checked carries on with the limit it has. */
     internal fun checking(entryIds: Collection<Long>) {
         val started = synchronized(checkIds) {

@@ -4,6 +4,7 @@ import app.katari.sync.client.account.DeviceListChanges
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
+import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.LiveChannel
@@ -30,7 +31,9 @@ import kotlin.time.Duration.Companion.seconds
  * pause ([PullBatching], D064), so another device's change shows within seconds, and its count of the account's
  * devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
  * [MAX_BACKOFF] and starts over once the channel works; each end also starts a run, which finds out why when the
- * server refused it, as for a removed device.
+ * server refused it, as for a removed device. A channel heard from after the server or the network was found missing
+ * starts a run too, even with nothing new to pull: only a run that gets through tells the status, and an open entry's
+ * note that its progress is this device's own, that the server answers again.
  */
 @Inject
 class LiveUpdates(
@@ -39,6 +42,7 @@ class LiveUpdates(
     private val network: NetworkConnectivity,
     private val runs: SyncRuns,
     private val deviceChanges: DeviceListChanges,
+    private val handOff: EntryHandOff,
 ) {
     /** Whether the channel should be open: the app is in front, the device syncs, and there is a network. */
     fun wanted(foreground: Flow<Boolean>): Flow<Boolean> = combine(
@@ -85,9 +89,12 @@ class LiveUpdates(
                     override fun onAnnouncement(changes: ChangesAvailable) {
                         heard.set(true)
                         deviceChanges.hear(changes.devices)
-                        if (latest.get().isBehind(changes.server)) {
+                        val state = latest.get()
+                        if (state.isBehind(changes.server)) {
                             announced.set(changes.server)
                             batching.hear()
+                        } else if (state.unreachableSince != null || handOff.toldUnreachable) {
+                            runs.request(SyncRequest())
                         }
                     }
 

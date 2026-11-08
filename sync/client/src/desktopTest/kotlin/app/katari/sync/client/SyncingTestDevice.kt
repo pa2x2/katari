@@ -110,7 +110,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     )
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges),
+        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff),
         LocalChanges(local.driver),
         work,
         connection,
