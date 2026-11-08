@@ -190,6 +190,9 @@ class SyncAccount(
         if (!sameAccount) capture.start()
     }
 
+    /** This device's ID in its account, known without the server; null while the device has never joined one. */
+    suspend fun thisDevice(): DeviceId? = connection.state().device
+
     suspend fun devices(): AccountCall<List<AccountDevice>> = linked { client, device ->
         client.devices().devices.also(devices::remember).map { AccountDevice(it, isThisDevice = it.id == device) }
     }

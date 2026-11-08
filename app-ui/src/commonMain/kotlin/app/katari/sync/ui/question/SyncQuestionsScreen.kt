@@ -2,39 +2,39 @@ package app.katari.sync.ui.question
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import app.katari.sync.client.kind.question.ProfileDeletionAnswer
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.relativeTimeSpanString
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Delete
-import mihon.icons.materialsymbols.rounded.EditNote
-import mihon.icons.materialsymbols.rounded.SwapHoriz
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import kotlinx.coroutines.launch
+import mihon.core.platform.currentPlatformContext
+import mihon.presentation.kit.feedback.SnackbarDuration
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowAction
-import mihon.presentation.kit.list.RowActions
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
+import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Needs your answer (D029): one card per question, saying what happened, on which devices, and what every device
- * shows until it is answered, with the answers that settle it. Opened from the Sync rows and an entry's banner.
+ * shows until it is answered, with the answers that settle it. Opened from the Sync rows and an entry's banner, it goes
+ * back there once the last question is answered (D025).
  */
 data object SyncQuestionsScreen : Screen() {
 
@@ -45,6 +45,32 @@ data object SyncQuestionsScreen : Screen() {
         val open by model.open.collectAsState()
         // The entry key of the notes question whose versions are shown
         var notesShown by rememberSaveable { mutableStateOf<String?>(null) }
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
+        val context = currentPlatformContext()
+
+        LaunchedEffect(model) { model.allAnswered.collect { navigator.pop() } }
+
+        // The deletion is written once the message goes without Undo, or once the screen is left while it shows
+        val deleteProfile: (NamedQuestion.ProfileDeletion) -> Unit = { question ->
+            model.startDeletion(question)
+            scope.launch {
+                var undone = false
+                try {
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                    undone = snackbarHostState.showSnackbar(
+                        message = context.stringResource(
+                            MR.strings.sync_question_profile_deleted,
+                            question.profileName ?: context.stringResource(MR.strings.sync_unknown_profile),
+                        ),
+                        actionLabel = context.stringResource(MR.strings.action_undo),
+                        duration = SnackbarDuration.Short,
+                    ) == SnackbarResult.ActionPerformed
+                } finally {
+                    if (undone) model.undoDeletion(question) else model.deleteProfile(question)
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -54,6 +80,7 @@ data object SyncQuestionsScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
+            snackbarHostState = snackbarHostState,
         ) { contentPadding ->
             RowList(contentPadding = contentPadding) {
                 val questions = open ?: return@RowList
@@ -65,12 +92,22 @@ data object SyncQuestionsScreen : Screen() {
                     item {
                         RowGroupItem(RowGroupPosition.Alone) {
                             Column {
-                                QuestionCard(
-                                    question = question,
-                                    onKeepMigration = model::keepMigration,
-                                    onShowNotes = { notesShown = it.question.entryKey },
-                                    onAnswerProfile = model::answerProfileDeletion,
-                                )
+                                when (question) {
+                                    is NamedQuestion.Migration -> MigrationQuestionCard(
+                                        question = question,
+                                        onKeep = { model.keepMigration(question, it) },
+                                        onOpenEntry = { navigator.push(EntryScreen(it)) },
+                                    )
+                                    is NamedQuestion.Notes -> NotesQuestionCard(
+                                        question = question,
+                                        onChoose = { notesShown = question.question.entryKey },
+                                    )
+                                    is NamedQuestion.ProfileDeletion -> ProfileDeletionQuestionCard(
+                                        question = question,
+                                        onDelete = { deleteProfile(question) },
+                                        onKeep = { model.keepProfile(question) },
+                                    )
+                                }
                             }
                         }
                     }
@@ -88,115 +125,6 @@ data object SyncQuestionsScreen : Screen() {
                 },
                 onDismissRequest = { notesShown = null },
             )
-        }
-    }
-}
-
-@Composable
-private fun QuestionCard(
-    question: NamedQuestion,
-    onKeepMigration: (NamedQuestion.Migration, String) -> Unit,
-    onShowNotes: (NamedQuestion.Notes) -> Unit,
-    onAnswerProfile: (NamedQuestion.ProfileDeletion, ProfileDeletionAnswer) -> Unit,
-) {
-    val unknownDevice = stringResource(MR.strings.sync_unknown_device)
-    when (question) {
-        is NamedQuestion.Migration -> {
-            val title = question.entryTitle ?: stringResource(MR.strings.sync_unknown_entry)
-            val moves = question.targets.map {
-                stringResource(
-                    MR.strings.sync_question_migration_move,
-                    it.device ?: unknownDevice,
-                    it.source ?: title,
-                )
-            }
-            SettingsRow(
-                title = stringResource(MR.strings.sync_question_migration_title, title),
-                subtitle = moves.joinToString(", ") + ". " + stringResource(MR.strings.sync_question_migration_kept),
-                icon = MaterialSymbols.Rounded.SwapHoriz,
-            )
-            val labels = question.targets.zip(question.keepLabels(title)) { target, label ->
-                target to when (label) {
-                    is KeepLabel.Source -> stringResource(MR.strings.sync_action_keep_source, label.name)
-                    is KeepLabel.Device -> stringResource(MR.strings.sync_action_keep_device, label.name)
-                    is KeepLabel.Order -> stringResource(
-                        if (label.later) MR.strings.sync_action_keep_later else MR.strings.sync_action_keep_earlier,
-                    )
-                }
-            }
-            // The one later edits follow for now is the proposed answer, last
-            RowActions(
-                labels.sortedBy { (target, _) -> target.key == question.question.provisional }.map { (target, label) ->
-                    RowAction(label = label, onClick = { onKeepMigration(question, target.key) })
-                },
-            )
-        }
-        is NamedQuestion.Notes -> {
-            SettingsRow(
-                title = stringResource(
-                    MR.strings.sync_question_notes_title,
-                    question.entryTitle ?: stringResource(MR.strings.sync_unknown_entry),
-                ),
-                subtitle = stringResource(MR.strings.sync_question_notes_text),
-                icon = MaterialSymbols.Rounded.EditNote,
-            )
-            RowActions(listOf(RowAction(stringResource(MR.strings.action_choose), { onShowNotes(question) })))
-        }
-        is NamedQuestion.ProfileDeletion -> {
-            val name = question.profileName ?: stringResource(MR.strings.sync_unknown_profile)
-            SettingsRow(
-                title = stringResource(MR.strings.sync_question_profile_title, name),
-                subtitle = stringResource(
-                    MR.strings.sync_question_profile_text,
-                    question.deletedOn ?: unknownDevice,
-                    question.changedOn ?: unknownDevice,
-                ),
-                icon = MaterialSymbols.Rounded.Delete,
-            )
-            RowActions(
-                listOf(
-                    RowAction(
-                        label = stringResource(MR.strings.action_delete),
-                        onClick = { onAnswerProfile(question, ProfileDeletionAnswer.DELETE) },
-                        destructive = true,
-                    ),
-                    RowAction(
-                        label = stringResource(MR.strings.sync_action_keep_profile),
-                        onClick = { onAnswerProfile(question, ProfileDeletionAnswer.KEEP) },
-                    ),
-                ),
-            )
-        }
-    }
-}
-
-/** Each version of the notes as its device wrote it; choosing one keeps it everywhere. */
-@Composable
-private fun NotesVersionsDialog(question: NamedQuestion.Notes, onKeep: (String) -> Unit, onDismissRequest: () -> Unit) {
-    val unknownDevice = stringResource(MR.strings.sync_unknown_device)
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        title = stringResource(
-            MR.strings.sync_question_notes_title,
-            question.entryTitle ?: stringResource(MR.strings.sync_unknown_entry),
-        ),
-        confirm = null,
-        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
-    ) {
-        Column {
-            question.versions.forEach { version ->
-                SettingsRow(
-                    title = version.notes,
-                    subtitle = stringResource(
-                        MR.strings.sync_question_notes_version,
-                        version.device ?: unknownDevice,
-                        relativeTimeSpanString(version.atMillis),
-                    ),
-                )
-                RowActions(
-                    listOf(RowAction(stringResource(MR.strings.sync_action_keep_these), { onKeep(version.notes) })),
-                )
-            }
         }
     }
 }

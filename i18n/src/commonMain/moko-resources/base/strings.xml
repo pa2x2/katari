@@ -3386,29 +3386,31 @@
     <!-- Sync: questions -->
     <string name="sync_questions_title">Needs your answer</string>
     <string name="sync_questions_none">Nothing needs your answer.</string>
+    <!-- %1$s is the profile's name -->
+    <string name="sync_question_in_profile">In the %1$s profile</string>
     <!-- %1$s is the entry's title -->
-    <string name="sync_question_migration_title">%1$s was migrated twice</string>
-    <!-- %1$s is a device's name, %2$s the source it migrated the entry to -->
-    <string name="sync_question_migration_move">%1$s moved it to %2$s</string>
-    <string name="sync_question_migration_kept">Both are kept until you choose.</string>
-    <!-- %1$s is a source's name -->
-    <string name="sync_action_keep_source">Keep %1$s</string>
-    <!-- %1$s is the name of the device that made one of the two migrations, when both went to sources of the same name -->
-    <string name="sync_action_keep_device">Keep %1$s\'s choice</string>
-    <!-- Answers of a migration question whose two migrations can't be told apart by source or device -->
-    <string name="sync_action_keep_earlier">Keep the earlier one</string>
-    <string name="sync_action_keep_later">Keep the later one</string>
+    <string name="sync_question_migration_title">%1$s was migrated on two devices</string>
+    <string name="sync_question_migration_kept">Both editions stay in your library until you choose.</string>
+    <!-- %1$s is the device that migrated the entry to this edition, %2$s when, such as "2 minutes ago" -->
+    <string name="sync_question_migration_moved">Moved on %1$s · %2$s</string>
+    <!-- %1$s is when this device migrated the entry to this edition, such as "2 minutes ago" -->
+    <string name="sync_question_migration_moved_here">Moved here · %1$s</string>
     <!-- %1$s is the profile's name -->
     <string name="sync_question_profile_title">%1$s was deleted</string>
     <!-- %1$s is the device that deleted it, %2$s the device that changed it since -->
     <string name="sync_question_profile_text">Deleted on %1$s, but %2$s changed things in it since. Kept for now.</string>
     <string name="sync_action_keep_profile">Keep profile</string>
+    <!-- %1$s is the profile's name; shown with Undo before the deletion is made -->
+    <string name="sync_question_profile_deleted">%1$s deleted</string>
     <!-- %1$s is the entry's title -->
     <string name="sync_question_notes_title">Notes on %1$s</string>
-    <string name="sync_question_notes_text">Edited on two devices at the same time. Showing the later notes for now.</string>
+    <string name="sync_question_notes_text">Edited on two devices before they synced. Showing the later notes for now.</string>
     <!-- %1$s is a device's name, %2$s when it wrote the notes -->
     <string name="sync_question_notes_version">%1$s · %2$s</string>
     <string name="sync_action_keep_these">Keep these</string>
+    <string name="sync_action_keep_both">Keep both</string>
+    <!-- This device as a sentence names it, such as "Deleted on this device" -->
+    <string name="sync_this_device_in_text">this device</string>
     <string name="sync_unknown_device">another device</string>
     <string name="sync_unknown_entry">An entry</string>
     <string name="sync_unknown_profile">A profile</string>
