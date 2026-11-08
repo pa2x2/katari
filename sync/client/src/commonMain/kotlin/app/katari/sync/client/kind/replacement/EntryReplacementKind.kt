@@ -135,13 +135,17 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
 
     /**
      * The replacement's own changes arrive as records of the new entry, made by the device that replaced it; here the
-     * old entry's rows follow a move to another profile, and its edits made since carry over ([ReplacedEntryEdits]).
+     * old entry's rows follow a move to another profile, or its activity follows a migration, as it did on that device,
+     * and its edits made since carry over ([ReplacedEntryEdits]).
      * The old entry never returns to the library: its record no longer sets it as a favorite ([EntryKind.apply]).
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: EntryReplacementPayload): ApplyOutcome {
         val replacement = payload.replacement.value
         val toId = writes.entryId(replacement.to).idOr { return it }
-        if (replacement.cause == Replacement.Cause.PROFILE_MOVE) moveRows(writes, payload.from, toId)
+        when (replacement.cause) {
+            Replacement.Cause.PROFILE_MOVE -> moveRows(writes, payload.from, toId)
+            Replacement.Cause.MIGRATION -> moveActivity(writes, payload.from, toId)
+        }
         ReplacedEntryEdits(writes).carryAll(payload.from)
         return ApplyOutcome.Applied(null)
     }
@@ -152,10 +156,8 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
      * entry already had, which its own records hold, and its custom cover, which the new entry's record names.
      */
     private suspend fun moveRows(writes: LocalWrites, from: String, toId: Long) {
-        val ref = writes.database.sync_recordsQueries.getByKey(from).awaitAsOneOrNull()?.local_ref ?: return
-        val fromId = LocalRef(ref).long(0)
+        val fromId = otherLocalEntry(writes, from, toId) ?: return
         val queries = writes.database.sync_applyQueries
-        if (fromId == toId || !queries.entryExists(fromId).awaitAsOne()) return
         val progressChapters = queries.progressChapterLinks(fromId).awaitAsList()
         queries.detachProgressChapters(fromId)
         queries.moveChapters(toEntryId = toId, fromEntryId = fromId)
@@ -166,5 +168,23 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
         writes.database.want(FileOwner.CustomCover(fromId), null)
         queries.deleteEntry(fromId)
+    }
+
+    /**
+     * Moves the old entry's sessions and completions to the entry that replaced it by a migration, as migrating moved
+     * them on the device that migrated. Its history moved there to the new entry's chapters, whose records bring it.
+     */
+    private suspend fun moveActivity(writes: LocalWrites, from: String, toId: Long) {
+        val fromId = otherLocalEntry(writes, from, toId) ?: return
+        val queries = writes.database.sync_applyQueries
+        queries.moveActivitySessions(toEntryId = toId, fromEntryId = fromId)
+        queries.moveActivityCompletions(toEntryId = toId, fromEntryId = fromId)
+    }
+
+    /** The local ID of the entry [from], when its row is here and isn't the entry [toId] it became. */
+    private suspend fun otherLocalEntry(writes: LocalWrites, from: String, toId: Long): Long? {
+        val ref = writes.database.sync_recordsQueries.getByKey(from).awaitAsOneOrNull()?.local_ref ?: return null
+        val fromId = LocalRef(ref).long(0)
+        return fromId.takeIf { it != toId && writes.database.sync_applyQueries.entryExists(it).awaitAsOne() }
     }
 }

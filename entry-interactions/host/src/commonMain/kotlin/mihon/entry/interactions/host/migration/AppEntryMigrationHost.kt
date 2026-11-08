@@ -265,6 +265,9 @@ internal class AppEntryMigrationHost(
                     transition.childUpdates.forEach { update ->
                         updateChild(update.updated)
                     }
+                    transition.historyChapterMoves?.let { moves ->
+                        moveReadingTime(transition.expectedSource.id, transition.expectedTarget.id, moves)
+                    }
                     transition.preparedTracks.forEach { track -> insertTrack(profileId, track) }
                     participateMergeReplacement?.let { replacement ->
                         when (val result = replacement()) {
@@ -430,6 +433,20 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         entryId = entry.id,
         profileId = profileId,
     )
+}
+
+/** History of a chapter without a counterpart stays with the old entry, which keeps that chapter. */
+private suspend fun Database.moveReadingTime(sourceEntryId: Long, targetEntryId: Long, chapterMoves: Map<Long, Long>) {
+    chapterMoves.forEach { (sourceChapterId, targetChapterId) ->
+        historyQueries.addToChapter(
+            toEntryId = targetEntryId,
+            toChapterId = targetChapterId,
+            fromChapterId = sourceChapterId,
+        )
+        historyQueries.removeByChapterId(sourceChapterId)
+    }
+    activityQueries.moveSessionsToEntry(toEntryId = targetEntryId, fromEntryId = sourceEntryId)
+    activityQueries.moveCompletionEventsToEntry(toEntryId = targetEntryId, fromEntryId = sourceEntryId)
 }
 
 private suspend fun Database.updateChild(child: EntryChapter) {

@@ -100,11 +100,86 @@ class EntryReplacementTest {
                         """["entry","default","aniyomi",888,"/new","anime",1,0,null,"Watched on the train",0,0,0]""",
                         """["chapter","/new","/new/1",1,0]""",
                         """["chapter","/new","/new/2",1,0]""",
-                        // Migrating leaves history with the old entry
+                        // Time read on the old entry after the migration stays with it
                         """["history","/old/2",5000,1200]""",
                         """["progress","/new","","/new/1",600,0]""",
                         """["tracker","/new",2,55,2,8.0]""",
                     )
+                }
+            }
+        }
+
+    @Test
+    fun `a migration takes the time read along on every device, also a session from before it was heard of`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        """
+                        INSERT INTO source_identities(local_key, id_scheme, external_id)
+                        VALUES (-2, 'aniyomi', 777), (-3, 'aniyomi', 888)
+                        """,
+                        "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/old', 'Book', 1, 'book')",
+                        "INSERT INTO chapters(_id, entry_id, url, name, chapter_number) VALUES (10, 1, '/old/1', 'Book', 1)",
+                        "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 10, 1000, 300)",
+                        """
+                        INSERT INTO activity_sessions(session_id, entry_id, started_at, ended_at, duration)
+                        VALUES ('session-a', 1, 700, 1000, 300)
+                        """,
+                    )
+                    exchange.settle(listOf(a, b))
+                    b.sql(
+                        "UPDATE history SET last_read = 2000, time_read = 500",
+                        """
+                        INSERT INTO activity_sessions(session_id, entry_id, started_at, ended_at, duration)
+                        SELECT 'session-b', _id, 1800, 2000, 200 FROM entries
+                        """,
+                    )
+                    exchange.settle(listOf(a, b))
+
+                    // A migrates the entry in replace mode as local migration does: the old chapter's history moves to
+                    // the matched new chapter, and the old entry's sessions to the new entry
+                    a.sql(
+                        "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (2, -3, '/new', 'Book', 1, 'book')",
+                        "INSERT INTO chapters(_id, entry_id, url, name, chapter_number) VALUES (20, 2, '/new/1', 'Book', 1)",
+                        """
+                        INSERT INTO entry_migration_operations(
+                            operation_id, intent_fingerprint, profile_id, source_entry_id, target_entry_id, mode,
+                            created_at
+                        )
+                        VALUES ('operation', 'REPLACE:CHILD_STATE', 1, 1, 2, 'REPLACE', 0)
+                        """,
+                        "UPDATE entries SET favorite = 0 WHERE _id = 1",
+                        """
+                        INSERT INTO history(entry_id, chapter_id, last_read, time_read)
+                        SELECT 2, 20, last_read, time_read FROM history WHERE chapter_id = 10
+                        """,
+                        "DELETE FROM history WHERE chapter_id = 10",
+                        "UPDATE activity_sessions SET entry_id = 2 WHERE entry_id = 1",
+                    )
+                    a.drainAll()
+                    delay(5)
+                    // B hasn't heard of it yet and reads the old entry once more
+                    b.sql(
+                        """
+                        INSERT INTO activity_sessions(session_id, entry_id, started_at, ended_at, duration)
+                        SELECT 'session-late', _id, 3000, 3100, 100 FROM entries WHERE url = '/old'
+                        """,
+                    )
+
+                    exchange.settle(listOf(a, b))
+
+                    a.library() shouldBe b.library()
+                    a.library().filter { it.startsWith("""["history"""") || it.startsWith("""["session"""") } shouldBe
+                        listOf(
+                            """["history","/new/1",2000,500]""",
+                            """["session","session-a","/new",700,1000,300]""",
+                            """["session","session-b","/new",1800,2000,200]""",
+                            """["session","session-late","/new",3000,3100,100]""",
+                        )
                 }
             }
         }

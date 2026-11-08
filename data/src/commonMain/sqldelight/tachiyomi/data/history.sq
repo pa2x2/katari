@@ -87,6 +87,23 @@ upsertInsert:
 INSERT OR IGNORE INTO history(entry_id, chapter_id, last_read, time_read)
 VALUES (:entryId, :chapterId, :readAt, :time_read);
 
+-- Adds a chapter's history to another's, keeping the later read; the chapter's own history stays until removed.
+addToChapter:
+INSERT INTO history(entry_id, chapter_id, last_read, time_read)
+SELECT :toEntryId, :toChapterId, last_read, time_read
+FROM history
+WHERE chapter_id = :fromChapterId
+ON CONFLICT(chapter_id) DO UPDATE SET
+    last_read = CASE
+        WHEN history.last_read IS NULL OR excluded.last_read > history.last_read THEN excluded.last_read
+        ELSE history.last_read
+    END,
+    time_read = history.time_read + excluded.time_read;
+
+removeByChapterId:
+DELETE FROM history
+WHERE chapter_id = :chapterId;
+
 getReadDuration:
 SELECT coalesce(sum(time_read), 0)
 FROM history
