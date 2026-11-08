@@ -54,12 +54,25 @@ class SyncAccount(
     /** Changes whenever the server says a device joined or left the account, while the app listens live. */
     val deviceListChanges: Flow<Long> get() = deviceChanges.heard
 
+    /**
+     * What [address] leads to. A local-network address typed without a scheme that finds no sync server over HTTPS is
+     * tried over plain HTTP (D002); when nothing answers there, the HTTPS answer says why.
+     */
     suspend fun checkServer(address: String): ServerCheck {
-        val url = when (val parsed = ServerAddress.parse(address)) {
-            is ServerAddress.Accepted -> parsed.url
+        val parsed = when (val parsed = ServerAddress.parse(address)) {
+            is ServerAddress.Accepted -> parsed
             ServerAddress.Malformed -> return ServerCheck.Malformed
             ServerAddress.PlainHttpOutsideLocalNetwork -> return ServerCheck.PlainHttpOutsideLocalNetwork
         }
+        val checked = checkServer(parsed.url)
+        val fallback = parsed.plainHttpFallback
+        if (fallback == null || (checked != ServerCheck.Unreachable && checked != ServerCheck.NotASyncServer)) {
+            return checked
+        }
+        return checkServer(fallback).takeIf { it != ServerCheck.Unreachable } ?: checked
+    }
+
+    private suspend fun checkServer(url: HttpUrl): ServerCheck {
         val info = try {
             clients.of(url).info()
         } catch (_: SyncFailure.Unreachable) {
