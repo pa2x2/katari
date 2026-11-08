@@ -3364,14 +3364,14 @@
     <string name="sync_first_sync_title">Before the first sync</string>
     <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged; nothing is deleted.</string>
     <string name="sync_first_sync_profiles">Profiles on this device</string>
-    <string name="sync_first_sync_default_paired">Paired automatically (default profile)</string>
-    <string name="sync_first_sync_same_profile">Paired automatically (already in your account)</string>
+    <string name="sync_first_sync_paired">Paired automatically</string>
     <!-- %1$s is the account profile's name -->
     <string name="sync_first_sync_same_as">Same as %1$s</string>
     <string name="sync_first_sync_add_new">Add as new</string>
-    <string name="sync_first_sync_settings">Settings of paired profiles</string>
-    <string name="sync_first_sync_use_account">Use account\'s</string>
-    <string name="sync_first_sync_use_device">Use this device\'s</string>
+    <!-- %1$s says how the profile joins the account, %2$s how many titles its library holds -->
+    <string name="sync_first_sync_profile_line">%1$s · %2$s</string>
+    <string name="sync_first_sync_settings_account">Account\'s settings</string>
+    <string name="sync_first_sync_settings_device">This device\'s settings</string>
     <string name="sync_first_sync_device_settings">Settings tied to this device (screen, storage, network) are never replaced.</string>
     <string name="sync_action_start_sync">Start sync</string>
     <string name="sync_first_sync_unavailable">Can\'t reach the server to compare profiles. Try again when you\'re online.</string>

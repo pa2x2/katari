@@ -489,6 +489,10 @@
         <item quantity="one">%d minute</item>
         <item quantity="other">%d minutes</item>
     </plurals>
+    <plurals name="sync_first_sync_titles">
+        <item quantity="one">%d title</item>
+        <item quantity="other">%d titles</item>
+    </plurals>
     <plurals name="missing_extensions_titles">
         <item quantity="one">%d title</item>
         <item quantity="other">%d titles</item>

@@ -25,7 +25,8 @@ class ProfilePairingTest {
             AccountProfile("x1", "Second"),
         )
 
-        proposePairings(local, account).map { Triple(it.profileId, it.pairedWith?.uuid, it.sameProfile) } shouldBe
+        val pairings = proposePairings(local, account, librarySizes = emptyMap())
+        pairings.map { Triple(it.profileId, it.pairedWith?.uuid, it.sameProfile) } shouldBe
             listOf(
                 Triple(1L, ProfileKind.DEFAULT_UUID, true),
                 Triple(2L, "x1", true),

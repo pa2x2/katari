@@ -84,7 +84,10 @@ class FirstSync(
             .filter { it.kind == ProfileKind.name && it.kindVersion == ProfileKind.version && !it.deleted }
             .map { ProfileKind.decode(it.payload) }
             .map { AccountProfile(it.uuid, it.name.value) }
-        return proposePairings(localProfiles(), account)
+        val librarySizes = handler.await {
+            sync_first_syncQueries.librarySizes().awaitAsList().associate { it.profile_id to it.size }
+        }
+        return proposePairings(localProfiles(), account, librarySizes)
     }
 
     /**

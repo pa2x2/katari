@@ -7,7 +7,6 @@ import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.firstsync.ProfileChoice
 import app.katari.sync.client.firstsync.ProfilePairing
 import app.katari.sync.client.firstsync.SettingsWinner
-import app.katari.sync.client.kind.profile.ProfileKind
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -78,8 +77,6 @@ class FirstSyncViewModel(private val account: SyncAccount, profileManager: Profi
         data object Loading : State
 
         data class Choosing(val pairings: List<ProfilePairing>, val choices: Map<Long, Choice>) : State {
-            fun isDefault(pairing: ProfilePairing) = pairing.pairedWith?.uuid == ProfileKind.DEFAULT_UUID
-
             fun isPaired(pairing: ProfilePairing) = pairing.sameProfile || choices.getValue(pairing.profileId).paired
 
             fun answer(): List<ProfileChoice> = pairings.map { pairing ->
