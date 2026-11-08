@@ -19,12 +19,16 @@ sealed interface ProfileManagementDialog {
     data class Delete(val profile: Profile) : ProfileManagementDialog
 }
 
-/** Shows [dialog] and carries out what it confirms; [onDismissRequest] closes it, also after a confirmed change. */
+/**
+ * Shows [dialog] and carries out what it confirms; [onDismissRequest] closes it, also after a confirmed change. While
+ * [syncLinked], deleting a profile says it goes from every linked device too (D025), as sync deletes it there.
+ */
 @Composable
 fun ProfileManagementDialogs(
     dialog: ProfileManagementDialog?,
     profiles: List<Profile>,
     profileManager: ProfileManager,
+    syncLinked: Boolean,
     onDismissRequest: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -75,7 +79,14 @@ fun ProfileManagementDialogs(
         is ProfileManagementDialog.Delete -> {
             ConfirmDialog(
                 title = stringResource(MR.strings.profiles_delete_profile),
-                text = stringResource(MR.strings.profiles_delete_profile_confirmation, dialog.profile.name),
+                text = stringResource(
+                    if (syncLinked) {
+                        MR.strings.profiles_delete_profile_confirmation_synced
+                    } else {
+                        MR.strings.profiles_delete_profile_confirmation
+                    },
+                    dialog.profile.name,
+                ),
                 confirmLabel = stringResource(MR.strings.action_delete),
                 onConfirm = {
                     scope.launch {

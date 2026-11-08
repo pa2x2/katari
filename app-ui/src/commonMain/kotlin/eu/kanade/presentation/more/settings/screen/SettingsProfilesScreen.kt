@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.status.rememberSyncStatus
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
@@ -103,6 +105,7 @@ object SettingsProfilesScreen : SearchableSettings {
             dialog = dialog,
             profiles = profiles,
             profileManager = profileManager,
+            syncLinked = rememberSyncStatus()?.link is SyncStatus.Link.Linked,
             onDismissRequest = { dialog = null },
         )
     }
