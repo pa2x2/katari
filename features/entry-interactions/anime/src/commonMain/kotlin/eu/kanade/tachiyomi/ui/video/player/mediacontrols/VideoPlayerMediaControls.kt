@@ -18,7 +18,8 @@ internal interface VideoPlayerMediaControls {
         player: VideoPlayer,
         metadata: VideoMetadata,
         seekStepSeconds: Int,
-        hasPreviousEpisode: Boolean,
-        hasNextEpisode: Boolean,
     )
+
+    /** Which episode buttons work now: none while another episode opens, as on the player's own controls. */
+    fun setEpisodeNavigation(canPlayPrevious: Boolean, canPlayNext: Boolean)
 }

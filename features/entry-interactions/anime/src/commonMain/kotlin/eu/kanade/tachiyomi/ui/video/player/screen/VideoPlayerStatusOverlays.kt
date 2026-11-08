@@ -41,9 +41,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
- * the held speed boost, a pinch's zoom, episode and source switching, a failed episode change, a move to another
- * server, an automatic skip, the engine's notices, a playback error, a switch that failed and the first-run gesture
- * guide, which waits for a frame and steps aside for a problem screen.
+ * the held speed boost, a pinch's zoom, episode and source switching (an episode change can be cancelled there), a
+ * failed episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch
+ * that failed and the first-run gesture guide, which waits for a frame and steps aside for a problem screen.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -103,6 +103,9 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         VideoPlayerSwitchingOverlay(
             label = switchingLabel,
             modifier = Modifier.align(Alignment.TopCenter),
+            onCancel = viewModel::cancelEpisodeChange.takeIf {
+                episodeChange is VideoPlayerViewModel.EpisodeChange.Loading
+            },
         )
     }
 

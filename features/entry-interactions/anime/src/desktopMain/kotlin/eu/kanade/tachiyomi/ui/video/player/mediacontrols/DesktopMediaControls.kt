@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.ui.video.player.mediacontrols
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.player.AnimePlayerMediaArtwork
 import mihon.entry.interactions.player.AnimePlayerMediaCommands
@@ -30,13 +32,12 @@ internal class DesktopMediaControls(
     private var player: VideoPlayer? = null
     private var following: Job? = null
     private var episodes = 0
+    private val episodeNavigation = MutableStateFlow(EpisodeNavigation(canPlayPrevious = false, canPlayNext = false))
 
     override fun attach(
         player: VideoPlayer,
         metadata: VideoMetadata,
         seekStepSeconds: Int,
-        hasPreviousEpisode: Boolean,
-        hasNextEpisode: Boolean,
     ) {
         val session = session ?: controls.show(Commands()).also { session = it }
         this.player = player
@@ -44,7 +45,7 @@ internal class DesktopMediaControls(
         val episode = ++episodes
         val artwork = AnimePlayerMediaArtwork(metadata.episodePreviewUrl, metadata.cover)
         following = scope.launch {
-            player.state.collect { state ->
+            combine(player.state, episodeNavigation, ::Pair).collect { (state, episodes) ->
                 session.update(
                     AnimePlayerMediaState(
                         episode = episode,
@@ -55,12 +56,16 @@ internal class DesktopMediaControls(
                         positionMs = player.currentPositionMs,
                         playing = state.meansToPlay,
                         speed = state.speed,
-                        hasPreviousEpisode = hasPreviousEpisode,
-                        hasNextEpisode = hasNextEpisode,
+                        hasPreviousEpisode = episodes.canPlayPrevious,
+                        hasNextEpisode = episodes.canPlayNext,
                     ),
                 )
             }
         }
+    }
+
+    override fun setEpisodeNavigation(canPlayPrevious: Boolean, canPlayNext: Boolean) {
+        episodeNavigation.value = EpisodeNavigation(canPlayPrevious, canPlayNext)
     }
 
     fun release() {
@@ -103,6 +108,8 @@ internal class DesktopMediaControls(
         scope.launch { action() }
     }
 }
+
+private data class EpisodeNavigation(val canPlayPrevious: Boolean, val canPlayNext: Boolean)
 
 // Buffering counts, as shells would otherwise show a pause at every stall
 private val VideoPlayerState.meansToPlay: Boolean

@@ -122,10 +122,11 @@ internal fun VideoPlayerWatchScreen(
     val shouldHideChromeForSeekFeedback = ui.seekFeedbackState?.hidePlayerChrome == true
     val hidePlayerChrome = (shouldHideChromeForSeekFeedback && !controlsPinned) || isInPictureInPictureMode
     val nextEpisodeAvailable = current.nextChapterId != null
+    val episodeOpening = current.episodeChange is VideoPlayerViewModel.EpisodeChange.Loading
     val endScreenVisible = ui.playbackSnapshot.playbackEnded &&
         nextEpisodeAvailable &&
         !nextEpisode.endScreenDismissed &&
-        !nextEpisode.advanceInFlight &&
+        !episodeOpening &&
         (!isInPictureInPictureMode || pictureInPicture.drawsOwnWindow) &&
         !ui.subtitleEditorVisible
     val effectivePlaybackSpeed = if (temporarySpeedBoostActive) {
@@ -134,22 +135,22 @@ internal fun VideoPlayerWatchScreen(
         current.playback.sessionPlaybackSpeed
     }
     val onPreviousEpisode = {
-        temporarySpeedBoostActive = false
-        ui.controlsVisible = !visit.controlsLocked
-        ui.settingsVisible = false
-        ui.episodesDrawerVisible = false
-        ui.subtitleEditorVisible = false
-        ui.isScrubbing = false
-        nextEpisode.advanceInFlight = true
-        nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded)
-        ui.controllerInteractionSequence += 1L
-        playback.flush()
-        viewModel.playPreviousEpisode()
+        if (current.canPlayPrevious) {
+            temporarySpeedBoostActive = false
+            ui.controlsVisible = !visit.controlsLocked
+            ui.settingsVisible = false
+            ui.episodesDrawerVisible = false
+            ui.subtitleEditorVisible = false
+            ui.isScrubbing = false
+            nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded)
+            ui.controllerInteractionSequence += 1L
+            playback.flush()
+            viewModel.playPreviousEpisode()
+        }
     }
     val onNextEpisode = {
-        if (!nextEpisode.advanceInFlight && nextEpisodeAvailable) {
+        if (current.canPlayNext) {
             temporarySpeedBoostActive = false
-            nextEpisode.advanceInFlight = true
             nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded)
             ui.controlsVisible = !visit.controlsLocked
             ui.settingsVisible = false
@@ -164,9 +165,13 @@ internal fun VideoPlayerWatchScreen(
     SideEffect {
         mediaControls.onNextEpisode = onNextEpisode
         mediaControls.onPreviousEpisode = onPreviousEpisode
+        mediaControls.setEpisodeNavigation(
+            canPlayPrevious = current.canPlayPrevious,
+            canPlayNext = current.canPlayNext,
+        )
         pictureInPicture.setEpisodeNavigation(
-            onPreviousEpisode = onPreviousEpisode.takeIf { current.previousChapterId != null },
-            onNextEpisode = onNextEpisode.takeIf { nextEpisodeAvailable },
+            onPreviousEpisode = onPreviousEpisode.takeIf { current.canPlayPrevious },
+            onNextEpisode = onNextEpisode.takeIf { current.canPlayNext },
         )
     }
     val latestPlayback = rememberUpdatedState(current.playback)
@@ -252,13 +257,14 @@ internal fun VideoPlayerWatchScreen(
     val markers = remember(current.stream.markers, onlineMarkers) {
         current.stream.markers + onlineMarkers.map { it.marker }
     }
+    // Moving on to the next episode waits while another opens, so its offer at the credits steps aside meanwhile.
     val skipOffer = markerSkip.offerAt(
         mode = markerSkipMode,
         positionMs = ui.playbackSnapshot.positionMs,
         durationMs = ui.playbackSnapshot.durationMs,
         markers = markers,
         hasNextEpisode = nextEpisodeAvailable,
-    )
+    )?.takeUnless { it.goesToNextEpisode && episodeOpening }
     val chapters = rememberVideoPlayerChapters(currentPlayer, markers, ui.playbackSnapshot.durationMs)
     val seekToPosition: (Long) -> Unit = { positionMs ->
         ui.scrubPositionMs = positionMs
@@ -286,7 +292,6 @@ internal fun VideoPlayerWatchScreen(
         temporarySpeedBoostActive = false
         nextEpisode.countdownElapsedMs = 0L
         nextEpisode.endScreenDismissed = false
-        nextEpisode.advanceInFlight = false
         ui.controlsVisible = !isInPictureInPictureMode && !visit.controlsLocked
         ui.isScrubbing = false
         ui.ignoreNextGestureSeekTapUp = false
@@ -307,8 +312,6 @@ internal fun VideoPlayerWatchScreen(
                 cover = current.entry.asEntryCover(),
             ),
             seekStepSeconds = seekStepSeconds,
-            hasPreviousEpisode = current.previousChapterId != null,
-            hasNextEpisode = current.nextChapterId != null,
         )
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
         currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
@@ -447,7 +450,6 @@ internal fun VideoPlayerWatchScreen(
     LaunchedEffect(current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
         if (current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
             // The episode stays; it waits for Retry instead of running on under the error.
-            nextEpisode.advanceInFlight = false
             currentPlayer.pause()
         }
     }

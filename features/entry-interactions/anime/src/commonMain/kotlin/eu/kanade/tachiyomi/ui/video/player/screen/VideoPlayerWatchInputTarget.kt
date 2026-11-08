@@ -189,8 +189,8 @@ internal class VideoPlayerWatchInputTarget(
         player.stepFrame(forward)
     }
 
-    override val hasPreviousEpisode get() = ready.previousChapterId != null
-    override val hasNextEpisode get() = ready.nextChapterId != null
+    override val canPlayPreviousEpisode get() = ready.canPlayPrevious
+    override val canPlayNextEpisode get() = ready.canPlayNext
 
     override fun previousEpisode() = actions.previousEpisode()
 

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -14,6 +15,7 @@ import mihon.entry.interactions.anime.state.durationMs
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChapterRow
 import mihon.presentation.kit.list.CollapsibleRowGroupHeader
@@ -21,8 +23,11 @@ import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.sheet.OverlayListDrawer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -37,6 +42,8 @@ internal fun VideoPlayerEpisodesDrawer(
     expandedMemberIds: Set<Long>,
     expandedGroupIds: Set<ChapterGroupId>,
     currentEpisodeId: Long,
+    /** The episode opening over [currentEpisodeId], marked as such; until it plays or fails no episode can be picked. */
+    openingEpisodeId: Long?,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
@@ -83,6 +90,7 @@ internal fun VideoPlayerEpisodesDrawer(
                 expandedMemberIds = expandedMemberIds,
                 expandedGroupIds = expandedGroupIds,
                 currentEpisodeId = currentEpisodeId,
+                openingEpisodeId = openingEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeClick,
@@ -98,6 +106,7 @@ private fun LazyListScope.videoPlayerEpisodeItems(
     expandedMemberIds: Set<Long>,
     expandedGroupIds: Set<ChapterGroupId>,
     currentEpisodeId: Long,
+    openingEpisodeId: Long?,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
@@ -156,6 +165,8 @@ private fun LazyListScope.videoPlayerEpisodeItems(
                     VideoPlayerEpisodeRow(
                         episode = episode,
                         playbackState = playbackStateByEpisodeId[episode.id],
+                        opening = episode.id == openingEpisodeId,
+                        enabled = openingEpisodeId == null,
                         onClick = { onEpisodeClick(episode) },
                     )
                 }
@@ -207,6 +218,8 @@ private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedSections(
 private fun VideoPlayerEpisodeRow(
     episode: EntryChapter,
     playbackState: EntryProgressState?,
+    opening: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     val progress = playbackState.episodeProgress()
@@ -219,6 +232,19 @@ private fun VideoPlayerEpisodeRow(
             pluralStringResource(MR.plurals.anime_episode_minutes_left, it.minutesLeft, it.minutesLeft)
         },
         progressFraction = progress?.fraction,
+        enabled = enabled,
+        trailing = if (opening) {
+            {
+                LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall), tone = ContentTone.Primary)
+                Text(
+                    text = stringResource(MR.strings.anime_playback_episode_opening),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Primary,
+                )
+            }
+        } else {
+            null
+        },
     )
 }
 

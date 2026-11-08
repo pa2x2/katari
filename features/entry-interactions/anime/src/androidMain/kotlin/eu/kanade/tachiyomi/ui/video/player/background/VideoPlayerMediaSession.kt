@@ -44,8 +44,24 @@ internal class VideoPlayerMediaSession(
         .setCallback(Callback())
         .build()
 
-    fun setPlayer(player: VideoPlayer, metadata: VideoMetadata, seekStepSeconds: Int, hasNextEpisode: Boolean) {
+    private var seekStepSeconds = 0
+    private var nextEpisodeButton = false
+
+    fun setPlayer(player: VideoPlayer, metadata: VideoMetadata, seekStepSeconds: Int, nextEpisodeButton: Boolean) {
         this.player.attach(player, metadata, seekStepMs = seekStepSeconds * 1000L)
+        this.seekStepSeconds = seekStepSeconds
+        this.nextEpisodeButton = nextEpisodeButton
+        showButtons()
+    }
+
+    /** The notification can't show the button dimmed, so it leaves it out while it wouldn't work. */
+    fun setNextEpisodeButton(shown: Boolean) {
+        if (shown == nextEpisodeButton) return
+        nextEpisodeButton = shown
+        showButtons()
+    }
+
+    private fun showButtons() {
         session.setMediaButtonPreferences(
             buildList {
                 add(
@@ -64,7 +80,7 @@ internal class VideoPlayerMediaSession(
                         .setSlots(CommandButton.SLOT_FORWARD)
                         .build(),
                 )
-                if (hasNextEpisode) {
+                if (nextEpisodeButton) {
                     add(
                         CommandButton.Builder(CommandButton.ICON_NEXT)
                             .setSessionCommand(NEXT_EPISODE_COMMAND)

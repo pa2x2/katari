@@ -1926,6 +1926,8 @@
     <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s (%3$d of %4$d)</string>
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
+    <string name="anime_playback_episode_opening">Opening</string>
+    <string name="anime_playback_source_waits_for_episode">Dub, server and quality come back once %s plays</string>
     <string name="anime_playback_details">Details</string>
     <string name="anime_guide_brightness">Swipe for brightness</string>
     <string name="anime_guide_volume">Swipe for volume</string>
