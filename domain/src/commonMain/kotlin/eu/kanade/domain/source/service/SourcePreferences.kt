@@ -9,7 +9,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mihon.domain.extension.model.ContentWarning
-import mihon.domain.migration.models.MigrationFlag
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
@@ -36,6 +35,7 @@ class SourcePreferences(
         const val ANIME_LAST_USED_SOURCE_KEY = "last_anime_catalogue_source"
         const val LEGACY_SHOW_NSFW_SOURCE_KEY = "show_nsfw_source"
         const val MIGRATION_SOURCES_KEY = "migration_sources"
+        const val LEGACY_MIGRATION_FLAGS_KEY = "migration_flags"
         const val SAVED_FEED_PRESETS_KEY = "saved_feed_presets"
         const val SAVED_FEEDS_KEY = "saved_source_feeds"
 
@@ -52,6 +52,9 @@ class SourcePreferences(
             FEED_TIMELINE_KEY_FAMILY,
             FEED_ANCHOR_KEY_FAMILY,
         )
+
+        fun migrationRemoveDownloads(preferenceStore: PreferenceStore): Preference<Boolean> =
+            preferenceStore.getBoolean("migration_remove_downloads", true)
 
         fun enabledContentWarnings(preferenceStore: PreferenceStore): Preference<Set<ContentWarning>> {
             return AllowedContentWarnings(
@@ -130,12 +133,11 @@ class SourcePreferences(
 
     val migrationSources: Preference<List<Long>> = preferenceStore.getLongArray(MIGRATION_SOURCES_KEY, emptyList())
 
-    val migrationFlags: Preference<Set<MigrationFlag>> = preferenceStore.getObjectFromInt(
-        key = "migration_flags",
-        defaultValue = MigrationFlag.entries.toSet(),
-        serializer = { MigrationFlag.toBit(it) },
-        deserializer = { value: Int -> MigrationFlag.fromBit(value) },
-    )
+    /**
+     * Whether a migration deletes the old entry's downloads. The only migration choice that is remembered: what a
+     * migration carries over is chosen for each one, starting from everything.
+     */
+    val migrationRemoveDownloads: Preference<Boolean> = migrationRemoveDownloads(preferenceStore)
 
     val migrationDeepSearchMode: Preference<Boolean> = preferenceStore.getBoolean("migration_deep_search", false)
 

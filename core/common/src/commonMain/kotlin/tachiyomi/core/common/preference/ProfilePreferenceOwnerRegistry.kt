@@ -212,13 +212,6 @@ private class KeyRecordingPreferenceStore : PreferenceStore {
         deserializer: (String) -> T,
     ): Preference<T> = record(key, defaultValue)
 
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> = record(key, defaultValue)
-
     override fun <T> getObjectSetFromStringSet(
         key: String,
         defaultValue: Set<T>,

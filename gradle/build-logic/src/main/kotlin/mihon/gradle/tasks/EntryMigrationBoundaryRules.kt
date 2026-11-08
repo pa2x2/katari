@@ -164,7 +164,7 @@ private val AMBIENT_MIGRATION_AUTHORITY_NAMES = setOf(
     "SourcePreferences",
     "activeProfileId",
     "currentProfileId",
-    "migrationFlags",
+    "migrationRemoveDownloads",
 )
 
 private val CONCRETE_ENTRY_TYPE_REFERENCE = Regex("""\bEntryType\.([A-Z][A-Z0-9_]*)\b""")

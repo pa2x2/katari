@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import dev.zacsweers.metro.Inject
+import eu.kanade.domain.source.service.LegacyMigrationFlagsConversion
 import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
@@ -78,6 +79,7 @@ class PreferenceRestorer(
         legacyUpdateCategoriesConversion.convert(profileId, store)
         LegacyExcludedSourcesConversion.convert(store)
         LegacyNsfwSourceConversion.convert(store)
+        LegacyMigrationFlagsConversion.convert(store)
         LegacyItemsPerRowConversion.convert(store)
 
         if (includeGlobalRestore) {

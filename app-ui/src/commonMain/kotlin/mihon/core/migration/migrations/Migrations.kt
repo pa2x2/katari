@@ -17,4 +17,5 @@ val migrations: List<Migration>
         SourceUpdatePausesMigration(),
         ContentWarningMigration(),
         CoverSizeMigration(),
+        MigrationOptionsMigration(),
     )

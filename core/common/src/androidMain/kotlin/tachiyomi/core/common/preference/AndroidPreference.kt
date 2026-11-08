@@ -192,27 +192,6 @@ sealed class AndroidPreference<T>(
         }
     }
 
-    class ObjectAsInt<T>(
-        preferences: SharedPreferences,
-        keyFlow: Flow<String?>,
-        key: String,
-        defaultValue: T,
-        private val serializer: (T) -> Int,
-        private val deserializer: (Int) -> T,
-    ) : AndroidPreference<T>(preferences, keyFlow, key, defaultValue) {
-        override fun read(preferences: SharedPreferences, key: String, defaultValue: T): T {
-            return try {
-                if (preferences.contains(key)) preferences.getInt(key, 0).let(deserializer) else defaultValue
-            } catch (e: Exception) {
-                defaultValue
-            }
-        }
-
-        override fun write(key: String, value: T): Editor.() -> Unit = {
-            putInt(key, serializer(value))
-        }
-    }
-
     class ObjectSetAsStringSet<T>(
         preferences: SharedPreferences,
         keyFlow: Flow<String?>,

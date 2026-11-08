@@ -14,7 +14,6 @@ import tachiyomi.core.common.preference.DesktopPreference.BooleanPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.FloatPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.IntPrimitive
 import tachiyomi.core.common.preference.DesktopPreference.LongPrimitive
-import tachiyomi.core.common.preference.DesktopPreference.ObjectAsInt
 import tachiyomi.core.common.preference.DesktopPreference.ObjectAsString
 import tachiyomi.core.common.preference.DesktopPreference.ObjectSetAsStringSet
 import tachiyomi.core.common.preference.DesktopPreference.StringPrimitive
@@ -134,15 +133,6 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
         deserializer: (String) -> T,
     ): Preference<T> {
         return ObjectAsString(this, key, defaultValue, serializer, deserializer)
-    }
-
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> {
-        return ObjectAsInt(this, key, defaultValue, serializer, deserializer)
     }
 
     override fun <T> getObjectSetFromStringSet(

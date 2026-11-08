@@ -18,7 +18,7 @@ internal val BrowseScopes = PreferenceScopeTable {
         "pref_migration_sorting",
         "pref_migration_direction",
         "migration_sources",
-        "migration_flags",
+        "migration_remove_downloads",
         "migration_deep_search",
         "migration_prioritize_by_chapters",
         "migration_hide_unmatched",
@@ -27,7 +27,8 @@ internal val BrowseScopes = PreferenceScopeTable {
     personPrefix("pref_display_mode_catalogue_")
 
     // Keys of earlier versions, read only to convert them: hidden and pinned sources before one set held them, the
-    // 18+ switch before content warnings, and the repositories before they had their own table.
+    // 18+ switch before content warnings, the repositories before they had their own table, and the migration options
+    // before only the download choice was remembered.
     device(
         "hidden_catalogues",
         "hidden_manga_catalogues",
@@ -36,6 +37,7 @@ internal val BrowseScopes = PreferenceScopeTable {
         "pinned_anime_catalogues",
         "show_nsfw_source",
         "extension_repos",
+        "migration_flags",
     )
 
     // GlobalSourcePreferences: how many installed extensions have updates

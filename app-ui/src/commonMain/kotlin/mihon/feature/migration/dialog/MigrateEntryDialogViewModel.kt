@@ -18,8 +18,6 @@ import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.entry.interactions.migration.EntryMigrationPreparationResult
 import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
 import mihon.entry.interactions.migration.EntryMigrationReference
-import mihon.feature.migration.options.toEntryMigrationOptions
-import mihon.feature.migration.options.toMigrationFlags
 import tachiyomi.domain.entry.model.Entry
 
 @Inject
@@ -42,14 +40,14 @@ class MigrateEntryDialogViewModel(
         state.update { State(isLoading = true) }
         when (val result = migration.prepare(EntryMigrationPrepareIntent(current, target))) {
             is EntryMigrationPreparationResult.Ready -> {
-                val defaults = sourcePreference.migrationFlags.get().toEntryMigrationOptions()
-                val selectedOptions = defaults.intersect(result.availableOptions)
+                val removeDownloads = sourcePreference.migrationRemoveDownloads.get()
                 state.update {
                     State(
                         reference = result.reference,
                         availableOptions = result.availableOptions.toList(),
-                        selectedOptions = selectedOptions,
-                        preservedDefaults = defaults - result.availableOptions,
+                        selectedOptions = result.availableOptions.filterTo(mutableSetOf()) {
+                            it != EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS || removeDownloads
+                        },
                         isLoading = false,
                     )
                 }
@@ -72,7 +70,11 @@ class MigrateEntryDialogViewModel(
     suspend fun migrateEntry(mode: EntryMigrationMode): Boolean {
         val current = state.value
         val reference = current.reference ?: return false
-        sourcePreference.migrationFlags.set((current.selectedOptions + current.preservedDefaults).toMigrationFlags())
+        if (EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS in current.availableOptions) {
+            sourcePreference.migrationRemoveDownloads.set(
+                EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS in current.selectedOptions,
+            )
+        }
         state.update { it.copy(isMigrating = true, hasFailure = false) }
         return when (
             migration.execute(
@@ -110,7 +112,6 @@ class MigrateEntryDialogViewModel(
         val reference: EntryMigrationReference? = null,
         val availableOptions: List<EntryMigrationOption> = emptyList(),
         val selectedOptions: Set<EntryMigrationOption> = emptySet(),
-        val preservedDefaults: Set<EntryMigrationOption> = emptySet(),
         val isLoading: Boolean = true,
         val isMigrating: Boolean = false,
         val isMigrated: Boolean = false,

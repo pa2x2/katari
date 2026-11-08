@@ -118,35 +118,6 @@ class ProfileAwarePreferenceStore(
         )
     }
 
-    override fun <T> getObjectFromInt(
-        key: String,
-        defaultValue: T,
-        serializer: (T) -> Int,
-        deserializer: (Int) -> T,
-    ): Preference<T> {
-        return DynamicPreference(
-            preferences = backing.sharedPreferences,
-            keyFlow = backing.keyFlow,
-            profileFlow = profileFlow,
-            defaultValue = defaultValue,
-            keyProvider = { key(key) },
-            read = { prefs, prefKey, default ->
-                try {
-                    if (prefs.contains(prefKey)) {
-                        serializer(default).let {
-                            prefs.getInt(prefKey, it)
-                        }.let(deserializer)
-                    } else {
-                        default
-                    }
-                } catch (_: Exception) {
-                    default
-                }
-            },
-            write = { editor, prefKey, value -> editor.putInt(prefKey, serializer(value)) },
-        )
-    }
-
     override fun <T> getObjectSetFromStringSet(
         key: String,
         defaultValue: Set<T>,
