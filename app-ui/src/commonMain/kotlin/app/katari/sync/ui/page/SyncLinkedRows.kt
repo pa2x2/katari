@@ -5,6 +5,9 @@ import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.guide.ServerFix
+import app.katari.sync.ui.guide.rememberOpenSyncGuide
+import app.katari.sync.ui.guide.serverFixLabel
 import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
 import app.katari.sync.ui.status.stopsSync
@@ -172,6 +175,10 @@ private fun attentionRows(
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
         )
+        is SyncHeadline.ServerTooOld -> {
+            val openGuide = rememberOpenSyncGuide()
+            listOf(row(serverFixLabel(ServerFix.UPDATE)) { openGuide(ServerFix.UPDATE.page) })
+        }
         else -> emptyList()
     }
 }

@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.guide.SyncGuide
+import app.katari.sync.ui.guide.SyncGuideAction
 import app.katari.sync.ui.link.linkCodeEntryScreen
 import app.katari.sync.ui.link.linkCodeScanning
 import app.katari.sync.ui.signin.SyncSignInScreen
@@ -137,6 +139,7 @@ internal class SyncStep(statusState: SyncStatusState) : OnboardingStep {
                     )
                 }
             }
+            SyncGuideAction(stringResource(MR.strings.onboarding_sync_no_server), SyncGuide.SERVER)
         }
     }
 }
