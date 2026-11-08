@@ -14,6 +14,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import java.io.File
+import java.util.regex.Pattern
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -84,6 +85,31 @@ internal object ShowcaseDevice {
         }
         fail("Scrolling never reached $selector")
     }
+
+    /**
+     * Scrolls the screen back to its top through the middle of the screen, as [scrollTo] goes down, until a swipe moves
+     * nothing. A swipe glides on and stops wherever its speed runs out, a few pixels apart from run to run, but every
+     * run stops at the top, so a still taken there or [dragUp] from there comes out the same.
+     */
+    fun scrollToTop(timeoutMs: Long = TIMEOUT_MS) {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        val x = device.displayWidth / 2
+        while (SystemClock.uptimeMillis() < deadline) {
+            val before = textBounds()
+            device.swipe(
+                x,
+                (device.displayHeight * SCROLL_TO).toInt(),
+                x,
+                (device.displayHeight * SCROLL_FROM).toInt(),
+                SCROLL_STEPS,
+            )
+            settle(extraMs = 300)
+            if (textBounds() == before) return
+        }
+        fail("Scrolling never reached the top")
+    }
+
+    private fun textBounds(): List<Rect> = device.findObjects(By.text(ANY_TEXT)).map { it.visibleBounds }
 
     /**
      * The scrollable matching [selector], with its gestures kept out of the bands along the top and bottom edges where
@@ -357,8 +383,31 @@ internal object ShowcaseDevice {
      */
     fun capture(name: String) {
         settle()
+        refreshGestureHandle()
         shell("mkdir -p $CAPTURE_DIRECTORY")
         if (!heldStill(File("$CAPTURE_DIRECTORY/$name.png"))) fail("The screen never held still for $name")
+    }
+
+    /**
+     * Has the gesture handle take its colour from the screen as it is now. The launcher draws the handle light or dark
+     * by the brightness behind it, but changes it only once that brightness moves by more than a step from what it last
+     * went by, so a screen that brightened gradually, as covers fading in do, keeps the colour the handle took partway,
+     * which differs from run to run. A launcher started afresh goes by its first look.
+     */
+    private fun refreshGestureHandle() {
+        val home = "-a android.intent.action.MAIN -c android.intent.category.HOME"
+        val launcher = shell("cmd package resolve-activity --brief $home")
+            .lines()
+            .last { it.isNotBlank() }
+            .substringBefore('/')
+        shell("am force-stop $launcher")
+        val deadline = SystemClock.uptimeMillis() + TIMEOUT_MS
+        while ("mSamplingListenerRegistered: true" !in shell("dumpsys activity service $launcher")) {
+            if (SystemClock.uptimeMillis() > deadline) fail("The launcher never drew the gesture handle again")
+            SystemClock.sleep(HANDLE_POLL_MS)
+        }
+        // The first look comes with the next frame the system composes, or once it has been idle for a moment.
+        SystemClock.sleep(HANDLE_SAMPLE_MS)
     }
 
     /**
@@ -454,6 +503,7 @@ internal object ShowcaseDevice {
     private const val SCROLL_FROM = 0.7f
     private const val SCROLL_TO = 0.3f
     private const val SCROLL_STEPS = 50
+    private val ANY_TEXT = Pattern.compile(".+", Pattern.DOTALL)
 
     // The status bar's band, whose swipes pull the notification shade, and gesture navigation's 32 dp band with room
     // for the slop the system allows a swipe.
@@ -480,6 +530,8 @@ internal object ShowcaseDevice {
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
     private const val STILL_INTERVAL_MS = 500L
+    private const val HANDLE_POLL_MS = 200L
+    private const val HANDLE_SAMPLE_MS = 1_000L
 
     // Outside CAPTURE_DIRECTORY, which the pipeline publishes whole.
     private const val STILL_PROBE = "/data/local/tmp/showcase-still.png"
