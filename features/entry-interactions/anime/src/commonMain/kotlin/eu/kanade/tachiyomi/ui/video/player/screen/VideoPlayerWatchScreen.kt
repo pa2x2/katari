@@ -403,7 +403,7 @@ internal fun VideoPlayerWatchScreen(
         },
         toggleFullScreen = {
             host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }
-            registerControllerInteraction(true)
+            registerControllerInteraction(false)
         },
         openEpisodes = {
             temporarySpeedBoostActive = false
