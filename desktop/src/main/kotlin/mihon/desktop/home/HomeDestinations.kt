@@ -18,6 +18,9 @@ import mihon.desktop.window.OpenWindow
 import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.ui.ProfileUnlock
+import mihon.feature.profiles.ui.switcher.ProfileSwitchEffects
+import mihon.feature.profiles.ui.switcher.switchToProfile
 import tachiyomi.core.common.util.system.logcat
 
 /**
@@ -25,8 +28,8 @@ import tachiyomi.core.common.util.system.logcat
  * intents. A destination in another profile switches to it first and opens once the home has started for it; one in
  * whichever profile the home shows opens in the profile the home starts with, picked at start or switched to. One
  * that comes before the home has started, or while it starts again for a profile switch, waits for it, and only the
- * last one waits, as Android keeps only the last intent. Desktop can't unlock a locked profile, so nothing opens in
- * one. The navigator is the window's at the time the destination opens, not the one shown when a notification was
+ * last one waits, as Android keeps only the last intent. A destination in a locked profile asks for its unlock first,
+ * as the profile switcher does, and doesn't open when the unlock doesn't happen. The navigator is the window's at the time the destination opens, not the one shown when a notification was
  * posted, so a notification still opens after a profile switch has replaced the home. Used on the window's thread.
  */
 @Inject
@@ -34,6 +37,8 @@ import tachiyomi.core.common.util.system.logcat
 class HomeDestinations(
     private val openWindow: OpenWindow,
     private val profileManager: ProfileManager,
+    private val profileUnlock: ProfileUnlock,
+    private val switchEffects: ProfileSwitchEffects,
     private val migrationSessions: SourceMigrationSessionStore,
 ) {
     private var waiting: Waiting? = null
@@ -53,14 +58,13 @@ class HomeDestinations(
             openInHome(destination, profileId)
             return
         }
+        val profile = profileManager.visibleProfiles.value.firstOrNull { it.id == profileId }
+        val context = openWindow.context
         when {
-            profileManager.visibleProfiles.value.none { it.id == profileId } ->
-                logcat(LogPriority.INFO) { "Not opening $destination: its profile isn't shown" }
-            profileManager.profileRequiresUnlock(profileId) ->
-                logcat(LogPriority.INFO) { "Not opening $destination: desktop can't unlock its profile" }
-            else -> {
+            profile == null -> logcat(LogPriority.INFO) { "Not opening $destination: its profile isn't shown" }
+            context == null -> logcat(LogPriority.INFO) { "Not opening $destination: no window to switch profiles in" }
+            else -> switchToProfile(context, profileManager, profileUnlock, switchEffects, profile) {
                 waiting = Waiting(profileId, destination)
-                profileManager.setActiveProfile(profileId)
             }
         }
     }
