@@ -160,11 +160,11 @@ class AndroidChallengePage(
     }
 }
 
-private const val JS_BRIDGE_NAME = "mihon"
+private const val JS_BRIDGE_NAME = "katari"
 private val CHALLENGE_LISTENER_SCRIPT = """
     addEventListener("message", ({data}) => {
         if (data?.source === "cloudflare-challenge") {
-            mihon?.postMessage(data.event);
+            $JS_BRIDGE_NAME?.postMessage(data.event);
         }
     })
 """.trimIndent()
