@@ -543,6 +543,7 @@ internal class DefaultEntryMigrationFeature(
                 .distinctBy { (sourceId) -> sourceId }
                 .toMap()
                 .takeIf { replace },
+            childOrder = childPairs.order,
             expectedSourceTracks = inspected.sourceTracks,
             preparedTracks = preparedTracks,
             consequenceRequests = consequenceRequests,

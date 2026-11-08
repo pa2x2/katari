@@ -1,6 +1,7 @@
 package mihon.entry.interactions.migration.host
 
 import mihon.entry.interactions.migration.EntryMigrationMode
+import tachiyomi.domain.entry.migration.MigrationChapterPosition
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.track.model.EntryTrack
@@ -25,6 +26,8 @@ data class EntryMigrationHostTransition(
      * copy, which leaves it with the old entry, still in the Library.
      */
     val historyChapterMoves: Map<Long, Long>?,
+    /** The order the chapters were paired in when paired by position, recorded with the operation for sync. */
+    val childOrder: List<MigrationChapterPosition<EntryChapter>>?,
     val expectedSourceTracks: List<EntryTrack>,
     val preparedTracks: List<EntryTrack>,
     val consequenceRequests: List<EntryMigrationConsequenceRequest> = emptyList(),

@@ -227,6 +227,12 @@ FROM entry_migration_operations
 WHERE operation_id = :operationId
 AND mode = 'REPLACE';
 
+entryMigrationChapterPositions:
+SELECT source_chapter_url, target_chapter_url
+FROM entry_migration_chapter_positions
+WHERE operation_id = :operationId
+ORDER BY position;
+
 extensionRepositoryRow:
 SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord, format, extension_list_url
 FROM extension_store

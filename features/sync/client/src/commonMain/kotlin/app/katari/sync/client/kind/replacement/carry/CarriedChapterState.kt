@@ -179,15 +179,28 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         pairs(sources).matches.filter { it.source === source }.map { it.target }
 
     /**
-     * The old entry's chapters, [sources], paired with the new entry's as the replacement paired them. A migration
-     * pairs them as local migration does, by number or else by name. A move keeps its own chapter rows, so each pairs
-     * with itself by URL, also where two chapters share a number.
+     * The old entry's chapters, [sources], paired with the new entry's as the replacement paired them. A migration that
+     * paired them by position recorded the pairs, which are taken as they are, whatever this device's chapter lists
+     * hold now; any other pairs them as local migration does, by number or else by name. A move keeps its own chapter
+     * rows, so each pairs with itself by URL, also where two chapters share a number.
      */
     private suspend fun pairs(sources: List<Chapter>): MigrationChapterPairs<Chapter> {
         val targets = chapters(carry.to)
-        if (!carry.isMove) return pairMigrationChaptersByNumber(sources, targets, Chapter::number, Chapter::name)
         val sourceByUrl = sources.associateBy(Chapter::url)
-        return pairMigrationChaptersInOrder(targets.map { MigrationChapterPosition(sourceByUrl[it.url], it) })
+        return when {
+            carry.isMove -> pairMigrationChaptersInOrder(
+                targets.map { MigrationChapterPosition(sourceByUrl[it.url], it) },
+            )
+            carry.chapterOrder.isNotEmpty() -> {
+                val targetByUrl = targets.associateBy(Chapter::url)
+                pairMigrationChaptersInOrder(
+                    carry.chapterOrder.map { paired ->
+                        MigrationChapterPosition(sourceByUrl[paired.sourceUrl], paired.targetUrl?.let(targetByUrl::get))
+                    },
+                )
+            }
+            else -> pairMigrationChaptersByNumber(sources, targets, Chapter::number, Chapter::name)
+        }
     }
 
     /**

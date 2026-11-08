@@ -92,8 +92,7 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
     private suspend fun carryFor(from: String): ReplacementCarry? {
         val stored = writes.database.sync_recordsQueries.getByKey(EntryReplacementKind.key(from)).awaitAsOneOrNull()
         if (stored == null || stored.deleted) return null
-        val replacement = EntryReplacementKind.decode(stored.payload).replacement
-        return ReplacementCarry(writes, from, replacement.value, replacement.at)
+        return ReplacementCarry(writes, EntryReplacementKind.decode(stored.payload))
     }
 
     private companion object {

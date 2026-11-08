@@ -10,6 +10,11 @@ package tachiyomi.domain.entry.migration
 class MigrationChapterPairs<C>(
     val matches: List<MigrationChapterMatch<C>>,
     val number: (C) -> Double,
+    /**
+     * The order the chapters were paired in, which a migration records so other devices pair them the same way; null
+     * when they were paired by number, which every device repeats from its own chapters.
+     */
+    val order: List<MigrationChapterPosition<C>>? = null,
 )
 
 /** One place in the order a migration paired chapters in: a source chapter and the target chapter beside it. */
@@ -43,5 +48,6 @@ fun <C> pairMigrationChaptersInOrder(order: List<MigrationChapterPosition<C>>): 
     return MigrationChapterPairs(
         matches = order.mapNotNull { (source, target) -> target?.let { MigrationChapterMatch(source, it) } },
         number = { places[it] ?: -1.0 },
+        order = order,
     )
 }

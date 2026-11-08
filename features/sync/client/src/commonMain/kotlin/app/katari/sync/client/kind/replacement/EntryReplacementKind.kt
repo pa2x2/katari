@@ -15,6 +15,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.replacement.carry.ReplacedEntryEdits
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -81,6 +82,9 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             if (operation == null) {
                 LocalRead.Missing
             } else {
+                val inOrder = reads.database.sync_local_rowsQueries.entryMigrationChapterPositions(ref.text(1))
+                    .awaitAsList()
+                    .map { PairedChapter(it.source_chapter_url, it.target_chapter_url) }
                 found(
                     reads,
                     from = reads.entryKey(operation.source_entry_id),
@@ -89,6 +93,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
                     parents = listOf(operation.source_entry_id, operation.target_entry_id),
                     options = EntryMigrationFingerprint.options(operation.intent_fingerprint).map { it.name }.sorted(),
                     targetBefore = targetBefore(ref),
+                    chapters = MigratedChapters(inOrder).takeUnless { it == MigratedChapters() },
                 )
             }
         }
@@ -117,6 +122,7 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
         parents: List<Long>,
         options: List<String> = emptyList(),
         targetBefore: LibraryState? = null,
+        chapters: MigratedChapters? = null,
     ): LocalRead<EntryReplacementPayload> {
         val to = reads.entryKey(toEntryId)
         if (from == null || to == null) return LocalRead.NotSynced
@@ -124,14 +130,19 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
             key = key(from),
             parents = parents.map { RecordRef(EntryKind, EntryKind.ref(it)) },
         ) { previous, stamps ->
-            EntryReplacementPayload(
-                from,
-                stamps.field(2, Replacement(to, cause, options, targetBefore), previous?.replacement),
-            )
+            val replacement = stamps.field(2, Replacement(to, cause, options, targetBefore), previous?.replacement)
+            EntryReplacementPayload(from, replacement, chapters?.let { Stamped(it, replacement.at) })
         }
     }
-    override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload) =
-        local.copy(replacement = latest(local.replacement, incoming.replacement))
+
+    /** The newer replacement, with how it carried chapters from whichever copy holds that for it. */
+    override fun merge(local: EntryReplacementPayload, incoming: EntryReplacementPayload): EntryReplacementPayload {
+        val replacement = latest(local.replacement, incoming.replacement)
+        return local.copy(
+            replacement = replacement,
+            chapters = listOfNotNull(local.chapters, incoming.chapters).firstOrNull { it.at == replacement.at },
+        )
+    }
 
     /**
      * The replacement's own changes arrive as records of the new entry, made by the device that replaced it; here the
