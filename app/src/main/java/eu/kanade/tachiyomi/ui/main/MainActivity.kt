@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
@@ -45,7 +44,6 @@ import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
@@ -110,11 +108,7 @@ class MainActivity : BaseActivity() {
     private var allowAppUnlockPrompt = true
 
     init {
-        registerSecureActivity(this)
-    }
-
-    override fun shouldRequestAppUnlock(activity: AppCompatActivity): Boolean {
-        return allowAppUnlockPrompt
+        registerSecureActivity(this) { allowAppUnlockPrompt }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -274,7 +268,7 @@ class MainActivity : BaseActivity() {
                 requiresProfileUnlock &&
                 shouldSkipProfileAuth
             ) {
-                requestAppUnlock(activity)
+                activity.requestAppUnlock()
             }
         }
 
@@ -299,7 +293,7 @@ class MainActivity : BaseActivity() {
                 }
                 startupGateState = startupDecision.state
                 if (profile != null && requiresProfileUnlock && shouldSkipProfileAuth) {
-                    requestAppUnlock(activity)
+                    activity.requestAppUnlock()
                 }
             }
         }
