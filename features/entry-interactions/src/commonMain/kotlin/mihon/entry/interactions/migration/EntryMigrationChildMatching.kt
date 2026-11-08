@@ -6,21 +6,75 @@ import tachiyomi.domain.entry.migration.MigrationChapterMatch
 import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
 import tachiyomi.domain.entry.migration.matchMigrationChapters
 import tachiyomi.domain.entry.migration.migratedChapterMarks
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.sortedForReading
+
+internal typealias EntryMigrationChildMatch = MigrationChapterMatch<EntryChapter>
+
+/** How a migration pairs the migrated entry's chapters with the target's. */
+internal sealed interface EntryMigrationChildPairing {
+    fun pair(sourceChildren: List<EntryChapter>, targetChildren: List<EntryChapter>): EntryMigrationChildPairs
+
+    /** A target chapter takes the source chapter of its number, or of its name when it has none. */
+    data object ByNumber : EntryMigrationChildPairing {
+        override fun pair(
+            sourceChildren: List<EntryChapter>,
+            targetChildren: List<EntryChapter>,
+        ) = EntryMigrationChildPairs(
+            matches = matchMigrationChapters(
+                sourceChildren,
+                targetChildren,
+                EntryChapter::chapterNumber,
+                EntryChapter::name,
+            ),
+            number = EntryChapter::chapterNumber,
+        )
+    }
+
+    /**
+     * The source's chapters take the target's from [offset] on, one for one, both in [readingOrder]'s reading order: a
+     * merged entry's seasons, which number their episodes from one each, landing on an entry that lists them all.
+     */
+    data class ByPosition(val readingOrder: Entry, val offset: Int) : EntryMigrationChildPairing {
+        override fun pair(
+            sourceChildren: List<EntryChapter>,
+            targetChildren: List<EntryChapter>,
+        ): EntryMigrationChildPairs {
+            val sources = sourceChildren.sortedForReading(readingOrder)
+            val targets = targetChildren.sortedForReading(readingOrder).drop(offset).take(sources.size)
+            val positions = (sources.withIndex() + targets.withIndex())
+                .associate { (index, chapter) -> chapter.id to index.toDouble() }
+            return EntryMigrationChildPairs(
+                matches = sources.zip(targets) { source, target -> MigrationChapterMatch(source, target) },
+                number = { positions[it.id] ?: -1.0 },
+            )
+        }
+    }
+}
+
+/**
+ * The target chapters a migration changes, each with the source chapter whose state it takes, and where [number]
+ * places a chapter for the rule that every target chapter up to the last source chapter read counts as read.
+ */
+internal class EntryMigrationChildPairs(
+    val matches: List<EntryMigrationChildMatch>,
+    val number: (EntryChapter) -> Double,
+)
 
 internal fun prepareMigrationChildUpdates(
     sourceChildren: List<EntryChapter>,
-    childMatches: List<EntryMigrationChildMatch>,
+    childPairs: EntryMigrationChildPairs,
     transfer: MigrationChildStateTransfer,
 ): List<EntryMigrationHostChildUpdate> {
     val marks = migratedChapterMarks(
         sources = sourceChildren,
-        matches = childMatches,
+        matches = childPairs.matches,
         transfer = transfer,
         marks = { MigrationChapterMarks(it.read, it.bookmark) },
-        number = EntryChapter::chapterNumber,
+        number = childPairs.number,
     ).toMap()
-    return childMatches.mapNotNull { match ->
+    return childPairs.matches.mapNotNull { match ->
         val target = match.target
         val carried = marks[target]
         val updated = target.copy(
@@ -31,11 +85,3 @@ internal fun prepareMigrationChildUpdates(
         updated.takeIf { it != target }?.let { EntryMigrationHostChildUpdate(target, it) }
     }
 }
-
-internal typealias EntryMigrationChildMatch = MigrationChapterMatch<EntryChapter>
-
-internal fun matchMigrationChildren(
-    sourceChildren: List<EntryChapter>,
-    targetChildren: List<EntryChapter>,
-): List<EntryMigrationChildMatch> =
-    matchMigrationChapters(sourceChildren, targetChildren, EntryChapter::chapterNumber, EntryChapter::name)

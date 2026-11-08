@@ -436,6 +436,9 @@ internal class AppEntryMergeHost(
             if (replacementMembership != null && replacementMembership !in transition.expectedGroups) conflict()
             val replacementIds = transition.replacementGroups.flatMap { it.orderedEntryIds }
             if (replacementIds.distinct().size != replacementIds.size) conflict()
+            val expectedIds = transition.expectedGroups.flatMapTo(mutableSetOf()) { it.orderedEntryIds }
+            if (!expectedIds.containsAll(transition.libraryRemovalEntryIds)) conflict()
+            if (transition.replacementEntryId in transition.libraryRemovalEntryIds) conflict()
             transition.replacementGroups.forEach { group ->
                 if (group.profileId != profileId) conflict()
                 validatePersistedGroup(group.orderedEntryIds)
@@ -458,6 +461,9 @@ internal class AppEntryMergeHost(
                 group.orderedEntryIds.forEachIndexed { index, entryId ->
                     merged_entriesQueries.insert(profileId, group.targetEntryId, entryId, index.toLong())
                 }
+            }
+            transition.libraryRemovalEntryIds.forEach { entryId ->
+                entriesQueries.setFavoriteForProfile(false, profileId, entryId)
             }
             val visible = transition.replacementGroups
                 .firstOrNull { transition.replacementEntryId in it.orderedEntryIds }
