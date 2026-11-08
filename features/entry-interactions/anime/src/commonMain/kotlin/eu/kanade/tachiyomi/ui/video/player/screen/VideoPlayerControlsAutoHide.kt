@@ -13,15 +13,15 @@ import mihon.presentation.kit.pointer.LocalAppPointerPresence
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 
 /**
- * Hides the controls while playing once they have been left alone a while, and at once when the mouse leaves the app.
- * Nothing hides them while [controlsPinned], paused, loading, scrubbing, or under the settings, the episode list or the
- * startup overlay; a mouse resting on one of them holds off only the wait.
+ * Hides the controls once they have been left alone a while, playing or paused, and at once when the mouse leaves the
+ * app. Nothing hides them while [controlsPinned], loading, at the episode's end, scrubbing, or under the settings, the
+ * episode list or the startup overlay; a mouse resting on one of them holds off only the wait.
  */
 @Composable
 internal fun VideoPlayerControlsAutoHide(ui: VideoPlayerWatchUiState, controlsPinned: Boolean) {
     val held = controlsPinned ||
-        !ui.playbackSnapshot.isPlaying ||
         ui.playbackSnapshot.isLoading ||
+        ui.playbackSnapshot.playbackEnded ||
         ui.isScrubbing ||
         ui.settingsVisible ||
         ui.episodesDrawerVisible ||
