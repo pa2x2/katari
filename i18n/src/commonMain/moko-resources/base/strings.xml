@@ -1230,7 +1230,8 @@
     <string name="missing_source_install_from">From %1$s · %2$s</string>
     <string name="missing_source_migrate">Migrate to another source</string>
     <string name="missing_extensions_title">Install extensions</string>
-    <string name="missing_extensions_note">Titles in your library come from these extensions, which aren\'t installed here.</string>
+    <string name="missing_extensions_note">Titles in your library come from these extensions.</string>
+    <string name="missing_extensions_untrusted">Installed, not trusted here</string>
     <string name="missing_extensions_ready">Ready to install</string>
     <string name="missing_extensions_unavailable">Can\'t install here</string>
     <string name="missing_extensions_details">%1$s · %2$s · %3$s</string>
