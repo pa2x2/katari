@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
+import tachiyomi.domain.source.model.StubSource
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceManager
 
@@ -14,8 +15,7 @@ class SourceNamesRestorer(
 
     suspend operator fun invoke(backupSources: List<BackupSource>) {
         backupSources
-            // Some backups store the id as the name, and sources without a stub were backed up with no name.
-            .filter { it.name.isNotBlank() && it.name.toLongOrNull() == null }
+            .filter { StubSource.isKnownName(it.name) }
             .filter {
                 sourceManager.get(it.sourceId) == null && stubSourceRepository.getStubSource(it.sourceId) == null
             }

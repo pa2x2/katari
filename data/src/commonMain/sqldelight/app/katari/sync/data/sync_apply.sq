@@ -65,6 +65,12 @@ SET favorite = :favorite,
     chapter_flags = :chapterFlags
 WHERE _id = :entryId;
 
+-- The name of a source no extension here provided, as backup restore stores it. A source with a row already keeps
+-- its name: an installed one renames its downloads when that changes.
+nameSource:
+INSERT OR IGNORE INTO sources(_id, lang, name)
+VALUES (:source, '', :name);
+
 moveEntry:
 UPDATE entries
 SET profile_id = :profileId

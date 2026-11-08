@@ -39,10 +39,12 @@ SELECT
     Entry.genre,
     Entry.status,
     Entry.thumbnail_url,
-    Entry.background_url
+    Entry.background_url,
+    Name.name AS source_name
 FROM entries Entry
 JOIN profiles P ON P._id = Entry.profile_id
 JOIN source_identities S ON S.local_key = Entry.source
+LEFT JOIN sources Name ON Name._id = Entry.source
 WHERE Entry._id = :entryId;
 
 chapterRow:

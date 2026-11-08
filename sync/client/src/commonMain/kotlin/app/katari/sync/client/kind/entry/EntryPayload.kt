@@ -28,6 +28,11 @@ data class EntryPayload(
     @ProtoNumber(12) val metadata: EntryMetadata,
     /** The cover the person set for the entry; null for none, the source's own cover. */
     @ProtoNumber(13) val customCover: Stamped<SyncedFile?> = Stamped(null, Stamped.UNKNOWN_EDIT),
+    /**
+     * The source's name, so a device that never had its extension can name it (D019); null when no device that wrote
+     * the record knew it.
+     */
+    @ProtoNumber(14) val sourceName: String? = null,
 )
 
 /** The source's description of the entry as this device last fetched it. */
