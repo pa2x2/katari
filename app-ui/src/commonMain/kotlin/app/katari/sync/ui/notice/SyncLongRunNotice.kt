@@ -17,6 +17,8 @@ data class SyncLongRunNotice(val title: StringResource, val server: String?, val
             val syncing = status?.activity as? SyncStatus.Activity.Syncing
             val step = syncing?.step
             return when {
+                syncing?.catchingUp == true ->
+                    SyncLongRunNotice(MR.strings.sync_long_run_catching_up, server, syncing.percent)
                 syncing?.percent != null ->
                     SyncLongRunNotice(MR.strings.sync_long_run_downloading, server, syncing.percent)
                 step != null -> SyncLongRunNotice(step.kind.title(), server, step.percent())
