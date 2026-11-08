@@ -19,8 +19,7 @@ internal class WindowPictureInPicture(
     override val isInPictureInPictureMode: Boolean
         get() = inPictureInPicture()
 
-    override val showsButton: Boolean
-        get() = window.isAvailable
+    override val showsButton = true
 
     override val drawsOwnWindow = true
 

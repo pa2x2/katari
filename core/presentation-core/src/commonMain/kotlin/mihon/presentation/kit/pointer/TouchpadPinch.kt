@@ -28,7 +28,7 @@ sealed interface TouchpadPinch {
 
 /**
  * The window's touchpad pinches as they happen, shared by every element that takes them. Null where the window gets
- * none: on Android, where a pinch is touch, and on desktops whose window toolkit doesn't pass them on.
+ * none, as on Android, where a pinch is touch.
  */
 val LocalWindowTouchpadPinches = staticCompositionLocalOf<Flow<TouchpadPinch>?> { null }
 

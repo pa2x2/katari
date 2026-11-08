@@ -89,7 +89,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     AppProcessStart.runAppUpgradeMigrations(graph)
     AppProcessStart.startSync(graph)
     // Before anything starts AWT, which fixes the window toolkit for the run
-    graph.startDisplayBackend()
+    graph.displayBackend.start()
     SingletonImageLoader.setSafe { graph.imageLoader }
     // As Android's launch does before its first screen: the default profile exists, older preferences are moved and
     // the profile last open is active again, so the window opens in that profile's theme.
@@ -120,14 +120,10 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
 /** Crash-report mode: the window shows only the crash screen, and nothing resumes the app's work. */
 private fun startCrashReport(graph: DesktopGraph, report: Path) {
     AppProcessStart.startCrashReport(graph)
-    graph.startDisplayBackend()
+    graph.displayBackend.start()
     // The debug info lists the extensions that misbehave, which loads them once logs are dumped
     graph.prepareExtensionHost()
     runWindow(graph, laterLaunches = emptyFlow()) { CrashReportWindowContent(report, graph.appRestart) }
-}
-
-private fun DesktopGraph.startDisplayBackend() {
-    displayBackend.start(preferNativeWayland = displayBackendPreferences.useNativeWayland.get())
 }
 
 /**

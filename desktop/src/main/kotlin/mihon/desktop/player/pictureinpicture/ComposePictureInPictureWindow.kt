@@ -16,8 +16,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.application.icon.AppIcon
-import mihon.desktop.display.backend.DisplayBackend
-import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.window.WindowPreferences
 import mihon.entry.interactions.player.AnimePlayerPictureInPictureWindow
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
@@ -31,18 +29,13 @@ import kotlin.math.roundToInt
 
 /**
  * The picture-in-picture window as a Compose window of the app's: undecorated, so it has no title bar, and asking to
- * stay over the other windows, which X11 window managers do and native Wayland has no way to ask for. It moves and
- * resizes itself ([movesWindow], [ResizeEdges]), as a window without a title bar or frame gets nothing from the window
- * manager to do either with. Its place and size are saved as they change and come back the next time it opens.
- * Native Wayland draws Compose's windows through Swing, which this window has no way to, so there is none there.
+ * stay over the other windows, which X11 window managers do. It moves and resizes itself ([movesWindow],
+ * [ResizeEdges]), as a window without a title bar or frame gets nothing from the window manager to do either with.
+ * Its place and size are saved as they change and come back the next time it opens.
  */
 internal class ComposePictureInPictureWindow(
     private val preferences: WindowPreferences,
-    private val displayBackend: DisplayBackend,
 ) : AnimePlayerPictureInPictureWindow {
-    override val isAvailable: Boolean
-        get() = displayBackend.windowDrawing == WindowDrawing.Accelerated
-
     @Composable
     override fun Window(
         title: String,

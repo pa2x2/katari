@@ -6,10 +6,8 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.presentation.more.settings.screen.advanced.DisplayBackendSetting
 import eu.kanade.presentation.more.settings.screen.appearance.InterfaceSizeSetting
 import mihon.desktop.application.DesktopAppVariant
-import mihon.desktop.display.backend.DesktopDisplayBackendSetting
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.display.backend.LinuxDisplayBackend
 import mihon.desktop.display.size.DesktopInterfaceSizeSetting
@@ -26,9 +24,6 @@ interface DisplayBindings {
     @Binds
     val DesktopInterfaceSizeSetting.interfaceSizeSetting: InterfaceSizeSetting
 
-    @Binds
-    val DesktopDisplayBackendSetting.displayBackendSetting: DisplayBackendSetting
-
     companion object {
         @Provides
         @SingleIn(AppScope::class)
@@ -38,10 +33,9 @@ interface DisplayBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun sessionScale(operatingSystem: DesktopOperatingSystem, backend: DisplayBackend): SessionScale =
-            when (operatingSystem) {
-                DesktopOperatingSystem.LINUX -> XftSessionScale(backend)
-            }
+        fun sessionScale(operatingSystem: DesktopOperatingSystem): SessionScale = when (operatingSystem) {
+            DesktopOperatingSystem.LINUX -> XftSessionScale()
+        }
 
         @Provides
         @SingleIn(AppScope::class)

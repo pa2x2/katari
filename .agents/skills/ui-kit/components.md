@@ -269,7 +269,7 @@ See the `adaptive-layout` skill for which to use at which window size.
 | Job | Component | Notes |
 |---|---|---|
 | The hand cursor over something a click acts on | `Modifier.clickCursor` | |
-| Zooming with a touchpad pinch | `Modifier.touchpadPinch` | Pinches that start over the element, with the pointer to zoom about; desktop windows on X11 only |
+| Zooming with a touchpad pinch | `Modifier.touchpadPinch` | Pinches that start over the element, with the pointer to zoom about; desktop only |
 | A keyboard shortcut while something is shown | `KeyboardShortcutHandler`, `KeyboardShortcutScope` | |
 | The window's layout facts | `currentWindowLayout` | |
 
