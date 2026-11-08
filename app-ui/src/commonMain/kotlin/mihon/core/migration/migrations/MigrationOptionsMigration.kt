@@ -7,7 +7,7 @@ import mihon.feature.profiles.core.ProfileConstants
 import tachiyomi.core.common.util.lang.withIOContext
 
 class MigrationOptionsMigration : Migration {
-    override val version: Float = 88f
+    override val version: Float = 92f
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean = withIOContext {
         val profileStore = migrationContext.profileStore
