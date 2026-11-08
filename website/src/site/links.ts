@@ -1,5 +1,6 @@
 export const REPOSITORY = "https://github.com/pa2x2/katari";
 export const RELEASES = `${REPOSITORY}/releases`;
+export const SYNC_SERVER_IMAGE = "ghcr.io/pa2x2/katari-sync-server";
 
 /**
  * Spread onto a link that leaves the site, so it opens in a new tab and the visitor keeps their place here. A new

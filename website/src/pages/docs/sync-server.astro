@@ -1,0 +1,203 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { RELEASES, SYNC_SERVER_IMAGE, leavesSite, sitePath } from "../../site/links.ts";
+
+const image = `${SYNC_SERVER_IMAGE}:latest`;
+const run = `docker run -d --name katari-sync --restart unless-stopped \\
+  -p 8080:8080 -v katari-sync:/data \\
+  ${image}`;
+const compose = `services:
+  katari-sync:
+    image: ${image}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - katari-sync:/data
+
+volumes:
+  katari-sync:`;
+---
+
+<GuidePage
+  manual="docs"
+  slug="sync-server"
+  lead="The sync server holds your accounts' libraries so their devices can sync. It runs in Docker on any machine that stays on, such as a home server, a NAS or a small VPS."
+>
+  <Task id="requirements" title="What you need">
+    <ul>
+      <li>Docker on an x86_64 or arm64 machine that stays on.</li>
+      <li>
+        Room for every account's covers and fonts, which take most of the space, and their libraries and history, which take little.
+      </li>
+      <li>
+        For devices outside your home network, an <code>https://</code> address. Katari accepts plain <code>http://</code> only for addresses
+        on your local network.
+      </li>
+    </ul>
+  </Task>
+
+  <Task id="start" title="Start the server">
+    <p>With Docker:</p>
+    <Snippet lang="shell" code={run} />
+    <p>Or with Docker Compose, in a <code>compose.yaml</code>, started with <code>docker compose up -d</code>:</p>
+    <Snippet lang="yaml" file="compose.yaml" code={compose} />
+    <p>
+      The server listens on port 8080 and keeps everything in the <code>katari-sync</code> volume at <code>/data</code>. Open
+      <code>http://&lt;machine&gt;:8080</code> in a browser to set it up.
+    </p>
+  </Task>
+
+  <Task id="admin" title="Set up the admin account">
+    <p>
+      A new server has no accounts, and its web page opens on <strong>Set up this server</strong>. It asks for a <strong>Setup code</strong>,
+      which the server prints to its log when it starts:
+    </p>
+    <Snippet lang="shell" code="docker logs katari-sync" />
+    <p>
+      Look for <code>No accounts yet. The setup code for creating the admin account is …</code>, enter the code with a username and
+      password, and select <strong>Create admin account</strong>. The admin account syncs like any other, and it manages everyone else's.
+    </p>
+    <p>
+      Until the admin account exists, a device that signs in is told to open the web page first. The same happens after the server is reset,
+      as <a href="#move">Move, restore or reset the server</a> describes.
+    </p>
+  </Task>
+
+  <Task id="accounts" title="Add people">
+    <p>On the web page's <strong>Accounts</strong>, an admin can:</p>
+    <ul>
+      <li>
+        <strong>Invite</strong> someone: the page shows the server address, an invite code and a QR code. The person opens
+        <Path>Settings › Sync › Sign in with server address › I have an invite code</Path> and chooses their own username and password, or
+        scans the QR code with <strong>Scan a code from a linked device</strong>. An invite works once, for 1 day.
+      </li>
+      <li><strong>Add account</strong> with a username and password you choose and pass on. They can change the password later.</li>
+      <li>
+        Open an account to <strong>Reset password</strong>, <strong>Make admin</strong>, <strong>Disable</strong> it, which stops its devices
+        syncing and keeps its data, or <strong>Delete account</strong>, which removes its synced data and files from the server. Its devices
+        keep theirs either way.
+      </li>
+    </ul>
+    <p>
+      Everyone can sign in to the web page to see their devices and storage, change their password, remove a device, or delete their synced
+      data under <strong>My account</strong>. How people use sync on their devices is in <a href={sitePath("docs/sync/")}>Sync</a>.
+    </p>
+  </Task>
+
+  <Task id="https" title="HTTPS behind a reverse proxy">
+    <p>
+      The server speaks plain HTTP. For an <code>https://</code> address, put a reverse proxy with a certificate in front of it, such as
+      Caddy, nginx or Traefik, and set <code>KATARI_SYNC_TRUSTED_PROXIES</code> to the number of proxies in front of it, usually
+      <code>1</code>. Caddy needs one line:
+    </p>
+    <Snippet lang="plaintext" file="Caddyfile" code={`sync.example.com {\n  reverse_proxy localhost:8080\n}`} />
+    <p>With another proxy, make sure it:</p>
+    <ul>
+      <li>passes the <code>Host</code> header on unchanged, since invites show the address the browser used;</li>
+      <li>appends to <code>X-Forwarded-For</code> and sets <code>X-Forwarded-Proto</code>;</li>
+      <li>allows WebSocket upgrades, which bring changes to devices as they happen;</li>
+      <li>accepts request bodies up to 64 MB, the largest cover or font a device uploads.</li>
+    </ul>
+    <Callout label="Trusted proxies" tone="warning">
+      <p>
+        Leave <code>KATARI_SYNC_TRUSTED_PROXIES</code> at <code>0</code> when devices connect to the server directly. Set above 0 without a
+        proxy, anyone can fake the address they sign in from and get past the limit on wrong passwords.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="settings" title="Settings">
+    <p>The server reads these environment variables when it starts, such as <code>-e KATARI_SYNC_TRUSTED_PROXIES=1</code> with Docker.</p>
+    <table class="terms">
+      <thead>
+        <tr><th>Variable</th> <th>Default</th> <th>What it sets</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>KATARI_SYNC_PORT</code></td> <td data-label="Default"><code>8080</code></td> <td data-label="What it sets">The port it listens on.</td></tr>
+        <tr><td><code>KATARI_SYNC_HOST</code></td> <td data-label="Default"><code>0.0.0.0</code></td> <td data-label="What it sets">The address it listens on.</td></tr>
+        <tr><td><code>KATARI_SYNC_DATA_DIR</code></td> <td data-label="Default"><code>/data</code></td> <td data-label="What it sets">Where it keeps its database and files.</td></tr>
+        <tr>
+          <td><code>KATARI_SYNC_TRUSTED_PROXIES</code></td> <td data-label="Default"><code>0</code></td>
+          <td data-label="What it sets">How many reverse proxies are in front of it, from 0 to 10.</td>
+        </tr>
+        <tr>
+          <td><code>KATARI_SYNC_MAX_FILE_BYTES</code></td> <td data-label="Default">64 MiB</td>
+          <td data-label="What it sets">The largest cover or font a device can upload, in bytes.</td>
+        </tr>
+        <tr>
+          <td><code>KATARI_SYNC_MAX_REQUEST_BYTES</code></td> <td data-label="Default">32 MiB</td>
+          <td data-label="What it sets">The largest request it reads, in bytes, at least 1 MiB.</td>
+        </tr>
+        <tr>
+          <td><code>KATARI_SYNC_PULL_PAGE_SIZE</code></td> <td data-label="Default"><code>500</code></td>
+          <td data-label="What it sets">How many changes a device downloads at a time, from 1 to 10,000.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>A value it can't use stops the server with a message naming the variable.</p>
+  </Task>
+
+  <Task id="backup" title="Back up the data">
+    <p>Everything the server holds is in its <code>/data</code> volume. Stop the server while you copy it, so the database is copied whole:</p>
+    <Snippet
+      lang="shell"
+      code={`docker stop katari-sync
+docker run --rm -v katari-sync:/data -v "$PWD":/backup alpine \\
+  tar -czf /backup/katari-sync.tar.gz -C /data .
+docker start katari-sync`}
+    />
+    <p>
+      Devices keep their own full copies, so a lost server costs no one their library; a backup saves the accounts and spares every device
+      from filling the server in again.
+    </p>
+  </Task>
+
+  <Task id="update" title="Update the server">
+    <p>
+      When a new version of Katari needs a newer server, the app says the server <strong>needs a server update</strong>. Back up the data
+      first: a new version can change the database so that older versions can't open it, and its release notes say so.
+    </p>
+    <p>With Docker, pull the new image and start the container again with the same command as before:</p>
+    <Snippet
+      lang="shell"
+      code={`docker pull ${image}
+docker rm -f katari-sync
+${run}`}
+    />
+    <p>With Docker Compose:</p>
+    <Snippet lang="shell" code="docker compose pull && docker compose up -d" />
+    <p>
+      The <a href={`${RELEASES}?q=sync-server&expanded=true`} {...leavesSite()}>server's releases</a> list what each version changes, and the
+      web page's footer shows admins which version is running.
+    </p>
+  </Task>
+
+  <Task id="reset-password" title="Locked out">
+    <p>An admin who can't sign in to the web page gets a new password from inside the container:</p>
+    <Snippet lang="shell" code="docker exec katari-sync katari-sync-server reset-password <username>" />
+    <p>It prints the new password, enables the account if it was disabled, and ends its web sign-ins. Its devices keep syncing.</p>
+  </Task>
+
+  <Task id="move" title="Move, restore or reset the server">
+    <ul>
+      <li>
+        <strong>A new address</strong>, such as a new IP address or domain: on each device, enter it under
+        <Path>Settings › Sync › Server address</Path>. Devices stay signed in when the same server answers there.
+      </li>
+      <li>
+        <strong>Restored from a backup</strong>: devices that synced after the backup notice the server went back, show
+        <strong>Catching the server up</strong>, and send it what it's missing.
+      </li>
+      <li>
+        <strong>Reset</strong>, starting from an empty <code>/data</code>: set up the admin account again. Devices show
+        <strong>Your sync server was reset</strong> and keep their libraries; once their accounts exist again, <strong>Set it up again</strong>
+        signs them in and they fill the server in.
+      </li>
+    </ul>
+  </Task>
+</GuidePage>
