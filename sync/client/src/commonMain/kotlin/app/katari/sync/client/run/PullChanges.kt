@@ -46,6 +46,7 @@ class PullChanges(
                 liveOnly = liveOnly,
                 afterChain = state.chain,
                 device = description,
+                resync = state.stage == SyncStage.RESYNC,
             )
             val page = try {
                 client.pull(request)

@@ -3,6 +3,7 @@ package app.katari.sync.client
 import app.katari.sync.server.SyncServer
 import app.katari.sync.server.account.FirstAdminOutcome
 import app.katari.sync.server.config.ServerConfig
+import app.katari.sync.server.retention.DeletionMarkerRetention
 import app.katari.sync.server.retention.UnreferencedFileRetention
 import java.io.File
 import java.net.ServerSocket
@@ -51,6 +52,16 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
             override fun now(): Instant = Clock.System.now() + UnreferencedFileRetention.GRACE * 2
         }
         UnreferencedFileRetention(services.storage, services.content, later).sweep()
+    }
+
+    /**
+     * Drops the deletion markers every device has pulled past, as the server's retention does, and returns the newest
+     * sequence dropped so far.
+     */
+    fun dropPassedDeletionMarkers(accountId: Long): Long {
+        val services = running().services
+        DeletionMarkerRetention(services.storage, services.clock).sweep(accountId)
+        return services.storage.records.markersDroppedThrough(accountId)
     }
 
     /** A copy of the server's data as it is now, to [restoreFrom] later. */

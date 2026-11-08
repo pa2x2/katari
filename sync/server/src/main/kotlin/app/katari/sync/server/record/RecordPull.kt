@@ -17,7 +17,8 @@ import app.katari.sync.server.storage.ServerStorage
  *
  * A position the history chain is no longer kept for, or one from before a dropped deletion marker, is refused as
  * [SyncErrorCode.CURSOR_EXPIRED]: the first cannot be checked, and pulling from the second would miss that deletion
- * (a pull that leaves out deletions has nothing to miss and is never refused for it).
+ * (a pull that leaves out deletions has nothing to miss and is never refused for it, nor is a resync after a lost or
+ * restored server ([PullRequest.resync]), whose device applied those deletions before).
  */
 class RecordPull(
     private val storage: ServerStorage,
@@ -32,7 +33,7 @@ class RecordPull(
         if (request.afterChain.isNotEmpty() && request.afterChain != chainThere.toHexString()) {
             return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_UNKNOWN)
         }
-        if (!request.liveOnly && request.after < storage.records.markersDroppedThrough(accountId)) {
+        if (!request.liveOnly && !request.resync && request.after < storage.records.markersDroppedThrough(accountId)) {
             return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_EXPIRED)
         }
         storage.devices.setSyncedUpTo(device.id, request.after)
