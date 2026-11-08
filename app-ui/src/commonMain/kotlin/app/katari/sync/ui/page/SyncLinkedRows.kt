@@ -3,6 +3,7 @@ package app.katari.sync.ui.page
 import androidx.compose.runtime.Composable
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
@@ -47,7 +48,11 @@ internal fun linkedPreferences(
         add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
     }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
-    if (link.stopped != SyncStop.SIGN_IN_AGAIN) add(devicesGroup(devices, actions))
+    if (link.stopped != SyncStop.SIGN_IN_AGAIN) {
+        val reachable = status.activity !is SyncStatus.Activity.Unreachable &&
+            status.activity != SyncStatus.Activity.Offline
+        add(devicesGroup(devices, reachable, actions))
+    }
     add(syncOptionsGroup(preferences, knowsWifi))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
@@ -67,8 +72,13 @@ private fun statusCard(
     headline: SyncHeadline?,
     actions: SyncPageActions,
 ): Preference.PreferenceItem<*, *> {
-    val account = link.accountName?.let { stringResource(MR.strings.sync_account_on_server, it, link.server.host) }
-        ?: link.server.host
+    // A headline that names the server leaves the account alone under it
+    val accountName = link.accountName
+    val account = when {
+        accountName == null -> link.server.host
+        headline?.namesServer() == true -> accountName
+        else -> stringResource(MR.strings.sync_account_on_server, accountName, link.server.host)
+    }
     return Preference.PreferenceItem.CustomPreference(title = "status") {
         TextPreferenceWidget(
             title = headline?.let { syncHeadlineText(it) }.orEmpty(),
@@ -90,6 +100,14 @@ private fun statusCard(
             },
         )
     }
+}
+
+/** Whether the status card's headline names the server, as "Can't reach 127.0.0.1" does. */
+private fun SyncHeadline.namesServer(): Boolean = when (this) {
+    is SyncHeadline.Unreachable, is SyncHeadline.UnreachableLong, is SyncHeadline.ServerTooOld -> true
+    is SyncHeadline.AccountDisabled -> server != null
+    is SyncHeadline.Unsent -> unreachableServer != null
+    else -> false
 }
 
 /** Library titles whose extensions this device lacks, opening the sheet that installs them. */
@@ -133,7 +151,7 @@ private fun attentionRows(
         SyncHeadline.SignInAgain ->
             listOf(
                 row(stringResource(MR.strings.sync_action_sign_in_again)) {
-                    actions.signIn(link.server.toString(), link.accountName)
+                    actions.signIn(link.server.shownAddress, link.accountName)
                 },
             )
         is SyncHeadline.Failed -> listOf(

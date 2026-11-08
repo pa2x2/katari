@@ -3,6 +3,7 @@ package app.katari.sync.ui.page
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.link.linkCodeScanning
 import eu.kanade.presentation.more.settings.Preference
@@ -86,7 +87,7 @@ internal fun endedPreferences(link: SyncStatus.Link.Ended, actions: SyncPageActi
         PageActions(
             main = PageAction(
                 label = stringResource(MR.strings.sync_action_sign_in_again),
-                onClick = { actions.signIn(link.server?.toString(), link.accountName) },
+                onClick = { actions.signIn(link.server?.shownAddress, link.accountName) },
                 icon = MaterialSymbols.Rounded.Dns,
             ),
             others = listOf(PageAction(stringResource(MR.strings.action_close), actions.dismissEnded)),

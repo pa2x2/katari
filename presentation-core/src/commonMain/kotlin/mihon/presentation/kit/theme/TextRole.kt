@@ -96,5 +96,7 @@ internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
 internal fun TextRole.defaultColor(colors: KatariColors): Color = when (this) {
     TextRole.GroupLabel -> colors.primary
     TextRole.Supporting -> colors.onSurfaceVariant
+    // Read off the screen and typed elsewhere, so in full contrast even inside a dialog's quieter content colour
+    TextRole.TypedCode -> colors.onSurface
     else -> Color.Unspecified
 }
