@@ -14,10 +14,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import eu.kanade.tachiyomi.ui.video.player.introtimes.markSource
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.MediaMarkedSpan
 import mihon.presentation.kit.control.MediaTimeline
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
@@ -46,6 +49,7 @@ internal fun VideoPlayerTimeline(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long> = emptyList(),
+    onlineMarkers: List<OnlineMarker> = emptyList(),
     chapter: VideoPlayerChapter?,
     onOpenChapters: () -> Unit,
     /** Where a mouse hovers over the bar, null once it leaves; null where nothing hovers. */
@@ -147,6 +151,13 @@ internal fun VideoPlayerTimeline(
                     ),
                     enabled = effectiveDurationMs > 0L,
                     segmentBoundaries = markerBoundariesMs.map { it.fractionOf(effectiveDurationMs) },
+                    markedSpans = onlineMarkers.map { online ->
+                        MediaMarkedSpan(
+                            start = online.marker.startMs.fractionOf(effectiveDurationMs),
+                            end = online.marker.endMs.fractionOf(effectiveDurationMs),
+                            source = online.service.markSource,
+                        )
+                    },
                     onHover = onHover?.let { hover ->
                         { fraction -> hover(fraction?.let { playbackPositionAt(it, effectiveDurationMs) }) }
                     },

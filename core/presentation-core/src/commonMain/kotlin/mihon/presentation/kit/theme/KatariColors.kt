@@ -69,6 +69,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Series, tracks, rules and hatching of charts. Series accents keep the order statistics assigns them. */
     val chart: ChartColors
 
+    /** Parts of a video marked by different sources, one colour each, light enough to read over video in either theme. */
+    val mediaMarks: List<Color>
+
     /** Text and icons drawn over video or page images, whatever the theme. */
     val onMedia: Color = MEDIA_LIGHT
 
@@ -125,6 +128,7 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
         onWarningContainer = warning.onContainer
         active = ToneSet.of(ACTIVE_SEED.harmonize(primary), isDark).accent
         chart = ChartColors(scheme, CHART_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark).accent })
+        mediaMarks = MEDIA_MARK_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark = true).accent }
     }
 }
 
@@ -165,6 +169,12 @@ private val MEDIA_DARK = Color.Black
 private val SUCCESS_SEED = Color(0xFF4CAF50)
 private val WARNING_SEED = Color(0xFFFFB300)
 private val ACTIVE_SEED = Color(0xFFFFC107)
+
+// Teal and amber: apart from each other and from the primary of the played part beside them.
+private val MEDIA_MARK_SEEDS = listOf(
+    Color(0xFF00897B),
+    Color(0xFFFFB300),
+)
 
 // Rose, sky, sage, plum and amber: the hues statistics used before they followed the theme.
 private val CHART_SEEDS = listOf(

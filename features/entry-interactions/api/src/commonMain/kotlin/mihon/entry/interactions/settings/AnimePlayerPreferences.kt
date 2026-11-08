@@ -28,6 +28,8 @@ class AnimePlayerPreferences(
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
         const val MARKER_SKIP_KEY = "anime_marker_skip"
         const val FIND_INTRO_TIMES_ONLINE_KEY = "anime_find_intro_times_online"
+        const val INTRO_TIMES_FROM_ANISKIP_KEY = "anime_intro_times_from_aniskip"
+        const val INTRO_TIMES_FROM_THEINTRODB_KEY = "anime_intro_times_from_theintrodb"
         const val BACKGROUND_PLAYBACK_KEY = "anime_background_playback"
 
         // Renamed when the guide gained the sideways seek, so every profile sees it once more.
@@ -65,8 +67,16 @@ class AnimePlayerPreferences(
         AnimeMarkerSkipMode.BUTTON,
     )
 
-    /** Asking AniList and AniSkip for intro and credits times sends series titles and episode numbers away. */
+    /**
+     * Looking intro and credits times up online sends series titles and episode numbers away, to the services that
+     * [introTimesFromAniSkip] and [introTimesFromTheIntroDb] leave on.
+     */
     val findIntroTimesOnline: Preference<Boolean> = preferenceStore.getBoolean(FIND_INTRO_TIMES_ONLINE_KEY, false)
+
+    val introTimesFromAniSkip: Preference<Boolean> = preferenceStore.getBoolean(INTRO_TIMES_FROM_ANISKIP_KEY, true)
+
+    val introTimesFromTheIntroDb: Preference<Boolean> =
+        preferenceStore.getBoolean(INTRO_TIMES_FROM_THEINTRODB_KEY, true)
 
     val backgroundPlayback: Preference<Boolean> = preferenceStore.getBoolean(BACKGROUND_PLAYBACK_KEY, false)
 
@@ -149,6 +159,22 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val introTimesFromAniSkipSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, INTRO_TIMES_FROM_ANISKIP_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = true,
+        profilePreference = introTimesFromAniSkip,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    val introTimesFromTheIntroDbSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, INTRO_TIMES_FROM_THEINTRODB_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = true,
+        profilePreference = introTimesFromTheIntroDb,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     val backgroundPlaybackSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, BACKGROUND_PLAYBACK_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
@@ -183,6 +209,8 @@ class AnimePlayerPreferences(
         autoPlayNextSetting,
         markerSkipSetting,
         findIntroTimesOnlineSetting,
+        introTimesFromAniSkipSetting,
+        introTimesFromTheIntroDbSetting,
         backgroundPlaybackSetting,
         preferredQualityHeightSetting,
         defaultPlaybackSpeedPercentSetting,

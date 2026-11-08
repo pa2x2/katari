@@ -36,6 +36,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * A playback position bar laid over video: the played part in the primary colour with a thumb, then the buffered
  * part and the rest of the track in the media colours. [played] and [buffered] are fractions of the whole, 0..1.
  * [segmentBoundaries] are fractions where the video's parts meet, such as the end of an intro; the track breaks there.
+ * [markedSpans] take their source's colour, played or not, so parts from different sources, such as intro times found
+ * by two services, tell apart; [MediaMarkSwatch] names a colour beside its source.
  *
  * Pressing the bar starts a scrub: [onScrubStart], then [onScrub] with the touched fraction as the finger moves, then
  * [onScrubEnd] when it lifts or the gesture is cancelled. While [scrubbing] the track and thumb grow. A disabled bar,
@@ -59,6 +61,7 @@ fun MediaTimeline(
     enabled: Boolean = true,
     compact: Boolean = false,
     segmentBoundaries: List<Float> = emptyList(),
+    markedSpans: List<MediaMarkedSpan> = emptyList(),
     onHover: ((Float?) -> Unit)? = null,
 ) {
     val geometry = if (compact) CompactGeometry else FullGeometry
@@ -80,6 +83,7 @@ fun MediaTimeline(
     val bufferedColor = colors.onMedia.copy(alpha = BUFFERED_TRACK_ALPHA)
     val playedColor = colors.primary
     val haloColor = colors.primary.copy(alpha = HALO_ALPHA)
+    val markColors = colors.mediaMarks
 
     val latestEnabled by rememberUpdatedState(enabled)
     val latestThumbExtent by rememberUpdatedState(thumbExtent)
@@ -192,6 +196,22 @@ fun MediaTimeline(
                 )
                 drawLine(playedColor, Offset(startX, centerY), Offset(playedX, centerY), strokeWidth, StrokeCap.Round)
             }
+            markedSpans.forEach { span ->
+                val markLeft = maxOf(left, startX + trackWidth * span.start)
+                val markRight = minOf(right, startX + trackWidth * span.end)
+                if (markRight <= markLeft) return@forEach
+                val mark = markColors[span.source.ordinal]
+                clipRect(left = markLeft, top = 0f, right = markRight, bottom = size.height) {
+                    drawLine(
+                        mark.copy(alpha = MARK_REST_ALPHA),
+                        Offset(startX, centerY),
+                        Offset(startX + trackWidth, centerY),
+                        strokeWidth,
+                        StrokeCap.Round,
+                    )
+                    drawLine(mark, Offset(startX, centerY), Offset(playedX, centerY), strokeWidth, StrokeCap.Round)
+                }
+            }
         }
         if (halo > 0.dp) drawCircle(haloColor, radius = halo.toPx() / 2f, center = Offset(playedX, centerY))
         if (thumb > 0.dp) drawCircle(playedColor, radius = thumb.toPx() / 2f, center = Offset(playedX, centerY))
@@ -234,3 +254,4 @@ private const val HALO_ANIMATION_MS = 160
 private const val REST_TRACK_ALPHA = 0.28f
 private const val BUFFERED_TRACK_ALPHA = 0.42f
 private const val HALO_ALPHA = 0.24f
+private const val MARK_REST_ALPHA = 0.6f

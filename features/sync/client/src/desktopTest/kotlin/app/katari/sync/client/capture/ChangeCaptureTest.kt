@@ -150,6 +150,9 @@ class ChangeCaptureTest {
             expect("intro times pick", "entry.intro-times-pick") {
                 db.intro_times_matchesQueries.upsert(1, "", 5, null, "Show", 2020, true, 0)
             }
+            expect("theintrodb pick", "entry.theintrodb-pick") {
+                db.theintrodb_matchesQueries.upsert(1, "", 5, null, null, "Show", 2020, 1, 1, true, 0)
+            }
             expect("playback preferences", "entry.playback-preferences") {
                 db.playback_preferencesQueries.upsertInsert(
                     1, "dub", null, null, null, null, "auto", null, null, null, null, null, null, null, null, null,

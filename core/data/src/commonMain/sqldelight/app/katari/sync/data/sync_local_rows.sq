@@ -183,6 +183,13 @@ WHERE entry_id = :entryId
 AND group_key = :groupKey
 AND picked_by_user = 1;
 
+theIntroDbPickRow:
+SELECT entry_id, group_key, tvdb_id, tmdb_id, imdb_id, title, year, season, first_episode
+FROM theintrodb_matches
+WHERE entry_id = :entryId
+AND group_key = :groupKey
+AND picked_by_user = 1;
+
 -- Picture framing, zoom and pan depend on the screen, and mpv_hint_shown is this device's own hint; neither syncs.
 playbackPreferencesRow:
 SELECT

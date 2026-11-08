@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime.introtimes
+package mihon.entry.interactions.anime.introtimes.aniskip
 
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind

@@ -20,7 +20,9 @@ import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
-import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
+import mihon.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
+import mihon.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
+import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
@@ -114,7 +116,9 @@ object AnimePlayerBindings {
         sourceSettingsFeature: EntrySourceSettingsFeature,
         downloadRuntime: EntryDownloadRuntimeFeature,
         libraryPreferences: LibraryPreferences,
-        introTimesLookup: IntroTimesLookup,
+        introTimesEpisodes: IntroTimesEpisodeReader,
+        aniSkipLookup: AniSkipLookup,
+        theIntroDbLookup: TheIntroDbLookup,
         progressOffers: EntryProgressOffers,
         @AppCoroutineScope appScope: CoroutineScope,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
@@ -136,7 +140,9 @@ object AnimePlayerBindings {
             sourceSettingsFeature = sourceSettingsFeature,
             downloadRuntime = downloadRuntime,
             libraryPreferences = libraryPreferences,
-            introTimesLookup = introTimesLookup,
+            introTimesEpisodes = introTimesEpisodes,
+            aniSkipLookup = aniSkipLookup,
+            theIntroDbLookup = theIntroDbLookup,
             progressOffers = progressOffers,
             persistenceScope = appScope,
         )

@@ -1,0 +1,18 @@
+import kotlin.Boolean;
+
+-- TheIntroDB's matches, kept apart from AniSkip's (tachiyomi/data/theintrodb_matches.sq).
+CREATE TABLE theintrodb_matches(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL DEFAULT '',
+    tvdb_id INTEGER,
+    tmdb_id INTEGER,
+    imdb_id TEXT,
+    title TEXT,
+    year INTEGER,
+    season INTEGER,
+    first_episode INTEGER,
+    picked_by_user INTEGER AS Boolean NOT NULL,
+    checked_at INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);

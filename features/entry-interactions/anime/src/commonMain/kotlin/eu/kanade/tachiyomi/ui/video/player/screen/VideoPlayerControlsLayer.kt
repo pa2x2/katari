@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -44,6 +45,7 @@ internal fun VideoPlayerControlsLayer(
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
     markers: List<PlaybackMarker>,
+    onlineMarkers: List<OnlineMarker>,
     chapters: List<VideoPlayerChapter>,
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
@@ -57,6 +59,9 @@ internal fun VideoPlayerControlsLayer(
         } else {
             markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
         }
+    }
+    val skipService = remember(skipOffer, onlineMarkers) {
+        skipOffer?.let { offer -> onlineMarkers.firstOrNull { it.marker == offer.marker }?.service }
     }
     val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
     LaunchedEffect(shown) {
@@ -175,9 +180,11 @@ internal fun VideoPlayerControlsLayer(
                 ui.registerControllerInteraction(true)
             },
             markerBoundariesMs = markerBoundariesMs,
+            onlineMarkers = onlineMarkers,
             chapter = chapters.chapterAt(displayedPositionMs),
             onOpenChapters = { actions.openSettings(VideoPlayerSettingsSection.Chapters) },
             skipOffer = skipOffer,
+            skipService = skipService,
             skipCountdown = skipCountdown,
             onSkip = onSkip,
             onControlsFootprintChange = { ui.controlsFootprint = it },

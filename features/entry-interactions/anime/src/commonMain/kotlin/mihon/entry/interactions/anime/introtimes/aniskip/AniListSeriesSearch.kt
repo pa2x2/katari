@@ -1,4 +1,4 @@
-package mihon.entry.interactions.anime.introtimes
+package mihon.entry.interactions.anime.introtimes.aniskip
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject

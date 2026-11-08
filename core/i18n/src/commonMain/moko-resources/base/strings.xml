@@ -1984,24 +1984,43 @@
     <string name="anime_marker_skip_button">Button</string>
     <string name="anime_marker_skip_countdown">Button, then skip</string>
     <string name="anime_marker_skip_automatic">Automatic</string>
-    <string name="anime_intro_times_found">Times from AniSkip</string>
+    <string name="anime_skip_with_service">%1$s · %2$s</string>
+    <string name="intro_times_service_aniskip" translatable="false">AniSkip</string>
+    <string name="intro_times_service_theintrodb" translatable="false">TheIntroDB</string>
+    <string name="anime_intro_times_in_use">In use</string>
+    <string name="anime_intro_times_found">Times for this episode</string>
+    <!-- Which kinds of times are used, such as "Credits, Preview" -->
+    <string name="anime_intro_times_partly_used">Used for %s</string>
+    <!-- The service whose times win, such as AniSkip -->
+    <string name="anime_intro_times_used_instead">%s’s times are used instead</string>
     <string name="anime_intro_times_matched">Matched to %1$s (%2$d)</string>
     <string name="anime_intro_times_matched_no_year">Matched to %s</string>
-    <string name="anime_intro_times_none_for_episode">AniSkip has no times for this episode</string>
-    <string name="anime_intro_times_none_for_unnumbered">AniSkip can\'t look up an episode without a number</string>
-    <string name="anime_intro_times_looking">Looking for times on AniSkip</string>
-    <string name="anime_intro_times_no_series">No AniSkip series found</string>
+    <string name="anime_intro_times_season_from">Season %1$d from episode %2$d</string>
+    <string name="anime_intro_times_none_for_episode">No times for this episode</string>
+    <string name="anime_intro_times_none_for_unnumbered">An episode without a number can\'t be looked up</string>
+    <string name="anime_intro_times_looking">Looking for times</string>
+    <string name="anime_intro_times_no_series">Nothing found by this title</string>
     <string name="anime_intro_times_searched_for">Searched for “%s”</string>
-    <string name="anime_intro_times_unreachable">Couldn\'t reach AniSkip</string>
+    <string name="anime_intro_times_unreachable">Couldn\'t look up times</string>
     <string name="anime_intro_times_unreachable_summary">Check the connection and retry</string>
-    <string name="anime_intro_times_turned_off">Not looked up for this series</string>
+    <string name="anime_intro_times_turned_off">Not looked up for this title</string>
     <string name="anime_intro_times_turned_off_summary">You picked None</string>
     <string name="anime_intro_times_change">Change</string>
     <string name="anime_intro_times_find">Find</string>
-    <string name="anime_intro_times_series">Series for intro times</string>
+    <!-- Title of the page that picks what a service's times come from, such as "Series for AniSkip" -->
+    <string name="anime_intro_times_series">Series for %s</string>
     <string name="anime_intro_times_search_placeholder">Search AniList</string>
     <string name="anime_intro_times_search_failed">Couldn\'t reach AniList</string>
-    <string name="anime_intro_times_series_none_summary">Don\'t look up times for this series</string>
+    <string name="anime_intro_times_media_search_placeholder">Search series and films</string>
+    <string name="anime_intro_times_media_search_failed">Couldn\'t reach Wikidata or TVmaze</string>
+    <string name="anime_intro_times_series_none_summary">Don\'t look up times for this title</string>
+    <string name="anime_intro_times_kind_series">Series</string>
+    <string name="anime_intro_times_kind_film">Film</string>
+    <string name="anime_intro_times_season">Season</string>
+    <string name="anime_intro_times_which_episode">Which episode is playing?</string>
+    <string name="anime_intro_times_episode_number">Episode %d</string>
+    <string name="anime_intro_times_episodes_failed">Couldn\'t reach TVmaze</string>
+    <string name="anime_intro_times_tvmaze_credit">Data from TVmaze</string>
     <string name="anime_series_format_tv">TV</string>
     <string name="anime_series_format_tv_short">TV short</string>
     <string name="anime_series_format_movie">Movie</string>
@@ -2097,7 +2116,9 @@
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="pref_anime_marker_skip_summary">%s · where they\'re marked</string>
     <string name="pref_anime_find_intro_times_online">Find intro and credits times online</string>
-    <string name="pref_anime_find_intro_times_online_summary">Asks AniSkip when the source marks none. Sends series titles to AniList and episode numbers to AniSkip.</string>
+    <string name="pref_anime_find_intro_times_online_summary">Asks the services below when the source marks none</string>
+    <string name="pref_anime_intro_times_aniskip_summary">Anime. Sends series titles to AniList and episode numbers to AniSkip.</string>
+    <string name="pref_anime_intro_times_theintrodb_summary">Anime, series and films. Sends series titles to Wikidata and TVmaze, and their ids and episode numbers to TheIntroDB.</string>
     <string name="pref_anime_marker_skip_button">Show a button</string>
     <string name="pref_anime_marker_skip_countdown">Show a button, then skip</string>
     <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
