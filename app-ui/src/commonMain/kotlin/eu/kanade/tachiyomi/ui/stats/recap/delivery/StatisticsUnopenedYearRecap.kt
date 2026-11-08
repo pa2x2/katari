@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.stats.recap.delivery
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -7,7 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.service.StatisticsPreferences

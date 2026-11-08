@@ -11,7 +11,7 @@ plugins {
 kotlin {
     @Suppress("UnstableApiUsage")
     android {
-        namespace = "mihon.aniyomi.source"
+        namespace = "app.katari.aniyomi.source"
         optimization {
             consumerKeepRules.apply {
                 publish = true

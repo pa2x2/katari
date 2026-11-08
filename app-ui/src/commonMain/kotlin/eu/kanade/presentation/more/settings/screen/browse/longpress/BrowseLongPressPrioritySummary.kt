@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.browse.longpress
 
 import androidx.compose.runtime.Composable
-import mihon.core.common.CustomPreferences
-import mihon.core.common.sanitizeBrowseLongPressActionPriority
+import app.katari.core.common.CustomPreferences
+import app.katari.core.common.sanitizeBrowseLongPressActionPriority
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

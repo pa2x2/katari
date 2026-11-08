@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.security
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * Keeping the app's screens out of screenshots, screen recordings and the system's list of recent apps. Where the

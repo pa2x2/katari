@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.source.lnreader.runtime.storage
 
 import android.content.SharedPreferences
-import mihon.script.runtime.ScriptBindings
+import app.katari.script.runtime.ScriptBindings
 
 /**
  * Where `@libs/storage` keeps a plugin's values: the plugin's source settings file, one key per storage key holding

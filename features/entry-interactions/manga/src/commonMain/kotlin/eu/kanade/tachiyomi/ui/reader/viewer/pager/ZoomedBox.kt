@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntRect
-import mihon.entry.interactions.manga.reader.image.tiles.PageImageView
+import app.katari.entry.interactions.manga.reader.image.tiles.PageImageView
 import kotlin.math.roundToInt
 
 /**

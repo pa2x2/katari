@@ -1,10 +1,10 @@
 package mihon.tools.extensioncompatibility.environment
 
+import app.katari.desktop.extension.ExtensionHostGraph
+import app.katari.desktop.extension.startHeadlessExtensionHost
+import app.katari.desktop.storage.XdgDesktopDirectories
 import logcat.LogPriority
 import logcat.LogcatLogger
-import mihon.desktop.extension.ExtensionHostGraph
-import mihon.desktop.extension.startHeadlessExtensionHost
-import mihon.desktop.storage.XdgDesktopDirectories
 import java.nio.file.Files
 import java.nio.file.Path
 

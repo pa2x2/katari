@@ -1,8 +1,8 @@
 package tachiyomi.domain.entry.model
 
+import app.katari.core.common.extensions.EMPTY
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 data class EntryChapter(
     val id: Long,

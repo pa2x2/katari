@@ -3,6 +3,8 @@ package eu.kanade.presentation.more.settings.screen.libraryupdates
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.library.update.planning.LibraryUpdateSkipRule
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -15,8 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences

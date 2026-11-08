@@ -1,6 +1,6 @@
 package app.katari.sync.client.connection
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * What the platform says about this device for its account's device list. The account sees it through

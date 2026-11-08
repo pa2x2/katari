@@ -2,6 +2,7 @@ package app.katari.sync.client.apply
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
@@ -11,7 +12,6 @@ import app.katari.sync.data.Sync_outbox
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
 import logcat.LogPriority
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler

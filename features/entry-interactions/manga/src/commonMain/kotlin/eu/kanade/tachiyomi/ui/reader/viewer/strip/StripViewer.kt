@@ -11,6 +11,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import app.katari.entry.interactions.manga.reader.text.surface.ViewerTextSurfaces
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.viewer.EntryChildDirection
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
@@ -27,12 +33,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
-import mihon.entry.interactions.manga.reader.text.surface.ViewerTextSurfaces
-import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.viewer.EntryChildDirection
 import tachiyomi.core.common.util.system.logcat
 import kotlin.math.abs
 import kotlin.math.min

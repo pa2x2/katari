@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.tts.provider.android"
+    namespace = "app.katari.tts.provider.android"
 }
 
 dependencies {

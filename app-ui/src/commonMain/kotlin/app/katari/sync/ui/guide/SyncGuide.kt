@@ -2,9 +2,9 @@ package app.katari.sync.ui.guide
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
-import mihon.presentation.kit.list.RowGroupAction
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.OpenInNew
+import app.katari.presentation.kit.list.RowGroupAction
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

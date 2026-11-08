@@ -1,14 +1,14 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
+import app.katari.core.archive.ArchiveOpener
+import app.katari.entry.interactions.manga.download.DownloadManager
+import app.katari.entry.interactions.manga.download.DownloadProvider
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
-import mihon.core.archive.ArchiveOpener
-import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.manga.download.DownloadProvider
 import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.domain.entry.model.Entry
 

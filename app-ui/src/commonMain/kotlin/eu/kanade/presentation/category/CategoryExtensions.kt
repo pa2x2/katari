@@ -1,7 +1,7 @@
 package eu.kanade.presentation.category
 
 import androidx.compose.runtime.Composable
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource

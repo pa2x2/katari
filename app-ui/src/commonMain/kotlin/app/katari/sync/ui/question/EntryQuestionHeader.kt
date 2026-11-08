@@ -2,10 +2,10 @@ package app.katari.sync.ui.question
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.SettingsRow
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

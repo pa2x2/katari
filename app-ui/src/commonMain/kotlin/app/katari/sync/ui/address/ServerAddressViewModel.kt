@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.client.account.ServerMove
 import app.katari.sync.client.account.SyncAccount
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 
 /**

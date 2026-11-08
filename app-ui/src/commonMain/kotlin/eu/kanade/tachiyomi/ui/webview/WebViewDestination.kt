@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.webview
 
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.entry.interactions.source.EntryWebViewDestination
 import eu.kanade.presentation.util.Screen
-import mihon.core.common.platform.PlatformFacility
-import mihon.entry.interactions.source.EntryWebViewDestination
 
 /**
  * A source's site in the app's web view, opened from shared screens such as the library update report, which push

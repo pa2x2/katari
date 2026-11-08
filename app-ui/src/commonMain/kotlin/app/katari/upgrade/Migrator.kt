@@ -1,0 +1,44 @@
+package app.katari.upgrade
+
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+
+object Migrator {
+
+    private var result: Deferred<Boolean>? = null
+    val scope = CoroutineScope(Dispatchers.IO + Job())
+
+    fun initialize(
+        old: Int,
+        new: Int,
+        migrations: List<Migration>,
+        graph: MigrationGraph,
+        dryrun: Boolean = false,
+        onMigrationComplete: () -> Unit,
+    ) {
+        val migrationContext = MigrationContext(dryrun, old, graph)
+        val migrationJobFactory = MigrationJobFactory(migrationContext, scope)
+        val migrationStrategyFactory = MigrationStrategyFactory(migrationJobFactory, onMigrationComplete)
+        val strategy = migrationStrategyFactory.create(old, new)
+        result = strategy(migrations)
+    }
+
+    suspend fun await(): Boolean {
+        val result = result ?: CompletableDeferred(false)
+        return result.await()
+    }
+
+    fun release() {
+        result = null
+    }
+
+    val isRunning: Boolean
+        get() = result?.isCompleted == false
+
+    suspend fun awaitAndRelease(): Boolean {
+        return await().also { release() }
+    }
+}

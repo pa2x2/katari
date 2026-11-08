@@ -1,5 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
+import app.katari.entry.interactions.manga.page.MangaPageStore
+import app.katari.entry.interactions.manga.page.acquisition.MangaPageAcquirer
+import app.katari.entry.interactions.manga.page.acquisition.MangaPageAcquisitionIntent
+import app.katari.entry.interactions.manga.page.acquisition.PreemptedMangaPagePreload
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
@@ -22,10 +26,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.manga.page.MangaPageStore
-import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquirer
-import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionIntent
-import mihon.entry.interactions.manga.page.acquisition.PreemptedMangaPagePreload
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import kotlin.math.min

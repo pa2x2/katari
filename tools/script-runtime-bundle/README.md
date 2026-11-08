@@ -1,7 +1,7 @@
 # Script runtime bundle
 
 The JavaScript script runtimes need from npm: `URL` and `URLSearchParams` (core-js-pure). The built file is committed in
-`../../sources/script-runtime/src/commonMain/resources/mihon/script/runtime/web/`; Gradle never runs npm. `SHA256SUMS`
+`../../sources/script-runtime/src/commonMain/resources/app/katari/script/runtime/web/`; Gradle never runs npm. `SHA256SUMS`
 records it, and `checkVendoredScripts` (part of `spotlessCheck`) fails when the committed file doesn't match.
 
 Rebuild after changing a version in `package.json`:

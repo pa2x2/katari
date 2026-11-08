@@ -1,0 +1,5 @@
+package app.katari.entry.interactions.book.library
+
+import app.katari.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+
+internal class BookOutsideReleasePeriodFilterProvider : EntryOutsideReleasePeriodFilterProvider

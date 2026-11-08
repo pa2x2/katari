@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.icons.simpleicons"
+        namespace = "app.katari.icons.simpleicons"
     }
     desktop()
 
@@ -33,7 +33,7 @@ spotless {
 }
 
 valkyrie {
-    packageName = "mihon.icons.simpleicons"
+    packageName = "app.katari.icons.simpleicons"
     generateAtSync = true
 
     imageVector {

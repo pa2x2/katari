@@ -16,6 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.Scaffold
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.tachiyomi.ui.webview.WebViewViewModel
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents
@@ -25,10 +29,6 @@ import eu.kanade.tachiyomi.ui.webview.browser.BrowserRequest
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserView
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 

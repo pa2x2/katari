@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.control
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.chip.TriStateChip
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import mihon.presentation.kit.chip.TriStateChip
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

@@ -1,5 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
+import app.katari.library.display.legacy.LegacyItemsPerRowConversion
+import app.katari.library.update.legacy.LegacyExcludedSourcesConversion
+import app.katari.library.update.legacy.LegacyUpdateCategoriesConversion
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.LegacyMigrationFlagsConversion
 import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
@@ -15,10 +19,6 @@ import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.SourcePreferenceBackupStores
 import logcat.LogPriority
-import mihon.feature.library.display.legacy.LegacyItemsPerRowConversion
-import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
-import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat

@@ -3,6 +3,11 @@ package eu.kanade.presentation.more.settings.screen.libraryupdates
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.library.update.planning.LibraryUpdateSkipRule
+import app.katari.presentation.kit.control.Switch
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarTitle
+import app.katari.presentation.kit.navigation.Scaffold
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -11,11 +16,6 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScreen
 import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.util.Screen
-import mihon.feature.library.update.planning.LibraryUpdateSkipRule
-import mihon.presentation.kit.control.Switch
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarTitle
-import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

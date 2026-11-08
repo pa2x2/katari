@@ -1,5 +1,14 @@
 package eu.kanade.tachiyomi.ui.video.player.introtimes
 
+import app.katari.entry.interactions.anime.introtimes.IntroTimesEpisode
+import app.katari.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
+import app.katari.entry.interactions.anime.introtimes.IntroTimesResult
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.interactions.anime.introtimes.OnlineMarker
+import app.katari.entry.interactions.anime.introtimes.aniskip.AniListSeries
+import app.katari.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
+import app.katari.entry.interactions.anime.introtimes.mergeIntroTimes
+import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,15 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.anime.introtimes.IntroTimesEpisode
-import mihon.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
-import mihon.entry.interactions.anime.introtimes.IntroTimesResult
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.entry.interactions.anime.introtimes.OnlineMarker
-import mihon.entry.interactions.anime.introtimes.aniskip.AniListSeries
-import mihon.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
-import mihon.entry.interactions.anime.introtimes.mergeIntroTimes
-import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import tachiyomi.domain.entry.model.IntroTimesSeries
 import tachiyomi.domain.entry.model.TheIntroDbMedia
 

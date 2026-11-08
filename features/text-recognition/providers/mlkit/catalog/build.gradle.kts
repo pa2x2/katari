@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.mlkit.catalog"
+    namespace = "app.katari.text.recognition.provider.mlkit.catalog"
 }
 
 dependencies {

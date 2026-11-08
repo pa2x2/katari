@@ -5,13 +5,13 @@ import androidx.media3.common.Format
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
-import mihon.video.engine.spi.tracks.AudioTrackSelection
-import mihon.video.engine.spi.tracks.TextTrackSelection
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTrack
-import mihon.video.engine.spi.tracks.VideoTrackGroup
-import mihon.video.engine.spi.tracks.VideoTrackSelection
-import mihon.video.engine.spi.tracks.VideoTracks
+import app.katari.video.engine.spi.tracks.AudioTrackSelection
+import app.katari.video.engine.spi.tracks.TextTrackSelection
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTrack
+import app.katari.video.engine.spi.tracks.VideoTrackGroup
+import app.katari.video.engine.spi.tracks.VideoTrackSelection
+import app.katari.video.engine.spi.tracks.VideoTracks
 
 internal fun Tracks.toVideoTracks(): VideoTracks = VideoTracks(
     groups.map { group ->

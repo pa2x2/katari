@@ -2,12 +2,12 @@ package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.TriStateRow
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
-import mihon.entry.interactions.library.EntryLibraryFilterAvailability
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.TriStateRow
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*

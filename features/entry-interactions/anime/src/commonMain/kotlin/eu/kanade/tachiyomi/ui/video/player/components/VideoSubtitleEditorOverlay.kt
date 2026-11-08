@@ -28,6 +28,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.video.engine.spi.player.SubtitleCue
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_X
@@ -38,8 +40,6 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.video.engine.spi.player.SubtitleCue
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

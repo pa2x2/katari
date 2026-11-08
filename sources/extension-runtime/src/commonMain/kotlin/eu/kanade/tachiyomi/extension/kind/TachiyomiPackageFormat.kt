@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.kind
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.source.Source
@@ -8,7 +9,6 @@ import eu.kanade.tachiyomi.source.adapter.asUnifiedSource
 import eu.kanade.tachiyomi.source.entry.EntrySourceFactory
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.failure.containExtensionCode
-import mihon.domain.extension.model.ContentWarning
 
 /*
  * What packages declaring `tachiyomi.extension` share, whether built against the Tachiyomi extensions-lib or Katari's

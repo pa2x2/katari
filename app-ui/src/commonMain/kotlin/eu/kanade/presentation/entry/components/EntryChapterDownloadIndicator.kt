@@ -2,17 +2,17 @@ package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.translate.EntryTranslateStatus
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Translate
+import app.katari.presentation.kit.button.DownloadIndicator
+import app.katari.presentation.kit.button.DownloadIndicatorAction
+import app.katari.presentation.kit.button.DownloadIndicatorMenuItem
+import app.katari.presentation.kit.button.DownloadIndicatorState
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.ChapterTranslationBadge
 import eu.kanade.presentation.entry.translation.chapterTranslateActions
-import mihon.entry.interactions.download.EntryDownloadState
-import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Translate
-import mihon.presentation.kit.button.DownloadIndicator
-import mihon.presentation.kit.button.DownloadIndicatorAction
-import mihon.presentation.kit.button.DownloadIndicatorMenuItem
-import mihon.presentation.kit.button.DownloadIndicatorState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

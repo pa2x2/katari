@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.settings.screen.data
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLocale
-import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.dialog.ConfirmDialog
+import app.katari.presentation.kit.list.ChoiceRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.Instant

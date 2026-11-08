@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.picture
 
 import android.view.View
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerCapabilities
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurfaceView
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerCapabilities
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

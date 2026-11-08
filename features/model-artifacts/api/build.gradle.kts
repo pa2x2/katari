@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.model.artifacts.api"
+        namespace = "app.katari.model.artifacts.api"
     }
     desktop()
 

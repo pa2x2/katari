@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.source.lnreader.entry
 
 import android.content.SharedPreferences
+import app.katari.script.runtime.ScriptNetwork
+import app.katari.script.runtime.ScriptRuntimeFactory
 import eu.kanade.tachiyomi.source.entry.ChapterListRest
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.source.entry.SEntry
@@ -12,8 +14,6 @@ import eu.kanade.tachiyomi.source.lnreader.web.LnReaderUrls
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import mihon.script.runtime.ScriptNetwork
-import mihon.script.runtime.ScriptRuntimeFactory
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 

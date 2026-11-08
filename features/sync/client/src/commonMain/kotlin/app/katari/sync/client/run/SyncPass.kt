@@ -1,5 +1,6 @@
 package app.katari.sync.client.run
 
+import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.connection.SyncConnection
@@ -28,7 +29,6 @@ import app.katari.sync.protocol.version.SyncProtocolVersion
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
-import mihon.core.platform.network.NetworkConnectivity
 import tachiyomi.core.common.util.system.logcat
 
 /**

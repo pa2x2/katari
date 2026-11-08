@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.feature.library.update"
+        namespace = "app.katari.library.update"
 
         withHostTest { }
     }

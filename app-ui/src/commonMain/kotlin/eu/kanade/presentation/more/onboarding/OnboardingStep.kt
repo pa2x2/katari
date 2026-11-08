@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.onboarding
 
 import androidx.compose.runtime.Composable
-import mihon.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.feedback.GuidePageHeading
 
 /** One page of the first-run guide: what its heading says, whether it lets the guide go on, and what it shows. */
 internal interface OnboardingStep {

@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.animeplayer
 
 import androidx.compose.runtime.Composable
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * The player engine the platform installs apart from Katari, which the player settings manage in a group of their own.

@@ -1,10 +1,10 @@
 package app.katari.sync.ui.status
 
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CloudSync
+import app.katari.presentation.kit.theme.ContentTone
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CloudSync
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -540,9 +540,9 @@ private class EntryInteractionBoundaryRules(
         val allowedPaths = setOf(
             "core/domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
             "core/domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
-            "features/entry-interactions/api/src/main/java/mihon/entry/interactions/library/" +
+            "features/entry-interactions/api/src/main/java/app/katari/entry/interactions/library/" +
                 "EntryLibraryProgressFeature.kt",
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryBindings.kt",
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/library/EntryLibraryBindings.kt",
         )
         if (file.relativePath in allowedPaths) return
 
@@ -689,10 +689,10 @@ private class EntryInteractionBoundaryRules(
         if (file.isTestPath()) return
         val allowedPaths = setOf(
             "core/domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/" +
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/source/" +
                 "DefaultEntrySourceRefreshFeature.kt",
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/SourceRefreshBindings.kt",
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/source/EntrySourceRefreshBindings.kt",
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/source/SourceRefreshBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
@@ -751,7 +751,7 @@ private class EntryInteractionBoundaryRules(
             file.relativePath.startsWith("sources/source-local/src/main/") ||
             file.relativePath.startsWith("sources/entry-source-api/src/") ||
             file.relativePath ==
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntryWebViewFeature.kt"
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/source/DefaultEntryWebViewFeature.kt"
         if (ownsContract) return
 
         file.findReference("ChapterWebViewSource")?.let { reference ->
@@ -1083,7 +1083,7 @@ private class EntryInteractionBoundaryRules(
         private val CATALOGUE_PROVIDER_ASSEMBLY_FILES = setOf(
             "core/domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
             "core/domain/src/main/java/tachiyomi/domain/source/model/UnifiedStubSource.kt",
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/catalogue/host/" +
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/catalogue/host/" +
                 "SourceManagerEntryCatalogueProviderHost.kt",
         )
 
@@ -1142,7 +1142,7 @@ private class EntryInteractionBoundaryRules(
         )
 
         private val EXHAUSTIVE_ENTRY_TYPE_MAPPING_ALLOWED_FILES = setOf(
-            "features/entry-interactions/src/main/java/mihon/entry/interactions/library/" +
+            "features/entry-interactions/src/main/java/app/katari/entry/interactions/library/" +
                 "EntryLibraryUpdateNotificationRouting.kt",
         )
 
@@ -1171,9 +1171,9 @@ private class EntryInteractionBoundaryRules(
         )
 
         private val PROFILE_FEATURE_ROOTS = listOf(
-            "app/src/main/java/mihon/feature/profiles/",
-            "app-ui/src/commonMain/kotlin/mihon/feature/profiles/",
-            "core/data/src/commonMain/kotlin/mihon/feature/profiles/",
+            "app/src/main/java/app/katari/profiles/",
+            "app-ui/src/commonMain/kotlin/app/katari/profiles/",
+            "core/data/src/commonMain/kotlin/app/katari/profiles/",
         )
 
         private val DIRECT_BOOKMARK_PERSISTENCE = Regex(
@@ -1285,7 +1285,7 @@ private data class TypeModule(
     val sourceRoots: List<File>,
     val gradleFile: File,
 ) {
-    val packagePrefix: String = "mihon.entry.interactions.$name"
+    val packagePrefix: String = "app.katari.entry.interactions.$name"
     val gradleAccessor: String = name.toGradleAccessor()
     val gradleRelativePath: String = "$relativePath/build.gradle.kts"
 

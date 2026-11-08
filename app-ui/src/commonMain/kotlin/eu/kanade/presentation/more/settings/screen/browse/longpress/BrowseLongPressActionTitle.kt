@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.browse.longpress
 
+import app.katari.core.common.CustomPreferences.BrowseLongPressAction
 import dev.icerock.moko.resources.StringResource
-import mihon.core.common.CustomPreferences.BrowseLongPressAction
 import tachiyomi.i18n.*
 
 val BrowseLongPressAction.titleRes: StringResource

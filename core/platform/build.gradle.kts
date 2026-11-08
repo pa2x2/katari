@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.core.platform"
+        namespace = "app.katari.core.platform"
     }
     desktop()
 

@@ -3,6 +3,6 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const outputs = ['../../sources/script-runtime/src/commonMain/resources/mihon/script/runtime/web/url.js'];
+const outputs = ['../../sources/script-runtime/src/commonMain/resources/app/katari/script/runtime/web/url.js'];
 const lines = outputs.map((path) => `${createHash('sha256').update(readFileSync(path)).digest('hex')}  ${path}`);
 writeFileSync('SHA256SUMS', lines.join('\n') + '\n');

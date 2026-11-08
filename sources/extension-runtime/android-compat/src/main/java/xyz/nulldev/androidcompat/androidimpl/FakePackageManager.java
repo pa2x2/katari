@@ -14,7 +14,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.UserHandle;
 import kotlin.NotImplementedError;
-import mihon.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.AndroidCompatEnvironment;
 import xyz.nulldev.androidcompat.info.ApplicationInfoImpl;
 
 import java.util.ArrayList;

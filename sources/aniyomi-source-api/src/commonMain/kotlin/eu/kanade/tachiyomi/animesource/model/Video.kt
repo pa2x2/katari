@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.animesource.model
 
 import android.net.Uri
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 import okhttp3.Headers
 
 /**

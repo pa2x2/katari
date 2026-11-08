@@ -5,7 +5,7 @@ description: How Katari UI is built from the presentation-core kit — finding t
 
 # UI kit
 
-`presentation-core` is the UI kit: `mihon.presentation.kit` owns colour, typography, spacing, sizes, shape and every component. Screens are built from kit components and `KatariTheme` tokens only.
+`presentation-core` is the UI kit: `app.katari.presentation.kit` owns colour, typography, spacing, sizes, shape and every component. Screens are built from kit components and `KatariTheme` tokens only.
 
 The kit owns how a screen is put together, not only its pieces. A screen supplies content and behaviour; its structure (bars, how lists are framed and grouped, headers, spacing between sections, sheet and dialog layout, where the main action sits) comes from the highest-level kit component made for that job. Arranging kit primitives into a structure of your own bypasses the kit, even when every primitive and token in it is the kit's.
 

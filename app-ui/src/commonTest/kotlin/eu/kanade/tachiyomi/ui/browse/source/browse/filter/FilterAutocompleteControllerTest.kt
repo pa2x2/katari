@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterAutocompleteOptions
 import eu.kanade.tachiyomi.source.entry.EntryFilterSuggestion
@@ -10,7 +11,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)

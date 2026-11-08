@@ -3,16 +3,16 @@ package eu.kanade.tachiyomi.ui.home.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.common.CustomPreferences
-import mihon.core.common.HomeScreenTabs
-import mihon.core.common.homeScreenContentTabOrder
-import mihon.core.common.navigation.HomeNavigationConfiguration
-import mihon.core.common.navigation.resolveHomeNavigationConfiguration
-import mihon.core.common.navigation.withVisibleProfiles
-import mihon.core.common.resolveHomeScreenTab
-import mihon.core.common.resolveVisibleHomeScreenTabs
-import mihon.core.common.toHomeScreenTabs
+import app.katari.core.common.CustomPreferences
+import app.katari.core.common.HomeScreenTabs
+import app.katari.core.common.homeScreenContentTabOrder
+import app.katari.core.common.navigation.HomeNavigationConfiguration
+import app.katari.core.common.navigation.resolveHomeNavigationConfiguration
+import app.katari.core.common.navigation.withVisibleProfiles
+import app.katari.core.common.resolveHomeScreenTab
+import app.katari.core.common.resolveVisibleHomeScreenTabs
+import app.katari.core.common.toHomeScreenTabs
+import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 

@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.image.layout.isSpread
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
-import mihon.entry.interactions.manga.reader.image.layout.isSpread
 import tachiyomi.core.common.util.system.SpreadSide
 
 /** The paged viewer's settings for wide pages, read once per page. */

@@ -1,0 +1,5 @@
+package app.katari.entry.interactions.lifecycle.profile.host
+
+fun interface EntryProfileMoveCoverHashStateHost {
+    suspend fun move(request: EntryProfileMoveStateRequest)
+}

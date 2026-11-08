@@ -19,6 +19,17 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.zIndex
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.reader.settings.ReaderOrientation
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.viewer.chrome.ui.handoff.ProgressOfferNote
+import app.katari.entry.viewer.chrome.ui.position.ReaderPageIndicator
+import app.katari.entry.viewer.chrome.ui.position.ReaderUnderPages
+import app.katari.presentation.kit.dialog.ProgressDialog
+import app.katari.presentation.kit.feedback.ScreenMessagesOverlay
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderChapterNavigationSheet
@@ -35,17 +46,6 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupErrorScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
-import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
-import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
-import mihon.presentation.kit.dialog.ProgressDialog
-import mihon.presentation.kit.feedback.ScreenMessagesOverlay
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

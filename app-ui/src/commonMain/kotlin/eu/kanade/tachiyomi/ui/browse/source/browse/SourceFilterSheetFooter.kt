@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.sheet.SheetActions
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.sheet.SheetActions
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

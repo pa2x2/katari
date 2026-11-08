@@ -10,12 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.input.pointer.PointerIcon
+import app.katari.presentation.kit.pointer.HiddenPointer
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import eu.kanade.tachiyomi.ui.video.player.screen.CONTROLS_AUTO_HIDE_DELAY_MS
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
-import mihon.presentation.kit.pointer.HiddenPointer
 
 /**
  * The mouse pointer over the picture. It shows while the controls do, and for as long as they would after it moves or

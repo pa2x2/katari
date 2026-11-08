@@ -6,8 +6,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import app.katari.entry.interactions.runtime.EntryPlayerCache
 import eu.kanade.tachiyomi.util.storage.DiskUtil
-import mihon.entry.interactions.runtime.EntryPlayerCache
 import java.io.File
 
 /**

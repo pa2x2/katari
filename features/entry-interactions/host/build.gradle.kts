@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.interactions.host"
+        namespace = "app.katari.entry.interactions.host"
 
         withHostTest { }
     }

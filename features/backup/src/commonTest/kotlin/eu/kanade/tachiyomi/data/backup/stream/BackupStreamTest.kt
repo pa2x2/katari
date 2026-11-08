@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.stream
 
+import app.katari.profiles.core.ProfileBackup
+import app.katari.profiles.core.ProfileScopedBackup
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
@@ -13,8 +15,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.protobuf.ProtoBuf
-import mihon.feature.profiles.core.ProfileBackup
-import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.Buffer
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

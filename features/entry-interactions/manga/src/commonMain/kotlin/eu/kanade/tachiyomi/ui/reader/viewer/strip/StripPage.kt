@@ -13,19 +13,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import app.katari.core.image.progressive.rememberProgressivePreview
+import app.katari.entry.interactions.manga.reader.image.animation.AnimatedPageImage
+import app.katari.entry.interactions.manga.reader.image.layout.PageBitmap
+import app.katari.entry.interactions.manga.reader.image.layout.displayedSize
+import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
+import app.katari.entry.interactions.manga.reader.image.source.PageImage
+import app.katari.entry.interactions.manga.reader.image.strips.StripPageImage
+import app.katari.entry.interactions.manga.reader.text.surface.PageTextLayer
+import app.katari.presentation.kit.progress.CombinedCircularProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageProblem
 import eu.kanade.tachiyomi.ui.reader.viewer.page.rememberReaderPageContent
-import mihon.core.image.progressive.rememberProgressivePreview
-import mihon.entry.interactions.manga.reader.image.animation.AnimatedPageImage
-import mihon.entry.interactions.manga.reader.image.layout.PageBitmap
-import mihon.entry.interactions.manga.reader.image.layout.displayedSize
-import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
-import mihon.entry.interactions.manga.reader.image.source.PageImage
-import mihon.entry.interactions.manga.reader.image.strips.StripPageImage
-import mihon.entry.interactions.manga.reader.text.surface.PageTextLayer
-import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 
 /**
  * One page of the long strip, [width] pixels wide: as tall as the page once its size is known, and as tall as

@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.viewer.settings.api"
+        namespace = "app.katari.entry.viewer.settings.api"
     }
     desktop()
 

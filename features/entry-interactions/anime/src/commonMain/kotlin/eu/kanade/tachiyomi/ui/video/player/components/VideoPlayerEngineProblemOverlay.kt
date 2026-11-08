@@ -2,11 +2,11 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailure
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

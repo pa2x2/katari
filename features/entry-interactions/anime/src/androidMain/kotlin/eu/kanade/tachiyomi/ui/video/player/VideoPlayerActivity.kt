@@ -17,6 +17,17 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import app.katari.core.metro.metroGraph
+import app.katari.entry.interactions.anime.R
+import app.katari.entry.interactions.runtime.EntryInteractionActivityGraph
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.interactions.source.launchEntryChildWebViewAction
+import app.katari.entry.interactions.source.openEntry
+import app.katari.entry.interactions.source.openExtensions
+import app.katari.entry.interactions.source.openSourceSettings
+import app.katari.entry.viewer.settings.navigation.openViewerSettings
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayback
 import eu.kanade.tachiyomi.ui.video.player.brightness.WindowBrightness
@@ -33,17 +44,6 @@ import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerVisitState
 import eu.kanade.tachiyomi.ui.video.player.surface.TextureSeekPreviewSurface
 import eu.kanade.tachiyomi.ui.video.player.volume.DeviceStreamVolume
 import eu.kanade.tachiyomi.util.system.toast
-import mihon.core.metro.metroGraph
-import mihon.entry.interactions.anime.R
-import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
-import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.interactions.source.launchEntryChildWebViewAction
-import mihon.entry.interactions.source.openEntry
-import mihon.entry.interactions.source.openExtensions
-import mihon.entry.interactions.source.openSourceSettings
-import mihon.entry.viewer.settings.navigation.openViewerSettings
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 

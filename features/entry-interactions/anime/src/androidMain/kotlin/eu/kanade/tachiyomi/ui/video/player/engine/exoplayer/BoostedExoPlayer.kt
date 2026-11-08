@@ -8,8 +8,8 @@ import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import app.katari.video.engine.spi.player.VideoPlayer
 import logcat.LogPriority
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.core.common.util.system.logcat
 import kotlin.math.log10
 import kotlin.math.roundToInt

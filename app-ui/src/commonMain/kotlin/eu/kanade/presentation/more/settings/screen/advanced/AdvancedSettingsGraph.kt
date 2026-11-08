@@ -1,14 +1,14 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
+import app.katari.core.common.GlobalCustomPreferences
+import app.katari.core.image.progressive.ProgressiveImageEngine
+import app.katari.core.image.progressive.ProgressiveImagePreferences
+import app.katari.entry.interactions.download.EntryDownloadMaintenanceFeature
+import app.katari.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import app.katari.entry.interactions.reader.settings.ReaderBasePreferences
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import mihon.core.common.GlobalCustomPreferences
-import mihon.core.image.progressive.ProgressiveImageEngine
-import mihon.core.image.progressive.ProgressiveImagePreferences
-import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import tachiyomi.domain.library.service.MetadataUpdateRunner
 
 /** Graph entry points of the advanced settings. */

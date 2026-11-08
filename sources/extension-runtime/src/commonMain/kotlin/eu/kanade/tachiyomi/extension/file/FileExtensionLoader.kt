@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.file
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.kind.LibVersion
@@ -10,7 +11,6 @@ import eu.kanade.tachiyomi.extension.util.ExtensionLoadPolicy
 import eu.kanade.tachiyomi.extension.util.rootMessage
 import eu.kanade.tachiyomi.util.lang.Hash
 import logcat.LogPriority
-import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.util.system.logcat
 import kotlin.coroutines.cancellation.CancellationException
 

@@ -16,7 +16,7 @@
 
 // Katari's model of the Android Open Source Project's Dialog, limited to what extensions use to show a web view over
 // the foreground activity: a dialog over an activity whose content is a WebView opens in the app's window
-// (mihon.extension.compat.ExtensionDialogs, which says how it looks), showing that web view's page. A dialog with any
+// (app.katari.extension.compat.ExtensionDialogs, which says how it looks), showing that web view's page. A dialog with any
 // other content throws as it is shown, as does one over a context that has no running activity, as Android throws
 // BadTokenException. The dialog has no window of its own, so getWindow() is null, which the SDK allows, and what
 // extensions set on a window is never asked for. Lifecycle, listeners and their threads are AOSP's: the user closing
@@ -38,8 +38,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.WebView;
 
-import mihon.extension.compat.AndroidCompatEnvironment;
-import mihon.extension.compat.ShownDialog;
+import app.katari.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.ShownDialog;
 
 public class Dialog implements DialogInterface {
     private final Context mContext;

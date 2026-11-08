@@ -1,10 +1,10 @@
 package app.katari.sync.client.setting.apply
 
+import app.katari.profiles.core.ProfileStore
+import app.katari.profiles.sourcepreferences.SourcePreferenceFiles
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
-import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.PreferenceStore
 
 /** Writes the stores [app.katari.sync.client.setting.read.StoreSettingReads] reads. */

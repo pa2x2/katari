@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.model.artifacts.runtime"
+        namespace = "app.katari.model.artifacts.runtime"
 
         withHostTest { }
     }

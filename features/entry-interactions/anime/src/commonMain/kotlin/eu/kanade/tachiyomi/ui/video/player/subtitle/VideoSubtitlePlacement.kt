@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
-import mihon.video.engine.spi.player.SubtitleAnchored
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.SubtitleImage
-import mihon.video.engine.spi.player.SubtitleLine
+import app.katari.video.engine.spi.player.SubtitleAnchored
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.SubtitleImage
+import app.katari.video.engine.spi.player.SubtitleLine
 import kotlin.math.roundToInt
 
 /** A cue's text as laid out for drawing, in pixels. */

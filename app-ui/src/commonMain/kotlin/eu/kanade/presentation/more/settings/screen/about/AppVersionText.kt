@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.settings.screen.about
 
+import app.katari.appupdate.check.ReleaseVersion
+import app.katari.ui.buildinfo.AppBuild
+import app.katari.ui.buildinfo.AppBuildType
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import mihon.app.ui.buildinfo.AppBuild
-import mihon.app.ui.buildinfo.AppBuildType
-import mihon.feature.appupdate.check.ReleaseVersion
 import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 

@@ -1,5 +1,7 @@
 package app.katari.sync.client.status
 
+import app.katari.core.platform.network.NetworkConnectivity
+import app.katari.core.platform.network.NetworkState
 import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
@@ -26,8 +28,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.transformLatest
-import mihon.core.platform.network.NetworkConnectivity
-import mihon.core.platform.network.NetworkState
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 

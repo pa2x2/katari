@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.viewer.chrome.ui"
+        namespace = "app.katari.entry.viewer.chrome.ui"
     }
     desktop()
 

@@ -3,9 +3,9 @@ package eu.kanade.presentation.more.settings.widget
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.control.SegmentedButtons
+import app.katari.presentation.kit.list.ControlRow
 import eu.kanade.domain.ui.model.ThemeMode
-import mihon.presentation.kit.control.SegmentedButtons
-import mihon.presentation.kit.list.ControlRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

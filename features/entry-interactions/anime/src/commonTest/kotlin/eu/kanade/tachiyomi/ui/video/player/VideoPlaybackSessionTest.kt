@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.entry.interactions.anime.state.animeProgressState
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.anime.state.animeProgressState
 import org.junit.jupiter.api.Test
 
 class VideoPlaybackSessionTest {

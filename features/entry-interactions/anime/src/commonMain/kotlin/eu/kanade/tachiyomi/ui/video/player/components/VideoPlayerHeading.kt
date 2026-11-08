@@ -7,14 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.button.IconButtonSize
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.ArrowBack
+import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.button.IconButtonSize
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

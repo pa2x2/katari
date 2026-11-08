@@ -9,9 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * The settings with only the source rows, for an episode that isn't playing: one that failed to open, or is still

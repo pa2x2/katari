@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.source.lnreader.runtime
 
+import app.katari.script.runtime.ScriptNetwork
+import app.katari.script.runtime.ScriptRuntimeFactory
+import app.katari.script.runtime.ScriptRuntimePool
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
-import mihon.script.runtime.ScriptNetwork
-import mihon.script.runtime.ScriptRuntimeFactory
-import mihon.script.runtime.ScriptRuntimePool
 
 /**
  * Runs LNReader plugins, each in runtimes of its own per profile. A runtime keeps the plugin object between calls, so

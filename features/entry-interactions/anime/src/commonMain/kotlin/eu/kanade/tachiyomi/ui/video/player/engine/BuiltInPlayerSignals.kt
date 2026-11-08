@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.engine
 
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTracks
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTracks
 
 /**
  * What the built-in player's tracks say mpv would show better: styled (ASS/SSA) subtitles chosen to show, which the

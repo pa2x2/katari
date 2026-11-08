@@ -1,5 +1,7 @@
 package app.katari.sync.client
 
+import app.katari.core.platform.network.NetworkConnectivity
+import app.katari.core.platform.network.NetworkState
 import app.katari.sync.client.account.DeviceDirectory
 import app.katari.sync.client.account.DeviceListChanges
 import app.katari.sync.client.account.Disconnection
@@ -41,8 +43,6 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import mihon.core.platform.network.NetworkConnectivity
-import mihon.core.platform.network.NetworkState
 import okhttp3.OkHttpClient
 import java.io.File
 

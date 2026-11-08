@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.handoff
 
+import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.media.handoff.EntryProgressOffers
 import tachiyomi.domain.entry.service.sortedForReading
 
 /**

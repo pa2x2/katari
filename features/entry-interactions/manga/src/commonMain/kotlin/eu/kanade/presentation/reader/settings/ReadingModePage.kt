@@ -6,20 +6,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.reader.settings.ReaderOrientation
+import app.katari.entry.interactions.reader.settings.ReaderPageLayout
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
+import app.katari.entry.viewer.settings.updateEntry
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.list.ChipsRow
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.SliderRow
+import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.reader.settings.ReaderOrientation
-import mihon.entry.interactions.reader.settings.ReaderPageLayout
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
-import mihon.entry.viewer.settings.updateEntry
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.list.ChipsRow
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.SliderRow
-import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -191,7 +191,7 @@ private fun ColumnScope.TapZonesItems(
     invertMode: MangaReaderSettings.TappingInvertMode,
     onSelectInvertMode: (MangaReaderSettings.TappingInvertMode) -> Unit,
 ) {
-    mihon.entry.viewer.chrome.ui.tap.ReaderTapZoneSettings(
+    app.katari.entry.viewer.chrome.ui.tap.ReaderTapZoneSettings(
         selected,
         onSelect,
         invertMode.ordinal,

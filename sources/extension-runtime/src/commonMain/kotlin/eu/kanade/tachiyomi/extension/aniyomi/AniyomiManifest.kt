@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.aniyomi
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.tachiyomi.extension.kind.ExtensionDescription
 import eu.kanade.tachiyomi.extension.kind.ExtensionKind
 import eu.kanade.tachiyomi.extension.kind.contentWarningOf
@@ -7,7 +8,6 @@ import eu.kanade.tachiyomi.extension.kind.extensionLibValue
 import eu.kanade.tachiyomi.extension.kind.sourceClassNames
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
-import mihon.domain.extension.model.ContentWarning
 
 /*
  * How an Aniyomi extension describes itself. Aniyomi reads the `aniyomix.*` keys, which catalogues built with its

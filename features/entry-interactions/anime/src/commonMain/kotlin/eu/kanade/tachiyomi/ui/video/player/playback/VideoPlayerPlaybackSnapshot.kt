@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.playback
 
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerState
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerState
 
 internal data class VideoPlayerPlaybackSnapshot(
     val positionMs: Long = 0L,

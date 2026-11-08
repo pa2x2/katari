@@ -7,8 +7,8 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import app.katari.presentation.kit.pager.WheelTurns
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import mihon.presentation.kit.pager.WheelTurns
 import kotlin.math.abs
 import kotlin.math.pow
 

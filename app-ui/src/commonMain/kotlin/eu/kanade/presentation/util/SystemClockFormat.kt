@@ -1,7 +1,7 @@
 package eu.kanade.presentation.util
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 
 /** The system's 12/24-hour clock setting, which the Time format setting's "Follow system" choice reads. */
 @PlatformFacility

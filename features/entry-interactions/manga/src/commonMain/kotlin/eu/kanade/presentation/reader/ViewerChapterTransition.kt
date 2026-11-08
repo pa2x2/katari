@@ -3,11 +3,11 @@ package eu.kanade.presentation.reader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import app.katari.entry.interactions.manga.download.DownloadManager
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.viewer.EntryChildTransition
+import app.katari.entry.viewer.chrome.ui.transition.ReaderEntryChildTransitionLoadState
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
-import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.viewer.EntryChildTransition
-import mihon.entry.viewer.chrome.ui.transition.ReaderEntryChildTransitionLoadState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.LocalSource

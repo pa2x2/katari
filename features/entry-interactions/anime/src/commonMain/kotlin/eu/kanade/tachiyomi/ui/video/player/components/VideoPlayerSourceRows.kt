@@ -3,6 +3,9 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import app.katari.entry.interactions.anime.stream.streamChoiceKey
+import app.katari.entry.interactions.anime.stream.streamDisplayLabel
+import app.katari.presentation.kit.list.RowGroupNote
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
@@ -11,9 +14,6 @@ import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
 import eu.kanade.tachiyomi.ui.video.player.withSelectedServer
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
-import mihon.entry.interactions.anime.stream.streamChoiceKey
-import mihon.entry.interactions.anime.stream.streamDisplayLabel
-import mihon.presentation.kit.list.RowGroupNote
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

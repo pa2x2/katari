@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.video.player.markers
 
+import app.katari.video.engine.spi.chapters.FileChapter
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapterName.Given
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapterName.Marker
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapterName.Numbered
 import io.kotest.matchers.shouldBe
-import mihon.video.engine.spi.chapters.FileChapter
 import org.junit.jupiter.api.Test
 
 class VideoPlayerChaptersTest {

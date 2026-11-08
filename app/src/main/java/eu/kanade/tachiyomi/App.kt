@@ -15,6 +15,15 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import androidx.work.Configuration
+import app.katari.android.di.AppGraph
+import app.katari.android.localnetwork.LocalNetworkPermissionPrompter
+import app.katari.android.work.RetiredWorkerFactory
+import app.katari.core.metro.GraphProvider
+import app.katari.extension.runtime.injekt.MetroInjektRegistrar
+import app.katari.profiles.sourcepreferences.extensionPreferenceSourceId
+import app.katari.telemetry.TelemetryConfig
+import app.katari.ui.host.AppProcessStart
+import app.katari.ui.host.AppVisibility
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import dev.zacsweers.metro.createGraphFactory
@@ -34,15 +43,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.app.di.AppGraph
-import mihon.app.di.injekt.MetroInjektRegistrar
-import mihon.app.localnetwork.LocalNetworkPermissionPrompter
-import mihon.app.ui.host.AppProcessStart
-import mihon.app.ui.host.AppVisibility
-import mihon.app.work.RetiredWorkerFactory
-import mihon.core.metro.GraphProvider
-import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
-import mihon.telemetry.TelemetryConfig
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -51,7 +51,7 @@ import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.InjektScope
 import kotlin.concurrent.thread
-import mihon.icons.materialsymbols.R as MaterialSymbolsR
+import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 class App :
     Application(),

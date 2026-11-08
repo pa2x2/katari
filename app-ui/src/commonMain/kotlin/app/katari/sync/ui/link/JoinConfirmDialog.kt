@@ -3,12 +3,12 @@ package app.katari.sync.ui.link
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.sync.client.account.LinkCodeLink
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

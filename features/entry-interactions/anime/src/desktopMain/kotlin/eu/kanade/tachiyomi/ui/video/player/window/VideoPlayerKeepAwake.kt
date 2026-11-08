@@ -3,10 +3,10 @@ package eu.kanade.tachiyomi.ui.video.player.window
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import app.katari.core.platform.power.ScreenIdleInhibitor
+import app.katari.entry.viewer.chrome.ui.window.KeepScreenAwake
+import app.katari.video.engine.spi.player.VideoPlayerState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
-import mihon.core.platform.power.ScreenIdleInhibitor
-import mihon.entry.viewer.chrome.ui.window.KeepScreenAwake
-import mihon.video.engine.spi.player.VideoPlayerState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

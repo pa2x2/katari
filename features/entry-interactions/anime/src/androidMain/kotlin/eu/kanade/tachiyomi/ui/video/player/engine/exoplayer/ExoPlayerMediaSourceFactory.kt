@@ -11,11 +11,11 @@ import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import app.katari.video.engine.spi.loading.VideoRequestHeaders
+import app.katari.video.engine.spi.loading.resolvedRequest
+import app.katari.video.engine.spi.loading.siblingDocumentUri
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import mihon.video.engine.spi.loading.VideoRequestHeaders
-import mihon.video.engine.spi.loading.resolvedRequest
-import mihon.video.engine.spi.loading.siblingDocumentUri
 
 /**
  * Where the ExoPlayer engine loads a stream from: OkHttp with the stream's headers and user agent, then

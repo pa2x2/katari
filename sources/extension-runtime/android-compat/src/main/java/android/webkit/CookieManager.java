@@ -23,8 +23,8 @@ import android.net.WebAddress;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import mihon.extension.compat.AndroidCompatEnvironment;
-import mihon.extension.compat.WebViewCookies;
+import app.katari.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.WebViewCookies;
 
 import java.util.Map;
 import java.util.Objects;

@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.theme.StoryPalette
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
-import mihon.presentation.kit.theme.StoryPalette
 
 /**
  * One recap page in its frame.

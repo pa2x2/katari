@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.mlkit"
+    namespace = "app.katari.text.recognition.provider.mlkit"
 
     defaultConfig {
         consumerProguardFiles("consumer-proguard.pro")

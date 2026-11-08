@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse.filter.control
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.list.TriStateRow
 import eu.kanade.tachiyomi.source.entry.EntryFilter
-import mihon.presentation.kit.list.CheckRow
-import mihon.presentation.kit.list.TriStateRow
 
 /** A boolean filter option. */
 @Composable

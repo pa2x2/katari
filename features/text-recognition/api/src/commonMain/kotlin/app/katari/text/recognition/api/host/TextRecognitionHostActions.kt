@@ -1,0 +1,67 @@
+package app.katari.text.recognition.api.host
+
+import app.katari.language.api.tag.LanguageTag
+import app.katari.model.artifacts.api.descriptor.ModelArtifactDescriptor
+import app.katari.text.recognition.api.component.KnownTextRecognitionComponent
+import app.katari.text.recognition.api.component.TextRecognitionComponentId
+import app.katari.text.recognition.api.configuration.TextRecognitionConfiguration
+import app.katari.text.recognition.api.configuration.TextRecognitionPipelineResolution
+import app.katari.text.recognition.api.pipeline.TextRecognitionPipeline
+import app.katari.text.recognition.api.pipeline.TextRecognitionPipelineSelection
+import app.katari.text.recognition.api.pipeline.TextRecognitionPreset
+import app.katari.text.recognition.api.provider.KnownTextRecognitionProvider
+import kotlinx.coroutines.flow.Flow
+
+/** Provider-neutral boundary shared by settings and reader surfaces. */
+interface TextRecognitionHostActions {
+    /**
+     * The providers the build carries. Empty where the platform doesn't recognize text, which hides the recognition
+     * settings.
+     */
+    val providers: List<KnownTextRecognitionProvider>
+    val knownComponents: List<KnownTextRecognitionComponent>
+    val presets: List<TextRecognitionPreset>
+
+    /** Languages at least one component of this build reads, in catalog order. */
+    val supportedLanguages: List<LanguageTag>
+
+    fun observeConfiguration(): Flow<TextRecognitionConfiguration>
+
+    fun saveConfiguration(configuration: TextRecognitionConfiguration)
+
+    /** How [configuration] reads [language]. Works for unsaved configurations, for example a settings draft. */
+    fun resolve(configuration: TextRecognitionConfiguration, language: LanguageTag): TextRecognitionPipelineResolution
+
+    /** Presets that read [language], including presets of engines this build excludes. */
+    fun presets(language: LanguageTag): List<TextRecognitionPreset>
+
+    /**
+     * Every pipeline the catalog can form for [language]: each detector with each recognizer that reads it, and each
+     * engine that reads it. Pipelines with excluded components are included so hosts can explain them.
+     */
+    fun pipelines(language: LanguageTag): List<TextRecognitionPipeline>
+
+    /** Pipeline a selection names, or `null` when it names an unknown preset. */
+    fun pipeline(selection: TextRecognitionPipelineSelection): TextRecognitionPipeline?
+
+    /** Every model [pipeline] needs to read [language], installed or not. */
+    fun models(pipeline: TextRecognitionPipeline, language: LanguageTag): List<ModelArtifactDescriptor>
+
+    /** Installs platform-managed models the user approved for [component] reading [language]. */
+    suspend fun installPlatformModels(
+        component: TextRecognitionComponentId,
+        language: LanguageTag,
+    ): TextRecognitionPlatformModelsResult
+}
+
+sealed interface TextRecognitionPlatformModelsResult {
+    data object Installed : TextRecognitionPlatformModelsResult
+
+    data class Failed(
+        val reason: String,
+    ) : TextRecognitionPlatformModelsResult {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+}

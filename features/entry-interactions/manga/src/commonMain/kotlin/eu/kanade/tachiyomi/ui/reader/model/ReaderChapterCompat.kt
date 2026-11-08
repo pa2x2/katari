@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
+import app.katari.entry.interactions.manga.download.DownloadCache
 import eu.kanade.tachiyomi.source.entry.ChapterKind
-import mihon.entry.interactions.manga.download.DownloadCache
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

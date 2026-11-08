@@ -6,6 +6,7 @@ import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.handoff.HandOffCheck
 import app.katari.sync.client.handoff.ProgressArrival
 import app.katari.sync.client.trigger.SyncTriggers
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
 import kotlin.time.Clock
 
 /**

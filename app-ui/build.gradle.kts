@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.app.ui"
+        namespace = "app.katari.ui"
         // The screens' drawables are Compose resources, which Android packages as the module's assets; values the app's
         // build types override are Android resources.
         androidResources {
@@ -128,5 +128,5 @@ kotlin {
 }
 
 compose.resources {
-    packageOfResClass = "mihon.app.ui.resources"
+    packageOfResClass = "app.katari.ui.resources"
 }

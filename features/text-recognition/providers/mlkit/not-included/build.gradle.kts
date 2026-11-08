@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.mlkit.notincluded"
+    namespace = "app.katari.text.recognition.provider.mlkit.notincluded"
 }
 
 dependencies {

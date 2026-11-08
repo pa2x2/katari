@@ -3,15 +3,15 @@ package eu.kanade.tachiyomi.ui.reader.viewer.page
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Error
+import app.katari.icons.materialsymbols.rounded.OpenInBrowser
+import app.katari.icons.materialsymbols.rounded.Refresh
+import app.katari.presentation.kit.feedback.ProblemAction
+import app.katari.presentation.kit.feedback.ProblemCard
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Error
-import mihon.icons.materialsymbols.rounded.OpenInBrowser
-import mihon.icons.materialsymbols.rounded.Refresh
-import mihon.presentation.kit.feedback.ProblemAction
-import mihon.presentation.kit.feedback.ProblemCard
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

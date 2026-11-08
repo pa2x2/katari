@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.backup"
+        namespace = "app.katari.backup"
 
         // Old backups' reader settings convert to reading modes, which load their labels from i18n's Android resources.
         withHostTest {

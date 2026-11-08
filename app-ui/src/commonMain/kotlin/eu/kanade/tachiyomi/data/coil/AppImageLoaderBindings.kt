@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.coil
 
+import app.katari.entry.interactions.source.EntryCoverNetworkFeature
 import coil3.ImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.preferEndFirstIntrinsicSize
@@ -19,7 +20,6 @@ import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.coroutines.Dispatchers
-import mihon.entry.interactions.source.EntryCoverNetworkFeature
 import tachiyomi.core.common.storage.StorageFileResolver
 
 /**

@@ -5,14 +5,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.navigation.DockPlacement
+import app.katari.presentation.kit.navigation.DockedScreen
+import app.katari.presentation.kit.navigation.FloatingDockHost
+import app.katari.presentation.kit.window.currentWindowLayout
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.ui.home.HomeScreen
-import mihon.presentation.kit.navigation.DockPlacement
-import mihon.presentation.kit.navigation.DockedScreen
-import mihon.presentation.kit.navigation.FloatingDockHost
-import mihon.presentation.kit.window.currentWindowLayout
 
 /**
  * Shows the screens of [navigator] with the home destinations beside every one of them in a wide window, not only beside

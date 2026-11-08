@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.security
 
-import mihon.feature.profiles.core.ProfileManager
+import app.katari.profiles.core.ProfileManager
 
 interface SecurityGraph {
     val profileManager: ProfileManager

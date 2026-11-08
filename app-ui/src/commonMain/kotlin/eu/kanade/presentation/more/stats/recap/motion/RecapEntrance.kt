@@ -9,9 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.TextRole
 import kotlin.math.roundToLong
 
 /**

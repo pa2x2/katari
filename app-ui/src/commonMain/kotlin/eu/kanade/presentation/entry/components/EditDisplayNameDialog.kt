@@ -13,9 +13,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.field.TextField
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.field.TextField
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

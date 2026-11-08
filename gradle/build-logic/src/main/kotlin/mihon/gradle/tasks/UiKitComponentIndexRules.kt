@@ -3,7 +3,7 @@ package mihon.gradle.tasks
 /*
  * Agents find kit components through the index in the ui-kit skill, by the job they do: a component missing from it
  * gets built again under another name somewhere else. So the index must name every public top-level composable of
- * mihon.presentation.kit, and its Component column may name nothing else, which keeps renamed and deleted components
+ * app.katari.presentation.kit, and its Component column may name nothing else, which keeps renamed and deleted components
  * out of it. Scope members, such as PageSpreadScope.Pages, are found through the component that provides the scope.
  */
 
@@ -88,7 +88,7 @@ private fun String.isKitSource(): Boolean {
     val sourceSet = removePrefix("core/presentation-core/src/").substringBefore("/")
     return startsWith("core/presentation-core/src/") &&
         !sourceSet.contains("test", ignoreCase = true) &&
-        contains("/kotlin/mihon/presentation/kit/")
+        contains("/kotlin/app/katari/presentation/kit/")
 }
 
 private val TOP_LEVEL_FUNCTION =

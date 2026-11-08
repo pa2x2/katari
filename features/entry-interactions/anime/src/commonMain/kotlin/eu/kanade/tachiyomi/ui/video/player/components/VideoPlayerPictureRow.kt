@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.list.ChipsRow
 import eu.kanade.tachiyomi.ui.video.player.picture.label
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.list.ChipsRow
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

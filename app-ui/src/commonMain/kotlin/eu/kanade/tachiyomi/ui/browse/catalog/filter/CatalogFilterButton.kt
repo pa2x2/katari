@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FilterList
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

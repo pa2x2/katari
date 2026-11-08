@@ -10,13 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.presentation.kit.content.CoverFrame
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.CoverRow
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.entry.components.EntryCover
-import mihon.presentation.kit.content.CoverFrame
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.CoverRow
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
 /**

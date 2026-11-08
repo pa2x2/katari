@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.animesource.model
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 /**
  * A server that offers an episode's videos. [videoList] is null when the videos have to be fetched with

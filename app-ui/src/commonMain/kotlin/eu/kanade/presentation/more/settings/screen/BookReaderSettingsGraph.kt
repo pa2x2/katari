@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
-import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
+import app.katari.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.source.repository.SourceRepository
 

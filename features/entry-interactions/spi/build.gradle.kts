@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.interactions.spi"
+        namespace = "app.katari.entry.interactions.spi"
 
         withHostTest { }
     }

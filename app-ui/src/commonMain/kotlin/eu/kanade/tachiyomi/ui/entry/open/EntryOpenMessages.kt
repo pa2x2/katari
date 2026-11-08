@@ -3,14 +3,14 @@ package eu.kanade.tachiyomi.ui.entry.open
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import app.katari.entry.interactions.navigation.EntryContinueResult
+import app.katari.entry.interactions.navigation.EntryOpenResult
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.presentation.kit.feedback.ScreenMessages
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.entry.interactions.navigation.EntryContinueResult
-import mihon.entry.interactions.navigation.EntryOpenResult
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.presentation.kit.feedback.ScreenMessages
-import mihon.presentation.kit.feedback.rememberScreenMessages
 
 /**
  * Tells the user, on the screen they are on, that a chapter or episode they opened or continued with didn't open

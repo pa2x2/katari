@@ -1,0 +1,86 @@
+package app.katari.entry.interactions.book.document.reader
+
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
+import app.katari.entry.interactions.book.document.reader.input.detectReaderClicks
+import app.katari.entry.interactions.book.document.reader.input.detectRepeatedClicks
+import app.katari.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
+import app.katari.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
+import app.katari.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
+import app.katari.presentation.kit.layout.ReadingColumn
+import tachiyomi.domain.entry.model.EntryChapter
+
+/** Owns the lazy item provider so logical chapter activation cannot invalidate unchanged rows. */
+@Composable
+internal fun BookDocumentViewerList(
+    items: BookDocumentViewerDataset<EntryChapter>,
+    state: LazyListState,
+    selection: BookDocumentChapterSelection,
+    chapterLoadState: (Long) -> BookDocumentChapterLoadState?,
+    onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
+    onExternalLinkClick: (String) -> Unit,
+    onReaderTap: () -> Unit,
+    onTransitionRetry: (EntryChapter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val currentOnReaderTap by rememberUpdatedState(onReaderTap)
+    val sections = remember(items.identity) { items.current + items.next + items.previous }
+    val transitionMode = LocalBookDocumentChapterTransitionMode.current
+    val preparedChapterIds = remember(items.identity) { sections.map { it.owner.id }.toSet() }
+    PrefetchBookDocumentFigureHeaders(sections)
+    BookDocumentTablePreparation(sections, modifier) {
+        ReadingColumn(
+            state = state,
+            maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(selection) { detectRepeatedClicks { selection.handleReaderTap(currentOnReaderTap) } }
+                .pointerInput(selection) { detectReaderClicks { selection.handleReaderTap(currentOnReaderTap) } }
+                .semantics {
+                    onClick {
+                        selection.handleReaderTap(currentOnReaderTap)
+                        true
+                    }
+                },
+        ) {
+            items(items, key = { it.key }) { item ->
+                val transition = (item as? BookDocumentViewerItem.Transition)?.transition
+                val destination = transition?.to
+                val isSeamless = transition != null && destination != null &&
+                    isSeamlessWhenNeededBoundary(
+                        transitionMode,
+                        transition,
+                        destination.id in preparedChapterIds,
+                        chapterLoadState(destination.id),
+                    )
+                if (isSeamless) {
+                    Spacer(modifier = Modifier.fillMaxWidth())
+                } else {
+                    BookDocumentViewerRow(
+                        item = item,
+                        transitionDirection = transition?.direction,
+                        loadState = destination?.let { chapterLoadState(it.id) },
+                        onAnchorClick = onAnchorClick,
+                        onExternalLinkClick = onExternalLinkClick,
+                        onTransitionRetry = onTransitionRetry,
+                        wrapFloats = true,
+                    )
+                }
+            }
+        }
+    }
+}

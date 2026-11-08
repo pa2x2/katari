@@ -2,8 +2,8 @@ package tachiyomi.presentation.widget
 
 import androidx.compose.ui.unit.dp
 import androidx.glance.ImageProvider
-import mihon.presentation.kit.widget.WidgetMetrics
-import mihon.presentation.kit.widget.WidgetOnCoverScreen
+import app.katari.presentation.kit.widget.WidgetMetrics
+import app.katari.presentation.kit.widget.WidgetOnCoverScreen
 
 class UpdatesGridCoverScreenGlanceWidget : BaseUpdatesGridGlanceWidget() {
     override val foreground = WidgetOnCoverScreen

@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension.util
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.repository.ExtensionStoreRepository
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
@@ -23,8 +25,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import java.io.File

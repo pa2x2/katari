@@ -4,9 +4,9 @@ import android.content.Context
 import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
 import logcat.LogPriority
-import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI

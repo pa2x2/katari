@@ -2,6 +2,12 @@ package eu.kanade.presentation.more.settings.screen.textrecognition.models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.model.artifacts.api.ModelArtifactStore
+import app.katari.model.artifacts.api.descriptor.ModelArtifactId
+import app.katari.text.recognition.api.host.TextRecognitionHostActions
+import app.katari.text.recognition.ui.models.TextRecognitionStoredModels
+import app.katari.text.recognition.ui.models.observeStoredModels
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -10,12 +16,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.model.artifacts.api.ModelArtifactStore
-import mihon.model.artifacts.api.descriptor.ModelArtifactId
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.text.recognition.ui.models.TextRecognitionStoredModels
-import mihon.text.recognition.ui.models.observeStoredModels
 
 /** Stored model revisions sorted by what the profile's saved recognition settings read with them. */
 @Inject

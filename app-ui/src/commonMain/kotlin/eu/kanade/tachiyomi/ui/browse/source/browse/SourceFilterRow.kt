@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
+import app.katari.presentation.kit.list.RowGroupPosition
 import eu.kanade.domain.source.model.FilterRestoreIssue
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -8,7 +9,6 @@ import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.isSearchable
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
-import mihon.presentation.kit.list.RowGroupPosition
 
 /** One row of the root filter sheet list, planned before composition so the sheet can locate filters by index. */
 internal sealed interface SourceFilterRow {

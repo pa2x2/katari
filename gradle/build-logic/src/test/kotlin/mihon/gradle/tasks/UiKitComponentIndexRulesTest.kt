@@ -8,7 +8,7 @@ class UiKitComponentIndexRulesTest {
     @Test
     fun `kit composables missing from the index and index names that are not kit composables are reported`() {
         val kit = UiKitBoundarySource(
-            "core/presentation-core/src/commonMain/kotlin/mihon/presentation/kit/surface/Kit.kt",
+            "core/presentation-core/src/commonMain/kotlin/app/katari/presentation/kit/surface/Kit.kt",
             """
             /** A card. */
             @Composable

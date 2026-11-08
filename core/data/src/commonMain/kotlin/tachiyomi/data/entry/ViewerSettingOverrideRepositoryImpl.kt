@@ -1,12 +1,12 @@
 package tachiyomi.data.entry
 
+import app.katari.entry.viewer.settings.ViewerSettingId
+import app.katari.entry.viewer.settings.ViewerSettingOverride
+import app.katari.entry.viewer.settings.ViewerSettingOverrideRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.viewer.settings.ViewerSettingId
-import mihon.entry.viewer.settings.ViewerSettingOverride
-import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.query.chunkedForSqlQuery
 

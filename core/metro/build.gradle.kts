@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.core.metro"
+        namespace = "app.katari.core.metro"
     }
     desktop()
 

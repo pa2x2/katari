@@ -14,12 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import app.katari.presentation.kit.content.chartCell
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
-import mihon.presentation.kit.content.chartCell
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 
 /**
  * Vertical bars that grow in at step [order] of the page's entrance, the [highlight] one in full accent and the rest

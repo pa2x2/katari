@@ -1,6 +1,7 @@
 package app.katari.sync.client.trigger
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

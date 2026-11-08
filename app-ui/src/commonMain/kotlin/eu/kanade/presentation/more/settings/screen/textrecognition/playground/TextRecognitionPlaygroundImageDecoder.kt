@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.playground
 
 import androidx.compose.ui.graphics.ImageBitmap
-import mihon.core.common.platform.PlatformFacility
-import mihon.text.recognition.api.image.TextRecognitionImage
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.text.recognition.api.image.TextRecognitionImage
 import tachiyomi.domain.storage.DocumentUri
 
 /** Decodes the image the user picked to try the recognition settings on. */

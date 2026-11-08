@@ -91,7 +91,7 @@ class UiKitBoundaryRulesTest {
         val pagers = """
             import androidx.compose.foundation.pager.HorizontalPager
             import androidx.compose.foundation.pager.PagerState
-            import mihon.presentation.kit.pager.VerticalPager
+            import app.katari.presentation.kit.pager.VerticalPager
             androidx.compose.foundation.pager.VerticalPager(state) {}
         """.trimIndent()
         val screen = "app-ui/src/commonMain/kotlin/Screen.kt"

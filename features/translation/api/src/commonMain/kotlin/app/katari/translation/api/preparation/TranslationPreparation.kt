@@ -1,0 +1,149 @@
+package app.katari.translation.api.preparation
+
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.engine.KnownTranslationEngine
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.model.TranslationModelDescriptor
+import app.katari.translation.api.model.TranslationOperationProgress
+import app.katari.translation.api.provider.TranslationProviderDisclosure
+import app.katari.translation.api.provider.TranslationProviderPresentation
+import app.katari.translation.api.request.ResolvedTranslationRequest
+
+/** Opaque, process-local execution authority returned only by [app.katari.translation.api.TranslationFeature.prepare]. */
+interface ReadyTranslation
+
+sealed interface TranslationPreparation {
+    data class Ready(
+        val translation: ReadyTranslation,
+        val request: ResolvedTranslationRequest,
+        val presentation: TranslationProviderPresentation,
+    ) : TranslationPreparation
+
+    data class ProviderDisclosureRequired(
+        val engine: TranslationEngineId,
+        val presentation: TranslationProviderPresentation,
+        val disclosure: TranslationProviderDisclosure,
+    ) : TranslationRequirement
+
+    data class ModelDownloadRequired(
+        val engine: TranslationEngineId,
+        val presentation: TranslationProviderPresentation,
+        val models: List<TranslationModelDescriptor>,
+    ) : TranslationRequirement {
+        init {
+            require(models.isNotEmpty())
+        }
+    }
+
+    data class SystemSetupRequired(
+        val engine: TranslationEngineId,
+        val presentation: TranslationProviderPresentation,
+        val reason: TranslationSystemSetupReason,
+    ) : TranslationRequirement
+
+    data class SetupInProgress(
+        val engine: TranslationEngineId,
+        val presentation: TranslationProviderPresentation,
+        val progress: TranslationOperationProgress? = null,
+    ) : TranslationRequirement
+
+    data class SourceUndetermined(
+        val suggestedLanguages: List<LanguageTag> = emptyList(),
+    ) : TranslationPreparation
+
+    data class TargetLanguageRequired(
+        val sourceLanguage: LanguageTag?,
+        val reason: TranslationTargetChoiceReason,
+    ) : TranslationRequirement
+
+    data class EngineChoiceRequired(
+        val reason: TranslationEngineChoiceReason,
+        val engines: List<KnownTranslationEngine>,
+    ) : TranslationRequirement
+
+    data class Unavailable(
+        val reason: TranslationUnavailableReason,
+    ) : TranslationRequirement
+
+    data class Rejected(
+        val reason: TranslationRejectionReason,
+    ) : TranslationPreparation
+}
+
+/**
+ * A prerequisite the user must resolve before translation can run. The same requirements block translating text and
+ * preparing a route without it.
+ */
+sealed interface TranslationRequirement :
+    TranslationPreparation,
+    TranslationRoutePreparation
+
+sealed interface TranslationSystemSetupReason {
+    data object ServiceDisabled : TranslationSystemSetupReason
+
+    data object LanguageModelsRequired : TranslationSystemSetupReason
+
+    data class ProviderActionRequired(
+        val description: String,
+    ) : TranslationSystemSetupReason {
+        init {
+            require(description.isNotBlank())
+        }
+    }
+}
+
+sealed interface TranslationTargetChoiceReason {
+    data object NoDefaultTarget : TranslationTargetChoiceReason
+
+    data object SourceEqualsTarget : TranslationTargetChoiceReason
+}
+
+sealed interface TranslationEngineChoiceReason {
+    data object NoEngineConfigured : TranslationEngineChoiceReason
+
+    data class SelectedEngineUnavailable(
+        val engine: TranslationEngineId,
+    ) : TranslationEngineChoiceReason
+}
+
+sealed interface TranslationUnavailableReason {
+    data class UnsupportedOs(
+        val minimumApi: Int,
+    ) : TranslationUnavailableReason
+
+    data object ServiceMissing : TranslationUnavailableReason
+
+    data object SystemSettingsUnavailable : TranslationUnavailableReason
+
+    data class UnsupportedLanguage(
+        val language: LanguageTag,
+    ) : TranslationUnavailableReason
+
+    data class UnsupportedLanguagePair(
+        val source: LanguageTag,
+        val target: LanguageTag,
+    ) : TranslationUnavailableReason
+
+    data class EngineUnavailable(
+        val engine: TranslationEngineId,
+        val reason: String,
+    ) : TranslationUnavailableReason {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+}
+
+sealed interface TranslationRejectionReason {
+    data object BlankInput : TranslationRejectionReason
+
+    data class InputTooLarge(
+        val actualCodePoints: Int,
+        val maximumCodePoints: Int,
+    ) : TranslationRejectionReason {
+        init {
+            require(actualCodePoints > maximumCodePoints)
+            require(maximumCodePoints > 0)
+        }
+    }
+}

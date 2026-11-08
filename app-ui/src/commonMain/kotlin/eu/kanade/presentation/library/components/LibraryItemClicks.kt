@@ -3,8 +3,8 @@ package eu.kanade.presentation.library.components
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.selection.selectableItem
 import eu.kanade.tachiyomi.ui.library.LibraryPage
-import mihon.presentation.kit.selection.selectableItem
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 

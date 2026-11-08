@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
+import app.katari.core.archive.ArchiveReader
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
-import mihon.core.archive.ArchiveReader
 import tachiyomi.core.common.util.system.isImageFile
 
 /**

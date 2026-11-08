@@ -1,15 +1,15 @@
 package eu.kanade.presentation.crash
 
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.BugReport
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.feedback.InfoScreen
+import app.katari.presentation.kit.list.ControlRow
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.BugReport
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.InfoScreen
-import mihon.presentation.kit.list.ControlRow
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

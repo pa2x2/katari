@@ -26,6 +26,11 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.viewer.chrome.ui.tap.ReaderTapAction
+import app.katari.entry.viewer.chrome.ui.tap.readerTapAction
+import app.katari.presentation.kit.layout.PageSpread
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -37,11 +42,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.hidesTapZones
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
-import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
-import mihon.entry.viewer.chrome.ui.tap.readerTapAction
-import mihon.presentation.kit.layout.PageSpread
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.window.currentWindowLayout
 
 /**
  * The paged viewer on screen: the slots in a pager turning [PagedViewer.direction], each a page, two facing pages or a

@@ -2,9 +2,9 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.list.ChoiceRow
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource

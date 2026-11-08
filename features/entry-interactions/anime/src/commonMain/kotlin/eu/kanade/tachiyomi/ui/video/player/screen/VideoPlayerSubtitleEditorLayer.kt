@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.subtitleKeepsOwnStyle
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

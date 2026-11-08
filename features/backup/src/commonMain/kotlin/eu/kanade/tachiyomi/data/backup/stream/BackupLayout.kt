@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.backup.stream
 
+import app.katari.profiles.core.ProfileScopedBackup
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import mihon.feature.profiles.core.ProfileScopedBackup
 
 /** How an entry is encoded: as a [BackupEntry], or as the manga and anime lists of backups before entries. */
 internal enum class BackupEntryFormat {

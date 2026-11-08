@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.stream
 
+import app.katari.profiles.core.ProfileScopedBackup
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import kotlinx.serialization.protobuf.ProtoBuf
-import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.BufferedSink
 import okio.buffer
 import okio.sink

@@ -2,11 +2,11 @@ package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import android.text.Layout
 import androidx.media3.common.text.Cue
-import mihon.video.engine.spi.player.SubtitleAnchored
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.SubtitleImage
-import mihon.video.engine.spi.player.SubtitleLine
-import mihon.video.engine.spi.player.SubtitleTextAlignment
+import app.katari.video.engine.spi.player.SubtitleAnchored
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.SubtitleImage
+import app.katari.video.engine.spi.player.SubtitleLine
+import app.katari.video.engine.spi.player.SubtitleTextAlignment
 
 /**
  * Media3's cues as the app draws them, placed as Media3's own subtitle view placed them, with its embedded styles and

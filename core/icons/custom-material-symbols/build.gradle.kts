@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.icons.custommaterialsymbols"
+        namespace = "app.katari.icons.custommaterialsymbols"
     }
     desktop()
 
@@ -32,7 +32,7 @@ spotless {
 }
 
 valkyrie {
-    packageName = "mihon.icons.custommaterialsymbols"
+    packageName = "app.katari.icons.custommaterialsymbols"
     generateAtSync = true
 
     imageVector {

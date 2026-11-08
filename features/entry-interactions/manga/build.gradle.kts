@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.interactions.manga"
+        namespace = "app.katari.entry.interactions.manga"
         // The reader's layouts, animations and S Pen actions are Android resources of this module.
         androidResources {
             enable = true

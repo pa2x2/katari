@@ -205,7 +205,7 @@
             android:exported="false" />
 
         <receiver
-            android:name="mihon.feature.migration.work.SourceMigrationActionReceiver"
+            android:name="app.katari.sourcemigration.work.SourceMigrationActionReceiver"
             android:exported="false" />
 
         <receiver

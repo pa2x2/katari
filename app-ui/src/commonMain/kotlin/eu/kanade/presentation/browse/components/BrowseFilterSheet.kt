@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.RestartAlt
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.sheet.SheetActions
-import mihon.presentation.kit.sheet.SheetHeader
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.RestartAlt
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetActions
+import app.katari.presentation.kit.sheet.SheetHeader
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

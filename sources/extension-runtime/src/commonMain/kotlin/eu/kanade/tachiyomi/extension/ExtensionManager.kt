@@ -1,5 +1,12 @@
 package eu.kanade.tachiyomi.extension
 
+import app.katari.core.common.GlobalCustomPreferences
+import app.katari.domain.extension.interactor.UpdateExtensionStores
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.repository.ExtensionStoreRepository
+import app.katari.profiles.core.ProfileConstants
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileStore
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
@@ -51,13 +58,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
-import mihon.core.common.GlobalCustomPreferences
-import mihon.domain.extension.interactor.UpdateExtensionStores
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.repository.ExtensionStoreRepository
-import mihon.feature.profiles.core.ProfileConstants
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext

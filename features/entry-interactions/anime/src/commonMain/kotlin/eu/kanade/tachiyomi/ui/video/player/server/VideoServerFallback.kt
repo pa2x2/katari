@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.video.player.server
 
+import app.katari.video.engine.spi.player.VideoPlayerError
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailureOutcome
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
-import mihon.video.engine.spi.player.VideoPlayerError
 
 /*
  * Automatic server fallback while an episode opens. When the server it opens on fails before the first frame for a

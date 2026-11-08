@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.translation.provider.server"
+        namespace = "app.katari.translation.provider.server"
         // The providers' setup activities share this module's theme, an Android resource.
         androidResources {
             enable = true

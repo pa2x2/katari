@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.KatariTheme
 
 @Composable
 internal fun BrowseSourceLoadingItem() {

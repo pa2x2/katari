@@ -6,13 +6,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

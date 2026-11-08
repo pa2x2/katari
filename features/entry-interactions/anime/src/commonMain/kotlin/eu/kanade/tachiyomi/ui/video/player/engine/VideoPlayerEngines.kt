@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.ui.video.player.engine
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.video.engine.spi.VideoEngine
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
-import mihon.video.engine.spi.VideoEngine
 
 /**
  * The engines the watched player plays in. [builtIn] is the platform's own. On Android, mpv comes from an add-on the

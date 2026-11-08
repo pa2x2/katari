@@ -15,17 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.presentation.kit.content.BadgeGroup
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.content.coverFrame
+import app.katari.presentation.kit.surface.CoverCell
+import app.katari.presentation.kit.surface.MediaScrim
+import app.katari.presentation.kit.surface.MediaScrimEdge
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryCover
-import mihon.presentation.kit.content.BadgeGroup
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.content.coverFrame
-import mihon.presentation.kit.surface.CoverCell
-import mihon.presentation.kit.surface.MediaScrim
-import mihon.presentation.kit.surface.MediaScrimEdge
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverModel
 

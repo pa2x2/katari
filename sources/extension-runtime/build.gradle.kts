@@ -22,7 +22,7 @@ val generateExtensionFamilies = tasks.register<GenerateExtensionFamiliesTask>("g
 
 kotlin {
     android {
-        namespace = "mihon.extension.runtime"
+        namespace = "app.katari.extension.runtime"
 
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }

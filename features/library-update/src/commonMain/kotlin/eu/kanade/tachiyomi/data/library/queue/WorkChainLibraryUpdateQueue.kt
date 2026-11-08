@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.library.queue
 
+import app.katari.profiles.core.ProfileDatabase
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -12,7 +13,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.feature.profiles.core.ProfileDatabase
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryUpdateQueue

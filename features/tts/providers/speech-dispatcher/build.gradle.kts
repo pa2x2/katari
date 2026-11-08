@@ -23,5 +23,5 @@ dependencies {
 }
 
 compose.resources {
-    packageOfResClass = "mihon.tts.provider.speechdispatcher.resources"
+    packageOfResClass = "app.katari.tts.provider.speechdispatcher.resources"
 }

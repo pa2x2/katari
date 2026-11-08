@@ -1,5 +1,6 @@
 package app.katari.sync.client.firstsync
 
+import app.katari.domain.profile.ProfileSeedPreferences
 import app.katari.sync.client.SyncingTestDevice
 import app.katari.sync.client.TestSyncServer
 import app.katari.sync.client.account.AccountCall
@@ -12,7 +13,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import mihon.domain.profile.ProfileSeedPreferences
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

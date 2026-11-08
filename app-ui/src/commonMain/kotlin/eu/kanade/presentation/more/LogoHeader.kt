@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.app.ui.resources.Res
-import mihon.app.ui.resources.ic_katari
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.ui.resources.Res
+import app.katari.ui.resources.ic_katari
 import org.jetbrains.compose.resources.painterResource
 
 /** The app logo heading a screen, with [below] under it. */

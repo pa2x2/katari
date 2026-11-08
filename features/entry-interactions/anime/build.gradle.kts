@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.interactions.anime"
+        namespace = "app.katari.entry.interactions.anime"
         // The player activity's theme and transitions, the benchmark build's paused start and ExoPlayer's audio
         // attribution are Android resources of this module.
         androidResources {

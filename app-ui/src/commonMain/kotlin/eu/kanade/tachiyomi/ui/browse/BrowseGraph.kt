@@ -1,14 +1,14 @@
 package eu.kanade.tachiyomi.ui.browse
 
+import app.katari.core.common.CustomPreferences
+import app.katari.entry.interactions.media.EntryImmersiveFeature
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.profiles.core.ProfileManager
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.tachiyomi.ui.browse.feed.CatalogFeedItemSource
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestination
-import mihon.core.common.CustomPreferences
-import mihon.entry.interactions.media.EntryImmersiveFeature
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
 

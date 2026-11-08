@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
+import app.katari.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
-import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 
 /** The viewer showing the pages in one reading mode, as the reader drives it on every platform. */
 internal interface ReaderViewer {

@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.entry.viewer.settings.ViewerSettingBinding
+import app.katari.entry.viewer.settings.updateEntry
+import app.katari.presentation.kit.list.ToggleRow
 import kotlinx.coroutines.launch
-import mihon.entry.viewer.settings.ViewerSettingBinding
-import mihon.entry.viewer.settings.updateEntry
-import mihon.presentation.kit.list.ToggleRow
 
 /** In-reader toggle that writes this series' override instead of the profile value. */
 @Composable

@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import android.content.Context
 import android.content.Intent
-import mihon.entry.interactions.anime.R
+import app.katari.entry.interactions.anime.R
 
 /**
  * The position an intent asks the open player to pause at, which lets the showcase capture a still of an exact frame:

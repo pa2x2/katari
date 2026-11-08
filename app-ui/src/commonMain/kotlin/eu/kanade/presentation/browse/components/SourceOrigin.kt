@@ -1,7 +1,7 @@
 package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
-import mihon.app.ui.di.LocalAppUiGraph
+import app.katari.ui.di.LocalAppUiGraph
 
 /**
  * A source row's subtitle: its [language] and, when the extension that provides it came from a store, that store's

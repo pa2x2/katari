@@ -6,6 +6,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CheckCircle
+import app.katari.icons.materialsymbols.rounded.Devices
+import app.katari.icons.materialsymbols.rounded.Dns
+import app.katari.icons.materialsymbols.rounded.Keyboard
+import app.katari.icons.materialsymbols.rounded.QrCodeScanner
+import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.SettingsRow
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.guide.SyncGuideAction
@@ -20,17 +31,6 @@ import app.katari.sync.ui.status.syncHeadlineText
 import app.katari.sync.ui.status.tone
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CheckCircle
-import mihon.icons.materialsymbols.rounded.Devices
-import mihon.icons.materialsymbols.rounded.Dns
-import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.icons.materialsymbols.rounded.QrCodeScanner
-import mihon.icons.materialsymbols.rounded.Smartphone
-import mihon.presentation.kit.feedback.GuidePageHeading
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

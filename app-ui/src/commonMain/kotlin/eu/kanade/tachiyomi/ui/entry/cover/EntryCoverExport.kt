@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.cover
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
 import tachiyomi.domain.storage.DocumentUri
 
 /**

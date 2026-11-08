@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.tts.ui"
+        namespace = "app.katari.tts.ui"
 
         withHostTest { }
     }

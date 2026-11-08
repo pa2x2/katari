@@ -11,16 +11,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.FilterList
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.control.ConnectedToggleGroup
+import app.katari.presentation.kit.navigation.AppBarExtension
+import app.katari.presentation.kit.navigation.AppBarScrollBehavior
+import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.presentation.kit.progress.LinearProgressIndicator
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.control.ConnectedToggleGroup
-import mihon.presentation.kit.navigation.AppBarExtension
-import mihon.presentation.kit.navigation.AppBarScrollBehavior
-import mihon.presentation.kit.navigation.SearchToolbar
-import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

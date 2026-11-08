@@ -46,7 +46,7 @@ class PluginSpotless : Plugin<Project> {
                 forbidRegex(
                     "materialSymbolsRImport",
                     "(?m)^import mihon\\.icons\\.materialsymbols\\.R(?! as MaterialSymbolsR$)\\b.*$",
-                    "Import mihon.icons.materialsymbols.R as MaterialSymbolsR",
+                    "Import app.katari.icons.materialsymbols.R as MaterialSymbolsR",
                 )
                 forbidRegex(
                     "materialSymbolsRQualified",
@@ -56,7 +56,7 @@ class PluginSpotless : Plugin<Project> {
                 forbidRegex(
                     "customMaterialSymbolsRImport",
                     "(?m)^import mihon\\.icons\\.custommaterialsymbols\\.R(?! as CustomMaterialSymbolsR$)\\b.*$",
-                    "Import mihon.icons.custommaterialsymbols.R as CustomMaterialSymbolsR",
+                    "Import app.katari.icons.custommaterialsymbols.R as CustomMaterialSymbolsR",
                 )
                 forbidRegex(
                     "customMaterialSymbolsRQualified",

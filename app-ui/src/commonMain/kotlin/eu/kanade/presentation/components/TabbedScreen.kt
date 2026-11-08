@@ -16,20 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.AppBarActions
+import app.katari.presentation.kit.navigation.AppBarTitle
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.presentation.kit.navigation.Tab
+import app.katari.presentation.kit.navigation.TabRow
+import app.katari.presentation.kit.pager.HorizontalPager
+import app.katari.presentation.kit.shortcut.KeyboardShortcutScope
+import app.katari.profiles.ui.switcher.ActiveProfileButton
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
-import mihon.feature.profiles.ui.switcher.ActiveProfileButton
-import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.layout.ScreenFrame
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.AppBarActions
-import mihon.presentation.kit.navigation.AppBarTitle
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.navigation.SearchToolbar
-import mihon.presentation.kit.navigation.Tab
-import mihon.presentation.kit.navigation.TabRow
-import mihon.presentation.kit.pager.HorizontalPager
-import mihon.presentation.kit.shortcut.KeyboardShortcutScope
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable

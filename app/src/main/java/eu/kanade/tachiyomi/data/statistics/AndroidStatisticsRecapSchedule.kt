@@ -3,10 +3,10 @@ package eu.kanade.tachiyomi.data.statistics
 import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.workManager
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.domain.statistics.service.StatisticsRecapSchedule

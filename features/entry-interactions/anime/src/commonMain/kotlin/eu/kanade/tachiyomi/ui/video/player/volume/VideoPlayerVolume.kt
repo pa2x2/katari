@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player.volume
 
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayer
 
 /**
  * The volume the side gesture shows and changes, as a level from 0 to [gestureMaxLevel]: up to [maxLevel] the
  * platform's volume, and above it [boostLevels] more where the player boosts
- * ([mihon.video.engine.spi.player.VideoPlayerCapabilities.volumeBoost]). Android's is the device's music volume.
+ * ([app.katari.video.engine.spi.player.VideoPlayerCapabilities.volumeBoost]). Android's is the device's music volume.
  */
 internal interface VideoPlayerVolume {
     /** The volume, plus the boost's levels above [maxLevel]. */

@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.content.LogoSize
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.coil.ExtensionIconDensity
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
-import mihon.presentation.kit.content.LogoSize
 import tachiyomi.domain.source.model.Source
 
 /**

@@ -6,6 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
+import app.katari.android.di.appGraph
+import app.katari.entry.interactions.download.EntryDownloadActionFeature
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.navigation.EntryOpenOptions
+import app.katari.entry.interactions.navigation.EntryOpenResult
+import app.katari.entry.interactions.state.EntryConsumptionFeature
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getParcelableExtraCompat
@@ -17,12 +23,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import mihon.app.di.appGraph
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.navigation.EntryOpenFeature
-import mihon.entry.interactions.navigation.EntryOpenOptions
-import mihon.entry.interactions.navigation.EntryOpenResult
-import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.setting
 
+import app.katari.entry.interactions.reader.settings.ReadingMode
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.openReaderPageInWebView
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
@@ -8,7 +9,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagedViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.strip.AndroidStripViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.strip.StripViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.viewer
-import mihon.entry.interactions.reader.settings.ReadingMode
 
 /** The shared viewer for the reading mode [preference] resolves to, in [activity]'s view tree. */
 internal fun ReadingMode.Companion.toViewer(preference: Int?, activity: ReaderActivity): Viewer {

@@ -11,7 +11,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.translation.provider.deepl"
+        namespace = "app.katari.translation.provider.deepl"
         // The engine's glyph is a Compose resource, which Android packages as the module's assets.
         androidResources {
             enable = true
@@ -48,5 +48,5 @@ kotlin {
 }
 
 compose.resources {
-    packageOfResClass = "mihon.translation.provider.deepl.resources"
+    packageOfResClass = "app.katari.translation.provider.deepl.resources"
 }

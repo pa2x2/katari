@@ -1,0 +1,5 @@
+package app.katari.entry.interactions.manga.library
+
+import app.katari.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+
+internal class MangaOutsideReleasePeriodFilterProvider : EntryOutsideReleasePeriodFilterProvider

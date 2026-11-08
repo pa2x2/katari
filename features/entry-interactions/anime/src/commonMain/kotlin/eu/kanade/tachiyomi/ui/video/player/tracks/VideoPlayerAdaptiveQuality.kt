@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTrackSelection
+import app.katari.video.engine.spi.tracks.VideoTracks
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityOption
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTrackSelection
-import mihon.video.engine.spi.tracks.VideoTracks
 import kotlin.math.abs
 
 internal fun VideoTracks.availableAdaptiveQualities(): List<VideoAdaptiveQualityOption> {

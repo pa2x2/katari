@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader.screen
 
 import androidx.compose.runtime.Composable
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
 import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
-import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 
 /**
  * What the reader screen gets from the platform that hosts it: what the platform does its own way, and the actions

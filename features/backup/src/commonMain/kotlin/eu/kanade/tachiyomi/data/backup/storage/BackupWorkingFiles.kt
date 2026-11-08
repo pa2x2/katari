@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.storage
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import java.io.File
 
 /** The app's own files that creating and restoring a backup need besides the backup itself. */

@@ -6,8 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import mihon.entry.viewer.chrome.ui.window.ViewerFullScreen
-import mihon.presentation.kit.window.WindowFullScreen
+import app.katari.entry.viewer.chrome.ui.window.ViewerFullScreen
+import app.katari.presentation.kit.window.WindowFullScreen
 
 /**
  * The player's full screen: what [ViewerFullScreen] does for every viewer, and moving into picture-in-picture leaves

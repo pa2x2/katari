@@ -5,7 +5,7 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
-import mihon.app.ui.R
+import app.katari.ui.R
 
 // The caret flips from one direction to the other.
 @Composable

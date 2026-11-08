@@ -22,7 +22,7 @@ plugins {
 version = "1.0.0-beta.3"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
-    packageName.set("mihon.desktop.application")
+    packageName.set("app.katari.desktop.application")
     versionName.set(version.toString())
     androidVersionName.set(getAppVersionName())
     androidVersionCode.set(getAppVersionCode())
@@ -128,7 +128,7 @@ dependencies {
 }
 
 compose.desktop.application {
-    mainClass = "mihon.desktop.MainKt"
+    mainClass = "app.katari.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
 

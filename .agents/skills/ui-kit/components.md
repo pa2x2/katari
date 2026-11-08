@@ -1,6 +1,6 @@
 # Kit components by job
 
-Every public composable in `mihon.presentation.kit`, found by the job it does. Search this file for what the UI does, not for a name. Each component's doc comment in `presentation-core` has the details and its parameters.
+Every public composable in `app.katari.presentation.kit`, found by the job it does. Search this file for what the UI does, not for a name. Each component's doc comment in `presentation-core` has the details and its parameters.
 
 The Component column holds only kit composables, in backticks; `checkUiKitBoundaries` checks it against the kit in both directions, so a new kit composable gets its row in the same change.
 

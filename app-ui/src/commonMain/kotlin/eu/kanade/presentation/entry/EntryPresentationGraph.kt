@@ -1,9 +1,9 @@
 package eu.kanade.presentation.entry
 
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
 import eu.kanade.domain.ui.UiPreferences
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager

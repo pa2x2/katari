@@ -20,6 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.viewer.chrome.ui.handoff.ProgressOfferNote
+import app.katari.presentation.kit.surface.SurfaceContainer
+import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.video.engine.spi.tracks.subtitleChoiceKey
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
@@ -54,13 +61,6 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.background
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.asEntryCover

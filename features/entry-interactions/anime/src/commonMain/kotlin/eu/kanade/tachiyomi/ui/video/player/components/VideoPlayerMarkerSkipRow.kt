@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.list.ChipsRow
+import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.list.ChipsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

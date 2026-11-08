@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.extension.model
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 import tachiyomi.domain.source.model.StubSource

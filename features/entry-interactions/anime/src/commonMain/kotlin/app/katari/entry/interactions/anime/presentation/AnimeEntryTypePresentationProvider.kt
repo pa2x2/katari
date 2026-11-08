@@ -1,0 +1,69 @@
+package app.katari.entry.interactions.anime.presentation
+
+import app.katari.entry.interactions.presentation.EntryHistorySubtitlePresentation
+import app.katari.entry.interactions.presentation.EntryNotificationChildNumberPolicy
+import app.katari.entry.interactions.presentation.EntryPartialProgressPresentation
+import app.katari.entry.interactions.presentation.EntryTypePresentation
+import app.katari.entry.interactions.presentation.EntryUpdateNotificationVocabulary
+import app.katari.entry.interactions.runtime.EntryTypePresentationProvider
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
+import tachiyomi.i18n.*
+
+internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvider {
+    override val presentation = EntryTypePresentation(
+        displayNameLabel = MR.strings.entry_type_anime,
+        badgeIcon = MaterialSymbols.RoundedFilled.PlayArrow,
+        coverOverlayIcon = MaterialSymbols.RoundedFilled.PlayArrow,
+        markAsConsumedLabel = MR.strings.action_mark_as_watched,
+        markAsUnconsumedLabel = MR.strings.action_mark_as_unwatched,
+        markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_watched,
+        unconsumedIndicatorLabel = MR.strings.action_filter_unwatched,
+        bookmarkChildLabel = MR.strings.action_bookmark_episode,
+        removeBookmarkChildLabel = MR.strings.action_remove_bookmark_episode,
+        filterUnconsumedLabel = MR.strings.action_filter_unwatched,
+        fillerChildLabel = MR.strings.chapter_kind_filler,
+        openChildLabel = MR.strings.action_play,
+        childListTitle = MR.strings.episodes,
+        childCountPlural = MR.plurals.anime_num_episodes,
+        completedChildCountPlural = MR.plurals.activity_completed_episodes,
+        missingChildCountPlural = MR.plurals.missing_episodes,
+        childCountReasonLabel = MR.strings.possible_duplicates_reason_episode_count,
+        childNumberDisplayLabel = MR.strings.display_mode_episode,
+        childNumberShortLabel = MR.strings.display_mode_episode_short,
+        childNumberSettingLabel = MR.strings.show_episode_number,
+        deleteChildrenConfirmationLabel = MR.strings.confirm_delete_episodes,
+        noChildrenFoundLabel = MR.strings.anime_no_episodes,
+        otherChildrenLabel = MR.strings.chapter_group_other_episodes,
+        noChildrenYetLabel = MR.strings.chapter_group_no_episodes_yet,
+        scanlatorLabel = MR.strings.scanlator_release_group,
+        excludeScanlatorsLabel = MR.strings.exclude_release_groups,
+        noScanlatorsFoundLabel = MR.strings.no_release_groups_found,
+        noNextChildLabel = MR.strings.no_next_episode,
+        viewerUnavailableLabel = MR.strings.viewer_unavailable_watching,
+        settingsTitle = MR.strings.episode_settings,
+        setSettingsAsDefaultLabel = MR.strings.set_episode_settings_as_default,
+        confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_episode_settings,
+        alsoSetSettingsForLibraryLabel = MR.strings.also_set_episode_settings_for_library,
+        settingsUpdatedLabel = MR.strings.episode_settings_updated,
+        downloadAmountPlural = MR.plurals.download_amount_episodes,
+        downloadUnconsumedLabel = MR.strings.download_unwatched,
+        downloadNumberSortLabel = MR.strings.action_order_by_episode_number,
+        intervalExpectedUpdateLabel = MR.strings.anime_interval_expected_update,
+        intervalExpectedUpdateNullLabel = MR.strings.anime_interval_expected_update_null,
+        immersiveOpenLabel = MR.strings.browse_anime_feed_open_in_player,
+        immersiveOpenIcon = MaterialSymbols.RoundedFilled.PlayArrow,
+        historySubtitle = EntryHistorySubtitlePresentation.NameTimestampAndDuration,
+        partialProgress = EntryPartialProgressPresentation.Fixed(MR.strings.label_started),
+        updateNotification = EntryUpdateNotificationVocabulary(
+            childGeneric = MR.plurals.notification_episodes_generic,
+            childSingle = MR.strings.notification_episodes_single,
+            childSingleAndMore = MR.strings.notification_episodes_single_and_more,
+            childMultiple = MR.strings.notification_episodes_multiple,
+            childMultipleAndMore = MR.plurals.notification_episodes_multiple_and_more,
+            viewChildrenLabel = MR.strings.action_view_episodes,
+            numberPolicy = EntryNotificationChildNumberPolicy.NON_NEGATIVE,
+            maxDisplayedNumbers = 5,
+        ),
+    )
+}

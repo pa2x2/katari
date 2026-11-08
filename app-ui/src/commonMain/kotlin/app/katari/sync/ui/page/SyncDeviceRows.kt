@@ -2,18 +2,18 @@ package app.katari.sync.ui.page
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Computer
+import app.katari.icons.materialsymbols.rounded.Devices
+import app.katari.icons.materialsymbols.rounded.QrCode2
+import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.menu.OverflowMenu
+import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.account.AccountDevice
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.relativeTimeSpanString
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Computer
-import mihon.icons.materialsymbols.rounded.Devices
-import mihon.icons.materialsymbols.rounded.QrCode2
-import mihon.icons.materialsymbols.rounded.Smartphone
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.menu.OverflowMenu
-import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

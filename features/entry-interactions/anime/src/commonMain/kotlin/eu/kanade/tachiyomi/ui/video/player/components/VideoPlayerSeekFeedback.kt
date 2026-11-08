@@ -27,18 +27,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.ChevronLeft
+import app.katari.icons.materialsymbols.rounded.ChevronRight
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.surface.OverlayPanel
+import app.katari.presentation.kit.surface.OverlayStyle
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import kotlinx.coroutines.delay
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ChevronLeft
-import mihon.icons.materialsymbols.rounded.ChevronRight
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.OverlayPanel
-import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

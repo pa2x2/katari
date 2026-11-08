@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.more
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -14,7 +15,6 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

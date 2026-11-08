@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.entry
 
 import android.app.PendingIntent
 import android.content.Context
+import app.katari.entry.interactions.download.EntryDownloadNotificationActions
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
-import mihon.entry.interactions.download.EntryDownloadNotificationActions
 
 class AppEntryDownloadNotificationActions : EntryDownloadNotificationActions {
     override fun openDownloadManager(context: Context): PendingIntent {

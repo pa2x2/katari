@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.entry.translation
 
-import mihon.core.common.platform.PlatformFacility
-import mihon.core.platform.PlatformContext
-import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.host.TranslationSettingsDestination
+import app.katari.core.common.platform.PlatformFacility
+import app.katari.core.platform.PlatformContext
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.host.TranslationSettingsDestination
 
 /**
  * The settings screens the translation setup sheet sends the user to, opened the way the platform shows a screen from

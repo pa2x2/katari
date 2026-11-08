@@ -1,0 +1,195 @@
+package app.katari.presentation.kit.list
+
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.offset
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.content.LogoSize
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.pointer.clickCursor
+import app.katari.presentation.kit.surface.SurfaceContainer
+import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.LocalContentColor
+import app.katari.presentation.kit.theme.TextRole
+
+/**
+ * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
+ * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
+ *
+ * [subtitleTone] marks a subtitle that reports a state by its colour role, such as a warning. [iconAlert] marks the
+ * icon instead, for a row that tells of a problem while its subtitle explains it calmly.
+ *
+ * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
+ * row's text does.
+ */
+@Composable
+fun SettingsRow(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    iconAlert: Boolean = false,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    titleSuffix: (@Composable () -> Unit)? = null,
+    subtitleMaxLines: Int = Int.MAX_VALUE,
+    subtitleTone: ContentTone = ContentTone.Inherit,
+    enabled: Boolean = true,
+    role: Role? = null,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    below: (@Composable () -> Unit)? = null,
+    nested: Boolean = false,
+) {
+    RowFrame(
+        modifier = modifier,
+        indent = if (nested) LogoSize.Row.side(KatariTheme.sizes) + KatariTheme.spacing.l else KatariTheme.sizes.none,
+        enabled = enabled,
+        role = role,
+        onClick = onClick,
+        onLongClick = onLongClick,
+    ) {
+        TrailingControlsLayout(
+            leading = {
+                when {
+                    leading != null -> leading()
+                    icon != null && LocalInRowGroup.current -> RowIconTile(icon, iconAlert)
+                    icon != null -> Icon(
+                        icon,
+                        contentDescription = null,
+                        tone = if (iconAlert) ContentTone.Error else ContentTone.Secondary,
+                    )
+                }
+            },
+            words = {
+                RowTitle(title, titleSuffix)
+                if (!subtitle.isNullOrBlank()) {
+                    Text(
+                        subtitle,
+                        role = TextRole.Supporting,
+                        tone = subtitleTone,
+                        maxLines = subtitleMaxLines,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            },
+            trailing = { if (trailing != null) RowTrailing(trailing) },
+            leadingGap = KatariTheme.spacing.l,
+            trailingGap = KatariTheme.spacing.l,
+            below = { below?.invoke() },
+        )
+    }
+}
+
+/**
+ * The controls at a row's end, such as an indicator before a switch, set apart by one gap so no caller lays them out
+ * on its own.
+ */
+@Composable
+internal fun RowTrailing(content: @Composable () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        content()
+    }
+}
+
+@Composable
+internal fun RowFrame(
+    modifier: Modifier,
+    indent: Dp = KatariTheme.sizes.none,
+    enabled: Boolean,
+    role: Role?,
+    onClick: (() -> Unit)?,
+    onLongClick: (() -> Unit)?,
+    content: @Composable () -> Unit,
+) {
+    val density = LocalRowDensity.current
+    val clickable = onClick != null || onLongClick != null
+    val inDialog = LocalInDialog.current
+    val bleed = if (inDialog) KatariTheme.spacing.m else KatariTheme.sizes.none
+    Box(
+        modifier = Modifier
+            .then(
+                if (inDialog) {
+                    Modifier
+                        .padding(vertical = KatariTheme.spacing.xxs / 2)
+                        .bleed(bleed)
+                        .clip(KatariTheme.shapes.medium)
+                } else {
+                    Modifier
+                },
+            )
+            .then(modifier)
+            .then(
+                if (clickable) {
+                    Modifier.clickCursor(enabled).combinedClickable(
+                        enabled = enabled,
+                        role = role,
+                        onLongClick = onLongClick,
+                        onClick = { onClick?.invoke() },
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .fillMaxWidth()
+            .padding(horizontal = LocalRowInset.current + bleed, vertical = density.verticalPadding)
+            .padding(start = indent),
+    ) {
+        if (enabled) {
+            content()
+        } else {
+            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.disabledContent) { content() }
+        }
+    }
+}
+
+@Composable
+internal fun RowTitle(title: String, suffix: (@Composable () -> Unit)? = null) {
+    val role = LocalRowDensity.current.titleRole
+    if (suffix == null) {
+        Text(title, role = role)
+    } else {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, role = role)
+            suffix()
+        }
+    }
+}
+
+/** Fills a choice row while it is chosen, when it sits in a dialog; elsewhere its row group or control shows that. */
+@Composable
+internal fun Modifier.dialogSelectionFill(selected: Boolean): Modifier =
+    if (selected && LocalInDialog.current) background(SurfaceContainer.Selected) else this
+
+// Widens the element by [horizontal] on each side without taking more room in its parent.
+private fun Modifier.bleed(horizontal: Dp): Modifier = layout { measurable, constraints ->
+    val extra = horizontal.roundToPx() * 2
+    val placeable = measurable.measure(constraints.offset(horizontal = extra))
+    layout((placeable.width - extra).coerceAtLeast(0), placeable.height) {
+        placeable.place(-extra / 2, 0)
+    }
+}

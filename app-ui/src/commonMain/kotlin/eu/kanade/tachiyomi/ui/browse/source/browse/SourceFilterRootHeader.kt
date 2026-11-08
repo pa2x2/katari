@@ -9,13 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.content.TonedSpan
-import mihon.presentation.kit.content.TonedText
-import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.content.TonedSpan
+import app.katari.presentation.kit.content.TonedText
+import app.katari.presentation.kit.sheet.SheetHeader
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -4,15 +4,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.AutoStories
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.StoryBanner
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.AutoStories
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.content.Icon
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.surface.StoryBanner
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

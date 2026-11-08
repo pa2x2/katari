@@ -10,14 +10,14 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import androidx.preference.TwoStatePreference
+import app.katari.entry.interactions.source.EntrySourceSettingsPopulateResult
+import app.katari.entry.interactions.source.EntrySourceSettingsResolution
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
-import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import tachiyomi.core.common.util.system.logcat
 
 /**

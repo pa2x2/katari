@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.source.EntryChildWebViewAction
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBothEnginesFailedOverlay
@@ -15,7 +16,6 @@ import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
-import mihon.entry.interactions.source.EntryChildWebViewAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

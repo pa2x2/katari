@@ -5,6 +5,21 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.SurfaceViewOutput
+import app.katari.video.engine.spi.player.TextureViewOutput
+import app.katari.video.engine.spi.player.VideoOutput
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerCapabilities
+import app.katari.video.engine.spi.player.VideoPlayerError
+import app.katari.video.engine.spi.player.VideoPlayerEvent
+import app.katari.video.engine.spi.player.VideoPlayerListener
+import app.katari.video.engine.spi.player.VideoPlayerState
+import app.katari.video.engine.spi.player.VideoSize
+import app.katari.video.engine.spi.tracks.AudioTrackSelection
+import app.katari.video.engine.spi.tracks.TextTrackSelection
+import app.katari.video.engine.spi.tracks.VideoTrackSelection
+import app.katari.video.engine.spi.tracks.VideoTracks
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,21 +30,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.SurfaceViewOutput
-import mihon.video.engine.spi.player.TextureViewOutput
-import mihon.video.engine.spi.player.VideoOutput
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerCapabilities
-import mihon.video.engine.spi.player.VideoPlayerError
-import mihon.video.engine.spi.player.VideoPlayerEvent
-import mihon.video.engine.spi.player.VideoPlayerListener
-import mihon.video.engine.spi.player.VideoPlayerState
-import mihon.video.engine.spi.player.VideoSize
-import mihon.video.engine.spi.tracks.AudioTrackSelection
-import mihon.video.engine.spi.tracks.TextTrackSelection
-import mihon.video.engine.spi.tracks.VideoTrackSelection
-import mihon.video.engine.spi.tracks.VideoTracks
 
 /**
  * A Media3 [Player], ExoPlayer's, as a [VideoPlayer]. The state is taken from the player after each of its events and

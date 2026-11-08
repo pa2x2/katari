@@ -1,10 +1,10 @@
 package app.katari.sync.ui.question
 
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.SyncProblem
-import mihon.presentation.kit.surface.NoticeCard
-import mihon.presentation.kit.surface.NoticeTone
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.SyncProblem
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.ui.stats.recap
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.statistics.EntryStatisticsFeature
+import app.katari.profiles.core.ProfileStore
+import app.katari.ui.di.AppUiScope
 import coil3.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -25,9 +28,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import logcat.LogPriority
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.statistics.EntryStatisticsFeature
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat

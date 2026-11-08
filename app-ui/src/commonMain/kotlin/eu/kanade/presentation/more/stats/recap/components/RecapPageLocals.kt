@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.stats.recap.components
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import mihon.presentation.kit.theme.StoryPalette
+import app.katari.presentation.kit.theme.StoryPalette
 
 /** The colours of the page being drawn, for what the page draws itself rather than lays out as text. */
 internal val LocalRecapPalette = staticCompositionLocalOf<StoryPalette> { error("Provided by RecapPageFrame") }

@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.library
 
+import app.katari.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
+import app.katari.profiles.core.ProfileManager
+import app.katari.profiles.ui.ProfileUnlock
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.ui.ProfileUnlock
 import tachiyomi.domain.library.service.LibraryUpdateQueue
 
 /** Graph entry points of the library tab and the library update report. */

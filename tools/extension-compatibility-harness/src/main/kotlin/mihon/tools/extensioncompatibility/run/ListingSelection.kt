@@ -1,8 +1,8 @@
 package mihon.tools.extensioncompatibility.run
 
+import app.katari.desktop.extension.ExtensionHostGraph
 import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import eu.kanade.tachiyomi.extension.model.Extension
-import mihon.desktop.extension.ExtensionHostGraph
 import mihon.tools.extensioncompatibility.options.SmokeOptions
 import mihon.tools.extensioncompatibility.results.ExtensionResult
 import mihon.tools.extensioncompatibility.results.InstallMeasurements

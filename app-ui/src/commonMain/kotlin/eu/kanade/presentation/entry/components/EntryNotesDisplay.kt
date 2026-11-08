@@ -12,9 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import app.katari.presentation.kit.content.RichText
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import mihon.presentation.kit.content.RichText
 
 private val FADE_TIME = tween<Float>(500)
 

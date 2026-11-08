@@ -1,7 +1,7 @@
 package eu.kanade.domain.source.service
 
+import app.katari.domain.extension.model.ContentWarning
 import io.kotest.matchers.shouldBe
-import mihon.domain.extension.model.ContentWarning
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.InMemoryPreferenceStore.InMemoryPreference

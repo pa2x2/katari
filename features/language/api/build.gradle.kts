@@ -7,7 +7,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.language.api"
+        namespace = "app.katari.language.api"
     }
     desktop()
 }

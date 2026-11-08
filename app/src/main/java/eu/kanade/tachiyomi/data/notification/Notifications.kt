@@ -5,12 +5,12 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_DEFAULT
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
+import app.katari.entry.interactions.download.EntryDownloadNotifications
+import app.katari.entry.interactions.media.playback.VideoPlaybackNotifications
+import app.katari.entry.interactions.translate.EntryTranslateNotifications
+import app.katari.profiles.core.Profile
 import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
-import mihon.entry.interactions.download.EntryDownloadNotifications
-import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
-import mihon.entry.interactions.translate.EntryTranslateNotifications
-import mihon.feature.profiles.core.Profile
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -45,7 +45,7 @@ object Notifications {
 
     fun channelLibraryUpdates(profileId: Long) = "$CHANNEL_LIBRARY_UPDATES_PREFIX$profileId"
 
-    fun groupLibraryUpdates(profileId: Long) = "mihon.entry.library_updates.$profileId"
+    fun groupLibraryUpdates(profileId: Long) = "app.katari.entry.library_updates.$profileId"
 
     fun idLibraryUpdates(profileId: Long) = ID_LIBRARY_UPDATES_BASE - profileId.toInt()
 

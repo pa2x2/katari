@@ -8,12 +8,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
+import app.katari.presentation.kit.chip.FloatingChip
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.chip.FloatingChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 

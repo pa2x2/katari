@@ -1,0 +1,132 @@
+package app.katari.translation.spi.engine
+
+import app.katari.translation.api.engine.KnownTranslationEngine
+import app.katari.translation.api.engine.TranslationEngineId
+import app.katari.translation.api.language.TranslationLanguageSupportInspection
+import app.katari.translation.api.model.TranslationModelDescriptor
+import app.katari.translation.api.model.TranslationOperationProgress
+import app.katari.translation.api.preparation.TranslationSystemSetupReason
+import app.katari.translation.api.preparation.TranslationUnavailableReason
+import app.katari.translation.api.provider.TranslationProviderDisclosure
+import app.katari.translation.api.provider.TranslationProviderPresentation
+import app.katari.translation.api.request.ResolvedTranslationRoute
+
+/**
+ * Internal provider adapter. Platform and future engines implement this contract without becoming public API.
+ */
+interface TranslationEngine {
+    val catalogEntry: KnownTranslationEngine
+    val presentation: TranslationProviderPresentation
+    val maximumInputCodePoints: Int?
+
+    /** Request-independent device inspection. No text or language pair may be manufactured for this check. */
+    suspend fun inspectDevice(): TranslationEngineDeviceAvailability
+
+    /** Provider-owned language support inspection. No sample text may be sent to the provider. */
+    suspend fun inspectLanguageSupport(): TranslationLanguageSupportInspection
+
+    /** Readiness depends on the route only, so the same preparation serves every text translated along it. */
+    suspend fun prepare(route: ResolvedTranslationRoute): TranslationEnginePreparation
+
+    suspend fun revalidate(ready: ReadyTranslationEngineRequest): TranslationEnginePreparation
+
+    suspend fun translate(ready: ReadyTranslationEngineRequest, text: String): TranslationEngineExecution
+}
+
+sealed interface TranslationEngineDeviceAvailability {
+    data object Available : TranslationEngineDeviceAvailability
+
+    data object NotInstalled : TranslationEngineDeviceAvailability
+
+    data class ConfigurationRequired(
+        val reason: String,
+    ) : TranslationEngineDeviceAvailability {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+
+    data class UnsupportedOs(
+        val minimumApi: Int,
+    ) : TranslationEngineDeviceAvailability
+
+    data object ServiceMissing : TranslationEngineDeviceAvailability
+
+    data class Unavailable(
+        val reason: String? = null,
+    ) : TranslationEngineDeviceAvailability
+
+    data class Failed(
+        val reason: String,
+    ) : TranslationEngineDeviceAvailability {
+        init {
+            require(reason.isNotBlank())
+        }
+    }
+}
+
+/** Provider-owned opaque preparation state. Only the engine that produced it may execute it. */
+interface ReadyTranslationEngineRequest
+
+sealed interface TranslationEnginePreparation {
+    data class Ready(
+        val request: ReadyTranslationEngineRequest,
+    ) : TranslationEnginePreparation
+
+    data class ProviderDisclosureRequired(
+        val disclosure: TranslationProviderDisclosure,
+    ) : TranslationEngineRequirement
+
+    data class ModelDownloadRequired(
+        val models: List<TranslationModelDescriptor>,
+    ) : TranslationEngineRequirement {
+        init {
+            require(models.isNotEmpty())
+        }
+    }
+
+    data class SystemSetupRequired(
+        val reason: TranslationSystemSetupReason,
+    ) : TranslationEngineRequirement
+
+    data class SetupInProgress(
+        val progress: TranslationOperationProgress? = null,
+    ) : TranslationEngineRequirement
+
+    data class Unavailable(
+        val reason: TranslationUnavailableReason,
+    ) : TranslationEngineRequirement
+}
+
+/** Everything but [TranslationEnginePreparation.Ready]: what the user must resolve before the engine can run. */
+sealed interface TranslationEngineRequirement : TranslationEnginePreparation
+
+sealed interface TranslationEngineExecution {
+    data class Success(
+        val translatedText: String,
+    ) : TranslationEngineExecution {
+        init {
+            require(translatedText.isNotBlank())
+        }
+    }
+
+    data class PreparationChanged(
+        val preparation: TranslationEnginePreparation,
+    ) : TranslationEngineExecution
+
+    data object ProviderSurfaceOpened : TranslationEngineExecution
+
+    data class Failed(
+        val message: String? = null,
+    ) : TranslationEngineExecution
+}
+
+interface TranslationEngineRegistry {
+    val engines: List<TranslationEngine>
+
+    fun find(engine: TranslationEngineId): TranslationEngine?
+}
+
+interface KnownTranslationEngineCatalog {
+    val knownEngines: List<KnownTranslationEngine>
+}

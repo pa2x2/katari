@@ -1,8 +1,8 @@
 package eu.kanade.presentation.more.onboarding
 
 import androidx.compose.runtime.Composable
+import app.katari.core.common.platform.PlatformFacility
 import dev.icerock.moko.resources.StringResource
-import mihon.core.common.platform.PlatformFacility
 
 /**
  * The system permissions the first-run guide asks the user to grant, such as Android's to install extensions, post

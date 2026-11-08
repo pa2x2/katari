@@ -5,6 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import app.katari.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.tts.ui.playback.ShortFormSpeechFailure
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
@@ -32,11 +37,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.tts.ui.playback.ShortFormSpeechFailure
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext

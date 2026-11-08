@@ -1,16 +1,16 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.core.platform.clipboard.TextClipboard
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
+import app.katari.entry.interactions.settings.AnimePlayerPreferences
+import app.katari.entry.viewer.settings.ViewerSettingBinder
+import app.katari.video.engine.mpv.MpvVideoEngine
+import app.katari.video.engine.mpv.addon.MpvAddon
+import app.katari.video.engine.mpv.install.MpvAddonInstallation
+import app.katari.video.engine.spi.VideoEngine
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
-import mihon.core.platform.clipboard.TextClipboard
-import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
-import mihon.entry.interactions.settings.AnimePlayerPreferences
-import mihon.entry.viewer.settings.ViewerSettingBinder
-import mihon.video.engine.mpv.MpvVideoEngine
-import mihon.video.engine.mpv.addon.MpvAddon
-import mihon.video.engine.mpv.install.MpvAddonInstallation
-import mihon.video.engine.spi.VideoEngine
 
 /**
  * Graph entry point of the video player activity, which Android constructs. The player's dependencies are internal to

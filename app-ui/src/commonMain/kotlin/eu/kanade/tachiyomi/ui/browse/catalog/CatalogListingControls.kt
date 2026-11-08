@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.control.ConnectedToggleGroup
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.control.ConnectedToggleGroup
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

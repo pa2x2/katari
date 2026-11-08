@@ -10,11 +10,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.field.TextField
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.delay
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.field.TextField
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

@@ -1,6 +1,6 @@
 package eu.kanade.domain.source.service
 
-import mihon.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ContentWarning
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**

@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import app.katari.presentation.kit.feedback.LoadingScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -17,7 +18,6 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.feedback.LoadingScreen
 
 class GlobalSearchScreen(
     val searchQuery: String = "",

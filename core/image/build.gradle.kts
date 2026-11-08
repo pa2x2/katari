@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.core.image"
+        namespace = "app.katari.core.image"
     }
     desktop()
 

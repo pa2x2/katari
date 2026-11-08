@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category

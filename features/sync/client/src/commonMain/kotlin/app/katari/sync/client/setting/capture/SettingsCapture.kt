@@ -1,5 +1,9 @@
 package app.katari.sync.client.setting.capture
 
+import app.katari.profiles.core.PreferenceWrite
+import app.katari.profiles.core.ProfileStore
+import app.katari.profiles.sourcepreferences.SourcePreferenceFiles
+import app.katari.profiles.sourcepreferences.SourceSettingWrite
 import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
 import app.katari.sync.client.kind.setting.SourceSettingKind
@@ -16,10 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
-import mihon.feature.profiles.core.PreferenceWrite
-import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
-import mihon.feature.profiles.sourcepreferences.SourceSettingWrite
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 

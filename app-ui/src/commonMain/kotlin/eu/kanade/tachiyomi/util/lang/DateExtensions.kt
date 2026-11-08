@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.util.lang
 
+import app.katari.core.platform.PlatformContext
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
-import mihon.core.platform.PlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.pluralStringResource
 import tachiyomi.i18n.platform.stringResource

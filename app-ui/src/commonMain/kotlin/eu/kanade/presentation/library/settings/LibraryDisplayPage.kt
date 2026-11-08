@@ -2,13 +2,13 @@ package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import app.katari.presentation.kit.list.RowGroup
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.list.SliderRow
+import app.katari.presentation.kit.list.ToggleRow
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
-import mihon.presentation.kit.list.RowGroup
-import mihon.presentation.kit.list.RowGroupGap
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.SliderRow
-import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.domain.library.model.CoverSize

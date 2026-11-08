@@ -1,11 +1,11 @@
 package app.katari.sync.client
 
+import app.katari.core.platform.storage.AppPrivateDirectories
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.LocalFileStore
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.cache.CoverCacheDirectories
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption

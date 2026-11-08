@@ -13,17 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.progress.LinearProgressIndicator
+import app.katari.video.engine.mpv.addon.MpvAddon
+import app.katari.video.engine.mpv.install.MpvAddonInstallStatus
+import app.katari.video.engine.mpv.install.MpvAddonInstallation
+import app.katari.video.engine.mpv.install.describe
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
 import eu.kanade.tachiyomi.ui.video.player.engine.availability
 import eu.kanade.tachiyomi.ui.video.player.isOnline
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.video.engine.mpv.addon.MpvAddon
-import mihon.video.engine.mpv.install.MpvAddonInstallStatus
-import mihon.video.engine.mpv.install.MpvAddonInstallation
-import mihon.video.engine.mpv.install.describe
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

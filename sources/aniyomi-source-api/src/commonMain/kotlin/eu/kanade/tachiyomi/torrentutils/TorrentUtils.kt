@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.torrentutils
 
+import app.katari.aniyomi.runtime.TorrentUnsupportedException
 import eu.kanade.tachiyomi.torrentutils.model.TorrentInfo
-import mihon.aniyomi.runtime.TorrentUnsupportedException
 
 /**
  * Katari plays no torrents, so these calls always fail. They exist so that torrent extensions load and can be shown

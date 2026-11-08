@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
+import app.katari.entry.interactions.anime.stream.ResolvedStreamCache
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 
 internal interface VideoStreamResolver {
     /**

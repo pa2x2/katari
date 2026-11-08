@@ -1,17 +1,17 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
+import app.katari.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayerState
+import app.katari.video.engine.spi.tracks.TextTrackSelection
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTrack
+import app.katari.video.engine.spi.tracks.VideoTrackGroup
+import app.katari.video.engine.spi.tracks.VideoTracks
+import app.katari.video.engine.spi.tracks.subtitleChoiceKey
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
-import mihon.video.engine.spi.player.VideoPlayer
-import mihon.video.engine.spi.player.VideoPlayerState
-import mihon.video.engine.spi.tracks.TextTrackSelection
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTrack
-import mihon.video.engine.spi.tracks.VideoTrackGroup
-import mihon.video.engine.spi.tracks.VideoTracks
-import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import java.util.Locale
 
 internal fun VideoTracks.availableSubtitleTracks(

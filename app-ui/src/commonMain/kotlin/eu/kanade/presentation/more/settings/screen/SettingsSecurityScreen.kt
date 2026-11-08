@@ -4,12 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import app.katari.core.platform.currentPlatformContext
+import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.pluralStringResource

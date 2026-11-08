@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings
 
-import mihon.feature.profiles.core.ProfileStore
+import app.katari.profiles.core.ProfileStore
 
 /** Graph entry points of the settings framework, which every settings screen is built on. */
 interface PreferenceScreenGraph {

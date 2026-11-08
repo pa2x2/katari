@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import mihon.presentation.kit.feedback.StatusStrip
-import mihon.presentation.kit.feedback.StatusStripTone
+import app.katari.presentation.kit.feedback.StatusStrip
+import app.katari.presentation.kit.feedback.StatusStripTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -5,13 +5,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.list.SettingsRow
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

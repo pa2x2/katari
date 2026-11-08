@@ -3,11 +3,11 @@ package eu.kanade.presentation.library.update.report.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.RowGroupHeader
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
 import dev.icerock.moko.resources.StringResource
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** The header of one outcome of the report, with how many entries had it; [isError] marks failures. */

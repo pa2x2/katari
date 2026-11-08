@@ -6,7 +6,10 @@ import androidx.compose.runtime.remember
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.sync.ui.signin.SyncJoinOrigin
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.onboarding.OnboardingScreen
@@ -14,9 +17,6 @@ import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.collectAsState
 

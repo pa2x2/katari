@@ -8,12 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEachIndexed
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.RowGroupGap
 import kotlin.time.Duration.Companion.seconds
 
 /**

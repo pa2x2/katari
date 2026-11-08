@@ -1,6 +1,6 @@
 package app.katari.sync.client.trigger
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 

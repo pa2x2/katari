@@ -1,0 +1,23 @@
+package app.katari.entry.interactions.child
+
+import kotlinx.coroutines.flow.Flow
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+
+interface EntryChildListInteraction {
+    fun sortedForReading(entry: Entry, chapters: List<EntryChapter>, memberIds: List<Long>): List<EntryChapter>
+    fun sortedForDisplay(entry: Entry, chapters: List<EntryChapter>, memberIds: List<Long>): List<EntryChapter>
+}
+
+interface EntryChildProgressInteraction {
+    fun progressLabels(request: EntryChildProgressRequest): Flow<Map<Long, EntryChildProgressLabel>>
+}
+
+fun interface EntryMissingChildGapInteraction {
+    fun buildDisplayList(request: EntryChildListRequest): EntryChildListDisplay
+}
+
+interface EntryScanlatorFilterInteraction {
+    fun scanlatorFor(entry: Entry, chapter: EntryChapter): String?
+    fun normalizeScanlator(entry: Entry, scanlator: String): String?
+}

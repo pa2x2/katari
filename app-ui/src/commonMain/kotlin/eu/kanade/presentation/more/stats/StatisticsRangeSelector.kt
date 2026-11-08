@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.stats
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.control.SegmentedButtons
 import eu.kanade.presentation.more.stats.data.StatsRange
-import mihon.presentation.kit.control.SegmentedButtons
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

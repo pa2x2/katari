@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.home.navigation
 
-import mihon.app.ui.di.AppUiGraph
-import mihon.core.common.HomeScreenTabs
+import app.katari.core.common.HomeScreenTabs
+import app.katari.ui.di.AppUiGraph
 
 /**
  * The home tabs whose feature this platform doesn't offer: the navigation leaves them out, whatever the profile's tab

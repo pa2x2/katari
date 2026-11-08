@@ -11,8 +11,8 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.unit.ColorProvider
-import mihon.presentation.kit.widget.WidgetMetrics
-import mihon.presentation.kit.widget.widgetNoteStyle
+import app.katari.presentation.kit.widget.WidgetMetrics
+import app.katari.presentation.kit.widget.widgetNoteStyle
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource

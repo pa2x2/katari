@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
+import app.katari.video.engine.spi.player.SubtitleAnchored
+import app.katari.video.engine.spi.player.SubtitleCue
+import app.katari.video.engine.spi.player.SubtitleLine
 import io.kotest.matchers.shouldBe
-import mihon.video.engine.spi.player.SubtitleAnchored
-import mihon.video.engine.spi.player.SubtitleCue
-import mihon.video.engine.spi.player.SubtitleLine
 import org.junit.jupiter.api.Test
 
 class VideoSubtitlePlacementTest {

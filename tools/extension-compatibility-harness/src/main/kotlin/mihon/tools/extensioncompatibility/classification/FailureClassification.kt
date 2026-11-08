@@ -1,13 +1,13 @@
 package mihon.tools.extensioncompatibility.classification
 
+import app.katari.core.common.web.ChallengeUnsolved
+import app.katari.core.common.web.ChallengeUnsolvedException
+import app.katari.extension.runtime.jvm.conversion.DexConversionException
+import app.katari.extension.runtime.jvm.conversion.unconvertedMethodOf
+import app.katari.extension.runtime.jvm.diagnostics.PlatformGaps
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.network.HttpException
-import mihon.core.common.web.ChallengeUnsolved
-import mihon.core.common.web.ChallengeUnsolvedException
-import mihon.extension.runtime.jvm.conversion.DexConversionException
-import mihon.extension.runtime.jvm.conversion.unconvertedMethodOf
-import mihon.extension.runtime.jvm.diagnostics.PlatformGaps
 import mihon.tools.extensioncompatibility.results.Outcome
 import mihon.tools.extensioncompatibility.results.OutcomeKind
 import java.io.InterruptedIOException

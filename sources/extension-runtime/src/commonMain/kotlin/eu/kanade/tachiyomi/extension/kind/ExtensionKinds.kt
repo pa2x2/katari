@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.kind
 
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -11,7 +12,6 @@ import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
 import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import eu.kanade.tachiyomi.source.lnreader.LnReaderSourceFactory
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 

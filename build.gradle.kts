@@ -303,7 +303,7 @@ val verifyEntrySourceApiAbi40 = registerEntrySdkAbiCheck(
     taskName = "verifyEntrySourceApiAbi40",
     baseline = "entry-source-api-sdk-4.0.0",
     baselineLabel = "Entry SDK 4.0.0 entry-source-api",
-    expectedSha256Value = "4fb4e2059477cb20c82bfc3863d8e56655caaa577cd321493a48bd99025b3ef2",
+    expectedSha256Value = "f628ee7b88a6ab6efe377cafb72811fd069617a8ef4a5580f7b7aa669fb152b6",
     includedElements = listOf("eu.kanade.tachiyomi.source.entry.*"),
 )
 val verifyBookApiAbi40 = registerEntrySdkAbiCheck(
@@ -319,7 +319,7 @@ val verifyCoreCommonAbi40 = registerEntrySdkAbiCheck(
     taskName = "verifyCoreCommonAbi40",
     baseline = "core-common-sdk-4.0.0",
     baselineLabel = "Entry SDK 4.0.0 core-common",
-    expectedSha256Value = "5069ee4e0aed4653f7217e97e007e917e30d8a43d0fb105d4cbd951c555a9b47",
+    expectedSha256Value = "e79a4ebce2500e2bc169e7593396f2c21971b5c6e0409869640590e055b50802",
     includedElements = listOf(
         "eu.kanade.tachiyomi.network.*",
         "eu.kanade.tachiyomi.util.*",

@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
+import app.katari.entry.interactions.persistence.backup.EntryBackupFeature
+import app.katari.entry.interactions.persistence.backup.EntryBackupSelection
+import app.katari.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupActivityCompletion
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySegment
@@ -10,9 +13,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.applyLegacyFeatureStateProjection
 import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
-import mihon.entry.interactions.persistence.backup.EntryBackupFeature
-import mihon.entry.interactions.persistence.backup.EntryBackupSelection
-import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.GetHistoryByEntryIds

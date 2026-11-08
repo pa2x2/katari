@@ -2,16 +2,16 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.ToggleRow
+import app.katari.presentation.kit.list.rowGroupItems
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
 import eu.kanade.presentation.browse.components.FilterSectionHeading
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilterState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.ToggleRow
-import mihon.presentation.kit.list.rowGroupItems
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.script.runtime"
+        namespace = "app.katari.script.runtime"
 
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }

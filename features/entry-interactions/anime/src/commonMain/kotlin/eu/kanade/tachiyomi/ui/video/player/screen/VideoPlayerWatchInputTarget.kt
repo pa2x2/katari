@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
@@ -16,7 +17,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.steppedPlaybackSpeed
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**

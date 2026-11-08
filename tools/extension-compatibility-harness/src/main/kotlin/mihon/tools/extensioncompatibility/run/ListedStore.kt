@@ -1,10 +1,10 @@
 package mihon.tools.extensioncompatibility.run
 
+import app.katari.desktop.extension.ExtensionHostGraph
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import mihon.desktop.extension.ExtensionHostGraph
-import mihon.domain.extension.model.ExtensionStore
 import kotlin.time.Duration.Companion.seconds
 
 /** A store of the list as the host read it: its listings, or why it couldn't be read. */

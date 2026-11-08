@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import mihon.language.api.tag.LanguageTag
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.translation.ui.picker.language.TranslationLanguagePickerList
-import mihon.translation.ui.picker.language.translationLanguageOptionsOf
+import app.katari.language.api.tag.LanguageTag
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.translation.ui.picker.language.TranslationLanguagePickerList
+import app.katari.translation.ui.picker.language.translationLanguageOptionsOf
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

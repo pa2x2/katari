@@ -20,6 +20,8 @@ import androidx.glance.background
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.unit.ColorProvider
+import app.katari.core.metro.metroGraph
+import app.katari.presentation.kit.widget.WidgetMetrics
 import coil3.annotation.ExperimentalCoilApi
 import coil3.asDrawable
 import coil3.imageLoader
@@ -36,8 +38,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
-import mihon.core.metro.metroGraph
-import mihon.presentation.kit.widget.WidgetMetrics
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.presentation.widget.components.LockedWidget

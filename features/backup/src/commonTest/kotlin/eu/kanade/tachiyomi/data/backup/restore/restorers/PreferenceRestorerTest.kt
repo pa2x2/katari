@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.restore.restorers
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.profiles.core.ProfileStore
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BooleanPreferenceValue
@@ -7,8 +9,6 @@ import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.domain.extension.model.ContentWarning
-import mihon.feature.profiles.core.ProfileStore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test

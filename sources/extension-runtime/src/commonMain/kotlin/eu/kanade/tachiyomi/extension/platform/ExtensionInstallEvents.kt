@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.extension.platform
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 
 /**
  * The extensions added, replaced or removed: the platform's packages, and the app's own private copies and file

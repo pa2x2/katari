@@ -6,6 +6,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.presentation.kit.layout.ScreenFrame
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -23,8 +25,6 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.layout.ScreenFrame
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState

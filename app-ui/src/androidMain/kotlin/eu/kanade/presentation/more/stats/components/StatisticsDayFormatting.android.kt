@@ -1,7 +1,7 @@
 package eu.kanade.presentation.more.stats.components
 
 import android.text.format.DateUtils
-import mihon.core.platform.PlatformContext
+import app.katari.core.platform.PlatformContext
 import java.time.LocalDate
 import java.time.ZoneId
 

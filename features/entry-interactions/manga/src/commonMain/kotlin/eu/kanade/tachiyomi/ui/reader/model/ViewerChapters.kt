@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
-import mihon.entry.interactions.viewer.EntryChildTransition
-import mihon.entry.interactions.viewer.EntryChildWindow
-import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
+import app.katari.entry.interactions.viewer.EntryChildTransition
+import app.katari.entry.interactions.viewer.EntryChildWindow
+import app.katari.entry.interactions.viewer.entryChildTransitionItemAtAnchor
 
 internal typealias ViewerChapters = EntryChildWindow<ReaderChapter>
 

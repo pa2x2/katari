@@ -14,7 +14,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import mihon.entry.interactions.download.EntryDownloadQueueGroup
+import app.katari.entry.interactions.download.EntryDownloadQueueGroup
 
 /*
  * A dragged download can only be dropped within its source's card, so neither the drag's auto-scroll nor the row

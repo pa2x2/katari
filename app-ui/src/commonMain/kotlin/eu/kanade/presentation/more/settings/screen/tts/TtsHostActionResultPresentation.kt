@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen.tts
 
-import mihon.core.platform.PlatformContext
-import mihon.presentation.kit.feedback.ScreenMessages
-import mihon.tts.api.host.TtsHostActionResult
-import mihon.tts.api.host.TtsSetupDestination
+import app.katari.core.platform.PlatformContext
+import app.katari.presentation.kit.feedback.ScreenMessages
+import app.katari.tts.api.host.TtsHostActionResult
+import app.katari.tts.api.host.TtsSetupDestination
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 

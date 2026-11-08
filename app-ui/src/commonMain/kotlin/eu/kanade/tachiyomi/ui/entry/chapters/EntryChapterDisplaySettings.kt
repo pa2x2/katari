@@ -1,5 +1,10 @@
 package eu.kanade.tachiyomi.ui.entry.chapters
 
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.child.EntryScanlatorFilterFeature
+import app.katari.entry.interactions.child.EntryScanlatorFilterScope
+import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
+import app.katari.presentation.kit.feedback.SnackbarHostState
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -7,11 +12,6 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.ui.entry.EntryStateAccess
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.child.EntryScanlatorFilterFeature
-import mihon.entry.interactions.child.EntryScanlatorFilterScope
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable

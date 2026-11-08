@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.translation.spi"
+        namespace = "app.katari.translation.spi"
     }
     desktop()
 

@@ -1,0 +1,60 @@
+package app.katari.entry.interactions.book.format.epub.preparation
+
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourceGroup
+import app.katari.book.api.BookContentResourcePage
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCapability
+import app.katari.entry.interactions.book.content.BookByteRange
+import app.katari.entry.interactions.book.content.BookContentSession
+import app.katari.entry.interactions.book.content.BookLinkedResourceKind
+import app.katari.entry.interactions.book.content.MaterializedBookResource
+import app.katari.entry.interactions.book.content.OpenedBookResource
+import app.katari.entry.interactions.book.format.epub.EpubContract
+import java.io.File
+
+internal class EpubContentSessionFixture(
+    private val file: File,
+) : BookContentSession {
+    private val resource = BookContentResource(
+        id = "book.epub",
+        mediaType = EpubContract.FORMAT,
+        size = file.length(),
+        revision = "resource-revision",
+        availability = BookResourceAvailability.AVAILABLE,
+        capabilities = setOf(BookResourceCapability.MATERIALIZE),
+    )
+    override val descriptor = BookContentDescriptor(EpubContract.FORMAT)
+    override val publicationId = "publication"
+    override val revision = "publication-revision"
+    override val catalogRevision: String? = null
+    override val catalogCoverage = BookCatalogCoverage.COMPLETE
+    override val resourceHierarchy: List<BookContentResourceGroup> = emptyList()
+    override val primaryResourceIds = listOf(resource.id)
+
+    override suspend fun listResources(cursor: String?, limit: Int) =
+        Result.success(BookContentResourcePage(listOf(resource)))
+
+    override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? =
+        error("EPUB documents resolve images and fonts against their own package")
+
+    override suspend fun getResource(resourceId: String) = Result.success(resource)
+
+    override suspend fun openResource(resourceId: String, range: BookByteRange?): Result<OpenedBookResource> =
+        error("The EPUB preparer must materialize its primary resource")
+
+    override suspend fun materializeResource(
+        resourceId: String,
+        onProgress: (bytesRead: Long, totalBytes: Long?) -> Unit,
+    ): Result<MaterializedBookResource> = Result.success(
+        object : MaterializedBookResource {
+            override val metadata = resource
+            override val file = this@EpubContentSessionFixture.file
+            override fun close() = Unit
+        },
+    )
+
+    override fun close() = Unit
+}

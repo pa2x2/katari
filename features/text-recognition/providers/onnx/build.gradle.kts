@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.text.recognition.provider.onnx"
+    namespace = "app.katari.text.recognition.provider.onnx"
 
     defaultConfig {
         consumerProguardFiles("consumer-proguard.pro")

@@ -1,5 +1,8 @@
 package eu.kanade.tachiyomi.extension.store
 
+import app.katari.domain.extension.model.ContentWarning
+import app.katari.domain.extension.model.ExtensionStore
+import app.katari.domain.extension.model.ExtensionStoreFormat
 import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -8,9 +11,6 @@ import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
-import mihon.domain.extension.model.ExtensionStoreFormat
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind

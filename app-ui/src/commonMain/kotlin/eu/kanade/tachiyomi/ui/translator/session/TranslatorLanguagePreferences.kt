@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.translator.session
 
-import mihon.language.api.tag.LanguageTag
-import mihon.translation.api.request.TranslationSourceLanguageSelection
-import mihon.translation.api.request.TranslationTargetLanguageSelection
+import app.katari.language.api.tag.LanguageTag
+import app.katari.translation.api.request.TranslationSourceLanguageSelection
+import app.katari.translation.api.request.TranslationTargetLanguageSelection
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 

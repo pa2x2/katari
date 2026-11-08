@@ -3,11 +3,11 @@ package eu.kanade.tachiyomi.ui.video.player.introtimes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.interactions.anime.introtimes.OnlineMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
 import kotlinx.coroutines.flow.first
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.entry.interactions.anime.introtimes.OnlineMarker
 
 /**
  * The services the playing episode's times are looked up with: those turned on, while the setting is and its source

@@ -1,0 +1,37 @@
+package app.katari.upgrade
+
+import app.katari.domain.extension.repository.ExtensionStoreRepository
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileStore
+import eu.kanade.domain.base.InstallationPreferences
+import eu.kanade.domain.source.service.GlobalSourcePreferences
+import tachiyomi.core.common.preference.PlatformPreferenceFiles
+import tachiyomi.domain.backup.service.BackupCreateSchedule
+import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.category.repository.CategoryRepository
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
+import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
+
+/**
+ * What the app version migrations read from the graph. Members are resolved when a migration reads them, so startup
+ * pays only for what the pending migrations use.
+ */
+interface MigrationGraph {
+    val installationPreferences: InstallationPreferences
+    val globalSourcePreferences: GlobalSourcePreferences
+    val libraryPreferences: LibraryPreferences
+    val downloadPreferences: DownloadPreferences
+    val profileStore: ProfileStore
+    val profileDatabase: ProfileDatabase
+    val preferenceFiles: PlatformPreferenceFiles
+    val getCategories: GetCategories
+    val categoryRepository: CategoryRepository
+    val libraryUpdateRulesRepository: LibraryUpdateRulesRepository
+    val extensionStoreRepository: ExtensionStoreRepository
+    val libraryUpdateSchedule: LibraryUpdateSchedule
+    val backupCreateSchedule: BackupCreateSchedule
+    val statisticsRecapSchedule: StatisticsRecapSchedule
+}

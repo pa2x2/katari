@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.anime.introtimes.OnlineMarker
+import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBarReach
@@ -20,8 +22,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
-import mihon.entry.interactions.anime.introtimes.OnlineMarker
-import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**

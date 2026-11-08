@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import androidx.compose.runtime.Immutable
-import mihon.entry.interactions.anime.state.lastWatchedAt
-import mihon.entry.interactions.anime.state.positionMs
-import mihon.entry.interactions.child.EntryChildListFeature
-import mihon.entry.interactions.child.EntryChildListRequest
-import mihon.entry.interactions.child.EntryChildListResult
-import mihon.entry.interactions.child.EntryChildListRow
+import app.katari.entry.interactions.anime.state.lastWatchedAt
+import app.katari.entry.interactions.anime.state.positionMs
+import app.katari.entry.interactions.child.EntryChildListFeature
+import app.katari.entry.interactions.child.EntryChildListRequest
+import app.katari.entry.interactions.child.EntryChildListResult
+import app.katari.entry.interactions.child.EntryChildListRow
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

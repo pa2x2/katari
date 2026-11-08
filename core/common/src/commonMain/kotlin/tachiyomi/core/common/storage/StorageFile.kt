@@ -1,6 +1,6 @@
 package tachiyomi.core.common.storage
 
-import mihon.core.common.platform.PlatformFacility
+import app.katari.core.common.platform.PlatformFacility
 import java.io.InputStream
 import java.io.OutputStream
 

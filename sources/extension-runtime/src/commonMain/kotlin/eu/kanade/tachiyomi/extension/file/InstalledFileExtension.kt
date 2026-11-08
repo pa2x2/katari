@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.extension.file
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.tachiyomi.extension.model.fileExtensionPkgName
 import kotlinx.serialization.Serializable
-import mihon.domain.extension.model.ContentWarning
 import java.io.File
 
 /** A file extension as installed: its [manifest] and the folder of the version it names. */

@@ -15,19 +15,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.field.AutocompleteTextField
+import app.katari.presentation.kit.list.currentRowInset
+import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldClearButton
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterFieldKeyboardOptions
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.filterFieldKeyboardActions
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.field.AutocompleteTextField
-import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

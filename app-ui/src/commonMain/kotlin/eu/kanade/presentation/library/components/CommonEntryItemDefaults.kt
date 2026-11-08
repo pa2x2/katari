@@ -1,7 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.ui.unit.Dp
-import mihon.presentation.kit.theme.KatariSpacing
+import app.katari.presentation.kit.theme.KatariSpacing
 
 object CommonEntryItemDefaults {
     val GridHorizontalSpacer: Dp = KatariSpacing.xs

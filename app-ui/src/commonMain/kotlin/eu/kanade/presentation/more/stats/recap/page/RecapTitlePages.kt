@@ -12,6 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import app.katari.presentation.kit.content.StoryMetrics
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.RecapCover
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
@@ -25,10 +29,6 @@ import eu.kanade.presentation.more.stats.recap.motion.recapReveal
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
 import eu.kanade.tachiyomi.ui.stats.recap.story.TopTitleMoment
-import mihon.presentation.kit.content.StoryMetrics
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

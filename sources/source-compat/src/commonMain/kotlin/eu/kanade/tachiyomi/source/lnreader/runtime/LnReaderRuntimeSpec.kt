@@ -1,13 +1,13 @@
 package eu.kanade.tachiyomi.source.lnreader.runtime
 
+import app.katari.script.runtime.ScriptLimits
+import app.katari.script.runtime.ScriptNetwork
+import app.katari.script.runtime.ScriptRuntimeSpec
+import app.katari.script.runtime.ScriptSource
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.source.lnreader.runtime.storage.LnReaderStorage
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import mihon.script.runtime.ScriptLimits
-import mihon.script.runtime.ScriptNetwork
-import mihon.script.runtime.ScriptRuntimeSpec
-import mihon.script.runtime.ScriptSource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import java.nio.charset.Charset
 import java.util.Locale

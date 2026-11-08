@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.core.archive"
+        namespace = "app.katari.core.archive"
     }
     desktop()
 

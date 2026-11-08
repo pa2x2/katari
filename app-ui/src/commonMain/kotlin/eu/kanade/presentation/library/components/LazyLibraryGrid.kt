@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.util.plus
 

@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.chip.FloatingChip
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
+import app.katari.presentation.kit.chip.FloatingChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

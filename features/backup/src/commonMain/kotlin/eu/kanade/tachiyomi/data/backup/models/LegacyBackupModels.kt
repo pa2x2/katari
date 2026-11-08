@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import app.katari.core.common.extensions.JsonObjectEmptyBytes
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import mihon.core.common.extensions.JsonObjectEmptyBytes
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.EntryStatus
 
@@ -58,7 +58,7 @@ data class LegacyBackupChapter(
     @ProtoNumber(10) var sourceOrder: Long = 0,
     // @ProtoNumber(11) var lastModifiedAt: Long, part of the sync scaffold inherited from Mihon
     // @ProtoNumber(12) var version: Long, part of the sync scaffold inherited from Mihon
-    @ProtoNumber(13) var memo: ByteArray = mihon.core.common.extensions.JsonObjectEmptyBytes,
+    @ProtoNumber(13) var memo: ByteArray = app.katari.core.common.extensions.JsonObjectEmptyBytes,
 )
 
 @Serializable

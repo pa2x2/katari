@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.tts.runtime"
+        namespace = "app.katari.tts.runtime"
 
         withHostTest { }
     }

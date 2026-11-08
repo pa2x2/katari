@@ -2,8 +2,8 @@
 
 package eu.kanade.tachiyomi.data.database.models
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 internal class ChapterImpl : Chapter {
 

@@ -33,6 +33,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
+import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.interactions.anime.introtimes.OnlineMarker
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
@@ -42,13 +49,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
-import mihon.entry.interactions.anime.introtimes.IntroTimesService
-import mihon.entry.interactions.anime.introtimes.OnlineMarker
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewResolution
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState

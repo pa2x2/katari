@@ -5,10 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import app.katari.presentation.kit.pointer.LocalAppPointerPresence
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
-import mihon.presentation.kit.pointer.LocalAppPointerPresence
 
 internal const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 

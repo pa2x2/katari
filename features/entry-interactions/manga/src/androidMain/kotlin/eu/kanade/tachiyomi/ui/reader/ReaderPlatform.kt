@@ -9,14 +9,14 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationManagerCompat
+import app.katari.core.metro.metroGraph
+import app.katari.entry.interactions.reader.settings.ReaderBasePreferences
+import app.katari.entry.interactions.runtime.EntryInteractionActivityGraph
+import app.katari.entry.interactions.runtime.registerEntryInteractionSecureScreen
+import app.katari.entry.interactions.runtime.setEntryInteractionContent
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import mihon.core.metro.metroGraph
-import mihon.entry.interactions.reader.settings.ReaderBasePreferences
-import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
-import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
-import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import com.google.android.material.R as MaterialR

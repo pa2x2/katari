@@ -5,6 +5,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.platform.currentPlatformContext
+import app.katari.entry.interactions.navigation.EntryContinueResult
+import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -23,10 +27,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.platform.currentPlatformContext
-import mihon.entry.interactions.navigation.EntryContinueResult
-import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.stringResource

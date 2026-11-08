@@ -3,6 +3,7 @@ package app.katari.sync.ui.question
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.sync.client.question.Questions
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import mihon.app.di.AppUiScope
 
 /** The question an open entry's screen shows as a banner, if one waits about it. */
 @AssistedInject

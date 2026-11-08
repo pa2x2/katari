@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.source.entry
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 /**
  * Default mutable implementation returned by [SEntry.create].

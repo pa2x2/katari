@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.chapters
 
 import androidx.compose.runtime.Immutable
-import mihon.entry.interactions.download.EntryDownloadState
+import app.katari.entry.interactions.download.EntryDownloadState
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

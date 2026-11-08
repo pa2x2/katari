@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.feedback.EmptyScreen
-import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.navigation.AppBar
-import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.tts.ui.settings.TtsVoiceCatalogState
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.navigation.AppBar
+import app.katari.presentation.kit.navigation.Scaffold
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.tts.ui.settings.TtsVoiceCatalogState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

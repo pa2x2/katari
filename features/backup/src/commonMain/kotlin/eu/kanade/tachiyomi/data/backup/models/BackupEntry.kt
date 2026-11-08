@@ -1,12 +1,12 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import app.katari.core.common.extensions.JsonObjectEmptyBytes
+import app.katari.entry.interactions.state.EntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import mihon.core.common.extensions.JsonObjectEmptyBytes
-import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator

@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.settings.screen.debug
 
 import android.os.Build
 import androidx.profileinstaller.ProfileVerifier
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.CrashLogUtil
@@ -9,7 +10,6 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.withContext
-import mihon.core.platform.PlatformContext
 import tachiyomi.domain.storage.DocumentUri
 
 /** Logcat, the device's build facts, ART's profile verification and WorkManager's work list. */

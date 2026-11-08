@@ -11,11 +11,11 @@ import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import app.katari.video.engine.spi.player.VideoPlayer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
-import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 

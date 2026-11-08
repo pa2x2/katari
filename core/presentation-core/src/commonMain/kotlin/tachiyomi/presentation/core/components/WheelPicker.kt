@@ -43,12 +43,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import app.katari.presentation.kit.shortcut.typingFocus
+import app.katari.presentation.kit.theme.KatariTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.shortcut.typingFocus
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.clickableNoIndication
 import tachiyomi.presentation.core.util.showSoftKeyboard

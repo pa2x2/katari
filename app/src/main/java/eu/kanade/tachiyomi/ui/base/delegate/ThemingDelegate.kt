@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.base.delegate
 
 import android.app.Activity
+import app.katari.android.di.appGraph
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.tachiyomi.R
-import mihon.app.di.appGraph
 
 interface ThemingDelegate {
     fun applyAppTheme(activity: Activity)

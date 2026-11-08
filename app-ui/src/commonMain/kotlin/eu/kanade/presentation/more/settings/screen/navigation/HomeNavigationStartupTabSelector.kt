@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
 import androidx.compose.runtime.Composable
+import app.katari.core.common.homeScreenContentTabOrder
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
-import mihon.core.common.homeScreenContentTabOrder
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,7 +1,7 @@
 package xyz.nulldev.androidcompat.info
 
 import android.content.pm.ApplicationInfo
-import mihon.extension.compat.AndroidCompatEnvironment
+import app.katari.extension.compat.AndroidCompatEnvironment
 
 class ApplicationInfoImpl(
     environment: AndroidCompatEnvironment,

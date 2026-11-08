@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.source.EntryChildWebViewAction
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
@@ -34,8 +36,6 @@ import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
-import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource

@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.viewer.chrome.ui.mode.ReaderReadingModeDialog
+import app.katari.presentation.kit.theme.KatariPreviewTheme
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
-import mihon.entry.interactions.reader.settings.ReadingMode
-import mihon.entry.viewer.chrome.ui.mode.ReaderReadingModeDialog
-import mihon.presentation.kit.theme.KatariPreviewTheme
 
 private val ReadingModesWithoutDefault = ReadingMode.entries - ReadingMode.DEFAULT
 

@@ -2,8 +2,8 @@
 
 package eu.kanade.tachiyomi.source.model
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 class SMangaImpl : SManga {
 

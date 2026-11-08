@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.translation.runtime"
+        namespace = "app.katari.translation.runtime"
         // The Android robot of the system engine is an Android resource.
         androidResources {
             enable = true

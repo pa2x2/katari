@@ -1,6 +1,6 @@
 package tachiyomi.source.local.metadata
 
-import mihon.core.archive.EpubReader
+import app.katari.core.archive.EpubReader
 import tachiyomi.source.local.LocalEntryChapterMetadata
 import tachiyomi.source.local.LocalEntryMetadata
 import java.text.ParseException

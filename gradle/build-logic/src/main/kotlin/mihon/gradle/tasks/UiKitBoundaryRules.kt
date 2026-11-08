@@ -120,8 +120,8 @@ private val UI_KIT_RULES = listOf(
         Regex("""\.copy\(\s*alpha\s*=|\balpha\s*\(\s*0?\.\d|\balpha\s*=\s*0?\.\d"""),
     ),
     UiKitRule(
-        "Pagers come from mihon.presentation.kit.pager, which turns one page for a wheel notch or a touchpad swipe; " +
-            UI_KIT_SKILL,
+        "Pagers come from app.katari.presentation.kit.pager, which turns one page for a wheel notch or a touchpad " +
+            "swipe; $UI_KIT_SKILL",
         Regex("""\bandroidx\.compose\.foundation\.pager\.(HorizontalPager|VerticalPager)\b"""),
         // Readers turn their own pages from the wheel, through zoom and across chapters
         accept = { _, facts -> !facts.relativePath.startsWith("features/entry-interactions/") },

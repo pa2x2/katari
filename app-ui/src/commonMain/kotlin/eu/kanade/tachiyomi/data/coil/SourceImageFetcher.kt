@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.coil
 
+import app.katari.entry.interactions.source.EntryCoverNetworkFeature
+import app.katari.entry.interactions.source.EntryCoverNetworkResolution
 import coil3.Extras
 import coil3.ImageLoader
 import coil3.fetch.Fetcher
@@ -9,8 +11,6 @@ import coil3.network.httpHeaders
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.Options
 import coil3.toUri
-import mihon.entry.interactions.source.EntryCoverNetworkFeature
-import mihon.entry.interactions.source.EntryCoverNetworkResolution
 import okhttp3.Call
 
 /**

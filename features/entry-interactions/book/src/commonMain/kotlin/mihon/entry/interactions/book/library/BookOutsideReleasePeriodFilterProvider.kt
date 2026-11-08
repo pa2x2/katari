@@ -1,5 +1,0 @@
-package mihon.entry.interactions.book.library
-
-import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
-
-internal class BookOutsideReleasePeriodFilterProvider : EntryOutsideReleasePeriodFilterProvider

@@ -6,12 +6,12 @@ import android.os.Build
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import app.katari.android.di.appGraph
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.library.queue.WorkChainLibraryUpdateQueue
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import mihon.app.di.appGraph
 
 /** One update of the [AndroidLibraryUpdateWorkChain], which runs its [LibraryUpdateRun] in the foreground. */
 class LibraryUpdateJob(private val context: Context, workerParams: WorkerParameters) :

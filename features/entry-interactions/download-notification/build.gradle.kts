@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "mihon.entry.interactions.download.notification"
+    namespace = "app.katari.entry.interactions.download.notification"
 }
 
 dependencies {

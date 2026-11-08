@@ -33,6 +33,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
+import app.katari.entry.viewer.chrome.ui.tap.ReaderTapAction
+import app.katari.entry.viewer.chrome.ui.tap.readerTapAction
+import app.katari.presentation.kit.layout.PageStrip
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.reader.ChapterTransitionPlacement
 import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -45,10 +49,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.tap.FollowTapZoneSettings
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.hidesTapZones
 import kotlinx.coroutines.launch
-import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
-import mihon.entry.viewer.chrome.ui.tap.readerTapAction
-import mihon.presentation.kit.layout.PageStrip
-import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.roundToInt
 
 /**

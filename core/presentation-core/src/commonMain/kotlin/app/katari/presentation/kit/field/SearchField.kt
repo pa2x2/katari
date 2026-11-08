@@ -1,0 +1,59 @@
+package app.katari.presentation.kit.field
+
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.ImeAction
+import app.katari.presentation.kit.shortcut.typingFocus
+import app.katari.presentation.kit.theme.KatariTheme
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/** A search field for filtering a list or picker, drawn like the search field of a SearchToolbar. */
+@Composable
+fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    onSearch: (() -> Unit)? = null,
+) {
+    val state = rememberQueryTextFieldState(query, onQueryChange)
+    SearchField(state = state, placeholder = placeholder, modifier = modifier, onSearch = onSearch)
+}
+
+/**
+ * A search field over a [state] the caller owns, for a query that is only run on demand, such as a search screen's
+ * query field in its app bar. The keyboard's search key runs [onSearch].
+ */
+@Composable
+fun SearchField(
+    state: TextFieldState,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    onSearch: (() -> Unit)? = null,
+) {
+    BasicTextField(
+        state = state,
+        modifier = modifier.typingFocus(),
+        textStyle = searchFieldTextStyle(),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        onKeyboardAction = { onSearch?.invoke() },
+        lineLimits = TextFieldLineLimits.SingleLine,
+        cursorBrush = SolidColor(KatariTheme.colors.onSurface),
+        decorator = { innerTextField ->
+            SearchFieldFrame(
+                query = state.text.toString(),
+                placeholder = placeholder,
+                clearLabel = stringResource(MR.strings.action_clear),
+                onClear = { state.clearText() },
+                innerTextField = innerTextField,
+            )
+        },
+    )
+}

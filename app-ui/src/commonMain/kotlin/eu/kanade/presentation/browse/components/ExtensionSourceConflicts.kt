@@ -2,13 +2,13 @@ package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.list.SettingsRow
 import eu.kanade.tachiyomi.extension.model.SourceConflict
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.background
 
 import android.content.Context
+import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoPlayerMediaControls
-import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The player's media session and, while background playback is on, its hosting in [VideoPlaybackService]. The session

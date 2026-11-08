@@ -2,6 +2,8 @@ package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.language.api.tag.LanguageTag
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -14,8 +16,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.language.api.tag.LanguageTag
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.entry.model.asEntryCover

@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.language.runtime"
+        namespace = "app.katari.language.runtime"
 
         withHostTest { }
     }

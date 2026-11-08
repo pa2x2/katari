@@ -16,7 +16,7 @@
 
 // Modified for Katari's desktop extension host from the Android Open Source Project's WebView: the SDK's own members
 // without their documentation, which AOSP's has. What extensions use runs on a hidden page of the host's
-// (mihon.extension.compat.webkit.WebViewPage, which says how calls and callbacks are threaded); the members the host
+// (app.katari.extension.compat.webkit.WebViewPage, which says how calls and callbacks are threaded); the members the host
 // doesn't offer throw as the SDK's stub does. The view itself is never drawn, so the members it inherits as a view
 // work as on any view in no window, except that the touch events dispatched to it reach its page as a touchscreen's,
 // and a Dialog whose content it is shows its page in the app's window.
@@ -44,8 +44,8 @@ import android.view.ViewTreeObserver;
 import android.view.textclassifier.TextClassifier;
 import android.widget.AbsoluteLayout;
 
-import mihon.core.common.web.ExtensionPage;
-import mihon.extension.compat.webkit.WebViewPage;
+import app.katari.core.common.web.ExtensionPage;
+import app.katari.extension.compat.webkit.WebViewPage;
 
 import java.util.List;
 import java.util.Map;

@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.mediacontrols
 
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.VideoPlayer
 
 /**
  * The controls the system shows for the playing episode outside the player: play/pause, back and forward by the seek

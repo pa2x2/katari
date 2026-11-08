@@ -86,32 +86,32 @@ private const val PREFERENCE_STORES = "/kotlin/tachiyomi/core/common/preference/
 
 /** Code that asks stores for keys it doesn't own, with why. */
 internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
-    "sources/extension-runtime/jvm-host/src/main/kotlin/mihon/extension/runtime/jvm/preferences/" +
+    "sources/extension-runtime/jvm-host/src/main/kotlin/app/katari/extension/runtime/jvm/preferences/" +
         "FileSharedPreferences.kt" to
         "the desktop's shared preferences, a store",
     "features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/restorers/PreferenceRestorer.kt" to
         "restores whatever keys a backup holds",
     "features/sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/apply/StoreSettingWrites.kt" to
         "writes the person-level keys other devices synced, which the scope tables already mark",
-    "app/src/main/java/mihon/feature/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
+    "app/src/main/java/app/katari/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
         "moves keys of earlier versions into profiles",
-    "app-ui/src/commonMain/kotlin/mihon/core/migration/migrations/TrackerDataCleanupMigration.kt" to
+    "app-ui/src/commonMain/kotlin/app/katari/upgrade/migrations/TrackerDataCleanupMigration.kt" to
         "deletes the keys trackers kept, which nothing owns since Katari dropped trackers",
-    "features/entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/media/" +
+    "features/entry-interactions/src/commonMain/kotlin/app/katari/entry/interactions/media/" +
         "DefaultEntryMediaCacheFeature.kt" to
         "reads the keys each cache declares through EntryMediaCacheAutoClearPreference",
     "app/src/main/java/eu/kanade/tachiyomi/data/library/AndroidLibraryUpdateWorkChain.kt" to
         "reads WorkManager input data, not preferences",
-    "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/" +
+    "features/entry-interactions/manga/src/commonMain/kotlin/app/katari/entry/interactions/manga/download/" +
         "DownloadStore.kt" to
         "the download queue, in a file of its own and keyed by download",
-    "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/" +
+    "features/entry-interactions/manga/src/commonMain/kotlin/app/katari/entry/interactions/manga/download/" +
         "DownloadPendingDeleter.kt" to
         "chapters waiting for deletion, in a file of their own and keyed by entry",
-    "features/entry-interactions/anime/src/commonMain/kotlin/mihon/entry/interactions/anime/download/" +
+    "features/entry-interactions/anime/src/commonMain/kotlin/app/katari/entry/interactions/anime/download/" +
         "AnimeDownloadStore.kt" to
         "the download queue, in a file of its own and keyed by download",
-    "features/entry-interactions/book/src/commonMain/kotlin/mihon/entry/interactions/book/download/" +
+    "features/entry-interactions/book/src/commonMain/kotlin/app/katari/entry/interactions/book/download/" +
         "BookDownloadQueueFileBackend.kt" to
         "the download queue of earlier versions, in a file of its own",
 )

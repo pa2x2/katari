@@ -29,7 +29,7 @@ classes and `source-api`'s `util` and `AppInfo` against each library in [`abi/`]
 - The HTTP helpers extensions call (`eu.kanade.tachiyomi.network.*`) are in `core:common`, shared with manga
   extensions, because only one class of each name can exist in the app.
 - `source-compat` turns these sources into Katari `UnifiedSource`s. Only it and the extension loader in `app` use these types.
-- The extension loader takes the class-loading rule from `mihon.aniyomi.runtime.AniyomiExtensionClassLoading`.
+- The extension loader takes the class-loading rule from `app.katari.aniyomi.runtime.AniyomiExtensionClassLoading`.
 
 Most of the code is ported from Aniyomi's `source-api` (Apache License 2.0) and Anikku's related-anime defaults
 (Apache License 2.0).

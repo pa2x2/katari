@@ -10,8 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.feedback.GuideScreen
+import app.katari.presentation.kit.feedback.GuideScreen
+import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

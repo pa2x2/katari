@@ -1,9 +1,9 @@
 package eu.kanade.presentation.entry.components
 
+import app.katari.entry.interactions.download.EntryDownloadOption
+import app.katari.entry.interactions.download.EntryDownloadOptionGroup
+import app.katari.entry.interactions.download.EntryDownloadOptions
 import io.kotest.matchers.shouldBe
-import mihon.entry.interactions.download.EntryDownloadOption
-import mihon.entry.interactions.download.EntryDownloadOptionGroup
-import mihon.entry.interactions.download.EntryDownloadOptions
 import org.junit.jupiter.api.Test
 
 class EntryDownloadChoicesTest {

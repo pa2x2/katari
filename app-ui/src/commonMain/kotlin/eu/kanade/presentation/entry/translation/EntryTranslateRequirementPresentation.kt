@@ -1,11 +1,11 @@
 package eu.kanade.presentation.entry.translation
 
 import androidx.compose.runtime.Composable
-import mihon.entry.interactions.translate.EntryTranslateRequirement
-import mihon.text.recognition.api.preparation.TextRecognitionPreparation
-import mihon.text.recognition.api.preparation.TextRecognitionUnavailableReason
-import mihon.translation.api.preparation.TranslationPreparation
-import mihon.translation.ui.picker.language.displayName
+import app.katari.entry.interactions.translate.EntryTranslateRequirement
+import app.katari.text.recognition.api.preparation.TextRecognitionPreparation
+import app.katari.text.recognition.api.preparation.TextRecognitionUnavailableReason
+import app.katari.translation.api.preparation.TranslationPreparation
+import app.katari.translation.ui.picker.language.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

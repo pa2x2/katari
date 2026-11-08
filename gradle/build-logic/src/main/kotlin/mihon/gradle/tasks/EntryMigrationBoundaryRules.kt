@@ -134,19 +134,19 @@ internal data class EntryMigrationBoundaryFinding(
 )
 
 private const val ENTRY_MIGRATION_APPLICATION_API_ROOT =
-    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/migration/"
+    "features/entry-interactions/api/src/main/java/app/katari/entry/interactions/migration/"
 
 private const val ENTRY_MIGRATION_HOST_API_ROOT =
-    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/"
+    "features/entry-interactions/api/src/main/java/app/katari/entry/interactions/migration/host/"
 
 private const val ENTRY_MIGRATION_IMPLEMENTATION_ROOT =
-    "features/entry-interactions/src/main/java/mihon/entry/interactions/migration/"
+    "features/entry-interactions/src/main/java/app/katari/entry/interactions/migration/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "features/entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
+    "features/entry-interactions/host/src/main/java/app/katari/entry/interactions/host/"
 
 private const val LEGACY_MIGRATION_USE_CASE_PATH =
-    "app/src/main/java/mihon/domain/migration/usecases/MigrateEntryUseCase.kt"
+    "app/src/main/java/app/katari/domain/migration/usecases/MigrateEntryUseCase.kt"
 
 private val RAW_MIGRATION_AUTHORITY_NAMES = setOf(
     "EntryCapabilityInteraction",

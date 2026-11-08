@@ -1,10 +1,10 @@
 package eu.kanade.presentation.more.settings.screen.tts.presentation
 
 import androidx.compose.runtime.Composable
-import mihon.tts.api.provider.TtsVoiceProcessing
-import mihon.tts.api.voice.TtsDefaultVoiceSelection
-import mihon.tts.ui.settings.TtsSettingsState
-import mihon.tts.ui.settings.displayName
+import app.katari.tts.api.provider.TtsVoiceProcessing
+import app.katari.tts.api.voice.TtsDefaultVoiceSelection
+import app.katari.tts.ui.settings.TtsSettingsState
+import app.katari.tts.ui.settings.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

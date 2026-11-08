@@ -1,12 +1,12 @@
 package app.katari.sync.client.capture
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
+import app.katari.data.database.TemporarySchema
 import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.setting.capture.SettingsCapture
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import mihon.data.database.TemporarySchema
 import tachiyomi.data.DatabaseHandler
 
 /**

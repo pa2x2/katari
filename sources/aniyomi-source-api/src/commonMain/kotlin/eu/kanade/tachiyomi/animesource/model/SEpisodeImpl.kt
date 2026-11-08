@@ -2,8 +2,8 @@
 
 package eu.kanade.tachiyomi.animesource.model
 
+import app.katari.core.common.extensions.EMPTY
 import kotlinx.serialization.json.JsonObject
-import mihon.core.common.extensions.EMPTY
 
 // Not in any extensions-lib; extensions built against Aniyomi's own classes construct it directly
 class SEpisodeImpl : SEpisode {

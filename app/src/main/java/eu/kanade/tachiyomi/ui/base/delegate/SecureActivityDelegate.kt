@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import app.katari.android.di.appGraph
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication
 import eu.kanade.tachiyomi.ui.security.UnlockActivity
@@ -15,7 +16,6 @@ import eu.kanade.tachiyomi.util.view.setSecureScreen
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import mihon.app.di.appGraph
 
 interface SecureActivityDelegate {
     /**

@@ -1,0 +1,71 @@
+package app.katari.entry.interactions.migration
+
+import tachiyomi.domain.entry.model.Entry
+import java.io.Serializable
+
+/** Explicit profile-scoped identity retained across Migration navigation and execution. */
+data class EntryMigrationSubject(
+    val profileId: Long,
+    val entryId: Long,
+) : Serializable
+
+/** Requests authoritative preparation for one concrete source/target pair. */
+data class EntryMigrationPrepareIntent(
+    val source: Entry,
+    val target: Entry,
+    val operationKey: EntryMigrationOperationKey? = null,
+)
+
+/** Stable caller-owned identity for a restartable Migration operation. */
+@JvmInline
+value class EntryMigrationOperationKey(val value: String) {
+    init {
+        require(value.isNotBlank()) { "Migration operation key must not be blank" }
+    }
+}
+
+/**
+ * Identifies one durable execution attempt without requiring an in-memory preparation reference.
+ *
+ * A restarted caller reconciles this operation before preparing the pair again. If the operation
+ * already committed, Migration can return its result even when replacing the source removed it
+ * from the Library.
+ */
+data class EntryMigrationOperationIntent(
+    val key: EntryMigrationOperationKey,
+    val source: EntryMigrationSubject,
+    val target: EntryMigrationSubject,
+    val mode: EntryMigrationMode,
+    val selectedOptions: Set<EntryMigrationOption>,
+)
+
+/** Requests source refresh during Migration target discovery or explicit target selection. */
+data class EntryMigrationTargetRefreshIntent(
+    val source: Entry,
+    val target: Entry,
+    val fetchDetails: Boolean,
+    val fetchChildren: Boolean,
+)
+
+/** User-selectable transfer options captured before execution; shared with sync, which reads them back. */
+typealias EntryMigrationOption = tachiyomi.domain.entry.migration.EntryMigrationOption
+
+enum class EntryMigrationMode {
+    COPY,
+    REPLACE,
+}
+
+/**
+ * Executes choices made against a Feature-issued preparation.
+ *
+ * The selected options are user intent, not a downstream consequence checklist. Entry Migration owns the pipeline and
+ * automatically composes every applicable non-optional Feature consequence.
+ */
+data class EntryMigrationExecuteIntent(
+    val reference: EntryMigrationReference,
+    val mode: EntryMigrationMode,
+    val selectedOptions: Set<EntryMigrationOption>,
+)
+
+/** Opaque proof of the authoritative state used to prepare one Migration pair. */
+interface EntryMigrationReference

@@ -3,6 +3,10 @@ package app.katari.sync.client
 import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.db.SqlDriver
+import app.katari.data.database.DatabaseRepositoryImpl
+import app.katari.data.database.TemporarySchema
+import app.katari.data.database.createSqlDriver
+import app.katari.profiles.core.ProfileDatabase
 import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
@@ -26,10 +30,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.setMain
-import mihon.data.database.DatabaseRepositoryImpl
-import mihon.data.database.TemporarySchema
-import mihon.data.database.createSqlDriver
-import mihon.feature.profiles.core.ProfileDatabase
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters

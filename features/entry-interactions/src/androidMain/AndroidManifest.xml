@@ -3,7 +3,7 @@
 
     <application>
         <receiver
-            android:name="mihon.entry.interactions.translate.notification.EntryTranslateNotificationReceiver"
+            android:name="app.katari.entry.interactions.translate.notification.EntryTranslateNotificationReceiver"
             android:exported="false" />
     </application>
 

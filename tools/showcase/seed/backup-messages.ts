@@ -1,7 +1,7 @@
 /**
  * The parts of Katari's backup format the seed writes, with the field numbers of the app's `@ProtoNumber`s
  * (features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/models and
- * mihon/feature/profiles/core/ProfileScopedBackup.kt).
+ * app/katari/profiles/core/ProfileScopedBackup.kt).
  *
  * Restoring old backups is a compatibility guarantee of the app, so these numbers never change meaning; fields the
  * seed leaves out restore as their defaults.

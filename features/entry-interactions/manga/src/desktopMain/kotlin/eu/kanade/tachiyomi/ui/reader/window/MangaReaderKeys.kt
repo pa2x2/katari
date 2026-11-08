@@ -2,17 +2,17 @@ package eu.kanade.tachiyomi.ui.reader.window
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.input.key.Key
+import app.katari.presentation.kit.shortcut.ContextMenuKey
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
+import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
+import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
+import app.katari.presentation.kit.shortcut.ShortcutGroup
+import app.katari.presentation.kit.shortcut.ShortcutKeys
+import app.katari.presentation.kit.window.WindowFullScreen
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyChord
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import eu.kanade.tachiyomi.ui.reader.viewer.key.chords
-import mihon.presentation.kit.shortcut.ContextMenuKey
-import mihon.presentation.kit.shortcut.KeyboardShortcut
-import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
-import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
-import mihon.presentation.kit.shortcut.ShortcutGroup
-import mihon.presentation.kit.shortcut.ShortcutKeys
-import mihon.presentation.kit.window.WindowFullScreen
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

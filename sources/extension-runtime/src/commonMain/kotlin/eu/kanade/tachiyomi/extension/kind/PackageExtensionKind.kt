@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.extension.kind
 
+import app.katari.domain.extension.model.ContentWarning
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.platform.ExtensionClassLoaders
 import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import mihon.domain.extension.model.ContentWarning
 
 /**
  * An ecosystem whose extensions are apks. It adds the manifest it reads, its class loader and how its classes become

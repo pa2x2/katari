@@ -2,11 +2,11 @@ package eu.kanade.presentation.entry.translation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Translate
-import mihon.presentation.kit.content.ProgressBadge
-import mihon.presentation.kit.theme.ContentTone
+import app.katari.entry.interactions.translate.EntryTranslateStatus
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Translate
+import app.katari.presentation.kit.content.ProgressBadge
+import app.katari.presentation.kit.theme.ContentTone
 
 /** The 文A mark a chapter's download indicator carries when the chapter is translated or on its way to it. */
 @Composable

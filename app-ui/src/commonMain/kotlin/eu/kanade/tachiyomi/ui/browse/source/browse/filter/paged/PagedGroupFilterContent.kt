@@ -19,6 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.paging.LoadState
 import androidx.paging.PagingSource
 import androidx.paging.compose.collectAsLazyPagingItems
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import app.katari.presentation.kit.chip.FilterChip
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.field.SearchField
+import app.katari.presentation.kit.refresh.RefreshButton
+import app.katari.presentation.kit.sheet.SheetHeader
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageLoadReason
@@ -27,16 +37,6 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterSheetFooter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterNavigationResult
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.field.SearchField
-import mihon.presentation.kit.refresh.RefreshButton
-import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

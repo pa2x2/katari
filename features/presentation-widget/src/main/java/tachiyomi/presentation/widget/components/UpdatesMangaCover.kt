@@ -9,7 +9,7 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.size
-import mihon.presentation.kit.widget.WidgetMetrics
+import app.katari.presentation.kit.widget.WidgetMetrics
 import tachiyomi.presentation.widget.R
 import tachiyomi.presentation.widget.util.appWidgetInnerRadius
 

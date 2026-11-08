@@ -2,13 +2,13 @@ package eu.kanade.tachiyomi.ui.video.player.gesture
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Keyboard
+import app.katari.icons.materialsymbols.rounded.Mouse
+import app.katari.icons.materialsymbols.rounded.SwipeVertical
+import app.katari.presentation.kit.gesture.InputGuide
+import app.katari.presentation.kit.gesture.InputGuideHint
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Keyboard
-import mihon.icons.materialsymbols.rounded.Mouse
-import mihon.icons.materialsymbols.rounded.SwipeVertical
-import mihon.presentation.kit.gesture.InputGuide
-import mihon.presentation.kit.gesture.InputGuideHint
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -2,19 +2,19 @@ package app.katari.sync.ui.firstsync
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.profiles.core.ProfileManager
 import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.firstsync.ProfileChoice
 import app.katari.sync.client.firstsync.ProfilePairing
 import app.katari.sync.client.firstsync.SettingsWinner
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import mihon.app.di.AppUiScope
-import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.util.lang.launchIO
 
 /**

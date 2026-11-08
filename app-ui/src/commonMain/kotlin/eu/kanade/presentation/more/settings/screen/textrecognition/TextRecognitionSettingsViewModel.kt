@@ -2,6 +2,14 @@ package eu.kanade.presentation.more.settings.screen.textrecognition
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.language.api.tag.LanguageTag
+import app.katari.model.artifacts.api.ModelArtifactStore
+import app.katari.text.recognition.api.TextRecognitionFeature
+import app.katari.text.recognition.api.host.TextRecognitionHostActions
+import app.katari.text.recognition.ui.models.TextRecognitionStoredModels
+import app.katari.text.recognition.ui.models.observeStoredModels
+import app.katari.text.recognition.ui.settings.TextRecognitionSettingsController
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -14,14 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.language.api.tag.LanguageTag
-import mihon.model.artifacts.api.ModelArtifactStore
-import mihon.text.recognition.api.TextRecognitionFeature
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.text.recognition.ui.models.TextRecognitionStoredModels
-import mihon.text.recognition.ui.models.observeStoredModels
-import mihon.text.recognition.ui.settings.TextRecognitionSettingsController
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext

@@ -1,0 +1,125 @@
+package app.katari.entry.interactions.anime.media
+
+import app.katari.entry.interactions.anime.runtime.requireAnime
+import app.katari.entry.interactions.media.EntryPlaybackEngine
+import app.katari.entry.interactions.media.EntryPlaybackPreferencesSnapshot
+import app.katari.entry.interactions.media.EntryPlaybackQualityMode
+import app.katari.entry.interactions.media.EntryPlaybackSubtitleTextEdge
+import app.katari.entry.interactions.state.EntryPlaybackPreferencesProcessor
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
+import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.SubtitleTextEdge
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+
+internal class AnimePlaybackPreferencesProcessor(
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
+) : EntryPlaybackPreferencesProcessor {
+
+    override suspend fun snapshot(entry: Entry): EntryPlaybackPreferencesSnapshot? {
+        entry.requireAnime()
+        return playbackPreferencesRepository.getByEntryId(entry.id)?.toSnapshot()
+    }
+
+    override suspend fun restore(entry: Entry, snapshot: EntryPlaybackPreferencesSnapshot) {
+        entry.requireAnime()
+        playbackPreferencesRepository.upsert(snapshot.toPlaybackPreferences(entry.id))
+    }
+
+    override suspend fun copy(sourceEntry: Entry, targetEntry: Entry): Boolean {
+        sourceEntry.requireAnime()
+        targetEntry.requireAnime()
+
+        val preferences = playbackPreferencesRepository.getByEntryId(sourceEntry.id) ?: return false
+        playbackPreferencesRepository.upsert(preferences.copy(entryId = targetEntry.id))
+        return true
+    }
+}
+
+private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
+    return EntryPlaybackPreferencesSnapshot(
+        dubKey = dubKey,
+        serverKey = serverKey,
+        streamKey = streamKey,
+        sourceQualityKey = sourceQualityKey,
+        subtitleKey = subtitleKey,
+        playerQualityMode = playerQualityMode.toSnapshotMode(),
+        playerQualityHeight = playerQualityHeight,
+        subtitleOffsetX = subtitleOffsetX,
+        subtitleOffsetY = subtitleOffsetY,
+        subtitleTextSize = subtitleTextSize,
+        subtitleTextColor = subtitleTextColor,
+        subtitleBackgroundColor = subtitleBackgroundColor,
+        subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        subtitleTextEdge = subtitleTextEdge?.toSnapshotEdge(),
+        playerEngine = playerEngine?.toSnapshotEngine(),
+        updatedAt = updatedAt,
+    )
+}
+
+private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long): PlaybackPreferences {
+    return PlaybackPreferences(
+        entryId = entryId,
+        dubKey = dubKey,
+        serverKey = serverKey,
+        streamKey = streamKey,
+        sourceQualityKey = sourceQualityKey,
+        subtitleKey = subtitleKey,
+        playerQualityMode = playerQualityMode.toDomainMode(),
+        playerQualityHeight = playerQualityHeight,
+        subtitleOffsetX = subtitleOffsetX,
+        subtitleOffsetY = subtitleOffsetY,
+        subtitleTextSize = subtitleTextSize,
+        subtitleTextColor = subtitleTextColor,
+        subtitleBackgroundColor = subtitleBackgroundColor,
+        subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        subtitleTextEdge = subtitleTextEdge?.toDomainEdge(),
+        playerEngine = playerEngine?.toDomainEngine(),
+        updatedAt = updatedAt,
+    )
+}
+
+private fun SubtitleTextEdge.toSnapshotEdge(): EntryPlaybackSubtitleTextEdge {
+    return when (this) {
+        SubtitleTextEdge.NONE -> EntryPlaybackSubtitleTextEdge.NONE
+        SubtitleTextEdge.OUTLINE -> EntryPlaybackSubtitleTextEdge.OUTLINE
+        SubtitleTextEdge.SHADOW -> EntryPlaybackSubtitleTextEdge.SHADOW
+    }
+}
+
+private fun EntryPlaybackSubtitleTextEdge.toDomainEdge(): SubtitleTextEdge {
+    return when (this) {
+        EntryPlaybackSubtitleTextEdge.NONE -> SubtitleTextEdge.NONE
+        EntryPlaybackSubtitleTextEdge.OUTLINE -> SubtitleTextEdge.OUTLINE
+        EntryPlaybackSubtitleTextEdge.SHADOW -> SubtitleTextEdge.SHADOW
+    }
+}
+
+private fun PlayerEngineOverride.toSnapshotEngine(): EntryPlaybackEngine {
+    return when (this) {
+        PlayerEngineOverride.BUILT_IN -> EntryPlaybackEngine.BUILT_IN
+        PlayerEngineOverride.MPV -> EntryPlaybackEngine.MPV
+    }
+}
+
+private fun EntryPlaybackEngine.toDomainEngine(): PlayerEngineOverride {
+    return when (this) {
+        EntryPlaybackEngine.BUILT_IN -> PlayerEngineOverride.BUILT_IN
+        EntryPlaybackEngine.MPV -> PlayerEngineOverride.MPV
+    }
+}
+
+private fun PlayerQualityMode.toSnapshotMode(): EntryPlaybackQualityMode {
+    return when (this) {
+        PlayerQualityMode.AUTO -> EntryPlaybackQualityMode.AUTO
+        PlayerQualityMode.SPECIFIC_HEIGHT -> EntryPlaybackQualityMode.SPECIFIC_HEIGHT
+    }
+}
+
+private fun EntryPlaybackQualityMode.toDomainMode(): PlayerQualityMode {
+    return when (this) {
+        EntryPlaybackQualityMode.AUTO -> PlayerQualityMode.AUTO
+        EntryPlaybackQualityMode.SPECIFIC_HEIGHT -> PlayerQualityMode.SPECIFIC_HEIGHT
+    }
+}

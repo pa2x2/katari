@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.entry.interactions"
+        namespace = "app.katari.entry.interactions"
 
         withHostTest {
             isIncludeAndroidResources = true

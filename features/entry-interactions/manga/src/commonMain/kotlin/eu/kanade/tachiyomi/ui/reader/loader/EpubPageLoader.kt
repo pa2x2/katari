@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
+import app.katari.core.archive.EpubReader
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
-import mihon.core.archive.EpubReader
 
 /**
  * Loader used to load a chapter from a .epub file.

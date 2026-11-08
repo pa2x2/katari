@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.pip
 
 import androidx.compose.runtime.Composable
+import app.katari.entry.interactions.player.AnimePlayerNavigation
+import app.katari.entry.interactions.player.AnimePlayerPictureInPictureWindow
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
-import mihon.entry.interactions.player.AnimePlayerNavigation
-import mihon.entry.interactions.player.AnimePlayerPictureInPictureWindow
 
 /**
  * Desktop's picture-in-picture (D009): the player goes on in a window of the app's own ([window]), and the screen

@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.sourcekeys
 
+import app.katari.entry.interactions.persistence.backup.EntryBackupSourceKeys
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.stream.BackupSummary
-import mihon.entry.interactions.persistence.backup.EntryBackupSourceKeys
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 

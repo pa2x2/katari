@@ -6,6 +6,7 @@ import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.LinkCodeOffer
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -13,7 +14,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes

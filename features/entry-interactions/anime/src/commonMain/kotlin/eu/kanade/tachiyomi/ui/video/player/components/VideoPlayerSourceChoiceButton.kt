@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

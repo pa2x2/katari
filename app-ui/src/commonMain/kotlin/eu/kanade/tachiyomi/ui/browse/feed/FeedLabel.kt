@@ -6,14 +6,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.core.platform.currentPlatformContext
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 
 /**

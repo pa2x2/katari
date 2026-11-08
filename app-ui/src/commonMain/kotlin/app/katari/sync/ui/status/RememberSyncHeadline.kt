@@ -6,8 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.SyncUiGraph
+import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.delay
-import mihon.app.ui.di.LocalAppUiGraph
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 

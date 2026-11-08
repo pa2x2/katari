@@ -1,10 +1,10 @@
 package eu.kanade.tachiyomi.ui.video.player.recovery
 
+import app.katari.entry.interactions.anime.stream.streamChoiceKey
+import app.katari.entry.interactions.anime.stream.streamDisplayLabel
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
-import mihon.entry.interactions.anime.stream.streamChoiceKey
-import mihon.entry.interactions.anime.stream.streamDisplayLabel
 
 /**
  * A switch to another dub, server, stream or quality, or a retry, that failed while the episode played on. [selection]

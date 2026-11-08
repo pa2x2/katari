@@ -1,5 +1,6 @@
 package mihon.tools.extensioncompatibility.run
 
+import app.katari.desktop.extension.ExtensionHostGraph
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -8,7 +9,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import mihon.desktop.extension.ExtensionHostGraph
 import mihon.tools.extensioncompatibility.classification.FailureClassification
 import mihon.tools.extensioncompatibility.classification.SelfSignedCertificateProbe
 import mihon.tools.extensioncompatibility.classification.SiteChallengeProbe

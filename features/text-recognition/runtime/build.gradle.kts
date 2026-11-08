@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.text.recognition.runtime"
+        namespace = "app.katari.text.recognition.runtime"
 
         withHostTest { }
     }

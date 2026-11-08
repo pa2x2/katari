@@ -11,13 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.ContentCopy
-import mihon.icons.materialsymbols.rounded.Photo
-import mihon.icons.materialsymbols.rounded.Save
-import mihon.icons.materialsymbols.rounded.Share
-import mihon.presentation.kit.menu.ContextMenu
-import mihon.presentation.kit.menu.DropdownMenuItem
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.ContentCopy
+import app.katari.icons.materialsymbols.rounded.Photo
+import app.katari.icons.materialsymbols.rounded.Save
+import app.katari.icons.materialsymbols.rounded.Share
+import app.katari.presentation.kit.menu.ContextMenu
+import app.katari.presentation.kit.menu.DropdownMenuItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
+import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
+import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.reader.settings.ReaderPageLayout
+import app.katari.entry.viewer.settings.ViewerSettingBinding
 import eu.kanade.tachiyomi.ui.reader.viewer.current
-import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
-import mihon.entry.interactions.reader.settings.ChapterTransitionMode
-import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.reader.settings.ReaderPageLayout
-import mihon.entry.viewer.settings.ViewerSettingBinding
 
 /**
  * The paged viewer's settings as the opened entry has them now, per-series overrides included. Each read is current,

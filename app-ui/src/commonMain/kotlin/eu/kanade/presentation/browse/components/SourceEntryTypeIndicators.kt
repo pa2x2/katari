@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

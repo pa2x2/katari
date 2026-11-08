@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.restore.entries
 
+import app.katari.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import io.kotest.matchers.collections.shouldContainExactly
@@ -7,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import org.junit.jupiter.api.Test
 
 class EntryRestoreCoordinatorTest {

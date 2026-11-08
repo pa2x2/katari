@@ -3,16 +3,16 @@ package eu.kanade.presentation.more.settings.screen.tts.voice
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.core.platform.currentPlatformContext
+import app.katari.language.api.tag.LanguageTag
+import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.tts.api.voice.TtsDefaultVoiceSelection
+import app.katari.tts.ui.settings.displayName
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
-import mihon.core.platform.currentPlatformContext
-import mihon.language.api.tag.LanguageTag
-import mihon.presentation.kit.feedback.rememberScreenMessages
-import mihon.tts.api.voice.TtsDefaultVoiceSelection
-import mihon.tts.ui.settings.displayName
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

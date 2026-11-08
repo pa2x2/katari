@@ -17,9 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import mihon.presentation.kit.content.SchematicPart
-import mihon.presentation.kit.content.schematic
-import mihon.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.content.SchematicPart
+import app.katari.presentation.kit.content.schematic
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 
 /** A miniature of the pinned section in [style]: a heading over its entries, grouped in rows or on a shelf. */

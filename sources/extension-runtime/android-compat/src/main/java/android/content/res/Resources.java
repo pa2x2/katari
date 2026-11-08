@@ -24,7 +24,7 @@ package android.content.res;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import mihon.extension.compat.AndroidCompatEnvironment;
+import app.katari.extension.compat.AndroidCompatEnvironment;
 
 public class Resources {
     private static final Object sSync = new Object();

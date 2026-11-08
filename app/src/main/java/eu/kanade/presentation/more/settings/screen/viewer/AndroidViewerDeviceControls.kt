@@ -2,9 +2,9 @@ package eu.kanade.presentation.more.settings.screen.viewer
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalView
+import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
-import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 
 /** Android offers every control on every device; only the display cutout depends on the window's screen. */
 @Inject

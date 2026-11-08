@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -14,8 +16,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import tachiyomi.domain.library.service.LibraryPreferences
 
 @Inject

@@ -3,9 +3,9 @@ package eu.kanade.presentation.category.components
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Add
-import mihon.presentation.kit.button.FloatingActionButton
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Add
+import app.katari.presentation.kit.button.FloatingActionButton
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB

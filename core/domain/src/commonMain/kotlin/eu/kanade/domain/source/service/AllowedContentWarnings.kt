@@ -1,12 +1,12 @@
 package eu.kanade.domain.source.service
 
+import app.katari.domain.extension.model.ContentWarning
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import mihon.domain.extension.model.ContentWarning
 import tachiyomi.core.common.preference.Preference
 
 /**

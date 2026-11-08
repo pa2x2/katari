@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.data.backup.preferences
 
+import app.katari.profiles.core.ProfileAwarePreferenceStore
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Inject
-import mihon.feature.profiles.core.ProfileAwarePreferenceStore
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.PreferenceStore
 
 /**

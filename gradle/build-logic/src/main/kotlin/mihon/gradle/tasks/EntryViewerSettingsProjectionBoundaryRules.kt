@@ -108,7 +108,7 @@ private const val VIEWER_SETTINGS_SCREEN_REGISTRY =
     "app-ui/src/main/java/eu/kanade/presentation/more/settings/screen/EntryViewerSettingsScreenProjections.kt"
 
 private const val VIEWER_SETTINGS_RESOLVER_BINDINGS =
-    "app-ui/src/main/java/mihon/app/ui/di/ViewerSettingsScreenProjectionBindings.kt"
+    "app-ui/src/main/java/app/katari/ui/di/ViewerSettingsScreenProjectionBindings.kt"
 
 private val APP_VIEWER_SETTINGS_SCREEN_DECLARATION = Regex(
     """\b(?:object|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*AppEntryViewerSettingsScreenProjection\b""",

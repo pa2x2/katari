@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.text.recognition.ui"
+        namespace = "app.katari.text.recognition.ui"
     }
     desktop()
 

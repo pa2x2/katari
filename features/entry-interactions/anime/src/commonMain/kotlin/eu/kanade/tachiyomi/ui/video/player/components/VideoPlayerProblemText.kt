@@ -1,15 +1,15 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.ViewList
+import app.katari.icons.materialsymbols.rounded.Extension
+import app.katari.icons.materialsymbols.rounded.Settings
+import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ViewList
-import mihon.icons.materialsymbols.rounded.Extension
-import mihon.icons.materialsymbols.rounded.Settings
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

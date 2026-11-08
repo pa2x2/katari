@@ -5,7 +5,7 @@
 
 package android.util;
 
-import mihon.extension.compat.LogcatLog;
+import app.katari.extension.compat.LogcatLog;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

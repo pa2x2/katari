@@ -1,5 +1,13 @@
 package eu.kanade.tachiyomi.data.backup.restore
 
+import app.katari.core.platform.PlatformContext
+import app.katari.entry.interactions.download.EntryDownloadMaintenanceFeature
+import app.katari.entry.interactions.persistence.backup.EntryBackupRestoreSession
+import app.katari.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
+import app.katari.profiles.core.ProfileConstants
+import app.katari.profiles.core.ProfileDatabase
+import app.katari.profiles.core.ProfileScopedBackup
+import app.katari.profiles.core.ProfileStore
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -31,14 +39,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
-import mihon.feature.profiles.core.ProfileConstants
-import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileScopedBackup
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.domain.backup.model.RestoreOptions
@@ -365,7 +365,7 @@ class BackupRestorer(
         }
     }
 
-    private suspend fun upsertProfile(bundle: ProfileScopedBackup): mihon.feature.profiles.core.Profile {
+    private suspend fun upsertProfile(bundle: ProfileScopedBackup): app.katari.profiles.core.Profile {
         val existing = profileDatabase.getProfileByUuid(bundle.profile.uuid)
         if (existing != null) {
             profileDatabase.updateProfile(

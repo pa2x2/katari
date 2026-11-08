@@ -2,10 +2,10 @@ package eu.kanade.presentation.more.settings.screen.about
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalUriHandler
+import app.katari.presentation.kit.sheet.DetailsLink
+import app.katari.presentation.kit.sheet.DetailsSection
+import app.katari.presentation.kit.sheet.DetailsSheet
 import com.mikepenz.aboutlibraries.entity.Library
-import mihon.presentation.kit.sheet.DetailsLink
-import mihon.presentation.kit.sheet.DetailsSection
-import mihon.presentation.kit.sheet.DetailsSheet
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

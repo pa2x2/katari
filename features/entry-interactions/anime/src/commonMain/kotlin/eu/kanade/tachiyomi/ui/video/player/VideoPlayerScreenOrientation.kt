@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import mihon.entry.interactions.settings.AnimePlayerOrientation
+import app.katari.entry.interactions.settings.AnimePlayerOrientation
 
 /**
  * Turns the screen the way the orientation setting or the rotate button asks. Only Android has it: a desktop window

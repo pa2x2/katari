@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.extension.store
 
+import app.katari.domain.extension.model.ExtensionStore
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.kind.compareLibVersions
 import eu.kanade.tachiyomi.extension.model.Extension
-import mihon.domain.extension.model.ExtensionStore
 
 /*
  * Several stores can list the same extension. Android only replaces an installed apk with one signed by the same key,

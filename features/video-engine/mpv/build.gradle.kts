@@ -23,7 +23,7 @@ val unpackLibmpvGlue = tasks.register<UnpackAarGlueTask>("unpackLibmpvGlue") {
 kotlin {
     @Suppress("UnstableApiUsage")
     android {
-        namespace = "mihon.video.engine.mpv"
+        namespace = "app.katari.video.engine.mpv"
         // The glue's assets, which name the add-on's libraries and the glue level it must have.
         androidResources {
             enable = true

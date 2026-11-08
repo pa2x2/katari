@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import mihon.app.di.appGraph
-import mihon.app.ui.host.AppUiRoot
+import app.katari.android.di.appGraph
+import app.katari.ui.host.AppUiRoot
 
 inline fun ComponentActivity.setComposeContent(
     parent: CompositionContext? = null,

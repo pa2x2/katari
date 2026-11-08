@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.rememberUpdatedState
-import mihon.presentation.kit.navigation.rememberAppBarExpander
+import app.katari.presentation.kit.navigation.rememberAppBarExpander
 
 /**
  * Lets the Library tab bring the visible page back to its top when the tab is reselected.

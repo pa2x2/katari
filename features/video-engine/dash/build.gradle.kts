@@ -7,7 +7,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.video.engine.dash"
+        namespace = "app.katari.video.engine.dash"
 
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }

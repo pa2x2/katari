@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.ui.ProfilePickerScene
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.TextRole
+import app.katari.profiles.core.Profile
+import app.katari.profiles.ui.ProfilePickerScene
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

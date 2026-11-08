@@ -10,6 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
 import eu.kanade.tachiyomi.source.entry.EntryFilterTextInput
@@ -17,9 +20,6 @@ import eu.kanade.tachiyomi.source.filter.withProjectedState
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterItem
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.KatariTheme
 
 /** One item of a paged list, drawn as the filter control the source projects for it. */
 @Composable

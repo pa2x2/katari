@@ -1,14 +1,14 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
+import app.katari.video.engine.spi.tracks.TrackKind
+import app.katari.video.engine.spi.tracks.VideoTrack
+import app.katari.video.engine.spi.tracks.VideoTrackGroup
+import app.katari.video.engine.spi.tracks.VideoTracks
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import io.kotest.matchers.shouldBe
-import mihon.video.engine.spi.tracks.TrackKind
-import mihon.video.engine.spi.tracks.VideoTrack
-import mihon.video.engine.spi.tracks.VideoTrackGroup
-import mihon.video.engine.spi.tracks.VideoTracks
 import org.junit.jupiter.api.Test
 
 /*

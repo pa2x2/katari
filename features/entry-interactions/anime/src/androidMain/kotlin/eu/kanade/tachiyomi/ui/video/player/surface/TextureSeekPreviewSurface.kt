@@ -9,8 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import mihon.video.engine.spi.player.TextureViewOutput
-import mihon.video.engine.spi.player.VideoPlayer
+import app.katari.video.engine.spi.player.TextureViewOutput
+import app.katari.video.engine.spi.player.VideoPlayer
 
 // A texture, unlike a surface, is clipped and moved with the popup around it
 internal object TextureSeekPreviewSurface : SeekPreviewSurface {

@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.reader
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import androidx.compose.ui.platform.ComposeView
-import mihon.entry.interactions.manga.R
+import app.katari.entry.interactions.manga.R
 
 /**
  * The views of `reader_activity.xml`. Inflated by hand because the multiplatform Android library plugin this module

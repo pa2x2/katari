@@ -9,7 +9,7 @@ plugins {
 
 kotlin {
     android {
-        namespace = "mihon.core.testfixtures"
+        namespace = "app.katari.core.testfixtures"
     }
     desktop()
 

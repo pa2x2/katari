@@ -10,15 +10,15 @@ import androidx.compose.runtime.setValue
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.common.toHomeScreenTabPreferenceValue
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.EditOff
+import app.katari.presentation.kit.dialog.ConfirmDialog
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.HandlesOwnBackPress
 import eu.kanade.presentation.util.Screen
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.core.common.toHomeScreenTabPreferenceValue
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.EditOff
-import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

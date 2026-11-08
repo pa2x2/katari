@@ -2,12 +2,14 @@ package app.katari.sync.ui.question
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.kind.question.ProfileDeletionAnswer
 import app.katari.sync.client.question.Question
 import app.katari.sync.client.question.Questions
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -22,8 +24,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import mihon.app.di.AppUiScope
-import mihon.core.metro.AppCoroutineScope
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.data.ActiveProfileProvider
 

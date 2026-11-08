@@ -1,8 +1,8 @@
 package eu.kanade.tachiyomi.ui.webview
 
+import app.katari.core.platform.PlatformContext
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.util.Screen
-import mihon.core.platform.PlatformContext
 
 /** The web view as a screen in the main window, and as its own activity over a reader or player. */
 @Inject

@@ -1,6 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.migration.search
 
 import androidx.lifecycle.viewModelScope
+import app.katari.entry.interactions.catalogue.EntryCatalogueFeature
+import app.katari.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import app.katari.entry.interactions.migration.EntryMigrationFeature
+import app.katari.entry.interactions.migration.EntryMigrationPreparationResult
+import app.katari.entry.interactions.migration.EntryMigrationPrepareIntent
+import app.katari.entry.interactions.migration.EntryMigrationSubject
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -13,13 +20,6 @@ import eu.kanade.tachiyomi.extension.SourceExtensionPackages
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import kotlinx.coroutines.launch
-import mihon.app.di.AppUiScope
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
-import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.migration.EntryMigrationPreparationResult
-import mihon.entry.interactions.migration.EntryMigrationPrepareIntent
-import mihon.entry.interactions.migration.EntryMigrationSubject
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.model.Entry

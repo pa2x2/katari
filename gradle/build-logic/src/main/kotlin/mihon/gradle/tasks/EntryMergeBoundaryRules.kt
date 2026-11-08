@@ -209,16 +209,16 @@ internal data class EntryMergeBoundaryFinding(
 )
 
 private const val ENTRY_INTERACTIONS_HOST_API_ROOT =
-    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/merge/host/"
+    "features/entry-interactions/api/src/main/java/app/katari/entry/interactions/merge/host/"
 
 private const val ENTRY_INTERACTIONS_MERGE_API_ROOT =
-    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/merge/"
+    "features/entry-interactions/api/src/main/java/app/katari/entry/interactions/merge/"
 
 private const val ENTRY_INTERACTIONS_MERGE_IMPLEMENTATION_ROOT =
-    "features/entry-interactions/src/main/java/mihon/entry/interactions/merge/"
+    "features/entry-interactions/src/main/java/app/katari/entry/interactions/merge/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "features/entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
+    "features/entry-interactions/host/src/main/java/app/katari/entry/interactions/host/"
 
 private val ENTRY_TYPE_MODULE_ROOT = Regex(
     """features/entry-interactions/(?!api/|spi/|download-notification/|host/|src/)[^/]+/src/main/.*""",

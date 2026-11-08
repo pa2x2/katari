@@ -2,8 +2,8 @@ package eu.kanade.presentation.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
-import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
+import app.katari.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
+import app.katari.entry.interactions.reader.navigation.EntryReaderNavigationSheet
 
 /** Reader chapters presented through the shared table of contents, keyed by chapter id. */
 @Composable

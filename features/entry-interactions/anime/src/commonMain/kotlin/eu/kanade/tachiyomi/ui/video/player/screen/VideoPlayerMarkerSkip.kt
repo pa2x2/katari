@@ -10,14 +10,14 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
+import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
+import app.katari.entry.viewer.settings.ViewerSettingBinding
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.markers.MarkerAutoSkip
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.skipOfferAt
 import kotlinx.coroutines.delay
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
-import mihon.entry.viewer.settings.ViewerSettingBinding
 
 /** An automatic skip, kept for Undo: [fromMs] is where playback was when it skipped. */
 internal data class VideoPlayerSkippedMarker(val marker: PlaybackMarker, val fromMs: Long)

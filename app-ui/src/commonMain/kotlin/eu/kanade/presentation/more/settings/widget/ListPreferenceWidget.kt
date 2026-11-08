@@ -8,11 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.dialog.DialogScrollEdges
-import mihon.presentation.kit.layout.RowList
-import mihon.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.dialog.Dialog
+import app.katari.presentation.kit.dialog.DialogAction
+import app.katari.presentation.kit.dialog.DialogScrollEdges
+import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.list.ChoiceRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

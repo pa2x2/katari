@@ -1,10 +1,10 @@
 package eu.kanade.presentation.library.update
 
 import androidx.compose.runtime.Composable
+import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.currentPlatformContext
+import app.katari.library.update.report.LibraryUpdateRunSummary
 import eu.kanade.presentation.util.relativeTimeSpanString
-import mihon.core.platform.PlatformContext
-import mihon.core.platform.currentPlatformContext
-import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

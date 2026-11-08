@@ -1,11 +1,11 @@
 package eu.kanade.presentation.more.onboarding
 
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.RocketLaunch
-import mihon.presentation.kit.feedback.GuidePageHeading
-import mihon.presentation.kit.list.ChoiceRow
-import mihon.presentation.kit.list.RowGroup
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.RocketLaunch
+import app.katari.presentation.kit.feedback.GuidePageHeading
+import app.katari.presentation.kit.list.ChoiceRow
+import app.katari.presentation.kit.list.RowGroup
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

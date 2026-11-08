@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.stats.recap.list
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository

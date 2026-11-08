@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.ui.webview.browser
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.core.common.platform.PlatformFacility
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.common.platform.PlatformFacility
 
 /**
  * The platform's browser, as the web view screen shows it. The screen owns the pages it opens: it keeps the open ones as
