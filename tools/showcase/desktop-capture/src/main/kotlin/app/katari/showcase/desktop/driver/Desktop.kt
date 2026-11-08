@@ -51,7 +51,8 @@ internal object Desktop {
         awaitValue("$selector to go", timeoutMs) { if (allNodes().none(selector::matches)) Unit else null }
     }
 
-    fun click(selector: Selector, timeoutMs: Long = TIMEOUT_MS) = click(steadyBounds(selector, timeoutMs))
+    /** Clicks the node [selector] finds once it is enabled, as a person waits for a button to become clickable. */
+    fun click(selector: Selector, timeoutMs: Long = TIMEOUT_MS) = click(steadyBounds(selector.enabled(), timeoutMs))
 
     /** Clicks the point at the given fractions of [window]'s width and height. */
     fun clickAt(window: Window, x: Float, y: Float, button: Int = InputEvent.BUTTON1_DOWN_MASK) {

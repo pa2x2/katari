@@ -11,14 +11,15 @@ import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { CONTENT_SERVER_PORT } from "../../content/content-server.ts";
 import { profiles } from "../../seed/library-plan.ts";
-import { LIBRARY_UPDATED_AT, SHOWCASE_NOW } from "../../seed/showcase-clock.ts";
+import { LIBRARY_UPDATED_AT, SHOWCASE_NOW, YEAR_RECAP_EDITION } from "../../seed/showcase-clock.ts";
+import { SYNC_SERVER_PORT } from "../sync/sync-server.ts";
 import { timed } from "../timed.ts";
 import { encodeForWeb } from "../web-clip.ts";
 import { attachedSerials, Device } from "./adb.ts";
 import { pinShowcaseClock, useRealClock } from "./device-clock.ts";
 import { awaitIdle } from "./device-idle.ts";
 import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./emulator.ts";
-import { CAPTURE_DIRECTORY, FAILURE_DIRECTORY, runInstrumentation } from "./instrumentation.ts";
+import { CAPTURE_DIRECTORY, FAILURE_DIRECTORY, READY_SIGNAL, runInstrumentation } from "./instrumentation.ts";
 import { installOfflineTranslator, startOfflineTranslator } from "./offline-translator.ts";
 import { writePreferences } from "./shared-preferences.ts";
 import { freezeStatusBar } from "./status-bar.ts";
@@ -28,10 +29,11 @@ const APP_PREFERENCES = `${APP_ID}_preferences.xml`;
 const RECAP_SHARE_IMAGE = `/data/data/${APP_ID}/cache/shared_image/statistics_recap.png`;
 const SEED_NAME = "showcase.tachibk";
 const SEED_ON_DEVICE = `/sdcard/Download/${SEED_NAME}`;
-// The app's name for the recap of the year so far, which it offers in December, as at the showcase moment.
-const YEAR_RECAP_EDITION = `${new Date(SHOWCASE_NOW).getUTCFullYear()}-so-far`;
 // App state is kept per profile; the restore creates the seed's profiles with ids from 1 in plan order.
 const PERSONAL_PROFILE_ID = profiles.findIndex((profile) => profile.name === "Personal") + 1;
+/** What the sync shots and the docs call the phone; the app names the device after the system's device name. */
+const DEVICE_NAME = "Phone";
+const READY_POLL_MS = 500;
 
 export interface PhoneOptions {
   appApk: string;
@@ -60,6 +62,8 @@ export class PhoneSession {
   private readonly options: PhoneOptions;
   private readonly scenes: PhoneScenes;
   private readonly ran: string[] = [];
+  /** When, in real time, the running scene set the clock to the showcase moment. */
+  private clockPinnedAt = 0;
 
   private constructor(device: Device, options: PhoneOptions, scenes: PhoneScenes) {
     this.device = device;
@@ -72,8 +76,10 @@ export class PhoneSession {
     const device = options.reuse ? reusedEmulator() : await timed("booting the emulator", bootShowcaseEmulator);
     const session = new PhoneSession(device, options, scenes);
     try {
-      // The apps reach the content server on the emulator's loopback, as the desktop app reaches it on the host's.
+      // The apps reach the content and sync servers on the emulator's loopback, as the desktop app reaches them on the
+      // host's.
       device.reversePort(CONTENT_SERVER_PORT);
+      device.reversePort(SYNC_SERVER_PORT);
       if (!options.reuse) await session.prepare();
       device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
       await timed("waiting for the device to settle", () => awaitIdle(device));
@@ -85,17 +91,52 @@ export class PhoneSession {
     return session;
   }
 
-  async run(scene: string): Promise<void> {
+  async run(scene: string, args: Record<string, string> = {}): Promise<void> {
     // Times shown relative to now, such as "opened 27 minutes ago", would otherwise depend on how long the scenes
     // before took, and cross a minute in some runs but not in others.
     pinShowcaseClock(this.device);
+    this.clockPinnedAt = Date.now();
     // Every scene starts the app afresh, so it reads this, whatever the scenes before it opened.
     writePreferences(this.device, APP_ID, APP_PREFERENCES, {
       [`__APP_STATE_profile_${PERSONAL_PROFILE_ID}:statistics_last_opened_year_recap`]:
         this.scenes.yearRecapOpened.includes(scene) ? YEAR_RECAP_EDITION : "",
     });
-    runInstrumentation(this.device, APP_ID, scene);
+    await runInstrumentation(this.device, APP_ID, scene, args);
     this.ran.push(scene);
+  }
+
+  /**
+   * Runs [scene], and [alongside] beside it once the scene signals that it is ready for it, handing it the scene's end,
+   * then waits for both. A scene that ends without signalling fails, having never had what it waited for.
+   */
+  async runAlongside(
+    scene: string,
+    args: Record<string, string>,
+    alongside: (ended: Promise<void>) => Promise<void>,
+  ): Promise<void> {
+    this.device.shell(`rm -f ${READY_SIGNAL}`);
+    let ended = false;
+    const running = this.run(scene, args).finally(() => {
+      ended = true;
+    });
+    while (!ended && !this.device.shell(`ls ${READY_SIGNAL} 2>/dev/null || true`).includes(READY_SIGNAL)) {
+      await sleep(READY_POLL_MS);
+    }
+    if (ended) {
+      await running;
+      throw new Error(`${scene} ended without signalling that it was ready for the scene alongside it`);
+    }
+    // Both end before either's failure is reported, so neither is left running into the next scene; when both fail,
+    // the scene alongside may be why this one did.
+    const outcomes = await Promise.allSettled([running, alongside(running.then(() => {}, () => {}))]);
+    const failures = outcomes.flatMap((outcome) => (outcome.status === "rejected" ? [outcome.reason] : []));
+    if (failures.length === 1) throw failures[0];
+    if (failures.length > 1) throw new AggregateError(failures, `${scene} and the scene alongside it failed`);
+  }
+
+  /** What the phone's clock reads now: the showcase moment the running scene started at, and the time since. */
+  clockNow(): number {
+    return SHOWCASE_NOW + (Date.now() - this.clockPinnedAt);
   }
 
   /** Pulls what the scenes left into the run's folder, with the recap clip made fit for the site. */
@@ -132,6 +173,7 @@ export class PhoneSession {
   private async prepare(): Promise<void> {
     const device = this.device;
     useRealClock(device);
+    device.shell(`settings put global device_name ${DEVICE_NAME}`);
     await timed("installing the apps", async () => {
       device.adb("install", "-r", this.options.appApk);
       // The seed restore scene waits for the notification the app posts once the restore is done.

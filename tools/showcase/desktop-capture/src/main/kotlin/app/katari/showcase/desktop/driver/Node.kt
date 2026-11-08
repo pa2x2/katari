@@ -8,6 +8,7 @@ import java.awt.Window
 import javax.accessibility.Accessible
 import javax.accessibility.AccessibleContext
 import javax.accessibility.AccessibleRole
+import javax.accessibility.AccessibleState
 
 /**
  * One node of a window's accessibility tree as it was when read. A Compose node also carries its semantics: the
@@ -28,6 +29,8 @@ internal class Node(
     val contentDescriptions: List<String>,
     val testTag: String?,
     val selected: Boolean,
+    /** Whether it takes input: a disabled button, such as one waiting for a form to be complete, ignores clicks. */
+    val enabled: Boolean,
     /** A Compose node's semantics, whose actions [Desktop] takes as assistive tools do; null for a Swing node. */
     val semantics: SemanticsConfiguration?,
 ) {
@@ -37,6 +40,7 @@ internal class Node(
         if (contentDescriptions.isNotEmpty()) append(" description=").append(contentDescriptions)
         if (testTag != null) append(" tag=").append(testTag)
         if (selected) append(" selected")
+        if (!enabled) append(" disabled")
         append(" @").append(bounds.x).append(',').append(bounds.y).append(' ')
         append(bounds.width).append('x').append(bounds.height)
     }
@@ -78,6 +82,8 @@ private fun node(
         contentDescriptions = semantics?.getOrNull(SemanticsProperties.ContentDescription).orEmpty(),
         testTag = semantics?.getOrNull(SemanticsProperties.TestTag),
         selected = semantics?.getOrNull(SemanticsProperties.Selected) == true,
+        enabled = semantics?.let { SemanticsProperties.Disabled !in it }
+            ?: context.accessibleStateSet.contains(AccessibleState.ENABLED),
         semantics = semantics,
     )
 }

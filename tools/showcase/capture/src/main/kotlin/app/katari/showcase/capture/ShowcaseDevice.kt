@@ -26,6 +26,9 @@ internal object ShowcaseDevice {
     const val CAPTURE_DIRECTORY = "/data/local/tmp/showcase"
     const val FAILURE_DIRECTORY = "/data/local/tmp/showcase-failures"
 
+    // The pipeline watches for it while a scene with another alongside it runs (tools/showcase/pipeline/scenes.ts).
+    private const val READY_SIGNAL = "/data/local/tmp/showcase-ready"
+
     private val instrumentation get() = InstrumentationRegistry.getInstrumentation()
 
     val device: UiDevice by lazy { UiDevice.getInstance(instrumentation) }
@@ -184,6 +187,17 @@ internal object ShowcaseDevice {
         }
         fail("Nothing on screen matches $selector, nor under the dock")
     }
+
+    /** Closes the on-screen keyboard if typing brought it up, as it covers the bottom of the screen. */
+    fun hideKeyboard() {
+        if ("mInputShown=true" in shell("dumpsys input_method")) {
+            device.pressBack()
+            settle()
+        }
+    }
+
+    /** A text field by the label it shows, which Compose lays out inside the field. */
+    fun textField(label: String): BySelector = By.clazz("android.widget.EditText").hasDescendant(By.text(label))
 
     fun enterText(selector: BySelector, text: String) {
         try {
@@ -346,6 +360,29 @@ internal object ShowcaseDevice {
         shell("mkdir -p $CAPTURE_DIRECTORY")
         if (!heldStill(File("$CAPTURE_DIRECTORY/$name.png"))) fail("The screen never held still for $name")
     }
+
+    /**
+     * Saves the screen as it is this moment, for what never holds still, such as a countdown, which [capture] would wait
+     * out. Taken right after [awaitPromptly], it shows what that waited for.
+     */
+    fun captureNow(name: String) {
+        shell("mkdir -p $CAPTURE_DIRECTORY")
+        shell("screencap -p $CAPTURE_DIRECTORY/$name.png")
+    }
+
+    /**
+     * Waits for [selector] to show, looking as often as the screen can be read rather than at UiAutomator's usual
+     * second, for a still taken the moment something changes, such as one count of a countdown.
+     */
+    fun awaitPromptly(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
+        val deadline = SystemClock.uptimeMillis() + timeoutMs
+        while (!device.hasObject(selector)) {
+            if (SystemClock.uptimeMillis() > deadline) fail("Nothing on screen matches $selector")
+        }
+    }
+
+    /** Tells the pipeline the scene is ready for the desktop scene that runs alongside it. */
+    fun signalReady() = writeDeviceFile(READY_SIGNAL, "")
 
     /**
      * Waits until the screen holds still, as [capture] does, for a gesture that must land on what is drawn now: a

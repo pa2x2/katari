@@ -252,4 +252,5 @@ include(
     ":tools:showcase:capture",
     ":tools:showcase:desktop-capture",
     ":tools:showcase:extension",
+    ":tools:showcase:sync-server",
 )

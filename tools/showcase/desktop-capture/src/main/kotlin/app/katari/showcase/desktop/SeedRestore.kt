@@ -12,36 +12,19 @@ import app.katari.showcase.desktop.driver.Selector
 internal class SeedRestore : DesktopScene {
     override fun run(scene: SceneContext) {
         Desktop.click(Selector.textStartsWith("I have a backup"))
-        next(awaiting = "Restore backup")
+        nextGuideStep(awaiting = "Restore backup")
         Desktop.click(Selector.text("Choose a backup file"))
         FileDialog.choose(scene.argument("seed"))
         Desktop.click(Selector.text("Restore"))
         Desktop.find(Selector.textStartsWith("Restore completed"), RESTORE_TIMEOUT_MS)
-        next(awaiting = "Appearance")
-        next(awaiting = "Storage")
-        Desktop.click(Selector.text("Select a folder"))
-        FileDialog.choose(scene.argument("storage"))
-        Desktop.find(Selector.textStartsWith("Selected folder:"))
-        next(awaiting = "Use Katari on more devices?")
+        nextGuideStep(awaiting = "Appearance")
+        nextGuideStep(awaiting = "Storage")
+        chooseStorageFolder(scene.argument("storage"))
+        nextGuideStep(awaiting = "Use Katari on more devices?")
         Desktop.click(Selector.text("Skip"))
         Desktop.find(Selector.text("You're all set"))
         Desktop.click(Selector.text("Get started"))
-        trustExtension()
-    }
-
-    /** Moves the guide on to the step titled [awaiting]. */
-    private fun next(awaiting: String) {
-        Desktop.click(Selector.text("Next"))
-        Desktop.find(Selector.text(awaiting))
-    }
-
-    private fun trustExtension() {
-        openTab("Browse")
-        Desktop.click(Selector.tab("Extensions"))
-        Desktop.click(Selector.description("Trust"))
-        // The dialog's button shows the word; the row's button above only has it as its description.
-        Desktop.click(Selector.text("Trust"))
-        Desktop.find(Selector.text("Installed"))
+        trustShowcaseExtension()
     }
 
     private companion object {

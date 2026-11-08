@@ -1,18 +1,29 @@
 /**
  * The desktop app as the desktop scenes run it: from the AppDir its AppImage is packed from, on a private display,
- * with folders, a session bus, fonts and a browser of its own, so nothing reaches the desktop of the machine running
- * the pipeline. Each scene is a fresh launch with the capture agent (tools/showcase/desktop-capture) loaded through
- * JAVA_TOOL_OPTIONS; the agent runs the scene, writes how it went and closes the app.
+ * with folders, a session bus, a keyring, fonts and a browser of its own, so nothing reaches the desktop of the machine
+ * running the pipeline. Each scene is a fresh launch with the capture agent (tools/showcase/desktop-capture) loaded
+ * through JAVA_TOOL_OPTIONS; the agent runs the scene, writes how it went and closes the app.
  *
  * Every launch starts at the showcase moment, as every phone scene does, through libfaketime: the seed's history and
  * the times shown relative to now read the same as on the phone, and sync orders the two devices' changes the same
- * way whatever day the pipeline runs.
+ * way whatever day the pipeline runs. A launch beside a running phone scene starts where the phone's clock is instead,
+ * so the two agree, as devices' clocks do, and a change one makes after the other's comes after it.
  */
 import { spawn } from "node:child_process";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { SHOWCASE_NOW, SHOWCASE_TIME_ZONE } from "../../seed/showcase-clock.ts";
+import { SHOWCASE_NOW, SHOWCASE_TIME_ZONE, YEAR_RECAP_EDITION } from "../../seed/showcase-clock.ts";
 import type { Display } from "./display.ts";
 
 /** The folder name the development build keeps its data under, which the AppDir the pipeline runs is. */
@@ -40,6 +51,11 @@ export interface DesktopAppOptions {
   display: Display;
   /** `libfaketime.so.1`, which the app is started with to run at the showcase moment. */
   faketime: string;
+  /**
+   * `gnome-keyring-daemon`, the Secret Service the app keeps its sync device token in, as on a desktop with GNOME
+   * Keyring. Every launch starts its own on the launch's session bus, over the profile's keyring file.
+   */
+  keyring: string;
 }
 
 export class DesktopApp {
@@ -66,10 +82,16 @@ export class DesktopApp {
     writeFileSync(this.fontConfig(), fontConfig(FONT));
     writeFileSync(this.browser(), `#!/bin/sh\necho "$@" >> '${join(this.options.workDir, "browser.log")}'\n`);
     chmodSync(this.browser(), 0o755);
+    writeFileSync(this.session(), SESSION_SCRIPT);
+    chmodSync(this.session(), 0o755);
   }
 
-  /** Runs the desktop scene [scene] (its class under the agent's package) in a fresh launch of the app. */
-  async runScene(scene: string, args: Record<string, string> = {}): Promise<void> {
+  /**
+   * Runs the desktop scene [scene] (its class under the agent's package) in a fresh launch of the app, whose clock
+   * starts at [startsAt].
+   */
+  async runScene(scene: string, args: Record<string, string> = {}, startsAt: number = SHOWCASE_NOW): Promise<void> {
+    this.markYearRecapOpened();
     const result = join(this.options.workDir, "result.txt");
     rmSync(result, { force: true });
     const agentOptions = join(this.options.workDir, "agent.properties");
@@ -89,8 +111,8 @@ export class DesktopApp {
     const output = openSync(log, "w");
     const app = spawn(
       "dbus-run-session",
-      ["--config-file", this.busConfig(), "--", join(this.options.appDir, "AppRun")],
-      { env: this.environment(agentOptions), stdio: ["ignore", output, output] },
+      ["--config-file", this.busConfig(), "--", this.session(), join(this.options.appDir, "AppRun")],
+      { env: this.environment(agentOptions, startsAt), stdio: ["ignore", output, output] },
     );
     const exited = new Promise<void>((resolve) => app.once("exit", () => resolve()));
     // Unreferenced, the time limits don't keep the pipeline running once the app has ended.
@@ -111,7 +133,7 @@ export class DesktopApp {
     }
   }
 
-  private environment(agentOptions: string): NodeJS.ProcessEnv {
+  private environment(agentOptions: string, startsAt: number): NodeJS.ProcessEnv {
     const inherited = Object.fromEntries(
       Object.entries(process.env).filter(([name]) => !NOT_INHERITED.includes(name)),
     );
@@ -122,7 +144,7 @@ export class DesktopApp {
       HOSTNAME: HOST_NAME,
       TZ: SHOWCASE_TIME_ZONE,
       LD_PRELOAD: this.options.faketime,
-      FAKETIME: `@${new Date(SHOWCASE_NOW).toISOString().slice(0, 19).replace("T", " ")}`,
+      FAKETIME: `@${new Date(startsAt).toISOString().slice(0, 19).replace("T", " ")}`,
       // The JVM hangs when libfaketime fakes the monotonic clock as well, as its README warns.
       FAKETIME_DONT_FAKE_MONOTONIC: "1",
       // Turned on by glibc version, this fix reads the deadlines of waits on the monotonic clock as if that clock were
@@ -132,6 +154,7 @@ export class DesktopApp {
       SKIKO_RENDER_API: "SOFTWARE",
       FONTCONFIG_FILE: this.fontConfig(),
       BROWSER: this.browser(),
+      KEYRING_DAEMON: this.options.keyring,
       // Java takes its home folder from the account, not HOME; the file dialogs open there, and Java keeps its
       // preferences there.
       JAVA_TOOL_OPTIONS: `-Duser.home=${this.home} -javaagent:${this.options.agentJar}=${agentOptions}`,
@@ -161,7 +184,43 @@ export class DesktopApp {
   private browser(): string {
     return join(this.options.workDir, "browser");
   }
+
+  /**
+   * Marks the year recap opened in every profile the app has made, as the phone scenes outside the library's group find
+   * it (scenes.ts): until it is, the dock's More carries a mark for it. The app reads a profile's file as it starts.
+   */
+  private markYearRecapOpened(): void {
+    const profiles = join(this.folders().XDG_CONFIG_HOME, APP_FOLDER, "profiles");
+    if (!existsSync(profiles)) return;
+    for (const profile of readdirSync(profiles)) {
+      const file = join(profiles, profile, "profile.json");
+      if (!existsSync(file)) continue;
+      const preferences = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
+      preferences["__APP_STATE_statistics_last_opened_year_recap"] = { type: "string", value: YEAR_RECAP_EDITION };
+      writeFileSync(file, JSON.stringify(preferences, null, 4));
+    }
+  }
+
+  private session(): string {
+    return join(this.options.workDir, "session");
+  }
 }
+
+/**
+ * Runs the command it is given on the launch's session bus once the keyring has taken its name there; the app asks
+ * whether the desktop has a keyring only once. The keyring is unlocked with a password from its standard input, which
+ * creates the profile's login keyring on the first launch, and runs on the real clock.
+ */
+const SESSION_SCRIPT = `#!/bin/sh
+printf showcase | env -u LD_PRELOAD "$KEYRING_DAEMON" --daemonize --unlock --components=secrets > /dev/null || exit 1
+for attempt in $(seq 100); do
+  dbus-send --session --print-reply --dest=org.freedesktop.DBus / org.freedesktop.DBus.NameHasOwner \\
+    string:org.freedesktop.secrets | grep -q true && exec "$@"
+  sleep 0.1
+done
+echo "The keyring did not take its name on the session bus" >&2
+exit 1
+`;
 
 /**
  * What the pipeline's own session sets that would lead the app to the machine's desktop: its Wayland display and
