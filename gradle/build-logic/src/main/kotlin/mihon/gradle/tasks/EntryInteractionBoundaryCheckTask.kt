@@ -71,21 +71,21 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
         private val SOURCE_MODULES = listOf(
             "app",
             "app-ui",
-            "data",
-            "domain",
-            "presentation-core",
-            "presentation-widget",
-            "source-local",
-            "source-compat",
-            "source-api",
-            "entry-source-api",
-            "entry-interactions",
-            "entry-interactions/api",
-            "entry-interactions/spi",
-            "entry-interactions/host",
-            "backup",
-            "trackers",
-            "extension-runtime",
+            "core/data",
+            "core/domain",
+            "core/presentation-core",
+            "features/presentation-widget",
+            "sources/source-local",
+            "sources/source-compat",
+            "sources/source-api",
+            "sources/entry-source-api",
+            "features/entry-interactions",
+            "features/entry-interactions/api",
+            "features/entry-interactions/spi",
+            "features/entry-interactions/host",
+            "features/backup",
+            "features/trackers",
+            "sources/extension-runtime",
             "desktop",
         )
     }
@@ -98,7 +98,7 @@ private class EntryInteractionBoundaryRules(
 ) {
     private val processorInterfaceNames = sourceIndex.files
         .asSequence()
-        .filter { it.relativePath.startsWith("entry-interactions/spi/src/main/") }
+        .filter { it.relativePath.startsWith("features/entry-interactions/spi/src/main/") }
         .flatMap { it.topLevelDeclarations.asSequence() }
         .filter { it.kind == KotlinDeclarationKind.INTERFACE }
         .map { it.name }
@@ -106,7 +106,9 @@ private class EntryInteractionBoundaryRules(
         .toSet()
 
     private val internalApiNames = buildSet {
-        val spiFiles = sourceIndex.files.filter { it.relativePath.startsWith("entry-interactions/spi/src/main/") }
+        val spiFiles = sourceIndex.files.filter {
+            it.relativePath.startsWith("features/entry-interactions/spi/src/main/")
+        }
         addAll(
             spiFiles
                 .flatMap(KotlinSourceFile::topLevelDeclarations)
@@ -119,7 +121,7 @@ private class EntryInteractionBoundaryRules(
         .asSequence()
         .filter { file ->
             file.relativePath.startsWith(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+                "features/entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
             )
         }
         .flatMap { file ->
@@ -307,7 +309,7 @@ private class EntryInteractionBoundaryRules(
 
     private fun checkApplicationApiDispatchContracts(findings: MutableList<Finding>) {
         sourceIndex.files
-            .filter { it.relativePath.startsWith("entry-interactions/api/src/main/") }
+            .filter { it.relativePath.startsWith("features/entry-interactions/api/src/main/") }
             .forEach { file ->
                 file.topLevelDeclarations
                     .filter { declaration ->
@@ -413,9 +415,9 @@ private class EntryInteractionBoundaryRules(
 
     private fun checkAppGradleDependencies(findings: MutableList<Finding>) {
         val forbiddenDependencies = typeModules
-            .map { "projects.entryInteractions.${it.gradleAccessor}" }
-            .plus("projects.entryInteractions.api")
-            .plus("projects.entryInteractions.spi")
+            .map { "projects.features.entryInteractions.${it.gradleAccessor}" }
+            .plus("projects.features.entryInteractions.api")
+            .plus("projects.features.entryInteractions.spi")
 
         applicationBuildFiles().forEach { file ->
             val relativePath = file.relativeTo(root).invariantSeparatorsPath
@@ -426,8 +428,8 @@ private class EntryInteractionBoundaryRules(
                         findings += Finding(
                             relativePath = relativePath,
                             lineNumber = index + 1,
-                            reason = "$module must consume Entry features through projects.entryInteractions, not: " +
-                                dependency,
+                            reason = "$module must consume Entry features through " +
+                                "projects.features.entryInteractions, not: $dependency",
                         )
                     }
                 }
@@ -452,11 +454,15 @@ private class EntryInteractionBoundaryRules(
 
             file.readLines().forEachIndexed { index, line ->
                 if (line.contains("testImplementation")) return@forEachIndexed
-                if (line.contains("projects.entryInteractions)") || line.contains("projects.entryInteractions,")) {
+                if (
+                    line.contains("projects.features.entryInteractions)") ||
+                    line.contains("projects.features.entryInteractions,")
+                ) {
                     findings += Finding(
                         relativePath = module.gradleRelativePath,
                         lineNumber = index + 1,
-                        reason = "type interaction modules must depend on projects.entryInteractions.spi, not root",
+                        reason = "type interaction modules must depend on " +
+                            "projects.features.entryInteractions.spi, not root",
                     )
                 }
             }
@@ -464,13 +470,13 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkRootGradleDependencies(findings: MutableList<Finding>) {
-        val file = root.resolve("entry-interactions/build.gradle.kts")
+        val file = root.resolve("features/entry-interactions/build.gradle.kts")
         if (!file.isFile) return
 
         file.readLines().forEachIndexed { index, line ->
-            if (line.contains("api(projects.entryInteractions.spi)")) {
+            if (line.contains("api(projects.features.entryInteractions.spi)")) {
                 findings += Finding(
-                    relativePath = "entry-interactions/build.gradle.kts",
+                    relativePath = "features/entry-interactions/build.gradle.kts",
                     lineNumber = index + 1,
                     reason = "root Entry interactions must not export the provider SPI to application consumers",
                 )
@@ -505,7 +511,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkRootCompositionTypeModuleImports(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (!file.relativePath.startsWith("entry-interactions/src/main/")) return
+        if (!file.relativePath.startsWith("features/entry-interactions/src/main/")) return
 
         file.imports.forEach { import ->
             val importedFqName = import.importedFqName ?: return@forEach
@@ -550,10 +556,11 @@ private class EntryInteractionBoundaryRules(
     private fun checkLibraryProgressDomainPortReferences(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val allowedPaths = setOf(
-            "domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
-            "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
-            "entry-interactions/api/src/main/java/mihon/entry/interactions/library/EntryLibraryProgressFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryBindings.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/service/EntryLibraryProgressResolution.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
+            "features/entry-interactions/api/src/main/java/mihon/entry/interactions/library/" +
+                "EntryLibraryProgressFeature.kt",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/library/EntryLibraryBindings.kt",
         )
         if (file.relativePath in allowedPaths) return
 
@@ -570,10 +577,10 @@ private class EntryInteractionBoundaryRules(
     private fun checkCatalogueFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
-            file.relativePath.startsWith("data/src/main/") ||
-            file.relativePath.startsWith("domain/src/main/") ||
-            file.relativePath.startsWith("presentation-core/src/main/") ||
-            file.relativePath.startsWith("presentation-widget/src/main/")
+            file.relativePath.startsWith("core/data/src/main/") ||
+            file.relativePath.startsWith("core/domain/src/main/") ||
+            file.relativePath.startsWith("core/presentation-core/src/main/") ||
+            file.relativePath.startsWith("features/presentation-widget/src/main/")
 
         if (isApplicationLayer) {
             if (file.relativePath !in SOURCE_DESCRIPTION_PORT_FILES) {
@@ -600,7 +607,7 @@ private class EntryInteractionBoundaryRules(
         }
 
         val isCatalogueConsumerLayer = isApplicationLayer ||
-            (file.relativePath.startsWith("entry-interactions/") && "/src/main/" in file.relativePath)
+            (file.relativePath.startsWith("features/entry-interactions/") && "/src/main/" in file.relativePath)
         if (!isCatalogueConsumerLayer) return
 
         if (file.relativePath !in CATALOGUE_PROVIDER_ASSEMBLY_FILES) {
@@ -618,7 +625,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkLegacySourceCompatibilityBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (file.isTestPath() || file.relativePath.startsWith("source-compat/src/main/")) return
+        if (file.isTestPath() || file.relativePath.startsWith("sources/source-compat/src/main/")) return
 
         file.imports
             .filter { it.importedFqName == LEGACY_MANGA_SOURCE_ADAPTER }
@@ -645,10 +652,10 @@ private class EntryInteractionBoundaryRules(
     private fun checkSourceActionFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
-            file.relativePath.startsWith("data/src/main/") ||
-            file.relativePath.startsWith("domain/src/main/") ||
-            file.relativePath.startsWith("presentation-core/src/main/") ||
-            file.relativePath.startsWith("presentation-widget/src/main/")
+            file.relativePath.startsWith("core/data/src/main/") ||
+            file.relativePath.startsWith("core/domain/src/main/") ||
+            file.relativePath.startsWith("core/presentation-core/src/main/") ||
+            file.relativePath.startsWith("features/presentation-widget/src/main/")
         if (!isApplicationLayer) return
 
         RAW_SOURCE_ACTION_IMPORTS.forEach { (simpleName, qualifiedName) ->
@@ -666,10 +673,10 @@ private class EntryInteractionBoundaryRules(
     private fun checkDownloadActionPolicyBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val isApplicationLayer = file.relativePath.startsWith("app/src/main/") ||
-            file.relativePath.startsWith("data/src/main/") ||
-            file.relativePath.startsWith("domain/src/main/") ||
-            file.relativePath.startsWith("presentation-core/src/main/") ||
-            file.relativePath.startsWith("presentation-widget/src/main/")
+            file.relativePath.startsWith("core/data/src/main/") ||
+            file.relativePath.startsWith("core/domain/src/main/") ||
+            file.relativePath.startsWith("core/presentation-core/src/main/") ||
+            file.relativePath.startsWith("features/presentation-widget/src/main/")
         if (!isApplicationLayer) return
 
         listOf("EntryDownloadActionTarget", "EntryDownloadSourceAccess").forEach { policyType ->
@@ -699,10 +706,11 @@ private class EntryInteractionBoundaryRules(
     private fun checkSourceRefreshFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val allowedPaths = setOf(
-            "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntrySourceRefreshFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/SourceRefreshBindings.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/" +
+                "DefaultEntrySourceRefreshFeature.kt",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/SourceRefreshBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
@@ -718,10 +726,10 @@ private class EntryInteractionBoundaryRules(
 
     private fun checkSourceRefreshMechanicsBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
-        val ownsSourceContract = file.relativePath.startsWith("entry-source-api/src/") ||
-            file.relativePath.startsWith("source-api/src/") ||
-            file.relativePath.startsWith("source-compat/src/") ||
-            file.relativePath.startsWith("source-local/src/") ||
+        val ownsSourceContract = file.relativePath.startsWith("sources/entry-source-api/src/") ||
+            file.relativePath.startsWith("sources/source-api/src/") ||
+            file.relativePath.startsWith("sources/source-compat/src/") ||
+            file.relativePath.startsWith("sources/source-local/src/") ||
             file.relativePath in SOURCE_REFRESH_MECHANICS_OWNERS
         if (ownsSourceContract) return
 
@@ -739,10 +747,10 @@ private class EntryInteractionBoundaryRules(
     private fun checkMeteredSourcePolicyBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val isGenericConsumer = file.relativePath.startsWith("app/src/main/") ||
-            file.relativePath.startsWith("data/src/main/") ||
-            file.relativePath.startsWith("domain/src/main/") ||
-            file.relativePath.startsWith("presentation-core/src/main/") ||
-            file.relativePath.startsWith("presentation-widget/src/main/")
+            file.relativePath.startsWith("core/data/src/main/") ||
+            file.relativePath.startsWith("core/domain/src/main/") ||
+            file.relativePath.startsWith("core/presentation-core/src/main/") ||
+            file.relativePath.startsWith("features/presentation-widget/src/main/")
         if (!isGenericConsumer) return
 
         file.findReference("UnmeteredSource")?.let { reference ->
@@ -758,11 +766,11 @@ private class EntryInteractionBoundaryRules(
     private fun checkTrackingHostBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
         val ownsTrackingHost = file.relativePath.startsWith(
-            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+            "features/entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
         ) || file.relativePath.startsWith(
-            "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
         ) || file.relativePath.startsWith(
-            "trackers/src/main/java/mihon/entry/interactions/host/tracking/",
+            "features/trackers/src/main/java/mihon/entry/interactions/host/tracking/",
         ) || isEntryHostCompositionPath(file.relativePath)
         if (ownsTrackingHost) return
 
@@ -805,9 +813,9 @@ private class EntryInteractionBoundaryRules(
 
     private fun checkTrackingFeatureModelBoundary(file: KotlinSourceFile, findings: MutableList<Finding>) {
         val isPublicTrackingApi = file.relativePath.startsWith(
-            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/",
+            "features/entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/",
         ) && !file.relativePath.startsWith(
-            "entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
+            "features/entry-interactions/api/src/main/java/mihon/entry/interactions/tracking/host/",
         )
         if (!isPublicTrackingApi) return
 
@@ -824,11 +832,11 @@ private class EntryInteractionBoundaryRules(
 
     private fun checkChildWebViewFeatureBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
         if (file.isTestPath()) return
-        val ownsContract = file.relativePath.startsWith("source-compat/src/main/") ||
-            file.relativePath.startsWith("source-local/src/main/") ||
-            file.relativePath.startsWith("entry-source-api/src/") ||
+        val ownsContract = file.relativePath.startsWith("sources/source-compat/src/main/") ||
+            file.relativePath.startsWith("sources/source-local/src/main/") ||
+            file.relativePath.startsWith("sources/entry-source-api/src/") ||
             file.relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntryWebViewFeature.kt"
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntryWebViewFeature.kt"
         if (ownsContract) return
 
         file.findReference("ChapterWebViewSource")?.let { reference ->
@@ -1063,9 +1071,9 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun KotlinSourceFile.isRootOrTypeModuleOrTestPath(): Boolean {
-        return relativePath.startsWith("entry-interactions/src/main/") ||
-            relativePath.startsWith("entry-interactions/api/src/main/") ||
-            relativePath.startsWith("entry-interactions/spi/src/main/") ||
+        return relativePath.startsWith("features/entry-interactions/src/main/") ||
+            relativePath.startsWith("features/entry-interactions/api/src/main/") ||
+            relativePath.startsWith("features/entry-interactions/spi/src/main/") ||
             owningTypeModule() != null ||
             isTestPath()
     }
@@ -1099,7 +1107,7 @@ private class EntryInteractionBoundaryRules(
             packageName.startsWith("$RAW_TRACKER_PACKAGE.") ||
             packageName == DOMAIN_TRACKER_PACKAGE ||
             packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
-            relativePath.startsWith("trackers/src/main/java/mihon/entry/interactions/host/tracking/") ||
+            relativePath.startsWith("features/trackers/src/main/java/mihon/entry/interactions/host/tracking/") ||
             isAppGraphCompositionPath(relativePath)
     }
 
@@ -1127,20 +1135,20 @@ private class EntryInteractionBoundaryRules(
 
         private val STRICT_IMPORT_CHECKED_ROOTS = listOf(
             "app/src/main/",
-            "data/src/main/",
-            "domain/src/main/",
-            "presentation-core/src/main/",
-            "presentation-widget/src/main/",
-            "source-local/src/main/",
-            "source-compat/src/main/",
+            "core/data/src/main/",
+            "core/domain/src/main/",
+            "core/presentation-core/src/main/",
+            "features/presentation-widget/src/main/",
+            "sources/source-local/src/main/",
+            "sources/source-compat/src/main/",
         )
 
         private val APPLICATION_LAYER_ROOTS = listOf(
             "app/src/main/",
-            "data/src/main/",
-            "domain/src/main/",
-            "presentation-core/src/main/",
-            "presentation-widget/src/main/",
+            "core/data/src/main/",
+            "core/domain/src/main/",
+            "core/presentation-core/src/main/",
+            "features/presentation-widget/src/main/",
         )
 
         private val LEGACY_INTERACTION_APIS = listOf(
@@ -1156,9 +1164,9 @@ private class EntryInteractionBoundaryRules(
         private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
 
         private val SOURCE_DESCRIPTION_PORT_FILES = setOf(
-            "data/src/main/java/tachiyomi/data/source/SourceRepositoryImpl.kt",
-            "domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
-            "domain/src/main/java/tachiyomi/domain/source/service/EntrySourceDescriptionResolutionPort.kt",
+            "core/data/src/main/java/tachiyomi/data/source/SourceRepositoryImpl.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/interactor/GetLibraryEntries.kt",
+            "core/domain/src/main/java/tachiyomi/domain/source/service/EntrySourceDescriptionResolutionPort.kt",
         )
 
         private val RAW_SOURCE_DESCRIPTION_IMPORTS = setOf(
@@ -1170,9 +1178,9 @@ private class EntryInteractionBoundaryRules(
         )
 
         private val CATALOGUE_PROVIDER_ASSEMBLY_FILES = setOf(
-            "domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
-            "domain/src/main/java/tachiyomi/domain/source/model/UnifiedStubSource.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/catalogue/host/" +
+            "core/domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
+            "core/domain/src/main/java/tachiyomi/domain/source/model/UnifiedStubSource.kt",
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/catalogue/host/" +
                 "SourceManagerEntryCatalogueProviderHost.kt",
         )
 
@@ -1200,8 +1208,8 @@ private class EntryInteractionBoundaryRules(
 
         // The whole-list refresh and the older parts of a list arriving in parts save chapters through one saver
         private val SOURCE_REFRESH_MECHANICS_OWNERS = setOf(
-            "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
-            "domain/src/main/java/tachiyomi/domain/entry/interactor/SourceChapterSaver.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
+            "core/domain/src/main/java/tachiyomi/domain/entry/interactor/SourceChapterSaver.kt",
         )
 
         private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(
@@ -1220,18 +1228,18 @@ private class EntryInteractionBoundaryRules(
 
         private val SOURCE_MEDIA_RESOLUTION_GUARDED_ROOTS = listOf(
             "app/src/main/java/",
-            "data/src/main/java/",
-            "domain/src/main/java/",
-            "presentation-core/src/main/java/",
-            "presentation-widget/src/main/java/",
+            "core/data/src/main/java/",
+            "core/domain/src/main/java/",
+            "core/presentation-core/src/main/java/",
+            "features/presentation-widget/src/main/java/",
         )
 
         private val SOURCE_MEDIA_RESOLUTION_ALLOWED_FILES = setOf(
-            "domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
+            "core/domain/src/main/java/tachiyomi/domain/source/model/StubSource.kt",
         )
 
         private val EXHAUSTIVE_ENTRY_TYPE_MAPPING_ALLOWED_FILES = setOf(
-            "entry-interactions/src/main/java/mihon/entry/interactions/library/" +
+            "features/entry-interactions/src/main/java/mihon/entry/interactions/library/" +
                 "EntryLibraryUpdateNotificationRouting.kt",
         )
 
@@ -1247,8 +1255,8 @@ private class EntryInteractionBoundaryRules(
         private val MEDIA_CACHE_MAINTENANCE_GUARDED_ROOTS = listOf(
             "app/src/main/java/eu/kanade/presentation/",
             "app/src/main/java/eu/kanade/tachiyomi/ui/",
-            "presentation-core/src/main/java/",
-            "presentation-widget/src/main/java/",
+            "core/presentation-core/src/main/java/",
+            "features/presentation-widget/src/main/java/",
         )
 
         private val MEDIA_SESSION_DIRECT_CONSEQUENCE_OPERATIONS = setOf(
@@ -1263,7 +1271,7 @@ private class EntryInteractionBoundaryRules(
         private val PROFILE_FEATURE_ROOTS = listOf(
             "app/src/main/java/mihon/feature/profiles/",
             "app-ui/src/commonMain/kotlin/mihon/feature/profiles/",
-            "data/src/commonMain/kotlin/mihon/feature/profiles/",
+            "core/data/src/commonMain/kotlin/mihon/feature/profiles/",
         )
 
         private val DIRECT_BOOKMARK_PERSISTENCE = Regex(
@@ -1289,10 +1297,12 @@ private class EntryInteractionBoundaryRules(
         )
 
         private val PUBLIC_TYPE_MODULE_ANDROID_COMPONENT_FILES = setOf(
-            "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/VideoPlayerActivity.kt",
-            "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
-            "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderNavigationOverlayView.kt",
-            "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/ReaderButton.kt",
+            "features/entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/" +
+                "VideoPlayerActivity.kt",
+            "features/entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+            "features/entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/" +
+                "ReaderNavigationOverlayView.kt",
+            "features/entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/ReaderButton.kt",
         )
     }
 }
@@ -1379,18 +1389,18 @@ private data class TypeModule(
 
     companion object {
         /**
-         * Every module under `entry-interactions/` that isn't infrastructure is a type module. One with none of
-         * [TYPE_MODULE_SOURCE_ROOTS] fails the check, so moving its sources where the check doesn't read them can't
+         * Every module under `features/entry-interactions/` that isn't infrastructure is a type module. One with none
+         * of [TYPE_MODULE_SOURCE_ROOTS] fails the check, so moving its sources where the check doesn't read them can't
          * leave it unchecked.
          */
         fun discover(root: File): List<TypeModule> {
-            val entryInteractions = root.resolve("entry-interactions")
+            val entryInteractions = root.resolve("features/entry-interactions")
             return entryInteractions.listFiles()
                 .orEmpty()
                 .filter { it.isDirectory && it.name !in INFRASTRUCTURE_MODULES }
                 .filter { it.resolve("build.gradle.kts").isFile }
                 .map { directory ->
-                    val relativePath = "entry-interactions/${directory.name}"
+                    val relativePath = "features/entry-interactions/${directory.name}"
                     val sourceRoots = TYPE_MODULE_SOURCE_ROOTS.map(directory::resolve).filter(File::isDirectory)
                     if (sourceRoots.isEmpty()) {
                         throw GradleException(

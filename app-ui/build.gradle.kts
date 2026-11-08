@@ -27,41 +27,41 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.core.metro)
-                api(projects.presentationCore)
+                api(projects.core.presentationCore)
                 // Screen and Tab, which every app screen extends, are Voyager's.
                 api(libs.bundles.voyager)
 
-                api(projects.appUpdate)
+                api(projects.features.appUpdate)
                 implementation(projects.core.common)
                 implementation(projects.core.image)
                 implementation(projects.core.platform)
                 // The debug info shows the backup format's schema.
-                implementation(projects.backup)
+                implementation(projects.features.backup)
                 // The profile manager reads and writes profiles through the database directly.
-                implementation(projects.data)
-                implementation(projects.domain)
-                implementation(projects.entryInteractions.api)
-                implementation(projects.entryViewerChromeUi)
-                implementation(projects.entryViewerSettingsUi)
+                implementation(projects.core.data)
+                implementation(projects.core.domain)
+                implementation(projects.features.entryInteractions.api)
+                implementation(projects.features.entryViewerChromeUi)
+                implementation(projects.features.entryViewerSettingsUi)
                 // Extension and source icons load through the extension host.
-                implementation(projects.extensionRuntime)
-                implementation(projects.i18n)
-                implementation(projects.libraryUpdate)
+                implementation(projects.sources.extensionRuntime)
+                implementation(projects.core.i18n)
+                implementation(projects.features.libraryUpdate)
                 // Source errors from script sources, such as LNReader plugins, are worded by their kind.
-                implementation(projects.scriptRuntime)
-                implementation(projects.icons.customMaterialSymbols)
-                implementation(projects.icons.materialSymbols)
-                implementation(projects.icons.simpleIcons)
-                implementation(projects.modelArtifacts.ui)
+                implementation(projects.sources.scriptRuntime)
+                implementation(projects.core.icons.customMaterialSymbols)
+                implementation(projects.core.icons.materialSymbols)
+                implementation(projects.core.icons.simpleIcons)
+                implementation(projects.features.modelArtifacts.ui)
                 // A source's settings screen shows the preference tree the source settings host reads.
-                implementation(projects.sourceCompat)
-                implementation(projects.sync.client)
+                implementation(projects.sources.sourceCompat)
+                implementation(projects.features.sync.client)
                 // The sync device token is kept in the store for secrets that translation servers' keys use.
-                implementation(projects.translation.providers.serverConnection)
-                implementation(projects.textRecognition.ui)
-                implementation(projects.trackers)
-                implementation(projects.translation.ui)
-                implementation(projects.tts.ui)
+                implementation(projects.features.translation.providers.serverConnection)
+                implementation(projects.features.textRecognition.ui)
+                implementation(projects.features.trackers)
+                implementation(projects.features.translation.ui)
+                implementation(projects.features.tts.ui)
 
                 implementation(libs.compose.multiplatform.runtime)
                 implementation(libs.compose.multiplatform.foundation)
@@ -97,7 +97,7 @@ kotlin {
         commonTest {
             dependencies {
                 // ComicInfo is read back through the app's XML configuration.
-                implementation(projects.coreMetadata)
+                implementation(projects.core.coreMetadata)
                 implementation(projects.core.testFixtures)
                 implementation(libs.bundles.test)
                 implementation(libs.kotlinx.coroutines.test)

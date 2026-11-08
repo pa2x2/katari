@@ -38,13 +38,13 @@ jobs:
 
           while IFS= read -r path; do
             case "$path" in
-              i18n/src/commonMain/moko-resources/base/strings.xml | \
-                i18n/src/commonMain/moko-resources/base/plurals.xml)
+              core/i18n/src/commonMain/moko-resources/base/strings.xml | \
+                core/i18n/src/commonMain/moko-resources/base/plurals.xml)
                 app=true
                 ;;
               *.md | \
-                i18n/src/commonMain/moko-resources/*/strings.xml | \
-                i18n/src/commonMain/moko-resources/*/plurals.xml)
+                core/i18n/src/commonMain/moko-resources/*/strings.xml | \
+                core/i18n/src/commonMain/moko-resources/*/plurals.xml)
                 ;;
               *)
                 app=true

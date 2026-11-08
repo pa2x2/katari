@@ -34,7 +34,7 @@ class PreferenceScopeRulesTest {
         val findings = checkPreferenceScopes(
             listOf(
                 PreferenceScopeSource("reader/src/commonMain/kotlin/ReaderPreferences.kt", preferences),
-                PreferenceScopeSource("sync/client/src/commonMain/kotlin/ReaderScopes.kt", table),
+                PreferenceScopeSource("features/sync/client/src/commonMain/kotlin/ReaderScopes.kt", table),
             ),
         )
 
@@ -65,13 +65,16 @@ class PreferenceScopeRulesTest {
 
         val findings = checkPreferenceScopes(
             listOf(
-                PreferenceScopeSource("domain/src/commonMain/kotlin/LibraryPreferences.kt", preferences),
-                PreferenceScopeSource("sync/client/src/main/kotlin/LibraryScopes.kt", table),
+                PreferenceScopeSource("core/domain/src/commonMain/kotlin/LibraryPreferences.kt", preferences),
+                PreferenceScopeSource("features/sync/client/src/main/kotlin/LibraryScopes.kt", table),
             ),
         )
 
         assertEquals(
-            listOf("sync/client/src/main/kotlin/LibraryScopes.kt:2: no preference uses \"library_removed_setting\""),
+            listOf(
+                "features/sync/client/src/main/kotlin/LibraryScopes.kt:2: " +
+                    "no preference uses \"library_removed_setting\"",
+            ),
             findings.map { "${it.relativePath}:${it.lineNumber}: ${it.reason.substringBefore(';')}" },
         )
     }
@@ -85,11 +88,11 @@ class PreferenceScopeRulesTest {
         """.trimIndent()
 
         val findings = checkPreferenceScopes(
-            listOf(PreferenceScopeSource("domain/src/commonMain/kotlin/EntryPreferences.kt", preferences)),
+            listOf(PreferenceScopeSource("core/domain/src/commonMain/kotlin/EntryPreferences.kt", preferences)),
         )
 
         assertEquals(
-            listOf("domain/src/commonMain/kotlin/EntryPreferences.kt:2"),
+            listOf("core/domain/src/commonMain/kotlin/EntryPreferences.kt:2"),
             findings.map { "${it.relativePath}:${it.lineNumber}" },
         )
     }

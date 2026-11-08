@@ -1,8 +1,9 @@
 # Repo Notes
 
 ## Layout
-- `app/` is the runtime app. Shared code lives in `core/*`, `data`, `domain`, `presentation-*`, `source-*`, `i18n`, `telemetry`, and `macrobenchmark`.
-- Developer tools run by hand (builders of committed artifacts, release and publish scripts, probes, harnesses) live in `tools/`, one directory per tool named after its job. Modules keep only what their own build runs; never add such scripts inside a module.
+- `app/` is the Android app, `desktop/` the Linux app, and `app-ui/` the screens both share; only these modules sit at the repository root.
+- Every other module lives in the group folder that owns it, and its Gradle path follows the folder (`:core:data`, `:features:translation:runtime`): `core/` holds the foundation the apps build on (data, domain, i18n, icons, presentation-core, telemetry and the shared libraries), `sources/` holds what loads extensions and their content (the extension SDK and compatibility APIs, the extension runtime, the web view), and `features/` holds the apps' features. Put a new module in the group that owns it rather than at the root.
+- Developer tools run by hand (builders of committed artifacts, release and publish scripts, probes, harnesses) live in `tools/`, one directory per tool named after its job, together with the baseline profile generator and the showcase pipeline. Modules keep only what their own build runs; never add such scripts inside a module.
 - Custom Gradle plugins and tasks live in `gradle/build-logic/`. `settings.gradle.kts` enables type-safe project accessors and rejects project-level repositories, so add repos only there and use catalog/accessor entries instead of hardcoded versions or string project paths.
 
 ## Source organization
@@ -34,7 +35,7 @@
 - Never combine FOSS/unit/architecture tasks with `-Pinclude-telemetry` in the same Gradle invocation. The property applies Google services to every configured variant and makes `processFossGoogleServices` reject the `app.katari.foss` application ID. Run FOSS checks without it, let that invocation finish, then run telemetry-enabled release compilation or assembly in a separate invocation.
 - Do not infer the installable variant for emulator/device validation from the `foss` unit-test buildType. Before installing, identify the package that is actually running and use the matching Gradle variant: `installDebug` installs `app.katari.dev`, while `installFoss` installs the separate `app.katari.foss` application. After installation, verify that the intended package was launched and that its process changed or restarted; installing a different application ID does not update the app under test.
 - Never launch apps on a device with `adb shell monkey`: its random event can be a rotation, which turns the device's auto-rotate on. Use `adb shell am start -n app.katari.dev/eu.kanade.tachiyomi.ui.main.MainActivity`, or for another package `adb shell 'am start -n "$(cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER <package> | tail -n 1)"'`.
-- After touching `data/src/main/sqldelight`, run `./gradlew verifySqlDelightMigration`.
+- After touching `core/data/src/commonMain/sqldelight`, run `./gradlew verifySqlDelightMigration`.
 
 ## Guidance
 - When asked to fix the issue - never simply apply the easiest fix without finding the reason of the issue. Band-aid solutions are not welcomed. The goal is to fix the reason issue arised in the first place, not to merely fix the symptom

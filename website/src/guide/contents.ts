@@ -17,7 +17,7 @@ export interface GuideEntry {
   /** One line on the manual's index and in the contents' links. */
   summary: string;
   /**
-   * The Material Symbol the app shows for the feature, copied from icons/material-symbols. Pages for extension
+   * The Material Symbol the app shows for the feature, copied from core/icons/material-symbols. Pages for extension
    * developers describe no screen of the app, so they take the nearest symbol from the same set.
    */
   icon: SvgComponent;

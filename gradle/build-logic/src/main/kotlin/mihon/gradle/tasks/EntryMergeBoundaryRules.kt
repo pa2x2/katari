@@ -71,7 +71,9 @@ private fun checkTransitionalSupportReferences(
     source: EntryMergeBoundarySource,
     findings: MutableList<EntryMergeBoundaryFinding>,
 ) {
-    if (!source.isRawAuthorityGuardedPath() && !source.relativePath.startsWith("entry-interactions/spi/src/main/")) {
+    if (!source.isRawAuthorityGuardedPath() &&
+        !source.relativePath.startsWith("features/entry-interactions/spi/src/main/")
+    ) {
         return
     }
     TRANSITIONAL_MERGE_SUPPORT_NAMES.forEach { name ->
@@ -90,7 +92,7 @@ private fun checkHostApiReferences(
     hostApiNames: Set<String>,
     findings: MutableList<EntryMergeBoundaryFinding>,
 ) {
-    if (source.relativePath.startsWith("entry-interactions/api/src/main/")) return
+    if (source.relativePath.startsWith("features/entry-interactions/api/src/main/")) return
 
     hostApiNames.forEach { name ->
         if (source.isAllowedHostReference(name)) return@forEach
@@ -109,7 +111,7 @@ private fun checkRawAuthorityReferences(
     source: EntryMergeBoundarySource,
     findings: MutableList<EntryMergeBoundaryFinding>,
 ) {
-    val isEntryInteractionsApi = source.relativePath.startsWith("entry-interactions/api/src/main/")
+    val isEntryInteractionsApi = source.relativePath.startsWith("features/entry-interactions/api/src/main/")
     if (source.relativePath.startsWith(APPLICATION_ENTRY_INTERACTION_HOST_ROOT)) return
     if (!isEntryInteractionsApi && !source.isRawAuthorityGuardedPath()) return
 
@@ -132,7 +134,7 @@ private fun checkApplicationApiSurface(
     source: EntryMergeBoundarySource,
     findings: MutableList<EntryMergeBoundaryFinding>,
 ) {
-    if (!source.relativePath.startsWith("entry-interactions/api/src/main/")) return
+    if (!source.relativePath.startsWith("features/entry-interactions/api/src/main/")) return
     if (source.relativePath.startsWith(ENTRY_INTERACTIONS_HOST_API_ROOT)) return
     if (!source.content.contains("EntryMerge")) return
 
@@ -179,9 +181,9 @@ private fun EntryMergeBoundarySource.isMergeImplementationPath(): Boolean {
 
 private fun EntryMergeBoundarySource.isRawAuthorityGuardedPath(): Boolean {
     return relativePath.startsWith("app/src/main/") ||
-        relativePath.startsWith("data/src/main/") ||
-        relativePath.startsWith("domain/src/main/") ||
-        relativePath.startsWith("entry-interactions/src/main/") ||
+        relativePath.startsWith("core/data/src/main/") ||
+        relativePath.startsWith("core/domain/src/main/") ||
+        relativePath.startsWith("features/entry-interactions/src/main/") ||
         ENTRY_TYPE_MODULE_ROOT.matches(relativePath)
 }
 
@@ -207,19 +209,19 @@ internal data class EntryMergeBoundaryFinding(
 )
 
 private const val ENTRY_INTERACTIONS_HOST_API_ROOT =
-    "entry-interactions/api/src/main/java/mihon/entry/interactions/merge/host/"
+    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/merge/host/"
 
 private const val ENTRY_INTERACTIONS_MERGE_API_ROOT =
-    "entry-interactions/api/src/main/java/mihon/entry/interactions/merge/"
+    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/merge/"
 
 private const val ENTRY_INTERACTIONS_MERGE_IMPLEMENTATION_ROOT =
-    "entry-interactions/src/main/java/mihon/entry/interactions/merge/"
+    "features/entry-interactions/src/main/java/mihon/entry/interactions/merge/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
+    "features/entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
 
 private val ENTRY_TYPE_MODULE_ROOT = Regex(
-    """entry-interactions/(?!api/|spi/|download-notification/|host/|src/)[^/]+/src/main/.*""",
+    """features/entry-interactions/(?!api/|spi/|download-notification/|host/|src/)[^/]+/src/main/.*""",
 )
 
 private val RAW_MERGE_AUTHORITY_NAMES = setOf(

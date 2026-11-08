@@ -3,13 +3,13 @@ name: release-notes
 description: Generate Katari release notes for the Android app, the desktop app, the sync server and the extension SDK. Use when asked to run or prepare a Katari release changelog, for any of them.
 ---
 
-The Android app, the desktop app and the sync server are versioned and released apart, from the same `main`: the
-Android app from `versionName` in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, the desktop app from
-`version` in `desktop/build.gradle.kts` and `DESKTOP-CHANGELOG.md`, tagged `desktop-v<version>`, and the sync server
-from `version` in `sync/server/build.gradle.kts` and `SYNC-SERVER-CHANGELOG.md`, tagged `sync-server-v<version>`. A push
-to `main` releases each of them whose version has notes and no tag yet, so one release can carry any of them. This
-skill decides what the release covers, holds the rules every changelog follows and the SDK's changelog, and hands each
-app's and the server's changelog to its own skill.
+The Android app, the desktop app and the sync server are versioned and released apart, from the same `main`: the Android
+app from `versionName` in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, the desktop app from `version`
+in `desktop/build.gradle.kts` and `desktop/CHANGELOG.md`, tagged `desktop-v<version>`, and the sync server from
+`version` in `features/sync/server/build.gradle.kts` and `features/sync/server/CHANGELOG.md`, tagged
+`sync-server-v<version>`. A push to `main` releases each of them whose version has notes and no tag yet, so one release
+can carry any of them. This skill decides what the release covers, holds the rules every changelog follows and the SDK's
+changelog, and hands each app's and the server's changelog to its own skill.
 
 ## Decide what the release covers
 
@@ -78,15 +78,16 @@ app's and the server's changelog to its own skill.
    The server's changelog takes only what the people running it notice; an app's sync screens and behaviour stay in
    that app's changelog, and a protocol change reaches each changelog whose audience notices it.
 
-## Update SDK-CHANGELOG.md
+## Update sources/entry-source-api/CHANGELOG.md
 
-1. Inspect SDK changes only under the modules published by `jitpack.yml`, since the last SDK tag (`sdk-*`).
-   - `entry-source-api/`: extension source contracts, capabilities, filters, and media models.
-   - `book-api/`: shared BOOK content, publication, and document contracts.
+1. Inspect SDK changes only under the modules `publishEntrySdkToMavenLocal` publishes (the task `jitpack.yml` runs),
+   since the last SDK tag (`sdk-*`).
+   - `sources/entry-source-api/`: extension source contracts, capabilities, filters, and media models.
+   - `sources/book-api/`: shared BOOK content, publication, and document contracts.
    - `core/common/`: the published supporting library; consider only changes affecting
      extension consumers.
 2. New SDK must already be tagged and released. Use its tag to determine a version.
-3. Update `SDK-CHANGELOG.md` for that SDK version.
+3. Update `sources/entry-source-api/CHANGELOG.md` for that SDK version.
 4. When Katari stops loading extensions built with the previous SDK, or extensions built with this one can't load in
    the previous Katari, the release needs an upgrade guide on the website. Hand that to the `website-update` skill, and
    put one quoted line under the version's heading that links the guide by its full address on the site:

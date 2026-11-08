@@ -79,35 +79,39 @@ private fun String.isMainSource(): Boolean {
     return sourceSet.isNotEmpty() && !sourceSet.contains("test", ignoreCase = true)
 }
 
-private const val SCOPE_TABLES = "sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/scope"
+private const val SCOPE_TABLES = "features/sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/scope"
 
 /** The preference stores themselves, which pass on whatever key they are asked for. */
 private const val PREFERENCE_STORES = "/kotlin/tachiyomi/core/common/preference/"
 
 /** Code that asks stores for keys it doesn't own, with why. */
 internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
-    "extension-runtime/jvm-host/src/main/kotlin/mihon/extension/runtime/jvm/preferences/FileSharedPreferences.kt" to
+    "sources/extension-runtime/jvm-host/src/main/kotlin/mihon/extension/runtime/jvm/preferences/" +
+        "FileSharedPreferences.kt" to
         "the desktop's shared preferences, a store",
-    "backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/restorers/PreferenceRestorer.kt" to
+    "features/backup/src/commonMain/kotlin/eu/kanade/tachiyomi/data/backup/restore/restorers/PreferenceRestorer.kt" to
         "restores whatever keys a backup holds",
-    "sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/apply/StoreSettingWrites.kt" to
+    "features/sync/client/src/commonMain/kotlin/app/katari/sync/client/setting/apply/StoreSettingWrites.kt" to
         "writes the person-level keys other devices synced, which the scope tables already mark",
     "app/src/main/java/mihon/feature/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
         "moves keys of earlier versions into profiles",
-    "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/media/DefaultEntryMediaCacheFeature.kt" to
+    "features/entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/media/" +
+        "DefaultEntryMediaCacheFeature.kt" to
         "reads the keys each cache declares through EntryMediaCacheAutoClearPreference",
     "app/src/main/java/eu/kanade/tachiyomi/data/library/AndroidLibraryUpdateWorkChain.kt" to
         "reads WorkManager input data, not preferences",
-    "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/DownloadStore.kt" to
+    "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/" +
+        "DownloadStore.kt" to
         "the download queue, in a file of its own and keyed by download",
-    "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/" +
+    "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/download/" +
         "DownloadPendingDeleter.kt" to
         "chapters waiting for deletion, in a file of their own and keyed by entry",
-    "entry-interactions/anime/src/commonMain/kotlin/mihon/entry/interactions/anime/download/AnimeDownloadStore.kt" to
+    "features/entry-interactions/anime/src/commonMain/kotlin/mihon/entry/interactions/anime/download/" +
+        "AnimeDownloadStore.kt" to
         "the download queue, in a file of its own and keyed by download",
-    "entry-interactions/book/src/commonMain/kotlin/mihon/entry/interactions/book/download/" +
+    "features/entry-interactions/book/src/commonMain/kotlin/mihon/entry/interactions/book/download/" +
         "BookDownloadQueueFileBackend.kt" to
         "the download queue of earlier versions, in a file of its own",
-    "trackers/src/commonMain/kotlin/eu/kanade/domain/track/store/DelayedTrackingStore.kt" to
+    "features/trackers/src/commonMain/kotlin/eu/kanade/domain/track/store/DelayedTrackingStore.kt" to
         "the tracking queue, in a file of its own and keyed by tracker binding",
 )

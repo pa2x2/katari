@@ -10,7 +10,7 @@ class HostParityRulesTest {
         val findings = checkHostParity(
             listOf(
                 HostParitySource(
-                    "data/src/commonMain/kotlin/shared/di/SharedBindings.kt",
+                    "core/data/src/commonMain/kotlin/shared/di/SharedBindings.kt",
                     """
                         package shared.di
 
@@ -224,7 +224,7 @@ class HostParityRulesTest {
                     "fun setComposeContent() = setContent { AppUiRoot(appGraph) {} }",
                 ),
                 HostParitySource(
-                    "translation/ui/src/androidMain/kotlin/translation/Host.kt",
+                    "features/translation/ui/src/androidMain/kotlin/translation/Host.kt",
                     """
                         @Composable
                         fun Host() = CompositionLocalProvider(LocalClipboardManager provides manager) {}
@@ -240,7 +240,7 @@ class HostParityRulesTest {
         assertEquals(
             listOf(
                 "desktop/src/main/kotlin/desktop/window/Window.kt:8 LocalAppUiGraph",
-                "translation/ui/src/androidMain/kotlin/translation/Host.kt:2 LocalClipboardManager",
+                "features/translation/ui/src/androidMain/kotlin/translation/Host.kt:2 LocalClipboardManager",
             ),
             findings.map { "${it.relativePath}:${it.lineNumber} ${it.reason.substringBefore(' ')}" },
         )

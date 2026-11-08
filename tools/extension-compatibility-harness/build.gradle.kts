@@ -32,11 +32,11 @@ tasks.distTar { enabled = false }
 
 dependencies {
     implementation(projects.desktop)
-    implementation(projects.extensionRuntime)
-    implementation(projects.extensionRuntime.jvmHost)
+    implementation(projects.sources.extensionRuntime)
+    implementation(projects.sources.extensionRuntime.jvmHost)
     implementation(projects.core.common)
-    implementation(projects.domain)
-    implementation(projects.entrySourceApi)
+    implementation(projects.core.domain)
+    implementation(projects.sources.entrySourceApi)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

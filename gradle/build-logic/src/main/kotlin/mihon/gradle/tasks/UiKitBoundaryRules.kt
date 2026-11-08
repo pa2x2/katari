@@ -124,7 +124,7 @@ private val UI_KIT_RULES = listOf(
             UI_KIT_SKILL,
         Regex("""\bandroidx\.compose\.foundation\.pager\.(HorizontalPager|VerticalPager)\b"""),
         // Readers turn their own pages from the wheel, through zoom and across chapters
-        accept = { _, facts -> !facts.relativePath.startsWith("entry-interactions/") },
+        accept = { _, facts -> !facts.relativePath.startsWith("features/entry-interactions/") },
     ),
 )
 
@@ -183,5 +183,8 @@ private fun String.isUiKitConsumerSource(): Boolean {
 }
 
 private fun String.isUiKitConsumerModule(): Boolean {
-    return this != "presentation-core" && this != "icons" && !startsWith("icons/") && !startsWith("gradle/")
+    return this != "core/presentation-core" &&
+        this != "core/icons" &&
+        !startsWith("core/icons/") &&
+        !startsWith("gradle/")
 }

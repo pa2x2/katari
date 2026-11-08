@@ -65,7 +65,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: showcase/package-lock.json
+          cache-dependency-path: tools/showcase/package-lock.json
 
       # Upstream sites such as Project Gutenberg go down for hours and Wikimedia limits how often it is asked, so a run
       # starts from what the last run that downloaded anything kept. It is an artifact rather than an Actions cache: a
@@ -98,7 +98,7 @@ jobs:
           npm run seed
 
       - name: Build
-        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
+        run: ./gradlew :app:assembleBenchmark :tools:showcase:extension:assembleShowcase :tools:showcase:capture:assembleShowcase
 
       # The benchmark build is minified, so the app's frames in a failed capture's thread dumps read only through its
       # mapping, which goes along for that.
@@ -109,8 +109,8 @@ jobs:
           build="$RUNNER_TEMP/showcase-build"
           mkdir -p "$build"
           cp app/build/outputs/apk/benchmark/app-x86_64-benchmark.apk "$build/app.apk"
-          cp showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$build/extension.apk"
-          cp showcase/capture/build/outputs/apk/showcase/capture-showcase.apk "$build/capture.apk"
+          cp tools/showcase/extension/build/outputs/apk/showcase/extension-showcase.apk "$build/extension.apk"
+          cp tools/showcase/capture/build/outputs/apk/showcase/capture-showcase.apk "$build/capture.apk"
           cp app/build/outputs/mapping/benchmark/mapping.txt "$build/mapping.txt"
           cp "$KATARI_SHOWCASE_CACHE/showcase.tachibk" "$build/"
           cp -r "$KATARI_SHOWCASE_CACHE/served" "$build/"
@@ -125,7 +125,7 @@ jobs:
 
       - name: List the groups of scenes to capture
         id: matrix
-        run: echo "matrix=$(node showcase/pipeline/capture-matrix.ts)" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(node tools/showcase/pipeline/capture-matrix.ts)" >> "$GITHUB_OUTPUT"
 
       # Also after a failure, so a later run starts from whatever this one managed to download.
       - name: Keep the showcase downloads the build used
@@ -148,7 +148,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.build.outputs.matrix) }}
     env:
-      # Matches showcase/pipeline/device/emulator.ts.
+      # Matches tools/showcase/pipeline/device/emulator.ts.
       SYSTEM_IMAGE: system-images;android-36.1;google_apis;x86_64
 
     steps:
@@ -162,7 +162,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: showcase/package-lock.json
+          cache-dependency-path: tools/showcase/package-lock.json
 
       - name: Set up the emulator
         run: |
@@ -343,7 +343,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: showcase/package-lock.json
+          cache-dependency-path: tools/showcase/package-lock.json
 
       # The comparison reads a clip's format with ffprobe.
       - name: Install ffmpeg
@@ -362,7 +362,7 @@ jobs:
           (cd showcase && npm ci)
           proposal="$RUNNER_TEMP/proposal"
           mkdir -p "$proposal/files"
-          node showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" > "$proposal/result.json"
+          node tools/showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" > "$proposal/result.json"
           cat "$proposal/result.json"
           jq -r '.changed[]' "$proposal/result.json" | while read -r name; do
             cp "$RUNNER_TEMP/captures/$name" "$proposal/files/"

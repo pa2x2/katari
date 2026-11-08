@@ -42,7 +42,8 @@ class DesktopCookieStore(directory: Path) {
      * copy reads [all] once subscribed (`onSubscription`) and applies the changes after it: a change it receives may
      * already be in what it read, and applying the changes in order still ends with the store's cookies.
      *
-     * The desktop web view's cookie mirror (`:web-view:jcef`) listens, to keep Chromium's cookies in step with the store.
+     * The desktop web view's cookie mirror (`:sources:web-view:jcef`) listens, to keep Chromium's cookies in step with
+     * the store.
      */
     val changes: SharedFlow<CookieChange> = changeEvents.asSharedFlow()
 

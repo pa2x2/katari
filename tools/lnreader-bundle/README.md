@@ -7,9 +7,10 @@ from LNReader's tree), protobufjs 8.7.1 and @noble/ciphers 2.2.0. `entries/` spl
 - `core`: cheerio, htmlparser2 and dayjs, evaluated by every LNReader runtime.
 - `urlencode`, `protobuf`, `ciphers`: evaluated on the first `require` that needs them.
 
-The built chunks are committed in `../../source-compat/src/commonMain/resources/eu/kanade/tachiyomi/source/lnreader/libs/`; Gradle never runs
-npm. `SHA256SUMS` records them, and `checkVendoredScripts` (part of `spotlessCheck`) fails when a committed chunk
-doesn't match. The build also rewrites the licence-screen entries of every bundled package
+The built chunks are committed in
+`../../sources/source-compat/src/commonMain/resources/eu/kanade/tachiyomi/source/lnreader/libs/`; Gradle never runs npm.
+`SHA256SUMS` records them, and `checkVendoredScripts` (part of `spotlessCheck`) fails when a committed chunk doesn't
+match. The build also rewrites the licence-screen entries of every bundled package
 (`app/licences/*/lnreader-npm-*.json`).
 
 Rebuild after changing a version in `package.json`:

@@ -2,9 +2,10 @@ name: Release
 
 # A push to main releases each app whose version has notes in its changelog and no tag holding it yet: the Android app
 # from versionName in app/build.gradle.kts and CHANGELOG.md, tagged v<version>, the desktop app from version in
-# desktop/build.gradle.kts and DESKTOP-CHANGELOG.md, tagged desktop-v<version>, and the sync server from version in
-# sync/server/build.gradle.kts and SYNC-SERVER-CHANGELOG.md, tagged sync-server-v<version>. One push can release any of
-# them. Each app's release is a draft, to try it before anyone is offered it, and its commit is tagged along with it.
+# desktop/build.gradle.kts and desktop/CHANGELOG.md, tagged desktop-v<version>, and the sync server from version in
+# features/sync/server/build.gradle.kts and features/sync/server/CHANGELOG.md, tagged sync-server-v<version>. One push
+# can release any of them. Each app's release is a draft, to try it before anyone is offered it, and its commit is
+# tagged along with it.
 # The sync server gets no GitHub release: its image goes straight to this repository's packages.
 on:
   push:
@@ -77,8 +78,8 @@ jobs:
           }
 
           release_of android app/build.gradle.kts '^ *versionName = "\(.*\)"$' v CHANGELOG.md
-          release_of desktop desktop/build.gradle.kts '^version = "\(.*\)"$' desktop-v DESKTOP-CHANGELOG.md
-          release_of server sync/server/build.gradle.kts '^version = "\(.*\)"$' sync-server-v SYNC-SERVER-CHANGELOG.md
+          release_of desktop desktop/build.gradle.kts '^version = "\(.*\)"$' desktop-v desktop/CHANGELOG.md
+          release_of server features/sync/server/build.gradle.kts '^version = "\(.*\)"$' sync-server-v features/sync/server/CHANGELOG.md
 
   build:
     name: Build
@@ -361,7 +362,7 @@ jobs:
           cache-read-only: true
 
       - name: Build and test the server
-        run: ./gradlew :sync:server:test :sync:server:installDist
+        run: ./gradlew :features:sync:server:test :features:sync:server:installDist
 
       - name: Name the image and its tags
         id: names
@@ -394,8 +395,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: sync/server/build/install/katari-sync-server
-          file: sync/server/Dockerfile
+          context: features/sync/server/build/install/katari-sync-server
+          file: features/sync/server/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.names.outputs.tags }}

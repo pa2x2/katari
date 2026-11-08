@@ -17,10 +17,10 @@ describe what it does.
 
 ## Collect the changes
 
-1. When the release-notes skill hands off, take its new `CHANGELOG.md` and `SDK-CHANGELOG.md` outcomes as the list
-   to check. Otherwise derive outcomes from `git log main..HEAD` and `git diff main...HEAD`, the same way release-notes
-   does, keeping only those a user or extension developer would notice.
-2. Inspect `git diff main...HEAD -- i18n/src/commonMain/moko-resources/base/strings.xml`. Every changed or removed
+1. When the release-notes skill hands off, take its new `CHANGELOG.md` and `sources/entry-source-api/CHANGELOG.md`
+   outcomes as the list to check. Otherwise derive outcomes from `git log main..HEAD` and `git diff main...HEAD`, the
+   same way release-notes does, keeping only those a user or extension developer would notice.
+2. Inspect `git diff main...HEAD -- core/i18n/src/commonMain/moko-resources/base/strings.xml`. Every changed or removed
    string is a label the site may still quote.
 3. Create a temporary file to track each outcome and its verdict.
 
@@ -47,10 +47,10 @@ describe what it does.
    `website/src/pages/developers/upgrade/<major.minor>.astro`, listed first after the SDK changelog in the developer
    contents' "SDK releases" group. Follow `upgrade/3.0.astro`: build changes, then what no longer compiles, then what still
    compiles but behaves differently, each change as a diff `Snippet` with a link to the section that explains it. Write
-   its versions out instead of reading `sdk.ts`. The SDK changelog page renders `SDK-CHANGELOG.md` itself, and the
-   build fails when the file links a guide page that doesn't exist.
+   its versions out instead of reading `sdk.ts`. The SDK changelog page renders `sources/entry-source-api/CHANGELOG.md`
+   itself, and the build fails when the file links a guide page that doesn't exist.
 4. When a page needs a still or clip that does not exist, do not make one by hand. Report the scene it needs so it can
-   be added to `showcase/capture` and `showcase/pipeline/scenes.ts`.
+   be added to `tools/showcase/capture` and `tools/showcase/pipeline/scenes.ts`.
 
 ## Writing rules
 
