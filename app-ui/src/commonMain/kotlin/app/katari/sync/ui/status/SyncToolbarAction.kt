@@ -1,11 +1,13 @@
 package app.katari.sync.ui.status
 
 import androidx.compose.runtime.Composable
+import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
+import mihon.icons.custommaterialsymbols.rounded.CloudSyncArrows
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Cloud
 import mihon.icons.materialsymbols.rounded.CloudDone
 import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.icons.materialsymbols.rounded.CloudUpload
-import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.SyncProblem
 import mihon.icons.materialsymbols.rounded.Wifi
 import mihon.presentation.kit.content.Spin
@@ -13,9 +15,10 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.theme.ContentTone
 
 /**
- * Sync's icon in the Library toolbar (D028, D055), always there once the device is set up: turning arrows while it
- * syncs, a count while changes wait to be sent, a warning when it needs the person, a check mark when up to date. It
- * opens the Sync page. A standalone device shows none: there the Sync row in More is sync's only trace (D028).
+ * Sync's icon in the Library toolbar (D028, D055), always there once the device is set up: a cloud whose arrows turn
+ * while it syncs, so it doesn't read as library update's refresh beside it; a count while changes wait to be sent, a
+ * warning when it needs the person, a check mark when up to date. It opens the Sync page. A standalone device shows
+ * none: there the Sync row in More is sync's only trace (D028).
  */
 @Composable
 fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
@@ -32,9 +35,10 @@ fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
         headline is SyncHeadline.Syncing || headline is SyncHeadline.Downloading || headline is SyncHeadline.Step ->
             AppBar.Action(
                 title = title,
-                icon = MaterialSymbols.Rounded.Sync,
+                icon = MaterialSymbols.Rounded.Cloud,
                 onClick = onClick,
                 spin = Spin.CounterClockwise,
+                arrows = CustomMaterialSymbols.Rounded.CloudSyncArrows,
             )
         headline is SyncHeadline.Unsent -> AppBar.Action(
             title = title,

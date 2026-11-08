@@ -1,0 +1,7 @@
+<!--
+  Custom Material Symbols Rounded 'cloud_sync_arrows'.
+  Two arrows turning counterclockwise, drawn to sit inside Material Symbols Rounded 'cloud'
+  and to turn about their centre while the cloud stays still.
+  SPDX-License-Identifier: Apache-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M536.8 -616C481 -636.3 418.7 -625.3 373.3 -587.2C327.9 -549 306.2 -489.6 316.5 -431.2L275.2 -423.9L366.1 -368.8L432.7 -451.7L391.4 -444.4C385.8 -476 397.5 -508.3 422.1 -528.9C446.8 -549.6 480.6 -555.6 510.8 -544.6C530.5 -537.4 552.3 -547.6 559.5 -567.3C566.7 -587 556.5 -608.8 536.8 -616ZM423.2 -304C479 -283.7 541.3 -294.7 586.7 -332.8C632.1 -371 653.8 -430.4 643.5 -488.8L684.8 -496.1L593.9 -551.2L527.3 -468.3L568.6 -475.6C574.2 -444 562.5 -411.7 537.9 -391.1C513.2 -370.4 479.4 -364.4 449.2 -375.4C429.5 -382.6 407.7 -372.4 400.5 -352.7C393.3 -333 403.5 -311.2 423.2 -304Z"/></svg>

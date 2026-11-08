@@ -10,7 +10,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 |---|---|---|
 | A screen: bars, floating action, snackbars, insets, room for the dock, how wide content grows | `Scaffold` | Pick the content width with its `frame` (see `adaptive-layout`) |
 | A screen's top bar, with an action mode while items are selected | `AppBar`, `AppBarTitle`, `UpButton` | `UpButton` takes another icon where "up" closes something, such as a full-screen editor |
-| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs |
+| The bar's actions: icons with tooltips, the rest in one "More" menu | `AppBarActions`, `AppBarAvatarButton` | The avatar button ends the actions, such as the active profile; an action's `spin` turns its icon while its work runs, or only its `arrows` over a still icon, such as sync's cloud |
 | Filter chips or a summary line under the app bar, in the same top bar | `AppBarExtension` | Filled like the bar (`actionMode` for a bar in action mode); never a `Surface` or row of your own under the bar |
 | A large title that collapses on scroll and grows back | `rememberAppBarScrollBehavior`, `rememberAppBarExpander` | The expander grows it back when content returns to its top from code |
 | An app bar that turns into a search field | `SearchToolbar` | |
@@ -105,7 +105,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | The app's button, including destructive confirms | `Button` | Style by its `style` enum and `destructive` |
-| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs |
+| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs; with `arrows` drawn over a still icon, only they turn |
 | Lines between groups of icon buttons in one row, such as a formatting bar | `ButtonGroupDivider` | |
 | An item's actions in a row that scrolls or wraps, such as an entry's library and tracking actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |
