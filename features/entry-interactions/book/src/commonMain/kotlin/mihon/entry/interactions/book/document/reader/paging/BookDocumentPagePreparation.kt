@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.document.reader.paging
 
+import app.katari.book.api.document.BookDocumentBlockContent
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import tachiyomi.domain.entry.model.EntryChapter
 

@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
-import mihon.book.api.document.BookDocumentBorder
-import mihon.book.api.document.BookDocumentBorderStyle
-import mihon.book.api.document.BookDocumentBoxBorders
-import mihon.book.api.document.BookDocumentBoxStyle
-import mihon.book.api.document.BookDocumentCorners
-import mihon.book.api.document.BookDocumentInsets
+import app.katari.book.api.document.BookDocumentBorder
+import app.katari.book.api.document.BookDocumentBorderStyle
+import app.katari.book.api.document.BookDocumentBoxBorders
+import app.katari.book.api.document.BookDocumentBoxStyle
+import app.katari.book.api.document.BookDocumentCorners
+import app.katari.book.api.document.BookDocumentInsets
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssLength
 import mihon.entry.interactions.book.format.html.prosechapter.css.cssComponents
 import mihon.entry.interactions.book.format.html.prosechapter.css.isTransparentColor

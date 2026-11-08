@@ -3,8 +3,8 @@ package mihon.entry.interactions.book.document.reader.box
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBorder
-import mihon.book.api.document.BookDocumentBoxStyle
+import app.katari.book.api.document.BookDocumentBorder
+import app.katari.book.api.document.BookDocumentBoxStyle
 import kotlin.math.roundToInt
 
 /*

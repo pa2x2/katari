@@ -13,11 +13,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.layoutBookDocumentTable
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.layoutBookDocumentTable
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader

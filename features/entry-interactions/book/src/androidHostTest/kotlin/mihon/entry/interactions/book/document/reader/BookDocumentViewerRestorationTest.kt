@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.viewer.EntryChildWindow
 import org.junit.Test
 import org.junit.runner.RunWith

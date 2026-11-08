@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCapability
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import java.io.ByteArrayOutputStream

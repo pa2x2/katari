@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.content
 
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookContentResourceGroup
-import mihon.book.api.BookContentResourcePage
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourceGroup
+import app.katari.book.api.BookContentResourcePage
 import java.io.File
 import java.io.InputStream
 

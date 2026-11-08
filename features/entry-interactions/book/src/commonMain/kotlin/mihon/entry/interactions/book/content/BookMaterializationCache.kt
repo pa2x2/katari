@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookResourceCacheState
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookResourceCacheState
 import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.nio.file.AtomicMoveNotSupportedException

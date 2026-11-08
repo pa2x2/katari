@@ -17,7 +17,7 @@ version = providers.gradleProperty("sourceApiVersion")
 kotlin {
     @Suppress("UnstableApiUsage")
     android {
-        namespace = "mihon.book.api"
+        namespace = "app.katari.book.api"
         optimization {
             consumerKeepRules.apply {
                 publish = true

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.epub.navigation
 
-import mihon.book.api.BookLocator
+import app.katari.book.api.BookLocator
 import mihon.entry.interactions.book.format.epub.archive.EpubArchiveReference
 import mihon.entry.interactions.book.format.epub.archive.resolveArchiveReference
 

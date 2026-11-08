@@ -1,5 +1,9 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourcePage
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
@@ -9,10 +13,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookContentResourcePage
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCacheState
 import mihon.entry.interactions.book.runtime.requireBook
 import tachiyomi.domain.entry.model.Entry
 import java.io.ByteArrayInputStream

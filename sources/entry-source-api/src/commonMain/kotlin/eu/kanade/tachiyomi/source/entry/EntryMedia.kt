@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.source.entry
 
-import mihon.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentDescriptor
 
 /**
  * Sealed media payload returned by [UnifiedSource.getMedia].

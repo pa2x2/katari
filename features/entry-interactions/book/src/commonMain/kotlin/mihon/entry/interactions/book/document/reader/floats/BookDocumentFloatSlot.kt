@@ -5,7 +5,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentFloat
+import app.katari.book.api.document.BookDocumentFloat
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxSlice
 import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
 

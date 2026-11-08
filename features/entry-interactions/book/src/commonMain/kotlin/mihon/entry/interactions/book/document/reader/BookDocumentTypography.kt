@@ -6,10 +6,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import mihon.book.api.document.BookDocumentAlignment
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentFontFamily
+import app.katari.book.api.document.BookDocumentAlignment
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment

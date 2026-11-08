@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.format.html.prosechapter.sanitization
 
-import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.toBookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.toBookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport

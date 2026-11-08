@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.text.TextMeasurer
-import mihon.book.api.document.BookDocumentFontFamily
+import app.katari.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography

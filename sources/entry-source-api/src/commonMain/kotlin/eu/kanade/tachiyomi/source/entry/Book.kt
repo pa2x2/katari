@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.source.entry
 
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookResourceAvailability
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookResourceAvailability
 
 /**
  * A bounded snapshot of source-known resources for one book publication.

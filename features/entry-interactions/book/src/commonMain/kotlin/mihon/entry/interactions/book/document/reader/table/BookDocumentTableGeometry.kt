@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.reader.table
 
 import androidx.compose.ui.unit.IntRect
-import mihon.book.api.document.BookDocumentTableLayout
+import app.katari.book.api.document.BookDocumentTableLayout
 import kotlin.math.ceil
 
 internal data class BookDocumentTableGeometry(

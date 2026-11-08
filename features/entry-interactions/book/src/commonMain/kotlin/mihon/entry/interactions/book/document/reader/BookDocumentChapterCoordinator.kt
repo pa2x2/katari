@@ -1,5 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
+import app.katari.book.api.BookLocator
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.locatorAt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,9 +15,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.book.api.BookLocator
-import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.locatorAt
 import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -405,7 +405,7 @@ internal class BookDocumentChapterCoordinator(
 
     private fun requestNavigation(
         section: BookDocumentSection<EntryChapter>,
-        position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
+        position: app.katari.book.api.document.BookDocumentPosition = section.initialPosition,
         alignToPassage: Boolean = false,
         returnToOrigin: Boolean = false,
         centerLine: Boolean = false,

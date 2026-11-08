@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.document.reader.paging
 
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentRichText
-import mihon.book.api.document.BookDocumentTextRange
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentRichText
+import app.katari.book.api.document.BookDocumentTextRange
 
 /** Retains source ranges and inline semantics when a paragraph continues on another page. */
 internal fun BookDocumentBlock.pageTextSlice(sourceText: String, start: Int, end: Int): BookDocumentBlock {

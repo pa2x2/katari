@@ -29,7 +29,7 @@
 # rewrite signatures or method finality on this surface.
 -keep class eu.kanade.tachiyomi.source.** { *; }
 -keep class eu.kanade.tachiyomi.source.entry.** { *; }
--keep class mihon.book.api.** { *; }
+-keep class app.katari.book.api.** { *; }
 -keep class eu.kanade.tachiyomi.util.JsoupExtensionsKt { *; }
 -keep class eu.kanade.tachiyomi.util.RxExtensionKt { *; }
 

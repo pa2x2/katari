@@ -1,14 +1,14 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
-import mihon.book.api.document.BookDocumentAlignment
-import mihon.book.api.document.BookDocumentFlowStyle
-import mihon.book.api.document.BookDocumentFontFamily
-import mihon.book.api.document.BookDocumentInlineStyle
-import mihon.book.api.document.BookDocumentStyle
-import mihon.book.api.document.BookDocumentTextContext
-import mihon.book.api.document.BookDocumentTextDirection
-import mihon.book.api.document.BookDocumentTextTransform
-import mihon.book.api.document.BookDocumentWhiteSpace
+import app.katari.book.api.document.BookDocumentAlignment
+import app.katari.book.api.document.BookDocumentFlowStyle
+import app.katari.book.api.document.BookDocumentFontFamily
+import app.katari.book.api.document.BookDocumentInlineStyle
+import app.katari.book.api.document.BookDocumentStyle
+import app.katari.book.api.document.BookDocumentTextContext
+import app.katari.book.api.document.BookDocumentTextDirection
+import app.katari.book.api.document.BookDocumentTextTransform
+import app.katari.book.api.document.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssLength
 import mihon.entry.interactions.book.format.html.prosechapter.css.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
 import mihon.entry.interactions.book.format.html.prosechapter.css.isTransparentColor

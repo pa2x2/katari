@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.sanitization
 
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentLinkTarget
 import org.jsoup.nodes.Element
 
 /** Recognizes explicit note semantics and the paired note/backlink IDs used in Gutenberg and Pandoc HTML. */

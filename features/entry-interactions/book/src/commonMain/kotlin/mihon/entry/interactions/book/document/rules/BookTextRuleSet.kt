@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.rules
 
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentTextEdit
-import mihon.book.api.document.withTextBlockEdits
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentTextEdit
+import app.katari.book.api.document.withTextBlockEdits
 import mihon.entry.interactions.reader.settings.BookTextRule
 
 /**

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.sanitization
 
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

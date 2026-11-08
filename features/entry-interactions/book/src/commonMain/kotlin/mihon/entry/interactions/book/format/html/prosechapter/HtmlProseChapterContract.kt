@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter
 
-import mihon.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentDescriptor
 
 internal object HtmlProseChapterContract {
     const val FORMAT = "text/html"

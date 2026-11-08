@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
-import mihon.book.api.document.BookDocumentGradient
+import app.katari.book.api.document.BookDocumentGradient
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssLength
 import mihon.entry.interactions.book.format.html.prosechapter.css.cssComponents
 import mihon.entry.interactions.book.format.html.prosechapter.css.parseCssColor

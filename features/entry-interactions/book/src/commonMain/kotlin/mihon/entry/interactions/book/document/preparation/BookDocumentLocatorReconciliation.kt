@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.document.preparation
 
-import mihon.book.api.BookLocator
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.locatorAt
-import mihon.book.api.document.resolvePosition
+import app.katari.book.api.BookLocator
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.locatorAt
+import app.katari.book.api.document.resolvePosition
 
 /** Migrated block IDs belong to the source document; only content evidence can identify a new document. */
 internal fun reconcileDocumentLocator(documents: List<BookDocument>, locator: BookLocator): BookLocator? {

@@ -156,7 +156,7 @@ internal fun rememberBookDocumentPagedNavigation(
                 val document = section.document.document
                 val last = page.fragments.last()
                 val lastBlock = last.item as BookDocumentViewerItem.Block
-                val endPosition = mihon.book.api.document.BookDocumentPosition(lastBlock.content.id, last.end)
+                val endPosition = app.katari.book.api.document.BookDocumentPosition(lastBlock.content.id, last.end)
                 val location = BookDocumentViewerLocation(
                     section,
                     position,

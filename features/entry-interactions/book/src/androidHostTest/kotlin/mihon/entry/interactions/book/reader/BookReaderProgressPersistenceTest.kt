@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookLocator
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookLocator
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

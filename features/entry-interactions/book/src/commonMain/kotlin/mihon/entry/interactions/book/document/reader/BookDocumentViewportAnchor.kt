@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.runtime.saveable.listSaver
-import mihon.book.api.document.BookDocumentBlockId
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocumentPosition
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Saves the first visible passage for mode changes and recreation, independently of reading progress. */

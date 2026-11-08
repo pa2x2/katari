@@ -5,7 +5,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Constraints
-import mihon.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlock
 
 /**
  * A text block laid out off-screen the way [BookDocumentSelectableText] draws it, for page breaks and float splits.

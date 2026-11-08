@@ -1,15 +1,15 @@
 package mihon.entry.interactions.book.format.epub.preparation
 
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentBlockRole
+import app.katari.book.api.document.BookDocumentContent
+import app.katari.book.api.document.BookDocumentLinkTarget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentBlockId
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentBlockRole
-import mihon.book.api.document.BookDocumentContent
-import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.format.epub.EpubContract
 import mihon.entry.interactions.book.format.epub.archive.EpubArchive
 import mihon.entry.interactions.book.format.epub.archive.EpubArchiveReference

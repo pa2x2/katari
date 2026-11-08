@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.render
 
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockId
 
 /**
  * Android rendering projection of the processor-neutral [BookDocument].

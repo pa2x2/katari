@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.reader.sidebyside
 
-import mihon.book.api.document.BookDocumentGridTrack
-import mihon.book.api.document.BookDocumentJustification
+import app.katari.book.api.document.BookDocumentGridTrack
+import app.katari.book.api.document.BookDocumentJustification
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

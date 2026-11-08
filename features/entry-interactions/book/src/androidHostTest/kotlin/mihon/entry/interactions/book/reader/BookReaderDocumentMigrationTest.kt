@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookTextContext
+import app.katari.book.api.document.locatorAt
+import app.katari.book.api.document.resolvePosition
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookLocator
-import mihon.book.api.BookTextContext
-import mihon.book.api.document.locatorAt
-import mihon.book.api.document.resolvePosition
 import mihon.entry.interactions.book.document.preparation.preparedDocumentPublication
 import mihon.entry.interactions.book.migration.BOOK_PENDING_MIGRATION_CONTENT_KEY
 import mihon.entry.interactions.book.state.BookProgressIdentity

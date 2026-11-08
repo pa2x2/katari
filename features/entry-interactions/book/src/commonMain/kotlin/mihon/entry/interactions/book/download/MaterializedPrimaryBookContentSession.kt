@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.download
 
-import mihon.book.api.BookContentResource
+import app.katari.book.api.BookContentResource
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.MaterializedBookResource

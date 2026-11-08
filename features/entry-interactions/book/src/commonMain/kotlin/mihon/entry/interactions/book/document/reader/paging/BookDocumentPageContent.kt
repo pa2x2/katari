@@ -14,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem

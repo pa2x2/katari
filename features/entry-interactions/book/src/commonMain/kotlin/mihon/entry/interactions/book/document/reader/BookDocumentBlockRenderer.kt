@@ -13,10 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentContent
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentContent
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.figure.BookDocumentFigureRenderer
 import mihon.entry.interactions.book.document.reader.sidebyside.BookDocumentSideBySideRenderer
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer

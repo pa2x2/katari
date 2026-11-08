@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookContentDescriptor
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.BookLinkedResources
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
@@ -13,7 +14,6 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
-import mihon.book.api.BookContentDescriptor
 import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload

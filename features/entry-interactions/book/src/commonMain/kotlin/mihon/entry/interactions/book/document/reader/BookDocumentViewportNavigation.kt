@@ -4,10 +4,10 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentPosition
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportGeometry
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import tachiyomi.domain.entry.model.EntryChapter

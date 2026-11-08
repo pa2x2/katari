@@ -2,9 +2,9 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.BookDocumentRichText
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentRichText
 
 @Composable
 internal fun BookDocumentRichTextRenderer(

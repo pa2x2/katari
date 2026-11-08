@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookContentResource
 import eu.kanade.tachiyomi.util.lang.Hash
 import kotlinx.serialization.json.Json
-import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.content.fileSuffix
 import tachiyomi.core.common.storage.ListedStorageFile
 import tachiyomi.core.common.storage.StorageFile

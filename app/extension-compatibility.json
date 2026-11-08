@@ -4,7 +4,7 @@
       "id": "katari",
       "name": "Katari extensions",
       "library": "Entry SDK",
-      "versions": ["3.0"]
+      "versions": ["4.0"]
     },
     {
       "id": "tachiyomi",

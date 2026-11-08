@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentDescriptor
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import io.mockk.coEvery
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookContentDescriptor
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue

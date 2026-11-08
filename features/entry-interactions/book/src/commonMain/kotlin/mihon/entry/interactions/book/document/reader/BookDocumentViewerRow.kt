@@ -9,8 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
 import mihon.entry.interactions.book.document.reader.box.textBackdrop
 import mihon.entry.interactions.book.document.reader.floats.BookDocumentFloatWrap

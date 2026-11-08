@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
-import mihon.book.api.document.BookDocumentBoxStyle
-import mihon.book.api.document.BookDocumentFloat
-import mihon.book.api.document.BookDocumentGridTrack
-import mihon.book.api.document.BookDocumentInsets
-import mihon.book.api.document.BookDocumentItemAlignment
-import mihon.book.api.document.BookDocumentItemSizing
-import mihon.book.api.document.BookDocumentJustification
-import mihon.book.api.document.BookDocumentSideBySideLayout
+import app.katari.book.api.document.BookDocumentBoxStyle
+import app.katari.book.api.document.BookDocumentFloat
+import app.katari.book.api.document.BookDocumentGridTrack
+import app.katari.book.api.document.BookDocumentInsets
+import app.katari.book.api.document.BookDocumentItemAlignment
+import app.katari.book.api.document.BookDocumentItemSizing
+import app.katari.book.api.document.BookDocumentJustification
+import app.katari.book.api.document.BookDocumentSideBySideLayout
 import mihon.entry.interactions.book.format.html.prosechapter.css.CssLength
 import mihon.entry.interactions.book.format.html.prosechapter.css.cssComponents
 import mihon.entry.interactions.book.format.html.prosechapter.css.parseCssLength

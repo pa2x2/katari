@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentTableLayout
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentTableLayout
 import mihon.presentation.kit.window.currentWindowLayout
 
 /** Keeps a complete row grid while composing selectable cells only near the window. */

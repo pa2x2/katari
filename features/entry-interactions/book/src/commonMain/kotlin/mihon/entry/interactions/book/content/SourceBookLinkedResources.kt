@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
+import app.katari.book.api.BookResourceCapability
 import eu.kanade.tachiyomi.source.entry.BookLinkedResources
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCacheState
-import mihon.book.api.BookResourceCapability
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 

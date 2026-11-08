@@ -7,10 +7,10 @@ import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBorder
-import mihon.book.api.document.BookDocumentBorderStyle
-import mihon.book.api.document.BookDocumentBoxStyle
-import mihon.book.api.document.BookDocumentGradient
+import app.katari.book.api.document.BookDocumentBorder
+import app.katari.book.api.document.BookDocumentBorderStyle
+import app.katari.book.api.document.BookDocumentBoxStyle
+import app.katari.book.api.document.BookDocumentGradient
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentAuthoredStyling
 import mihon.presentation.kit.content.DocumentBorder
 import mihon.presentation.kit.content.DocumentBorderStyle

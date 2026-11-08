@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
+import app.katari.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocumentPosition
 import io.kotest.matchers.shouldBe
-import mihon.book.api.document.BookDocumentBlockId
-import mihon.book.api.document.BookDocumentPosition
 import org.junit.jupiter.api.Test
 
 class BookDocumentNavigationRequestTest {

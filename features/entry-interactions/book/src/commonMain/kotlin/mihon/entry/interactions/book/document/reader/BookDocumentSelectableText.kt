@@ -22,11 +22,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentInlineStyleRange
-import mihon.book.api.document.BookDocumentLink
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentInlineStyleRange
+import app.katari.book.api.document.BookDocumentLink
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.input.secondaryClicks
 import mihon.entry.interactions.book.document.reader.links.BookDocumentLinkMenu
 import mihon.entry.interactions.book.document.reader.links.webLinkAt

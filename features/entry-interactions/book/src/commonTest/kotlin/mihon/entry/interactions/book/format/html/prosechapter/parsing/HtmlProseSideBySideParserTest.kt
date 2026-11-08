@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentSideBySideLayout
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentSideBySideLayout
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

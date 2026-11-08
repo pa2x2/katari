@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.content
 
-import mihon.book.api.BookContentResource
+import app.katari.book.api.BookContentResource
 
 internal fun BookContentResource.fileSuffix(): String = when (mediaType.normalizedBookMediaType()) {
     "application/epub+zip" -> ".epub"

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader.paging
 
-import mihon.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlock
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 
 /** Collapses paragraph margins and source blank lines at the physical page edges only. */

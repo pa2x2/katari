@@ -1,14 +1,14 @@
 package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentBlockRole
-import mihon.book.api.document.BookDocumentRichText
-import mihon.book.api.document.BookDocumentStyle
-import mihon.book.api.document.BookDocumentTableCell
-import mihon.book.api.document.BookDocumentTableCellScope
-import mihon.book.api.document.BookDocumentTableRow
-import mihon.book.api.document.layoutBookDocumentTable
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentBlockRole
+import app.katari.book.api.document.BookDocumentRichText
+import app.katari.book.api.document.BookDocumentStyle
+import app.katari.book.api.document.BookDocumentTableCell
+import app.katari.book.api.document.BookDocumentTableCellScope
+import app.katari.book.api.document.BookDocumentTableRow
+import app.katari.book.api.document.layoutBookDocumentTable
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
 import org.jsoup.nodes.Element

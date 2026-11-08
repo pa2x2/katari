@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.reader
 
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
-import mihon.book.api.model.BookPublicationModelDescriptor
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
+import app.katari.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
 import mihon.entry.interactions.book.preparation.BookOpeningProgress

@@ -6,8 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontFamily
-import mihon.book.api.document.BookDocumentFontFamily
-import mihon.book.api.document.BookDocumentInlineStyleRange
+import app.katari.book.api.document.BookDocumentFontFamily
+import app.katari.book.api.document.BookDocumentInlineStyleRange
 import mihon.entry.interactions.book.document.resource.BookDocumentFontCache
 /** Loads authored families through the same protected resource boundary as figures. */
 @Composable

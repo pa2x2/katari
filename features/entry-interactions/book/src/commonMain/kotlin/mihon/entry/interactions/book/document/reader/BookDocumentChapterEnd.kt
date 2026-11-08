@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocumentBlockId
 import mihon.entry.interactions.viewer.EntryChildWindow
 import tachiyomi.domain.entry.model.EntryChapter
 

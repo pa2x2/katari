@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookContentResource
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
 import org.junit.Test

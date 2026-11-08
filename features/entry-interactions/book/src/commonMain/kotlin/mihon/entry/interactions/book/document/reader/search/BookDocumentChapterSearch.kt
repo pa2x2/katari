@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.book.api.document.locatorAt
+import app.katari.book.api.document.locatorAt
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import tachiyomi.domain.entry.model.EntryChapter

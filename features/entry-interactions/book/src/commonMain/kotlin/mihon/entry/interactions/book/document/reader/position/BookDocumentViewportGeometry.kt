@@ -9,7 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.text.TextLayoutResult
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPosition
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentTextPresentation
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem

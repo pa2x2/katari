@@ -1,16 +1,16 @@
 package mihon.entry.interactions.book.format.html.prosechapter.preparation
 
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookReadingDirection
+import app.katari.book.api.BookResource
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentPublicationModel
 import eu.kanade.tachiyomi.network.HttpException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
-import mihon.book.api.BookPublication
-import mihon.book.api.BookReadingDirection
-import mihon.book.api.BookResource
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.content.BookLinkedResourceKind
@@ -41,7 +41,7 @@ internal class HtmlProseChapterPreparer(
     override val id = "html.prose-chapter"
     override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
 
-    override fun supports(descriptor: mihon.book.api.BookContentDescriptor): Boolean =
+    override fun supports(descriptor: app.katari.book.api.BookContentDescriptor): Boolean =
         HtmlProseChapterContract.supports(descriptor)
 
     override suspend fun prepare(

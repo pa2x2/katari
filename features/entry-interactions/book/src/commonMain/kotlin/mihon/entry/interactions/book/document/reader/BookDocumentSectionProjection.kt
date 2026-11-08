@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.resolvePosition
+import app.katari.book.api.document.resolvePosition
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.render.toPreparedBookDocument
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
@@ -8,7 +8,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** Resolves one opened generic BOOK session into the semantic document viewer boundary. */
 internal fun OpenedBookReaderSession.toDocumentSections(
-    retainedLocator: mihon.book.api.BookLocator?,
+    retainedLocator: app.katari.book.api.BookLocator?,
 ): BookDocumentPublicationSections<EntryChapter>? {
     val publication = preparedPublication as? PreparedBookDocumentPublication ?: return null
     val candidateLocator = retainedLocator?.takeIf(publication::validate)

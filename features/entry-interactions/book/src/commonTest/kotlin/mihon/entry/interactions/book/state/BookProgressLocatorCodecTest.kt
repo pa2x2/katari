@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.state
 
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookTextContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import mihon.book.api.BookLocator
-import mihon.book.api.BookTextContext
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import kotlin.test.assertEquals

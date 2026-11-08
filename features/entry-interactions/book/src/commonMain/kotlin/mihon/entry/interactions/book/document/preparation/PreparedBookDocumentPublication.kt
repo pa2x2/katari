@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.document.preparation
 
-import mihon.book.api.BookLocator
-import mihon.book.api.BookPublication
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentPublicationModel
-import mihon.book.api.document.BookDocumentPublicationProgress
-import mihon.book.api.document.resolvePosition
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookPublication
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentPublicationModel
+import app.katari.book.api.document.BookDocumentPublicationProgress
+import app.katari.book.api.document.resolvePosition
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization

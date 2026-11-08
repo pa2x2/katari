@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.document.BookDocumentBlockContent
 import eu.kanade.tachiyomi.source.entry.BookLinkedResources
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.format.html.prosechapter.preparation.HtmlProseChapterPreparer

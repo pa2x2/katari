@@ -7,8 +7,8 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentTableLayout
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentTableLayout
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
 import mihon.presentation.kit.theme.KatariTheme

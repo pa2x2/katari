@@ -1,19 +1,19 @@
 package mihon.entry.interactions.book.format.epub.preparation
 
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
+import app.katari.book.api.BookNavigationItem
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookReadingDirection
+import app.katari.book.api.BookResource
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
+import app.katari.book.api.BookResourceCapability
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentPublicationModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
-import mihon.book.api.BookNavigationItem
-import mihon.book.api.BookPublication
-import mihon.book.api.BookReadingDirection
-import mihon.book.api.BookResource
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCacheState
-import mihon.book.api.BookResourceCapability
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.normalizedBookContentLanguages
 import mihon.entry.interactions.book.content.normalizedBookMediaType
@@ -50,7 +50,7 @@ internal class EpubBookPreparer(
     override val id = "epub"
     override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
 
-    override fun supports(descriptor: mihon.book.api.BookContentDescriptor): Boolean =
+    override fun supports(descriptor: app.katari.book.api.BookContentDescriptor): Boolean =
         descriptor.format.substringBefore(';').trim().equals(EpubContract.FORMAT, true) &&
             descriptor.protection.equals("none", true)
 

@@ -1,14 +1,14 @@
 package mihon.entry.interactions.book.content
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourceGroup
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
+import app.katari.book.api.BookResourceCapability
 import eu.kanade.tachiyomi.source.entry.BookResourceHierarchyNode
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookContentResourceGroup
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCacheState
-import mihon.book.api.BookResourceCapability
 
 internal data class ResourceRecord(
     val id: String,

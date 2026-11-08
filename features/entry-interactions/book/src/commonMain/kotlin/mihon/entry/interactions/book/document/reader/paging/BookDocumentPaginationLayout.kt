@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import mihon.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography

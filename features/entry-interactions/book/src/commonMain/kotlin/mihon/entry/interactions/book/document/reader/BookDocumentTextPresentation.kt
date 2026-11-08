@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentInlineStyleRange
-import mihon.book.api.document.BookDocumentTextDirection
-import mihon.book.api.document.BookDocumentTextTransform
+import app.katari.book.api.document.BookDocumentInlineStyleRange
+import app.katari.book.api.document.BookDocumentTextDirection
+import app.katari.book.api.document.BookDocumentTextTransform
 
 /**
  * Display-only bidi isolates and case transforms, with source offsets retained for links, styles and clean selection

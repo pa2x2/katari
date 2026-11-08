@@ -1,5 +1,11 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookResource
+import app.katari.book.api.model.BookPublicationModel
+import app.katari.book.api.model.BookPublicationModelDescriptor
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
@@ -9,12 +15,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookLocator
-import mihon.book.api.BookPublication
-import mihon.book.api.BookResource
-import mihon.book.api.model.BookPublicationModel
-import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.preparation.BookContentPreparer

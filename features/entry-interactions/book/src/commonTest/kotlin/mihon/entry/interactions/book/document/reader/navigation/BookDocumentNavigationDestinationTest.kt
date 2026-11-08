@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.reader.navigation
 
-import mihon.book.api.BookLocator
-import mihon.book.api.document.locatorAt
+import app.katari.book.api.BookLocator
+import app.katari.book.api.document.locatorAt
 import mihon.entry.interactions.book.document.preparation.preparedDocumentPublication
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

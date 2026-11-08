@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookLocator
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.document.preparation.preparedDocumentPublication
 import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
 import mihon.entry.interactions.book.preparation.PreparedBookPublication

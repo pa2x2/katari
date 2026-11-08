@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.content
 
 import android.app.Application
+import app.katari.book.api.BookContentResource
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -8,7 +9,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.BookContentResource
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.nio.file.Files

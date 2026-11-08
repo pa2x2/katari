@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
-import mihon.book.api.document.BookDocumentShadow
+import app.katari.book.api.document.BookDocumentShadow
 import mihon.entry.interactions.book.format.html.prosechapter.css.cssComponents
 import mihon.entry.interactions.book.format.html.prosechapter.css.isTransparentColor
 import mihon.entry.interactions.book.format.html.prosechapter.css.parseCssColor

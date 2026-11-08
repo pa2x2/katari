@@ -10,10 +10,10 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import mihon.book.api.document.BookDocumentAlignment
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentTextDirection
+import app.katari.book.api.document.BookDocumentAlignment
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentTextDirection
 import mihon.presentation.kit.content.documentTextStyle
 
 /** Shared typography for selectable text and table geometry measurement. */

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPosition
 
 /** A semantic reading observation; exact restoration carries the request it completed. */
 internal data class BookDocumentViewerLocation<T>(

@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentBlockRole
-import mihon.book.api.document.BookDocumentStyle
-import mihon.book.api.document.BookDocumentWhiteSpace
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentBlockRole
+import app.katari.book.api.document.BookDocumentStyle
+import app.katari.book.api.document.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.style.clearsFloats
 import mihon.entry.interactions.book.format.html.prosechapter.style.documentBoxStyle

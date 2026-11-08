@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.preparation
 
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookFailure
-import mihon.book.api.BookLocator
-import mihon.book.api.BookPublication
-import mihon.book.api.model.BookPublicationModel
-import mihon.book.api.model.BookPublicationModelDescriptor
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookPublication
+import app.katari.book.api.model.BookPublicationModel
+import app.katari.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.content.BookContentSession
 
 /** Converts source-facing BOOK resources into one prepared publication model. */

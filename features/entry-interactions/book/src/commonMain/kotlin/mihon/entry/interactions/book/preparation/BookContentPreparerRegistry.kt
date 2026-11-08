@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.preparation
 
-import mihon.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentDescriptor
 
 internal class BookContentPreparerRegistry(
     preparers: Collection<BookContentPreparer>,

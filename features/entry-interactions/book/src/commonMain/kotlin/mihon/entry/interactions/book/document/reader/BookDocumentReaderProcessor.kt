@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentPublicationModel
-import mihon.book.api.model.BookPublicationModel
-import mihon.book.api.model.BookPublicationModelDescriptor
+import app.katari.book.api.document.BookDocumentPublicationModel
+import app.katari.book.api.model.BookPublicationModel
+import app.katari.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities

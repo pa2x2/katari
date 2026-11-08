@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.BookLocator
-import mihon.book.api.BookNavigationItem
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookNavigationItem
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation

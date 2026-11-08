@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader.paging
 
-import mihon.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import tachiyomi.domain.entry.model.EntryChapter
 

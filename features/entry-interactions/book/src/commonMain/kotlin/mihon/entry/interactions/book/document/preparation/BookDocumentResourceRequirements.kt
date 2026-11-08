@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.document.preparation
 
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentFontFamily
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.resource.PROSE_FONT_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.preparation.BookResourceRequirement

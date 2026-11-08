@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader.navigation
 
-import mihon.book.api.BookLocator
-import mihon.book.api.BookNavigationItem
-import mihon.book.api.document.resolvePosition
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookNavigationItem
+import app.katari.book.api.document.resolvePosition
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationRow
 import tachiyomi.domain.entry.model.EntryChapter

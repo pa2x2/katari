@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentShadow
+import app.katari.book.api.document.BookDocumentShadow
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentAuthoredStyling
 
 /**

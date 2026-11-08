@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.format.epub.preparation
 
+import app.katari.book.api.document.BookDocumentBlockContent
 import kotlinx.coroutines.test.runTest
-import mihon.book.api.document.BookDocumentBlockContent
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
 import mihon.entry.interactions.book.format.epub.archive.epubArchiveFile

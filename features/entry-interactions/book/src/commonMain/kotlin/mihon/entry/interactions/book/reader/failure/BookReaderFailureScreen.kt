@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.reader.failure
 
 import androidx.compose.runtime.Composable
-import mihon.book.api.BookFailureReason
+import app.katari.book.api.BookFailureReason
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Book
 import mihon.icons.materialsymbols.rounded.Error

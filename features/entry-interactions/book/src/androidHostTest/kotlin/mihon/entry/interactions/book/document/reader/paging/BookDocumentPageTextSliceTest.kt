@@ -1,19 +1,19 @@
 package mihon.entry.interactions.book.document.reader.paging
 
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentBlockId
-import mihon.book.api.document.BookDocumentBlockKind
-import mihon.book.api.document.BookDocumentBlockRole
-import mihon.book.api.document.BookDocumentFlowStyle
-import mihon.book.api.document.BookDocumentInlineStyle
-import mihon.book.api.document.BookDocumentInlineStyleRange
-import mihon.book.api.document.BookDocumentLink
-import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.BookDocumentRichText
-import mihon.book.api.document.BookDocumentStyle
-import mihon.book.api.document.BookDocumentTextDirection
-import mihon.book.api.document.BookDocumentTextRange
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentBlockId
+import app.katari.book.api.document.BookDocumentBlockKind
+import app.katari.book.api.document.BookDocumentBlockRole
+import app.katari.book.api.document.BookDocumentFlowStyle
+import app.katari.book.api.document.BookDocumentInlineStyle
+import app.katari.book.api.document.BookDocumentInlineStyleRange
+import app.katari.book.api.document.BookDocumentLink
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentRichText
+import app.katari.book.api.document.BookDocumentStyle
+import app.katari.book.api.document.BookDocumentTextDirection
+import app.katari.book.api.document.BookDocumentTextRange
 import org.junit.Test
 import kotlin.test.assertEquals
 

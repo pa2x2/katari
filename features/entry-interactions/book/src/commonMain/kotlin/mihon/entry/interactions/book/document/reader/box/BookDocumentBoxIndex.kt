@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader.box
 
-import mihon.book.api.document.BookDocumentBox
-import mihon.book.api.document.BookDocumentBoxStyle
-import mihon.book.api.document.BookDocumentContent
+import app.katari.book.api.document.BookDocumentBox
+import app.katari.book.api.document.BookDocumentBoxStyle
+import app.katari.book.api.document.BookDocumentContent
 
 /**
  * One block's share of a box. A box spanning several blocks is drawn as one slice per row or page fragment; only the

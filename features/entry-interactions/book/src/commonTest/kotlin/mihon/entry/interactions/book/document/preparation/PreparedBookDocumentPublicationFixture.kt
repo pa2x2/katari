@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.document.preparation
 
+import app.katari.book.api.BookPublication
+import app.katari.book.api.BookReadingDirection
+import app.katari.book.api.BookResource
+import app.katari.book.api.document.BookDocumentPublicationModel
 import io.mockk.mockk
-import mihon.book.api.BookPublication
-import mihon.book.api.BookReadingDirection
-import mihon.book.api.BookResource
-import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 

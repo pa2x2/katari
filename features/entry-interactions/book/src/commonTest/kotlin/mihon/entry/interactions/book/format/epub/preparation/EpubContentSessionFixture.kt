@@ -1,12 +1,12 @@
 package mihon.entry.interactions.book.format.epub.preparation
 
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookContentResourceGroup
-import mihon.book.api.BookContentResourcePage
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCapability
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourceGroup
+import app.katari.book.api.BookContentResourcePage
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookLinkedResourceKind

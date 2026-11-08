@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookFailure
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookFailure
 import mihon.entry.interactions.book.download.VerifiedBookDownloadPackage
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.state.BookProgressIdentity

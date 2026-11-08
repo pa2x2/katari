@@ -9,7 +9,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.presentation.kit.layout.ReadingColumn
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.theme.KatariTheme

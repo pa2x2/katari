@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
-import mihon.book.api.document.BookDocumentInlineStyleRange
-import mihon.book.api.document.BookDocumentLink
-import mihon.book.api.document.BookDocumentLinkTarget
-import mihon.book.api.document.BookDocumentRichText
-import mihon.book.api.document.BookDocumentTextRange
-import mihon.book.api.document.toBookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentInlineStyleRange
+import app.katari.book.api.document.BookDocumentLink
+import app.katari.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentRichText
+import app.katari.book.api.document.BookDocumentTextRange
+import app.katari.book.api.document.toBookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_FRAGMENT_ATTRIBUTE
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_ID_ATTRIBUTE
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_REFERENCE_ATTRIBUTE

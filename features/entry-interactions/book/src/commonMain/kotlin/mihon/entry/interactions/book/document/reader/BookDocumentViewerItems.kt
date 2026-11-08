@@ -1,8 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.runtime.Stable
-import mihon.book.api.document.BookDocumentPosition
-import mihon.book.api.document.BookDocumentPublicationProgress
+import app.katari.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPublicationProgress
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.transition.toViewerItem
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
@@ -50,7 +50,7 @@ internal data class BookDocumentSection<T>(
         BookDocumentBoxIndex(document.document.content)
     }
 
-    fun viewerBlockIndex(blockId: mihon.book.api.document.BookDocumentBlockId): Int =
+    fun viewerBlockIndex(blockId: app.katari.book.api.document.BookDocumentBlockId): Int =
         viewerBlockIndices[blockId.value] ?: -1
 
     fun viewerBlockIndex(key: Any): Int {
@@ -59,7 +59,7 @@ internal data class BookDocumentSection<T>(
         return viewerBlockIndices[stableKey.removePrefix(viewerBlockKeyPrefix)] ?: -1
     }
 
-    fun viewerBlockKey(blockId: mihon.book.api.document.BookDocumentBlockId): String =
+    fun viewerBlockKey(blockId: app.katari.book.api.document.BookDocumentBlockId): String =
         viewerBlockKeyPrefix + blockId.value
 
     fun totalProgression(progression: Float): Float = publicationProgress
@@ -97,7 +97,7 @@ internal sealed interface BookDocumentViewerItem<T> {
 
     data class Block<T>(
         val section: BookDocumentSection<T>,
-        val content: mihon.book.api.document.BookDocumentBlock,
+        val content: app.katari.book.api.document.BookDocumentBlock,
     ) : BookDocumentViewerItem<T> {
         override val key = section.viewerBlockKey(content.id)
     }

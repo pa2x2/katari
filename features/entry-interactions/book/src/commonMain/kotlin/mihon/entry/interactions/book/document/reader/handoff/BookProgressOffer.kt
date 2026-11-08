@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader.handoff
 
-import mihon.book.api.BookLocator
+import app.katari.book.api.BookLocator
 import mihon.entry.interactions.book.state.BookProgressLocatorCodec
 import mihon.entry.interactions.media.handoff.EntryProgressOffer
 import mihon.entry.interactions.media.handoff.ReadingPlace

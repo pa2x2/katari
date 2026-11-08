@@ -1,10 +1,10 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.Hash
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
 import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
+import app.katari.book.api.BookContentResourceGroup
 import kotlinx.serialization.Serializable
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
-import mihon.book.api.BookContentResourceGroup
 import mihon.entry.interactions.book.state.BookProgressIdentity
 
 /** Stable identity of one downloaded, openable BOOK child. */

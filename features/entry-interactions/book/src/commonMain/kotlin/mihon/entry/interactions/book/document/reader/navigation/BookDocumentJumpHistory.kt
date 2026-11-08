@@ -3,8 +3,8 @@ package mihon.entry.interactions.book.document.reader.navigation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import mihon.book.api.document.BookDocumentPosition
-import mihon.book.api.document.locatorAt
+import app.katari.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.locatorAt
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import tachiyomi.domain.entry.model.EntryChapter
 

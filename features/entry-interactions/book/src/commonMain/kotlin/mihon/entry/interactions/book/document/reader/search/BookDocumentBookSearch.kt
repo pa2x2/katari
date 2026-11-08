@@ -1,13 +1,13 @@
 package mihon.entry.interactions.book.document.reader.search
 
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.locatorAt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import logcat.LogPriority
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.locatorAt
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession

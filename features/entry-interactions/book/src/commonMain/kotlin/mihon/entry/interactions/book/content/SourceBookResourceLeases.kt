@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.content
 
-import mihon.book.api.BookContentResource
+import app.katari.book.api.BookContentResource
 import java.io.File
 import java.io.InputStream
 

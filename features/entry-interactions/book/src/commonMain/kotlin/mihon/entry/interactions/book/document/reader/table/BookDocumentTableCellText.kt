@@ -6,8 +6,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentTableCell
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentTableCell
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentTypography
 import mihon.entry.interactions.book.document.reader.bookDocumentFontSize

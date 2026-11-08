@@ -1,9 +1,9 @@
 package mihon.entry.interactions.book.document.reader.navigation
 
-import mihon.book.api.BookLocator
-import mihon.book.api.document.BookDocument
-import mihon.book.api.document.BookDocumentPosition
-import mihon.book.api.document.resolvePosition
+import app.katari.book.api.BookLocator
+import app.katari.book.api.document.BookDocument
+import app.katari.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.resolvePosition
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 
 internal data class BookDocumentNavigationDestination(

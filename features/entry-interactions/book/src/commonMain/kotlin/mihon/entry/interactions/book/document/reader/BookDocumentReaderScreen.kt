@@ -135,7 +135,10 @@ internal fun BookDocumentReaderScreen(
     onGoToProgressOffer: () -> Unit,
     onDismissProgressOffer: () -> Unit,
     onAnchorMissing: (String) -> Unit,
-    onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
+    onInternalLinkClick: (
+        BookDocumentSection<EntryChapter>,
+        app.katari.book.api.document.BookDocumentLinkTarget,
+    ) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     onAuxiliaryDismiss: () -> Unit,
     onChapterSelectionRetry: () -> Unit,

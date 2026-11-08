@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.processor
 
-import mihon.book.api.model.BookPublicationModelDescriptor
+import app.katari.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 

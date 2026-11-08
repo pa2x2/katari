@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.reader
 
-import mihon.book.api.BookLocator
-import mihon.book.api.document.isSameDocumentLocation
+import app.katari.book.api.BookLocator
+import app.katari.book.api.document.isSameDocumentLocation
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.preparation.PreparedBookPublication
 import mihon.entry.interactions.book.state.BookProgressIdentity

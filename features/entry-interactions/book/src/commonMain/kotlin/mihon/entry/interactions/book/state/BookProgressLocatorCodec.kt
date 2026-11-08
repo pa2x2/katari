@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.state
 
+import app.katari.book.api.BookLocator
+import app.katari.book.api.BookTextContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -7,8 +9,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
-import mihon.book.api.BookLocator
-import mihon.book.api.BookTextContext
 import tachiyomi.domain.entry.model.EntryProgressLocator
 
 internal object BookProgressLocatorCodec {

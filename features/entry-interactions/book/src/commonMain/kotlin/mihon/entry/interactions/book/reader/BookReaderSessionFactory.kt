@@ -1,5 +1,7 @@
 package mihon.entry.interactions.book.reader
 
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -8,8 +10,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.content.AppBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookMaterializationStore

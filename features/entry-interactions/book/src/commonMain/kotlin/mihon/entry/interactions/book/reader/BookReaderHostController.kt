@@ -4,13 +4,13 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.katari.book.api.BookFailure
+import app.katari.book.api.BookFailureReason
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import logcat.LogPriority
-import mihon.book.api.BookFailure
-import mihon.book.api.BookFailureReason
 import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.book.preparation.BookOpeningProgress
 import mihon.entry.interactions.book.processor.BookReaderProcessor

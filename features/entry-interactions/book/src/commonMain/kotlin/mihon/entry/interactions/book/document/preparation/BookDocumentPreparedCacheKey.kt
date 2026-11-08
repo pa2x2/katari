@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.preparation
 
+import app.katari.book.api.document.BookDocumentPublicationModel
 import kotlinx.serialization.Serializable
-import mihon.book.api.document.BookDocumentPublicationModel
 import java.security.MessageDigest
 
 @Serializable

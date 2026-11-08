@@ -14,7 +14,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import mihon.book.api.document.BookDocumentLinkTarget
+import app.katari.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
 import mihon.entry.interactions.book.document.reader.input.detectReaderClicks
 import mihon.entry.interactions.book.document.reader.input.detectRepeatedClicks

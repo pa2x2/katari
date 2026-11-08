@@ -2,8 +2,8 @@ package mihon.entry.interactions.book.document.reader.table
 
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.text.font.FontFamily
+import app.katari.book.api.document.BookDocumentBlock
 import kotlinx.coroutines.Dispatchers
-import mihon.book.api.document.BookDocumentBlock
 import java.util.IdentityHashMap
 
 internal val LocalBookDocumentTableCache = compositionLocalOf<BookDocumentTableCache?> { null }

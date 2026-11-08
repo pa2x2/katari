@@ -2,10 +2,10 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import app.katari.book.api.BookLocator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
 import tachiyomi.domain.entry.model.Entry

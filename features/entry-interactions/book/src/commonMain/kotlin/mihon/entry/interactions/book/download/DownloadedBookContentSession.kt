@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.download
 
+import app.katari.book.api.BookContentResource
+import app.katari.book.api.BookContentResourcePage
+import app.katari.book.api.BookResourceAvailability
+import app.katari.book.api.BookResourceCacheState
+import app.katari.book.api.BookResourceCapability
 import kotlinx.coroutines.CancellationException
-import mihon.book.api.BookContentResource
-import mihon.book.api.BookContentResourcePage
-import mihon.book.api.BookResourceAvailability
-import mihon.book.api.BookResourceCacheState
-import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookLinkedReference

@@ -22,11 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import app.katari.book.api.document.BookDocumentBlock
+import app.katari.book.api.document.BookDocumentBlockContent
+import app.katari.book.api.document.BookDocumentLinkTarget
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.book.api.document.BookDocumentBlock
-import mihon.book.api.document.BookDocumentBlockContent
-import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRenderer
 import mihon.entry.interactions.book.document.reader.BookDocumentSelectableText
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection

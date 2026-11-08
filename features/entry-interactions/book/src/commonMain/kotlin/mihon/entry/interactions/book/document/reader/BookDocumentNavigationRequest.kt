@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPosition
 
 /**
  * One explicit reader navigation that must supersede viewport-anchor preservation. [centerLine] brings the target's

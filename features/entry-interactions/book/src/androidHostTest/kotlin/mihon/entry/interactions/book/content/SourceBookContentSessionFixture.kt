@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.content
 
 import android.app.Application
+import app.katari.book.api.BookCatalogCoverage
+import app.katari.book.api.BookContentDescriptor
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
@@ -10,8 +12,6 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.mockk.every
 import io.mockk.mockk
-import mihon.book.api.BookCatalogCoverage
-import mihon.book.api.BookContentDescriptor
 import tachiyomi.domain.entry.model.Entry
 import java.nio.file.Files
 internal abstract class SourceBookContentSessionFixture {

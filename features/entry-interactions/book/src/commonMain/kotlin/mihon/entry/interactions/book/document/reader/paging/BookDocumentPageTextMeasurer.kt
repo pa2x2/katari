@@ -4,8 +4,8 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import app.katari.book.api.document.BookDocumentBlockKind
 import kotlinx.coroutines.Dispatchers
-import mihon.book.api.document.BookDocumentBlockKind
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentTypography
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem

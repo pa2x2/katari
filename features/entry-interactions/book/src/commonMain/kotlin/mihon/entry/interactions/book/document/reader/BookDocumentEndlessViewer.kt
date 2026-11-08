@@ -25,13 +25,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
+import app.katari.book.api.document.BookDocumentLinkTarget
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.input.BookDocumentKeyCommand
 import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
 import mihon.entry.interactions.book.document.reader.input.bookDocumentKeyCommands
@@ -146,7 +146,7 @@ internal fun BookDocumentEndlessViewer(
 
     suspend fun scrollToSectionPosition(
         section: BookDocumentSection<EntryChapter>,
-        position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
+        position: app.katari.book.api.document.BookDocumentPosition = section.initialPosition,
     ) {
         val index = items.indexOfPosition(section.key, position)
         if (index < 0) return

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
-import mihon.book.api.document.BookDocumentPosition
+import app.katari.book.api.document.BookDocumentPosition
 import kotlin.math.roundToInt
 
 /** Maps the active document section onto its visual scroll range without changing its resume locator. */
