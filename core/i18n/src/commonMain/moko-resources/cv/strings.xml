@@ -500,7 +500,6 @@
     <string name="action_copy_to_clipboard">Пайлашу асне ӑт</string>
     <string name="pref_backup_summary">Хӑй тӗллӗн тата хӑй халлӗн йантӑлав</string>
     <string name="action_update_category">Пухмӑша ҫӗнет</string>
-    <string name="pref_advanced_summary">Йӑнӑш кӗнекине тийесе йани, паттарейе лайӑхлатни</string>
     <string name="pref_library_update_show_tab_badge">Вуламан сыпӑксен шутне «Ҫӗнӗлӗх» ыккун ҫинче кӑтартни</string>
     <string name="pref_landscape_zoom">Сӑна тӑрӑх пысӑклатни</string>
     <string name="multi_lang">Нумай чӗлхеллӗ</string>

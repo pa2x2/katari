@@ -589,7 +589,6 @@
     <string name="pref_library_summary">Categorías, actualizaciones generales y acciones al deslizar el dedo</string>
     <string name="pref_reader_summary">Modos de lectura, apariencia y navegación</string>
     <string name="pref_appearance_summary">Colores de la interfaz y formatos de fecha</string>
-    <string name="pref_advanced_summary">Informes de fallos y ahorro de batería</string>
     <string name="pref_security_summary">Pantalla segura y desbloqueo biométrico</string>
     <string name="pref_backup_summary">Copias de seguridad manuales y automáticas, almacenamiento</string>
     <string name="pref_browse_summary">Fuentes, extensiones y búsqueda global</string>

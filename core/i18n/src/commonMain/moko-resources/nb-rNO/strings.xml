@@ -553,7 +553,6 @@
     <string name="crash_screen_restart_application">Start applikasjonen på nytt</string>
     <string name="download_notifier_split_page_path_not_found">Kunne ikke finne filbanen til side %d</string>
     <string name="pref_security_summary">Applås, sikker skjerm</string>
-    <string name="pref_advanced_summary">Dump krasjlogger, batterioptimaliseringer</string>
     <string name="missing_storage_permission">Lagringstilgang er ikke gitt</string>
     <string name="error_user_agent_string_invalid">Ugyldig streng for brukeragent</string>
     <string name="wish_list">Ønskeliste</string>

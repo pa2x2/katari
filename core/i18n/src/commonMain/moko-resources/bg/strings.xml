@@ -590,7 +590,6 @@
     <string name="pref_browse_summary">Източници, разширения, глобално търсене</string>
     <string name="pref_backup_summary">Ръчно и автоматично създаване на бекъп</string>
     <string name="pref_security_summary">Заключване на приложението, екран за сигурност</string>
-    <string name="pref_advanced_summary">Покажи записи от крашове, оптимизации за батерията</string>
     <string name="multi_lang">Мулти</string>
     <string name="pref_navigate_pan">Увеличи широките изображения при натискане</string>
     <string name="missing_storage_permission">Не е дадено разрешение за съхранение</string>

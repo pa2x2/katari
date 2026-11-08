@@ -617,7 +617,6 @@
     <string name="pref_browse_summary">Fontes, extensões, pesquisa global</string>
     <string name="pref_backup_summary">Backups manuais e automáticos, espaço de armazenamento</string>
     <string name="pref_security_summary">Bloqueio do aplicativo, tela segura</string>
-    <string name="pref_advanced_summary">Exportar registros de travamento, otimizações de bateria</string>
     <string name="crash_screen_title">Ooops!</string>
     <string name="crash_screen_restart_application">Reiniciar o aplicativo</string>
     <string name="unknown_title">Título desconhecido</string>

@@ -607,7 +607,6 @@
     <string name="pref_browse_summary">Источники, расширения, глобальный поиск</string>
     <string name="pref_backup_summary">Ручные и автоматические резервные копии, хранилище</string>
     <string name="pref_security_summary">Блокировка приложения, защита экрана</string>
-    <string name="pref_advanced_summary">Выгрузка журнала сбоев, оптимизация батареи</string>
     <string name="crash_screen_title">Ой, ошибочка вышла!</string>
     <string name="unknown_title">Неизвестное название</string>
     <string name="invalid_location">Недопустимое расположение: %s</string>

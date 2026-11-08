@@ -550,7 +550,6 @@
     <string name="download_notifier_cache_renewal">בודק הורדות</string>
     <string name="delete_downloaded">מחיקת פרקים שהורדו</string>
     <string name="action_sort_next_updated">העדכון הצפוי הבא</string>
-    <string name="pref_advanced_summary">הורד קבצי קריסה, אופטימיזציה לסוללה</string>
     <string name="theme_lavender">לבנדר</string>
     <string name="information_cloudflare_help">לחץ כאן לעזרה עם Cloudflare</string>
     <string name="download_notifier_split_page_not_found">עמוד %d לא נמצא בעת פיצול</string>

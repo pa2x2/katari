@@ -130,7 +130,6 @@
     <string name="action_display_show_tabs">Toifa yorliqlarini ko\'rish</string>
     <string name="action_webview_refresh">Yangilash</string>
     <string name="pref_downloads_summary">Avto yuklash, oldindan yuklash</string>
-    <string name="pref_advanced_summary">Xatolar ro\'yhatini yuklash, quvvat sarfini optimizatsiyalash</string>
     <string name="action_pause">Pauza</string>
     <string name="action_search_hint">Qidirish…</string>
     <string name="action_unpin">Bo\'shatish</string>

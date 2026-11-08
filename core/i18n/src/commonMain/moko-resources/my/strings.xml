@@ -186,7 +186,6 @@
     <string name="pref_browse_summary">လမ်းညွှန်ရှာဖွေရေးအနှစ်ချုပ်</string>
     <string name="pref_backup_summary">အပေါ်မှာလမ်းညွှန်မှတ်သား</string>
     <string name="pref_security_summary">လုံခြုံရေးအနှစ်ချုပ်</string>
-    <string name="pref_advanced_summary">မြင့်မားသောအနှစ်ချုပ်</string>
     <string name="pref_category_theme">ပုံစံအဆင့်</string>
     <string name="pref_app_theme">အက်ပလီကေးရှင်းပုံစံ</string>
     <string name="theme_system">စနစ်ပုံစံ</string>

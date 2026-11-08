@@ -19,7 +19,6 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
-import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
@@ -41,6 +40,7 @@ import mihon.entry.interactions.manga.reader.image.animation.AnimatedPageImage
 import mihon.entry.interactions.manga.reader.image.layout.PageBitmap
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
 import mihon.entry.interactions.manga.reader.image.layout.displayedSize
+import mihon.entry.interactions.manga.reader.image.profile.DisplayProfile
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.tiles.TiledPageImage
 import mihon.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
@@ -125,7 +125,7 @@ internal fun MangaImmersivePage(
                     is PageImage.Animated -> AnimatedPageImage(
                         image = image,
                         layout = shown.layout,
-                        displayProfile = TachiyomiImageDecoder.displayProfile,
+                        displayProfile = DisplayProfile.bytes,
                         onFailed = contentState::fail,
                     )
                 }

@@ -570,7 +570,6 @@
     <string name="track_remove_finish_date_conf_text">Tādējādi no %s tiks noņemts iepriekš atlasītais beigu datums</string>
     <string name="delete_category">Dzēst kategoriju</string>
     <string name="pref_reader_summary">Lasīšanas režīmi, displejs, navigācija</string>
-    <string name="pref_advanced_summary">Avārijas žurnāli, akumulatora optimizācija</string>
     <string name="pref_backup_summary">Manuālā un automātiskā dublēšana</string>
     <string name="theme_tidalwave">Paisuma vilnis</string>
     <string name="multi_lang">Vairāku</string>

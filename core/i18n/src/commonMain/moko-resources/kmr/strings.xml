@@ -178,7 +178,6 @@
     <string name="pref_tracking_summary">Hevdemkirina pêşveçûnê ya yekalî, hevdemkirina pêşketî</string>
     <string name="pref_browse_summary">Çavkanî, pêvek, gera giştî</string>
     <string name="pref_security_summary">Kilîta sepanê, ekrana ewle</string>
-    <string name="pref_advanced_summary">Derxistina rojaneyên têkçûnê, başkirina bikaranîna pîlê</string>
     <string name="pref_category_theme">Tema</string>
     <string name="pref_app_theme">Temaya sepanê</string>
     <string name="theme_system">Pergal</string>

@@ -596,7 +596,6 @@
     <string name="pref_browse_summary">ソース、拡張機能、グローバル検索</string>
     <string name="pref_backup_summary">手動・自動バックアップ、ストレージ領域</string>
     <string name="pref_security_summary">アプリロック、セキュア画面</string>
-    <string name="pref_advanced_summary">クラッシュ ログのダンプ、バッテリー最適化</string>
     <string name="pref_appearance_summary">テーマ、日付と時刻の形式</string>
     <string name="pref_library_summary">カテゴリー、グローバル アップデート、章間スワイプ</string>
     <string name="action_open_random_manga">おまかせ閲覧</string>

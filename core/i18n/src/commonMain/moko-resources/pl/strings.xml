@@ -594,7 +594,6 @@
     <string name="pref_browse_summary">Źródła, rozszerzenia, globalne wyszukiwanie</string>
     <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
     <string name="pref_appearance_summary">Tło, data &amp; format czasu</string>
-    <string name="pref_advanced_summary">Zrzuć logi, optymalizacje baterii</string>
     <string name="missing_storage_permission">Nie przyznano uprawnień do przechowywania</string>
     <string name="pref_backup_summary">Manualna &amp; automatyczna kopia</string>
     <string name="label_read_duration">Czas odczytu</string>

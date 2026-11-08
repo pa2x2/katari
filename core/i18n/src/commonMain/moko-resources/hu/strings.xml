@@ -591,7 +591,6 @@
     <string name="action_display_show_continue_reading_button">Olvasás folytatása gomb</string>
     <string name="pref_library_summary">Kategóriák, globális frissítés, fejezet csúsztatás</string>
     <string name="pref_security_summary">Alkalmazás zárolás, képernyő zár</string>
-    <string name="pref_advanced_summary">Összeomlás naplók kiírása, akkumulátor optimalizálások</string>
     <string name="invalid_location">Hibás hely: %s</string>
     <string name="download_ahead_info">Csak akkor működik, ha az aktuális és a következő fejezet már letöltött.</string>
     <string name="download_ahead">Letöltés előre</string>

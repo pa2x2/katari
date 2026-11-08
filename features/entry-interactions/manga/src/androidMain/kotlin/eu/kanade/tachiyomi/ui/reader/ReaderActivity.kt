@@ -48,7 +48,6 @@ import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
-import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.AddToLibraryFirst
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.Error
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel.SetAsCoverResult.Success
@@ -113,7 +112,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
 import androidx.compose.ui.input.key.KeyEvent as ComposeKeyEvent
 
@@ -498,10 +496,6 @@ class ReaderActivity : EntryInteractionActivity() {
                 }
                 .launchIn(lifecycleScope)
 
-            preferences.displayProfile.changes()
-                .onEach { setDisplayProfile(it) }
-                .launchIn(lifecycleScope)
-
             settings.keepScreenOn.state
                 .map { it.effectiveValue }
                 .distinctUntilChanged()
@@ -526,24 +520,6 @@ class ReaderActivity : EntryInteractionActivity() {
             ) { _, _ -> }
                 .onEach { applySystemBars() }
                 .launchIn(lifecycleScope)
-        }
-
-        /**
-         * Sets the display profile to [path].
-         */
-        private fun setDisplayProfile(path: String) {
-            val file = metroGraph<MangaReaderGraph>().storageFiles.fromUri(path)
-            if (file != null && file.exists()) {
-                val inputStream = file.openInputStream()
-                val outputStream = ByteArrayOutputStream()
-                inputStream.use { input ->
-                    outputStream.use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                val data = outputStream.toByteArray()
-                TachiyomiImageDecoder.displayProfile = data
-            }
         }
 
         /**

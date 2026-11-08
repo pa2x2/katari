@@ -589,7 +589,6 @@
     <string name="pref_downloads_summary">Tự động tải xuống, tải xuống trước</string>
     <string name="pref_backup_summary">Sao lưu thủ công &amp; tự động, lưu trữ</string>
     <string name="pref_security_summary">Khoá ứng dụng, màn hình bảo vệ</string>
-    <string name="pref_advanced_summary">Xuất ghi chép sự cố, tối ưu hoá pin</string>
     <string name="pref_tracking_summary">Đồng bộ tiến trình đọc một chiều, đồng bộ nâng cao</string>
     <string name="pref_browse_summary">Nguồn, tiện ích mở rộng, tìm kiếm toàn bộ</string>
     <string name="action_display_show_continue_reading_button">Nút tiếp tục đọc</string>

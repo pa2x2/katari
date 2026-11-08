@@ -218,7 +218,6 @@
     <string name="pref_tracking_summary">একমুখী অগ্ৰগতি সমন্বয়, উন্নত সমন্বয়</string>
     <string name="pref_downloads_summary">স্বয়ংক্ৰিয় ডাউনলোড, আগতীয়া ডাউনলোড</string>
     <string name="pref_browse_summary">উৎস, এক্সটেনশ্বন, বিশ্বব্যাপী সন্ধান</string>
-    <string name="pref_advanced_summary">ক্ৰেশ লগ ডাম্প কৰক, বেটাৰী অনুকূলন</string>
     <string name="pref_backup_summary">হস্তচালিত আৰু স্বয়ংক্ৰিয় বেকআপ, সংৰক্ষণ স্থান</string>
     <string name="pref_security_summary">এপ লক, সুৰক্ষিত স্ক্ৰীন</string>
     <string name="pref_category_theme">থিম</string>

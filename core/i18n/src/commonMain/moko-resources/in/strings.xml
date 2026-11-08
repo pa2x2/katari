@@ -592,7 +592,6 @@
     <string name="pref_appearance_summary">Tema, format tanggal &amp; waktu</string>
     <string name="pref_library_summary">Kategori, pembaruan global, geser chapter</string>
     <string name="pref_backup_summary">Pencadangan manual &amp; otomatis, ruang penyimpanan</string>
-    <string name="pref_advanced_summary">Buat log kerusakan, pengoptimalan baterai</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="crash_screen_restart_application">Mulai ulang aplikasi</string>
     <string name="invalid_location">Lokasi tidak valid: %s</string>

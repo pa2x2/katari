@@ -608,7 +608,6 @@
     <string name="pref_tracking_summary">Sincronització en un sentit o millorada</string>
     <string name="pref_browse_summary">Fonts, extensions i cerca global</string>
     <string name="pref_security_summary">Blocatge de l’aplicació i mode discret</string>
-    <string name="pref_advanced_summary">Bolcatge de registres d’errors i optimitzacions de la bateria</string>
     <string name="crash_screen_restart_application">Reinicia l’aplicació</string>
     <string name="remove_manga">Suprimireu «%s» de la vostra biblioteca</string>
     <string name="action_search_hint">Cerca…</string>

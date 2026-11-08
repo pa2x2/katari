@@ -380,7 +380,6 @@
     <string name="pref_browse_summary">Крыніцы, пашырэнні, глабальны пошук</string>
     <string name="pref_backup_summary">Ручныя і аўтаматычныя рэзервоўкі, сховішча</string>
     <string name="pref_security_summary">Блакіроўка праграмы, абарона экрана</string>
-    <string name="pref_advanced_summary">Выгрузка журнала збояў, аптымізацыя батарэі</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="theme_monochrome">Манахром</string>
     <string name="theme_nord">Nord</string>

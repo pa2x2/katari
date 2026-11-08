@@ -621,7 +621,6 @@
     <string name="action_not_now">Не сада</string>
     <string name="pref_appearance_summary">Формат теме, датума и времена</string>
     <string name="pref_security_summary">Закључавање апликације, сигуран екран</string>
-    <string name="pref_advanced_summary">Записници гашења апликације, оптимизације батерије</string>
     <string name="action_open_random_manga">Отвори насумични наслов</string>
     <string name="download_ahead_info">Ради само ако је тренутно и следеће поглавље већ преузето.</string>
     <string name="information_no_entries_found">Нема наслова у овој категорији</string>
