@@ -229,7 +229,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A shade behind controls along an edge of media | `MediaScrim` | |
 | Text straight over pages or video | `OutlinedMediaText` | |
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton` | `Modifier.mediaToolbarSlot` puts a button at the end or orders its label's dropping |
-| A playback position bar over video | `MediaTimeline` | |
+| A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
+| The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
 | A player's volume among its controls | `MediaVolumeControl` | |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |

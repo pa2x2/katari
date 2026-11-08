@@ -6,33 +6,38 @@ import androidx.compose.runtime.snapshotFlow
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
 import kotlinx.coroutines.flow.first
-
-/** Whether the playing episode's times are looked up online: the setting is on and its source marks nothing to skip. */
-internal fun asksIntroTimesOnline(settingOn: Boolean, streamMarkers: List<PlaybackMarker>): Boolean =
-    settingOn && streamMarkers.none { it.skippable }
-
-/** The markers the player goes by: the source's, with the times found online for [chapterId] when it asks for them. */
-internal fun playbackMarkers(
-    streamMarkers: List<PlaybackMarker>,
-    chapterId: Long,
-    asksOnline: Boolean,
-    introTimes: VideoPlayerIntroTimesState?,
-): List<PlaybackMarker> {
-    val online = introTimes?.takeIf { asksOnline && it.chapterId == chapterId }?.markers.orEmpty()
-    return if (online.isEmpty()) streamMarkers else streamMarkers + online
-}
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 
 /**
- * Asks for [chapterId]'s times once [lengthMs] reports its length, which AniSkip needs. Placed after the effect that
- * resets the playback snapshot for a new episode, so the length it waits for is never the previous episode's.
+ * The services the playing episode's times are looked up with: those turned on, while the setting is and its source
+ * marks nothing to skip. Empty when none is asked.
+ */
+internal fun introTimesServices(
+    settingOn: Boolean,
+    turnedOn: Set<IntroTimesService>,
+    streamMarkers: List<PlaybackMarker>,
+): Set<IntroTimesService> = if (settingOn && streamMarkers.none { it.skippable }) turnedOn else emptySet()
+
+/** The markers found online for [chapterId], when it asks for them. */
+internal fun onlineMarkers(
+    chapterId: Long,
+    services: Set<IntroTimesService>,
+    introTimes: VideoPlayerIntroTimesState?,
+): List<OnlineMarker> =
+    introTimes?.takeIf { services.isNotEmpty() && it.chapterId == chapterId }?.markers.orEmpty()
+
+/**
+ * Asks for [chapterId]'s times once [lengthMs] reports its length, which both services need. Placed after the effect
+ * that resets the playback snapshot for a new episode, so the length it waits for is never the previous episode's.
  */
 @Composable
-internal fun VideoPlayerIntroTimes.Effect(chapterId: Long, asksOnline: Boolean, lengthMs: () -> Long) {
-    LaunchedEffect(this, chapterId, asksOnline) {
-        if (!asksOnline) {
+internal fun VideoPlayerIntroTimes.Effect(chapterId: Long, services: Set<IntroTimesService>, lengthMs: () -> Long) {
+    LaunchedEffect(this, chapterId, services) {
+        if (services.isEmpty()) {
             clear()
             return@LaunchedEffect
         }
-        request(chapterId, snapshotFlow(lengthMs).first { it > 0L })
+        request(chapterId, snapshotFlow(lengthMs).first { it > 0L }, services)
     }
 }
