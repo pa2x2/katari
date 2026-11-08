@@ -3,9 +3,12 @@ package mihon.entry.interactions.migration
 import mihon.entry.interactions.migration.host.EntryMigrationHostChildUpdate
 import tachiyomi.domain.entry.migration.MigrationChapterMarks
 import tachiyomi.domain.entry.migration.MigrationChapterMatch
+import tachiyomi.domain.entry.migration.MigrationChapterPairs
+import tachiyomi.domain.entry.migration.MigrationChapterPosition
 import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
-import tachiyomi.domain.entry.migration.matchMigrationChapters
 import tachiyomi.domain.entry.migration.migratedChapterMarks
+import tachiyomi.domain.entry.migration.pairMigrationChaptersByNumber
+import tachiyomi.domain.entry.migration.pairMigrationChaptersInOrder
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.service.sortedInSourceOrder
 
@@ -13,22 +16,20 @@ internal typealias EntryMigrationChildMatch = MigrationChapterMatch<EntryChapter
 
 /** How a migration pairs the migrated entry's chapters with the target's. */
 internal sealed interface EntryMigrationChildPairing {
-    fun pair(sourceChildren: List<EntryChapter>, targetChildren: List<EntryChapter>): EntryMigrationChildPairs
+    fun pair(
+        sourceChildren: List<EntryChapter>,
+        targetChildren: List<EntryChapter>,
+    ): MigrationChapterPairs<EntryChapter>
 
     /** A target chapter takes the source chapter of its number, or of its name when it has none. */
     data object ByNumber : EntryMigrationChildPairing {
-        override fun pair(
-            sourceChildren: List<EntryChapter>,
-            targetChildren: List<EntryChapter>,
-        ) = EntryMigrationChildPairs(
-            matches = matchMigrationChapters(
+        override fun pair(sourceChildren: List<EntryChapter>, targetChildren: List<EntryChapter>) =
+            pairMigrationChaptersByNumber(
                 sourceChildren,
                 targetChildren,
                 EntryChapter::chapterNumber,
                 EntryChapter::name,
-            ),
-            number = EntryChapter::chapterNumber,
-        )
+            )
     }
 
     /**
@@ -40,39 +41,27 @@ internal sealed interface EntryMigrationChildPairing {
         override fun pair(
             sourceChildren: List<EntryChapter>,
             targetChildren: List<EntryChapter>,
-        ): EntryMigrationChildPairs {
-            val sources = sourceChildren.sortedInSourceOrder()
-            val targets = targetChildren.sortedInSourceOrder().drop(offset).take(sources.size)
-            val positions = (sources.withIndex() + targets.withIndex())
-                .associate { (index, chapter) -> chapter.id to index.toDouble() }
-            return EntryMigrationChildPairs(
-                matches = sources.zip(targets) { source, target -> MigrationChapterMatch(source, target) },
-                number = { positions[it.id] ?: -1.0 },
+        ): MigrationChapterPairs<EntryChapter> {
+            val targets = targetChildren.sortedInSourceOrder().drop(offset)
+            return pairMigrationChaptersInOrder(
+                sourceChildren.sortedInSourceOrder().mapIndexed { index, source ->
+                    MigrationChapterPosition(source, targets.getOrNull(index))
+                },
             )
         }
     }
 }
 
-/**
- * The target chapters a migration changes, each with the source chapter whose state it takes, and where [number]
- * places a chapter for the rule that every target chapter up to the last source chapter read counts as read.
- */
-internal class EntryMigrationChildPairs(
-    val matches: List<EntryMigrationChildMatch>,
-    val number: (EntryChapter) -> Double,
-)
-
 internal fun prepareMigrationChildUpdates(
     sourceChildren: List<EntryChapter>,
-    childPairs: EntryMigrationChildPairs,
+    childPairs: MigrationChapterPairs<EntryChapter>,
     transfer: MigrationChildStateTransfer,
 ): List<EntryMigrationHostChildUpdate> {
     val marks = migratedChapterMarks(
         sources = sourceChildren,
-        matches = childPairs.matches,
+        pairs = childPairs,
         transfer = transfer,
         marks = { MigrationChapterMarks(it.read, it.bookmark) },
-        number = childPairs.number,
     ).toMap()
     return childPairs.matches.mapNotNull { match ->
         val target = match.target
