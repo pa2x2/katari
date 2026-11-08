@@ -510,6 +510,18 @@
     <string name="tts_settings_engine_required">Choose an available speech engine.</string>
     <string name="tts_settings_audio_focus_unavailable">Another app currently owns audio playback.</string>
     <string name="tts_settings_provider_failed">The speech engine could not play the preview.</string>
+    <!-- Speech Dispatcher, the speech service of Linux desktops; its name and package names stay untranslated -->
+    <string name="tts_speech_dispatcher_description">Speech through Speech Dispatcher, the speech service of Linux desktops, in the voices installed for it.</string>
+    <string name="tts_speech_dispatcher_processing">Speech Dispatcher\'s voices run on this computer.</string>
+    <string name="tts_speech_dispatcher_privacy">Text you listen to is passed only to Speech Dispatcher and the voice it reads with.</string>
+    <string name="tts_speech_dispatcher_not_installed">Speech Dispatcher isn\'t installed. Install the speech-dispatcher package and a voice such as espeak-ng to hear text read aloud.</string>
+    <string name="tts_speech_dispatcher_start_failed">Speech Dispatcher couldn\'t start.</string>
+    <string name="tts_speech_dispatcher_start_failed_because">Speech Dispatcher couldn\'t start: %s</string>
+    <string name="tts_speech_dispatcher_unreachable">Speech Dispatcher couldn\'t be reached.</string>
+    <string name="tts_speech_dispatcher_unreachable_because">Speech Dispatcher couldn\'t be reached: %s</string>
+    <string name="tts_speech_dispatcher_no_voices">Speech Dispatcher has no voices. Install a voice such as espeak-ng.</string>
+    <string name="tts_speech_dispatcher_stopped_responding">Speech Dispatcher stopped responding.</string>
+    <string name="tts_speech_dispatcher_refused">Speech Dispatcher refused to speak: %s</string>
     <!-- Model artifacts -->
     <string name="model_artifacts_title">Downloaded models</string>
     <string name="model_artifacts_summary">Storage used by on-device models</string>
