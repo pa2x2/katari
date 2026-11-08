@@ -13,7 +13,7 @@ import kotlin.math.pow
 import kotlin.math.roundToLong
 
 /**
- * Scrolling over the picture. The wheel sets the volume, [VOLUME_STEP_PERCENT] a notch, with the side volume feedback
+ * Scrolling over the picture. The wheel sets the volume, one percent a notch, with the side volume feedback
  * of Android's swipe; scrolling sideways, as a touchpad or a tilting wheel does, moves a target time as Android's
  * sideways swipe does, and seeks there once scrolling stops; with Ctrl held the wheel zooms the picture about the
  * pointer. Notches come as whole units of scrolling and touchpads as fractions of one, which add up.
@@ -71,7 +71,7 @@ internal fun Modifier.videoPlayerWheel(
                         if (steps == 0) continue
                         volumeSteps -= steps
                         val type = VideoPlayerSideGestureType.Volume
-                        val level = target.sideGestureLevel(type) + steps * VOLUME_STEP_PERCENT
+                        val level = target.sideGestureLevel(type) + steps
                         target.applySideGestureLevel(type, level)
                     }
                 }

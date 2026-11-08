@@ -79,3 +79,5 @@ private fun VideoPlayerInputTarget.zoomBy(geometry: VideoPictureGeometry?, facto
     previewPictureFraming(framing)
     commitPictureFraming(framing)
 }
+
+private const val VOLUME_STEP_PERCENT = 5

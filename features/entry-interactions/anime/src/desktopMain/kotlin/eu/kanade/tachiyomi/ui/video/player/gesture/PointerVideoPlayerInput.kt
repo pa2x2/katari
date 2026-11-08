@@ -59,5 +59,4 @@ internal object PointerVideoPlayerInput : VideoPlayerInput {
     }
 }
 
-internal const val VOLUME_STEP_PERCENT = 5
 internal const val PICTURE_ZOOM_STEP = 1.1f
