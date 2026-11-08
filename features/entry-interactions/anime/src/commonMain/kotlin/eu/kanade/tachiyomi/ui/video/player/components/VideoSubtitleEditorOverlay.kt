@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -46,8 +45,9 @@ import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * The subtitle editor: [previewCues] where the player would draw subtitles of the [draftAppearance] in a picture of
- * [aspectRatio] framed as [framing], at their real size, and the style panel beside it. The preview keeps to the space
- * the panel leaves, so it can be seen and dragged while the panel is open.
+ * [aspectRatio] framed as [framing], at their real size and place, and the style panel over it. The preview is laid out
+ * over the whole player, as the player lays out its subtitles, so where it sits is where they will show; the panel's
+ * handle slides the panel away to reach a preview under it.
  */
 @Composable
 internal fun VideoSubtitleEditorOverlay(
@@ -65,7 +65,6 @@ internal fun VideoSubtitleEditorOverlay(
     modifier: Modifier = Modifier,
 ) {
     var pictureAreaSize by remember { mutableStateOf(IntSize.Zero) }
-    var panelWidth by remember { mutableIntStateOf(0) }
     var drawerExpanded by remember { mutableStateOf(true) }
     val normalizedAppearance = draftAppearance.normalized()
     val gapPx = with(LocalDensity.current) { KatariTheme.spacing.s.toPx() }
@@ -93,15 +92,12 @@ internal fun VideoSubtitleEditorOverlay(
                 layout = layout,
                 previewCues = previewCues,
                 onDraftChange = onDraftChange,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = with(LocalDensity.current) { panelWidth.toDp() }),
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
         Row(
             modifier = Modifier
-                .onSizeChanged { panelWidth = it.width }
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight(0.92f)
                 .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true)
