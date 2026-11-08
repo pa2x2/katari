@@ -21,6 +21,7 @@ import mihon.video.engine.mpv.client.MpvErrorCode
 import mihon.video.engine.mpv.client.MpvLogLevel
 import mihon.video.engine.mpv.client.MpvSessionHost
 import mihon.video.engine.mpv.client.MpvValue
+import mihon.video.engine.mpv.proxy.RelayLog
 import mihon.video.engine.mpv.proxy.StreamFailure
 import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
@@ -146,6 +147,7 @@ internal class MpvPlayer(
     private var entryId = -1L
 
     private val errorLog = MpvErrorLog()
+    private val appLog = MpvAppLog(role)
 
     /** Confined to the mpv thread. */
     private var proxy: StreamProxy? = null
@@ -243,6 +245,7 @@ internal class MpvPlayer(
         // A load that is still opening seeks once it has, and an idle player starts the next load there.
         if (prepared && loaded) {
             sentPause = null
+            appLog.seekAsked(seconds(target))
             session.post { it.command("seek", seconds(target), "absolute") }
         }
         refresh()
@@ -587,6 +590,7 @@ internal class MpvPlayer(
                     bandwidthMeter = bandwidthMeter,
                     bufferedAheadMs = { bufferedMs - positionMs },
                     variantPick = { set -> trackRequest.variantPick(set.programId, mpvTracks) },
+                    relayLog = RelayLog(appLog.player, connectionBreaks = !preview),
                 )
             } catch (e: IOException) {
                 logcat(LogPriority.ERROR, e) { "The mpv stream proxy didn't start" }
@@ -717,6 +721,7 @@ internal class MpvPlayer(
 
         override fun onLogMessage(prefix: String, level: MpvLogLevel, text: String) {
             errorLog.add(prefix, level, text)
+            appLog.add(prefix, level, text)
         }
     }
 
