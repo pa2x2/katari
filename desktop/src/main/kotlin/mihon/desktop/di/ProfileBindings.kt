@@ -4,8 +4,8 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import mihon.desktop.profile.DesktopProfileStore
 import mihon.desktop.profile.DesktopProfileSwitchEffects
+import mihon.desktop.profile.DesktopProfileUnlock
 import mihon.desktop.profile.NoLegacyProfilePreferenceKeys
-import mihon.desktop.profile.NoProfileUnlock
 import mihon.feature.profiles.core.LegacyProfilePreferenceKeys
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.ui.ProfileUnlock
@@ -24,7 +24,7 @@ interface ProfileBindings {
     val NoLegacyProfilePreferenceKeys.legacyProfilePreferenceKeys: LegacyProfilePreferenceKeys
 
     @Binds
-    val NoProfileUnlock.profileUnlock: ProfileUnlock
+    val DesktopProfileUnlock.profileUnlock: ProfileUnlock
 
     @Binds
     val DesktopProfileSwitchEffects.profileSwitchEffects: ProfileSwitchEffects

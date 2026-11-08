@@ -159,6 +159,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A dialog's scrolling content, marked where more lies past an edge | `DialogScrollEdges` | |
 | Block the screen while work the user waits for runs | `ProgressDialog` | |
 | A window over the whole screen for a viewer | `FullScreenDialog` | |
+| Cover the whole window until something is done, such as the profile picker over a profile that locked again | `LockScreen` | The screens under it keep their state but get no input, focus or shortcuts |
 | A picture full screen, zoomable, dragged down to close | `PictureViewer` | |
 | A web page something outside the app puts up, such as an extension's check | `WebPageDialog` | |
 | A menu and its items | `DropdownMenu`, `DropdownMenuItem`, `CheckMenuItem`, `RadioMenuItem`, `NestedMenuItem`, `DropdownMenuDivider` | |

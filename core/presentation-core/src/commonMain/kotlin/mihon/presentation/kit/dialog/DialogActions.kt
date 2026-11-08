@@ -87,5 +87,6 @@ private fun ActionButton(action: DialogAction, style: ButtonStyle, modifier: Mod
         style = style,
         enabled = action.enabled,
         destructive = action.destructive,
+        loading = action.loading,
     )
 }

@@ -6,7 +6,7 @@ import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.ProfileUnlock
 
 /** Makes [profile] the active one after unlocking it if it's locked; false when the unlock didn't happen. */
-internal suspend fun switchToProfile(
+suspend fun switchToProfile(
     context: PlatformContext,
     profileManager: ProfileManager,
     profileUnlock: ProfileUnlock,

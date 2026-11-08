@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.first
 /**
  * Short messages that come from no screen, such as how a backup ended or why a link didn't open, posted from anywhere
  * in the app and shown on the screen the user is on as one of its own [ScreenMessages]. The window's host shows them
- * through [AppMessagesHost]. A message posted while no screen shows messages, such as before the home screen opens,
- * waits for one; past [WAITING_CAPACITY] waiting, the oldest is dropped.
+ * through [AppMessagesHost]. A message posted while no screen shows messages, such as while the window opens, waits
+ * for one; past [WAITING_CAPACITY] waiting, the oldest is dropped.
  */
 @Inject
 @SingleIn(AppScope::class)

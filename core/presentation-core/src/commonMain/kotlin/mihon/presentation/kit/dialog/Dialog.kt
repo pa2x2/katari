@@ -45,12 +45,16 @@ import mihon.presentation.kit.window.rememberFoldHalf
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A dialog or sheet button. [destructive] marks an action that deletes or discards something. */
+/**
+ * A dialog or sheet button. [destructive] marks an action that deletes or discards something; [loading] one that is
+ * already running, such as a password being checked.
+ */
 class DialogAction(
     val label: String,
     val onClick: () -> Unit,
     val enabled: Boolean = true,
     val destructive: Boolean = false,
+    val loading: Boolean = false,
 )
 
 /**
