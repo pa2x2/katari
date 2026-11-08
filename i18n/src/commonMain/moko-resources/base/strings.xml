@@ -3434,7 +3434,7 @@
     <string name="sync_handoff_checking">Checking your other devices…</string>
     <!-- %1$s is a device's name, %2$s when, such as "2 minutes ago" -->
     <string name="sync_handoff_from">From %1$s · %2$s</string>
-    <string name="sync_handoff_own">Can\'t reach your other devices · this device\'s progress</string>
+    <string name="sync_handoff_own">Can\'t reach your other devices</string>
     <!-- %1$s is a device's name, %2$s where it is, such as "Ch. 12, page 18" -->
     <string name="sync_handoff_further">%1$s is further: %2$s</string>
     <!-- %1$s is where another device is, such as "Chapter 12, page 18", when the device's name isn't known -->
