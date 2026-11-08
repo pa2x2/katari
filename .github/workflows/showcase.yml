@@ -91,7 +91,7 @@ jobs:
 
       # Before the build, so that an upstream site that cannot be reached fails the run in seconds.
       - name: Fetch the showcase content
-        working-directory: showcase
+        working-directory: tools/showcase
         run: |
           npm ci
           npm run fetch
@@ -218,7 +218,7 @@ jobs:
           path: ${{ runner.temp }}/showcase-build
 
       - name: Capture
-        working-directory: showcase
+        working-directory: tools/showcase
         env:
           BUILD: ${{ runner.temp }}/showcase-build
           GROUP: ${{ matrix.group }}
@@ -359,7 +359,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          (cd showcase && npm ci)
+          (cd tools/showcase && npm ci)
           proposal="$RUNNER_TEMP/proposal"
           mkdir -p "$proposal/files"
           node tools/showcase/pipeline/compare.ts --published published --captured "$RUNNER_TEMP/captures" > "$proposal/result.json"
