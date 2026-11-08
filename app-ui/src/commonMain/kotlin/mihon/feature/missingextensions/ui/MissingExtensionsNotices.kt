@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.feature.missingextensions.model.MissingExtension
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Extension
@@ -54,8 +55,19 @@ fun MissingExtensionsNotice(onReview: () -> Unit, modifier: Modifier = Modifier)
     )
 }
 
+/**
+ * How many titles need [extensions]. Extensions serve every profile, so the count does too, and says so when some of
+ * the titles are in profiles other than the open one.
+ */
 @Composable
 internal fun noticeText(extensions: List<MissingExtension>): String {
+    val profileManager = LocalAppUiGraph.current.profileManager
+    val openProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     val titles = extensions.sumOf { it.titleCount }.toInt()
-    return pluralStringResource(MR.plurals.missing_extensions_notice, titles, titles)
+    val beyondOpenProfile = extensions.any { extension -> extension.countsByProfile.keys.any { it != openProfile?.id } }
+    return pluralStringResource(
+        if (beyondOpenProfile) MR.plurals.missing_extensions_notice_profiles else MR.plurals.missing_extensions_notice,
+        titles,
+        titles,
+    )
 }
