@@ -9,7 +9,8 @@ import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * The player's keys ([VideoPlayerShortcuts]) while the watch screen shows. They leave the keys to the settings panel,
- * the episode list and the subtitle editor while one is open. The zoom keys zoom about the picture's centre.
+ * the episode list and the subtitle editor while one is open. The zoom keys zoom about the picture's centre, and the
+ * pan keys, there while the picture is zoomed past the player, bring a tenth of the player's size more into view.
  * [geometry] is the picture's shape in the player, null until the video has one.
  */
 @Composable
@@ -29,6 +30,11 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
     Key(VideoPlayerShortcuts.ZoomOut, enabled) { target.zoomBy(geometry(), 1f / PICTURE_ZOOM_STEP) }
     Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.frame(PictureFraming.Fit) }
+    val pans = enabled && geometry()?.overflows(target.pictureFraming) == true
+    Key(VideoPlayerShortcuts.PanLeft, pans) { target.panBy(geometry(), -1, 0) }
+    Key(VideoPlayerShortcuts.PanRight, pans) { target.panBy(geometry(), 1, 0) }
+    Key(VideoPlayerShortcuts.PanUp, pans) { target.panBy(geometry(), 0, -1) }
+    Key(VideoPlayerShortcuts.PanDown, pans) { target.panBy(geometry(), 0, 1) }
     val registry = LocalKeyboardShortcuts.current
     Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
 }
@@ -78,6 +84,18 @@ private fun VideoPlayerInputTarget.zoomBy(geometry: VideoPictureGeometry?, facto
     frame(geometry.zoom(pictureFraming, factor))
 }
 
+// [stepsX] and [stepsY] are toward the part of the picture to bring into view, which moves the other way
+private fun VideoPlayerInputTarget.panBy(geometry: VideoPictureGeometry?, stepsX: Int, stepsY: Int) {
+    geometry ?: return
+    frame(
+        geometry.pan(
+            pictureFraming,
+            deltaX = -stepsX * geometry.width * PAN_STEP_SHARE,
+            deltaY = -stepsY * geometry.height * PAN_STEP_SHARE,
+        ),
+    )
+}
+
 // Through the preview, as a gesture goes, so a key hides the controls and shows the picture pill as gestures do
 private fun VideoPlayerInputTarget.frame(framing: PictureFraming) {
     previewPictureFraming(framing)
@@ -85,3 +103,5 @@ private fun VideoPlayerInputTarget.frame(framing: PictureFraming) {
 }
 
 private const val VOLUME_STEP_PERCENT = 5
+
+private const val PAN_STEP_SHARE = 0.1f

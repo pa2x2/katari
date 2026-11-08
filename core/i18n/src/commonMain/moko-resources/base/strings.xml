@@ -1971,6 +1971,10 @@
     <string name="anime_shortcut_zoom_in">Zoom in</string>
     <string name="anime_shortcut_zoom_out">Zoom out</string>
     <string name="anime_shortcut_zoom_fit">Fit the picture</string>
+    <string name="anime_shortcut_pan_left">Pan left</string>
+    <string name="anime_shortcut_pan_right">Pan right</string>
+    <string name="anime_shortcut_pan_up">Pan up</string>
+    <string name="anime_shortcut_pan_down">Pan down</string>
     <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
     <string name="anime_playback_keeps_screen_awake">Playing a video</string>
     <string name="anime_skip_intro">Skip intro</string>

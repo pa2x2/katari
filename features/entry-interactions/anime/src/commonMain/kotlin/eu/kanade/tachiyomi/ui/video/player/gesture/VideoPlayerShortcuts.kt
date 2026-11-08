@@ -168,6 +168,36 @@ internal object VideoPlayerShortcuts {
             ShortcutKeys.Chord(Key.NumPad0, "0", ctrl = true),
         )
 
+    // Ctrl and the arrows move a zoomed picture, as the arrows alone seek and set the volume
+
+    val PanLeft: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.panLeft",
+            stringResource(MR.strings.anime_shortcut_pan_left),
+            ShortcutKeys.Chord(Key.DirectionLeft, "←", ctrl = true),
+        )
+
+    val PanRight: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.panRight",
+            stringResource(MR.strings.anime_shortcut_pan_right),
+            ShortcutKeys.Chord(Key.DirectionRight, "→", ctrl = true),
+        )
+
+    val PanUp: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.panUp",
+            stringResource(MR.strings.anime_shortcut_pan_up),
+            ShortcutKeys.Chord(Key.DirectionUp, "↑", ctrl = true),
+        )
+
+    val PanDown: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.panDown",
+            stringResource(MR.strings.anime_shortcut_pan_down),
+            ShortcutKeys.Chord(Key.DirectionDown, "↓", ctrl = true),
+        )
+
     /** ? beside the window's Ctrl+/. */
     val ShowList: KeyboardShortcut
         @Composable get() = shortcut(
