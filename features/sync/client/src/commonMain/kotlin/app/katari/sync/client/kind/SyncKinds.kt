@@ -13,6 +13,7 @@ import app.katari.sync.client.kind.entrychoice.EntryUpdateModeKind
 import app.katari.sync.client.kind.entrychoice.ExcludedScanlatorKind
 import app.katari.sync.client.kind.entrychoice.IntroTimesPickKind
 import app.katari.sync.client.kind.entrychoice.PlaybackPreferencesKind
+import app.katari.sync.client.kind.entrychoice.TheIntroDbPickKind
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesKind
 import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
 import app.katari.sync.client.kind.extension.ExtensionRepositoryKind
@@ -54,6 +55,7 @@ object SyncKinds {
         DownloadPreferencesKind,
         TranslationLanguagesKind,
         IntroTimesPickKind,
+        TheIntroDbPickKind,
         PlaybackPreferencesKind,
         MergeMemberKind,
         EntryReplacementKind,

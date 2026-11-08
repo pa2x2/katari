@@ -376,6 +376,84 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
     override fun entryKeyOf(payload: IntroTimesPickPayload) = payload.entryKey
 }
 
+/** Local ref: `[entry_id, group_key]`. Synced like [IntroTimesPickKind]: only the rows the person picked. */
+object TheIntroDbPickKind : SyncedKind<TheIntroDbPickPayload>(
+    "entry.theintrodb-pick",
+    1,
+    TheIntroDbPickPayload.serializer(),
+    Absence.TOMBSTONE,
+) {
+    override val capture = triggers(
+        "theintrodb_matches",
+        listOf("entry_id", "group_key"),
+        listOf(
+            Field(
+                3,
+                "tvdb_id",
+                "tmdb_id",
+                "imdb_id",
+                "title",
+                "year",
+                "season",
+                "first_episode",
+                "picked_by_user",
+            ),
+        ),
+        condition = { "$it.picked_by_user = 1" },
+    )
+
+    override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<TheIntroDbPickPayload> {
+        val row = reads.database.sync_local_rowsQueries.theIntroDbPickRow(ref.long(0), ref.text(1)).awaitAsOneOrNull()
+        return entryChoice(reads, ref.long(0), row, ref.text(1)) { entryKey, row, previous, stamps ->
+            TheIntroDbPickPayload(
+                entryKey = entryKey,
+                groupKey = row.group_key,
+                match = stamps.field(
+                    3,
+                    TheIntroDbPick(
+                        tvdbId = row.tvdb_id,
+                        tmdbId = row.tmdb_id,
+                        imdbId = row.imdb_id,
+                        title = row.title,
+                        year = row.year,
+                        season = row.season,
+                        firstEpisode = row.first_episode,
+                    ),
+                    previous?.match,
+                ),
+            )
+        }
+    }
+
+    override fun merge(local: TheIntroDbPickPayload, incoming: TheIntroDbPickPayload) = local.copy(
+        match = latest(local.match, incoming.match),
+    )
+
+    override suspend fun apply(writes: LocalWrites, key: String, payload: TheIntroDbPickPayload): ApplyOutcome {
+        val entryId = writes.entryId(payload.entryKey).idOr { return it }
+        val match = payload.match.value
+        writes.database.sync_applyQueries.upsertTheIntroDbPick(
+            entryId = entryId,
+            groupKey = payload.groupKey,
+            tvdbId = match.tvdbId,
+            tmdbId = match.tmdbId,
+            imdbId = match.imdbId,
+            title = match.title,
+            year = match.year,
+            season = match.season,
+            firstEpisode = match.firstEpisode,
+        )
+        return ApplyOutcome.Applied(LocalRef.of(entryId, payload.groupKey))
+    }
+
+    override suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome {
+        ref?.let { writes.database.sync_applyQueries.deleteTheIntroDbPick(it.long(0), it.text(1)) }
+        return ApplyOutcome.Applied(null)
+    }
+
+    override fun entryKeyOf(payload: TheIntroDbPickPayload) = payload.entryKey
+}
+
 /** Local ref: `[entry_id]`. */
 object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
     "entry.playback-preferences",

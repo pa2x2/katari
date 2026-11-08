@@ -34,6 +34,7 @@ class AccountRollback(private val handler: DatabaseHandler) {
             deleteTranslationLanguages(profileIds)
             deletePlaybackPreferences(profileIds)
             deleteIntroTimesPicks(profileIds)
+            deleteTheIntroDbPicks(profileIds)
             deleteHistory(profileIds)
             deleteProgress(profileIds)
             clearChapterMarks(profileIds)
