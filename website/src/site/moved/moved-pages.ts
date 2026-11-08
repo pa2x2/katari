@@ -1,7 +1,8 @@
 /**
  * Addresses pages had before they moved, and where each page is now. GitHub Pages can't redirect, so every old address
  * stays a page that sends the visitor on: released apps opened the docs under /guide/, and the developer pages lived
- * under /docs/extensions/ until they got a section of their own. The list only ever grows.
+ * under /docs/extensions/ until they got a section of their own. The list only ever grows, except that a page of a feature
+ * Katari dropped leaves it along with the page.
  */
 const userSlugs = [
   "install",
@@ -14,7 +15,6 @@ const userSlugs = [
   "statistics",
   "library-updates",
   "backups-and-storage",
-  "tracking",
   "local-source",
   "source-migration",
   "troubleshooting",

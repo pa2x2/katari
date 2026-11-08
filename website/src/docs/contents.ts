@@ -15,7 +15,6 @@ import queryStats from "../guide/icons/query_stats.svg";
 import settingsBackupRestore from "../guide/icons/settings_backup_restore.svg";
 import storage from "../guide/icons/storage.svg";
 import store from "../guide/icons/store.svg";
-import sync from "../guide/icons/sync.svg";
 import translate from "../guide/icons/translate.svg";
 import update from "../guide/icons/update.svg";
 import type { Manual } from "../guide/contents.ts";
@@ -62,21 +61,14 @@ export const docs: Manual = {
           title: "Library updates",
           summary: "When Katari checks for new chapters, and what Upcoming shows.",
           icon: update,
-          related: ["docs/tracking/", "docs/merged-entries/", "docs/troubleshooting/"],
+          related: ["docs/merged-entries/", "docs/troubleshooting/"],
         },
         {
           slug: "merged-entries",
           title: "Merged entries",
           summary: "One entry for every edition of a title.",
           icon: callMerge,
-          related: ["docs/source-migration/", "docs/library-updates/", "docs/tracking/"],
-        },
-        {
-          slug: "tracking",
-          title: "Tracking",
-          summary: "Send your progress to AniList, MyAnimeList and other trackers.",
-          icon: sync,
-          related: ["docs/profiles/", "docs/source-migration/", "docs/backups-and-storage/"],
+          related: ["docs/source-migration/", "docs/library-updates/"],
         },
       ],
     },
@@ -135,7 +127,7 @@ export const docs: Manual = {
           title: "Moving to another source",
           summary: "Move titles to a new source and keep what you've read.",
           icon: compareArrows,
-          related: ["docs/merged-entries/", "docs/tracking/", "docs/extension-stores/"],
+          related: ["docs/merged-entries/", "docs/extension-stores/"],
         },
         {
           slug: "local-source",
@@ -154,7 +146,7 @@ export const docs: Manual = {
           title: "Profiles",
           summary: "Separate libraries, history and settings in one app.",
           icon: accountCircle,
-          related: ["docs/tracking/", "docs/backups-and-storage/", "docs/statistics/"],
+          related: ["docs/sync/", "docs/backups-and-storage/", "docs/statistics/"],
         },
         {
           slug: "statistics",

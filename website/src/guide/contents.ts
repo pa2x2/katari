@@ -43,7 +43,7 @@ export interface ManualLink {
 export interface Manual {
   id: ManualId;
   name: string;
-  /** What a page's title ends with, such as "Tracking · Katari docs". */
+  /** What a page's title ends with, such as "Profiles · Katari docs". */
   titleSuffix: string;
   /** The path its pages live under, ending in a slash. */
   base: string;
@@ -60,7 +60,7 @@ export function manual(id: ManualId): Manual {
   return manuals.find((candidate) => candidate.id === id)!;
 }
 
-/** The page's path on the site, such as `docs/tracking/`. */
+/** The page's path on the site, such as `docs/profiles/`. */
 export function entryPath(owner: Manual, entry: GuideEntry): string {
   return entry.slug ? `${owner.base}${entry.slug}/` : owner.base;
 }
