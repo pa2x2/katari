@@ -44,19 +44,18 @@ fun OverlayDrawer(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
+            // The backdrop is the viewer, not a control: a hover or press shade across all of it would mark the
+            // whole viewer as a button
             Box(
-                modifier = when (backdrop) {
-                    SheetBackdrop.Dimmed ->
-                        Modifier
-                            .fillMaxSize()
-                            .background(SurfaceContainer.Scrim)
-                            .clickable(onClick = onDismissRequest)
-                    // A ripple across the whole viewer would be the only thing the tap shows
-                    SheetBackdrop.Clear ->
-                        Modifier
-                            .fillMaxSize()
-                            .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
-                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(
+                        when (backdrop) {
+                            SheetBackdrop.Dimmed -> Modifier.background(SurfaceContainer.Scrim)
+                            SheetBackdrop.Clear -> Modifier
+                        },
+                    )
+                    .clickable(interactionSource = null, indication = null, onClick = onDismissRequest),
             )
         }
 
