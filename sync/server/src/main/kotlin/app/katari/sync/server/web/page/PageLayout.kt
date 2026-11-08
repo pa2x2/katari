@@ -1,5 +1,6 @@
 package app.katari.sync.server.web.page
 
+import app.katari.sync.server.ServerVersion
 import app.katari.sync.server.web.request.FormTokens
 import app.katari.sync.server.web.request.WebVisitor
 import app.katari.sync.server.web.request.visitor
@@ -12,6 +13,7 @@ import kotlinx.html.MAIN
 import kotlinx.html.a
 import kotlinx.html.body
 import kotlinx.html.div
+import kotlinx.html.footer
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.img
@@ -68,6 +70,10 @@ private fun HTML.katariPage(title: String, visitor: WebVisitor, content: MAIN.()
             }
         }
         main("body") { content() }
+        // Admins, who upgrade the server, see its version; nobody else is told which version runs.
+        if (visitor.account?.isAdmin == true) {
+            footer("foot") { +"Katari sync server ${ServerVersion.name}" }
+        }
     }
 }
 
