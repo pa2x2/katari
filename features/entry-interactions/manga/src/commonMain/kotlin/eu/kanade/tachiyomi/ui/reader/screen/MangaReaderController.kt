@@ -63,10 +63,10 @@ internal class MangaReaderController(
     private val mutableViewer = MutableStateFlow<ReaderViewer?>(null)
     val viewer: StateFlow<ReaderViewer?> = mutableViewer.asStateFlow()
 
-    private val noticeChannel = Channel<StringResource>(Channel.BUFFERED)
+    private val noticeChannel = Channel<MangaReaderNotice>(Channel.BUFFERED)
 
     /** Short messages about what just happened, which the screen shows. */
-    val notices: Flow<StringResource> = noticeChannel.receiveAsFlow()
+    val notices: Flow<MangaReaderNotice> = noticeChannel.receiveAsFlow()
 
     var isAutoScrollRunning by mutableStateOf(false)
         private set
@@ -148,7 +148,7 @@ internal class MangaReaderController(
         mutableViewer.value = newViewer
         viewModel.onViewerChanged()
         if (viewModel.readerSettings.showReadingMode.state.value.effectiveValue) {
-            noticeChannel.trySend(ReadingMode.fromPreference(viewModel.getMangaReadingMode()).stringRes)
+            showNotice(ReadingMode.fromPreference(viewModel.getMangaReadingMode()).stringRes)
         }
         reloadChapters()
     }
@@ -177,6 +177,25 @@ internal class MangaReaderController(
         }
     }
 
+    private fun showNotice(message: StringResource) {
+        noticeChannel.trySend(MangaReaderNotice.Resource(message))
+    }
+
+    private fun showSpeechFailure(failure: ShortFormSpeechFailure) {
+        failure.explanation?.let { explanation ->
+            noticeChannel.trySend(MangaReaderNotice.Text(explanation))
+            return
+        }
+        showNotice(
+            when (failure) {
+                ShortFormSpeechFailure.LanguageUnavailable -> MR.strings.reader_text_speech_language_unavailable
+                ShortFormSpeechFailure.ConfigurationRequired -> MR.strings.reader_text_speech_configuration_required
+                is ShortFormSpeechFailure.Unavailable -> MR.strings.reader_text_speech_unavailable
+                is ShortFormSpeechFailure.PlaybackFailed -> MR.strings.reader_text_speech_failed
+            },
+        )
+    }
+
     private fun onEvent(event: ReaderViewModel.Event) {
         when (event) {
             ReaderViewModel.Event.ReloadViewerChapters -> reloadChapters()
@@ -185,19 +204,12 @@ internal class MangaReaderController(
                 viewModel.textSession.setOverlay(true)
                 textInteraction.setActive(true)
             }
-            is ReaderViewModel.Event.TranslationSpeechFailed -> noticeChannel.trySend(
-                when (event.failure) {
-                    ShortFormSpeechFailure.LanguageUnavailable -> MR.strings.reader_text_speech_language_unavailable
-                    ShortFormSpeechFailure.ConfigurationRequired -> MR.strings.reader_text_speech_configuration_required
-                    ShortFormSpeechFailure.Unavailable -> MR.strings.reader_text_speech_unavailable
-                    ShortFormSpeechFailure.PlaybackFailed -> MR.strings.reader_text_speech_failed
-                },
-            )
+            is ReaderViewModel.Event.TranslationSpeechFailed -> showSpeechFailure(event.failure)
             is ReaderViewModel.Event.SavedImage -> when (val result = event.result) {
-                ReaderViewModel.SaveImageResult.Success -> noticeChannel.trySend(MR.strings.picture_saved)
+                ReaderViewModel.SaveImageResult.Success -> showNotice(MR.strings.picture_saved)
                 is ReaderViewModel.SaveImageResult.Error -> logcat(LogPriority.ERROR, result.error)
             }
-            is ReaderViewModel.Event.SetCoverResult -> noticeChannel.trySend(
+            is ReaderViewModel.Event.SetCoverResult -> showNotice(
                 when (event.result) {
                     ReaderViewModel.SetAsCoverResult.Success -> MR.strings.cover_updated
                     ReaderViewModel.SetAsCoverResult.AddToLibraryFirst -> MR.strings.notification_first_add_to_library
@@ -298,7 +310,7 @@ internal class MangaReaderController(
     }
 
     fun toggleCropBorders() {
-        noticeChannel.trySend(if (viewModel.toggleCropBorders()) MR.strings.on else MR.strings.off)
+        showNotice(if (viewModel.toggleCropBorders()) MR.strings.on else MR.strings.off)
     }
 
     fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {
@@ -363,14 +375,14 @@ internal class MangaReaderController(
         viewer.value?.startAutoScroll(autoScrollSpeed)
         isAutoScrollRunning = true
         setMenuVisibility(false)
-        noticeChannel.trySend(MR.strings.reader_auto_scroll_enabled)
+        showNotice(MR.strings.reader_auto_scroll_enabled)
     }
 
     private fun stopAutoScroll(notify: Boolean = true) {
         if (!isAutoScrollRunning) return
         viewer.value?.stopAutoScroll()
         isAutoScrollRunning = false
-        if (notify) noticeChannel.trySend(MR.strings.reader_auto_scroll_disabled)
+        if (notify) showNotice(MR.strings.reader_auto_scroll_disabled)
     }
 
     /** Moves running auto scroll's speed level by [delta]. */

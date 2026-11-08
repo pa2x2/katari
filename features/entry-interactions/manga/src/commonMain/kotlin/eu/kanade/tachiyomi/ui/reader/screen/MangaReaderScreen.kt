@@ -63,7 +63,12 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
     // Before the notices are collected, so it holds the screen's messages by the time the first one comes
     ReaderMessages(state.menuVisible, menuBounds)
     LaunchedEffect(controller) {
-        controller.notices.collect { messages.show(it) }
+        controller.notices.collect { notice ->
+            when (notice) {
+                is MangaReaderNotice.Resource -> messages.show(notice.message)
+                is MangaReaderNotice.Text -> messages.show(notice.message)
+            }
+        }
     }
     when (val startup = state.startupState) {
         is ReaderStartupState.Loading -> {

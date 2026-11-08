@@ -61,14 +61,14 @@ internal class DefaultTtsHostActions(
             val status = when {
                 buildAvailability is TtsEngineBuildAvailability.NotIncluded ->
                     TtsEngineStatus.Unavailable(buildAvailability.reason)
-                engine == null -> TtsEngineStatus.NotInstalled
+                engine == null -> TtsEngineStatus.NotInstalled()
                 else -> inspectDevice(engine).toStatus()
             }
             TtsEngineState(
                 engine = known,
                 presentation = engine?.presentation,
                 status = status,
-                action = status.action(),
+                action = status.action()?.takeIf { supportsSetup(known.id) },
                 capabilities = engine?.capabilities,
             )
         }
@@ -163,7 +163,7 @@ internal class DefaultTtsHostActions(
     private fun TtsEngineDeviceAvailability.toApi(engine: TtsEngineId): TtsDeviceAvailability {
         return when (this) {
             TtsEngineDeviceAvailability.Available -> TtsDeviceAvailability.Available
-            TtsEngineDeviceAvailability.NotInstalled -> TtsDeviceAvailability.SelectedEngineMissing(engine)
+            is TtsEngineDeviceAvailability.NotInstalled -> TtsDeviceAvailability.SelectedEngineMissing(engine)
             is TtsEngineDeviceAvailability.ConfigurationRequired ->
                 TtsDeviceAvailability.SelectedEngineUnavailable(engine, reason)
             TtsEngineDeviceAvailability.ServiceMissing -> TtsDeviceAvailability.SelectedEngineUnavailable(
@@ -183,7 +183,7 @@ internal class DefaultTtsHostActions(
     private fun TtsEngineDeviceAvailability.toStatus(): TtsEngineStatus {
         return when (this) {
             TtsEngineDeviceAvailability.Available -> TtsEngineStatus.Ready
-            TtsEngineDeviceAvailability.NotInstalled -> TtsEngineStatus.NotInstalled
+            is TtsEngineDeviceAvailability.NotInstalled -> TtsEngineStatus.NotInstalled(reason)
             is TtsEngineDeviceAvailability.ConfigurationRequired -> TtsEngineStatus.ConfigurationRequired(reason)
             TtsEngineDeviceAvailability.ServiceMissing -> TtsEngineStatus.Unavailable("TTS service is missing")
             is TtsEngineDeviceAvailability.VoiceDataRequired -> TtsEngineStatus.VoiceDataRequired(reason)
@@ -194,7 +194,7 @@ internal class DefaultTtsHostActions(
 
     private fun TtsEngineStatus.action(): TtsEngineAction? {
         return when (this) {
-            TtsEngineStatus.NotInstalled -> TtsEngineAction.Install
+            is TtsEngineStatus.NotInstalled -> TtsEngineAction.Install
             is TtsEngineStatus.ConfigurationRequired -> TtsEngineAction.Configure
             is TtsEngineStatus.VoiceDataRequired -> TtsEngineAction.SetupVoiceData
             else -> null

@@ -135,7 +135,6 @@ internal class DesktopBookReader(
                         if (navigation.webViewAvailable) add(EntryChildWebViewAction.OPEN_IN_WEB_VIEW)
                         add(EntryChildWebViewAction.OPEN_IN_BROWSER)
                     },
-                    speaksSelections = false,
                     showMessage = { message -> messages.show(message) },
                     onClose = navigation::close,
                     onChildWebViewAction = { action, resolution, title ->

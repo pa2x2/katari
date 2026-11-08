@@ -60,7 +60,7 @@ internal class AndroidTtsEngine(
         ) {
             TtsEngineDeviceAvailability.Available
         } else {
-            TtsEngineDeviceAvailability.NotInstalled
+            TtsEngineDeviceAvailability.NotInstalled()
         }
     }
 

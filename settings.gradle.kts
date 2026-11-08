@@ -238,6 +238,7 @@ include(
     ":features:translation:ui",
     ":features:tts:api",
     ":features:tts:providers:android",
+    ":features:tts:providers:speech-dispatcher",
     ":features:tts:runtime",
     ":features:tts:spi",
     ":features:tts:ui",

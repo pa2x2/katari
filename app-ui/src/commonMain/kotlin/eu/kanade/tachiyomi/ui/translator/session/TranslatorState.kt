@@ -46,7 +46,8 @@ internal data class TranslatorState(
 }
 
 internal sealed interface TranslatorEvent {
-    data object SpeechFailed : TranslatorEvent
+    /** [explanation] is the speech engine's own words for the user, when it gave any. */
+    data class SpeechFailed(val explanation: String?) : TranslatorEvent
 
     /** Emitted when the current selections cannot be exchanged by the swap control. */
     data object SwapUnavailable : TranslatorEvent

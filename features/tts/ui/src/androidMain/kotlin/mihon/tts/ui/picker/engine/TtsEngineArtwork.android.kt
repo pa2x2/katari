@@ -1,5 +1,6 @@
 package mihon.tts.ui.picker.engine
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,8 +24,8 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.engine.TtsEngineArtwork
 
 /**
- * The installed application's icon when there is one, otherwise the bundled glyph. A glyph gets a wider inset than an
- * application icon, which already carries its own padding.
+ * The glyph, or the installed application's icon when there is one, otherwise the bundled drawable. A drawable gets a
+ * wider inset than an application icon, which already carries its own padding.
  */
 @Composable
 internal actual fun TtsEngineArtwork(
@@ -32,26 +33,37 @@ internal actual fun TtsEngineArtwork(
     size: ArtworkTileSize,
     modifier: Modifier,
 ) {
+    when (artwork) {
+        is TtsEngineArtwork.Glyph -> TtsEngineGlyph(artwork, size, modifier)
+        is TtsEngineArtwork.Bundled -> AndroidArtwork(null, artwork.resourceId, size, modifier)
+        is TtsEngineArtwork.InstalledApplication ->
+            AndroidArtwork(artwork.packageName, artwork.fallbackResourceId, size, modifier)
+    }
+}
+
+/** The icon of the application [packageName] where it is installed, otherwise the drawable [fallbackResource]. */
+@Composable
+private fun AndroidArtwork(
+    packageName: String?,
+    @DrawableRes fallbackResource: Int,
+    size: ArtworkTileSize,
+    modifier: Modifier,
+) {
     val context = LocalContext.current
     val displayDensity = LocalDensity.current.density
     val iconPixels = (size.side.value * displayDensity).toInt().coerceAtLeast(1)
-    val fallbackResource = when (artwork) {
-        is TtsEngineArtwork.Bundled -> artwork.resourceId
-        is TtsEngineArtwork.InstalledApplication -> artwork.fallbackResourceId
-    }
     val fallbackIcon = remember(context, fallbackResource, iconPixels) {
         val drawable = checkNotNull(ContextCompat.getDrawable(context, fallbackResource)) {
             "TTS engine artwork resource $fallbackResource could not be loaded"
         }
         drawable.toBitmap(width = iconPixels, height = iconPixels).asImageBitmap()
     }
-    val installedIcon by produceState<ImageBitmap?>(null, artwork, iconPixels) {
-        value = when (artwork) {
-            is TtsEngineArtwork.Bundled -> null
-            is TtsEngineArtwork.InstalledApplication -> withContext(Dispatchers.IO) {
+    val installedIcon by produceState<ImageBitmap?>(null, packageName, iconPixels) {
+        value = packageName?.let {
+            withContext(Dispatchers.IO) {
                 runCatching {
                     context.packageManager
-                        .getApplicationIcon(artwork.packageName)
+                        .getApplicationIcon(packageName)
                         .toBitmap(width = iconPixels, height = iconPixels)
                         .asImageBitmap()
                 }.getOrNull()
