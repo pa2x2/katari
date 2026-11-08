@@ -3,7 +3,6 @@ package mihon.entry.interactions.migration
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 class EntryMigrationChildPairingTest {
@@ -18,7 +17,7 @@ class EntryMigrationChildPairingTest {
 
         val updates = prepareMigrationChildUpdates(
             sourceChildren = seasonTwo,
-            childPairs = EntryMigrationChildPairing.ByPosition(Entry.create(), offset = 3).pair(seasonTwo, allSeasons),
+            childPairs = EntryMigrationChildPairing.ByPosition(offset = 3).pair(seasonTwo, allSeasons),
             transfer = MigrationChildStateTransfer(read = true, bookmarks = true),
         )
 

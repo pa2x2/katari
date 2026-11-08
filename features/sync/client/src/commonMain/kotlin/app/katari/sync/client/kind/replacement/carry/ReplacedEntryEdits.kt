@@ -34,9 +34,10 @@ import app.katari.sync.client.record.fillRecordGroups
  * Only edits stamped after the replacement carry over, and only what the replacement itself carried. A migration
  * carries what the app's own migration does, by its rules and the options the person chose ([CarriedLibraryState],
  * [CarriedChapterState], [CarriedEntryChoices]); its history and activity stay with the old entry, as they do when
- * migrating here. A move to another profile is the same entry in a new place, so everything follows it but its
- * category links, which a local move drops too. Each device carries the same edits to the same records, so the
- * changes it pushes merge into one.
+ * migrating here. A season folding into the entry its merged entry migrated to carries only its chapter state, as the
+ * new entry's place in the library and the choices about it are the merged entry's. A move to another profile is the
+ * same entry in a new place, so everything follows it but its category links, which a local move drops too. Each device
+ * carries the same edits to the same records, so the changes it pushes merge into one.
  */
 internal class ReplacedEntryEdits(private val writes: LocalWrites) {
 
@@ -74,8 +75,6 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
     /** Carries [payload], the record [key], over the replacement [carry]. */
     private suspend fun carry(carry: ReplacementCarry, key: String, payload: Any) {
         when (payload) {
-            is EntryPayload -> CarriedLibraryState(carry).entry(payload)
-            is CategoryMembershipPayload -> CarriedLibraryState(carry).membership(payload)
             // The marks are decided from all of the old entry's chapters, so the chapters arriving together, as
             // marking a whole entry read sends them, decide them once
             is ChapterPayload -> if (carry.after(payload.read) != null || carry.after(payload.bookmark) != null) {
@@ -85,6 +84,15 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
             }
             is ProgressPayload -> CarriedChapterState(carry).progress(payload)
             is HistoryPayload -> CarriedChapterState(carry).history(payload)
+            else -> if (!carry.chapterStateOnly) carryEntryState(carry, payload)
+        }
+    }
+
+    /** Carries [payload], a record of the entry's place in the library or of the person's choices about it. */
+    private suspend fun carryEntryState(carry: ReplacementCarry, payload: Any) {
+        when (payload) {
+            is EntryPayload -> CarriedLibraryState(carry).entry(payload)
+            is CategoryMembershipPayload -> CarriedLibraryState(carry).membership(payload)
             else -> CarriedEntryChoices(carry).choice(payload)
         }
     }
@@ -92,8 +100,7 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
     private suspend fun carryFor(from: String): ReplacementCarry? {
         val stored = writes.database.sync_recordsQueries.getByKey(EntryReplacementKind.key(from)).awaitAsOneOrNull()
         if (stored == null || stored.deleted) return null
-        val replacement = EntryReplacementKind.decode(stored.payload).replacement
-        return ReplacementCarry(writes, from, replacement.value, replacement.at)
+        return ReplacementCarry(writes, EntryReplacementKind.decode(stored.payload))
     }
 
     private companion object {

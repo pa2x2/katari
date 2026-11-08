@@ -20,6 +20,7 @@ internal class EntryViewerSettingsMigrationParticipant(
     override val id = "entry.migration.viewer-settings"
 
     override suspend fun prepare(event: EntryMigrationDurableEvent): EntryDurablePayload? {
+        if (event.chapterStateOnly) return null
         return when (val result = feature().prepareMigration(event.source, event.target)) {
             is EntryViewerSettingsMigrationPreparation.Prepared -> EntryDurablePayload(
                 schemaVersion = 1,

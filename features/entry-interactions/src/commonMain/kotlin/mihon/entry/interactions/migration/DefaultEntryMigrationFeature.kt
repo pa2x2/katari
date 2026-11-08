@@ -320,13 +320,13 @@ internal class DefaultEntryMigrationFeature(
                             intent,
                             member,
                             refreshedTarget,
-                            EntryMigrationChildPairing.ByPosition(reference.source, offset),
+                            EntryMigrationChildPairing.ByPosition(offset),
                         )
                         if (result !is EntryMigrationExecutionResult.Applied) return result
                     }
                     offset += count
                 }
-                EntryMigrationChildPairing.ByPosition(reference.source, offset = 0)
+                EntryMigrationChildPairing.ByPosition(offset = 0)
             }
         }
         val result = migrate(
@@ -338,7 +338,7 @@ internal class DefaultEntryMigrationFeature(
             mode = intent.mode,
             selectedOptions = intent.selectedOptions,
             pairing = pairing,
-            carriesLibraryState = true,
+            chapterStateOnly = false,
             authorized = { source, target ->
                 source.sameMigrationAuthorization(reference.source) &&
                     target.sameMigrationAuthorization(reference.target)
@@ -418,7 +418,7 @@ internal class DefaultEntryMigrationFeature(
             mode = intent.mode,
             selectedOptions = memberOptions intersect availableOptions(inspection),
             pairing = pairing,
-            carriesLibraryState = ownTarget,
+            chapterStateOnly = !ownTarget,
             authorized = { inspectedSource, inspectedTarget ->
                 inspectedSource.sameMigrationAuthorization(inspection.source) &&
                     inspectedTarget.sameMigrationAuthorization(inspection.target)
@@ -427,8 +427,8 @@ internal class DefaultEntryMigrationFeature(
     }
 
     /**
-     * Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. Without
-     * [carriesLibraryState], the target keeps its own Library fields and tracking, and only takes chapter state.
+     * Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. With
+     * [chapterStateOnly], the target keeps its own Library fields, tracking and choices, and only takes chapter state.
      */
     private suspend fun migrate(
         profileId: Long,
@@ -439,7 +439,7 @@ internal class DefaultEntryMigrationFeature(
         mode: EntryMigrationMode,
         selectedOptions: Set<EntryMigrationOption>,
         pairing: EntryMigrationChildPairing,
-        carriesLibraryState: Boolean,
+        chapterStateOnly: Boolean,
         authorized: (source: Entry, target: Entry) -> Boolean,
     ): EntryMigrationExecutionResult {
         val profile = executionHost.profile(profileId)
@@ -460,7 +460,7 @@ internal class DefaultEntryMigrationFeature(
             return EntryMigrationExecutionResult.Conflict
         }
 
-        val preparedTracks = if (carriesLibraryState) {
+        val preparedTracks = if (!chapterStateOnly) {
             when (
                 val result = tracking().prepareMigrationTracks(
                     source = inspected.source,
@@ -485,6 +485,7 @@ internal class DefaultEntryMigrationFeature(
             target = inspected.target,
             selectedOptions = selectedOptions,
             childMatches = childPairs.matches,
+            chapterStateOnly = chapterStateOnly,
         )
         val childUpdates = if (transferChildren) {
             prepareMigrationChildUpdates(
@@ -510,7 +511,7 @@ internal class DefaultEntryMigrationFeature(
                 payload = record.payload.value,
             )
         }
-        val targetUpdate = if (carriesLibraryState) {
+        val targetUpdate = if (!chapterStateOnly) {
             val libraryFields = migratedLibraryFields(
                 source = inspected.source.libraryFields(),
                 target = inspected.target.libraryFields(),
@@ -543,6 +544,8 @@ internal class DefaultEntryMigrationFeature(
                 .distinctBy { (sourceId) -> sourceId }
                 .toMap()
                 .takeIf { replace },
+            childOrder = childPairs.order,
+            chapterStateOnly = chapterStateOnly,
             expectedSourceTracks = inspected.sourceTracks,
             preparedTracks = preparedTracks,
             consequenceRequests = consequenceRequests,

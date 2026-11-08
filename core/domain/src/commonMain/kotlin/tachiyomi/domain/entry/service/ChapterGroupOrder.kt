@@ -42,3 +42,7 @@ fun List<EntryChapter>.sortedByGroup(comparator: Comparator<EntryChapter>, desce
     val sections = groupSectionsInReadingOrder(comparator)
     return (if (descending) sections.asReversed() else sections).flatMap(ChapterGroupSection::chapters)
 }
+
+/** [this] chapters of one entry in the order its source lists them for reading, oldest first, group by group. */
+fun List<EntryChapter>.sortedInSourceOrder(): List<EntryChapter> =
+    sortedByGroup(compareByDescending(EntryChapter::sourceOrder), descending = false)

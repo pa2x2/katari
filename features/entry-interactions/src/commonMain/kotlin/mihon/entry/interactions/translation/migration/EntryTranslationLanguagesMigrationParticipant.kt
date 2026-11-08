@@ -20,6 +20,7 @@ internal class EntryTranslationLanguagesMigrationParticipant(
     override val id = "entry.migration.translation-languages"
 
     override suspend fun prepare(event: EntryMigrationDurableEvent): EntryDurablePayload? {
+        if (event.chapterStateOnly) return null
         return when (val result = feature().prepareMigration(event.source, event.target)) {
             is EntryTranslationLanguagesMigrationPreparation.Prepared -> EntryDurablePayload(
                 schemaVersion = 1,

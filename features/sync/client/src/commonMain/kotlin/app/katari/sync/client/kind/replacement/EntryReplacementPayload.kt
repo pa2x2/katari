@@ -1,6 +1,7 @@
 package app.katari.sync.client.kind.replacement
 
 import app.katari.sync.client.payload.Stamped
+import app.katari.sync.client.payload.UnknownFields
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -12,7 +13,17 @@ import kotlinx.serialization.protobuf.ProtoNumber
 data class EntryReplacementPayload(
     @ProtoNumber(1) val from: String,
     @ProtoNumber(2) val replacement: Stamped<Replacement>,
-)
+    /**
+     * How a migration carried chapters, beyond what [replacement] says, which can't take new fields: an older app
+     * rewriting the record keeps only the top-level fields it doesn't know ([UnknownFields]). Stamped as the
+     * replacement it belongs to; such a rewrite can keep this from an earlier replacement, so it counts only while the
+     * stamps match ([migratedChapters]).
+     */
+    @ProtoNumber(3) val chapters: Stamped<MigratedChapters>? = null,
+) {
+    val migratedChapters: MigratedChapters?
+        get() = chapters?.takeIf { it.at == replacement.at }?.value
+}
 
 @Serializable
 data class Replacement(
@@ -50,4 +61,26 @@ data class LibraryState(
     /** Epoch milliseconds. */
     @ProtoNumber(4) val dateAdded: Long,
     @ProtoNumber(5) val notes: String,
+)
+
+/** How a migration carried the old entry's chapters over, where [Replacement] can't say. */
+@Serializable
+data class MigratedChapters(
+    /**
+     * The old entry's chapters in the order the migration paired them by position, each with the new entry's chapter
+     * it took, which no device could work out again from its own chapter lists; empty when it paired them by number.
+     */
+    @ProtoNumber(1) val inOrder: List<PairedChapter> = emptyList(),
+    /**
+     * Whether the migration took only the old entry's chapter state: a season folding into the entry its merged entry
+     * migrated to, which leaves the new entry's library state, tracking and choices to the merged entry.
+     */
+    @ProtoNumber(2) val chapterStateOnly: Boolean = false,
+)
+
+@Serializable
+data class PairedChapter(
+    @ProtoNumber(1) val sourceUrl: String,
+    /** Null where the new entry had no chapter left for it. */
+    @ProtoNumber(2) val targetUrl: String? = null,
 )

@@ -250,8 +250,17 @@ internal class AppEntryMigrationHost(
                         sourceEntryId = transition.expectedSource.id,
                         targetEntryId = transition.expectedTarget.id,
                         mode = transition.mode.name,
+                        chapterStateOnly = transition.chapterStateOnly,
                         createdAt = clockMillis(),
                     )
+                    transition.childOrder?.forEachIndexed { position, (source, target) ->
+                        entry_migration_chapter_positionsQueries.insert(
+                            operationId = transition.operationId,
+                            position = position.toLong(),
+                            sourceChapterUrl = checkNotNull(source) { "A migrated chapter is always held here" }.url,
+                            targetChapterUrl = target?.url,
+                        )
+                    }
                     transition.sourceUpdate?.let { updateEntry(profileId, it) }
                     updateEntry(profileId, transition.targetUpdate)
                     transition.targetCategoryIds?.let { categoryIds ->

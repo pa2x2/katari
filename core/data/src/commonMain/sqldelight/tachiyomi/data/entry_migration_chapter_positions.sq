@@ -1,0 +1,15 @@
+-- The order a migration paired the old entry's chapters with the new entry's in, when it paired them by position
+-- rather than by number: each old chapter at its place, with the new chapter it took, if any. Sync carries later edits
+-- of the old entry over by these pairs, which no device could work out again from its own chapter lists.
+CREATE TABLE entry_migration_chapter_positions(
+    operation_id TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    source_chapter_url TEXT NOT NULL,
+    target_chapter_url TEXT,
+    PRIMARY KEY(operation_id, position),
+    FOREIGN KEY(operation_id) REFERENCES entry_migration_operations(operation_id) ON DELETE CASCADE
+);
+
+insert:
+INSERT INTO entry_migration_chapter_positions(operation_id, position, source_chapter_url, target_chapter_url)
+VALUES (:operationId, :position, :sourceChapterUrl, :targetChapterUrl);
