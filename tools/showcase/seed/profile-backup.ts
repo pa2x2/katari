@@ -146,6 +146,9 @@ function preferences(plan: ProfilePlan): BackupPreference[] {
     { key: "reader_navigation_overlay_new_user", value: { type: "Boolean", value: false } },
     // The player otherwise covers its first video with a guide to its gestures.
     { key: "anime_gesture_guide_shown_seek_swipe", value: { type: "Boolean", value: true } },
+    // The desktop's comic and book readers otherwise cover the first page they show with a guide to the mouse and keys.
+    { key: "reader_input_guide_shown", value: { type: "Boolean", value: true } },
+    { key: "book_document_reader_input_guide_shown", value: { type: "Boolean", value: true } },
     { key: "statistics_daily_goal_minutes", value: { type: "Int", value: plan.dailyGoalMinutes } },
     // The year-so-far notification is due on December 1, so it would arrive on the first launch at the showcase moment
     // and sit in that scene's status bar.

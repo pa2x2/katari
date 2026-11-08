@@ -94,6 +94,7 @@ export interface SeriesEpisode {
   /** An image of a moment of the episode, which the episode list shows beside it. */
   still: string;
   versions: VideoVersion[];
+  played?: PlayedStretch;
 }
 
 export interface SeriesWork extends VideoWorkBase {

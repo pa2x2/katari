@@ -250,5 +250,6 @@ include(
     ":tools:baseline-profile",
     ":tools:extension-compatibility-harness",
     ":tools:showcase:capture",
+    ":tools:showcase:desktop-capture",
     ":tools:showcase:extension",
 )

@@ -20,6 +20,7 @@ export function resolveSeries(work: SeriesWork): ResolvedContent {
       date: episode.released,
       files: [],
       versions: episode.versions,
+      played: episode.played,
       summary: episode.summary,
       still: episode.still,
     })),

@@ -156,8 +156,9 @@ export const works: WorkDefinition[] = [
     license: { name: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
     // Wikimedia Commons lists the second episode's upload under CC BY-SA, so the credit says so.
     attribution: "© copyright Blender Foundation | caminandes.com; Gran Dillama as on Wikimedia Commons, under CC BY-SA 3.0",
-    // The episode list scene shows its episodes' stills and summaries. The stills are Wikimedia's frames of each video
-    // at the given second.
+    // The episode list scene shows its episodes' stills and summaries, and the desktop player scene plays the second.
+    // The stills are Wikimedia's frames of each video at the given second.
+    fetchChapters: [2],
     episodes: [
       {
         name: "Llama Drama",
@@ -173,6 +174,9 @@ export const works: WorkDefinition[] = [
         still:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm/960px-seek%3D45-Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm.jpg",
         versions: commonsVersions("7/7c/Caminandes_-_Gran_Dillama_-_Blender_Foundation%27s_new_Open_Movie.webm"),
+        // The desktop player scene (tools/showcase/desktop-capture PlayerScenes.kt) pauses the episode as it starts and
+        // seeks to 1:05, and the player buffers 50 s past it.
+        played: { from: 60, to: 120 },
       },
       {
         name: "Llamigos",
