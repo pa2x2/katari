@@ -7,8 +7,9 @@ The Android app, the desktop app and the sync server are versioned and released 
 app from `versionName` in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, the desktop app from `version`
 in `desktop/build.gradle.kts` and `desktop/CHANGELOG.md`, tagged `desktop-v<version>`, and the sync server from
 `version` in `features/sync/server/build.gradle.kts` and `features/sync/server/CHANGELOG.md`, tagged
-`sync-server-v<version>`. A push to `main` releases each of them whose version has notes and no tag yet, so one release
-can carry any of them. This skill decides what the release covers, holds the rules every changelog follows and the SDK's
+`sync-server-v<version>`. A push to `main` drafts a release of each of them whose version has notes and no tag yet,
+so one release can carry any of them. Publishing the server's draft builds its image, so when an app release needs that
+server, the server's draft is published first and the app's once the image is up. This skill decides what the release covers, holds the rules every changelog follows and the SDK's
 changelog, and hands each app's and the server's changelog to its own skill.
 
 ## Decide what the release covers

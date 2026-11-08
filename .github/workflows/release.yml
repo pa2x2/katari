@@ -4,9 +4,8 @@ name: Release
 # from versionName in app/build.gradle.kts and CHANGELOG.md, tagged v<version>, the desktop app from version in
 # desktop/build.gradle.kts and desktop/CHANGELOG.md, tagged desktop-v<version>, and the sync server from version in
 # features/sync/server/build.gradle.kts and features/sync/server/CHANGELOG.md, tagged sync-server-v<version>. One push
-# can release any of them. Each app's release is a draft, to try it before anyone is offered it, and its commit is
-# tagged along with it.
-# The sync server gets no GitHub release: its image goes straight to this repository's packages.
+# can release any of them. Each release is a draft, to try it before anyone is offered it, and its commit is tagged
+# along with it. The sync server's draft carries no files: publishing it builds its image (sync-server-image.yml).
 on:
   push:
     branches:
@@ -27,7 +26,9 @@ jobs:
       desktop_tag: ${{ steps.decide.outputs.desktop_tag }}
       desktop_version: ${{ steps.decide.outputs.desktop_version }}
       desktop_notes: ${{ steps.decide.outputs.desktop_notes }}
+      server_tag: ${{ steps.decide.outputs.server_tag }}
       server_version: ${{ steps.decide.outputs.server_version }}
+      server_notes: ${{ steps.decide.outputs.server_notes }}
 
     steps:
       - name: Checkout
@@ -334,16 +335,17 @@ jobs:
           TAG: ${{ needs.get_tag.outputs.desktop_tag }}
         run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA"
 
-  server_image:
-    name: Publish the sync server image
+  release_server:
+    name: Create GitHub Release (sync server)
     runs-on: ubuntu-26.04
     needs: get_tag
-    if: needs.get_tag.outputs.server_version != ''
+    if: needs.get_tag.outputs.server_tag != ''
     permissions:
       contents: write
-      packages: write
     env:
+      TAG: ${{ needs.get_tag.outputs.server_tag }}
       VERSION: ${{ needs.get_tag.outputs.server_version }}
+      NOTES: ${{ needs.get_tag.outputs.server_notes }}
 
     steps:
       - name: Checkout
@@ -361,58 +363,38 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
 
-      - name: Build and test the server
-        run: ./gradlew :features:sync:server:test :features:sync:server:installDist
+      # The image is built only when the draft is published, so a failing server must stop the draft here.
+      - name: Test the server
+        run: ./gradlew :features:sync:server:test
 
-      - name: Name the image and its tags
-        id: names
+      - name: Write the release notes
         shell: bash
         run: |
           set -euo pipefail
 
-          # Registry names must be lowercase; owners may not be.
+          # Registry names must be lowercase; owners may not be. sync-server-image.yml pushes under the same name.
           image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/katari-sync-server"
-          tags="$image:$VERSION"
-          if [[ "$VERSION" != *-* ]]; then
-            tags+=",$image:${VERSION%.*},$image:latest"
-          fi
-          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+          {
+            echo "$NOTES"
+            echo
+            echo "> [!TIP]"
+            echo ">"
+            echo "> The image is \`$image:$VERSION\`. [Running a sync server](https://pa2x2.github.io/katari/docs/sync-server/#update) explains how to update."
+          } > "$RUNNER_TEMP/notes.md"
 
-      # Emulation runs the Dockerfile's one RUN step for arm64.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
-
-      - name: Set up Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-
-      - name: Sign in to GitHub Packages
-        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          body_path: ${{ runner.temp }}/notes.md
+          draft: true
+          prerelease: ${{ contains(env.VERSION, '-') }}
+          # GitHub's latest release is the Android app's, which the website's download buttons link
+          make_latest: false
 
-      - name: Build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: features/sync/server/build/install/katari-sync-server
-          file: features/sync/server/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.names.outputs.tags }}
-          # The source label links the package to this repository on GitHub.
-          labels: |
-            org.opencontainers.image.title=Katari sync server
-            org.opencontainers.image.description=Self-hosted synchronization server for Katari
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ env.VERSION }}
-            org.opencontainers.image.licenses=Apache-2.0
-          # Without this, the package page lists an extra unknown/unknown platform per architecture.
-          provenance: false
-
-      # The tag goes in last: it is what tells later pushes to main that this version is published.
-      - name: Tag the published commit
+      - name: Tag the draft's commit
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/sync-server-v$VERSION" -f "sha=$GITHUB_SHA"
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA"

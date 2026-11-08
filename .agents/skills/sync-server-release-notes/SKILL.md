@@ -7,14 +7,14 @@ Follow the release-notes skill (`.agents/skills/release-notes/SKILL.md`) for wha
 changelog writing rules; this skill adds what only the sync server's changelog needs.
 
 The server's audience is the people who run it: they pull its image, set its environment variables, keep its data
-volume, and manage accounts on its web page. Its notes are the only notes they get, since a server release publishes an
-image to the repository's packages and makes no GitHub release.
+volume, and manage accounts on its web page. Its notes become the body of the server's GitHub release, which a push
+to `main` creates as a draft; publishing that draft builds the image and pushes it to the repository's packages.
 
 ## Inspect the release
 
 1. Read `version` from `features/sync/server/build.gradle.kts` as the release version: a semantic version, which may
-   carry a pre-release suffix such as `0.2.0-beta.1`, published under its exact tag only. Derive future tag
-   `sync-server-v<version>`; stop if the configured version is missing or is not a semantic version.
+   carry a pre-release suffix such as `0.2.0-beta.1` (its image also moves `:latest` while no stable version exists).
+   Derive future tag `sync-server-v<version>`; stop if the configured version is missing or is not a semantic version.
 2. Find the last server release: the highest `sync-server-v*` tag (`git tag --list 'sync-server-v*' --sort=-v:refname`).
    Inspect `git log <tag>..HEAD` and `git diff <tag>...HEAD` for outcomes the people running the server notice:
    `features/sync/server/` (its API, web page, storage, retention and recovery command), `features/sync/protocol/` as
