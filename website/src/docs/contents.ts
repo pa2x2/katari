@@ -88,7 +88,6 @@ export const docs: Manual = {
           title: "Comic reader",
           summary: "Reading modes, turning pages, and fitting pages to the screen.",
           icon: chromeReaderMode,
-          platform: "Android",
           related: ["docs/translation/", "docs/book-reader/", "docs/statistics/"],
         },
         {
@@ -96,7 +95,6 @@ export const docs: Manual = {
           title: "Book reader",
           summary: "Themes, fonts, search, hiding repeated text, and listening.",
           icon: menuBook,
-          platform: "Android",
           related: ["docs/comic-reader/", "docs/translation/", "docs/statistics/"],
         },
         {
@@ -104,7 +102,6 @@ export const docs: Manual = {
           title: "Watching video",
           summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
           icon: playCircle,
-          platform: "Android",
           related: ["docs/troubleshooting/", "docs/extension-compatibility/", "docs/statistics/"],
         },
         {

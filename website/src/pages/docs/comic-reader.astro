@@ -2,6 +2,7 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import WideShots from "../../guide/WideShots.astro";
 import { plannedCapture } from "../../media/planned-captures.ts";
@@ -40,7 +41,7 @@ import { sitePath } from "../../site/links.ts";
       <strong>Disabled</strong>. <strong>Invert tap zones</strong> swaps them horizontally, vertically or both.
     </p>
     <p>
-      To turn pages with the volume keys, switch on <strong>Volume keys</strong> under <Path>Settings › Readers › Manga reader</Path>,
+      <PlatformLabel platform="Android" lead />To turn pages with the volume keys, switch on <strong>Volume keys</strong> under <Path>Settings › Readers › Manga reader</Path>,
       in the Navigation group. They don't turn pages while the menus are showing.
     </p>
     <p>
@@ -95,16 +96,16 @@ import { sitePath } from "../../site/links.ts";
     <p>
       The <strong>Custom filter</strong> tab of the reader's settings has <strong>Custom brightness</strong>, <strong>Custom color
       filter</strong> with its own blend modes, <strong>Grayscale</strong> and <strong>Inverted</strong>, so a page can be dimmer or warmer
-      than the phone's own setting.
+      than the screen's own setting.
     </p>
   </Task>
 
   <Task id="auto-scroll" title="Scroll on its own">
     <p>
       Switch on <strong>Enable auto-scroll</strong> under <Path>Settings › Readers › Manga reader</Path>. Long strip then has a button in
-      its bar that starts and stops it. While it runs, volume up slows it down and volume down speeds it up.
-      <strong>Default auto-scroll speed</strong> sets where it starts.
+      its bar that starts and stops it. <strong>Default auto-scroll speed</strong> sets where it starts.
     </p>
+    <p><PlatformLabel platform="Android" lead />While it runs, volume up slows it down and volume down speeds it up.</p>
   </Task>
 
   <Task id="page-actions" title="Save, share or use a page as cover">
@@ -124,7 +125,7 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <Callout label="Only in Settings">
       <p>
-        Volume keys, auto-scroll, and skipping read, filtered or duplicate chapters are set for all titles at once, under
+        Auto-scroll, skipping read, filtered or duplicate chapters, and on Android the volume keys, are set for all titles at once, under
         <Path>Settings › Readers › Manga reader</Path>.
       </p>
     </Callout>

@@ -75,13 +75,13 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="video" title="A video won't play" platform="Android">
+  <Task id="video" title="A video won't play">
     <p>The player's error says what went wrong, and its buttons offer what can help.</p>
     <ul>
       <li>If the source or its server refuses, tap <strong>Open in WebView</strong>, pass the site's check, and tap <strong>Retry</strong>.</li>
-      <li>If one player can't play the video, try the other, or another server or quality.</li>
+      <li>If the video still won't play, try another server or quality, or on Android the other player.</li>
       <li>
-        If <a href={sitePath("docs/video/#mpv-addon")}>the mpv add-on</a> is missing or out of date, its row under
+        <PlatformLabel platform="Android" lead />If <a href={sitePath("docs/video/#mpv-addon")}>the mpv add-on</a> is missing or out of date, its row under
         <Path>Settings › Players › Anime player</Path> says so and offers the fix.
       </li>
     </ul>
