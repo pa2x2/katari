@@ -2,6 +2,7 @@ package mihon.presentation.kit.feedback
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 
 /**
@@ -32,7 +33,16 @@ internal class ScreenSnackbars(
                 else -> own ?: messages
             }
         }
+
+    val isShowing: Boolean
+        get() = shown?.currentSnackbarData != null
 }
+
+/**
+ * Whether the scaffold around shows a snackbar now. A [mihon.presentation.kit.chip.FloatingNote] beside the floating
+ * action steps aside meanwhile, so one note at a time floats above the action.
+ */
+internal val LocalSnackbarShowing = staticCompositionLocalOf<() -> Boolean> { { false } }
 
 /**
  * Draws [own] and [messages] in one place, one snackbar at a time as [ScreenSnackbars] orders them. The kit's
@@ -45,6 +55,10 @@ internal fun ScreenSnackbarHost(
     messages: SnackbarHostState?,
     modifier: Modifier = Modifier,
 ) {
-    val snackbars = remember(own, messages) { ScreenSnackbars(own, messages) }
+    ScreenSnackbarHost(remember(own, messages) { ScreenSnackbars(own, messages) }, modifier)
+}
+
+@Composable
+internal fun ScreenSnackbarHost(snackbars: ScreenSnackbars, modifier: Modifier = Modifier) {
     snackbars.shown?.let { SnackbarHost(it, modifier) }
 }

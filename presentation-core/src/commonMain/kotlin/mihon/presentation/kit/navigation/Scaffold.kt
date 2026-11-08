@@ -44,7 +44,9 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
+import mihon.presentation.kit.feedback.LocalSnackbarShowing
 import mihon.presentation.kit.feedback.ScreenSnackbarHost
+import mihon.presentation.kit.feedback.ScreenSnackbars
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.claimScreenMessages
 import mihon.presentation.kit.layout.LocalContentFrameMargin
@@ -130,6 +132,9 @@ fun Scaffold(
         contentColor = contentColor,
     ) {
         val screenMessagesHost = claimScreenMessages()
+        val snackbars = remember(snackbarHostState, screenMessagesHost) {
+            ScreenSnackbars(own = snackbarHostState, messages = screenMessagesHost)
+        }
         CompositionLocalProvider(LocalAppBarScrollBehavior provides topBarScrollBehavior) {
             ScaffoldLayout(
                 dockClearance = LocalDockClearance.current,
@@ -139,9 +144,13 @@ fun Scaffold(
                 topBar = { topBar(topBarScrollBehavior) },
                 bottomBar = bottomBar,
                 content = content,
-                snackbar = { ScreenSnackbarHost(own = snackbarHostState, messages = screenMessagesHost) },
+                snackbar = { ScreenSnackbarHost(snackbars) },
                 contentWindowInsets = remainingWindowInsets,
-                fab = floatingActionButton,
+                fab = {
+                    CompositionLocalProvider(LocalSnackbarShowing provides { snackbars.isShowing }) {
+                        floatingActionButton()
+                    }
+                },
             )
         }
     }

@@ -173,7 +173,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
-| A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; `FloatingChip` for a chip that jumps through a list |
+| A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; it steps aside while a snackbar shows above the action. `FloatingChip` for a chip that jumps through a list |
 | An offer floating over what is read or watched that stays until taken or dismissed, such as going where another device got to | `OfferNote` | Messages time out; its owner removes it once the offer stops applying |
 | Messages and snackbars | `rememberScreenMessages`, `ScreenMessagesHost`, `ScreenMessagesOverlay`, `AppMessagesHost`, `SnackbarHost` | The overlay is for full-window screens without a `Scaffold` |
 | A tooltip on long press or hover | `Tooltip`, `HoverTooltip`, `PointerTooltip` | `PointerTooltip` follows the pointer over content that names its own |
