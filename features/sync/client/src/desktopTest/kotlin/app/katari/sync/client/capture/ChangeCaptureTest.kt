@@ -164,7 +164,7 @@ class ChangeCaptureTest {
                 db.merged_entriesQueries.insert(1, 1, 2, 1)
             }
             expect("replacing migration", "entry.replacement") {
-                db.entry_migration_operationsQueries.insert("operation", "fingerprint", 1, 2, 1, "REPLACE", 0)
+                db.entry_migration_operationsQueries.insert("operation", "fingerprint", 1, 2, 1, "REPLACE", false, 0)
             }
             expect("extension repository", "extension.repository") {
                 db.extension_storeQueries.upsert(

@@ -92,8 +92,11 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
                     cause = Replacement.Cause.MIGRATION,
                     parents = listOf(operation.source_entry_id, operation.target_entry_id),
                     options = EntryMigrationFingerprint.options(operation.intent_fingerprint).map { it.name }.sorted(),
-                    targetBefore = targetBefore(ref),
-                    chapters = MigratedChapters(inOrder).takeUnless { it == MigratedChapters() },
+                    // The target's library state is the merged entry's to change, so a question turning this down
+                    // leaves it as the merged entry's migration left it
+                    targetBefore = targetBefore(ref).takeUnless { operation.chapter_state_only },
+                    chapters = MigratedChapters(inOrder, operation.chapter_state_only)
+                        .takeUnless { it == MigratedChapters() },
                 )
             }
         }

@@ -250,6 +250,7 @@ internal class AppEntryMigrationHost(
                         sourceEntryId = transition.expectedSource.id,
                         targetEntryId = transition.expectedTarget.id,
                         mode = transition.mode.name,
+                        chapterStateOnly = transition.chapterStateOnly,
                         createdAt = clockMillis(),
                     )
                     transition.childOrder?.forEachIndexed { position, (source, target) ->

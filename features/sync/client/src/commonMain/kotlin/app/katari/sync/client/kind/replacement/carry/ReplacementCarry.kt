@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.kind.replacement.EntryReplacementPayload
+import app.katari.sync.client.kind.replacement.MigratedChapters
 import app.katari.sync.client.kind.replacement.PairedChapter
 import app.katari.sync.client.kind.replacement.Replacement
 import app.katari.sync.client.payload.Stamped
@@ -28,6 +29,9 @@ internal class ReplacementCarry(val writes: LocalWrites, payload: EntryReplaceme
 
     /** The order a migration paired chapters in by position; empty when it paired them by number. */
     val chapterOrder: List<PairedChapter> = payload.migratedChapters?.inOrder.orEmpty()
+
+    /** Whether the migration took only the old entry's chapter state ([MigratedChapters.chapterStateOnly]). */
+    val chapterStateOnly: Boolean = payload.migratedChapters?.chapterStateOnly == true
 
     /** Whether the replacement carried what [option] stands for: a move carries everything. */
     fun carries(option: EntryMigrationOption): Boolean = isMove || option in options

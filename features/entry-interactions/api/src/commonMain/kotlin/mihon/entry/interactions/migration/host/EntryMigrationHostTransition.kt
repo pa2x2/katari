@@ -28,6 +28,11 @@ data class EntryMigrationHostTransition(
     val historyChapterMoves: Map<Long, Long>?,
     /** The order the chapters were paired in when paired by position, recorded with the operation for sync. */
     val childOrder: List<MigrationChapterPosition<EntryChapter>>?,
+    /**
+     * Whether only chapter state moves: a season folding into the entry its merged entry migrated to, which leaves the
+     * target's Library state, tracking and choices to the merged entry. Recorded with the operation for sync.
+     */
+    val chapterStateOnly: Boolean,
     val expectedSourceTracks: List<EntryTrack>,
     val preparedTracks: List<EntryTrack>,
     val consequenceRequests: List<EntryMigrationConsequenceRequest> = emptyList(),

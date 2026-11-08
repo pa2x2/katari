@@ -20,6 +20,7 @@ internal class EntryPlaybackPreferencesMigrationParticipant(
     override val id = "entry.migration.playback-preferences"
 
     override suspend fun prepare(event: EntryMigrationDurableEvent): EntryDurablePayload? {
+        if (event.chapterStateOnly) return null
         return when (val result = feature().prepareMigration(event.source, event.target)) {
             is EntryPlaybackPreferencesMigrationPreparation.Prepared -> EntryDurablePayload(
                 schemaVersion = 1,

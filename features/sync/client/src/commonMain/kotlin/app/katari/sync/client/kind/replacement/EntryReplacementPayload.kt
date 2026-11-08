@@ -71,6 +71,11 @@ data class MigratedChapters(
      * it took, which no device could work out again from its own chapter lists; empty when it paired them by number.
      */
     @ProtoNumber(1) val inOrder: List<PairedChapter> = emptyList(),
+    /**
+     * Whether the migration took only the old entry's chapter state: a season folding into the entry its merged entry
+     * migrated to, which leaves the new entry's library state, tracking and choices to the merged entry.
+     */
+    @ProtoNumber(2) val chapterStateOnly: Boolean = false,
 )
 
 @Serializable

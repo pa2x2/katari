@@ -26,7 +26,7 @@ class EntryMigrationPersistenceQueriesTest {
             val abort = IllegalStateException("abort outer transaction")
             val failure = shouldThrow<IllegalStateException> {
                 handler.await(inTransaction = true) {
-                    entry_migration_operationsQueries.insert("operation", "replace", 2, 10, 11, "REPLACE", 1)
+                    entry_migration_operationsQueries.insert("operation", "replace", 2, 10, 11, "REPLACE", false, 1)
                     handler.await(inTransaction = true) {
                         entry_migration_consequencesQueries.insert(
                             consequenceId = "participant",
