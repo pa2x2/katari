@@ -10,24 +10,28 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAniSkipPage
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEngineChoice
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerIntroTimesRow
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerIntroTimesRows
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerMarkerSkipChoice
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerMarkerSkipRow
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeriesPage
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerTheIntroDbPage
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
 import eu.kanade.tachiyomi.ui.video.player.engine.mpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimesState
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerServiceTimes
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.anime.introtimes.IntroTimesResult
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
+import mihon.entry.interactions.anime.introtimes.matched
 import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.video.engine.spi.player.VideoPlayer
@@ -37,7 +41,8 @@ import mihon.video.engine.spi.player.VideoPlayer
  * mode and player engine. Picking a chapter seeks to it through [onSeek] and closes the settings to show it playing.
  * Applying a source or resetting saves the progress first; the subtitle settings close the settings, pause the video
  * and open the subtitle editor. A track only mpv plays moves Auto to mpv when picked. When [introTimes] are looked up
- * online, the skip section says where they stand and opens the page that changes their series in place of the rest.
+ * online, the skip section says where they stand with each service and opens the page that changes a service's match in
+ * place of the rest.
  */
 @Composable
 internal fun VideoPlayerSettingsLayer(
@@ -59,30 +64,54 @@ internal fun VideoPlayerSettingsLayer(
     val scope = rememberCoroutineScope()
     val markerSkipOverride = markerSkipSetting?.let { it.state.collectAsState().value.entryOverride }
     val showsMarkerSkip = markerSkipSetting != null && (introTimes != null || markers.any { it.skippable })
-    var seriesPageOpen by remember { mutableStateOf(false) }
+    // The service whose match page shows in place of the settings, if any.
+    var matchPage by remember { mutableStateOf<IntroTimesService?>(null) }
     LaunchedEffect(ui.settingsVisible, introTimes?.episode) {
-        if (!ui.settingsVisible || introTimes?.episode == null) seriesPageOpen = false
+        if (!ui.settingsVisible || introTimes?.episode == null) matchPage = null
     }
     VideoPlayerSettings(
         visible = ui.settingsVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible,
         onDismissRequest = actions.dismissSettings,
     ) { settingsFrame, settingsModifier ->
         val episode = introTimes?.episode
-        if (seriesPageOpen && episode != null) {
-            val result = introTimes.result
-            VideoPlayerSeriesPage(
-                frame = settingsFrame,
-                initialQuery = episode.scope.title,
-                currentAnilistId = (result as? IntroTimesResult.Matched)?.series?.anilistId,
-                pickedNone = result == IntroTimesResult.TurnedOff,
-                search = viewModel.seriesSearch.state.collectAsState().value,
-                onSearch = viewModel.seriesSearch::search,
-                onPick = viewModel.introTimes::pick,
-                onBack = { seriesPageOpen = false },
-                onDismissRequest = actions.dismissSettings,
-                modifier = settingsModifier,
-            )
-            return@VideoPlayerSettings
+        if (episode != null) {
+            when (matchPage) {
+                IntroTimesService.ANISKIP -> {
+                    val result = (introTimes.aniSkip as? VideoPlayerServiceTimes.Done)?.result
+                    VideoPlayerAniSkipPage(
+                        frame = settingsFrame,
+                        initialQuery = episode.scope.title,
+                        currentAnilistId = result?.matched?.anilistId,
+                        pickedNone = result == IntroTimesResult.TurnedOff,
+                        search = viewModel.seriesSearch.state.collectAsState().value,
+                        onSearch = viewModel.seriesSearch::search,
+                        onPick = viewModel.introTimes::pickAniSkipSeries,
+                        onBack = { matchPage = null },
+                        onDismissRequest = actions.dismissSettings,
+                        modifier = settingsModifier,
+                    )
+                    return@VideoPlayerSettings
+                }
+                IntroTimesService.THEINTRODB -> {
+                    val result = (introTimes.theIntroDb as? VideoPlayerServiceTimes.Done)?.result
+                    VideoPlayerTheIntroDbPage(
+                        frame = settingsFrame,
+                        episode = episode,
+                        current = result?.matched,
+                        pickedNone = result == IntroTimesResult.TurnedOff,
+                        search = viewModel.mediaSearch.state.collectAsState().value,
+                        onSearch = viewModel.mediaSearch::search,
+                        episodes = viewModel.airedEpisodes.state.collectAsState().value,
+                        onLoadEpisodes = viewModel.airedEpisodes::load,
+                        onPick = viewModel.introTimes::pickTheIntroDbMedia,
+                        onBack = { matchPage = null },
+                        onDismissRequest = actions.dismissSettings,
+                        modifier = settingsModifier,
+                    )
+                    return@VideoPlayerSettings
+                }
+                null -> Unit
+            }
         }
         VideoPlayerSettingsContent(
             frame = settingsFrame,
@@ -167,9 +196,9 @@ internal fun VideoPlayerSettingsLayer(
                         },
                     )
                     if (introTimes != null) {
-                        VideoPlayerIntroTimesRow(
+                        VideoPlayerIntroTimesRows(
                             state = introTimes,
-                            onChangeSeries = { seriesPageOpen = true },
+                            onChange = { matchPage = it },
                             onRetry = viewModel.introTimes::retry,
                         )
                     }

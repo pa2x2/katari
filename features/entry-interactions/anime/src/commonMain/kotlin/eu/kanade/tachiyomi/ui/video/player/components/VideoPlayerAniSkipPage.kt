@@ -19,8 +19,8 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import coil3.compose.AsyncImage
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearchState
-import mihon.entry.interactions.anime.introtimes.AniListSeries
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerMatchSearchState
+import mihon.entry.interactions.anime.introtimes.aniskip.AniListSeries
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Block
 import mihon.presentation.kit.button.Button
@@ -47,17 +47,17 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The page of the settings where the series an episode's intro and credits times come from is picked. It searches
- * AniList, starting with the series' title; [currentAnilistId] is the series in use, and [pickedNone] marks None as the
+ * The page of the settings where the series an episode's AniSkip times come from is picked. It searches AniList,
+ * starting with the series' title; [currentAnilistId] is the series in use, and [pickedNone] marks None as the
  * one in use. Picking saves at once and returns to the settings.
  */
 @Composable
-internal fun VideoPlayerSeriesPage(
+internal fun VideoPlayerAniSkipPage(
     frame: VideoPlayerSettingsFrame,
     initialQuery: String,
     currentAnilistId: Long?,
     pickedNone: Boolean,
-    search: VideoPlayerSeriesSearchState,
+    search: VideoPlayerMatchSearchState<AniListSeries>,
     onSearch: (query: String, immediately: Boolean) -> Unit,
     onPick: (AniListSeries?) -> Unit,
     onBack: () -> Unit,
@@ -75,7 +75,10 @@ internal fun VideoPlayerSeriesPage(
         VideoPlayerSettingsHeader(
             frame = frame,
             onDismissRequest = onDismissRequest,
-            title = stringResource(MR.strings.anime_intro_times_series),
+            title = stringResource(
+                MR.strings.anime_intro_times_series,
+                stringResource(MR.strings.intro_times_service_aniskip),
+            ),
             onBack = onBack,
         )
         SearchField(
@@ -109,10 +112,10 @@ internal fun VideoPlayerSeriesPage(
             }
             item(key = NONE_GAP_ITEM) { RowGroupGap() }
             when (search) {
-                VideoPlayerSeriesSearchState.Searching -> item(key = STATUS_ITEM) {
+                VideoPlayerMatchSearchState.Searching -> item(key = STATUS_ITEM) {
                     LoadingScreen(Modifier.padding(vertical = KatariTheme.spacing.xl))
                 }
-                VideoPlayerSeriesSearchState.Failed -> item(key = STATUS_ITEM) {
+                VideoPlayerMatchSearchState.Failed -> item(key = STATUS_ITEM) {
                     SettingsRow(
                         title = stringResource(MR.strings.anime_intro_times_search_failed),
                         trailing = {
@@ -125,12 +128,12 @@ internal fun VideoPlayerSeriesPage(
                         },
                     )
                 }
-                is VideoPlayerSeriesSearchState.Results -> if (search.series.isEmpty()) {
+                is VideoPlayerMatchSearchState.Results -> if (search.found.isEmpty()) {
                     item(key = STATUS_ITEM) { NoResults() }
                 } else {
-                    itemsIndexed(search.series, key = { _, series -> series.anilistId }) { index, series ->
+                    itemsIndexed(search.found, key = { _, series -> series.anilistId }) { index, series ->
                         RowGroupItem(
-                            position = RowGroupPosition.of(index, search.series.size),
+                            position = RowGroupPosition.of(index, search.found.size),
                             selected = series.anilistId == currentAnilistId,
                         ) {
                             SeriesRow(series = series, onClick = { pick(series) })

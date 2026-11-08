@@ -2,6 +2,7 @@ package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
 import mihon.app.ui.di.LocalAppUiGraph
@@ -12,6 +13,7 @@ import mihon.entry.viewer.settings.asProfilePreference
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
 
@@ -48,6 +50,13 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val findIntroTimesOnline = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.findIntroTimesOnlineSetting).asProfilePreference()
         }
+        val introTimesFromAniSkip = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.introTimesFromAniSkipSetting).asProfilePreference()
+        }
+        val introTimesFromTheIntroDb = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.introTimesFromTheIntroDbSetting).asProfilePreference()
+        }
+        val findsIntroTimesOnline by findIntroTimesOnline.collectAsState()
         val backgroundPlayback = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting).asProfilePreference()
         }
@@ -118,6 +127,18 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 preference = findIntroTimesOnline,
                 title = stringResource(MR.strings.pref_anime_find_intro_times_online),
                 subtitle = stringResource(MR.strings.pref_anime_find_intro_times_online_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = introTimesFromAniSkip,
+                title = stringResource(MR.strings.intro_times_service_aniskip),
+                subtitle = stringResource(MR.strings.pref_anime_intro_times_aniskip_summary),
+                visible = findsIntroTimesOnline,
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = introTimesFromTheIntroDb,
+                title = stringResource(MR.strings.intro_times_service_theintrodb),
+                subtitle = stringResource(MR.strings.pref_anime_intro_times_theintrodb_summary),
+                visible = findsIntroTimesOnline,
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = backgroundPlayback,

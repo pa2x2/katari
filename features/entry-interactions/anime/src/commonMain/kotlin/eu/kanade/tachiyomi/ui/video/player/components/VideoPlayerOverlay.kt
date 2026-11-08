@@ -43,6 +43,8 @@ import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -123,9 +125,13 @@ internal fun VideoPlayerOverlay(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long>,
+    /** The markers found online, whose spans the timeline colours by service. */
+    onlineMarkers: List<OnlineMarker>,
     chapter: VideoPlayerChapter?,
     onOpenChapters: () -> Unit,
     skipOffer: VideoPlayerSkipOffer?,
+    /** The service the offered skip's marker came from; null for the source's own. */
+    skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
@@ -174,6 +180,7 @@ internal fun VideoPlayerOverlay(
                 lockedChromeVisible = lockedChromeVisible,
                 skipVisible = skipVisible,
                 skipOffer = skipOffer,
+                skipService = skipService,
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
                 onControlsFootprintChange = onControlsFootprintChange,
@@ -207,13 +214,21 @@ internal fun VideoPlayerOverlay(
                         showsRemainingTime = showsRemainingTime,
                         onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
+                        onlineMarkers = onlineMarkers,
                         chapter = chapter,
                         onOpenChapters = onOpenChapters,
                         onHover = onTimelineHover,
                         hoverPositionMs = timelineHoverMs,
                         hoverChapter = timelineHoverChapter,
                         timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
-                            { VideoPlayerSkipButton(offer = offer, countdown = skipCountdown, onClick = onSkip) }
+                            {
+                                VideoPlayerSkipButton(
+                                    offer = offer,
+                                    service = skipService,
+                                    countdown = skipCountdown,
+                                    onClick = onSkip,
+                                )
+                            }
                         },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
@@ -322,6 +337,7 @@ private fun BoxScope.VideoPlayerControls(
     lockedChromeVisible: Boolean,
     skipVisible: Boolean,
     skipOffer: VideoPlayerSkipOffer?,
+    skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
@@ -391,6 +407,7 @@ private fun BoxScope.VideoPlayerControls(
                 skipOffer?.let { offer ->
                     VideoPlayerSkipButton(
                         offer = offer,
+                        service = skipService,
                         countdown = skipCountdown,
                         onClick = onSkip,
                         modifier = Modifier

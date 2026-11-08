@@ -138,13 +138,16 @@ internal class VideoPlayerIntroTimes(
     private fun <M> launchLookup(
         service: IntroTimesService,
         current: Request,
-        set: VideoPlayerIntroTimesState.(VideoPlayerServiceTimes<M>) -> VideoPlayerIntroTimesState,
+        withTimes: VideoPlayerIntroTimesState.(VideoPlayerServiceTimes<M>) -> VideoPlayerIntroTimesState,
         find: suspend () -> IntroTimesResult<M>,
     ) {
         serviceJobs.remove(service)?.cancel()
         val update: (VideoPlayerServiceTimes<M>) -> Unit = { times ->
             // An answer that comes in as the next episode starts belongs to the one before.
-            mutableState.update { state -> state?.takeIf { it.chapterId == current.chapterId }?.set(times) ?: state }
+            mutableState.update { state ->
+                state?.takeIf { it.chapterId == current.chapterId }?.withTimes(times)
+                    ?: state
+            }
         }
         update(VideoPlayerServiceTimes.Looking)
         serviceJobs[service] = scope.launch { update(VideoPlayerServiceTimes.Done(find())) }

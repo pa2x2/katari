@@ -38,8 +38,8 @@ import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
-import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
-import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
+import eu.kanade.tachiyomi.ui.video.player.introtimes.introTimesServices
+import eu.kanade.tachiyomi.ui.video.player.introtimes.onlineMarkers
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPictureScene
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
@@ -56,6 +56,7 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -235,10 +236,24 @@ internal fun VideoPlayerWatchScreen(
     val markerSkipMode = markerSkipSetting?.let { it.state.collectAsState().value.effectiveValue }
     val markerSkip = rememberVideoPlayerMarkerSkip(current.chapterId)
     val findsIntroTimesOnline = host.settings.findIntroTimesOnline.state.collectAsState().value.effectiveValue
-    val asksIntroTimes = asksIntroTimesOnline(findsIntroTimesOnline, current.stream.markers)
+    val fromAniSkip = host.settings.introTimesFromAniSkip.state.collectAsState().value.effectiveValue
+    val fromTheIntroDb = host.settings.introTimesFromTheIntroDb.state.collectAsState().value.effectiveValue
+    val introTimesServices = remember(findsIntroTimesOnline, fromAniSkip, fromTheIntroDb, current.stream.markers) {
+        introTimesServices(
+            settingOn = findsIntroTimesOnline,
+            turnedOn = buildSet {
+                if (fromAniSkip) add(IntroTimesService.ANISKIP)
+                if (fromTheIntroDb) add(IntroTimesService.THEINTRODB)
+            },
+            streamMarkers = current.stream.markers,
+        )
+    }
     val introTimes by viewModel.introTimes.state.collectAsState()
-    val markers = remember(current.stream.markers, current.chapterId, asksIntroTimes, introTimes) {
-        playbackMarkers(current.stream.markers, current.chapterId, asksIntroTimes, introTimes)
+    val onlineMarkers = remember(current.chapterId, introTimesServices, introTimes) {
+        onlineMarkers(current.chapterId, introTimesServices, introTimes)
+    }
+    val markers = remember(current.stream.markers, onlineMarkers) {
+        current.stream.markers + onlineMarkers.map { it.marker }
     }
     val skipOffer = markerSkip.offerAt(
         mode = markerSkipMode,
@@ -313,7 +328,7 @@ internal fun VideoPlayerWatchScreen(
         currentPlayer.seekTo(positionMs)
     }
 
-    viewModel.introTimes.Effect(current.chapterId, asksIntroTimes) { ui.playbackSnapshot.durationMs }
+    viewModel.introTimes.Effect(current.chapterId, introTimesServices) { ui.playbackSnapshot.durationMs }
 
     LaunchedEffect(current.playback.currentAdaptiveQuality, currentPlayer) {
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
@@ -567,6 +582,7 @@ internal fun VideoPlayerWatchScreen(
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
             markers = markers,
+            onlineMarkers = onlineMarkers,
             chapters = chapters,
             skipOffer = skipOffer,
             skipCountdown = skipCountdown,
@@ -619,7 +635,7 @@ internal fun VideoPlayerWatchScreen(
             engine = engine,
             markerSkipSetting = markerSkipSetting,
             markers = markers,
-            introTimes = introTimes?.takeIf { asksIntroTimes && it.chapterId == current.chapterId },
+            introTimes = introTimes?.takeIf { introTimesServices.isNotEmpty() && it.chapterId == current.chapterId },
             chapters = chapters,
             onSeek = seekToPosition,
         )

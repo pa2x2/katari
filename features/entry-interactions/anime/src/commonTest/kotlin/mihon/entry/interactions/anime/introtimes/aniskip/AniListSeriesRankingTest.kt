@@ -1,9 +1,10 @@
-package mihon.entry.interactions.anime.introtimes
+package mihon.entry.interactions.anime.introtimes.aniskip
 
 import io.kotest.matchers.shouldBe
+import mihon.entry.interactions.anime.introtimes.IntroTimesScope
 import org.junit.jupiter.api.Test
 
-class IntroTimesSeriesRankingTest {
+class AniListSeriesRankingTest {
 
     @Test
     fun `a Russian title finds the season AniList names in another word order, not the next season ranked first`() {
@@ -45,5 +46,14 @@ class IntroTimesSeriesRankingTest {
     )
 
     private fun scope(title: String, year: Int?, episodeCount: Int) =
-        IntroTimesScope(entryId = 1, groupKey = null, title = title, year = year, episodeCount = episodeCount)
+        IntroTimesScope(
+            entryId = 1,
+            groupKey = null,
+            title = title,
+            seasonName = null,
+            year = year,
+            episodeCount = episodeCount,
+            firstNumber = 1,
+            firstAired = null,
+        )
 }

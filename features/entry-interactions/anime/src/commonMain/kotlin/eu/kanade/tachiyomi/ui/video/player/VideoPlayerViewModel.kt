@@ -10,8 +10,9 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
 import eu.kanade.tachiyomi.ui.video.player.handoff.VideoPlayerProgressOffers
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerAiredEpisodes
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerMatchSearch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
@@ -54,7 +55,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
+import mihon.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
+import mihon.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
+import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.resumePositionMs
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
@@ -121,7 +124,9 @@ internal class VideoPlayerViewModel(
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
-    introTimesLookup: IntroTimesLookup,
+    introTimesEpisodes: IntroTimesEpisodeReader,
+    aniSkipLookup: AniSkipLookup,
+    theIntroDbLookup: TheIntroDbLookup,
     progressOffers: EntryProgressOffers,
     private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -132,8 +137,10 @@ internal class VideoPlayerViewModel(
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
 
-    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesLookup)
-    val seriesSearch = VideoPlayerSeriesSearch(viewModelScope, introTimesLookup)
+    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesEpisodes, aniSkipLookup, theIntroDbLookup)
+    val seriesSearch = VideoPlayerMatchSearch(viewModelScope, aniSkipLookup::search)
+    val mediaSearch = VideoPlayerMatchSearch(viewModelScope, theIntroDbLookup::search)
+    val airedEpisodes = VideoPlayerAiredEpisodes(viewModelScope, theIntroDbLookup)
     val progressOffers = VideoPlayerProgressOffers(
         scope = viewModelScope,
         offers = progressOffers,
