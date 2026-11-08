@@ -1,5 +1,6 @@
 import changelog from "../../../CHANGELOG.md?raw";
 import desktopChangelog from "../../../desktop/CHANGELOG.md?raw";
+import syncServerChangelog from "../../../features/sync/server/CHANGELOG.md?raw";
 
 export interface Release {
   /** Such as `1.14.2`, or `0.1.0-alpha.1` for a pre-release. */
@@ -54,4 +55,9 @@ export function releaseNotes(markdown: string = changelog): ReleaseNotes[] {
 /** The desktop app's released versions in desktop/CHANGELOG.md, newest first. */
 export function desktopReleaseNotes(): ReleaseNotes[] {
   return releaseNotes(desktopChangelog);
+}
+
+/** The sync server's released versions in features/sync/server/CHANGELOG.md, newest first. */
+export function syncServerReleaseNotes(): ReleaseNotes[] {
+  return releaseNotes(syncServerChangelog);
 }

@@ -1,12 +1,14 @@
 ---
 interface Props {
   items: string[];
+  /** The items are HTML, such as changelog lines with their code spans rendered. */
+  html?: boolean;
 }
 
-const { items } = Astro.props;
+const { items, html = false } = Astro.props;
 ---
 
-<ul>{items.map((item) => <li>{item}</li>)}</ul>
+<ul>{items.map((item) => (html ? <li set:html={item} /> : <li>{item}</li>))}</ul>
 
 <style>
   ul {
