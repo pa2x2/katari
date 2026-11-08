@@ -63,9 +63,8 @@ kotlin {
         }
         getByName("desktopMain") {
             dependencies {
+                // libmpv itself comes with the app, which picks the build for the system it is packaged for
                 implementation(libs.jna)
-                // libmpv for x86_64 Linux, built from the same sources as the Android add-on's
-                runtimeOnly(libs.libmpv.desktop)
                 // The UI thread players are confined to, and post their state to, is Swing's
                 runtimeOnly(libs.kotlinx.coroutines.swing)
             }

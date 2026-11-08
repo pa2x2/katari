@@ -118,6 +118,11 @@ dependencies {
     implementation(libs.jna)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
+    // The native libraries the app's modules call, built for the system the app is packaged for, x86_64 Linux:
+    // libarchive with its compression libraries built in, so archives open whatever the system has, as Android does
+    // with its own build, and libmpv, built from the same sources as the Android add-on's
+    runtimeOnly(libs.libarchive.linux.x64)
+    runtimeOnly(libs.libmpv.linux.x64)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
