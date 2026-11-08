@@ -1,12 +1,12 @@
-import mihon.gradle.extensions.androidPlatformJar
-import mihon.gradle.tasks.AndroidStubJarTask
+import app.katari.gradle.extensions.androidPlatformJar
+import app.katari.gradle.tasks.AndroidStubJarTask
 
 // The Android classes extensions call, for the desktop extension host only: stand-ins copied from Suwayomi's
 // AndroidCompat and Katari's androidx.preference model (README.md), over a stub of the SDK's android.jar for every
 // class neither covers. Copied sources stay in src/main/java as they were; Katari's own code is in src/main/kotlin.
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
 }
 
 val androidStubJar = tasks.register<AndroidStubJarTask>("androidStubJar") {

@@ -1,25 +1,25 @@
+import app.katari.gradle.Config
+import app.katari.gradle.getCurrentTime
+import app.katari.gradle.getLatestCommitCount
+import app.katari.gradle.getLatestCommitSha
+import app.katari.gradle.getLatestCommitTime
+import app.katari.gradle.licences.GenerateLibmpvLicencesTask
+import app.katari.gradle.platformparity.exposeAndroidPlatformApiLibraries
+import app.katari.gradle.tasks.CheckApkNativeLibrariesTask
+import app.katari.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
-import mihon.gradle.Config
-import mihon.gradle.getCurrentTime
-import mihon.gradle.getLatestCommitCount
-import mihon.gradle.getLatestCommitSha
-import mihon.gradle.getLatestCommitTime
-import mihon.gradle.licences.GenerateLibmpvLicencesTask
-import mihon.gradle.platformparity.exposeAndroidPlatformApiLibraries
-import mihon.gradle.tasks.CheckApkNativeLibrariesTask
-import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(mihonx.plugins.android.application)
-    alias(mihonx.plugins.artifact.sanitizer)
-    alias(mihonx.plugins.compose)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.application)
+    alias(katari.plugins.artifact.sanitizer)
+    alias(katari.plugins.compose)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)

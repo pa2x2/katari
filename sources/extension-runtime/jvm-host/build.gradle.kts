@@ -2,8 +2,8 @@
 // stand-ins of :sources:extension-runtime:android-compat. It reads and verifies apks, converts their dex code to jars
 // and loads them. Paths and the app's channels come in from the desktop composition.
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
 }
 
 dependencies {

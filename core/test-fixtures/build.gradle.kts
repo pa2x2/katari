@@ -1,10 +1,10 @@
-import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import app.katari.gradle.extensions.desktop
 
 // Test doubles shared by more than one module's tests. Only test source sets depend on this module.
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 }
 
 kotlin {

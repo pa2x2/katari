@@ -1,8 +1,8 @@
 // The sync server as the showcase runs it (see ShowcaseSyncServer.kt). tools/showcase/pipeline/sync starts the
 // distribution installDist lays out.
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
     application
 }
 

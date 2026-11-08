@@ -9,13 +9,13 @@ pluginManagement {
 }
 
 plugins {
-    id("mihon.plugins.android.settings")
+    id("app.katari.plugins.android.settings")
 }
 
 dependencyResolutionManagement {
     versionCatalogs {
-        create("mihonx") {
-            from(files("gradle/mihon.versions.toml"))
+        create("katari") {
+            from(files("gradle/katari.versions.toml"))
         }
     }
 

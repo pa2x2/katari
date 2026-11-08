@@ -1,10 +1,10 @@
 // Speech through Speech Dispatcher, the speech service Linux desktops share. The module speaks Speech Dispatcher's own
 // text protocol over its socket, so it ships no native library, and starts the service the way its client library does.
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.compose)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.compose)
     alias(libs.plugins.compose.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.metro)
 }

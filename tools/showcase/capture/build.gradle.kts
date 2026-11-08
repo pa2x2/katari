@@ -1,6 +1,6 @@
 plugins {
-    alias(mihonx.plugins.android.test)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.android.test)
+    alias(katari.plugins.spotless)
 }
 
 android {

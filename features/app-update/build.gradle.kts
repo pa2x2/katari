@@ -1,11 +1,11 @@
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensions.desktop
 
 // How the apps update themselves from their GitHub releases, as both platforms do it: finding the newest release of
 // the running app, ordering versions, cleaning up release notes and downloading the release's file. Each platform picks
 // the file meant for its build and installs it.
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
 }
 

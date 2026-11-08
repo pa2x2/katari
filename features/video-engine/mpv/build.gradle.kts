@@ -1,9 +1,9 @@
-import mihon.gradle.extensions.desktop
-import mihon.gradle.tasks.UnpackAarGlueTask
+import app.katari.gradle.extensions.desktop
+import app.katari.gradle.tasks.UnpackAarGlueTask
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)
 }

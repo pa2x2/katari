@@ -1,11 +1,11 @@
-import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
-import mihon.gradle.extensions.desktop
-import mihon.gradle.extensions.keepKotlinModuleName
+import app.katari.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import app.katari.gradle.extensions.desktop
+import app.katari.gradle.extensions.keepKotlinModuleName
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 }
 
 kotlin {

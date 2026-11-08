@@ -2,8 +2,8 @@
 // directory, serving the protocol of :features:sync:protocol to every device of every account it holds. One artifact
 // both serves and carries the recovery command (see app.katari.sync.server.Main).
 plugins {
-    alias(mihonx.plugins.kotlin.jvm)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.jvm)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.sqldelight)
     application
 }

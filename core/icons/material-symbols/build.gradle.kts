@@ -1,11 +1,11 @@
-import mihon.gradle.extensions.desktop
-import mihon.gradle.tasks.GenerateVectorDrawablesTask
+import app.katari.gradle.extensions.desktop
+import app.katari.gradle.tasks.GenerateVectorDrawablesTask
 
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.compose)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.compose)
 
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.valkyrie)
 }

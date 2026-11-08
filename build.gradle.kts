@@ -1,7 +1,7 @@
-import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
-import mihon.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
-import mihon.gradle.extensionabi.ExtensionAbiCheckTask
-import mihon.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
+import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import app.katari.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
+import app.katari.gradle.extensionabi.ExtensionAbiCheckTask
+import app.katari.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
 import org.gradle.api.attributes.Bundling
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
@@ -91,7 +91,7 @@ plugins {
     alias(libs.plugins.moko.resources) apply false
     alias(libs.plugins.sqldelight) apply false
 
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
 }
 
 val buildLogic: IncludedBuild = gradle.includedBuild("build-logic")

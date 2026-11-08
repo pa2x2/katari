@@ -1,8 +1,8 @@
 plugins {
-    alias(mihonx.plugins.android.library)
-    alias(mihonx.plugins.compose)
+    alias(katari.plugins.android.library)
+    alias(katari.plugins.compose)
 
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.spotless)
     alias(libs.plugins.metro)
 }
 

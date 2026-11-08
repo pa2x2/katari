@@ -1,13 +1,13 @@
-import mihon.gradle.extensioncompatibility.GenerateExtensionFamiliesTask
-import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
-import mihon.gradle.extensions.desktop
+import app.katari.gradle.extensioncompatibility.GenerateExtensionFamiliesTask
+import app.katari.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import app.katari.gradle.extensions.desktop
 
 // The extension host both apps share: the extension manager, the extension kinds' rules, file extensions, store
 // matching and the source manager. What differs per platform (packages, class loading, installing, install events,
 // notices, folders, source settings files) comes in through the interfaces in eu.kanade.tachiyomi.extension.platform.
 plugins {
-    alias(mihonx.plugins.kotlin.multiplatform)
-    alias(mihonx.plugins.spotless)
+    alias(katari.plugins.kotlin.multiplatform)
+    alias(katari.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.metro)
