@@ -8,7 +8,7 @@ import java.lang.reflect.InaccessibleObjectException
 /**
  * X11: the class in every window's `WM_CLASS`, which desktops match against an app's desktop entry, by its file name or
  * its `StartupWMClass`, to show the app's name and icon for its windows and group them under it. The X11 toolkit names
- * it after the main class (`mihon-desktop-MainKt`) and has no setting for it, so it is set on the toolkit's field,
+ * it after the main class (`app-katari-desktop-MainKt`) and has no setting for it, so it is set on the toolkit's field,
  * which the app's `--add-opens java.desktop/sun.awt.X11` opens. Windows read it as they open.
  */
 internal object X11WindowClass {

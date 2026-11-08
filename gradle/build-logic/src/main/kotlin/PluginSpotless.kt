@@ -45,22 +45,22 @@ class PluginSpotless : Plugin<Project> {
                 endWithNewline()
                 forbidRegex(
                     "materialSymbolsRImport",
-                    "(?m)^import mihon\\.icons\\.materialsymbols\\.R(?! as MaterialSymbolsR$)\\b.*$",
+                    "(?m)^import app\\.katari\\.icons\\.materialsymbols\\.R(?! as MaterialSymbolsR$)\\b.*$",
                     "Import app.katari.icons.materialsymbols.R as MaterialSymbolsR",
                 )
                 forbidRegex(
                     "materialSymbolsRQualified",
-                    "(?m)^(?!import ).*\\bmihon\\.icons\\.materialsymbols\\.R\\.",
+                    "(?m)^(?!import ).*\\bapp\\.katari\\.icons\\.materialsymbols\\.R\\.",
                     "Use the MaterialSymbolsR import alias instead of the qualified name",
                 )
                 forbidRegex(
                     "customMaterialSymbolsRImport",
-                    "(?m)^import mihon\\.icons\\.custommaterialsymbols\\.R(?! as CustomMaterialSymbolsR$)\\b.*$",
+                    "(?m)^import app\\.katari\\.icons\\.custommaterialsymbols\\.R(?! as CustomMaterialSymbolsR$)\\b.*$",
                     "Import app.katari.icons.custommaterialsymbols.R as CustomMaterialSymbolsR",
                 )
                 forbidRegex(
                     "customMaterialSymbolsRQualified",
-                    "(?m)^(?!import ).*\\bmihon\\.icons\\.custommaterialsymbols\\.R\\.",
+                    "(?m)^(?!import ).*\\bapp\\.katari\\.icons\\.custommaterialsymbols\\.R\\.",
                     "Use the CustomMaterialSymbolsR import alias instead of the qualified name",
                 )
             }
