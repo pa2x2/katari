@@ -38,6 +38,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.sqldelight.sqliteDriver)
     implementation(libs.bouncycastle.prov)
+    // The web page shows an invite as a QR code the app's scanner reads.
+    implementation(libs.zxing.core)
     runtimeOnly(libs.slf4j.simple)
     constraints {
         // Ktor brings kotlin-reflect at the Kotlin it was built with; reflection must match the stdlib it runs on.

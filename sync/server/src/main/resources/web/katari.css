@@ -245,6 +245,17 @@ code {
 }
 .copy { display: flex; margin: 0 auto; }
 
+/* An invite: how to use it, its QR code, and the address and code the QR code holds */
+.lede.path-intro { margin-bottom: 4px; }
+.path { font-weight: 500; margin: 0 0 4px; }
+.invite { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px; }
+.qr { display: block; flex: 0 0 auto; width: 136px; height: 136px; }
+.invite-details { flex: 1 1 200px; min-width: 0; }
+.invite-details .lbl:first-child { margin-top: 0; }
+.invite-details .secret { margin: 0; padding: 8px 12px; text-align: start; }
+.invite-details .secret.address { font-size: 14px; letter-spacing: 0; overflow-wrap: anywhere; }
+.actions .lead { margin-right: auto; }
+
 /* Server figures */
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
 .stat { background: var(--surface-container); border-radius: 16px; padding: 12px 16px; }

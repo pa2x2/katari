@@ -2,9 +2,11 @@
 document.querySelectorAll("[data-copy]").forEach((button) => {
   const target = document.getElementById(button.dataset.copy);
   if (!target) return;
+  const label = button.textContent;
   button.hidden = false;
   button.addEventListener("click", async () => {
-    const text = target.textContent.trim();
+    // As laid out, so a block of several lines, such as an invite's address and code, copies as lines.
+    const text = target.innerText.trim();
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -17,6 +19,6 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
       return;
     }
     button.textContent = "Copied";
-    setTimeout(() => { button.textContent = "Copy"; }, 2000);
+    setTimeout(() => { button.textContent = label; }, 2000);
   });
 });
