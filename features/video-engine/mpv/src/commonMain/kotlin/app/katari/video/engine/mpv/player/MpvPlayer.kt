@@ -206,7 +206,7 @@ internal class MpvPlayer(
         pendingPositionMs = start
         sentTrackChoices = emptyMap()
         appliedVariantPick = null
-        val pause = !playsNow()
+        val pause = holdsMpvPaused()
         sentPause = pause
         session.post { client ->
             val proxy = proxy ?: return@post
@@ -377,6 +377,13 @@ internal class MpvPlayer(
 
     private fun playsNow(): Boolean = playWhenReady && holds.allowsPlaying
 
+    /**
+     * A load with external audio stays paused until [startLoadedFile] has added it. mpv takes tracks only once the file
+     * has loaded, and unpaused it would start the video meanwhile and the audio only once it is opened, its start
+     * skipped. The unpause is posted after the tracks are, so mpv runs it once they are in.
+     */
+    private fun holdsMpvPaused(): Boolean = !playsNow() || (!loaded && stream.audioTracks.isNotEmpty())
+
     /** Brings the holds and mpv's pause in line with the state. */
     private fun refresh() {
         holds.update(playWhenReady, playback())
@@ -385,7 +392,7 @@ internal class MpvPlayer(
 
     private fun applyPause() {
         if (!prepared) return
-        val pause = !playsNow()
+        val pause = holdsMpvPaused()
         if (pause != sentPause) {
             sentPause = pause
             session.post { it.setFlag("pause", pause) }
@@ -443,7 +450,8 @@ internal class MpvPlayer(
         everLoaded = true
         restarted = false
         firstFrameReported = false
-        // A file's external tracks go with it, so every load adds them again. mpv opens each before it returns.
+        // A file's external tracks go with it, so every load adds them again. mpv opens each before it returns, and
+        // the load stays paused until then (holdsMpvPaused).
         val subtitles = externalSubtitles
         val audio = externalAudio
         session.post { client ->

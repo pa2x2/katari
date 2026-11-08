@@ -184,7 +184,7 @@ class EntryHandOff(
     /** The edit [record] brings when it is a position another device changed. */
     private fun otherDevicesEdit(record: SequencedRecord, device: DeviceId): IncomingEdit? {
         val envelope = record.record
-        if (envelope.kind != ProgressKind.name || envelope.kindVersion != ProgressKind.version || envelope.deleted) {
+        if (envelope.kind != ProgressKind.name || !ProgressKind.reads(envelope.kindVersion) || envelope.deleted) {
             return null
         }
         val payload = ProgressKind.decode(envelope.payload)

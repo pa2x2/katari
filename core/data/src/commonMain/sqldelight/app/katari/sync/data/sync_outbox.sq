@@ -59,6 +59,18 @@ WHERE R.kind = :kind
 AND instr(R.local_ref, :localRefPrefix) = 1
 AND C.id = 0 AND S.id = 0 AND S.enabled = 1;
 
+-- The records of :kind stored under a version older than :version, read again from their rows. A read, not an edit:
+-- touching no field, it leaves every value's edit time as the record holds it.
+recordRereadOfOutdated:
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT R.kind, R.local_ref, 0, NULL, CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER),
+    C.seen_physical, C.seen_counter
+FROM sync_records R, sync_clock C, sync_state S
+WHERE R.kind = :kind
+AND R.kind_version < :version
+AND R.local_ref IS NOT NULL
+AND C.id = 0 AND S.id = 0 AND S.enabled = 1;
+
 -- The newest row, 0 when there never was one; rows written later have a higher seq.
 lastSeq:
 SELECT coalesce(max(seq), 0)

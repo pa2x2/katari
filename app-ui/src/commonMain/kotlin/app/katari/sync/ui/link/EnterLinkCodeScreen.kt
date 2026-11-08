@@ -12,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.field.TextField
@@ -31,6 +30,7 @@ import app.katari.sync.client.account.ServerCheck
 import app.katari.sync.ui.address.AddressCheck
 import app.katari.sync.ui.signin.JoinPath
 import app.katari.sync.ui.signin.JoinProblemNote
+import app.katari.sync.ui.signin.OneTimeCodeField
 import app.katari.sync.ui.signin.ServerCheckProblemNote
 import app.katari.sync.ui.signin.SyncJoinViewModel
 import app.katari.sync.ui.signin.joinProblemText
@@ -111,14 +111,11 @@ class EnterLinkCodeScreen : Screen() {
                                         imeAction = ImeAction.Next,
                                     ),
                                 )
-                                TextField(
+                                OneTimeCodeField(
                                     state = code,
-                                    modifier = Modifier.fillMaxWidth(),
                                     label = stringResource(MR.strings.sync_link_code),
-                                    keyboardOptions = KeyboardOptions(
-                                        capitalization = KeyboardCapitalization.Characters,
-                                        imeAction = ImeAction.Done,
-                                    ),
+                                    imeAction = ImeAction.Done,
+                                    modifier = Modifier.fillMaxWidth(),
                                 )
                             }
                         }

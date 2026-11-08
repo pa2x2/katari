@@ -82,7 +82,7 @@ class SyncSignInScreen(
         val address = rememberTextFieldState(server.orEmpty())
         val username = rememberTextFieldState(account.orEmpty())
         val password = rememberTextFieldState()
-        val invite = rememberTextFieldState(inviteCode.orEmpty())
+        val invite = rememberTextFieldState(oneTimeCodeText(inviteCode.orEmpty()))
         var withInvite by rememberSaveable { mutableStateOf(inviteCode != null) }
 
         LaunchedEffect(address) {
@@ -242,11 +242,11 @@ private fun CredentialFields(
     var hidePassword by rememberSaveable { mutableStateOf(true) }
     Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
         if (withInvite) {
-            TextField(
+            OneTimeCodeField(
                 state = invite,
-                modifier = Modifier.fillMaxWidth(),
                 label = stringResource(MR.strings.sync_invite_code),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                imeAction = ImeAction.Next,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
         TextField(

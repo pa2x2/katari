@@ -1,0 +1,26 @@
+-- Clearing history gets a column of its own, so syncing can keep the earliest start of the person's devices while a
+-- clear still moves the start forward on every one.
+ALTER TABLE statistics_epochs ADD COLUMN cleared_at INTEGER;
+
+-- Syncing used to keep the later of two devices' starts, hiding the activity the other device had recorded before it.
+-- No profile's statistics start after the earliest activity they hold, since clearing history deletes it all.
+UPDATE statistics_epochs
+SET started_at = min(
+    started_at,
+    coalesce(
+        (
+            SELECT min(activity_sessions.started_at)
+            FROM activity_sessions JOIN entries ON entries._id = activity_sessions.entry_id
+            WHERE entries.profile_id = statistics_epochs.profile_id
+        ),
+        started_at
+    ),
+    coalesce(
+        (
+            SELECT min(activity_completion_events.occurred_at)
+            FROM activity_completion_events JOIN entries ON entries._id = activity_completion_events.entry_id
+            WHERE entries.profile_id = statistics_epochs.profile_id
+        ),
+        started_at
+    )
+);

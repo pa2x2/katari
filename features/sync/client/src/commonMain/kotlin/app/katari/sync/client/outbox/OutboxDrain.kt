@@ -22,11 +22,12 @@ import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 
 /**
- * Turns the outbox into record changes ready to push. Each drained edit gets the hybrid timestamp of when it was made
- * ([EditStamper]); each record it touched is read from its local row and stored in `sync_records` with those
- * timestamps on the fields whose values changed. A record whose fields all ended where they were stored (an edit
- * undone, or a value merged from another device being written locally) changes nothing. Records the payload refers
- * to that were never synced, such as the entry of a chapter marked read, are stored along with it.
+ * Turns the outbox into record changes ready to push, after queueing the records stored under an older version of
+ * their kind to be read again ([SyncedKind.oldestReadableVersion]). Each drained edit gets the hybrid timestamp of
+ * when it was made ([EditStamper]); each record it touched is read from its local row and stored in `sync_records`
+ * with those timestamps on the fields whose values changed. A record whose fields all ended where they were stored
+ * (an edit undone, or a value merged from another device being written locally) changes nothing. Records the payload
+ * refers to that were never synced, such as the entry of a chapter marked read, are stored along with it.
  *
  * It only reads the local database and preferences, so it runs whether or not the server is reachable.
  */
@@ -46,6 +47,10 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
         val state = sync_stateQueries.get().awaitAsOne()
         val deviceId = state.device_id
         if (!state.enabled || deviceId == null) return@await 0
+        SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
+            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = kind.version.toLong())
+            sync_recordsQueries.raiseVersion(kind = kind.name, version = kind.version.toLong())
+        }
         val rows = sync_outboxQueries.batch(limit).awaitAsList()
         if (rows.isEmpty()) return@await 0
 

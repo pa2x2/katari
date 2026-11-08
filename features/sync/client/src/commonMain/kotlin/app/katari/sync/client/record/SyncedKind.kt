@@ -13,7 +13,10 @@ import kotlinx.serialization.protobuf.ProtoBuf
  * capture it, and how a local row becomes its payload.
  *
  * [name] and the payload's field numbers are a compatibility boundary. A field is added under an unused number; a
- * field that changes meaning, or is removed, makes a new [version], which older apps hold without applying.
+ * field that changes meaning, or is removed, makes a new [version], which older apps hold without applying. A version
+ * whose payload still decodes the older ones' records reads them from [oldestReadableVersion] on; the records this
+ * device stored under them are read again from their rows ([app.katari.sync.client.outbox.OutboxDrain]), so what the
+ * new version keeps or reads differently reaches the server.
  */
 abstract class SyncedKind<P : Any>(
     val name: String,
@@ -23,6 +26,10 @@ abstract class SyncedKind<P : Any>(
     val absence: Absence,
 ) {
     internal abstract val capture: List<CaptureTrigger>
+
+    internal open val oldestReadableVersion: Int get() = version
+
+    fun reads(version: Int): Boolean = version in oldestReadableVersion..this.version
 
     internal abstract suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<P>
 

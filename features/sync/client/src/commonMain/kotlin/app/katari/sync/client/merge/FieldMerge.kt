@@ -17,6 +17,19 @@ internal fun <T> latest(a: Stamped<T>, b: Stamped<T>): Stamped<T> = when {
     else -> b
 }
 
+/**
+ * The smaller of two values of a field that only ever moves back as devices merge, such as when counting started; the
+ * later edit of two equal values, so devices still agree on its timestamp.
+ */
+internal fun <T> earlier(a: Stamped<T>, b: Stamped<T>): Stamped<T> {
+    val order = compareValues(a.value, b.value)
+    return when {
+        order < 0 -> a
+        order > 0 -> b
+        else -> latest(a, b)
+    }
+}
+
 /** Orders values of one field: null first, comparable values naturally, anything else by its text. */
 internal fun compareValues(a: Any?, b: Any?): Int = when {
     a == b -> 0
