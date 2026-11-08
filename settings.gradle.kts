@@ -67,7 +67,7 @@ dependencyResolutionManagement {
         exclusiveContent {
             // LGPL libmpv with its JNI glue, released by pa2x2/mpv-android and checked against
             // gradle/verification-metadata.xml. Katari takes only the glue's classes and assets from it (see
-            // video-engine/mpv); the native libraries come from the separately installed mpv add-on.
+            // features/video-engine/mpv); the native libraries come from the separately installed mpv add-on.
             forRepository {
                 ivy {
                     name = "KatariLibmpv"
@@ -161,83 +161,94 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Katari"
-include(":aniyomi-source-api")
-include(":app")
-include(":app-update")
-include(":app-ui")
-include(":backup")
-include(":baseline-profile")
-include(":book-api")
-include(":core-metadata")
-include(":core:archive")
-include(":core:common")
-include(":core:image")
-include(":core:metro")
-include(":core:platform")
-include(":core:test-fixtures")
-include(":data")
-include(":desktop")
-include(":domain")
-include(":i18n")
-include(":library-update")
-include(":icons:custom-material-symbols")
-include(":icons:material-symbols")
-include(":icons:simple-icons")
-include(":presentation-core")
-include(":presentation-widget")
-include(":script-runtime")
-include(":entry-interactions")
-include(":entry-interactions:api")
-include(":entry-interactions:spi")
-include(":entry-interactions:download-notification")
-include(":entry-interactions:host")
-include(":entry-viewer-settings-api")
-include(":entry-viewer-chrome-ui")
-include(":entry-viewer-settings-ui")
-include(":entry-interactions:manga")
-include(":entry-interactions:anime")
-include(":entry-interactions:book")
-include(":entry-source-api")
-include(":extension-runtime")
-include(":extension-runtime:android-compat")
-include(":extension-runtime:jvm-host")
-include(":tools:extension-compatibility-harness")
-include(":source-api")
-include(":source-compat")
-include(":source-local")
-include(":sync:client")
-include(":sync:protocol")
-include(":sync:server")
-include(":telemetry")
-include(":trackers")
-include(":text-recognition:api")
-include(":text-recognition:spi")
-include(":text-recognition:runtime")
-include(":text-recognition:ui")
-include(":text-recognition:providers:mlkit")
-include(":text-recognition:providers:mlkit:catalog")
-include(":text-recognition:providers:mlkit:not-included")
-include(":text-recognition:providers:onnx")
-include(":language:api")
-include(":language:runtime")
-include(":model-artifacts:api")
-include(":model-artifacts:runtime")
-include(":model-artifacts:ui")
-include(":translation:api")
-include(":translation:spi")
-include(":translation:runtime")
-include(":translation:ui")
-include(":translation:providers:deepl")
-include(":translation:providers:libretranslate")
-include(":translation:providers:server-connection")
-include(":tts:api")
-include(":tts:spi")
-include(":tts:runtime")
-include(":tts:providers:android")
-include(":tts:ui")
-include(":video-engine:dash")
-include(":video-engine:mpv")
-include(":video-engine:spi")
-include(":web-view:jcef")
-include(":showcase:capture")
-include(":showcase:extension")
+
+include(":app", ":app-ui", ":desktop")
+
+include(
+    ":core:archive",
+    ":core:common",
+    ":core:core-metadata",
+    ":core:data",
+    ":core:domain",
+    ":core:i18n",
+    ":core:icons:custom-material-symbols",
+    ":core:icons:material-symbols",
+    ":core:icons:simple-icons",
+    ":core:image",
+    ":core:metro",
+    ":core:platform",
+    ":core:presentation-core",
+    ":core:telemetry",
+    ":core:test-fixtures",
+)
+
+include(
+    ":sources:aniyomi-source-api",
+    ":sources:book-api",
+    ":sources:entry-source-api",
+    ":sources:extension-runtime",
+    ":sources:extension-runtime:android-compat",
+    ":sources:extension-runtime:jvm-host",
+    ":sources:script-runtime",
+    ":sources:source-api",
+    ":sources:source-compat",
+    ":sources:source-local",
+    ":sources:web-view:jcef",
+)
+
+include(
+    ":features:app-update",
+    ":features:backup",
+    ":features:entry-interactions",
+    ":features:entry-interactions:anime",
+    ":features:entry-interactions:api",
+    ":features:entry-interactions:book",
+    ":features:entry-interactions:download-notification",
+    ":features:entry-interactions:host",
+    ":features:entry-interactions:manga",
+    ":features:entry-interactions:spi",
+    ":features:entry-viewer-chrome-ui",
+    ":features:entry-viewer-settings-api",
+    ":features:entry-viewer-settings-ui",
+    ":features:language:api",
+    ":features:language:runtime",
+    ":features:library-update",
+    ":features:model-artifacts:api",
+    ":features:model-artifacts:runtime",
+    ":features:model-artifacts:ui",
+    ":features:presentation-widget",
+    ":features:sync:client",
+    ":features:sync:protocol",
+    ":features:sync:server",
+    ":features:text-recognition:api",
+    ":features:text-recognition:providers:mlkit",
+    ":features:text-recognition:providers:mlkit:catalog",
+    ":features:text-recognition:providers:mlkit:not-included",
+    ":features:text-recognition:providers:onnx",
+    ":features:text-recognition:runtime",
+    ":features:text-recognition:spi",
+    ":features:text-recognition:ui",
+    ":features:trackers",
+    ":features:translation:api",
+    ":features:translation:providers:deepl",
+    ":features:translation:providers:libretranslate",
+    ":features:translation:providers:server-connection",
+    ":features:translation:runtime",
+    ":features:translation:spi",
+    ":features:translation:ui",
+    ":features:tts:api",
+    ":features:tts:providers:android",
+    ":features:tts:runtime",
+    ":features:tts:spi",
+    ":features:tts:ui",
+    ":features:video-engine:dash",
+    ":features:video-engine:mpv",
+    ":features:video-engine:spi",
+)
+
+include(
+    ":tools:baseline-profile",
+    ":tools:extension-compatibility-harness",
+    ":tools:showcase:capture",
+    ":tools:showcase:extension",
+)

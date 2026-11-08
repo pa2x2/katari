@@ -10,9 +10,9 @@ internal fun isEntryHostCompositionPath(relativePath: String): Boolean {
 }
 
 internal const val APP_ENTRY_HOST_BINDINGS_PATH =
-    "entry-interactions/host/src/main/java/mihon/entry/interactions/host/AppEntryHostBindings.kt"
+    "features/entry-interactions/host/src/main/java/mihon/entry/interactions/host/AppEntryHostBindings.kt"
 
-private const val ENTRY_FEATURE_SOURCE_ROOT = "entry-interactions/src/main/java/mihon/entry/interactions/"
+private const val ENTRY_FEATURE_SOURCE_ROOT = "features/entry-interactions/src/main/java/mihon/entry/interactions/"
 
 /** The application graphs' declarations and the binding containers they compose, on Android and desktop. */
 internal fun isAppGraphCompositionPath(relativePath: String): Boolean {

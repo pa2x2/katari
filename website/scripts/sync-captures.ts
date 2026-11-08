@@ -1,6 +1,6 @@
 /**
- * Copies the stills, clips, and credits the site shows into src/captures, from a local capture run (showcase/pipeline/capture.ts)
- * by default, or from a checkout of the published assets.
+ * Copies the stills, clips, and credits the site shows into src/captures, from a local capture run
+ * (tools/showcase/pipeline/capture.ts) by default, or from a checkout of the published assets.
  */
 import { copyFileSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { homedir } from "node:os";

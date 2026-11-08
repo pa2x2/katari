@@ -85,8 +85,8 @@ private fun UiKitBoundarySource.indexedComponents(): List<IndexedName> {
 }
 
 private fun String.isKitSource(): Boolean {
-    val sourceSet = removePrefix("presentation-core/src/").substringBefore("/")
-    return startsWith("presentation-core/src/") &&
+    val sourceSet = removePrefix("core/presentation-core/src/").substringBefore("/")
+    return startsWith("core/presentation-core/src/") &&
         !sourceSet.contains("test", ignoreCase = true) &&
         contains("/kotlin/mihon/presentation/kit/")
 }

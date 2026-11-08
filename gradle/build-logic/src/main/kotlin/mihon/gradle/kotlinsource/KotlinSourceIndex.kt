@@ -3,10 +3,10 @@ package mihon.gradle.kotlinsource
 import java.io.File
 
 /**
- * Rules name files by their Android-library path (`domain/src/main/java/…`), so they hold for a module before and after
- * it becomes multiplatform: files in `commonMain`, `androidMain` or `desktopMain` are indexed under that path, and
- * findings are reported at the real file. A platform file that shares its name with a file of another source set, as an
- * `actual` beside its `expect` may, keeps its source set in its indexed name (`androidMain/…/Foo.kt` →
+ * Rules name files by their Android-library path (`core/domain/src/main/java/…`), so they hold for a module before and
+ * after it becomes multiplatform: files in `commonMain`, `androidMain` or `desktopMain` are indexed under that path,
+ * and findings are reported at the real file. A platform file that shares its name with a file of another source set,
+ * as an `actual` beside its `expect` may, keeps its source set in its indexed name (`androidMain/…/Foo.kt` →
  * `main/java/…/Foo.android.kt`).
  */
 internal class KotlinSourceIndex private constructor(

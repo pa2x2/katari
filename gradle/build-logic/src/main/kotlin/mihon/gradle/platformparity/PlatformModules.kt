@@ -113,7 +113,10 @@ private fun String.productionProjectDependencies(accessors: Map<String, String>)
     return dependencies
 }
 
-/** The accessor Gradle generates for the module at [this] path: `entry-interactions/api` → `entryInteractions.api`. */
+/**
+ * The accessor Gradle generates for the module at [this] path: `features/entry-interactions/api` →
+ * `features.entryInteractions.api`.
+ */
 private fun String.toProjectAccessor(): String = split('/').joinToString(".") { segment ->
     segment.split('-').mapIndexed { index, part ->
         if (index == 0) part else part.replaceFirstChar(Char::uppercase)

@@ -7,7 +7,7 @@ description: Bring the pa2x2/mpv-android fork, which builds Katari's libmpv AAR 
 
 `pa2x2/mpv-android`, branch `katari-lgpl`, is a fork of `mpv-android/mpv-android` that builds two things Katari depends on. Its releases are tagged `libmpv-YYYY-MM-DD-N` and publish both together:
 
-- **The libmpv AAR.** Katari pins one release of it (`libmpv` in `gradle/libs.versions.toml`, hash in `gradle/verification-metadata.xml`) and takes only its compiled-in classes (`MPVLib`) and `assets/libmpv/` from it (`video-engine/mpv/build.gradle.kts`). The AAR's `load-order.json` states the JNI glue level and the minimum add-on the app requires (`MpvAddonRequirement.kt`). Katari's licence screen is generated at build time from the AAR's `third-party.json` (`gradle/build-logic/.../licences/LibmpvNotices.kt`).
+- **The libmpv AAR.** Katari pins one release of it (`libmpv` in `gradle/libs.versions.toml`, hash in `gradle/verification-metadata.xml`) and takes only its compiled-in classes (`MPVLib`) and `assets/libmpv/` from it (`features/video-engine/mpv/build.gradle.kts`). The AAR's `load-order.json` states the JNI glue level and the minimum add-on the app requires (`MpvAddonRequirement.kt`). Katari's licence screen is generated at build time from the AAR's `third-party.json` (`gradle/build-logic/.../licences/LibmpvNotices.kt`).
 - **The mpv add-on APKs** (`app.katari.mpv`, one per ABI: arm64-v8a, armeabi-v7a, x86_64). They hold the native libraries. Users install and update them separately from the app, which finds new ones through `MpvAddonReleaseSource.kt`.
 
 The work has three parts, each stopping for the user:
@@ -50,7 +50,7 @@ Read-only. `git fetch upstream` is the one permitted write. Reading GitHub (`gh 
      - **libplacebo** (`v_libplacebo`, `commit_libplacebo`): the newest release tag and the commit it resolves to. Check that the submodule list passed to `fetch_git` still matches what the release needs.
    - **Not built**: lua and curl. Their `v_*` and `sha_*` lines are inert (`dep_mpv` leaves them out and nothing fetches them). Upstream changes that add them back, or that rely on them in `mpv.sh`, must be adapted instead of accepted.
 
-   For every pin that would move, read the release notes for every version between the current and the target one, and match them against what Katari uses: the options, properties, commands and events `video-engine/mpv` sets or reads, decoders and formats Katari's sources serve (HLS, DASH, subtitles), and the fork's patches (next step). Give `file:line` for every match, as the `dependency-upgrades` skill asks.
+   For every pin that would move, read the release notes for every version between the current and the target one, and match them against what Katari uses: the options, properties, commands and events `features/video-engine/mpv` sets or reads, decoders and formats Katari's sources serve (HLS, DASH, subtitles), and the fork's patches (next step). Give `file:line` for every match, as the `dependency-upgrades` skill asks.
 
    Compute each new checksum from the real archive. Where the project publishes a checksum or signature, compare against it, and say which ones don't.
 
@@ -106,7 +106,7 @@ Only when the report said the pin must move, and only after the user says the re
 
 1. Change `libmpv` in `gradle/libs.versions.toml`, and its comment if the glue level changed.
 2. Replace the libmpv component in `gradle/verification-metadata.xml` with the new version, artifact name and SHA-256 from the release's `SHA256SUMS`. Download the AAR and hash it yourself to check the published value.
-3. Fix what the new `MPVLib` or assets need in `video-engine/mpv`, `MpvAddonRequirement.kt` and `LibmpvNotices.kt`. The report's reason names the code.
+3. Fix what the new `MPVLib` or assets need in `features/video-engine/mpv`, `MpvAddonRequirement.kt` and `LibmpvNotices.kt`. The report's reason names the code.
 4. Resolve once without caches (`--refresh-dependencies`, or a fresh Gradle user home): the AAR comes from a GitHub release URL, and a build that passes only from the cache will fail on the next clean machine.
 5. Run the validation from AGENTS.md: `spotlessApply`, `verifyTests`, then the telemetry release compilation in a separate invocation.
 6. On the test device, installed as an update over existing data:

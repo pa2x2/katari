@@ -1,6 +1,6 @@
 ---
 name: desktop-release-notes
-description: Write the desktop app's release notes in DESKTOP-CHANGELOG.md. Run through the release-notes skill, which decides what a Katari release covers and holds the writing rules.
+description: Write the desktop app's release notes in desktop/CHANGELOG.md. Run through the release-notes skill, which decides what a Katari release covers and holds the writing rules.
 ---
 
 Follow the release-notes skill (`.agents/skills/release-notes/SKILL.md`) for what the release covers and for its
@@ -19,9 +19,9 @@ changelog writing rules; this skill adds what only the desktop app's changelog n
    with, so describe what the app offers at `HEAD` in a few `✨ Added` outcomes instead of listing changes, and ask the
    user to confirm them before writing.
 
-## Update DESKTOP-CHANGELOG.md
+## Update desktop/CHANGELOG.md
 
-1. Update `DESKTOP-CHANGELOG.md` for the configured version using the shared writing rules. Keep its own
+1. Update `desktop/CHANGELOG.md` for the configured version using the shared writing rules. Keep its own
    `[Unreleased]` link, comparing the target `desktop-v<version>` tag with `HEAD`, and add or update the target
    version's link to its release, `https://github.com/pa2x2/katari/releases/tag/desktop-v<version>`.
 2. Leave Mihon out: the desktop app has no Mihon version it is based on.

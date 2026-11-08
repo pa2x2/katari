@@ -97,8 +97,8 @@ private fun EntryMigrationBoundarySource.isAllowedMigrationHostReference(name: S
 
 private fun EntryMigrationBoundarySource.isMigrationAuthorityGuardedPath(): Boolean {
     return relativePath.startsWith("app/src/main/") ||
-        relativePath.startsWith("data/src/main/") ||
-        relativePath.startsWith("domain/src/main/") ||
+        relativePath.startsWith("core/data/src/main/") ||
+        relativePath.startsWith("core/domain/src/main/") ||
         relativePath.startsWith(ENTRY_MIGRATION_APPLICATION_API_ROOT)
 }
 
@@ -134,16 +134,16 @@ internal data class EntryMigrationBoundaryFinding(
 )
 
 private const val ENTRY_MIGRATION_APPLICATION_API_ROOT =
-    "entry-interactions/api/src/main/java/mihon/entry/interactions/migration/"
+    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/migration/"
 
 private const val ENTRY_MIGRATION_HOST_API_ROOT =
-    "entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/"
+    "features/entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/"
 
 private const val ENTRY_MIGRATION_IMPLEMENTATION_ROOT =
-    "entry-interactions/src/main/java/mihon/entry/interactions/migration/"
+    "features/entry-interactions/src/main/java/mihon/entry/interactions/migration/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
+    "features/entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
 
 private const val LEGACY_MIGRATION_USE_CASE_PATH =
     "app/src/main/java/mihon/domain/migration/usecases/MigrateEntryUseCase.kt"

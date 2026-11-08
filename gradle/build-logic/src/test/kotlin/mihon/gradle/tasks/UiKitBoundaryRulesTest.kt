@@ -9,7 +9,7 @@ class UiKitBoundaryRulesTest {
     @Test
     fun `each styling decision made outside the kit is reported on its line`() {
         val findings = check(
-            "tts/ui/src/main/java/Screen.kt",
+            "features/tts/ui/src/main/java/Screen.kt",
             """
             import androidx.compose.material3.Text
             import androidx.compose.ui.window.Dialog
@@ -33,8 +33,8 @@ class UiKitBoundaryRulesTest {
     @Test
     fun `the kit, generated icons, tests, comments and strings are not checked`() {
         val violation = "import androidx.compose.ui.unit.dp\nval a = 12.dp"
-        val findings = check("presentation-core/src/main/java/Kit.kt", violation) +
-            check("icons/material-symbols/src/main/java/Icon.kt", violation) +
+        val findings = check("core/presentation-core/src/main/java/Kit.kt", violation) +
+            check("core/icons/material-symbols/src/main/java/Icon.kt", violation) +
             check("app/src/test/java/ScreenTest.kt", violation) +
             check(
                 "app/src/main/java/Screen.kt",
@@ -54,13 +54,13 @@ class UiKitBoundaryRulesTest {
         val findings = checkUiKitBoundaries(
             kotlinSources = emptyList(),
             buildScripts = listOf(
-                UiKitBoundarySource("presentation-core/build.gradle.kts", dependency),
-                UiKitBoundarySource("translation/ui/build.gradle.kts", dependency),
+                UiKitBoundarySource("core/presentation-core/build.gradle.kts", dependency),
+                UiKitBoundarySource("features/translation/ui/build.gradle.kts", dependency),
             ),
         )
 
         assertEquals(listOf(1, 2, 3), findings.map { it.lineNumber })
-        assertEquals(setOf("translation/ui/build.gradle.kts"), findings.map { it.relativePath }.toSet())
+        assertEquals(setOf("features/translation/ui/build.gradle.kts"), findings.map { it.relativePath }.toSet())
     }
 
     @Test
@@ -95,7 +95,8 @@ class UiKitBoundaryRulesTest {
             androidx.compose.foundation.pager.VerticalPager(state) {}
         """.trimIndent()
         val screen = "app-ui/src/commonMain/kotlin/Screen.kt"
-        val findings = check(screen, pagers) + check("entry-interactions/manga/src/commonMain/kotlin/Reader.kt", pagers)
+        val findings =
+            check(screen, pagers) + check("features/entry-interactions/manga/src/commonMain/kotlin/Reader.kt", pagers)
 
         assertEquals(listOf(screen to 1, screen to 4), findings.map { it.relativePath to it.lineNumber })
     }

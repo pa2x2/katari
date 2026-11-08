@@ -11,10 +11,10 @@ on:
       - '**'
       - '!**.md'
       - '!fastlane/**'
-      - '!i18n/src/commonMain/moko-resources/**/strings.xml'
-      - '!i18n/src/commonMain/moko-resources/**/plurals.xml'
-      - 'i18n/src/commonMain/moko-resources/base/strings.xml'
-      - 'i18n/src/commonMain/moko-resources/base/plurals.xml'
+      - '!core/i18n/src/commonMain/moko-resources/**/strings.xml'
+      - '!core/i18n/src/commonMain/moko-resources/**/plurals.xml'
+      - 'core/i18n/src/commonMain/moko-resources/base/strings.xml'
+      - 'core/i18n/src/commonMain/moko-resources/base/plurals.xml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

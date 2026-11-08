@@ -59,19 +59,19 @@ dependencies {
     extensionAbiChecker(libs.japicmp)
     extensionLinkedLibraries(libs.nanohttpd)
 
-    desktopExtensionHost(projects.aniyomiSourceApi)
-    desktopExtensionHost(projects.bookApi)
+    desktopExtensionHost(projects.sources.aniyomiSourceApi)
+    desktopExtensionHost(projects.sources.bookApi)
     desktopExtensionHost(projects.core.common)
-    desktopExtensionHost(projects.entrySourceApi)
-    desktopExtensionHost(projects.extensionRuntime.androidCompat)
-    desktopExtensionHost(projects.sourceApi)
+    desktopExtensionHost(projects.sources.entrySourceApi)
+    desktopExtensionHost(projects.sources.extensionRuntime.androidCompat)
+    desktopExtensionHost(projects.sources.sourceApi)
 
     // What indexPlatformApis reads: each app's libraries, and the Android API's desktop stand-ins.
     "platformApiDesktop"(projects.desktop)
     // JCEF, which desktop code compiles against and the JetBrains Runtime carries, so no library of the app has it
     "platformApiDesktop"(libs.jcef)
     "platformApiAndroid"(projects.app)
-    "platformApiAndroidStandIns"(projects.extensionRuntime.androidCompat)
+    "platformApiAndroidStandIns"(projects.sources.extensionRuntime.androidCompat)
 }
 
 plugins {
@@ -97,19 +97,19 @@ plugins {
 val buildLogic: IncludedBuild = gradle.includedBuild("build-logic")
 
 val legacySourceApiJar = layout.projectDirectory.file(
-    "source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+    "sources/source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val coreCommonJar = layout.projectDirectory.file(
     "core/common/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val aniyomiSourceApiJar = layout.projectDirectory.file(
-    "aniyomi-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+    "sources/aniyomi-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val entrySourceApiJar = layout.projectDirectory.file(
-    "entry-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+    "sources/entry-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val bookApiJar = layout.projectDirectory.file(
-    "book-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+    "sources/book-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 
 val extensionAbiChecks = mutableListOf<TaskProvider<ExtensionAbiCheckTask>>()
@@ -165,21 +165,21 @@ val injectedJavaScriptEngineChanges = listOf(
 
 val verifyLegacySourceAbi16 = registerExtensionAbiCheck(
     taskName = "verifyLegacySourceAbi16",
-    baseline = "source-api/abi/upstream-mihon-source-api-1.6",
+    baseline = "sources/source-api/abi/upstream-mihon-source-api-1.6",
     baselineLabel = "original upstream Mihon 1.6",
     expectedSha256Value = "2204a07ed2e89bcee8fac8808269808a00d629880bd8c5b720ad75c7c7901d90",
     currentJarFiles = listOf(legacySourceApiJar),
-    buildTasks = listOf(":source-api:assemble"),
+    buildTasks = listOf(":sources:source-api:assemble"),
     includedElements = listOf("eu.kanade.tachiyomi.source.*"),
     excludedElements = legacySourceExcludes,
 )
 val verifyKeiyoushiSourceAbi16 = registerExtensionAbiCheck(
     taskName = "verifyKeiyoushiSourceAbi16",
-    baseline = "source-api/abi/keiyoushi-extensions-lib-1.6-6e0c96cea8",
+    baseline = "sources/source-api/abi/keiyoushi-extensions-lib-1.6-6e0c96cea8",
     baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
     expectedSha256Value = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
     currentJarFiles = listOf(legacySourceApiJar, coreCommonJar),
-    buildTasks = listOf(":source-api:assemble", ":core:common:syncAndroidMainLibJars"),
+    buildTasks = listOf(":sources:source-api:assemble", ":core:common:syncAndroidMainLibJars"),
     includedElements = listOf(
         "eu.kanade.tachiyomi.source.*",
         "eu.kanade.tachiyomi.network.*",
@@ -211,14 +211,14 @@ fun registerAniyomiSourceAbiCheck(
     additionalCompatibleChanges: List<String> = emptyList(),
 ) = registerExtensionAbiCheck(
     taskName = taskName,
-    baseline = "aniyomi-source-api/abi/$baseline",
+    baseline = "sources/aniyomi-source-api/abi/$baseline",
     baselineLabel = baselineLabel,
     expectedSha256Value = expectedSha256Value,
     currentJarFiles = listOf(aniyomiSourceApiJar, coreCommonJar, legacySourceApiJar),
     buildTasks = listOf(
-        ":aniyomi-source-api:syncAndroidMainLibJars",
+        ":sources:aniyomi-source-api:syncAndroidMainLibJars",
         ":core:common:syncAndroidMainLibJars",
-        ":source-api:assemble",
+        ":sources:source-api:assemble",
     ),
     includedElements = listOf(
         "eu.kanade.tachiyomi.animesource.*",
@@ -286,13 +286,13 @@ fun registerEntrySdkAbiCheck(
     includedElements: List<String>,
 ) = registerExtensionAbiCheck(
     taskName = taskName,
-    baseline = "entry-source-api/abi/$baseline",
+    baseline = "sources/entry-source-api/abi/$baseline",
     baselineLabel = baselineLabel,
     expectedSha256Value = expectedSha256Value,
     currentJarFiles = listOf(entrySourceApiJar, bookApiJar, coreCommonJar),
     buildTasks = listOf(
-        ":entry-source-api:syncAndroidMainLibJars",
-        ":book-api:syncAndroidMainLibJars",
+        ":sources:entry-source-api:syncAndroidMainLibJars",
+        ":sources:book-api:syncAndroidMainLibJars",
         ":core:common:syncAndroidMainLibJars",
     ),
     includedElements = includedElements,
@@ -339,7 +339,7 @@ tasks.register("verifyLegacySourceAbi") {
     dependsOn(
         verifyLegacySourceAbi16,
         verifyKeiyoushiSourceAbi16,
-        ":source-compat:testAndroidHostTest",
+        ":sources:source-compat:testAndroidHostTest",
     )
 }
 
@@ -393,8 +393,8 @@ tasks.register("publishEntrySdkToMavenLocal") {
     description = "Publishes every Entry SDK artifact with the same version to Maven Local"
     dependsOn(
         ":core:common:publishToMavenLocal",
-        ":book-api:publishToMavenLocal",
-        ":entry-source-api:publishToMavenLocal",
+        ":sources:book-api:publishToMavenLocal",
+        ":sources:entry-source-api:publishToMavenLocal",
     )
 }
 

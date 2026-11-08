@@ -31,9 +31,9 @@ class EntryInteractionBoundaryCheckTaskTest {
                 }
 
                 dependencies {
-                    implementation(projects.entryInteractions)
-                    implementation(projects.entryInteractions.manga)
-                    implementation(projects.entryInteractions.spi)
+                    implementation(projects.features.entryInteractions)
+                    implementation(projects.features.entryInteractions.manga)
+                    implementation(projects.features.entryInteractions.spi)
                 }
             """.trimIndent(),
             additionalFiles = mapOf(
@@ -43,8 +43,8 @@ class EntryInteractionBoundaryCheckTaskTest {
                     }
 
                     dependencies {
-                        implementation(projects.entryInteractions)
-                        implementation(projects.entryInteractions.api)
+                        implementation(projects.features.entryInteractions)
+                        implementation(projects.features.entryInteractions.api)
                     }
                 """.trimIndent(),
             ),
@@ -53,10 +53,10 @@ class EntryInteractionBoundaryCheckTaskTest {
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
         error.message shouldContain "app/build.gradle.kts:7: app must consume Entry features through " +
-            "projects.entryInteractions, not: projects.entryInteractions.manga"
+            "projects.features.entryInteractions, not: projects.features.entryInteractions.manga"
         error.message shouldContain "app/build.gradle.kts:8"
         error.message shouldContain "desktop/build.gradle.kts:7: desktop must consume Entry features through " +
-            "projects.entryInteractions, not: projects.entryInteractions.api"
+            "projects.features.entryInteractions, not: projects.features.entryInteractions.api"
     }
 
     @Test
@@ -81,12 +81,12 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `multiplatform modules stay checked and findings name the real file`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "domain/src/commonMain/kotlin/domain/Feature.kt" to """
+                "core/domain/src/commonMain/kotlin/domain/Feature.kt" to """
                     package domain
 
                     expect class Feature
                 """,
-                "domain/src/androidMain/kotlin/domain/Feature.kt" to """
+                "core/domain/src/androidMain/kotlin/domain/Feature.kt" to """
                     package domain
 
                     import mihon.entry.interactions.manga.MangaOpenProcessor
@@ -98,7 +98,7 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
-        error.message shouldContain "domain/src/androidMain/kotlin/domain/Feature.kt"
+        error.message shouldContain "core/domain/src/androidMain/kotlin/domain/Feature.kt"
         error.message shouldContain "direct import across Entry interaction boundary"
     }
 
@@ -106,7 +106,7 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `multiplatform type modules and the root module's shared code stay checked`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
+                "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
                     "MangaConsumptionProcessor.kt" to """
                         package mihon.entry.interactions.manga.state
 
@@ -114,7 +114,8 @@ class EntryInteractionBoundaryCheckTaskTest {
 
                         class MangaConsumptionProcessor : EntryOpenProcessor
                     """,
-                "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/EntryConsumption.kt" to """
+                "features/entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/" +
+                    "EntryConsumption.kt" to """
                     package mihon.entry.interactions.state
 
                     import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
@@ -127,9 +128,10 @@ class EntryInteractionBoundaryCheckTaskTest {
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
         error.message shouldContain
-            "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
+            "features/entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
             "MangaConsumptionProcessor.kt:5: type-module processor must remain internal: MangaConsumptionProcessor"
-        error.message shouldContain "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/" +
+        error.message shouldContain
+            "features/entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/" +
             "EntryConsumption.kt:3: root Entry interactions must not import manga type-module symbols"
     }
 
@@ -137,8 +139,9 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `a type module whose sources the check doesn't read fails`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "entry-interactions/comic/build.gradle.kts" to "",
-                "entry-interactions/comic/src/jvmMain/kotlin/mihon/entry/interactions/comic/ComicOpenProcessor.kt" to
+                "features/entry-interactions/comic/build.gradle.kts" to "",
+                "features/entry-interactions/comic/src/jvmMain/kotlin/mihon/entry/interactions/comic/" +
+                    "ComicOpenProcessor.kt" to
                     """
                     package mihon.entry.interactions.comic
 
@@ -149,7 +152,8 @@ class EntryInteractionBoundaryCheckTaskTest {
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
-        error.message shouldContain "entry-interactions/comic: type module has none of the source roots the check reads"
+        error.message shouldContain
+            "features/entry-interactions/comic: type module has none of the source roots the check reads"
     }
 
     @Test
@@ -198,7 +202,8 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `type module public api parser ignores class literals in annotations`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/download/DownloadCache.kt" to
+                "features/entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/download/" +
+                    "DownloadCache.kt" to
                     """
                         package mihon.entry.interactions.manga.download
 
@@ -221,14 +226,14 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `unrelated feature and application api cannot borrow Migration host ports`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/" +
+                "features/entry-interactions/api/src/main/java/mihon/entry/interactions/migration/host/" +
                     "EntryMigrationPreparationHost.kt" to
                     """
                         package mihon.entry.interactions.host
 
                         interface EntryMigrationPreparationHost
                     """.trimIndent(),
-                "entry-interactions/src/main/java/mihon/entry/interactions/download/EntryDownloadFeature.kt" to
+                "features/entry-interactions/src/main/java/mihon/entry/interactions/download/EntryDownloadFeature.kt" to
                     """
                         package mihon.entry.interactions
 
@@ -247,7 +252,7 @@ class EntryInteractionBoundaryCheckTaskTest {
     fun `Merge implementation cannot use ambient profile authority or concrete type gates`() {
         createBaseFixture(
             additionalFiles = mapOf(
-                "entry-interactions/src/main/java/mihon/entry/interactions/merge/EntryMergeCoordinator.kt" to
+                "features/entry-interactions/src/main/java/mihon/entry/interactions/merge/EntryMergeCoordinator.kt" to
                     """
                         package mihon.entry.interactions
 
@@ -275,12 +280,12 @@ class EntryInteractionBoundaryCheckTaskTest {
             }
 
             dependencies {
-                implementation(projects.entryInteractions)
+                implementation(projects.features.entryInteractions)
             }
         """.trimIndent(),
         mangaBuildGradle: String = """
             dependencies {
-                implementation(projects.entryInteractions.spi)
+                implementation(projects.features.entryInteractions.spi)
             }
         """.trimIndent(),
         mangaProcessorSource: String = """
@@ -298,7 +303,7 @@ class EntryInteractionBoundaryCheckTaskTest {
         additionalFiles: Map<String, String> = emptyMap(),
     ) {
         write(
-            "entry-interactions/spi/src/main/java/mihon/entry/interactions/runtime/EntryInteractions.kt",
+            "features/entry-interactions/spi/src/main/java/mihon/entry/interactions/runtime/EntryInteractions.kt",
             """
                 package mihon.entry.interactions
 
@@ -310,11 +315,11 @@ class EntryInteractionBoundaryCheckTaskTest {
             """.trimIndent(),
         )
         write(
-            "entry-interactions/manga/build.gradle.kts",
+            "features/entry-interactions/manga/build.gradle.kts",
             mangaBuildGradle,
         )
         write(
-            "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/MangaOpenProcessor.kt",
+            "features/entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/MangaOpenProcessor.kt",
             mangaProcessorSource,
         )
         write(
