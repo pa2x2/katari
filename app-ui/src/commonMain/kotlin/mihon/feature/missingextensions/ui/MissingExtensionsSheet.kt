@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,7 +55,7 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
     val systemPackages = remember { graph.extensionSystemPackages }
     val context = currentPlatformContext()
     val permissionMissing = systemPackages.isInstallPermissionMissing()
-    var trusting by remember { mutableStateOf<MissingExtension?>(null) }
+    var trustingKey by rememberSaveable { mutableStateOf<String?>(null) }
 
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -65,7 +66,7 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
                 if (current.untrusted.isNotEmpty()) {
                     item(key = "untrusted") { RowGroupHeader(stringResource(MR.strings.missing_extensions_untrusted)) }
                     rowGroupItems(current.untrusted, key = { "untrusted-${it.key}" }) { extension ->
-                        UntrustedRow(extension, current, onTrust = { trusting = extension })
+                        UntrustedRow(extension, current, onTrust = { trustingKey = extension.key })
                     }
                 }
                 if (current.installable.isNotEmpty()) {
@@ -111,17 +112,17 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
             )
         }
     }
-    trusting?.let { extension ->
+    state?.untrusted?.find { it.key == trustingKey }?.let { extension ->
         ExtensionTrustDialog(
             onClickConfirm = {
                 model.trust(extension)
-                trusting = null
+                trustingKey = null
             },
             onClickDismiss = {
                 model.uninstall(extension)
-                trusting = null
+                trustingKey = null
             },
-            onDismissRequest = { trusting = null },
+            onDismissRequest = { trustingKey = null },
         )
     }
 }
