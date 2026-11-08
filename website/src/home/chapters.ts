@@ -1,5 +1,5 @@
 /**
- * What the home page tells, in order: three chapters of features, each with its copy and screenshots. The components
+ * What the home page tells, in order: four chapters of features, each with its copy and screenshots. The components
  * in this directory only lay it out.
  */
 import type { ImageMetadata } from "astro";
@@ -23,9 +23,10 @@ import translationBefore from "../captures/translation-before.png";
 import translationPopup from "../captures/translation-popup.png";
 import translator from "../captures/translator.png";
 import updates from "../captures/updates.png";
+import { type CaptureImage, PHONE_ASPECT, plannedCapture, WINDOW_ASPECT } from "../media/planned-captures.ts";
 
 export type Shot =
-  | { kind: "still"; image: ImageMetadata; alt: string; caption: string; landscape?: boolean }
+  | { kind: "still"; image: CaptureImage; alt: string; caption: string; landscape?: boolean }
   | { kind: "compare"; before: ImageMetadata; after: ImageMetadata; beforeLabel: string; afterLabel: string; alt: string; caption: string }
   | { kind: "clip"; src: string; poster: ImageMetadata; label: string; caption: string };
 
@@ -40,6 +41,8 @@ export interface Feature {
   docs: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
+  /** Beside the text, the landscape shot stands behind and the upright ones in front of its lower edge. */
+  scene?: boolean;
 }
 
 export interface Chapter {
@@ -183,6 +186,53 @@ export const chapters: Chapter[] = [
         shots: [
           { kind: "clip", src: recapClip, poster: recapTop, label: "The year's recap playing as a story, page by page", caption: "The recap plays as a story" },
           { kind: "still", image: recapShare, alt: "The year's recap as a picture to share", caption: "Shared as a picture" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "everywhere",
+    numeral: "四",
+    title: "Everywhere",
+    intro: "One library on all your devices.",
+    features: [
+      {
+        id: "sync",
+        docs: ["docs/sync/", "docs/sync-server/"],
+        title: "Your library on every device",
+        text: "Your library, progress and history stay the same across your devices, through a server you run yourself.",
+        highlights: [
+          "Every device keeps its whole library and works offline",
+          "Pick up on one device where you stopped on another",
+          "Link a new device by scanning a code",
+        ],
+        scene: true,
+        shots: [
+          {
+            kind: "still",
+            image: plannedCapture("sync-desktop.png", WINDOW_ASPECT),
+            alt: "The same library in Katari for Linux",
+            caption: "The same library on Linux",
+            landscape: true,
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-page.png", PHONE_ASPECT),
+            alt: "The Sync page listing the account's devices",
+            caption: "The Sync page",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-link-code.png", PHONE_ASPECT),
+            alt: "Link a device showing a code to scan",
+            caption: "Link a device",
+          },
+          {
+            kind: "still",
+            image: plannedCapture("sync-handoff.png", PHONE_ASPECT),
+            alt: "The reader offering to go where another device got to",
+            caption: "Pick up where you stopped",
+          },
         ],
       },
     ],
