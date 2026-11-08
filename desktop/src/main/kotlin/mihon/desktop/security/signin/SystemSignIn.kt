@@ -4,9 +4,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.desktop.application.thisProcessLaunch
 import mihon.desktop.security.pam.findPamService
@@ -48,29 +49,34 @@ class SystemSignIn {
     }
 }
 
-/** One check of the sign-in: what the system says and asks, the answers to its questions, and a way to stop it. */
+/** One check of the sign-in: what the system says and asks, and the answers to its questions. */
 class SignInCheckRun internal constructor(private val process: Process) {
     private val answers = DataOutputStream(process.outputStream)
 
     /**
      * What the system says and asks, ending with [SignInCheckEvent.Finished]; a check that ends without telling how
-     * it went finishes as [SignInOutcome.Failed]. Collected once.
+     * it went finishes as [SignInOutcome.Failed]. Collected once; when the collection stops early, the check stops,
+     * since reading the process's output blocks until it ends.
      */
-    val events: Flow<SignInCheckEvent> = flow {
-        val input = DataInputStream(process.inputStream)
-        while (true) {
-            val event = try {
-                SignInCheckProtocol.readEvent(input)
-            } catch (_: EOFException) {
-                SignInCheckEvent.Finished(SignInOutcome.Failed)
-            } catch (e: IOException) {
-                logcat(LogPriority.WARN, e) { "The sign-in check stopped talking" }
-                SignInCheckEvent.Finished(SignInOutcome.Failed)
+    val events: Flow<SignInCheckEvent> = channelFlow {
+        launch(Dispatchers.IO) {
+            val input = DataInputStream(process.inputStream)
+            while (true) {
+                val event = try {
+                    SignInCheckProtocol.readEvent(input)
+                } catch (_: EOFException) {
+                    SignInCheckEvent.Finished(SignInOutcome.Failed)
+                } catch (e: IOException) {
+                    logcat(LogPriority.WARN, e) { "The sign-in check stopped talking" }
+                    SignInCheckEvent.Finished(SignInOutcome.Failed)
+                }
+                send(event)
+                if (event is SignInCheckEvent.Finished) break
             }
-            emit(event)
-            if (event is SignInCheckEvent.Finished) break
+            close()
         }
-    }.flowOn(Dispatchers.IO)
+        awaitClose(::cancel)
+    }
 
     /** Answers the question the system asked last. */
     fun answer(text: String) {
@@ -82,7 +88,7 @@ class SignInCheckRun internal constructor(private val process: Process) {
     }
 
     /** Stops the check without answering it, so the system counts no try. */
-    fun cancel() {
+    private fun cancel() {
         process.destroyForcibly()
     }
 }

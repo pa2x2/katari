@@ -103,7 +103,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
     runWindow(graph, laterLaunches = instance.requests) {
-        HomeWindowContent(startup, graph.homeDestinations) { navigator ->
+        HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
             DesktopAppUpdatePrompt(graph.appUpdateController, graph.onboardingPreferences)
         }

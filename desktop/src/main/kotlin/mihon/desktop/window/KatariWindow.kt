@@ -23,6 +23,7 @@ import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
 import mihon.desktop.extension.dialog.ExtensionDialogsHost
+import mihon.desktop.security.signin.SignInPromptHost
 import mihon.desktop.work.WorkCloseGuardDialog
 import mihon.presentation.kit.files.LocalSystemFileChooser
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
@@ -141,6 +142,7 @@ private fun WindowContent(
                     InterfaceSizeShortcuts(graph.interfaceSizePreferences)
                     Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(shortcuts, backInput)) { content() }
                     ExtensionDialogsHost(graph.windowExtensionDialogs)
+                    SignInPromptHost(graph.signInPrompts, graph.systemSignIn)
                     WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
                 }
             }

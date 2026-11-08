@@ -1035,6 +1035,16 @@
     <string name="secure_screen">Secure screen</string>
     <string name="secure_screen_summary">Secure screen hides app contents when switching apps and block screenshots</string>
     <string name="firebase_summary">Sending crash logs and analytics will allow us to identify and fix issues, improve performance, and make future updates more relevant to your needs</string>
+    <string name="sign_in_check_line">Enter the password you use to sign in to this computer as %1$s.</string>
+    <string name="sign_in_check_waiting">You can type your password once the reader stops waiting.</string>
+    <string name="sign_in_check_refused">Wrong password. Too many wrong tries can lock your account on this computer for a while.</string>
+    <string name="sign_in_check_failed">Katari couldn\'t check your sign-in on this computer.</string>
+    <string name="sign_in_check_checking">Checking…</string>
+    <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
+    <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
+    <string name="profile_lock_unavailable">Profile lock isn\'t available</string>
+    <string name="profile_lock_unavailable_summary">Katari can\'t check your sign-in on this computer.</string>
+    <string name="profile_locked_cant_check">%1$s is locked, and Katari can\'t check your sign-in on this computer.</string>
 
     <string name="pref_category_extensions">Extensions</string>
     <string name="pref_allowed_content_warnings">Allowed content warnings</string>
