@@ -250,8 +250,7 @@ class MainActivity : BaseActivity() {
             startupProfiles = startupSnapshot.visibleProfiles
             setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
 
-            val requiresProfileUnlock =
-                initialProfile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+            val requiresProfileUnlock = initialProfile?.let { startupProfileRequiresAuthNow(it.id) } == true
             val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
             val startupDecision = resolveInitialStartupGateDecision(
                 shouldShowPicker = startupSnapshot.shouldShowPicker,
@@ -278,8 +277,7 @@ class MainActivity : BaseActivity() {
                 gateProfiles.size == 1
             ) {
                 val profile = activeProfile ?: gateProfiles.firstOrNull()
-                val requiresProfileUnlock =
-                    profile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+                val requiresProfileUnlock = profile?.let { startupProfileRequiresAuthNow(it.id) } == true
                 val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
                 val startupDecision = resolvePickerCollapseStartupGateDecision(
                     profile = profile,
@@ -347,7 +345,7 @@ class MainActivity : BaseActivity() {
                 isLocked = { profileManager.profileRequiresUnlock(it.id) },
                 authProfileName = pendingAuthProfile?.name,
                 onProfileSelected = { profile ->
-                    if (profileManager.profileRequiresUnlock(profile.id)) {
+                    if (startupProfileRequiresAuthNow(profile.id)) {
                         pendingSelectedProfileId = profile.id
                         pendingAuthProfileId = profile.id
                         startupGateState = ProfileStartupGateState.Authenticating
@@ -639,6 +637,18 @@ class MainActivity : BaseActivity() {
             title = this.stringResource(MR.strings.unlock_app_title, profile.name),
             subtitle = null,
         )
+    }
+
+    /**
+     * Whether opening [profileId] at start must authenticate now, decided as the in-app profile switch decides it: the
+     * open profile while the app lock holds it, any other once its own "Lock when idle" delay has run out.
+     */
+    private fun startupProfileRequiresAuthNow(profileId: Long): Boolean {
+        return if (profileId == profileManager.activeProfileId) {
+            profileManager.profileRequiresUnlock(profileId) && SecureActivityDelegate.requireUnlock
+        } else {
+            profileManager.profileRequiresAuthNow(profileId)
+        }
     }
 
     private fun shouldSkipStartupProfileAuth(): Boolean {
