@@ -49,7 +49,7 @@ internal fun linkedPreferences(
         add(Preference.PreferenceItem.InfoPreference(pluralStringResource(MR.plurals.sync_held_aside, count, count)))
     }
     // The server no longer knows this device's sign-in, so it has no devices to list or link until it signs in again
-    if (link.stopped != SyncStop.SIGN_IN_AGAIN) {
+    if (link.stopped != SyncStop.SIGN_IN_AGAIN && link.stopped != SyncStop.SERVER_RESET) {
         val reachable = status.activity !is SyncStatus.Activity.Unreachable &&
             status.activity != SyncStatus.Activity.Offline
         add(devicesGroup(devices, reachable, actions))
@@ -148,17 +148,27 @@ private fun attentionRows(
             )
         }
     }
+    val signInAgain = { actions.signIn(link.server.shownAddress, link.accountName) }
     return when (headline) {
         SyncHeadline.ChoicesWaiting ->
             listOf(row(stringResource(MR.strings.sync_action_continue_choosing), actions.openChoices))
         is SyncHeadline.Questions ->
             listOf(row(stringResource(MR.strings.sync_action_answer_questions), actions.openQuestions))
-        SyncHeadline.SignInAgain ->
+        SyncHeadline.SignInAgain -> listOf(row(stringResource(MR.strings.sync_action_sign_in_again), signInAgain))
+        // Signing in tells the person how to make the account again, and says so again if they haven't yet
+        SyncHeadline.ServerReset -> {
+            val title = stringResource(MR.strings.sync_action_set_up_again)
             listOf(
-                row(stringResource(MR.strings.sync_action_sign_in_again)) {
-                    actions.signIn(link.server.shownAddress, link.accountName)
+                Preference.PreferenceItem.CustomPreference(title = title) {
+                    TextPreferenceWidget(
+                        title = title,
+                        subtitle = stringResource(MR.strings.sync_server_reset_text),
+                        icon = MaterialSymbols.Rounded.Dns,
+                        onPreferenceClick = signInAgain,
+                    )
                 },
             )
+        }
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
         )

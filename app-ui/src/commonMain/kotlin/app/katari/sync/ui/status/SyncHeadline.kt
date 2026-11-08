@@ -18,6 +18,9 @@ sealed interface SyncHeadline {
 
     data object SignInAgain : SyncHeadline
 
+    /** The server started over and its accounts are gone: one is made again there before signing in (D022). */
+    data object ServerReset : SyncHeadline
+
     data object AppTooOld : SyncHeadline
 
     data class ServerTooOld(val server: String) : SyncHeadline
@@ -69,8 +72,8 @@ sealed interface SyncHeadline {
     /** Whether this is trouble the person should notice: shown in colour and as a warning in the Library toolbar. */
     val needsAttention: Boolean
         get() = when (this) {
-            is Removed, is AccountDisabled, SignInAgain, AppTooOld, is ServerTooOld, ChoicesWaiting, is Questions,
-            is UnreachableLong, is Failed,
+            is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,
+            is Questions, is UnreachableLong, is Failed,
             -> true
             else -> false
         }
@@ -89,6 +92,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     val server = link.server.host
     when (link.stopped) {
         SyncStop.SIGN_IN_AGAIN -> return SyncHeadline.SignInAgain
+        SyncStop.SERVER_RESET -> return SyncHeadline.ServerReset
         SyncStop.APP_TOO_OLD -> return SyncHeadline.AppTooOld
         SyncStop.SERVER_TOO_OLD -> return SyncHeadline.ServerTooOld(server)
         SyncStop.REMOVED -> return SyncHeadline.Removed(server)

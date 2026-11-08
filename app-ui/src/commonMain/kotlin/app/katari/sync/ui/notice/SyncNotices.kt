@@ -72,7 +72,7 @@ class SyncNotices(
     // The stops the person has to act on; an app or server too old for the other resolves with an update
     private fun SyncStatus.Link.toldStop(): SyncStop? = when (this) {
         is SyncStatus.Link.Ended -> reason
-        is SyncStatus.Link.Linked -> stopped?.takeIf { it == SyncStop.SIGN_IN_AGAIN }
+        is SyncStatus.Link.Linked -> stopped?.takeIf { it == SyncStop.SIGN_IN_AGAIN || it == SyncStop.SERVER_RESET }
         SyncStatus.Link.NotSetUp -> null
     }
 

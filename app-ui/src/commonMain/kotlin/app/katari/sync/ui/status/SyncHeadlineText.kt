@@ -27,6 +27,7 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     is SyncHeadline.AccountDisabled ->
         stringResource(MR.strings.sync_status_account_disabled, headline.server.orEmpty())
     SyncHeadline.SignInAgain -> stringResource(MR.strings.sync_status_sign_in_again)
+    SyncHeadline.ServerReset -> stringResource(MR.strings.sync_status_server_reset)
     SyncHeadline.AppTooOld -> stringResource(MR.strings.sync_status_app_too_old)
     is SyncHeadline.ServerTooOld -> stringResource(MR.strings.sync_status_server_too_old, headline.server)
     SyncHeadline.ChoicesWaiting -> stringResource(MR.strings.sync_status_choices)
@@ -100,8 +101,8 @@ private fun stepText(step: SyncStep): String {
 fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
     -> ContentTone.Error
-    SyncHeadline.SignInAgain, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld, SyncHeadline.ChoicesWaiting,
-    is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
+    SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
+    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
     SyncHeadline.FirstDownloadWaitsForWifi,
     -> ContentTone.Warning
     is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
@@ -112,7 +113,7 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
 /** Whether sync is stopped until the person, an update or time does something, which the status card's icon marks. */
 fun SyncHeadline.stopsSync(): Boolean = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, SyncHeadline.SignInAgain,
-    SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
+    SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
     -> true
     else -> false
 }
@@ -120,8 +121,8 @@ fun SyncHeadline.stopsSync(): Boolean = when (this) {
 fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase
-    SyncHeadline.SignInAgain, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld, SyncHeadline.ChoicesWaiting,
-    is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Failed,
+    SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
+    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Failed,
     -> MaterialSymbols.Rounded.SyncProblem
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff

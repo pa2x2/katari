@@ -3235,6 +3235,7 @@
     <!-- %1$s is the server's address -->
     <string name="sync_status_account_disabled">Your account on %1$s was disabled</string>
     <string name="sync_status_sign_in_again">Sign in again to keep syncing</string>
+    <string name="sync_status_server_reset">Your sync server was reset</string>
     <string name="sync_status_app_too_old">Update Katari to keep syncing</string>
     <!-- %1$s is the server's address -->
     <string name="sync_status_server_too_old">%1$s needs a server update</string>
@@ -3280,6 +3281,8 @@
     <string name="sync_server_plain_http_refused">Plain http:// works only for addresses on your local network. Use the server\'s https:// address.</string>
     <!-- %1$s is the server's address -->
     <string name="sync_server_needs_setup">This server has no accounts yet. Open %1$s in a browser to create the admin account, then sign in here.</string>
+    <!-- %1$s is the server's address -->
+    <string name="sync_server_reset_needs_setup">This server was reset and has no accounts. Open %1$s in a browser to create the admin account again, then sign in here. This device still has your library.</string>
     <string name="sync_server_malformed">That isn\'t a server address.</string>
     <string name="sync_server_unreachable">Can\'t reach this server. Check the address and your connection.</string>
     <string name="sync_server_not_sync">Something answered at this address, but it isn\'t a Katari sync server.</string>
@@ -3372,6 +3375,8 @@
     <!-- %1$s is the server's address -->
     <string name="sync_ended_text">It no longer syncs with %1$s. Everything stays on this device, which works on its own again.</string>
     <string name="sync_action_sign_in_again">Sign in again</string>
+    <string name="sync_action_set_up_again">Set it up again</string>
+    <string name="sync_server_reset_text">It has no accounts now. This device still has your library and fills the server in again.</string>
     <string name="sync_action_continue_choosing">Continue setting up</string>
     <string name="sync_action_answer_questions">Review and answer</string>
 
@@ -3430,6 +3435,7 @@
     <string name="sync_notification_account_disabled">Your sync account was disabled</string>
     <string name="sync_notification_sign_in_again">Sign in to sync again</string>
     <string name="sync_notification_ended_text">Everything stays on this device. Open Sync to sign in again.</string>
+    <string name="sync_notification_reset_text">Everything stays on this device. Open Sync to set the server up again.</string>
 
     <!-- Sync: restoring a backup on a synced device -->
     <string name="sync_restore_reach">How far the restore reaches</string>

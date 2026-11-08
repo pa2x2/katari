@@ -71,6 +71,12 @@ enum class SyncStop(internal val stored: String) {
      */
     SIGN_IN_AGAIN("sign-in-again"),
 
+    /**
+     * As [SIGN_IN_AGAIN], from a server whose storage started over (another instance), such as one replaced by an
+     * empty one: the account the device signed in to is gone and is made again on the server before signing in (D022).
+     */
+    SERVER_RESET("server-reset"),
+
     /** Removed from the account on another device or the web page; standalone again. */
     REMOVED("removed"),
 

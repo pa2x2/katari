@@ -13,8 +13,10 @@ import tachiyomi.i18n.localized.pluralStringResource
 import tachiyomi.i18n.localized.stringResource
 import tachiyomi.i18n.sync_account_disabled_title
 import tachiyomi.i18n.sync_ended_text
+import tachiyomi.i18n.sync_notification_reset_text
 import tachiyomi.i18n.sync_questions_waiting
 import tachiyomi.i18n.sync_removed_title
+import tachiyomi.i18n.sync_status_server_reset
 import tachiyomi.i18n.sync_status_sign_in_again
 import tachiyomi.i18n.sync_title
 
@@ -38,6 +40,9 @@ class DesktopSyncNotifications(private val notifications: DesktopNotifications) 
         val (title, body) = when (reason) {
             SyncStop.REMOVED -> stringResource(MR.strings.sync_removed_title) to ended
             SyncStop.ACCOUNT_DISABLED -> stringResource(MR.strings.sync_account_disabled_title) to ended
+            SyncStop.SERVER_RESET ->
+                stringResource(MR.strings.sync_status_server_reset) to
+                    stringResource(MR.strings.sync_notification_reset_text)
             else -> stringResource(MR.strings.sync_title) to stringResource(MR.strings.sync_status_sign_in_again)
         }
         notifications.show(

@@ -54,7 +54,7 @@ class ReplacedServerTest {
     }
 
     @Test
-    fun `a new server under the same address asks to sign in again, then takes everything without questions`(): Unit =
+    fun `a new server under the same address says it was reset, then takes everything without questions`(): Unit =
         runBlocking {
             TestSyncServer(directory).use { server ->
                 SyncingTestDevice(directory.resolve("a.db")).use { a ->
@@ -65,7 +65,7 @@ class ReplacedServerTest {
 
                         server.replaceWithEmpty()
                         a.sync() shouldBe SyncOutcome.IDLE
-                        a.connection.state().stopped shouldBe SyncStop.SIGN_IN_AGAIN
+                        a.connection.state().stopped shouldBe SyncStop.SERVER_RESET
                         // Edits go on being captured while it can't sync.
                         a.sql(*showRows("/meanwhile", read = 1))
 

@@ -27,7 +27,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import app.katari.sync.client.account.ServerCheck
+import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.server.shownAddress
+import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.AddressCheck
+import app.katari.sync.ui.status.rememberSyncStatus
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -51,6 +55,7 @@ import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import okhttp3.HttpUrl
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -155,7 +160,7 @@ class SyncSignInScreen(
                         }
                     }
                 }
-                item { AddressNote(check) }
+                item { AddressNote(check, resetServer = rememberResetServer()) }
                 item { RowGroupGap() }
                 item {
                     RowGroupItem(RowGroupPosition.Alone) {
@@ -189,9 +194,12 @@ class SyncSignInScreen(
     }
 }
 
-/** What checking the address found, under the address: a warning, a refusal, or that it is being checked. */
+/**
+ * What checking the address found, under the address: a warning, a refusal, or that it is being checked. An empty
+ * server at [resetServer], the one this device synced with before it was reset, says so (D022).
+ */
 @Composable
-private fun AddressNote(check: AddressCheck) {
+private fun AddressNote(check: AddressCheck, resetServer: HttpUrl?) {
     when (check) {
         AddressCheck.Empty -> Unit
         AddressCheck.Checking -> RowGroupNote(stringResource(MR.strings.sync_server_checking))
@@ -204,7 +212,12 @@ private fun AddressNote(check: AddressCheck) {
                 if (!result.webPage.isHttps) {
                     RowGroupNote(stringResource(MR.strings.sync_server_plain_http_local), tone = ContentTone.Warning)
                 }
-                serverCheckProblemText(result)?.let { RowGroupNote(it, showIcon = true) }
+                val setUp = if (result.webPage == resetServer) {
+                    stringResource(MR.strings.sync_server_reset_needs_setup, result.webPage.shownAddress)
+                } else {
+                    serverCheckProblemText(result)
+                }
+                setUp?.let { RowGroupNote(it, showIcon = true) }
                 RowGroupAction(
                     label = stringResource(MR.strings.action_open_in_browser),
                     onClick = { uriHandler.openUri(result.webPage.toString()) },
@@ -214,6 +227,11 @@ private fun AddressNote(check: AddressCheck) {
         }
     }
 }
+
+/** The server this device synced with, while it waits to sign in again because that server was reset. */
+@Composable
+private fun rememberResetServer(): HttpUrl? =
+    (rememberSyncStatus()?.link as? SyncStatus.Link.Linked)?.takeIf { it.stopped == SyncStop.SERVER_RESET }?.server
 
 @Composable
 private fun CredentialFields(
