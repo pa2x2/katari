@@ -205,6 +205,8 @@ class SyncPass(
         incoming.retryHeld()
         steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
             var sent = 0L
+            // The files records wait for, named while they upload, the records named again once taken
+            val files = steps.progressOf(SyncStep.Kind.UPLOADING_FILES)
             run rounds@{
                 repeat(PUSH_ROUNDS) { round ->
                     settings.flush()
@@ -212,7 +214,7 @@ class SyncPass(
                     drainAll()
                     val total = sent + pending.count()
                     progress(sent, total)
-                    val stale = push.pushAll(client, afterPull = round > 0) { taken ->
+                    val stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
                         sent += taken
                         progress(sent, total)
                     }

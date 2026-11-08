@@ -34,8 +34,17 @@ class PushChanges(
      * A refusal naming no server copy (sequence 0) means the record's last copy was a deletion the server since
      * dropped. On the first push the deletion may not have reached this device yet, which the pull that follows
      * finds out; when it is refused so again after that pull ([afterPull]), the change is pushed as a new record.
+     *
+     * [onTaken] hears how many records the server took. The files a chunk's records wait for can take far longer to
+     * upload than the records themselves, such as a library's custom covers after its server lost them, so
+     * [onFiles] hears how many of them are settled, done of total, while they upload.
      */
-    suspend fun pushAll(client: SyncServerClient, afterPull: Boolean, onTaken: (Int) -> Unit = {}): Boolean {
+    suspend fun pushAll(
+        client: SyncServerClient,
+        afterPull: Boolean,
+        onFiles: (done: Long, total: Long) -> Unit = { _, _ -> },
+        onTaken: (Int) -> Unit = {},
+    ): Boolean {
         var stale = false
         var after = ""
         while (true) {
@@ -44,7 +53,12 @@ class PushChanges(
             val (plain, naming) = chunk.partition { it.files.isEmpty() }
             if (push(client, plain, afterPull, onTaken)) stale = true
             if (naming.isNotEmpty()) {
-                val waiting = uploads.ensure(client, naming.flatMap { it.files })
+                val files = naming.flatMap { it.files }.distinct()
+                var settled = 0L
+                val waiting = uploads.ensure(client, files) { count ->
+                    settled += count
+                    onFiles(settled, files.size.toLong())
+                }
                 if (push(client, naming.filter { it.files.none(waiting::contains) }, afterPull, onTaken)) stale = true
             }
             after = chunk.last().key
