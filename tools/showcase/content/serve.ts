@@ -1,5 +1,5 @@
 /**
- * Serves the folder fetch.ts builds to the emulator, which reaches it at 10.0.2.2, and the files fetch.ts lists in its
+ * Serves the folder fetch.ts builds to the apps, at content-server.ts's address, and the files fetch.ts lists in its
  * `streamed.json` from their upstream sites, a range at a time (streamed-file.ts).
  *
  * Videos are only playable through range requests, which the player uses to seek and to read a container's index at

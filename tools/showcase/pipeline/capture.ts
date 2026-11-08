@@ -14,7 +14,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
-import { EMULATOR_CONTENT_SERVER } from "../content/content-server.ts";
+import { CONTENT_SERVER, CONTENT_SERVER_PORT } from "../content/content-server.ts";
 import { cacheDir } from "../content/download-cache.ts";
 import { profiles } from "../seed/library-plan.ts";
 import { LIBRARY_UPDATED_AT, SHOWCASE_NOW } from "../seed/showcase-clock.ts";
@@ -122,6 +122,8 @@ async function capture(scenes: string[], keep: boolean): Promise<void> {
   const reuse = values["reuse-emulator"];
   const device = reuse ? reusedEmulator() : await timed("booting the emulator", bootShowcaseEmulator);
   try {
+    // The apps reach the content server on the emulator's loopback, as the desktop app reaches it on the host's.
+    device.reversePort(CONTENT_SERVER_PORT);
     if (!reuse) await prepare(device, scenes.some((scene) => TRANSLATION_SCENES.includes(scene)));
     device.shell(`rm -rf ${CAPTURE_DIRECTORY} ${FAILURE_DIRECTORY}`);
     await timed("waiting for the device to settle", () => awaitIdle(device));
@@ -242,7 +244,7 @@ async function pushSeed(device: Device): Promise<string> {
 }
 
 async function startContentServer(served: string): Promise<ChildProcess> {
-  const catalog = `${EMULATOR_CONTENT_SERVER.replace("10.0.2.2", "127.0.0.1")}/catalog.json`;
+  const catalog = `${CONTENT_SERVER}/catalog.json`;
   // A server left over from another run would answer in place of this one, with whatever it was serving.
   if (await answers(catalog)) throw new Error(`Something already serves ${catalog}; stop it first`);
   const child = spawn(process.execPath, [join(import.meta.dirname, "..", "content", "serve.ts"), "--root", served], {

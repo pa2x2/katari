@@ -1,7 +1,7 @@
 /** One profile of the seed: its library entries with their history, and the settings the screenshots rely on. */
 import { existsSync } from "node:fs";
 import type { CatalogWork } from "../content/catalog.ts";
-import { EMULATOR_CONTENT_SERVER } from "../content/content-server.ts";
+import { CONTENT_SERVER } from "../content/content-server.ts";
 import type {
   BackupBookProgressState,
   BackupEntry,
@@ -53,7 +53,7 @@ export function profileBackup(
       description: catalogWork.description,
       genres: catalogWork.genres,
       status: catalogWork.status === "ongoing" ? 1 : 2,
-      thumbnailUrl: `${EMULATOR_CONTENT_SERVER}/${catalogWork.cover}`,
+      thumbnailUrl: `${CONTENT_SERVER}/${catalogWork.cover}`,
       dateAdded,
       chapters: chapters.map((chapter, sourceOrder) => {
         const fetchedAt = newChapters.find(

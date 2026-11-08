@@ -32,6 +32,11 @@ export class Device {
   forceStop(appId: string): void {
     this.shell(`am force-stop ${appId}`);
   }
+
+  /** Forwards connections to the device's own loopback [port] to the host's, where the pipeline's servers listen. */
+  reversePort(port: number): void {
+    this.adb("reverse", `tcp:${port}`, `tcp:${port}`);
+  }
 }
 
 /** Serials of every device adb currently lists as attached, emulators included. */
