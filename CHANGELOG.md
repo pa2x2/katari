@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.1] - 2026-11-08
+
+### 🧩 Improved
+
+- The sync link and invite code fields take a code typed or pasted in any form and show it in dashed groups of four.
+
+### 🐛 Fixed
+
+- Syncing no longer hides statistics a device recorded before another device started counting, and statistics hidden this way show again.
+- The offer to go where another device got further shows the place on its own line, so its name no longer breaks halfway.
+- Episodes whose audio comes as a separate track no longer play without sound for their first moments.
+
 ## [3.0.0] - 2026-11-08
 
 # DO NOT UPDATE IF YOU USE TRACKERS. TRACKERS WERE REMOVED IN THIS RELEASE. APP UPGRADE WIPES ALL DATA RELATED TO TRACKERS FROM APP'S DB
@@ -1101,7 +1113,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/pa2x2/katari/releases/tag/v3.0.1
 [3.0.0]: https://github.com/pa2x2/katari/releases/tag/v3.0.0
 [2.0.6]: https://github.com/pa2x2/katari/releases/tag/v2.0.6
 [2.0.5]: https://github.com/pa2x2/katari/releases/tag/v2.0.5

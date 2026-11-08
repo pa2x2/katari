@@ -1,5 +1,17 @@
 # Desktop Changelog
 
+## [1.0.0-beta.4] - 2026-11-08
+
+### 🧩 Improved
+
+- The sync link and invite code fields take a code typed or pasted in any form and show it in dashed groups of four.
+
+### 🐛 Fixed
+
+- Syncing no longer hides statistics a device recorded before another device started counting, and statistics hidden this way show again.
+- The offer to go where another device got further shows the place on its own line, so its name no longer breaks halfway.
+- Episodes whose audio comes as a separate track no longer play without sound for their first moments.
+
 ## [1.0.0-beta.3] - 2026-11-08
 
 ### ✨ Added
@@ -132,7 +144,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.4...HEAD
+[1.0.0-beta.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.1
