@@ -105,7 +105,10 @@ import { sitePath } from "../../site/links.ts";
       Select text for <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong>. <strong>Listen</strong> reads the
       selection aloud with the voice set under <Path>Settings › Text to speech</Path>. Katari doesn't read whole chapters aloud.
     </p>
-    <p><PlatformLabel platform="Linux" lead />Listen isn't there yet, so the selection menu leaves it out.</p>
+    <p>
+      <PlatformLabel platform="Linux" lead />Listen speaks through Speech Dispatcher. Install the <code>speech-dispatcher</code> package and a
+      voice such as <code>espeak-ng</code>.
+    </p>
     <p>
       <strong>Translate selected text automatically</strong>, in the <strong>Common</strong> tab, translates whatever you select without
       the extra tap. <a href={sitePath("docs/translation/#engine")}>Translation</a> covers the engines.

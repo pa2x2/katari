@@ -84,13 +84,16 @@ import { sitePath } from "../../site/links.ts";
 
   <Task id="restore" title="Restore">
     <ol>
-      <li>Select <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
+      <li>
+        Select <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or <strong>I have a backup</strong> in setup,
+        and pick the <code>.tachibk</code> file.
+      </li>
       <li>Choose what to bring back: library, categories, app settings, extension stores, source settings.</li>
       <li>
         If the backup holds several profiles, untick the ones to skip. Each one is either added as a new profile or merges into the profile
         it came from, and locked ones ask to be unlocked first.
       </li>
-      <li>Katari then lists missing sources. Install those extensions.</li>
+      <li>Katari lists the extensions the backup's titles need, and after the restore the Library offers to install them.</li>
     </ol>
     <p>Restoring doesn't switch the profile you're using. Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
   </Task>

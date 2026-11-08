@@ -29,12 +29,17 @@ const imports = `
 + import app.katari.book.api.BookContentDescriptor
 + import app.katari.book.api.BookResourceAvailability
 `;
+
+const coreCommon = `
+- import mihon.core.common.extensions.EMPTY
++ import app.katari.core.common.extensions.EMPTY
+`;
 ---
 
 <GuidePage
   manual="developers"
   slug="upgrade/4.0"
-  lead="SDK 4.0 moved the book classes to a new package, and Katari no longer loads extensions built with SDK 3.x. Every extension needs a rebuild, and only one that uses the book classes needs a code change."
+  lead="SDK 4.0 moved the book classes and the core-common helpers to new packages, and Katari no longer loads extensions built with SDK 3.x. Every extension needs a rebuild, and only one that uses those classes needs a code change."
 >
   <Task id="build" title="Build against 4.0">
     <p>
@@ -55,6 +60,13 @@ const imports = `
       Change the imports; nothing else in a book source changes. More in <a href={sitePath("developers/media/#books")}>Books</a>.
     </p>
     <Snippet lang="kotlin" code={imports} diff />
+
+    <h3>Helpers come from <code>app.katari.core.common</code></h3>
+    <p>
+      The supporting library's package <code>mihon.core.common</code> is now <code>app.katari.core.common</code>. An extension that uses
+      <code>JsonObject.EMPTY</code> or another of its helpers changes the import.
+    </p>
+    <Snippet lang="kotlin" code={coreCommon} diff />
   </Task>
 
   <p>
