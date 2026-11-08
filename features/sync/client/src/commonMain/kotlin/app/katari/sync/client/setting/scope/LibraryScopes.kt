@@ -30,7 +30,6 @@ internal val LibraryScopes = PreferenceScopeTable {
         "display_number_of_items",
         "categorized_display",
     )
-    personPrefix("pref_filter_library_tracked_")
     // The cover size fits the screen; the random order's seed is redrawn on each device.
     device("pref_library_cover_size", "library_random_sort_seed")
 

@@ -9,9 +9,6 @@
     <plurals name="missing_chapters_warning">
         <item quantity="other">ข้ามตอนที่ %d อาจเป็นเพราะหายมาจากแหล่งที่มาหรือถูกกรองออก</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d ตัวติดตาม</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s ตอน</item>
     </plurals>

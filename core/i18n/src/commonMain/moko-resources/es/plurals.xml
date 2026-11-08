@@ -40,11 +40,6 @@
         <item quantity="many">%1$s capítulos</item>
         <item quantity="other">%1$s capítulos</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d servicio de seguimiento</item>
-        <item quantity="many">%d de servicios de seguimiento</item>
-        <item quantity="other">%d servicios de seguimiento</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Se omite %d capítulo, o bien falta en la fuente o ha sido filtrado</item>
         <item quantity="many">Se omiten %d capítulos, o bien faltan en la fuente o han sido filtrados</item>

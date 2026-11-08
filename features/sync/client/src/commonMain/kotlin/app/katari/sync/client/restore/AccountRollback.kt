@@ -26,7 +26,6 @@ class AccountRollback(private val handler: DatabaseHandler) {
             deleteCategoryUpdateRules(profileIds)
             deleteCategories(profileIds)
             deleteMerges(profileIds)
-            deleteTrackerBindings(profileIds)
             deleteExcludedScanlators(profileIds)
             deleteUpdateModes(profileIds)
             deleteViewerSettings(profileIds)

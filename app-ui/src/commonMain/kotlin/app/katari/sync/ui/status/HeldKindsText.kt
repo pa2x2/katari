@@ -21,7 +21,6 @@ private fun kindLabel(family: String): StringResource = when (family) {
     "history" -> MR.strings.sync_kind_history
     "activity", "statistics" -> MR.strings.sync_kind_statistics
     "category", "categories" -> MR.strings.sync_kind_categories
-    "tracker" -> MR.strings.sync_kind_trackers
     "setting" -> MR.strings.sync_kind_settings
     "font" -> MR.strings.sync_kind_fonts
     "profile" -> MR.strings.sync_kind_profiles

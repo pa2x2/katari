@@ -65,12 +65,7 @@
     <string name="manga_download">Pobierz</string>
     <string name="download_unread">Pobierz nieprzeczytane</string>
     <string name="confirm_delete_chapters">Czy na pewno chcesz usunąć wybrane rozdziały?</string>
-    <string name="reading">Czytane</string>
     <string name="completed">Ukończone</string>
-    <string name="dropped">Porzucone</string>
-    <string name="on_hold">Wstrzymane</string>
-    <string name="plan_to_read">Planowane</string>
-    <string name="score">Ocena</string>
     <string name="title">Tytuł</string>
     <string name="error_category_exists">Kategoria o takiej nazwie już istnieje!</string>
     <string name="picture_saved">Obraz zapisany</string>
@@ -84,14 +79,10 @@
     <string name="download_notifier_unknown_error">Podczas pobierania rozdziału wystąpił nieoczekiwany błąd</string>
     <string name="download_notifier_download_paused">Wstrzymano pobieranie</string>
     <string name="action_sort_alpha">Alfabetycznie</string>
-    <string name="track">Śledzenie</string>
     <string name="action_reset">Reset</string>
-    <string name="services">Usługi śledzenia</string>
     <string name="version">Wersja</string>
-    <string name="login_title">Logowanie do %1$s</string>
     <string name="username">Nazwa użytkownika</string>
     <string name="password">Hasło</string>
-    <string name="login">Zaloguj się</string>
     <string name="unknown_error">Nieznany błąd</string>
     <string name="updating_category">Aktualizowanie kategorii</string>
     <string name="no_more_results">Nie znaleziono więcej wyników</string>
@@ -108,7 +99,6 @@
     <string name="all">Wszystko</string>
     <string name="pref_library_update_restriction">Ograniczenia sprzętowe dla automatycznych aktualizacji</string>
     <string name="charging">Podczas ładowania</string>
-    <string name="pref_auto_update_manga_sync">Aktualizuj postęp po przeczytaniu rozdziału</string>
     <string name="default_category">Domyślna kategoria</string>
     <string name="default_category_summary">Zawsze pytaj</string>
     <string name="pref_page_transitions">Animacje przejścia stron</string>
@@ -157,7 +147,6 @@
     <string name="fifth_to_last">5 rozdziałów do tyłu</string>
     <string name="pref_download_new">Pobieraj nowe rozdziały</string>
     <string name="manga">Biblioteka</string>
-    <string name="pref_category_tracking">Śledzenie</string>
     <string name="pref_reader_navigation">Nawigacja</string>
     <string name="pref_create_backup">Utwórz kopię zapasową</string>
     <string name="pref_create_backup_summ">Może być użyta do przywrócenia aktualnej biblioteki</string>
@@ -180,7 +169,6 @@
     <string name="backup_created">Utworzono kopię zapasową</string>
     <string name="restore_completed">Przywracanie ukończone</string>
     <string name="clear_database_completed">Pozycje usunięte</string>
-    <string name="login_success">Zalogowano</string>
     <string name="local_source">Źródło lokalne</string>
     <string name="ongoing">Nieukończone</string>
     <string name="unknown">Nieznany</string>
@@ -189,8 +177,6 @@
     <string name="chapter_downloading_progress">Pobieranie (%1$d/%2$d)</string>
     <string name="sort_by_source">Według źródła</string>
     <string name="sort_by_number">Według numeru rozdziału</string>
-    <string name="manga_tracking_tab">Śledzenie</string>
-    <string name="status">Status</string>
     <string name="snack_categories_deleted">Usunięto kategorie</string>
     <string name="dialog_with_checkbox_remove_description">To usunie datę przeczytania tego rozdziału. Na pewno?</string>
     <string name="dialog_with_checkbox_reset">Resetuj wszystkie rozdziały dla tego wpisu</string>
@@ -241,9 +227,6 @@
     <string name="migrate">Migruj</string>
     <string name="pager_viewer">Widok stron</string>
     <string name="source_not_installed">Nie zainstalowano źródła: %1$s</string>
-    <string name="repeating">Czytane ponownie</string>
-    <string name="track_status">Status</string>
-    <string name="track_type">Typ</string>
     <string name="transition_finished">Przeczytany:</string>
     <string name="transition_current">Obecny:</string>
     <string name="transition_next">Następny:</string>
@@ -271,9 +254,6 @@
     <string name="ext_obsolete">Przestarzałe</string>
     <string name="obsolete_extension_message">To rozszerzenie nie jest już dostępne i może nie funkcjonować prawidłowo, powodując problemy z aplikacją. Zalecamy odinstalowanie go.</string>
     <string name="pref_date_format">Format daty</string>
-    <string name="logout_title">Wylogować z %1$s?</string>
-    <string name="logout">Wyloguj</string>
-    <string name="logout_success">Wylogowano</string>
     <string name="paused">Wstrzymane</string>
     <string name="vertical_plus_viewer">Pionowo z przerwami</string>
     <string name="pref_skip_filtered_chapters">Pomijaj odfiltrowane rozdziały</string>
@@ -306,7 +286,6 @@
     <string name="pref_category_for_this_series">Dla tej serii</string>
     <string name="manga_info_collapse">Mniej</string>
     <string name="add_to_library">Dodaj do biblioteki</string>
-    <string name="email">Adres e-mail</string>
     <string name="downloaded_only_summary">Filtruje wszystkie pozycje w twojej bibliotece</string>
     <string name="label_downloaded_only">Tylko pobrane</string>
     <string name="check_for_updates">Sprawdź aktualizacje</string>
@@ -330,7 +309,6 @@
     <string name="in_library">W bibliotece</string>
     <string name="pinned_sources">Przypięte</string>
     <string name="last_used_source">Ostatnio używane</string>
-    <string name="tracking_info">Przesyłanie postępu czytania do zewnętrznego serwisu. Ustaw śledzenie guzikiem \"Śledzenie\" w wybranych tytułach.</string>
     <string name="channel_ext_updates">Aktualizacje rozszerzeń</string>
     <string name="information_webview_required">WebView jest wymagany do poprawnego działania aplikacji</string>
     <string name="notification_chapters_multiple">Rozdziały %1$s</string>
@@ -339,7 +317,6 @@
     <string name="local_source_help_guide">Źródła lokalne - poradnik</string>
     <string name="pref_cutout_short">Pokazuj zawartość w strefie odcięcia</string>
     <string name="action_view_chapters">Przeglądaj rozdziały</string>
-    <string name="add_tracking">Dodaj śledzenie</string>
     <string name="battery_optimization_setting_activity_not_found">Niepowodzenie otwarcia ustawień urządzenia</string>
     <string name="pref_refresh_library_covers">Odśwież okładki w bibliotece</string>
     <string name="restoring_backup_error">Przywracanie kopii zapasowej zakończone niepowodzeniem</string>
@@ -401,13 +378,9 @@
     <string name="pref_clear_history">Wyczyść historię</string>
     <string name="clear_history_confirmation">Jesteś pewien? CAŁA historia zostanie usunięta.</string>
     <string name="clear_history_completed">Historia usunięta</string>
-    <string name="backup_restore_missing_trackers">Serwisy, do których nie zalogowono:</string>
     <string name="pref_remove_bookmarked_chapters">Usuwaj rozdziały dodane do zakładek</string>
     <string name="pref_category_delete_chapters">Usuń rozdziały</string>
     <string name="file_picker_error">Nie znaleziono aplikacji do przeglądania plików</string>
-    <string name="myanimelist_relogin">Wymagane ponowne zalogowanie do MAL</string>
-    <string name="track_finished_reading_date">Data zakończenia</string>
-    <string name="track_started_reading_date">Data rozpoczęcia</string>
     <string name="pref_dump_crash_logs_summary">Zapisuje logi błędów do pliku do udostępnienia programistom</string>
     <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
     <string name="pref_viewer_nav">Strefy kliknięcia</string>
@@ -418,7 +391,6 @@
     <string name="action_asc">Rosnąco</string>
     <string name="action_order_by_chapter_number">Według numeru rozdziału</string>
     <string name="action_order_by_upload_date">Po dacie dodania</string>
-    <string name="action_filter_tracked">Śledzone</string>
     <string name="action_display_show_number_of_items">Pokaż liczbę elementów</string>
     <string name="right_and_left_nav">Prawa i Lewa</string>
     <string name="pref_dual_page_invert_summary">Jeśli układ w podziale podwójnych stron nie pasuje do kierunku czytania</string>
@@ -461,7 +433,6 @@
     <string name="error_saving_cover">Błąd przy zapisie okładki</string>
     <string name="cover_saved">Okładka zapisana</string>
     <string name="manga_cover">Okładka</string>
-    <string name="tracking_guide">Przewodnik śledzenia postępu</string>
     <string name="off">Wyłączone</string>
     <string name="on">Włączone</string>
     <string name="categorized_display_settings">Ustawienia sortowania dla każdej kategorii</string>
@@ -481,7 +452,6 @@
     <string name="pref_hide_threshold">Czułość ukrywania dolnego paska podczas przewijania</string>
     <string name="theme_tako">Tako</string>
     <string name="label_background_activity">Aktywność w tle</string>
-    <string name="action_track">Śledź</string>
     <string name="pref_category_appearance">Wygląd</string>
     <string name="confirm_lock_change">Autoryzuj, aby potwierdzić zmianę</string>
     <string name="label_default">Domyślny</string>
@@ -512,8 +482,6 @@
     <string name="download_queue_size_warning">Ostrzeżenie: Duże aktualizacje biblioteki mogą prowadzić do zwiększonego zużycia baterii oraz spowolnienia działania źródeł.</string>
     <string name="update_72hour">Co 3 dni</string>
     <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
-    <string name="enhanced_tracking_info">Usługi dostarczania ulepszonych funkcji dla niektórych źródeł. Mangi po dodaniu do biblioteki są automatycznie śledzone.</string>
-    <string name="enhanced_services">Ulepszone usługi śledzenia</string>
     <string name="ext_update_all">Zaktualizuj wszystko</string>
     <string name="ext_installer_legacy">Przestarzały</string>
     <string name="pref_auto_clear_chapter_cache">Wyczyść cache rozdziałów przy uruchamianiu aplikacji</string>
@@ -548,16 +516,11 @@
     <string name="webview_data_deleted">Dane WebView wyczyszczone</string>
     <string name="action_sort_last_manga_update">Ostatnia aktualizacja</string>
     <string name="description_placeholder">Brak opisu</string>
-    <string name="wish_list">Lista życzeń</string>
-    <string name="on_hold_list">Lista odłożonych na później</string>
-    <string name="unfinished_list">Lista niezakończonych</string>
     <string name="source_empty_screen">Nie znaleziono źródła</string>
     <string name="source_filter_empty_screen">Nie znaleziono zainstalowanego źródła</string>
     <string name="empty_screen">Cóż, to troszkę niezręczne</string>
     <string name="ext_info_language">Język</string>
-    <string name="reading_list">Lista czytanych</string>
     <string name="custom_cover">Niestandardowa okładka</string>
-    <string name="complete_list">Lista zakończonych</string>
     <string name="network_not_metered">Tylko na nielimitowanych połączeniach</string>
     <string name="pref_reset_viewer_flags">Resetowanie ustawień czytników serii</string>
     <string name="pref_reset_viewer_flags_summary">Resetuje tryb czytania i orientację wszystkich serii</string>
@@ -590,7 +553,6 @@
     <string name="pref_reader_summary">Tryb czytania, wyświetl, nawigacja</string>
     <string name="invalid_location">Nieprawidłowa lokalizacja: %s</string>
     <string name="action_display_show_continue_reading_button">Przycisk wznów czytanie</string>
-    <string name="pref_tracking_summary">Jednokierunkowa synchronizacja postępu, ulepszona synchronizacja</string>
     <string name="pref_browse_summary">Źródła, rozszerzenia, globalne wyszukiwanie</string>
     <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
     <string name="pref_appearance_summary">Tło, data &amp; format czasu</string>
@@ -599,12 +561,9 @@
     <string name="label_read_duration">Czas odczytu</string>
     <string name="label_titles_section">Wpisy</string>
     <string name="label_titles_in_global_update">W globalnej aktualizacji</string>
-    <string name="label_tracker_section">Śledzenie</string>
     <string name="unknown_title">Nieznany tytuł</string>
     <string name="updates_last_update_info_just_now">Przed chwilą</string>
     <string name="crash_screen_title">Ups!</string>
-    <string name="track_remove_date_conf_title">Usunąć datę?</string>
-    <string name="track_remove_finish_date_conf_text">To spowoduje usunięcie wcześniej wybranej daty zakończenia z %s</string>
     <string name="error_user_agent_string_invalid">Nieprawidłowy ciąg agenta użytkownika</string>
     <string name="crash_screen_restart_application">Uruchom ponownie aplikację</string>
     <string name="action_not_now">Nie teraz</string>
@@ -618,7 +577,6 @@
     <string name="fdroid_warning">Kompilacje F-Droid nie są oficjalnie obsługiwane. \nNaciśnij, aby dowiedzieć się więcej.</string>
     <string name="label_read_chapters">Przeczytane</string>
     <string name="pref_downloads_summary">Automatyczne pobieranie, pobierz wstępnie</string>
-    <string name="track_remove_start_date_conf_text">To spowoduje usunięcie wcześniej wybranej daty rozpoczęcia z %s</string>
     <string name="pref_library_update_show_tab_badge">Pokaż liczbę nieprzeczytanych na ikonie Aktualizacji</string>
     <string name="not_applicable">N/A</string>
     <string name="day_short">%dd</string>
@@ -626,15 +584,11 @@
     <string name="minute_short">%d minut</string>
     <string name="seconds_short">%d sekund</string>
     <string name="label_used">Używane</string>
-    <string name="label_tracked_titles">Śledzone pozycje</string>
-    <string name="label_mean_score">Średnia ocena</string>
     <string name="information_no_entries_found">Nie znaleziono wpisów w tej kategorii</string>
     <string name="download_notifier_cache_renewal">Sprawdzanie pobranych plików</string>
     <string name="information_no_manga_category">Kategoria jest pusta</string>
     <string name="copied_to_clipboard_plain">Skopiowano do schowka</string>
     <string name="pref_skip_dupe_chapters">Pomiń zduplikowane rozdziały</string>
-    <string name="enhanced_services_not_installed">Dostępne, ale źródło nie jest zainstalowane: %s</string>
-    <string name="track_error">Błąd %1$s: %2$s</string>
     <string name="pref_hide_in_library_items">Ukryj pozycje znajdujące się już w bibliotece</string>
     <string name="action_copy_to_clipboard">Kopiuj do schowka</string>
     <string name="action_update_category">Aktualizuj kategorię</string>
@@ -651,11 +605,9 @@
     <string name="syncing_library">Synchronizowanie biblioteki</string>
     <string name="create_backup_file_error">Nie można wykonać kopi zapasowej</string>
     <string name="intervals_header">Interwały</string>
-    <string name="track_delete_remote_text">Usuń też z %s</string>
     <string name="exception_http">HTTP %d, otwórz w WebView</string>
     <string name="exception_offline">Brak połączenia z internetem</string>
     <string name="exception_unknown_host">Nie można połączyć się z %s</string>
-    <string name="track_delete_title">Przestań śledzić %s?</string>
     <string name="delete_downloaded">Usuń pobrane</string>
     <string name="library_sync_complete">Synchronizacja biblioteki zakończona</string>
     <string name="download_cache_invalidated">Indeksy pobrań unieważnione</string>
@@ -663,7 +615,6 @@
     <string name="unlock_app_title">Odblokuj %s</string>
     <string name="action_filter_interval_custom">Dostosowany interwał aktualizacji</string>
     <string name="action_ok">OK</string>
-    <string name="track_delete_text">To usunie śledzenie lokalne.</string>
     <string name="action_apply">Zatwierdź</string>
     <string name="action_revert_to_default">Przywróć do domyślnych</string>
     <string name="action_move_to_bottom_all_for_series">Przenieś serię na dół</string>
@@ -692,7 +643,6 @@
     <string name="no_scanlators_found">Nie znaleziono skanlatorów</string>
     <string name="file_null_uri_error">Nie wybrano pliku</string>
     <string name="not_selected">Nie zaznaczone</string>
-    <string name="action_sort_tracker_score">Serwisy śledzące</string>
     <string name="label_data_storage">Dane i pamięć</string>
     <string name="pref_onboarding_guide">Szybka konfiguracja</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Unikaj przerywania długich operacji takich jak pobieranie rozdziałów, aktualizacje bibliotek lub przywracanie kopii zapasowej.</string>
@@ -710,7 +660,6 @@
     <string name="pref_storage_location">Miejsce przechowywania danych</string>
     <string name="pref_storage_location_info">Używane do automatycznych kopii zapasowych, pobierania rozdziałów i lokalnych źródeł.</string>
     <string name="invalid_backup_file_error">Pełny błąd:</string>
-    <string name="track_activity_name">Login serwisu śledzącego</string>
     <string name="action_create">Utwórz</string>
     <string name="pref_flash_page">Miganie przy zmianie strony</string>
     <string name="private_settings">Dołącz wrażliwe ustawienia (np. tokeny serwisu śledzącego)</string>
@@ -744,15 +693,12 @@
     <string name="onboarding_permission_crashlytics_description">Wyślij zanonimizowny dziennik awarii do deweloperów.</string>
     <string name="onboarding_permission_analytics">Zezwól na analizę danych</string>
     <string name="pref_security">Bezpieczeństwo i prywatność</string>
-    <string name="pref_auto_update_manga_on_mark_read">Aktualizuj postęp po oznaczeniu jako przeczytane</string>
     <string name="pref_firebase">Dane użytkownika i dzienniki awarii</string>
     <string name="ext_remove">Usuń</string>
     <string name="ext_confirm_remove">Usunąć Rozszerzenie?</string>
     <string name="remove_private_extension_message">Czy na pewno chcesz usunąć rozszerzenie \"%s\"?</string>
     <string name="firebase_summary">Przesyłanie dzienników awarii i danych użytkowania pozwoli nam na zidentyfikowanie i naprawę błędów, poprawę wydajności oraz dopasowanie przyszłych wersji aplikacji do twoich potrzeb</string>
-    <string name="trackers_updated_summary">Śledzenie zaktualizowane do rozdziału %d</string>
     <string name="non_library_settings">Wszystkie przeczytane wpisy</string>
-    <string name="confirm_tracker_update">Zaktualizować śledzenie do rozdziału %d?</string>
     <string name="upcoming_guide">Przewodnik nadchodzących aktualizacji</string>
     <string name="pref_download_new_unread_chapters_only">Pomiń pobieranie duplikatów przeczytanych już rozdziałów</string>
     <string name="invalid_backup_file_json">Kopia zapasowa JSON nie jest wspierana</string>

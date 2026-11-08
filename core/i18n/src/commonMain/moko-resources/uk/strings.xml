@@ -4,7 +4,6 @@
     <string name="categories">Категорії</string>
     <string name="manga">Записи бібліотеки</string>
     <string name="chapters">Розділи</string>
-    <string name="track">Відстеження</string>
     <string name="history">Історія</string>
     <string name="label_settings">Налаштування</string>
     <string name="label_download_queue">Черга завантажень</string>
@@ -66,7 +65,6 @@
     <string name="pref_category_general">Головні</string>
     <string name="pref_category_reader">Читалка</string>
     <string name="pref_category_downloads">Завантаження</string>
-    <string name="pref_category_tracking">Відстеження</string>
     <string name="pref_category_advanced">Додатково</string>
     <string name="pref_category_about">Інформація</string>
     <string name="pref_library_update_interval">Автоматичне оновлення</string>
@@ -79,7 +77,6 @@
     <string name="all">Всі</string>
     <string name="pref_library_update_restriction">Обмеження пристрою для автоматичних оновлень</string>
     <string name="charging">Коли заряджається</string>
-    <string name="pref_auto_update_manga_sync">Оновлювати прогрес після прочитання</string>
     <string name="default_category">Типова категорія</string>
     <string name="default_category_summary">Завжди запитувати</string>
     <string name="ext_update">Оновлення</string>
@@ -144,7 +141,6 @@
     <string name="fourth_to_last">Четвертий від останнього прочитаного розділу</string>
     <string name="fifth_to_last">П\'ятий від останнього прочитаного розділу</string>
     <string name="pref_download_new">Завантажувати нові розділи</string>
-    <string name="services">Трекери</string>
     <string name="pref_create_backup">Створити резервну копію</string>
     <string name="pref_create_backup_summ">Можна використовувати для відновлення поточної бібліотеки</string>
     <string name="pref_restore_backup">Відновити резервну копію</string>
@@ -167,11 +163,8 @@
     <string name="version">Версія</string>
     <string name="pref_enable_acra">Надсилати звіти про падіння</string>
     <string name="pref_acra_summary">Допомагає виправляти будь-які баги. Особисті дані не передаються</string>
-    <string name="login_title">Авторизація до %1$s</string>
     <string name="username">Ім\'я користувача</string>
     <string name="password">Пароль</string>
-    <string name="login">Логін</string>
-    <string name="login_success">Вхід успішний</string>
     <string name="unknown_error">Невідома помилка</string>
     <string name="updating_category">Оновлення категорії</string>
     <string name="no_more_results">Більше немає результатів</string>
@@ -200,18 +193,8 @@
     <string name="manga_download">Завантажити</string>
     <string name="download_unread">Непрочитані</string>
     <string name="confirm_delete_chapters">Ви впевнені, що бажаєте видалити вибрані розділи?</string>
-    <string name="manga_tracking_tab">Стежити</string>
-    <string name="reading">В процесі читання</string>
     <string name="completed">Завершене</string>
-    <string name="dropped">Кинуто</string>
-    <string name="on_hold">Заморожено</string>
-    <string name="plan_to_read">Планую почитати</string>
-    <string name="repeating">Перечитую</string>
-    <string name="score">Оцінка</string>
     <string name="title">Заголовок</string>
-    <string name="status">Статус</string>
-    <string name="track_status">Статус</string>
-    <string name="track_type">Тип</string>
     <string name="error_category_exists">Категорія з таким іменем вже існує!</string>
     <string name="snack_categories_deleted">Категорію видалено</string>
     <string name="dialog_with_checkbox_remove_description">Ця дія видалить дату прочитання розділу. Ви впевнені?</string>
@@ -271,9 +254,6 @@
     <string name="ext_obsolete">Застарілий</string>
     <string name="obsolete_extension_message">Це розширення більше не доступне. Воно може працювати невірно, а також викликати проблеми із застосунком. Рекомендується його видалити.</string>
     <string name="pref_date_format">Формат дати</string>
-    <string name="logout_title">Вихід із %1$s?</string>
-    <string name="logout">Вихід</string>
-    <string name="logout_success">Ви вийшли з системи</string>
     <string name="paused">Призупинено</string>
     <string name="label_more">Ще</string>
     <string name="action_sort_latest_chapter">Останній розділ</string>
@@ -302,7 +282,6 @@
     <string name="pref_disable_battery_optimization">Вимкнути збереження батареї</string>
     <string name="pref_disable_battery_optimization_summary">Допомагає фоновому оновленню бібліотеки та резервним копіям</string>
     <string name="battery_optimization_disabled">Збереження батареї вже вимкнено</string>
-    <string name="email">Електропошта</string>
     <string name="action_menu">Меню</string>
     <string name="action_newest">Найновіші</string>
     <string name="action_oldest">Найстаріші</string>
@@ -316,7 +295,6 @@
     <string name="pref_webtoon_side_padding">Бічний відступ</string>
     <string name="vertical_plus_viewer">Довга смуга з проміжками</string>
     <string name="action_select_inverse">Інвертувати вибір</string>
-    <string name="add_tracking">Додати відстеження</string>
     <string name="pinned_sources">Прикріплено</string>
     <string name="action_unpin">Відкріпити</string>
     <string name="action_pin">Закріпити</string>
@@ -350,7 +328,6 @@
     <string name="backup_restore_missing_sources">Відсутні джерела:</string>
     <string name="invalid_backup_file_missing_manga">Бекап не містить жодних записів бібліотеки.</string>
     <string name="invalid_backup_file">Невірний файл резервної копії:</string>
-    <string name="tracking_info">Одностороння синхронізація для оновлення прогресу розділу у зовнішніх сервісах стеження. Налаштуйте відстеження окремих записів за допомогою кнопки відстеження.</string>
     <string name="action_display_show_tabs">Показувати вкладки категорій</string>
     <string name="action_display_comfortable_grid">Зручна сітка</string>
     <string name="recent_manga_time">Розд. %1$s - %2$s</string>
@@ -383,7 +360,6 @@
     <string name="channel_errors">Помилки</string>
     <string name="channel_complete">Завершено</string>
     <string name="channel_progress">Прогрес</string>
-    <string name="backup_restore_missing_trackers">Трекери не авторизовано:</string>
     <string name="pref_remove_bookmarked_chapters">Дозволити видалення розділів з закладок</string>
     <string name="pref_category_delete_chapters">Видалити розділи</string>
     <string name="no_chapters_error">Немає розділів</string>
@@ -405,9 +381,6 @@
     <string name="spen_previous_page">Попередня сторінка</string>
     <string name="migration_help_guide">Гайд по міграції джерел</string>
     <string name="file_picker_error">Застосунок вибору файлів не знайдено</string>
-    <string name="myanimelist_relogin">Будь ласка, увійдіть в MAL знову</string>
-    <string name="track_finished_reading_date">Дата закінчення</string>
-    <string name="track_started_reading_date">Дата початку</string>
     <string name="pref_dump_crash_logs_summary">Зберігає логи помилок до файлу для надсилання розробникам</string>
     <string name="pref_dump_crash_logs">Поділіться журналами збоїв</string>
     <string name="pref_viewer_nav">Зони тицяння</string>
@@ -418,7 +391,6 @@
     <string name="action_asc">За зростанням</string>
     <string name="action_order_by_chapter_number">За номером розділу</string>
     <string name="action_order_by_upload_date">За датою завантаження</string>
-    <string name="action_filter_tracked">Відстежуване</string>
     <string name="action_display_show_number_of_items">Показати кількість об\'єктів</string>
     <string name="right_and_left_nav">Праворуч та ліворуч</string>
     <string name="pref_dual_page_split">Розділення широких сторінок</string>
@@ -461,7 +433,6 @@
     <string name="local_filter_order_by">Сортувати за</string>
     <string name="local_invalid_format">Невірний формат розділів</string>
     <string name="chapter_not_found">Розділ не знайдено</string>
-    <string name="tracking_guide">Гайд відстежування</string>
     <string name="off">Вимкнено</string>
     <string name="on">Увімкнено</string>
     <string name="categorized_display_settings">Налаштування сортування для кожної категорії</string>
@@ -471,8 +442,6 @@
     <string name="about_dont_kill_my_app">У деяких виробників є додаткові обмеження застосунків, котрі вбивають фонові сервіси. На цьому сайті більше інформації з приводу того, як це виправити.</string>
     <string name="label_background_activity">Фонова активність</string>
     <string name="restore_miui_warning">Резервування/Відновлення можуть не працювати належним чином, у випадку, якщо вимкнено Оптимізацію MIUI.</string>
-    <string name="enhanced_tracking_info">Надає розширені функції для конкретних джерел. Записи автоматично відстежуються при додаванні до бібліотеки.</string>
-    <string name="enhanced_services">Розширені трекери</string>
     <string name="pref_lowest">Найнижча</string>
     <string name="pref_low">Низька</string>
     <string name="pref_high">Висока</string>
@@ -494,7 +463,6 @@
     <string name="confirm_lock_change">Виконайте автентифікацію, щоб підтвердити зміну</string>
     <string name="label_default">Типово</string>
     <string name="pref_category_appearance">Вигляд</string>
-    <string name="action_track">Стежити</string>
     <string name="getting_started_guide">Посібник з початку роботи</string>
     <string name="pref_tablet_ui_mode">Планшетний інтерфейс</string>
     <string name="help_translate">Допомогти з перекладом</string>
@@ -532,11 +500,6 @@
     <string name="empty_backup_error">Немає елементів у бібліотеці для резервування</string>
     <string name="webview_data_deleted">Дані WebView очищені</string>
     <string name="pref_clear_webview_data">Очистити дані WebView</string>
-    <string name="reading_list">Читаю</string>
-    <string name="wish_list">Заплановано</string>
-    <string name="complete_list">Прочитано</string>
-    <string name="on_hold_list">Відкладено</string>
-    <string name="unfinished_list">Не закінчено</string>
     <string name="action_sort_last_manga_update">Остання перевірка оновлень</string>
     <string name="action_sort_unread_count">Кількість непрочитаного</string>
     <string name="pref_reset_viewer_flags_summary">Скидує режим читання та орієнтацію всіх серій</string>
@@ -587,7 +550,6 @@
     <string name="pref_library_summary">Категорії, глобальне оновлення, гортання розділів</string>
     <string name="pref_reader_summary">Режим читання, відображення, навігація</string>
     <string name="pref_downloads_summary">Автоматичне завантаження, завантаження наперед</string>
-    <string name="pref_tracking_summary">Одностороння синхронізація прогресу, розширена синхронізація</string>
     <string name="pref_browse_summary">Джерела, розширення, глобальний пошук</string>
     <string name="pref_backup_summary">Ручне та автоматичне резервування, сховище</string>
     <string name="pref_security_summary">Блокування застосунку, захист екрану</string>
@@ -604,15 +566,10 @@
     <string name="fdroid_warning">Збірки F-Droid офіційно не підтримуються. \nТицьніть для того, щоб дізнатись більше.</string>
     <string name="pref_invalidate_download_cache_summary">Змусити застосунок повторно перевірити завантажені розділи</string>
     <string name="action_display_show_continue_reading_button">Кнопка \"Продовжити читання\"</string>
-    <string name="track_remove_date_conf_title">Видалити дату?</string>
-    <string name="track_remove_start_date_conf_text">Це призведе до видалення вибраної раніше дати початку з %s</string>
-    <string name="track_remove_finish_date_conf_text">Це призведе до видалення раніше вибраної дати завершення з %s</string>
     <string name="pref_invalidate_download_cache">Переіндексація завантажень</string>
     <string name="label_read_duration">Тривалість читання</string>
     <string name="label_titles_section">Записи</string>
     <string name="label_total_chapters">Всього</string>
-    <string name="label_tracker_section">Відстеження</string>
-    <string name="label_tracked_titles">Відстежувані записи</string>
     <string name="not_applicable">Н/П</string>
     <string name="minute_short">%dm</string>
     <string name="label_stats">Статистика</string>
@@ -624,7 +581,6 @@
     <string name="label_used">Використано</string>
     <string name="label_completed_titles">Завершені записи</string>
     <string name="label_read_chapters">Прочитано</string>
-    <string name="label_mean_score">Середня оцінка</string>
     <string name="day_short">%dd</string>
     <string name="hour_short">%dh</string>
     <string name="seconds_short">%ds</string>
@@ -632,9 +588,7 @@
     <string name="pref_library_update_show_tab_badge">Відображення кількості непрочитаних на значку \"Нове\"</string>
     <string name="information_no_manga_category">Категорія порожня</string>
     <string name="copied_to_clipboard_plain">Скопійовано в буфер обміну</string>
-    <string name="enhanced_services_not_installed">Доступно, але джерело не встановлене: %s</string>
     <string name="pref_skip_dupe_chapters">Пропуск повторюваних розділів</string>
-    <string name="track_error">%1$s помилка: %2$s</string>
     <string name="pref_hide_in_library_items">Приховати записи, які вже є в бібліотеці</string>
     <string name="action_copy_to_clipboard">Копіювати в буфер обміну</string>
     <string name="action_update_category">Оновити категорію</string>
@@ -652,14 +606,10 @@
     <string name="intervals_header">Інтервали</string>
     <string name="manga_display_modified_interval_title">Налаштовано на оновлення кожної</string>
     <string name="action_ok">ОК</string>
-    <string name="track_delete_remote_text">Також видалити з %s</string>
-    <string name="track_delete_title">Видалити відстеження %s?</string>
-    <string name="track_delete_text">Це видалить відстеження локально.</string>
     <string name="delete_downloaded">Видалити завантажене</string>
     <string name="has_results">Має результати</string>
     <string name="library_sync_complete">Синхронізацію бібліотеки завершено</string>
     <string name="syncing_library">Синхронізація бібліотеки</string>
-    <string name="track_activity_name">Логін трекера</string>
     <string name="download_cache_invalidated">Індекс завантажень недійсний</string>
     <string name="information_cloudflare_help">Натисніть тут, щоб отримати допомогу з Cloudflare</string>
     <string name="create_backup_file_error">Не вдалося створити файл резервної копії</string>
@@ -675,7 +625,6 @@
     <string name="action_apply">Застосувати</string>
     <string name="action_revert_to_default">Повернути за замовчуванням</string>
     <string name="scanlator">Сканлейтор</string>
-    <string name="action_sort_tracker_score">Оцінка трекера</string>
     <string name="label_data_storage">Дані та сховище</string>
     <string name="action_create">Створити</string>
     <string name="relative_time_span_never">Ніколи</string>
@@ -727,7 +676,6 @@
     <string name="pref_webtoon_disable_zoom_out">Вимкнути зменшення масштабу</string>
     <string name="label_upcoming">Незабаром</string>
     <string name="upcoming_calendar_next">Наступний місяць</string>
-    <string name="pref_auto_update_manga_on_mark_read">Оновити прогрес коли главу помічено прочитаною</string>
     <string name="manga_interval_expected_update_null">Ця манґа завершена, або не має приблизної дати релізу.</string>
     <string name="action_sort_random">Випадково</string>
     <string name="onboarding_permission_crashlytics_description">Надіслати анонімний звіт про помилку.</string>
@@ -760,18 +708,13 @@
     <string name="pref_flash_style_black">Чорний</string>
     <string name="invalid_backup_file_json">Резервне копіювання JSON не підтримується</string>
     <string name="invalid_backup_file_unknown">Файл резервної копії пошкоджено</string>
-    <string name="trackers_updated_summary">Трекери оновлено до розділу %d</string>
-    <string name="confirm_tracker_update">Оновити трекери до розділу %d?</string>
     <string name="library_exported">Бібліотеку експортовано</string>
     <string name="possible_duplicates_title">Можливі копії</string>
     <string name="pref_incognito_mode_extension_summary">Призупинити історію читання для розширення</string>
-    <string name="action_toggle_private_on">Відстежувати приватно</string>
     <string name="file_picker_uri_permission_unsupported">Не вдалося отримати постійний доступ до теки. Програма може поводитися непередбачувано.</string>
     <string name="notes_placeholder">Сподобалась частина, де…</string>
     <string name="upcoming_guide">Інструкції до наступних розділів</string>
     <string name="non_library_settings">Всі прочитані записи</string>
-    <string name="tracked_privately">Відстежується приватно</string>
-    <string name="action_toggle_private_off">Відстежувати публічно</string>
     <string name="export">Експортувати</string>
     <string name="artist">Художник</string>
     <string name="author">Автор</string>

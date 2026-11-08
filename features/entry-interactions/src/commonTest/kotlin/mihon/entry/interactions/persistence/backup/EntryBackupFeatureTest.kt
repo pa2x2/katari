@@ -15,7 +15,11 @@ class EntryBackupFeatureTest {
         val entry = Entry.create().copy(id = 1, profileId = 2, source = 3, url = "/entry")
         val session = EntryBackupRestoreSession(EntryBackupRestoreSessionId("session")) { it }
 
-        val states = feature.snapshot(2, listOf(entry), EntryBackupSelection(true, true)).getValue(entry.id)
+        val states = feature.snapshot(
+            2,
+            listOf(entry),
+            EntryBackupSelection(includeContentState = true),
+        ).getValue(entry.id)
 
         feature.restore(
             session,

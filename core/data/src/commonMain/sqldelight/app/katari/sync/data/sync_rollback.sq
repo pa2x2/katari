@@ -1,6 +1,6 @@
 -- Emptying the person's data in some profiles before an account rollback restores a backup over it (D046a). Each
 -- statement leaves what the capture triggers see as the person removing it: an entry leaves the library, a chapter
--- is marked unread, a history, progress, category, tracker or per-entry choice row is deleted. Chapters, downloads,
+-- is marked unread, a history, progress, category or per-entry choice row is deleted. Chapters, downloads,
 -- covers and reading statistics stay: they are not the person's choices, or are kept as last synced (D046a).
 
 leaveLibrary:
@@ -33,10 +33,6 @@ WHERE profile_id IN :profileIds;
 deleteCategories:
 DELETE FROM categories
 WHERE profile_id IN :profileIds AND _id != 0;
-
-deleteTrackerBindings:
-DELETE FROM entry_sync
-WHERE profile_id IN :profileIds;
 
 deleteMerges:
 DELETE FROM merged_entries

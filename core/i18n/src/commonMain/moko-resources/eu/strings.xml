@@ -36,7 +36,6 @@
     <string name="download_queue_size_warning">Abisua: deskarga handiek iturriak motelagoak izatea eta/edo %s blokeatzea ekar dezakete.</string>
     <string name="creating_backup">Babeskopia sortzen</string>
     <string name="restore_duration">%1$02d min, %2$02d seg</string>
-    <string name="add_tracking">Gehitu jarraipena</string>
     <string name="cache_delete_error">Errore bat gertatu da cachea garbitzean</string>
     <string name="backup_created">Babeskopia sortu da</string>
     <string name="restoring_backup">Babeskopiatik berreskuratzen</string>
@@ -47,7 +46,6 @@
     <string name="migrate">Migratu</string>
     <string name="set_as_cover">Ezarri azal gisa</string>
     <string name="remove_from_library">Kendu liburutegitik</string>
-    <string name="services">Zerbitzuak</string>
     <string name="check_for_updates">Bilatu eguneraketak</string>
     <string name="source_unsupported">Iturria ez dago onartua</string>
     <string name="restoring_backup_canceled">Berreskuratzea bertan behera utzi da</string>
@@ -57,8 +55,6 @@
     <string name="ext_installer_shizuku_stopped">Shizuku ez dago martxan</string>
     <string name="restore_completed">Berreskuratu egin da</string>
     <string name="cookies_cleared">Cookieak garbitu dira</string>
-    <string name="dropped">Alde batera utzia</string>
-    <string name="status">Egoera</string>
     <string name="untrusted_extension">Fidagarria ez den luzapena</string>
     <string name="obsolete_extension_message">Luzapen hau jada ez dago eskuragarri.</string>
     <string name="disabled">Desgaitua</string>
@@ -82,15 +78,9 @@
     <string name="left_to_right_viewer">Ezkerretik eskuinera</string>
     <string name="right_to_left_viewer">Eskuinetik ezkerrera</string>
     <string name="vertical_viewer">Bertikalki</string>
-    <string name="reading">Irakurtzen</string>
-    <string name="on_hold">Momentuz utzia</string>
-    <string name="plan_to_read">Irakurtzeko asmoa dut</string>
     <string name="paused">Gelditurik</string>
-    <string name="score">Puntuazioa</string>
     <string name="backup_in_progress">Babeskopia abian da dagoeneko</string>
     <string name="channel_progress">Aurrerapena</string>
-    <string name="logout">Saioa itxi</string>
-    <string name="logout_success">Saioa itxi da</string>
     <string name="exclude">Baztertu: %s</string>
     <string name="ext_update_all">Eguneratu guztiak</string>
     <string name="ext_install">Instalatu</string>
@@ -112,7 +102,6 @@
     <string name="last_read_chapter">Azkenik irakurritako kapitulua</string>
     <string name="pref_category_delete_chapters">Ezabatu kapituluak</string>
     <string name="fourth_to_last">Atzetik hasita laugarren irakurritako kapitulua</string>
-    <string name="backup_restore_missing_trackers">Saioa hasi gabeko jarraitzaileak:</string>
     <string name="backup_choice">Zeren babeskopia nahi duzu?</string>
     <string name="restore_in_progress">Berreskuratzea abian da</string>
     <string name="restoring_backup_error">Ezin izan da babeskopia berreskuratu</string>
@@ -160,12 +149,8 @@
     <string name="off">Itzali</string>
     <string name="pref_reader_navigation">Nabigazioa</string>
     <string name="color_filter_b_value">U</string>
-    <string name="login_success">Saioa hasia</string>
-    <string name="logout_title">Itxi saioa %1$s-n?</string>
     <string name="manga_added_library">Liburutegira gehitua</string>
     <string name="confirm_delete_chapters">Ziur hautatutako kapituluak ezabatu nahi dituzula?</string>
-    <string name="track_finished_reading_date">Bukaera-data</string>
-    <string name="track_started_reading_date">Hasiera-data</string>
     <string name="dialog_with_checkbox_remove_description">Honek kapitulu honen irakurketa-data kenduko du. Ziur zaude?</string>
     <string name="transition_next">Hurrengoa:</string>
     <string name="pref_category_for_this_series">Argitalpen honetarako</string>
@@ -180,8 +165,6 @@
     <string name="manga_info_expand">Gehiago</string>
     <string name="display_mode_chapter">%1$s Kapitulua</string>
     <string name="chapter_settings">Kapituluaren ezarpenak</string>
-    <string name="track_status">Egoera</string>
-    <string name="track_type">Mota</string>
     <string name="custom_filter">Iragazki pertsonalizatua</string>
     <string name="snack_categories_deleted">Kategoriak ezabatuak</string>
     <string name="dialog_with_checkbox_reset">Berrezarri manga honen kapitulu guztiak</string>
@@ -204,7 +187,6 @@
     <string name="pref_remove_after_marked_as_read">Irakurria bezala eskuz markatu ondoren</string>
     <string name="pref_remove_bookmarked_chapters">Baimendu laster-markadun kapituluak ezabatzea</string>
     <string name="pref_remove_after_read">Irakurri ondoren automatikoki ezabatu</string>
-    <string name="enhanced_services">Zerbitzu hobetuak</string>
     <string name="help_translate">Lagundu itzultzen</string>
     <string name="file_picker_error">Ez da aurkitu fitxategiak hautatzeko aplikaziorik</string>
     <string name="all">Denak</string>
@@ -282,7 +264,6 @@
     <string name="clipboard_copy_error">Ezin izan da arbelean kopiatu</string>
     <string name="manga_download">Deskargatu</string>
     <string name="add_to_library">Gehitu liburutegira</string>
-    <string name="myanimelist_relogin">Mesedez, hasi saioa berriro MAL-en</string>
     <string name="show_title">Iturriaren izenburua</string>
     <string name="sort_by_source">Iturriaren arabera</string>
     <string name="confirm_set_chapter_settings">Ziur ezarpen hauek lehenetsi gisa gorde nahi dituzula?</string>
@@ -296,7 +277,6 @@
     <string name="information_webview_required">WebView beharrezkoa da Mihon-rentzat</string>
     <string name="download_notifier_text_only_wifi">Ez dago Wi-Fi konexiorik erabilgarri</string>
     <string name="label_default">Lehenetsia</string>
-    <string name="track">Jarraipena</string>
     <string name="action_display_mode">Bistaratze-modua</string>
     <string name="action_display">Bistaratu</string>
     <string name="action_display_grid">Lauki-sare trinkoa</string>
@@ -425,7 +405,6 @@
     <string name="action_menu">Menua</string>
     <string name="action_filter">Iragazi</string>
     <string name="action_filter_bookmarked">Orri-markatzailea jarria</string>
-    <string name="action_filter_tracked">Jarraitua</string>
     <string name="action_filter_unread">Irakurri gabea</string>
     <string name="action_filter_empty">Kendu iragazkia</string>
     <string name="action_sort_count">Mangak guztira</string>
@@ -452,7 +431,6 @@
     <string name="pref_category_library">Liburutegia</string>
     <string name="pref_category_reader">Irakurgailua</string>
     <string name="pref_category_downloads">Deskargak</string>
-    <string name="pref_category_tracking">Jarraipena</string>
     <string name="pref_category_advanced">Aurreratua</string>
     <string name="action_display_language_badge">Hizkuntza</string>
     <string name="theme_strawberrydaiquiri">Marrubi Daiquiri-a</string>
@@ -470,11 +448,8 @@
     <string name="tapping_inverted_both">Biak</string>
     <string name="pref_reader_actions">Ekintzak</string>
     <string name="pref_read_with_long_tap">Erakutsi sakaketa luzean</string>
-    <string name="login_title">Hasi saioa %1$s-n</string>
     <string name="username">Erabiltzaile-izena</string>
-    <string name="email">Posta elektroniko helbidea</string>
     <string name="password">Pasahitza</string>
-    <string name="login">Hasi saioa</string>
     <string name="action_global_search_query">Bilatu \"%1$s\" toki guztietan</string>
     <string name="action_show_errors">Sakatu xehetasunak ikusteko</string>
     <string name="update_72hour">3 egunean behin</string>
@@ -483,12 +458,7 @@
     <string name="restrictions">Mugaketak: %s</string>
     <string name="pref_library_update_refresh_metadata">Freskatu metadatuak automatikoki</string>
     <string name="invalid_backup_file_missing_manga">Babeskopiak ez du mangarik.</string>
-    <string name="manga_tracking_tab">Jarraipena</string>
-    <string name="repeating">Berrirakurtzen</string>
     <string name="pref_show_reading_mode_summary">Erakutsi erabilitako irakurketa modua laburki irakurlea irekitzen denean</string>
-    <string name="tracking_guide">Jarraipen gida</string>
-    <string name="pref_auto_update_manga_sync">Eguneratu aurrerapena irakurri ondoren</string>
-    <string name="action_track">Jarraitu</string>
     <string name="cache_deleted">Cachea garbitu da. %1$d fitxategi ezabatu dira</string>
     <string name="label_background_activity">Atzeko planoko ekintzak</string>
     <string name="pref_disable_battery_optimization_summary">Liburutegiaren eguneraketak eta babeskopiak atzeko planoan egiten laguntzen du</string>
@@ -515,10 +485,8 @@
     <string name="on_hiatus">Etenaldian</string>
     <string name="action_display_local_badge">Manga lokala</string>
     <string name="notification_chapters_single_and_more">%1$s kapitulua eta %2$d gehiago</string>
-    <string name="tracking_info">Norabide bakarreko sinkronizazioa jarraipen-zerbitzuetan kapituluaren aurrerapena eguneratzeko. Konfiguratu manga bakoitzaren jarraipena haien jarraipen botoia erabilita.</string>
     <string name="pref_show_navigation_mode">Nabigazio-diseinuaren geruza erakutsi</string>
     <string name="pref_show_navigation_mode_summary">Erakutsi ukipen-zonak irakurgailua irekitzen denean</string>
-    <string name="enhanced_tracking_info">Iturri zehatzetarako ezaugarri hobetuak eskaintzen dituzten zerbitzuak. Mangen jarraipena automatikoki egiten da zure liburutegira gehitzen direnean.</string>
     <string name="pref_clear_database_summary">Ezabatu zure liburutegian gordeta ez dauden mangen historia</string>
     <string name="publishing_finished">Argitarapena amaitua</string>
     <string name="pref_dual_page_split">Orrialde biko zatiketa</string>
@@ -555,8 +523,6 @@
     <string name="action_bar_up_description">Nabigatu gora</string>
     <string name="action_display_show_continue_reading_button">Jarraitu irakurtzen botoia</string>
     <string name="action_ok">OK</string>
-    <string name="reading_list">Irakurketa zerrenda</string>
-    <string name="unfinished_list">Bukatu gabeko zerrenda</string>
     <string name="action_set_interval">Ezarri denbora-bitartea</string>
     <string name="label_data_storage">Datu eta memoria</string>
     <string name="action_sort_last_manga_update">Azkenengo egunearatze egiaztapena</string>

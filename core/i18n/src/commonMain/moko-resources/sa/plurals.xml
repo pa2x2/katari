@@ -20,10 +20,6 @@
         <item quantity="one">%1$s अध्यायः</item>
         <item quantity="other">%1$s अध्यायाः</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d अन्वेषकः</item>
-        <item quantity="other">%d अन्वेषकाः</item>
-    </plurals>
     <plurals name="download_queue_summary">
         <item quantity="one">%1$s शेषः अस्ति</item>
         <item quantity="other">%1$s शेषः अस्ति</item>

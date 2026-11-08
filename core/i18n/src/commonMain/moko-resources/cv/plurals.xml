@@ -32,10 +32,6 @@
         <item quantity="one">%1$s йулчӗ</item>
         <item quantity="other">%1$s йулчӗ</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d йӗрлев</item>
-        <item quantity="other">%d йӗрлев</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d сыпӑк ҫук</item>
         <item quantity="other">%d сыпӑк ҫук</item>

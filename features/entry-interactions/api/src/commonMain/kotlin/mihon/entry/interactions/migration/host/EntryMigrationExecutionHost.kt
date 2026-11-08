@@ -4,7 +4,6 @@ import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
 import mihon.entry.interactions.migration.EntryMigrationMode
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.track.model.EntryTrack
 
 /** Explicit-profile application boundary for Migration execution preparation and its owned database transition. */
 interface EntryMigrationExecutionHost {
@@ -54,7 +53,6 @@ sealed interface EntryMigrationExecutionInspectionResult {
         val sourceChildren: List<EntryChapter>,
         val targetChildren: List<EntryChapter>,
         val sourceCategoryIds: List<Long>,
-        val sourceTracks: List<EntryTrack>,
     ) : EntryMigrationExecutionInspectionResult
 
     data object SourceMissing : EntryMigrationExecutionInspectionResult

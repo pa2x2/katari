@@ -34,9 +34,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileH
 import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
-import mihon.entry.interactions.tracking.EntryTrackingRecord
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 
@@ -68,7 +65,7 @@ class EntryMigrationFeatureTest {
     }
 
     @Test
-    fun `synchronization and tracking preparation failures cannot enter the migration transaction`() = runTest {
+    fun `a synchronization failure cannot enter the migration transaction`() = runTest {
         val syncHost = RecordingMigrationHost(source, target)
         val sourceRefresh = mockk<EntrySourceRefreshFeature> {
             coEvery { refresh(any()) } returns
@@ -82,20 +79,6 @@ class EntryMigrationFeatureTest {
             EntryMigrationExecuteIntent(syncPreparation.reference, EntryMigrationMode.COPY, emptySet()),
         ) shouldBe EntryMigrationExecutionResult.OperationalFailure(retryable = true)
         syncHost.transitions shouldBe emptyList()
-
-        val trackingHost = RecordingMigrationHost(source, target)
-        val tracking = mockk<EntryTrackingFeature> {
-            coEvery { prepareMigrationTracks(any(), any(), any()) } returns
-                EntryTrackingMigrationPreparationResult.Failed(IllegalStateException("tracking unavailable"))
-        }
-        val trackingFeature = feature(trackingHost, tracking = tracking)
-        val trackingPreparation = trackingFeature.prepare(EntryMigrationPrepareIntent(source, target))
-            .shouldBeInstanceOf<EntryMigrationPreparationResult.Ready>()
-
-        trackingFeature.execute(
-            EntryMigrationExecuteIntent(trackingPreparation.reference, EntryMigrationMode.COPY, emptySet()),
-        ) shouldBe EntryMigrationExecutionResult.OperationalFailure(retryable = true)
-        trackingHost.transitions shouldBe emptyList()
     }
 
     @Test
@@ -122,7 +105,6 @@ class EntryMigrationFeatureTest {
     private fun feature(
         host: RecordingMigrationHost,
         sourceRefresh: EntrySourceRefreshFeature = refreshedSourceRefresh(),
-        tracking: EntryTrackingFeature? = null,
     ): EntryMigrationFeature {
         val downloadFeature = mockk<EntryDownloadMaintenanceFeature>().also {
             coEvery { it.inspectEntry(any()) } returns
@@ -131,17 +113,6 @@ class EntryMigrationFeatureTest {
                 EntryDownloadRemovalPreparation.Inapplicable(EntryType.BOOK)
         }
         val customCoverHost = mockk<EntryMigrationCustomCoverHost>(relaxed = true)
-        val trackingFeature = tracking ?: mockk<EntryTrackingFeature>().also {
-            coEvery { it.prepareMigrationTracks(any(), any(), any()) } answers {
-                val target = args[1] as Entry
-
-                @Suppress("UNCHECKED_CAST")
-                val tracks = args[2] as List<EntryTrackingRecord>
-                EntryTrackingMigrationPreparationResult.Prepared(
-                    tracks.map { track -> track.copy(entryId = target.id) },
-                )
-            }
-        }
         val delivery = mockk<EntryMigrationConsequenceDelivery>().also {
             coEvery { it.deliverOperation(any()) } returns EntryMigrationFollowUp.INCOMPLETE
         }
@@ -158,7 +129,6 @@ class EntryMigrationFeatureTest {
             mergeMigration = NoOpMergeMigrationFeature,
             mergeLibraryLifecycle = { mockk() },
             downloads = { downloadFeature },
-            tracking = { trackingFeature },
             durableConsequences = EntryDurableConsequences(
                 setOf(
                     EntryDownloadMigrationParticipant { downloadFeature },
@@ -244,7 +214,6 @@ private class RecordingMigrationHost(
                 sourceChildren = emptyList(),
                 targetChildren = emptyList(),
                 sourceCategoryIds = emptyList(),
-                sourceTracks = emptyList(),
             )
         }
 

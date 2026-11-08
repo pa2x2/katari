@@ -55,11 +55,6 @@
         <item quantity="two">%d הפרקים הבאים</item>
         <item quantity="other">%d הפרקים הבאים</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">שירות מעקב אחד</item>
-        <item quantity="two">%d שירותי מעקב</item>
-        <item quantity="other">%d שירותי מעקב</item>
-    </plurals>
     <plurals name="next_unread_chapters">
         <item quantity="one">הפרק הבא שלא נקרא</item>
         <item quantity="two">%d הפרקים הבאים שלא נקראו</item>

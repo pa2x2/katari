@@ -71,7 +71,6 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import java.io.File
@@ -94,7 +93,6 @@ internal class Downloader(
     private val downloadPreferences: DownloadPreferences,
     private val xml: XML,
     private val getCategories: GetCategories,
-    private val getTracks: GetTracks,
     private val scope: CoroutineScope,
     private val store: DownloadStore,
 ) {
@@ -853,17 +851,9 @@ internal class Downloader(
         val categories = getCategories.await(entry.id, entry.profileId)
             .map { it.name.trim() }
             .takeUnless { it.isEmpty() }
-        val urls = getTracks.await(entry.id, entry.profileId)
-            .mapNotNull { track ->
-                track.remoteUrl.takeUnless { url -> url.isBlank() }?.trim()
-            }
-            .plus(chapter.url.trim())
-            .distinct()
-
         val comicInfo = createComicInfo(
             entry,
             chapter,
-            urls,
             categories,
             source.name,
         )

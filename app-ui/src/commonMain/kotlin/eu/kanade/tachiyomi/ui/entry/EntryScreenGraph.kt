@@ -11,7 +11,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
 
-/** Graph services the entry screen and its tracking dialog read outside a view model. */
+/** Graph services the entry screen reads outside a view model. */
 interface EntryScreenGraph {
     val entryBookmarkFeature: EntryBookmarkFeature
     val entryCatalogueFeature: EntryCatalogueFeature

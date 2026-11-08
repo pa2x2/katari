@@ -10,7 +10,6 @@ object PreferenceScopes {
         BrowseScopes,
         StatisticsScopes,
         DownloadScopes,
-        TrackingScopes,
         MangaReaderScopes,
         BookReaderScopes,
         PlayerScopes,

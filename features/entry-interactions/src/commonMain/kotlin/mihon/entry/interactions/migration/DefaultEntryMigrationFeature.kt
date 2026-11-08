@@ -25,10 +25,6 @@ import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.EntryTrackingMigrationPreparationResult
-import mihon.entry.interactions.tracking.toDomainTrack
-import mihon.entry.interactions.tracking.toTrackingRecord
 import tachiyomi.domain.entry.migration.EntryMigrationFingerprint
 import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
 import tachiyomi.domain.entry.migration.MigrationLibraryFields
@@ -43,7 +39,6 @@ internal class DefaultEntryMigrationFeature(
     private val mergeMigration: EntryMergeMigrationFeature,
     private val mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
     private val downloads: () -> EntryDownloadMaintenanceFeature,
-    private val tracking: () -> EntryTrackingFeature,
     private val durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
     private val consequences: EntryMigrationConsequenceDelivery,
     private val clockMillis: () -> Long = System::currentTimeMillis,
@@ -428,7 +423,7 @@ internal class DefaultEntryMigrationFeature(
 
     /**
      * Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. With
-     * [chapterStateOnly], the target keeps its own Library fields, tracking and choices, and only takes chapter state.
+     * [chapterStateOnly], the target keeps its own Library fields and choices, and only takes chapter state.
      */
     private suspend fun migrate(
         profileId: Long,
@@ -458,23 +453,6 @@ internal class DefaultEntryMigrationFeature(
         }
         if (!authorized(inspected.source, inspected.target)) {
             return EntryMigrationExecutionResult.Conflict
-        }
-
-        val preparedTracks = if (!chapterStateOnly) {
-            when (
-                val result = tracking().prepareMigrationTracks(
-                    source = inspected.source,
-                    target = inspected.target,
-                    tracks = inspected.sourceTracks.map { it.toTrackingRecord() },
-                )
-            ) {
-                is EntryTrackingMigrationPreparationResult.Prepared -> result.tracks.map { it.toDomainTrack() }
-                is EntryTrackingMigrationPreparationResult.Failed -> {
-                    return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
-                }
-            }
-        } else {
-            emptyList()
         }
 
         val transferChildren = EntryMigrationOption.CHILD_STATE in selectedOptions
@@ -546,8 +524,6 @@ internal class DefaultEntryMigrationFeature(
                 .takeIf { replace },
             childOrder = childPairs.order,
             chapterStateOnly = chapterStateOnly,
-            expectedSourceTracks = inspected.sourceTracks,
-            preparedTracks = preparedTracks,
             consequenceRequests = consequenceRequests,
         )
         val mergeReplacement = if (replace) {

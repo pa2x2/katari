@@ -92,8 +92,8 @@ internal suspend fun SyncTestDevice.library(): List<String> = listOf(
     FROM activity_sessions A JOIN entries E ON E._id = A.entry_id
     """,
     """
-    SELECT json_array('tracker', E.url, T.sync_id, T.remote_id, T.status, T.score)
-    FROM entry_sync T JOIN entries E ON E._id = T.entry_id
+    SELECT json_array('viewer setting', E.url, V.provider_id, V.setting_key, V.encoded_value)
+    FROM viewer_setting_overrides V JOIN entries E ON E._id = V.entry_id
     """,
 ).flatMap { rows(it) }.sorted()
 

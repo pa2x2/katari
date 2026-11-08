@@ -24,10 +24,6 @@
         <item quantity="one">%1$s тарау қалды</item>
         <item quantity="other">%1$s тарау қалды</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d бақылау</item>
-        <item quantity="other">%d бақылаулар</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s тарау</item>
         <item quantity="other">%1$s тарау</item>

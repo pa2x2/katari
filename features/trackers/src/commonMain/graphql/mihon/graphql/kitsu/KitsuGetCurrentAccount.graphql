@@ -1,9 +1,0 @@
-query KitsuGetCurrentAccount {
-  currentAccount {
-    id
-    ratingSystem
-    profile {
-      name
-    }
-  }
-}

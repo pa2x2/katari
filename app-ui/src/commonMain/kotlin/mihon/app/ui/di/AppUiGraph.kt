@@ -21,7 +21,6 @@ import eu.kanade.presentation.more.settings.screen.data.DataSettingsGraph
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoGraph
 import eu.kanade.presentation.more.settings.screen.security.SecuritySettingsGraph
 import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsGraph
-import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGraph
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
@@ -57,7 +56,6 @@ interface AppUiGraph :
     LibrarySettingsGraph,
     DownloadSettingsGraph,
     BrowseSettingsGraph,
-    TrackingSettingsGraph,
     ViewerSettingsGraph,
     BookReaderSettingsGraph,
     PlayerSettingsGraph,

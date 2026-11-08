@@ -23,7 +23,6 @@ import mihon.icons.materialsymbols.rounded.Keyboard
 import mihon.icons.materialsymbols.rounded.QueryStats
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
-import mihon.icons.materialsymbols.rounded.Sync
 import mihon.presentation.kit.content.NotificationBadge
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
@@ -45,7 +44,6 @@ fun MoreScreen(
     onIncognitoModeChange: (Boolean) -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickSync: () -> Unit,
-    onClickTracking: () -> Unit,
     onClickCategories: () -> Unit,
     onClickStats: () -> Unit,
     hasNewRecap: Boolean,
@@ -131,15 +129,6 @@ fun MoreScreen(
             item {
                 RowGroupItem(RowGroupPosition.Middle) {
                     SyncRow(onClick = onClickSync)
-                }
-            }
-            item {
-                RowGroupItem(RowGroupPosition.Middle) {
-                    TextPreferenceWidget(
-                        title = stringResource(MR.strings.pref_category_tracking),
-                        icon = MaterialSymbols.Rounded.Sync,
-                        onPreferenceClick = onClickTracking,
-                    )
                 }
             }
             item {

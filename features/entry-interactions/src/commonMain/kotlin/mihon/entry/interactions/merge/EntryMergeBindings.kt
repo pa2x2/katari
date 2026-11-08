@@ -27,7 +27,6 @@ import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequ
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.source.EntryMergeSourceGroupCoordinator
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 
@@ -44,12 +43,10 @@ object EntryMergeBindings {
     @SingleIn(AppScope::class)
     internal fun legacyConsequenceDelivery(
         mergeHost: EntryMergeHost,
-        tracking: () -> EntryTrackingFeature,
         libraryCustomCoverHost: EntryLibraryCustomCoverHost,
         downloadMaintenance: () -> EntryDownloadMaintenanceFeature,
     ): EntryMergeLegacyConsequenceDelivery = EntryMergeLegacyConsequenceDelivery(
         host = mergeHost,
-        tracking = tracking,
         coverCleanup = libraryCustomCoverHost::cleanupAfterLibraryRemoval,
         downloadMaintenance = downloadMaintenance,
     )

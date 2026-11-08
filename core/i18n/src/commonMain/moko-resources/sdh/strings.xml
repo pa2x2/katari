@@ -24,12 +24,10 @@
     <string name="label_recent_manga">تۆماری ڕابردوو</string>
     <string name="manga">مانگا</string>
     <string name="chapters">چاپتەرەکان</string>
-    <string name="track">بەدواداچوون</string>
     <string name="categories">کاتیگۆرییەکان</string>
     <string name="action_settings">سازکارییەکان</string>
     <string name="action_menu">لیست</string>
     <string name="action_filter_bookmarked">نیشانکراو</string>
-    <string name="action_filter_tracked">بەدواداچوو</string>
     <string name="action_sort_alpha">بە شێوازی ئەلف و بێ</string>
     <string name="action_sort_count">کۆی مانگاکان</string>
     <string name="action_sort_total">کۆی چاپتەرەکان</string>
@@ -115,7 +113,6 @@
     <string name="pref_category_library">کۆکراوەکان</string>
     <string name="pref_category_reader">خوێنەرەوە</string>
     <string name="pref_category_downloads">داونلۆدەکان</string>
-    <string name="pref_category_tracking">بەدواداچوون</string>
     <string name="pref_category_advanced">سازکارییە ئاڵۆزەکان</string>
     <string name="pager_viewer">شێوازی لاپەڕەکان</string>
     <string name="pref_viewer_nav">شێوازی گەڕان</string>
@@ -180,7 +177,6 @@
     <string name="filter_mode_multiply">شێوازی دوو ‌هێندە</string>
     <string name="pref_category_auto_download">داونلۆدی ئۆتۆماتیکی</string>
     <string name="pref_download_new">داونلۆدکردنی چاپتەری نوێ</string>
-    <string name="add_tracking">بەدواداچوون زیاد بکە</string>
     <string name="add_to_library">کردنە ناو کۆکراوەکان</string>
     <string name="notification_first_add_to_library">تکایە مانگا بۆ کۆکراوەکان زیاد بکە پێش کردنی ئەمە</string>
     <string name="snack_add_to_library">زیادکردنی مانگا بۆ کۆکراوەکان؟</string>

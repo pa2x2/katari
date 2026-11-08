@@ -31,8 +31,6 @@ kotlin {
                 api(projects.features.textRecognition.api)
                 api(projects.features.translation.api)
                 api(libs.kotlinx.coroutines.core)
-                // Tracking services carry their logo as a Compose resource.
-                api(libs.compose.multiplatform.resources)
 
                 implementation(projects.core.icons.customMaterialSymbols)
                 implementation(projects.core.icons.materialSymbols)
@@ -48,5 +46,5 @@ kotlin {
     }
 }
 
-// The source settings and tracker adapter contracts hand on the SharedPreferences and preference screens sources build
+// The source settings contract hands on the SharedPreferences and preference screens sources build
 compileSharedCodeAgainstAndroidApi()

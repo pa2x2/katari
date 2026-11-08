@@ -18,9 +18,6 @@
     <plurals name="num_categories">
         <item quantity="other">항목 %d개</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d개의 트래커</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">소스에 존재하지 않거나 필터링되어 있는 %d개의 회차를 건너뛰었습니다</item>
     </plurals>

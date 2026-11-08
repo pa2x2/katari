@@ -35,11 +35,6 @@
         <item quantity="few">Завршено у %1$s са %2$s грешке</item>
         <item quantity="other">Завршено у %1$s са %2$s грешака</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d пратилац</item>
-        <item quantity="few">%d пратиоца</item>
-        <item quantity="other">%d пратилаца</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s поглавље</item>
         <item quantity="few">%1$s поглавља</item>

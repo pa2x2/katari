@@ -32,10 +32,6 @@
         <item quantity="one">%1$s capìtulu</item>
         <item quantity="other">%1$s capìtulos</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d arrastadore</item>
-        <item quantity="other">%d arrastadores</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Brinchende %d capìtulu, sa fonte non lu tenet o est istadu bogadu cun unu filtru</item>
         <item quantity="other">Brinchende %d capìtulos, sa fonte non los tenet o sunt istados bogados cun unu filtru</item>

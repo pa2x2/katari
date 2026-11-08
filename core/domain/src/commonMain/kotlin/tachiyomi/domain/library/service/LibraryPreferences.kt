@@ -3,7 +3,6 @@ package tachiyomi.domain.library.service
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
@@ -114,11 +113,6 @@ class LibraryPreferences(
 
     val filterIntervalCustom: Preference<TriState> = preferenceStore.getEnum(
         "pref_filter_library_interval_custom",
-        TriState.DISABLED,
-    )
-
-    fun filterTracking(id: Int): Preference<TriState> = preferenceStore.getEnum(
-        TRACKING_FILTER_KEY_FAMILY.key("${id}_v2"),
         TriState.DISABLED,
     )
 
@@ -279,9 +273,6 @@ class LibraryPreferences(
     }
 
     companion object {
-        val TRACKING_FILTER_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_filter_library_tracked_")
-        val profileKeyPatterns = setOf(TRACKING_FILTER_KEY_FAMILY)
-
         const val DEVICE_ONLY_ON_WIFI = "wifi"
         const val DEVICE_NETWORK_NOT_METERED = "network_not_metered"
         const val DEVICE_CHARGING = "ac"

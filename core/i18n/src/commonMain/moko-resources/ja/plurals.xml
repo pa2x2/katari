@@ -24,9 +24,6 @@
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s 章</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d 個のトラッカー</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">%d 章をスキップします。ソースに章が存在しないか、フィルタリングされています</item>
     </plurals>

@@ -95,7 +95,6 @@ object DuplicateLibrarySupport {
         currentEntry: DuplicateEntryMetadata,
         libraryEntries: List<DuplicateLibraryCandidate<T>>,
         excludedIds: Set<Long>,
-        trackerDuplicateIds: Set<Long>,
         config: DuplicateConfig,
     ): List<DuplicateLibraryMatch<T>> {
         val current = currentEntry.toPreparedDuplicateEntry(config)
@@ -109,9 +108,9 @@ object DuplicateLibrarySupport {
             .filterNot { libraryItem -> libraryItem.memberIds.any { it in excludedIds } }
             .mapNotNull { libraryItem ->
                 val match = if (config.extendedEnabled) {
-                    scoreExtendedDuplicate(current, libraryItem, trackerDuplicateIds, config)
+                    scoreExtendedDuplicate(current, libraryItem, config)
                 } else {
-                    scoreLegacyDuplicate(current, libraryItem, trackerDuplicateIds)
+                    scoreLegacyDuplicate(current, libraryItem)
                 }
                 match?.let { libraryItem.sortTitle to it }
             }
@@ -126,13 +125,12 @@ object DuplicateLibrarySupport {
     private fun <T> scoreExtendedDuplicate(
         current: PreparedDuplicateEntry,
         libraryItem: DuplicateLibraryCandidate<T>,
-        trackerDuplicateIds: Set<Long>,
         config: DuplicateConfig,
     ): DuplicateLibraryMatch<T>? {
         val weights = config.weights
         val bestMatch = libraryItem.memberEntries.asSequence()
             .map { it.toPreparedDuplicateEntry(config) }
-            .mapNotNull { candidate -> scoreExtendedDuplicate(current, candidate, trackerDuplicateIds, config) }
+            .mapNotNull { candidate -> scoreExtendedDuplicate(current, candidate, config) }
             .maxByOrNull { it.score }
             ?: return null
 
@@ -141,26 +139,14 @@ object DuplicateLibrarySupport {
             count = libraryItem.count,
             cheapScore = bestMatch.score,
             scoreMax = weights.baseScoreMax(),
-            score = if (libraryItem.memberIds.any { it in trackerDuplicateIds }) {
-                max(bestMatch.score, LEGACY_TRACKER_MATCH_SCORE)
-            } else {
-                bestMatch.score
-            },
-            reasons = if (
-                libraryItem.memberIds.any { it in trackerDuplicateIds } &&
-                DuplicateMatchReason.TRACKER !in bestMatch.reasons
-            ) {
-                bestMatch.reasons + DuplicateMatchReason.TRACKER
-            } else {
-                bestMatch.reasons
-            },
+            score = bestMatch.score,
+            reasons = bestMatch.reasons,
         )
     }
 
     private fun scoreExtendedDuplicate(
         current: PreparedDuplicateEntry,
         candidate: PreparedDuplicateEntry,
-        trackerDuplicateIds: Set<Long>,
         config: DuplicateConfig,
     ): ScoredDuplicate? {
         val weights = config.weights
@@ -221,15 +207,10 @@ object DuplicateLibrarySupport {
         }
         score += scaledSimilarity(countSimilarity, weights.chapterCount)
 
-        if (candidate.id in trackerDuplicateIds) {
-            reasons += DuplicateMatchReason.TRACKER
-            score = max(score, LEGACY_TRACKER_MATCH_SCORE)
-        }
-
         if (reasons.isEmpty()) return null
 
         score = score.coerceIn(0, DuplicatePreferences.TOTAL_SCORE_BUDGET)
-        if (score < config.minimumMatchScore && DuplicateMatchReason.TRACKER !in reasons) return null
+        if (score < config.minimumMatchScore) return null
 
         val hasCreatorMatch = authorMatched || artistMatched
         val hasStrongNonTitleEvidence =
@@ -241,8 +222,7 @@ object DuplicateLibrarySupport {
                     descriptionSimilarity >= SUPPORTING_DESCRIPTION_THRESHOLD &&
                         countSimilarity >= COUNT_REASON_THRESHOLD
                     ) ||
-                (countSimilarity >= COUNT_REASON_THRESHOLD && genreOverlap >= 2) ||
-                DuplicateMatchReason.TRACKER in reasons
+                (countSimilarity >= COUNT_REASON_THRESHOLD && genreOverlap >= 2)
 
         val hasSupportingTitleEvidence =
             titleSimilarity >= TITLE_REASON_THRESHOLD && (authorMatched || artistMatched || genreOverlap >= 1)
@@ -260,37 +240,19 @@ object DuplicateLibrarySupport {
     private fun <T> scoreLegacyDuplicate(
         current: PreparedDuplicateEntry,
         libraryItem: DuplicateLibraryCandidate<T>,
-        trackerDuplicateIds: Set<Long>,
     ): DuplicateLibraryMatch<T>? {
-        val reasons = linkedSetOf<DuplicateMatchReason>()
-
         val titleMatched = libraryItem.memberEntries.any { candidate ->
             candidate.title.lowercase(Locale.ROOT).contains(current.rawLowercaseTitle)
         }
-        if (titleMatched) {
-            reasons += DuplicateMatchReason.TITLE
-        }
-
-        val trackerMatched = libraryItem.memberIds.any { it in trackerDuplicateIds }
-        if (trackerMatched) {
-            reasons += DuplicateMatchReason.TRACKER
-        }
-
-        if (reasons.isEmpty()) return null
-
-        val score = when {
-            trackerMatched && titleMatched -> LEGACY_TITLE_MATCH_SCORE.coerceAtLeast(LEGACY_TRACKER_MATCH_SCORE)
-            trackerMatched -> LEGACY_TRACKER_MATCH_SCORE
-            else -> LEGACY_TITLE_MATCH_SCORE
-        }
+        if (!titleMatched) return null
 
         return DuplicateLibraryMatch(
             item = libraryItem.item,
             count = libraryItem.count,
-            cheapScore = score,
+            cheapScore = LEGACY_TITLE_MATCH_SCORE,
             scoreMax = LEGACY_SCORE_MAX,
-            score = score,
-            reasons = reasons.toList(),
+            score = LEGACY_TITLE_MATCH_SCORE,
+            reasons = listOf(DuplicateMatchReason.TITLE),
         )
     }
 
@@ -399,7 +361,6 @@ object DuplicateLibrarySupport {
         val normalizedTitle = normalizeTitle(title, config.titleExclusionPatterns)
         val normalizedDescription = normalizeDescription(description)
         return PreparedDuplicateEntry(
-            id = id,
             normalizedTitle = normalizedTitle,
             rawLowercaseTitle = title.lowercase(Locale.ROOT).trim(),
             titleTokens = normalizedTitle.split(' ')
@@ -478,7 +439,6 @@ object DuplicateLibrarySupport {
     }
 
     private data class PreparedDuplicateEntry(
-        val id: Long,
         val normalizedTitle: String,
         val rawLowercaseTitle: String,
         val titleTokens: Set<String>,
@@ -501,7 +461,6 @@ object DuplicateLibrarySupport {
     private const val CREATOR_MISMATCH_PENALTY = 10
     private const val STATUS_MISMATCH_PENALTY = 2
     private const val LEGACY_TITLE_MATCH_SCORE = 46
-    private const val LEGACY_TRACKER_MATCH_SCORE = 58
     private const val LEGACY_SCORE_MAX = 100
     private const val MIN_NAME_SIMILARITY = 0.9
     private const val CONTAINS_MIN_TITLE_LENGTH = 6

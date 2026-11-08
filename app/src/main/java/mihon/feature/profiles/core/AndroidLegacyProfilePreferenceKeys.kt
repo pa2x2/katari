@@ -85,9 +85,6 @@ class AndroidLegacyProfilePreferenceKeys(
         if (currentVersion < 11) {
             migrateViewerSettingsToProfileKeys(sharedPreferences)
         }
-        if (currentVersion < 12) {
-            migrateAnilistScoreTypeToProfiles(sharedPreferences)
-        }
 
         migrateKeyBackToGlobal(
             sharedPreferences = sharedPreferences,
@@ -118,21 +115,6 @@ class AndroidLegacyProfilePreferenceKeys(
         ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
             profileIds = profileIds,
             profileKeys = DuplicatePreferences.profileKeys,
-        )
-    }
-
-    // The global value came from whichever profile logged into AniList last; every profile starts from it until its own
-    // login or account refresh reads its account's score format.
-    private suspend fun migrateAnilistScoreTypeToProfiles(
-        sharedPreferences: SharedPreferences,
-    ) {
-        val profileIds = profileDatabase.getProfiles(includeArchived = true)
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-
-        ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
-            profileIds = profileIds,
-            profileKeys = setOf("anilist_score_type"),
         )
     }
 

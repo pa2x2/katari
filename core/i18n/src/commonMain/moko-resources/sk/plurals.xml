@@ -24,12 +24,6 @@
         <item quantity="many">Pred %1$d dňami</item>
         <item quantity="other">Pred %1$d dňami</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d sledovač</item>
-        <item quantity="few">%d sledovače</item>
-        <item quantity="many">%d sledovačov</item>
-        <item quantity="other">%d sledovačov</item>
-    </plurals>
     <plurals name="next_unread_chapters">
         <item quantity="one">Ďalšia neprečítaná kapitola</item>
         <item quantity="few">Ďalšie %d neprečítané kapitoly</item>

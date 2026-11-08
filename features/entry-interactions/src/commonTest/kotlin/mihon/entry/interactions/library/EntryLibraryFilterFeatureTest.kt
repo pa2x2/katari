@@ -41,7 +41,6 @@ class EntryLibraryFilterFeatureTest {
         bookmarked: Boolean? = false,
         completed: Boolean = false,
         outsideReleasePeriod: Boolean = false,
-        trackers: Set<Long> = emptySet(),
     ): EntryLibraryFilterTarget {
         return EntryLibraryFilterTarget(
             type = type,
@@ -51,7 +50,6 @@ class EntryLibraryFilterFeatureTest {
             hasBookmarks = bookmarked,
             isCompleted = completed,
             isOutsideReleasePeriod = outsideReleasePeriod,
-            trackerIds = trackers,
         )
     }
 
@@ -64,7 +62,6 @@ class EntryLibraryFilterFeatureTest {
         completed: TriState = TriState.DISABLED,
         outsideReleasePeriod: TriState = TriState.DISABLED,
         outsideReleasePeriodEnabled: Boolean = false,
-        tracking: Map<Long, TriState> = emptyMap(),
     ): EntryLibraryFilterPolicy {
         return EntryLibraryFilterPolicy(
             downloadedOnly = downloadedOnly,
@@ -75,7 +72,6 @@ class EntryLibraryFilterFeatureTest {
             completed = completed,
             outsideReleasePeriod = outsideReleasePeriod,
             outsideReleasePeriodEnabled = outsideReleasePeriodEnabled,
-            tracking = tracking,
         )
     }
 }

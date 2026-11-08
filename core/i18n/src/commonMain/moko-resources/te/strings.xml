@@ -45,7 +45,6 @@
     <string name="action_menu">వివరాలపట్టిక</string>
     <string name="action_settings">అమరికలు</string>
     <string name="history">చరిత్ర</string>
-    <string name="track">కంట కనిపెట్టుట</string>
     <string name="chapters">అధ్యాయాలు</string>
     <string name="manga">లైబ్రరీ ఎంట్రీలు</string>
     <string name="categories">విభాగములు</string>
@@ -62,7 +61,6 @@
     <string name="action_edit_cover">ముఖచిత్రమును సవరించుము</string>
     <string name="action_move_category">విభాగములను క్రమీకరించుము</string>
     <string name="action_sort_chapter_fetch_date">పొందబడిన తేదీ</string>
-    <string name="action_filter_tracked">కంట కనిపెట్టబడ్డవి</string>
     <string name="label_default">ప్రమాణము</string>
     <string name="action_sort_count">మొత్తం ఎంట్రీలు</string>
     <string name="label_warning">హెచ్చరిక</string>
@@ -72,7 +70,6 @@
     <string name="action_webview_refresh">నవీకరించుము</string>
     <string name="pref_category_reader">పాఠకము</string>
     <string name="action_start_downloading_now">దిగుమతిని ఇప్పుడు ప్రారంభించుము</string>
-    <string name="pref_category_tracking">జాడ కనిపెట్టుట</string>
     <string name="action_display_comfortable_grid">తేలికపాటి వరుస</string>
     <string name="action_display_grid">ఇమిడ్చిన వరుస</string>
     <string name="action_migrate">వలస</string>
@@ -171,20 +168,15 @@
     <string name="licensed">లైసెన్స్ పొందింది</string>
     <string name="browse">విహరించండి</string>
     <string name="vertical_viewer">నిలువు</string>
-    <string name="services">సేవలు</string>
     <string name="password">గుప్తపదం</string>
     <string name="all">అన్ని</string>
     <string name="edge_nav">అంచు</string>
     <string name="latest">తాజా</string>
-    <string name="reading">చదువుతున్నారు</string>
     <string name="title">శీర్షిక</string>
-    <string name="score">గణన</string>
     <string name="kindlish_nav">కిండల్ మాదిరి</string>
     <string name="ongoing">కొనసాగుతున్నది</string>
-    <string name="status">స్థితి</string>
     <string name="unknown">తెలియదు</string>
     <string name="none">ఏమిలేదు</string>
     <string name="version">సంస్కరణ</string>
-    <string name="dropped">విడిచెను</string>
     <string name="paused">నిలిపివేయబడింది</string>
 </resources>

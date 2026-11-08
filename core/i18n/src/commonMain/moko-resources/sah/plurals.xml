@@ -15,9 +15,6 @@
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s түһүмэх</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d трэкэр</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">Манна %d түһүмэх суох</item>
     </plurals>

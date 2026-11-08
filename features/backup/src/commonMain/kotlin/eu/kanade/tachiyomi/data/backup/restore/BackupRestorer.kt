@@ -14,8 +14,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
-import eu.kanade.tachiyomi.data.backup.models.compatibility.doubleKitsuScores
-import eu.kanade.tachiyomi.data.backup.models.compatibility.hasHalvedKitsuScores
 import eu.kanade.tachiyomi.data.backup.restore.entries.EntryRestoreCoordinator
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
@@ -157,13 +155,9 @@ class BackupRestorer(
     ) {
         val sourceKeys = RestoredSourceKeys.of(summary, sourceIdentities)
         val backup = sourceKeys.applyTo(summary.metadata)
-        val kitsuScoresHalved = summary.hasHalvedKitsuScores()
         // Entries are read from the file again for each profile, so no more than a chunk of them is held at once
         val entries = { profileIndex: Int? ->
-            backupDecoder.decodeEntries(uri, profileIndex).onEach { entry ->
-                sourceKeys.applyTo(entry)
-                if (kitsuScoresHalved) entry.doubleKitsuScores()
-            }
+            backupDecoder.decodeEntries(uri, profileIndex).onEach { sourceKeys.applyTo(it) }
         }
         val entryRestore = EntryRestoreCoordinator(
             database,
@@ -246,7 +240,7 @@ class BackupRestorer(
                 }
             }
 
-            // TODO: optionally trigger online library + tracker update
+            // TODO: optionally trigger online library update
         }
     }
 

@@ -7,7 +7,6 @@
     <string name="action_filter_unread">មិនទាន់អាន</string>
     <string name="action_sort_last_read">អានចុងក្រោយគេ</string>
     <string name="action_previous_chapter">ភាគមុន</string>
-    <string name="track">ការតាមដានការអាន</string>
     <string name="label_sources">ប្រភព</string>
     <string name="label_recent_manga">ប្រវត្តិ</string>
     <string name="action_sort_alpha">តម្រៀបតាមអក្ខរក្រម</string>
@@ -24,7 +23,6 @@
     <string name="label_default">លំនាំដើម</string>
     <string name="action_filter">តម្រង</string>
     <string name="action_filter_bookmarked">បានចំណាំ</string>
-    <string name="action_filter_tracked">បានតាមដានការអាន</string>
     <string name="action_filter_empty">ជម្រុះតម្រងចេញ</string>
     <string name="action_sort_count">ចំនួនត្លុកសរុប</string>
     <string name="action_sort_total">ចំនួនភាគសរុប</string>
@@ -114,7 +112,6 @@
     <string name="pref_category_library">បណ្ណាល័យ</string>
     <string name="pref_category_reader">កន្លែងអាន</string>
     <string name="pref_category_downloads">ការទាញយក</string>
-    <string name="pref_category_tracking">ការតាមដានការអាន</string>
     <string name="pref_category_advanced">ការកំណត់ពិសេស</string>
     <string name="pref_category_about">អំពីរ</string>
     <string name="pref_category_theme">ពណ៌</string>

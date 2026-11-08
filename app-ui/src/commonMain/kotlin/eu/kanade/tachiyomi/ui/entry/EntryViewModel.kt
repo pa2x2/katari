@@ -70,9 +70,6 @@ import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
-import mihon.entry.interactions.tracking.EntryTrackingAvailability
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.presentation.kit.feedback.SnackbarHostState
@@ -118,7 +115,6 @@ class EntryViewModel(
     mergedMemberExpansionRepository: MergedMemberExpansionRepository,
     private val entryChapterGroupRepository: EntryChapterGroupRepository,
     chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
-    private val entryTrackingFeature: EntryTrackingFeature,
     private val sourceManager: SourceManager,
     membersFactory: EntryMembers.Factory,
     sourceRefreshFactory: EntrySourceRefresh.Factory,
@@ -208,13 +204,7 @@ class EntryViewModel(
         members,
     )
 
-    val marks: EntryChapterMarks = marksFactory.create(
-        viewModelScope,
-        context,
-        snackbarHostState,
-        stateAccess,
-        selection,
-    )
+    val marks: EntryChapterMarks = marksFactory.create(viewModelScope, stateAccess, selection)
 
     val downloads: EntryChapterDownloads = downloadsFactory.create(
         scope = viewModelScope,
@@ -360,9 +350,6 @@ class EntryViewModel(
             }
 
             observeDuplicateCandidates()
-
-            // Start observe tracking since it only needs entryId
-            observeTrackers()
 
             // Fetch info-chapters when needed
             if (viewModelScope.isActive && (needRefreshInfo || needRefreshChapter)) {
@@ -604,29 +591,6 @@ class EntryViewModel(
             ?.singleOrNull()
     }
 
-    fun supportsTracking(): Boolean {
-        val entryType = successState?.entry?.type ?: return false
-        return entryTrackingFeature.availability(entryType) is EntryTrackingAvailability.Available
-    }
-
-    private fun observeTrackers() {
-        val entry = successState?.entry ?: return
-
-        gatedScope.launchIO {
-            entryTrackingFeature.observeSession(entry)
-                .distinctUntilChanged()
-                .collectLatest { session ->
-                    val services = (session as? EntryTrackingSession.Available)?.services.orEmpty()
-                    updateSuccessState {
-                        it.copy(
-                            trackingCount = services.count { service -> service.track != null },
-                            hasLoggedInTrackers = services.isNotEmpty(),
-                        )
-                    }
-                }
-        }
-    }
-
     private fun observeDuplicateCandidates() {
         val state = successState ?: return
         if (!state.isFromSource || state.entry.favorite) return
@@ -656,7 +620,6 @@ class EntryViewModel(
 
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog
         data object SettingsSheet : Dialog
-        data object TrackSheet : Dialog
         data object FullCover : Dialog
     }
 
@@ -670,10 +633,6 @@ class EntryViewModel(
 
     fun showSettingsDialog() {
         updateSuccessState { it.copy(dialog = Dialog.SettingsSheet) }
-    }
-
-    fun showTrackDialog() {
-        updateSuccessState { it.copy(dialog = Dialog.TrackSheet) }
     }
 
     fun showCoverDialog() {
@@ -744,8 +703,6 @@ class EntryViewModel(
             val childListFeature: EntryChildListFeature,
             val scanlatorFilterFeature: EntryScanlatorFilterFeature,
             val scanlatorFilterState: EntryScanlatorFilterStateResult,
-            val trackingCount: Int = 0,
-            val hasLoggedInTrackers: Boolean = false,
             val duplicateCandidates: List<DuplicateEntryCandidate> = emptyList(),
             val isRefreshingData: Boolean = false,
             val dialog: Dialog? = null,

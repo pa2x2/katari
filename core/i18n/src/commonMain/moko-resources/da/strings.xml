@@ -28,7 +28,6 @@
     <string name="categories">Kategorier</string>
     <string name="manga">Biblioteksposter</string>
     <string name="chapters">Kapitler</string>
-    <string name="track">Sporing</string>
     <string name="label_sources">Kilder</string>
     <string name="label_settings">Indstillinger</string>
     <string name="name">Navn</string>
@@ -79,7 +78,6 @@
     <string name="action_display_list">Liste</string>
     <string name="action_display_download_badge">Downloaded kapitler</string>
     <string name="action_display_local_badge">Lokale manga</string>
-    <string name="action_filter_tracked">Sporet</string>
     <string name="action_move_category">Vælg kategorier</string>
     <string name="action_display_show_tabs">Vis kategorifaner</string>
     <string name="confirm_lock_change">Godkend for at bekræfte ænding</string>
@@ -116,7 +114,6 @@
     <string name="pref_category_general">Generelt</string>
     <string name="pref_category_appearance">Udseende</string>
     <string name="pref_category_downloads">Downloads</string>
-    <string name="pref_category_tracking">Sporing</string>
     <string name="action_close">Luk</string>
     <string name="pref_category_reader">Læser</string>
     <string name="action_webview_forward">Frem</string>
@@ -178,16 +175,11 @@
     <string name="include">Inkluder: %s</string>
     <string name="pref_app_language">App sprog</string>
     <string name="action_remove_everything">Fjern alt</string>
-    <string name="login">Login</string>
     <string name="unknown_error">Ukendt fejl</string>
     <string name="internal_error">InternalError: Tjek nedbrudslogfiler for yderligere information</string>
-    <string name="logout_success">Du er nu logget ud</string>
-    <string name="login_success">Logget ind</string>
-    <string name="logout_title">Log af %1$s?</string>
     <string name="add_to_library">Tilføj til bibliotek</string>
     <string name="in_library">I Biblioteket</string>
     <string name="remove_from_library">Fjern fra biblioteket</string>
-    <string name="logout">Log af</string>
     <string name="scale_type_fit_height">Tilpas højde</string>
     <string name="label_stats">Statistik</string>
     <string name="white_background">Hvid</string>

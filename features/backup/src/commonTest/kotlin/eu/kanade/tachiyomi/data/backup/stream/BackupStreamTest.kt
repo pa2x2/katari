@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
-import eu.kanade.tachiyomi.data.backup.models.BackupTracking
 import eu.kanade.tachiyomi.data.backup.models.LegacyBackupAnime
 import eu.kanade.tachiyomi.data.backup.models.LegacyBackupManga
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
@@ -44,7 +43,6 @@ class BackupStreamTest {
         read.summary.profileEntryCounts shouldContainExactly listOf(3, 1)
         read.summary.entrySources shouldBe setOf(1L, 2L, 3L, 4L)
         read.summary.entrySourceKeys shouldBe setOf(1L, 2L, 3L, 4L, 9L)
-        read.summary.trackingServiceIds shouldBe setOf(2L, 3L)
     }
 
     @Test
@@ -56,7 +54,6 @@ class BackupStreamTest {
                 profile("empty"),
             ),
             activeProfileUuid = "first",
-            kitsuScoresNative = true,
         )
         val sink = Buffer()
         val writer = BackupWriter(sink, ProtoBuf, scratchDir)
@@ -117,7 +114,6 @@ class BackupStreamTest {
             LegacyBackupManga(
                 source = 1,
                 url = "/top/manga",
-                tracking = listOf(BackupTracking(syncId = 3, libraryId = 1)),
             ),
         ),
         backupCategories = listOf(BackupCategory(name = "Reading", order = 0)),
@@ -133,7 +129,6 @@ class BackupStreamTest {
                 entries = listOf(
                     entry(4, "/first/entry").apply {
                         mergeTargetSource = 9
-                        tracking = listOf(BackupTracking(syncId = 2, libraryId = 1))
                     },
                 ),
             ),

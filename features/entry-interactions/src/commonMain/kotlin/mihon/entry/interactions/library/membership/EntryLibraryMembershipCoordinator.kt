@@ -11,20 +11,18 @@ import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import mihon.entry.interactions.lifecycle.attempt
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
 
 /**
  * Adds entries to and removes them from the Library. Merge groups give up removed members inside the removal
- * transaction; tracking, download and custom-cover consequences run after the change commits, and their failures are
+ * transaction; download and custom-cover consequences run after the change commits, and their failures are
  * reported without undoing it.
  */
 internal class EntryLibraryMembershipCoordinator(
     private val host: EntryLibraryMembershipHost,
     private val mergeCandidates: EntryMergeCandidateFeature,
     private val mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
-    private val tracking: () -> EntryTrackingFeature,
     private val downloads: () -> EntryDownloadMaintenanceFeature,
     private val customCoverHost: EntryLibraryCustomCoverHost,
 ) : EntryLibraryMembershipFeature {
@@ -59,7 +57,6 @@ internal class EntryLibraryMembershipCoordinator(
                     failures.attempt("entry.merge.library-addition") {
                         mergeLibraryLifecycle().entryAddedToLibrary(added)
                     }
-                    failures.attempt("entry.tracking.library-addition") { tracking().bindAutomatically(added) }
                     EntryLibraryAddResult.Added(added, failures)
                 }
                 EntryLibraryMembershipCommit.NoChange -> EntryLibraryAddResult.AlreadyInLibrary(entry)

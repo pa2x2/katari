@@ -54,12 +54,6 @@
         <item quantity="many">%d brakujących rozdziałów</item>
         <item quantity="other">%d brakujących rozdziałów</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">1 serwis śledzący</item>
-        <item quantity="few">%d serwisy śledzące</item>
-        <item quantity="many">%d serwisów śledzących</item>
-        <item quantity="other">%d serwisów śledzących</item>
-    </plurals>
     <plurals name="relative_time">
         <item quantity="one">Wczoraj</item>
         <item quantity="few">%1$d dni temu</item>

@@ -36,7 +36,6 @@ import mihon.icons.materialsymbols.rounded.RecordVoiceOver
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Security
 import mihon.icons.materialsymbols.rounded.Storage
-import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Update
 import mihon.presentation.kit.layout.RowList
@@ -207,12 +206,6 @@ object SettingsMainScreen : Screen() {
             ),
         ),
         listOf(
-            Item(
-                titleRes = MR.strings.pref_category_tracking,
-                subtitleRes = MR.strings.pref_tracking_summary,
-                icon = MaterialSymbols.Rounded.Sync,
-                screen = SettingsTrackingScreen,
-            ),
             Item(
                 titleRes = MR.strings.translation_title,
                 subtitleRes = MR.strings.translation_settings_summary,

@@ -36,11 +36,8 @@ class EntryReplacementTest {
                         VALUES (10, 1, '/old/1', 'Episode 1', 1, 1), (11, 1, '/old/2', 'Episode 2', 2, 0)
                         """,
                         """
-                        INSERT INTO entry_sync(
-                            entry_id, sync_id, remote_id, title, last_chapter_read, total_chapters, status, score,
-                            remote_url, start_date, finish_date
-                        )
-                        VALUES (1, 2, 55, 'Show', 1, 12, 1, 0, 'https://anilist.co/anime/55', 0, 0)
+                        INSERT INTO viewer_setting_overrides(entry_id, provider_id, setting_key, encoded_value, updated_at)
+                        VALUES (1, 'player', 'speed', '1.0', 0)
                         """,
                     )
                     exchange.settle(listOf(a, b))
@@ -49,7 +46,7 @@ class EntryReplacementTest {
                     )
 
                     // A migrates the entry as local migration does, keeping chapter state, categories and notes: the
-                    // new entry takes its place, its marks and its tracker binding, the old one leaves the library,
+                    // new entry takes its place, its marks and its viewer setting, the old one leaves the library,
                     // and the position follows the matched episode
                     a.sql(
                         "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (2, -3, '/new', 'Show', 1, 'anime')",
@@ -59,13 +56,9 @@ class EntryReplacementTest {
                         """,
                         "UPDATE entries SET favorite = 0 WHERE _id = 1",
                         """
-                        INSERT INTO entry_sync(
-                            entry_id, sync_id, remote_id, title, last_chapter_read, total_chapters, status, score,
-                            remote_url, start_date, finish_date
-                        )
-                        SELECT 2, sync_id, remote_id, title, last_chapter_read, total_chapters, status, score,
-                            remote_url, start_date, finish_date
-                        FROM entry_sync WHERE entry_id = 1
+                        INSERT INTO viewer_setting_overrides(entry_id, provider_id, setting_key, encoded_value, updated_at)
+                        SELECT 2, provider_id, setting_key, encoded_value, updated_at
+                        FROM viewer_setting_overrides WHERE entry_id = 1
                         """,
                         """
                         INSERT INTO entry_progress_state(entry_id, chapter_id, resource_key, locator_kind, position)
@@ -81,10 +74,10 @@ class EntryReplacementTest {
                     )
                     a.drainAll()
                     delay(5)
-                    // B hasn't heard of it yet, watches the second episode of the old entry and updates the tracker
+                    // B hasn't heard of it yet, watches the second episode of the old entry and changes its speed
                     b.sql(
                         "UPDATE entries SET notes = 'Watched on the train'",
-                        "UPDATE entry_sync SET status = 2, score = 8",
+                        "UPDATE viewer_setting_overrides SET encoded_value = '1.5'",
                         "UPDATE chapters SET read = 1 WHERE url = '/old/2'",
                         """
                         INSERT INTO history(entry_id, chapter_id, last_read, time_read)
@@ -103,7 +96,7 @@ class EntryReplacementTest {
                         // Time read on the old entry after the migration stays with it
                         """["history","/old/2",5000,1200]""",
                         """["progress","/new","","/new/1",600,0]""",
-                        """["tracker","/new",2,55,2,8.0]""",
+                        """["viewer setting","/new","player","speed","1.5"]""",
                     )
                 }
             }

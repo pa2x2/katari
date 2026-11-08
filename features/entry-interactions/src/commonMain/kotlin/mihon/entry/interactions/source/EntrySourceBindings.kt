@@ -36,18 +36,6 @@ object EntrySourceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun trackerSourceAdapterFeature(
-        sourceManager: SourceManager,
-        settings: EntrySourceSettingsFeature,
-        home: EntrySourceHomeFeature,
-    ): EntryTrackerSourceAdapterFeature = DefaultEntryTrackerSourceAdapterFeature(
-        sourceManager = sourceManager,
-        settings = settings,
-        home = home,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
     fun webViewFeature(
         sourceManager: SourceManager,
     ): EntryWebViewFeature = DefaultEntryWebViewFeature(

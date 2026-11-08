@@ -59,7 +59,6 @@ kotlin {
                 // The sync device token is kept in the store for secrets that translation servers' keys use.
                 implementation(projects.features.translation.providers.serverConnection)
                 implementation(projects.features.textRecognition.ui)
-                implementation(projects.features.trackers)
                 implementation(projects.features.translation.ui)
                 implementation(projects.features.tts.ui)
 

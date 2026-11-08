@@ -13,8 +13,6 @@ import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.state.EntryProgressFeature
 import mihon.entry.interactions.state.EntryProgressProcessor
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.entry.interactions.translate.EntryTranslateProcessor
 import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -41,8 +39,6 @@ object EntryMediaSessionBindings {
         progress: () -> EntryProgressFeature,
         downloads: () -> EntryDownloadLifecycleFeature,
         history: () -> EntryHistoryFeature,
-        tracking: () -> EntryTrackingFeature,
-        trackingHost: () -> EntryTrackingHost,
         translateAhead: () -> EntryTranslateAhead,
         settledListeners: () -> Set<EntryMediaSessionSettledListener>,
     ): EntryMediaSessionFeature = DefaultEntryMediaSessionFeature(
@@ -57,10 +53,6 @@ object EntryMediaSessionBindings {
         progress = progress,
         downloads = downloads,
         history = history,
-        tracking = tracking,
-        automaticTrackingSynchronizationEnabled = {
-            trackingHost().automation.isAutomaticProgressSynchronizationEnabled()
-        },
         translateAhead = translateAhead,
         settledListeners = settledListeners,
     )

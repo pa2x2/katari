@@ -18,7 +18,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entry.EntryChapterSettingsDialog
 import eu.kanade.presentation.entry.EntryScreen
 import eu.kanade.presentation.entry.activity.EntryActivitySheet
@@ -48,10 +47,8 @@ import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.search.performGenreSearch
 import eu.kanade.tachiyomi.ui.entry.search.performSearch
-import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdatesViewModel
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -334,13 +331,6 @@ class EntryScreen(
                 val url = checkNotNull(availableWebView).url
                 textClipboard.copy(url, url)
             }.takeIf { availableWebView != null },
-            onTrackingClicked = {
-                if (!successState.hasLoggedInTrackers) {
-                    navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking))
-                } else {
-                    viewModel.showTrackDialog()
-                }
-            }.takeIf { viewModel.supportsTracking() },
             onDuplicatesClicked = viewModel.library::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
@@ -484,15 +474,6 @@ class EntryScreen(
                     showScanlatorsDialog = true
                 }.takeIf { successState.scanlatorFilterApplicable },
             )
-            EntryViewModel.Dialog.TrackSheet -> {
-                NavigatorAdaptiveSheet(
-                    screen = TrackInfoDialogHomeScreen(
-                        entry = successState.entry,
-                    ),
-                    enableSwipeDismiss = { it.lastItem is TrackInfoDialogHomeScreen },
-                    onDismissRequest = onDismissRequest,
-                )
-            }
             EntryViewModel.Dialog.FullCover -> EntryCoverViewer(
                 entryId = successState.entry.id,
                 onDismissRequest = onDismissRequest,

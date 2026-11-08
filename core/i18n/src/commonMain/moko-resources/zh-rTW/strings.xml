@@ -105,7 +105,6 @@
     <string name="pref_remove_after_marked_as_read">手動標示為已讀後</string>
     <string name="disabled">已停用</string>
     <string name="pref_download_new">自動下載新章節</string>
-    <string name="services">歷程平臺</string>
     <string name="pref_create_backup">建立備份</string>
     <string name="pref_restore_backup">還原備份</string>
     <string name="pref_backup_interval">自動備份頻率</string>
@@ -120,8 +119,6 @@
     <string name="version">版本</string>
     <string name="pref_enable_acra">傳送錯誤報告</string>
     <string name="password">密碼</string>
-    <string name="login">登入</string>
-    <string name="login_success">已登入</string>
     <string name="manga_added_library">已收藏至書櫃</string>
     <string name="manga_removed_library">已從書櫃中移除</string>
     <string name="copied_to_clipboard">已複製到剪貼簿： \n「%1$s」</string>
@@ -178,7 +175,6 @@
     <string name="cache_delete_error">清除時發生錯誤</string>
     <string name="cookies_cleared">已清除 Cookie</string>
     <string name="pref_acra_summary">協助我們修復錯誤，傳送的資料將不包含個人敏感資訊</string>
-    <string name="login_title">登入 %1$s</string>
     <string name="username">使用者名稱</string>
     <string name="updating_category">正在更新類別</string>
     <string name="action_global_search_hint">全域搜尋…</string>
@@ -206,10 +202,7 @@
     <string name="sort_by_source">遵循來源</string>
     <string name="sort_by_number">章節編號</string>
     <string name="completed">已完結</string>
-    <string name="score">評分</string>
     <string name="title">標題</string>
-    <string name="status">狀態</string>
-    <string name="track_status">狀態</string>
     <string name="decode_image_error">圖片無法載入</string>
     <string name="notification_first_add_to_library">請先將作品收藏至書櫃</string>
     <string name="information_empty_category">尚無任何類別，輕觸新增按鈕即可建立類別以組織你的書櫃</string>
@@ -235,21 +228,13 @@
     <string name="transition_pages_error">頁面載入失敗：%1$s</string>
     <string name="information_no_recent">最近無更新</string>
     <string name="name">名稱</string>
-    <string name="track">歷程</string>
     <string name="action_open_log">檢視記錄檔</string>
-    <string name="pref_category_tracking">歷程</string>
-    <string name="pref_auto_update_manga_sync">閱後自動更新章節進度</string>
     <string name="ext_trust">信任</string>
     <string name="ext_untrusted">未信任</string>
     <string name="untrusted_extension">未受信任的擴充套件</string>
     <string name="untrusted_extension_message">惡意的擴充套件可能會讀取任何已儲存的登入認證或執行任意的程式碼\n\n若選擇信任該擴充套件，即表示你願意承擔上述風險</string>
     <string name="last_read_chapter">最後閱畢的章節</string>
     <string name="latest">最新</string>
-    <string name="manga_tracking_tab">歷程</string>
-    <string name="reading">閱讀中</string>
-    <string name="plan_to_read">準備中</string>
-    <string name="repeating">重溫中</string>
-    <string name="track_type">類型</string>
     <string name="dialog_with_checkbox_remove_description">此章節的閱讀日期將被清除，你確定嗎？</string>
     <string name="transition_current">這一章：</string>
     <string name="transition_previous">上一章：</string>
@@ -260,8 +245,6 @@
     <string name="third_to_last">倒數第三閱畢的章節</string>
     <string name="fourth_to_last">倒數第四閱畢的章節</string>
     <string name="fifth_to_last">倒數第五閱畢的章節</string>
-    <string name="dropped">已拋棄</string>
-    <string name="on_hold">擱置中</string>
     <string name="no_results_found">找不到結果</string>
     <string name="migration_selection_prompt">請選擇檔案來源</string>
     <string name="action_webview_back">上一頁</string>
@@ -304,8 +287,6 @@
     <string name="manga_info_collapse">較少</string>
     <string name="updating_library">正在更新書櫃</string>
     <string name="add_to_library">加入書櫃</string>
-    <string name="logout_success">你已登出</string>
-    <string name="logout">登出</string>
     <string name="last_used_source">最近使用</string>
     <string name="local_source_help_guide">本機來源指南</string>
     <string name="information_webview_outdated">請更新 WebView 以獲得更佳的相容性</string>
@@ -326,13 +307,11 @@
     <string name="information_cloudflare_bypass_failure">無法繞過 Cloudflare</string>
     <string name="action_start">開始</string>
     <string name="pref_cutout_short">使用螢幕凹口區域</string>
-    <string name="email">電子郵件地址</string>
     <string name="pref_skip_filtered_chapters">略過已篩選的章節</string>
     <string name="pref_show_reading_mode_summary">開始閱讀時，快顯闡明目前的模式</string>
     <string name="pref_show_reading_mode">閱讀模式提示</string>
     <string name="label_sources">來源</string>
     <string name="pref_webtoon_side_padding">頁緣留白</string>
-    <string name="add_tracking">新增閱讀歷程</string>
     <string name="in_library">在書櫃中</string>
     <string name="viewer">閱讀模式</string>
     <string name="action_disable">停用</string>
@@ -352,8 +331,6 @@
     <string name="restoring_backup_canceled">已取消還原</string>
     <string name="restoring_backup_error">還原失敗</string>
     <string name="creating_backup_error">備份失敗</string>
-    <string name="logout_title">登出 %1$s？</string>
-    <string name="tracking_info">將閱讀進度單向同步至外部歷程平臺，請逕行前往個別作品的「歷程」專區以設定</string>
     <string name="requires_app_restart">需要重新啟動應用程式以套用</string>
     <string name="label_network">網路</string>
     <string name="tapping_inverted_both">全部</string>
@@ -379,7 +356,6 @@
     <string name="no_pinned_sources">你尚未釘選任何來源</string>
     <string name="page_list_empty_error">沒有任何頁面</string>
     <string name="backup_restore_missing_sources">未安裝擴充套件：</string>
-    <string name="backup_restore_missing_trackers">未登入歷程平臺：</string>
     <string name="channel_progress">進度</string>
     <string name="channel_errors">錯誤</string>
     <string name="channel_complete">作業完成</string>
@@ -403,13 +379,9 @@
     <string name="migration_help_guide">來源遷移指南</string>
     <string name="spen_next_page">下一頁</string>
     <string name="spen_previous_page">上一頁</string>
-    <string name="myanimelist_relogin">請重新登入 MAL</string>
-    <string name="track_finished_reading_date">閱讀完畢日期</string>
-    <string name="track_started_reading_date">開始閱讀日期</string>
     <string name="edge_nav">邊緣式</string>
     <string name="kindlish_nav">Kindle 式</string>
     <string name="l_nav">L 式</string>
-    <string name="action_filter_tracked">已登錄歷程</string>
     <string name="pref_dump_crash_logs_summary">產生錯誤記錄檔以便分享予開發人員</string>
     <string name="pref_dump_crash_logs">分享當機記錄</string>
     <string name="pref_viewer_nav">輕觸區域</string>
@@ -470,9 +442,6 @@
     <string name="about_dont_kill_my_app">部分裝置製造商設有額外的應用程式限制來終止背景服務，此網站提供了修復這項問題的詳細資訊</string>
     <string name="label_background_activity">背景活動</string>
     <string name="restore_miui_warning">若停用 MIUI 最佳化，備份與還原可能無法正確執行</string>
-    <string name="enhanced_tracking_info">為特定來源提供增強功能，當作品被加入書櫃時，將自動登錄閱讀歷程</string>
-    <string name="enhanced_services">增強式歷程平臺</string>
-    <string name="tracking_guide">歷程平臺指南</string>
     <string name="categorized_display_settings">獨立各類別的排序方式</string>
     <string name="pref_dark_theme_pure_black">純黑深色模式</string>
     <string name="theme_yotsuba">四葉</string>
@@ -496,7 +465,6 @@
     <string name="label_default">預設</string>
     <string name="pref_tablet_ui_mode">平板電腦介面</string>
     <string name="getting_started_guide">入門指南</string>
-    <string name="action_track">新增</string>
     <string name="help_translate">協助翻譯</string>
     <string name="pref_remove_exclude_categories">排除的類別</string>
     <string name="ext_app_info">程式資訊</string>
@@ -551,11 +519,6 @@
     <string name="empty_screen">呃…尷尬了</string>
     <string name="ext_info_version">版本</string>
     <string name="ext_info_language">語言</string>
-    <string name="unfinished_list">已拋棄</string>
-    <string name="on_hold_list">擱置中</string>
-    <string name="complete_list">已完結</string>
-    <string name="wish_list">準備中</string>
-    <string name="reading_list">閱讀中</string>
     <string name="network_not_metered">僅透過吃到飽網路</string>
     <string name="cant_open_last_read_chapter">無法開啟上次閱讀章節</string>
     <string name="custom_cover">自訂封面</string>
@@ -587,7 +550,6 @@
     <string name="pref_reader_summary">閱讀模式、檢視、導覽</string>
     <string name="pref_appearance_summary">主題、日期格式</string>
     <string name="pref_downloads_summary">自動下載、預先下載</string>
-    <string name="pref_tracking_summary">單向進度同步、增強式同步</string>
     <string name="pref_backup_summary">手動與自動備份、儲存空間</string>
     <string name="pref_security_summary">上鎖應用程式、防窺畫面</string>
     <string name="crash_screen_restart_application">重新啟動應用程式</string>
@@ -603,9 +565,6 @@
     <string name="information_no_entries_found">類別沒有作品</string>
     <string name="fdroid_warning">F-Droid 的組建未被正式支援\n輕觸以瞭解詳情</string>
     <string name="action_display_show_continue_reading_button">繼續閱讀按鈕</string>
-    <string name="track_remove_date_conf_title">移除日期？</string>
-    <string name="track_remove_finish_date_conf_text">從「%s」移除你先前輸入的閱讀完畢日期</string>
-    <string name="track_remove_start_date_conf_text">從「%s」移除你先前輸入的開始閱讀日期</string>
     <string name="pref_invalidate_download_cache">重新索引下載</string>
     <string name="pref_invalidate_download_cache_summary">強制重新檢查已下載的章節</string>
     <string name="label_downloaded">已下載</string>
@@ -613,7 +572,6 @@
     <string name="label_titles_section">作品</string>
     <string name="label_total_chapters">總數</string>
     <string name="label_read_chapters">已讀</string>
-    <string name="label_mean_score">平均評分</string>
     <string name="label_used">平臺</string>
     <string name="day_short">%d天</string>
     <string name="label_stats">統計資料</string>
@@ -622,9 +580,7 @@
     <string name="label_started">開始日</string>
     <string name="label_titles_in_global_update">適用全域更新</string>
     <string name="label_read_duration">閱讀歷時</string>
-    <string name="label_tracker_section">歷程平臺</string>
     <string name="not_applicable">不適用</string>
-    <string name="label_tracked_titles">登錄作品</string>
     <string name="hour_short">%d時</string>
     <string name="minute_short">%d 分鐘</string>
     <string name="seconds_short">%d 秒鐘</string>
@@ -633,8 +589,6 @@
     <string name="pref_library_update_show_tab_badge">在「更新」導覽圖示上標記未讀章數</string>
     <string name="copied_to_clipboard_plain">已複製到剪貼簿</string>
     <string name="pref_skip_dupe_chapters">略過重複的章節</string>
-    <string name="enhanced_services_not_installed">可供使用但來源尚未安裝：%s</string>
-    <string name="track_error">%1$s 發生錯誤：%2$s</string>
     <string name="pref_hide_in_library_items">隱藏已在書櫃的作品</string>
     <string name="action_copy_to_clipboard">複製</string>
     <string name="action_update_category">更新類別</string>
@@ -647,9 +601,6 @@
     <string name="pref_chapter_swipe_end">向右滑動章節</string>
     <string name="action_ok">確定</string>
     <string name="delete_downloaded">刪除舊有下載章節</string>
-    <string name="track_delete_title">移除「%s」歷程平臺？</string>
-    <string name="track_delete_text">這將在本機上解除登錄該歷程平臺</string>
-    <string name="track_delete_remote_text">同時移除「%s」上的資料</string>
     <string name="action_filter_interval_custom">已自訂更新頻率</string>
     <string name="action_set_interval">設定間隔</string>
     <string name="action_sort_next_updated">下次預期更新</string>
@@ -661,7 +612,6 @@
     <string name="library_sync_complete">書櫃同步完成</string>
     <string name="download_cache_invalidated">正在重新建立下載索引</string>
     <string name="information_cloudflare_help">查看 Cloudflare 相關說明</string>
-    <string name="track_activity_name">登入歷程平臺</string>
     <string name="create_backup_file_error">無法建立備份檔</string>
     <string name="exception_http">HTTP %d，請在 WebView 中檢查網站</string>
     <string name="exception_offline">沒有網路連線</string>
@@ -680,7 +630,6 @@
     <string name="pref_flash_page">翻頁時閃爍畫面</string>
     <string name="label_data_storage">資料與儲存空間</string>
     <string name="pref_storage_usage">儲存空間使用情形</string>
-    <string name="action_sort_tracker_score">歷程平臺評分</string>
     <string name="action_apply">套用</string>
     <string name="action_revert_to_default">還原為預設值</string>
     <string name="no_scanlators_found">沒有掃譯者</string>
@@ -741,7 +690,6 @@
     <string name="invalid_backup_file_json">不支援 JSON 備份</string>
     <string name="action_copy_link">複製連結</string>
     <string name="pref_download_new_unread_chapters_only">略過下載重複閱讀的章節</string>
-    <string name="confirm_tracker_update">將進度更新到第 %d 章？</string>
     <string name="onboarding_permission_analytics">允許資料分析</string>
     <string name="onboarding_permission_analytics_description">傳送匿名使用資料來改進應用程式功能</string>
     <string name="pref_security">安全</string>
@@ -754,14 +702,9 @@
     <string name="ext_confirm_remove">解除安裝擴充套件？</string>
     <string name="remove_private_extension_message">您真的要解除安裝「%s」擴充套件嗎？</string>
     <string name="non_library_settings">所有已閱讀的作品</string>
-    <string name="pref_auto_update_manga_on_mark_read">標記為已讀時更新章節進度</string>
-    <string name="trackers_updated_summary">已更新歷程到第%d章</string>
     <string name="pref_incognito_mode_extension_summary">停止紀錄擴充的閱讀歷史</string>
     <string name="label_auto">自動</string>
     <string name="theme_monochrome">單色</string>
-    <string name="tracked_privately">私下紀錄</string>
-    <string name="action_toggle_private_on">私下紀錄</string>
-    <string name="action_toggle_private_off">公開紀錄</string>
     <string name="library_list">書櫃清單</string>
     <string name="library_exported">已匯出清單</string>
     <string name="export">匯出</string>
@@ -782,7 +725,6 @@
     <string name="clear_db_exclude_read">保留有已讀章節的作品</string>
     <string name="storage_failed_to_create_download_directory">無法建立下載目錄</string>
     <string name="storage_failed_to_create_directory">無法建立目錄：%s</string>
-    <string name="logging_in">登入中⋯</string>
     <string name="pref_update_library_manga_titles">更新書櫃中的漫畫標題以符合來源</string>
     <string name="pref_update_library_manga_titles_summary">警告：如果漫畫被重新命名，將會從下載佇列中移除（如果有的話）</string>
     <string name="migrationConfigScreen.availableHeader">可選</string>
@@ -844,7 +786,6 @@
     <string name="extensionStoresScreen.deleteStore.title">刪除擴充套件商店</string>
     <string name="extensionStoresScreen.deleteStore.body">你是否要刪除擴充套件商店「%1$s」(%2$s)？</string>
     <string name="pref_webtoon_vertical_navigator_on_left">將垂直導航器設於左側</string>
-    <string name="considering">考慮中</string>
     <string name="theme_tokyonight">Tokyo Night</string>
     <string name="downloading_with_progress">正在下載… (%d%%)</string>
     <string name="pref_vertical_navigator">在以下模式使用垂直章節導航器：</string>
@@ -875,9 +816,6 @@
     <string name="ext_content_warning_nsfw_description">來自此擴充套件的來源主要以 18+ 內容為主。</string>
     <string name="pref_load_ahead_only_over_wifi">僅在 Wi-Fi 下預先載入</string>
     <string name="pref_load_ahead_only_over_wifi_summary">僅載入您正在閱讀的頁面附近內容，以節省行動數據</string>
-    <string name="refresh_tracker_profile">重新整理追蹤器個人檔案</string>
-    <string name="refresh_tracker_success">%s 個人檔案已重新整理</string>
-    <string name="refresh_tracker_error">%1$s 重新整理錯誤：%2$s</string>
     <string name="information_webview_crashed">WebView 停止運作，且頁面已關閉</string>
     <string name="pref_hardware_bitmap_threshold">自訂硬體點陣圖的閾值設定</string>
     <string name="pref_hardware_bitmap_threshold_summary">如果閱讀時載入的是空白影像，請逐步降低閾值\n已選擇：%s</string>

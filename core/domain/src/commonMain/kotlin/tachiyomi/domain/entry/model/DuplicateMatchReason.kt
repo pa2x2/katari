@@ -3,7 +3,6 @@ package tachiyomi.domain.entry.model
 enum class DuplicateMatchReason {
     DESCRIPTION,
     TITLE,
-    TRACKER,
     AUTHOR,
     ARTIST,
     COVER,

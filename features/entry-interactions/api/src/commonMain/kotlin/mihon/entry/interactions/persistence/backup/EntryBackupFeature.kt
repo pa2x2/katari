@@ -17,7 +17,6 @@ data class EntryFeatureStateEnvelope(
 
 data class EntryBackupSelection(
     val includeContentState: Boolean,
-    val includeTrackingState: Boolean,
 )
 
 interface EntryBackupFeature {

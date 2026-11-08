@@ -234,7 +234,6 @@ private fun DuplicateMatchReason.label(entryType: EntryType): String {
     return when (this) {
         DuplicateMatchReason.DESCRIPTION -> stringResource(MR.strings.possible_duplicates_reason_description)
         DuplicateMatchReason.TITLE -> stringResource(MR.strings.possible_duplicates_reason_title)
-        DuplicateMatchReason.TRACKER -> stringResource(MR.strings.possible_duplicates_reason_tracker)
         DuplicateMatchReason.AUTHOR -> stringResource(MR.strings.possible_duplicates_reason_author)
         DuplicateMatchReason.ARTIST -> stringResource(MR.strings.possible_duplicates_reason_artist)
         DuplicateMatchReason.COVER -> stringResource(MR.strings.possible_duplicates_reason_cover)

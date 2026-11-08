@@ -27,7 +27,6 @@ import mihon.entry.interactions.runtime.EntryTypePresentationProvider
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionFeature
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryLibraryProgressResolutionPort
@@ -42,14 +41,12 @@ object EntryLibraryBindings {
         host: EntryLibraryMembershipHost,
         mergeCandidates: EntryMergeCandidateFeature,
         mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
-        tracking: () -> EntryTrackingFeature,
         downloads: () -> EntryDownloadMaintenanceFeature,
         customCoverHost: EntryLibraryCustomCoverHost,
     ): EntryLibraryMembershipFeature = EntryLibraryMembershipCoordinator(
         host = host,
         mergeCandidates = mergeCandidates,
         mergeLibraryLifecycle = mergeLibraryLifecycle,
-        tracking = tracking,
         downloads = downloads,
         customCoverHost = customCoverHost,
     )

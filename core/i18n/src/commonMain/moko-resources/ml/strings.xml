@@ -26,7 +26,6 @@
     <string name="name">പേര്</string>
     <string name="categories">വിഭാഗങ്ങൾ</string>
     <string name="chapters">അദ്ധ്യായങ്ങൾ</string>
-    <string name="track">ട്രാക്കിംഗ്</string>
     <string name="delete_downloaded">ഡൗൺലോഡ് ചെയ്‌തത് ഇല്ലാതാക്കുക</string>
     <string name="label_more">ഇനിയും</string>
     <string name="label_download_queue">ഡൗൺലോഡ് ക്യൂ</string>
@@ -54,7 +53,6 @@
     <string name="action_filter">ഫിൽട്ടർ ചെയ്യുക</string>
     <string name="action_set_interval">ഇടവേള സജ്ജമാക്കുക</string>
     <string name="action_filter_bookmarked">ബുക്ക്‌മാർക്ക് ചെയ്തു</string>
-    <string name="action_filter_tracked">ട്രാക്ക് ചെയ്തു</string>
     <string name="action_filter_unread">വായിക്കാത്തത്</string>
     <string name="action_filter_interval_custom">ഇഷ്‌ടാനുസൃതമാക്കിയ അപ്‌ഡേറ്റ് ആവൃത്തി</string>
     <string name="action_filter_empty">ഫിൽട്ടർ നീക്കം ചെയ്യുക</string>
@@ -67,7 +65,6 @@
     <string name="action_sort_next_updated">അടുത്തതായി പ്രതീക്ഷിക്കുന്ന അപ്ഡേറ്റ്</string>
     <string name="action_sort_chapter_fetch_date">അധ്യായം ലഭിച്ച തീയതി</string>
     <string name="action_sort_date_added">തീയതി ചേർത്തു</string>
-    <string name="action_sort_tracker_score">ട്രാക്കർ സ്കോർ</string>
     <string name="action_search_hint">തിരയുക…</string>
     <string name="action_search_settings">തിരയൽ ക്രമീകരണങ്ങൾ</string>
     <string name="action_select_all">എല്ലാം തിരഞ്ഞെടുക്കുക</string>

@@ -89,7 +89,6 @@ class EntryBackupCreator(
             entries = entries,
             selection = EntryBackupSelection(
                 includeContentState = options.chapters,
-                includeTrackingState = options.tracking,
             ),
         )
         val chaptersByEntry = if (options.chapters || options.history) {

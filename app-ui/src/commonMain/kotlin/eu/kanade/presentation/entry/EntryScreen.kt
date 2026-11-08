@@ -118,7 +118,6 @@ fun EntryScreen(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -213,7 +212,6 @@ fun EntryScreen(
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
-            onTrackingClicked = onTrackingClicked,
             onDuplicatesClicked = onDuplicatesClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -274,7 +272,6 @@ fun EntryScreen(
             onAddToMergeClicked = onAddToMergeClicked,
             onWebViewClicked = onWebViewClicked,
             onWebViewLongClicked = onWebViewLongClicked,
-            onTrackingClicked = onTrackingClicked,
             onDuplicatesClicked = onDuplicatesClicked,
             onTagSearch = onTagSearch,
             onCopyTagToClipboard = onCopyTagToClipboard,
@@ -338,7 +335,6 @@ private fun EntryScreenSmallImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -570,13 +566,11 @@ private fun EntryScreenSmallImpl(
                             sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                             EntryActionRow(
                                 favorite = state.entry.favorite,
-                                trackingCount = state.trackingCount,
                                 updatesLabel = updatesLabel,
                                 onAddToLibraryClicked = onAddToLibraryClicked,
                                 onAddToMergeClicked = onAddToMergeClicked,
                                 onWebViewClicked = onWebViewClicked,
                                 onWebViewLongClicked = onWebViewLongClicked,
-                                onTrackingClicked = onTrackingClicked,
                                 onDuplicatesClicked = onDuplicatesClicked,
                                 onUpdatesClicked = onUpdatesClicked,
                                 onEditCategory = onEditCategoryClicked,
@@ -691,7 +685,6 @@ fun EntryScreenLargeImpl(
     onAddToMergeClicked: (() -> Unit)?,
     onWebViewClicked: (() -> Unit)?,
     onWebViewLongClicked: (() -> Unit)?,
-    onTrackingClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
 
     // For tags menu
@@ -900,13 +893,11 @@ fun EntryScreenLargeImpl(
                         sync.question?.let { EntryQuestionBanner(it, sync.onChooseQuestion) }
                         EntryActionRow(
                             favorite = state.entry.favorite,
-                            trackingCount = state.trackingCount,
                             updatesLabel = updatesLabel,
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onAddToMergeClicked = onAddToMergeClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
                             onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,

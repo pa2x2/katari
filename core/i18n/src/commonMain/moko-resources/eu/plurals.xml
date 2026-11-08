@@ -28,10 +28,6 @@
         <item quantity="one">kapitulu 1</item>
         <item quantity="other">%1$s kapitulu</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">jarraitzaile 1</item>
-        <item quantity="other">%d jarraitzaile</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">Kapitulu berri bat</item>
         <item quantity="other">%1$d kapitulu berri</item>

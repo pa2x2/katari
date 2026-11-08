@@ -21,7 +21,6 @@ data class EntryLibraryFilterTarget(
     val hasBookmarks: Boolean?,
     val isCompleted: Boolean,
     val isOutsideReleasePeriod: Boolean,
-    val trackerIds: Set<Long>,
 )
 
 data class EntryLibraryFilterPolicy(
@@ -33,7 +32,6 @@ data class EntryLibraryFilterPolicy(
     val completed: TriState,
     val outsideReleasePeriod: TriState,
     val outsideReleasePeriodEnabled: Boolean,
-    val tracking: Map<Long, TriState>,
 )
 
 data class EntryLibraryFilterResult(

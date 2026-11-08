@@ -13,7 +13,6 @@ internal fun resolveSettingsStartScreen(
     val requestedScreen = when (destination) {
         SettingsScreen.Destination.About -> AboutScreen
         SettingsScreen.Destination.DataAndStorage -> SettingsDataScreen
-        SettingsScreen.Destination.Tracking -> SettingsTrackingScreen
         SettingsScreen.Destination.Translation -> SettingsTranslationScreen
         SettingsScreen.Destination.TextRecognition -> SettingsTextRecognitionScreen
         SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen

@@ -5,6 +5,7 @@ import eu.kanade.domain.source.service.GlobalSourcePreferences
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
+import tachiyomi.core.common.preference.PlatformPreferenceFiles
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.repository.CategoryRepository
@@ -25,6 +26,7 @@ interface MigrationGraph {
     val downloadPreferences: DownloadPreferences
     val profileStore: ProfileStore
     val profileDatabase: ProfileDatabase
+    val preferenceFiles: PlatformPreferenceFiles
     val getCategories: GetCategories
     val categoryRepository: CategoryRepository
     val libraryUpdateRulesRepository: LibraryUpdateRulesRepository

@@ -36,9 +36,6 @@
     <plurals name="download_amount">
         <item quantity="other">Puniki %d chapter</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d pelacak</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">Nglangkungi %d bab, embuh sumbere ilang utawa wis difilter</item>
     </plurals>

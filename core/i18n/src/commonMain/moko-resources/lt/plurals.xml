@@ -54,12 +54,6 @@
         <item quantity="many">Liko %1$s</item>
         <item quantity="other">Liko %1$s</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d stebėjimo įrenginys</item>
-        <item quantity="few">%d stebėjimo įrenginiai</item>
-        <item quantity="many">%d stebėjimo įrenginių</item>
-        <item quantity="other">%d stebėjimo įrenginių</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Praleidžiamas %d skyrius, arba jo nėra šaltinyje, arba jis buvo nepasirinktas</item>
         <item quantity="few">Praleidžiami %d skyriai, arba jų nėra šaltinyje, arba jie buvo nepasirinkti</item>

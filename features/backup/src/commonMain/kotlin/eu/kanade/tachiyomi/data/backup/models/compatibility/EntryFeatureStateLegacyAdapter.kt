@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntryFeatureState
 import eu.kanade.tachiyomi.data.backup.models.BackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackPreferences
 import eu.kanade.tachiyomi.data.backup.models.BackupPlaybackState
-import eu.kanade.tachiyomi.data.backup.models.BackupTracking
 import eu.kanade.tachiyomi.data.backup.models.BackupViewerSettingOverride
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
@@ -42,10 +41,6 @@ import mihon.entry.interactions.state.EntryProgressSnapshot
 import mihon.entry.interactions.state.EntryProgressStateSnapshot
 import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.state.backup.ENTRY_PROGRESS_BACKUP_STATE_ID
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_STATE_ID
-import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
-import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator
 
@@ -78,12 +73,6 @@ internal fun BackupEntry.featureStatesWithLegacyFallback(entry: Entry): List<Ent
     }
     states.addIfAbsent(ENTRY_MERGE_BACKUP_STATE_ID) {
         legacyMerge()?.envelope(ENTRY_MERGE_BACKUP_STATE_ID, ENTRY_MERGE_BACKUP_SCHEMA_VERSION)
-    }
-    states.addIfAbsent(ENTRY_TRACKING_BACKUP_STATE_ID) {
-        tracking.takeIf(List<BackupTracking>::isNotEmpty)
-            ?.map(BackupTracking::toState)
-            ?.let(::EntryTrackingBackupState)
-            ?.envelope(ENTRY_TRACKING_BACKUP_STATE_ID, ENTRY_TRACKING_BACKUP_SCHEMA_VERSION)
     }
     states.addIfAbsent(ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID) {
         downloadPreferences?.toState()?.envelope(
@@ -124,9 +113,6 @@ internal fun BackupEntry.applyLegacyFeatureStateProjection(states: List<EntryFea
                 mergeTargetUrl = state.target.url
                 mergeTargetType = state.target.type
                 mergePosition = state.position
-            }
-            ENTRY_TRACKING_BACKUP_STATE_ID -> {
-                tracking = envelope.decode<EntryTrackingBackupState>().records.map(EntryTrackingBackupRecord::toWire)
             }
             ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID -> {
                 downloadPreferences = envelope.decode<EntryDownloadConfigurationBackupState>().toWire()
@@ -313,37 +299,6 @@ private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreference
         null -> null
     },
     updatedAt = updatedAt,
-)
-
-@Suppress("DEPRECATION")
-private fun BackupTracking.toState() = EntryTrackingBackupRecord(
-    serviceId = syncId.toLong(),
-    remoteId = mediaIdInt.takeIf { it != 0 }?.toLong() ?: mediaId,
-    libraryId = libraryId,
-    title = title,
-    progress = lastChapterRead.toDouble(),
-    total = totalChapters.toLong(),
-    score = score.toDouble(),
-    status = status.toLong(),
-    startDate = startedReadingDate,
-    finishDate = finishedReadingDate,
-    remoteUrl = trackingUrl,
-    private = private,
-)
-
-private fun EntryTrackingBackupRecord.toWire() = BackupTracking(
-    syncId = serviceId.toInt(),
-    libraryId = libraryId ?: 0,
-    mediaId = remoteId,
-    trackingUrl = remoteUrl,
-    title = title,
-    lastChapterRead = progress.toFloat(),
-    totalChapters = total.toInt(),
-    score = score.toFloat(),
-    status = status.toInt(),
-    startedReadingDate = startDate,
-    finishedReadingDate = finishDate,
-    private = private,
 )
 
 private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBackupState(

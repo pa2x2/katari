@@ -32,10 +32,6 @@
         <item quantity="one">1 luku</item>
         <item quantity="other">%1$s lukua</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">1 seurantapalvelin</item>
-        <item quantity="other">%d seurantapalvelinta</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">1 puuttuva luku</item>
         <item quantity="other">%d puuttuvaa lukua</item>

@@ -32,7 +32,6 @@ import mihon.desktop.window.WindowPreferences
 import mihon.desktop.work.PersistedWorkResume
 import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
-import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.extension.runtime.jvm.application.WindowActivity
 import mihon.feature.appupdate.AppUpdateController
 import mihon.presentation.kit.files.SystemFileChooser
@@ -50,7 +49,6 @@ import mihon.webview.jcef.runtime.JcefRuntime
         ImageBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
-        MessageBindings::class,
         ShareBindings::class,
         FileChooserBindings::class,
         ThemeBindings::class,
@@ -77,8 +75,6 @@ import mihon.webview.jcef.runtime.JcefRuntime
         WebViewBindings::class,
         PlayerBindings::class,
         ReaderBindings::class,
-        TrackerBindings::class,
-        EntryTrackingHostBindings::class,
         BackupBindings::class,
         AdvancedSettingsBindings::class,
         AboutBindings::class,

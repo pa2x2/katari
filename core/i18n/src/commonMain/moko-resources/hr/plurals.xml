@@ -40,11 +40,6 @@
         <item quantity="few">%1$s poglavlja</item>
         <item quantity="other">%1$s poglavlja</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d usluga praćenja</item>
-        <item quantity="few">%d usluge praćenja</item>
-        <item quantity="other">%d usluga praćenja</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Preskače se %d poglavlje. Ne postoji u izvoru ili je filtrirano</item>
         <item quantity="few">Preskaču se %d poglavlja. Ne postoje u izvoru ili su filtrirana</item>

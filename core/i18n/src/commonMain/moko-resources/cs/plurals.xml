@@ -54,12 +54,6 @@
         <item quantity="many">Přeskočeno %d kapitol, buď chybí ve zdroji nebo byly vyfiltrovány</item>
         <item quantity="other">Přeskočeno %d kapitol, buď chybí ve zdroji nebo byly vyfiltrovány</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d sledovač</item>
-        <item quantity="few">%d sledovače</item>
-        <item quantity="many">%d sledovačů</item>
-        <item quantity="other">%d sledovačů</item>
-    </plurals>
     <plurals name="relative_time">
         <item quantity="one">Včera</item>
         <item quantity="few">Před %1$d dny</item>

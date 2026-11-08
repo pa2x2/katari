@@ -12,7 +12,6 @@ import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCov
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.merge.EntryMergeProfileMoveFeature
 import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 
@@ -28,7 +27,6 @@ object EntryProfileMoveBindings {
         scanlatorFilterStateHost: EntryProfileMoveScanlatorFilterStateHost,
         scanlatorFilterProcessors: Map<EntryType, EntryScanlatorFilterProcessor>,
         coverHashStateHost: EntryProfileMoveCoverHashStateHost,
-        trackingStateHost: EntryProfileMoveTrackingStateHost,
         customCoverHost: EntryProfileMoveCustomCoverHost,
         sourceVisibilityHost: EntryProfileMoveSourceVisibilityHost,
     ): EntryProfileMoveFeature = EntryProfileMoveCoordinator(
@@ -38,7 +36,6 @@ object EntryProfileMoveBindings {
         scanlatorFilterStateHost = scanlatorFilterStateHost,
         scanlatorFilterTypes = scanlatorFilterProcessors.keys,
         coverHashStateHost = coverHashStateHost,
-        trackingStateHost = trackingStateHost,
         customCoverHost = customCoverHost,
         sourceVisibilityHost = sourceVisibilityHost,
     )

@@ -6,8 +6,6 @@ import mihon.entry.interactions.download.maintenance.merge.ENTRY_DOWNLOAD_MERGE_
 import mihon.entry.interactions.merge.consequence.cover.ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergePendingConsequence
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.merge.ENTRY_TRACKING_MERGE_PARTICIPANT_ID
 import tachiyomi.domain.entry.model.Entry
 
 /**
@@ -18,7 +16,6 @@ import tachiyomi.domain.entry.model.Entry
  */
 internal class EntryMergeLegacyConsequenceDelivery(
     private val host: EntryMergeHost,
-    private val tracking: () -> EntryTrackingFeature,
     private val coverCleanup: suspend (Entry) -> Unit,
     private val downloadMaintenance: () -> EntryDownloadMaintenanceFeature,
 ) {
@@ -34,7 +31,6 @@ internal class EntryMergeLegacyConsequenceDelivery(
         val entry = host.profile(consequence.profileId).entries(listOf(consequence.entryId)).singleOrNull()
             ?: return
         when (consequence.participantId) {
-            ENTRY_TRACKING_MERGE_PARTICIPANT_ID -> tracking().bindAutomatically(entry)
             ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID -> coverCleanup(entry)
             ENTRY_DOWNLOAD_MERGE_PARTICIPANT_ID -> {
                 check(
@@ -48,7 +44,6 @@ internal class EntryMergeLegacyConsequenceDelivery(
     private companion object {
         const val LEGACY_SCHEMA_VERSION = 1
         val LEGACY_PARTICIPANT_IDS = setOf(
-            ENTRY_TRACKING_MERGE_PARTICIPANT_ID,
             ENTRY_MERGE_CUSTOM_COVER_PARTICIPANT_ID,
             ENTRY_DOWNLOAD_MERGE_PARTICIPANT_ID,
         )

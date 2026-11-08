@@ -228,7 +228,6 @@ include(
     ":features:text-recognition:runtime",
     ":features:text-recognition:spi",
     ":features:text-recognition:ui",
-    ":features:trackers",
     ":features:translation:api",
     ":features:translation:providers:deepl",
     ":features:translation:providers:libretranslate",

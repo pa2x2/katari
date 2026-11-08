@@ -23,7 +23,7 @@ class LegacyBackupManga(
     @ProtoNumber(14) var viewer: Int = 0,
     @ProtoNumber(16) var chapters: List<LegacyBackupChapter> = emptyList(),
     @ProtoNumber(17) var categories: List<Long> = emptyList(),
-    @ProtoNumber(18) var tracking: List<BackupTracking> = emptyList(),
+    // @ProtoNumber(18) var tracking, tracker links Katari no longer restores
     @ProtoNumber(100) var favorite: Boolean = true,
     @ProtoNumber(101) var chapterFlags: Int = 0,
     @ProtoNumber(103) var viewer_flags: Int? = null,
@@ -129,7 +129,6 @@ internal fun LegacyBackupManga.toBackupEntry(): BackupEntry {
         memo = memo,
         chapters = chapters.map { it.toBackupChapter() },
         categories = categories,
-        tracking = tracking,
         history = history,
         excludedScanlators = excludedScanlators,
         mergeTargetSource = mergeTargetSource,

@@ -17,7 +17,6 @@ import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveCustom
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveSourceVisibilityHost
-import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.host.lifecycle.removal.AppEntryDestructiveRemovalCustomCoverHost
 import mihon.entry.interactions.host.lifecycle.removal.AppEntryDestructiveRemovalHost
 import mihon.entry.interactions.host.migration.AppEntryMigrationCustomCoverHost
@@ -29,7 +28,6 @@ import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCov
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalHost
 import mihon.entry.interactions.media.session.EntryMediaSessionIncognitoState
@@ -124,11 +122,6 @@ abstract class AppEntryHostBindings {
         @SingleIn(AppScope::class)
         fun profileMoveCustomCoverHost(coverCache: CoverCache): EntryProfileMoveCustomCoverHost =
             AppEntryProfileMoveCustomCoverHost(coverCache)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun profileMoveTrackingStateHost(handler: DatabaseHandler): EntryProfileMoveTrackingStateHost =
-            AppEntryProfileMoveTrackingStateHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)

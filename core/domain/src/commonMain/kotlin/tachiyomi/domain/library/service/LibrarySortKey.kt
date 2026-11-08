@@ -13,14 +13,9 @@ data class LibrarySortKey(
     val latestUpload: Long,
     val entryFetchDate: Long,
     val dateAdded: Long,
-    val trackerScore: Double?,
 )
 
-fun librarySortComparator(
-    sort: LibrarySort,
-    trackerScores: Map<Long, Double?> = emptyMap(),
-    defaultTrackerScore: Double = -1.0,
-): Comparator<LibrarySortKey> {
+fun librarySortComparator(sort: LibrarySort): Comparator<LibrarySortKey> {
     // The collator already ignores case
     val sortAlphabetically: (LibrarySortKey, LibrarySortKey) -> Int = { item1, item2 ->
         item1.title.compareToWithCollator(item2.title)
@@ -56,11 +51,6 @@ fun librarySortComparator(
             }
             LibrarySort.Type.DateAdded -> {
                 item1.dateAdded.compareTo(item2.dateAdded)
-            }
-            LibrarySort.Type.TrackerMean -> {
-                val item1Score = item1.trackerScore ?: trackerScores[item1.id] ?: defaultTrackerScore
-                val item2Score = item2.trackerScore ?: trackerScores[item2.id] ?: defaultTrackerScore
-                item1Score.compareTo(item2Score)
             }
             LibrarySort.Type.Random -> {
                 error("Random sort should be handled before calling librarySortComparator")
