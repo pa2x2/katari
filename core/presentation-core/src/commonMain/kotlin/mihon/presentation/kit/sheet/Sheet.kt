@@ -1,7 +1,6 @@
 package mihon.presentation.kit.sheet
 
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -53,6 +52,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.dialog.ClearDialogWindowDim
 import mihon.presentation.kit.dialog.DialogBackHandler
+import mihon.presentation.kit.dialog.OutsideTapArea
 import mihon.presentation.kit.dialog.kitDialogProperties
 import mihon.presentation.kit.feedback.LocalScreenMessages
 import mihon.presentation.kit.feedback.ScreenSnackbarHost
@@ -175,16 +175,8 @@ private fun SheetLayout(
         }
     }
     val insets = WindowInsets.systemBars.union(WindowInsets.ime)
-    Box(
-        modifier = Modifier
-            .clickable(
-                interactionSource = null,
-                indication = null,
-                enabled = enableImplicitDismiss,
-                onClick = internalOnDismissRequest,
-            )
-            .fillMaxSize(),
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        OutsideTapArea(enabled = enableImplicitDismiss, onTap = internalOnDismissRequest)
         Box(
             modifier = Modifier
                 .inHalf(half)
@@ -208,11 +200,6 @@ private fun SheetLayout(
             }
             Surface(
                 modifier = formModifier
-                    .clickable(
-                        interactionSource = null,
-                        indication = null,
-                        onClick = {},
-                    )
                     .then(
                         if (enableImplicitDismiss && edge == SheetEdge.Bottom) {
                             Modifier.nestedScroll(
