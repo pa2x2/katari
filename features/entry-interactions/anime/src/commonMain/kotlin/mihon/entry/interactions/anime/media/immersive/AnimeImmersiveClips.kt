@@ -131,6 +131,7 @@ private fun ResolveVideoStream.Reason.message(): String {
         ResolveVideoStream.Reason.TorrentOnly -> "Only offered as a torrent"
         ResolveVideoStream.Reason.StreamFetchTimeout -> "Timed out while resolving streams"
         ResolveVideoStream.Reason.OfflineNoDownload -> "Device is offline and this episode is not downloaded"
+        ResolveVideoStream.Reason.PickNotOffered -> "The source does not offer this dub or server for this episode"
         is ResolveVideoStream.Reason.StreamFetchFailed -> cause.message ?: "Unable to resolve video stream"
     }
 }

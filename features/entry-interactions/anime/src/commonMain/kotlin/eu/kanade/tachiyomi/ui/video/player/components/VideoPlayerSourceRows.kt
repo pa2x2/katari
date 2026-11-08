@@ -38,6 +38,8 @@ internal data class VideoSourceRows(
     val changed: Boolean,
     val previewLoading: Boolean,
     val previewFailed: Boolean,
+    /** The source answered the drafted dub or server with another one, so it can't be applied. */
+    val previewNotOffered: Boolean,
     val dubs: List<VideoPlaybackOption>,
     val servers: List<VideoPlaybackOption>,
     val serversLoading: Boolean,
@@ -47,10 +49,11 @@ internal data class VideoSourceRows(
     val qualitiesLoading: Boolean,
 ) {
     val showDubs: Boolean get() = dubs.isNotEmpty()
-    val showServers: Boolean get() = serversLoading || servers.size > 1 || (previewFailed && !dubMatchesCurrent)
+    private val previewUnlisted: Boolean get() = previewFailed || previewNotOffered
+    val showServers: Boolean get() = serversLoading || servers.size > 1 || (previewUnlisted && !dubMatchesCurrent)
     val showStreams: Boolean get() = streams.size > 1
     val showQualities: Boolean
-        get() = qualitiesLoading || qualities.isNotEmpty() || (previewFailed && dubMatchesCurrent && !matchesCurrent)
+        get() = qualitiesLoading || qualities.isNotEmpty() || (previewUnlisted && dubMatchesCurrent && !matchesCurrent)
 }
 
 /**
@@ -64,6 +67,7 @@ internal fun videoSourceRows(options: VideoSourceOptions, draft: PlaybackSelecti
     val preview = options.preview.takeIf { !matchesCurrent && it.selection == draft }
     val previewLoading = preview?.isLoading == true
     val previewFailed = preview?.failed == true
+    val previewNotOffered = preview?.notOffered == true
     val qualities = if (matchesCurrent) {
         options.listed.sourceQualities
     } else {
@@ -76,6 +80,7 @@ internal fun videoSourceRows(options: VideoSourceOptions, draft: PlaybackSelecti
         changed = draft != options.active,
         previewLoading = previewLoading,
         previewFailed = previewFailed,
+        previewNotOffered = previewNotOffered,
         dubs = options.listed.dubs,
         servers = servers,
         serversLoading = previewLoading && !dubMatchesCurrent && servers.isEmpty(),
@@ -128,8 +133,13 @@ internal fun LazyListScope.videoSourceRowItems(
         item(key = VideoSourceRowKeys.SERVER) {
             when {
                 rows.serversLoading -> LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_server)
-                rows.previewFailed && !rows.dubMatchesCurrent -> FailedPlaybackOptionRow(
+                rows.previewNotOffered && !rows.dubMatchesCurrent -> UnlistedPlaybackOptionRow(
                     titleRes = MR.strings.anime_playback_server,
+                    message = MR.strings.anime_playback_options_not_offered,
+                )
+                rows.previewFailed && !rows.dubMatchesCurrent -> UnlistedPlaybackOptionRow(
+                    titleRes = MR.strings.anime_playback_server,
+                    message = MR.strings.anime_playback_options_failed,
                     onRetry = onRetryPreview,
                 )
                 else -> PlaybackOptionRow(
@@ -161,8 +171,13 @@ internal fun LazyListScope.videoSourceRowItems(
             when {
                 rows.qualitiesLoading -> LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_source_quality)
                 // A drafted server's qualities; a drafted dub's failure shows on its server row.
-                rows.previewFailed && rows.dubMatchesCurrent -> FailedPlaybackOptionRow(
+                rows.previewNotOffered && rows.dubMatchesCurrent -> UnlistedPlaybackOptionRow(
                     titleRes = MR.strings.anime_playback_source_quality,
+                    message = MR.strings.anime_playback_options_not_offered,
+                )
+                rows.previewFailed && rows.dubMatchesCurrent -> UnlistedPlaybackOptionRow(
+                    titleRes = MR.strings.anime_playback_source_quality,
+                    message = MR.strings.anime_playback_options_failed,
                     onRetry = onRetryPreview,
                 )
                 else -> PlaybackOptionRow(
@@ -176,7 +191,7 @@ internal fun LazyListScope.videoSourceRowItems(
     }
     if (rows.changed) {
         item(key = VideoSourceRowKeys.APPLY) {
-            ApplySourceRow(onCancel = onCancel, onApply = onApply)
+            ApplySourceRow(onCancel = onCancel, onApply = onApply, applyEnabled = !rows.previewNotOffered)
         }
     }
 }

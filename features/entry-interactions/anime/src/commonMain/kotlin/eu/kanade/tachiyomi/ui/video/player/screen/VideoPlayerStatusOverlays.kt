@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
@@ -249,12 +250,21 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     }
     if (switchFailure != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
         val section = (switchFailure.target?.choice ?: current.playback.playbackData.sourceChoice())?.settingsSection
+        // Asking again for a pick the source doesn't offer gets the same answer.
+        val notOffered = switchFailure.problem.cause == VideoPlayerProblem.Cause.NotOffered
         VideoPlayerNoticePill(
             label = switchFailure.target?.label
-                ?.let { stringResource(MR.strings.anime_playback_switch_failed, it) }
+                ?.let {
+                    val message = if (notOffered) {
+                        MR.strings.anime_playback_switch_not_offered
+                    } else {
+                        MR.strings.anime_playback_switch_failed
+                    }
+                    stringResource(message, it)
+                }
                 ?: stringResource(switchFailure.problem.cause.title),
             modifier = Modifier.align(Alignment.TopCenter),
-            actionLabel = stringResource(MR.strings.action_retry),
+            actionLabel = stringResource(MR.strings.action_retry).takeUnless { notOffered },
             onAction = {
                 viewModel.dismissSwitchFailure()
                 viewModel.retrySwitch()

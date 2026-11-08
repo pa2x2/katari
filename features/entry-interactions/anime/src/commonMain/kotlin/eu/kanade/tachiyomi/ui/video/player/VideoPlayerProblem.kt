@@ -53,6 +53,11 @@ internal data class VideoPlayerProblem(
             switchHelps = true,
         ),
         NotFound(MR.strings.anime_problem_not_found, MR.strings.anime_problem_not_found_explanation),
+        NotOffered(
+            MR.strings.anime_problem_not_offered,
+            MR.strings.anime_problem_not_offered_explanation,
+            switchHelps = true,
+        ),
         SourceMissing(
             MR.strings.anime_problem_source_missing,
             MR.strings.anime_problem_source_missing_explanation,
@@ -74,6 +79,7 @@ internal fun ResolveVideoStream.Reason.toProblem(): VideoPlayerProblem = when (t
     ResolveVideoStream.Reason.NoStreams -> VideoPlayerProblem(VideoPlayerProblem.Cause.NoStreams)
     ResolveVideoStream.Reason.TorrentOnly -> VideoPlayerProblem(VideoPlayerProblem.Cause.TorrentOnly)
     ResolveVideoStream.Reason.OfflineNoDownload -> VideoPlayerProblem(VideoPlayerProblem.Cause.Offline)
+    ResolveVideoStream.Reason.PickNotOffered -> VideoPlayerProblem(VideoPlayerProblem.Cause.NotOffered)
     is ResolveVideoStream.Reason.StreamFetchFailed -> VideoPlayerProblem(
         cause = generateSequence(cause) { it.cause }.firstNotNullOfOrNull(::networkCause)
             ?: VideoPlayerProblem.Cause.SourceFailed,

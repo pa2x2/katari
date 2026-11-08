@@ -1856,6 +1856,7 @@
     <string name="anime_playback_stream">Stream</string>
     <string name="anime_playback_server_failed">Didn\'t work</string>
     <string name="anime_playback_options_failed">Couldn\'t load these options</string>
+    <string name="anime_playback_options_not_offered">Not available for this episode</string>
     <string name="anime_playback_source_quality">Source quality</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
@@ -1941,6 +1942,7 @@
     <string name="anime_playback_server_fallback">%1$s didn\'t respond · Playing %2$s</string>
     <string name="anime_playback_change">Change</string>
     <string name="anime_playback_switch_failed">Couldn\'t switch to %1$s</string>
+    <string name="anime_playback_switch_not_offered">%1$s isn\'t available for this episode</string>
     <string name="anime_playback_member_episode">%1$s · %2$s</string>
     <!-- The window's title while an episode plays: the series, then the episode -->
     <string name="anime_playback_window_title">%1$s · %2$s</string>
@@ -2026,6 +2028,8 @@
     <string name="anime_problem_unplayable_explanation">Katari can\'t play this stream\'s format.</string>
     <string name="anime_problem_not_found">Episode not found</string>
     <string name="anime_problem_not_found_explanation">It may have been removed from the source.</string>
+    <string name="anime_problem_not_offered">Not available for this episode</string>
+    <string name="anime_problem_not_offered_explanation">The source doesn\'t offer this choice for this episode.</string>
     <string name="anime_problem_not_found_episode_list">It may have been removed from the source. Refresh the episode list and try again.</string>
     <string name="anime_problem_episode_list">Episode list</string>
     <string name="anime_problem_source_missing">Source not installed</string>

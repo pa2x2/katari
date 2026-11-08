@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
+import eu.kanade.tachiyomi.ui.video.player.recovery.isUnofferedPick
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.recovery.switchTarget
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
@@ -287,6 +288,7 @@ internal class VideoPlayerViewModel(
             if (!isActive) return@launch
             resolvePlayback(
                 selection = selection,
+                pickedFrom = current.playback.sourceSelection,
                 explicitStreamPick = selection.streamKey != null &&
                     selection.streamKey != current.playback.sourceSelection.streamKey,
                 preservePositionMs = current.resumePositionMs,
@@ -343,7 +345,15 @@ internal class VideoPlayerViewModel(
             if (target.read()?.selection != selection) return@launch
 
             when (result) {
-                is ResolveVideoStream.Result.Success -> {
+                is ResolveVideoStream.Result.Success -> if (
+                    isUnofferedPick(
+                        listed = target.listed,
+                        picked = selection,
+                        answered = result.playbackData.selection,
+                    )
+                ) {
+                    target.write(VideoPlaybackPreviewState(selection = selection, notOffered = true))
+                } else {
                     cacheSelectionResult(target.episodeId, selection, result)
                     target.write(result.toPreview(selection))
                 }
@@ -444,6 +454,7 @@ internal class VideoPlayerViewModel(
             updatePlaybackPreferences(ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
             resolvePlayback(
                 selection = selection,
+                pickedFrom = listedSelection,
                 initial = true,
                 explicitStreamPick = selection.streamKey != null && selection.streamKey != listedSelection.streamKey,
                 listedBefore = listed,
@@ -879,8 +890,13 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * [pickedFrom] is the selection the viewer drafted [selection] from, when they picked it: an answer with another dub
+     * or server than they picked then fails as [ResolveVideoStream.Reason.PickNotOffered] instead of playing.
+     */
     private suspend fun resolvePlayback(
         selection: PlaybackSelection? = null,
+        pickedFrom: PlaybackSelection? = null,
         preservePositionMs: Long? = null,
         initial: Boolean = false,
         showLoading: Boolean = true,
@@ -923,6 +939,13 @@ internal class VideoPlayerViewModel(
             )
         }
         val result = when (listed) {
+            is ResolveVideoStream.Result.Success if pickedFrom != null && targetSelection != null &&
+                isUnofferedPick(
+                    listed = pickedFrom,
+                    picked = targetSelection,
+                    answered = listed.playbackData.selection,
+                ) ->
+                ResolveVideoStream.Result.Error(ResolveVideoStream.Reason.PickNotOffered, listed.playbackData)
             is ResolveVideoStream.Result.Success -> {
                 showListed(listed.playbackData, serverNotice)
                 withContext(resolveDispatcher) {
@@ -1087,6 +1110,7 @@ internal class VideoPlayerViewModel(
         targetVisibleEntryId: Long = visibleEntryId,
         targetOwnerEntryId: Long = ownerEntryId,
         selection: PlaybackSelection? = null,
+        pickedFrom: PlaybackSelection? = null,
         fallback: ServerFallback = ServerFallback(),
         explicitStreamPick: Boolean = false,
     ) {
@@ -1117,6 +1141,7 @@ internal class VideoPlayerViewModel(
         playbackSession = null
         resolvePlayback(
             selection = selection,
+            pickedFrom = pickedFrom,
             initial = true,
             changingEpisode = change,
             explicitStreamPick = explicitStreamPick,
@@ -1146,6 +1171,7 @@ internal class VideoPlayerViewModel(
                 targetVisibleEntryId = failed.visibleEntryId,
                 targetOwnerEntryId = failed.ownerEntryId,
                 selection = selection,
+                pickedFrom = listed,
                 fallback = fallback,
                 explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
             )
