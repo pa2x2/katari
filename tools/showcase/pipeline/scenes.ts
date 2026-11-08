@@ -32,12 +32,8 @@ export const SCENE_GROUPS: Record<string, string[]> = {
     "translation.TranslationScenes",
   ],
   "library-and-statistics": ["library.LibraryScenes", "library.EntryScenes", "statistics.StatisticsScenes"],
-  "browse-backup-and-readers": [
-    "browse.BrowseScenes",
-    "settings.BackupScenes",
-    "reader.BookScenes",
-    "reader.PlayerScenes",
-  ],
+  "browse-and-backup": ["browse.BrowseScenes", "settings.BackupScenes"],
+  readers: ["reader.BookScenes", "reader.ComicScenes", "reader.PlayerScenes"],
 };
 
 export const SCENES = Object.values(SCENE_GROUPS).flat();
@@ -51,7 +47,8 @@ export const TRANSLATION_SCENES = SCENE_GROUPS.translation!;
  */
 export const YEAR_RECAP_OPENED_SCENES = [
   ...SCENE_GROUPS.translation!,
-  ...SCENE_GROUPS["browse-backup-and-readers"]!,
+  ...SCENE_GROUPS["browse-and-backup"]!,
+  ...SCENE_GROUPS.readers!,
 ];
 
 export function runScene(device: Device, appId: string, scene: string, args: Record<string, string> = {}): void {

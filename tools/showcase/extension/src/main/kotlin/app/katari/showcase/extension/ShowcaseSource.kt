@@ -67,7 +67,7 @@ internal class ShowcaseSource(
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia {
         val (workId, number) = chapter.url.removePrefix("/").split('/')
         val work = work(workId)
-        return work.media(work.chapters.single { it.number == number.toInt() }, baseUrl)
+        return work.media(work.chapters.single { it.number == number.toInt() }, selection, baseUrl)
     }
 
     private suspend fun works(): List<ShowcaseWork> =
@@ -102,6 +102,8 @@ internal class ShowcaseSource(
                 name = chapter.name
                 chapterNumber = chapter.number.toDouble()
                 dateUpload = LocalDate.parse(chapter.date).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                summary = chapter.summary
+                previewUrl = chapter.still?.let { "$baseUrl/$it" }
             }
         }
 }

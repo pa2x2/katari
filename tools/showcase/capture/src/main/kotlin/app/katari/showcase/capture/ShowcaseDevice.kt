@@ -14,6 +14,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import java.io.File
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -132,6 +133,29 @@ internal object ShowcaseDevice {
             touch(MotionEvent.ACTION_MOVE, downTime, x, endY)
         }
         touch(MotionEvent.ACTION_UP, downTime, x, endY)
+    }
+
+    /**
+     * Presses the screen point ([startX], [startY]), holds it past the long-press timeout, and drags to ([endX], [endY])
+     * before letting go, as a reader selects a passage. The drag steps as far apart as [dragUp]'s, so the selection ends
+     * on the same word every run.
+     */
+    fun pressAndDrag(startX: Int, startY: Int, endX: Int, endY: Int) {
+        val downTime = SystemClock.uptimeMillis()
+        touch(MotionEvent.ACTION_DOWN, downTime, startX.toFloat(), startY.toFloat())
+        SystemClock.sleep(LONG_PRESS_HOLD_MS)
+        val steps = maxOf(abs(endX - startX), abs(endY - startY)) / DRAG_STEP_PX.toInt()
+        for (step in 1..steps) {
+            SystemClock.sleep(DRAG_STEP_MS)
+            val x = startX + (endX - startX) * step / steps
+            val y = startY + (endY - startY) * step / steps
+            touch(MotionEvent.ACTION_MOVE, downTime, x.toFloat(), y.toFloat())
+        }
+        repeat(DRAG_HOLD_MOVES) {
+            SystemClock.sleep(DRAG_HOLD_INTERVAL_MS)
+            touch(MotionEvent.ACTION_MOVE, downTime, endX.toFloat(), endY.toFloat())
+        }
+        touch(MotionEvent.ACTION_UP, downTime, endX.toFloat(), endY.toFloat())
     }
 
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
@@ -320,16 +344,34 @@ internal object ShowcaseDevice {
     fun capture(name: String) {
         settle()
         shell("mkdir -p $CAPTURE_DIRECTORY")
-        val still = File("$CAPTURE_DIRECTORY/$name.png")
+        if (!heldStill(File("$CAPTURE_DIRECTORY/$name.png"))) fail("The screen never held still for $name")
+    }
+
+    /**
+     * Waits until the screen holds still, as [capture] does, for a gesture that must land on what is drawn now: a
+     * reader can still be moving its page into place after it shows its progress.
+     */
+    fun awaitStill() {
+        settle()
+        val probe = File(STILL_PROBE)
+        try {
+            if (!heldStill(probe)) fail("The screen never held still")
+        } finally {
+            shell("rm -f ${probe.path}")
+        }
+    }
+
+    /** Takes screenshots into [file] until two in a row are the same; false when the screen never holds still. */
+    private fun heldStill(file: File): Boolean {
         var previous: ByteArray? = null
         repeat(STILL_ATTEMPTS) {
-            shell("screencap -p ${still.path}")
-            val current = still.readBytes()
-            if (current.contentEquals(previous)) return
+            shell("screencap -p ${file.path}")
+            val current = file.readBytes()
+            if (current.contentEquals(previous)) return true
             previous = current
             SystemClock.sleep(STILL_INTERVAL_MS)
         }
-        fail("The screen never held still for $name")
+        return false
     }
 
     /**
@@ -390,6 +432,9 @@ internal object ShowcaseDevice {
     private const val DRAG_STEP_PX = 10f
     private const val DRAG_HOLD_MOVES = 6
     private const val DRAG_HOLD_INTERVAL_MS = 50L
+
+    // Well past the 400 ms after which a held finger becomes a long press.
+    private const val LONG_PRESS_HOLD_MS = 1_000L
     private const val REVEAL_ATTEMPTS = 3
     private const val STEADY_INTERVAL_MS = 100L
     private const val STEADY_SAMPLES = 2
@@ -398,4 +443,7 @@ internal object ShowcaseDevice {
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
     private const val STILL_INTERVAL_MS = 500L
+
+    // Outside CAPTURE_DIRECTORY, which the pipeline publishes whole.
+    private const val STILL_PROBE = "/data/local/tmp/showcase-still.png"
 }

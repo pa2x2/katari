@@ -26,7 +26,19 @@ class PlayerScenes {
      * the open player is sent the benchmark build's paused-start extra, which seeks it there exactly and pauses it.
      */
     @Test
-    fun player() {
+    fun player() = onShot { capture("player") }
+
+    /** The player's settings over the same frame, with another quality picked and waiting to be applied. */
+    @Test
+    fun settings() = onShot {
+        tap(By.desc("Settings"))
+        tap(By.text(OTHER_QUALITY))
+        find(By.text("Apply"))
+        capture("player-settings")
+    }
+
+    /** Runs [block] in the landscape player, paused on the shot with its controls showing. */
+    private fun onShot(block: () -> Unit) {
         openProfile("Personal")
         openEntry("Sintel")
         // The episode row's other text changes with how much of it was watched.
@@ -46,7 +58,7 @@ class PlayerScenes {
             // its place; a CI runner's emulator takes over half a minute to.
             awaitWithControls(By.text(SHOT_LABEL))
             awaitWithControls(By.desc("Play"))
-            capture("player")
+            block()
         } finally {
             device.setOrientationNatural()
         }
@@ -69,6 +81,9 @@ class PlayerScenes {
         const val PLAYER = "eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity"
         const val SHOT_MS = 691_169L
         const val SHOT_LABEL = "11:31 / 14:48"
+
+        // A version of the film the showcase extension offers besides the one playing, which it never fetches.
+        const val OTHER_QUALITY = "480p"
         const val BUFFERING_TIMEOUT_MS = 2 * 60_000L
         const val CONTROLS_WAIT_MS = 2_000L
 

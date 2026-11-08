@@ -2,8 +2,8 @@
  * Builds the folder the showcase content server serves, from the works in sources.ts as their upstream sites have them.
  *
  * The folder holds `catalog.json` (see catalog.ts), which lists every chapter's files, and `files/`, with every cover
- * and the files of the chapters sources.ts fetches, under the paths the catalog gives. A film's video stays upstream
- * and is listed in `streamed.json`, from which the content server streams what the player reads.
+ * and episode still and the files of the chapters sources.ts fetches, under the paths the catalog gives. An episode's
+ * videos stay upstream and are listed in `streamed.json`, from which the content server streams what the player reads.
  */
 import { copyFileSync, existsSync, linkSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, resolve } from "node:path";
@@ -15,7 +15,7 @@ import { cacheDir, cached } from "./download-cache.ts";
 import { extractCover } from "./epub-cover.ts";
 import type { ResolvedWork } from "./resolved-work.ts";
 import { resolveWork } from "./resolvers/resolve-work.ts";
-import type { FilmWork, WorkDefinition } from "./source-definitions.ts";
+import type { PlayedStretch, WorkDefinition } from "./source-definitions.ts";
 import { sources, works } from "./sources.ts";
 import { prefetch, readStreamed, streamedSize } from "./streamed-file.ts";
 import { cuePoints } from "./webm-cues.ts";
@@ -52,12 +52,34 @@ async function materialize(work: ResolvedWork, definition: WorkDefinition): Prom
   }
   const chapters: CatalogChapter[] = [];
   for (const chapter of work.chapters) {
-    const files = chapter.files.map((url, index) => `files/${work.id}/${chapter.number}/${fileName(work, index + 1, url)}`);
+    const directory = `files/${work.id}/${chapter.number}`;
+    const files = chapter.files.map((url, index) => `${directory}/${fileName(work, index + 1, url)}`);
+    const versions = chapter.versions?.map((version, index) => ({
+      ...version,
+      file: `${directory}/video-${index + 1}${extname(new URL(version.url).pathname)}`,
+    }));
     if (fetched.has(chapter.number)) {
-      const played = definition.kind === "film" ? definition.played : undefined;
-      for (const [index, url] of chapter.files.entries()) await place(work, url, files[index]!, played);
+      for (const [index, url] of chapter.files.entries()) link(await cached(url), join(out, files[index]!));
+      for (const [index, version] of (versions ?? []).entries()) {
+        // A scene plays only the version the player opens.
+        await stream(version.url, version.file, index === 0 ? chapter.played : undefined);
+      }
     }
-    chapters.push({ number: chapter.number, name: chapter.name, date: chapter.date, files });
+    // The episode list shows every episode's still, played or not.
+    let still: string | undefined;
+    if (chapter.still !== undefined) {
+      still = `${directory}/still${extname(new URL(chapter.still).pathname)}`;
+      link(await cached(chapter.still), join(out, still));
+    }
+    chapters.push({
+      number: chapter.number,
+      name: chapter.name,
+      date: chapter.date,
+      files,
+      ...(versions === undefined ? {} : { versions: versions.map(({ server, quality, file }) => ({ server, quality, file })) }),
+      ...(chapter.summary === undefined ? {} : { summary: chapter.summary }),
+      ...(still === undefined ? {} : { still }),
+    });
   }
   const { chapters: _, cover: __, ...described } = work;
   const credit = "credit" in work.cover ? (work.cover.credit ?? null) : null;
@@ -71,19 +93,15 @@ function fileName(work: ResolvedWork, index: number, url: string): string {
     case "book":
       return "book.epub";
     case "anime":
-      return `video${extname(url)}`;
+      throw new Error(`${work.id}: an episode's videos are its versions, not its files`);
   }
 }
 
-async function place(work: ResolvedWork, url: string, path: string, played?: FilmWork["played"]): Promise<void> {
-  if (work.type === "anime") {
-    // Asked now so that a video the player could not seek in fails the fetch rather than the player scene.
-    await streamedSize(url);
-    if (played !== undefined) await prefetchPlayback(url, played);
-    streamed[path] = url;
-  } else {
-    link(await cached(url), join(out, path));
-  }
+async function stream(url: string, path: string, played: PlayedStretch | undefined): Promise<void> {
+  // Asked now so that a video the player could not seek in fails the fetch rather than the player scene.
+  await streamedSize(url);
+  if (played !== undefined) await prefetchPlayback(url, played);
+  streamed[path] = url;
 }
 
 /**
@@ -92,7 +110,7 @@ async function place(work: ResolvedWork, url: string, path: string, played?: Fil
  * last cluster, where a film the seed finished opens. The first two stretches run on by what the content server streams
  * ahead of the player.
  */
-async function prefetchPlayback(url: string, played: NonNullable<FilmWork["played"]>): Promise<void> {
+async function prefetchPlayback(url: string, played: PlayedStretch): Promise<void> {
   if (extname(url) !== ".webm") throw new Error(`${url}: only a WebM says where its played stretch is`);
   const size = await streamedSize(url);
   const cues = await cuePoints((start, end) => readStreamed(url, start, Math.min(end, size)));

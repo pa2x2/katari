@@ -56,6 +56,19 @@ internal data class ShowcaseChapter(
     val name: String,
     /** ISO date the chapter was published. */
     val date: String,
-    /** Paths relative to the content server's root: pages in reading order, or the single EPUB or video. */
+    /** Paths relative to the content server's root: a comic's pages in reading order, or a book's single EPUB. */
     val files: List<String>,
+    /** An episode's videos, in the order the player prefers them. */
+    val versions: List<ShowcaseVideoVersion> = emptyList(),
+    val summary: String? = null,
+    /** Path of an image of a moment of the episode, relative to the content server's root. */
+    val still: String? = null,
+)
+
+@Serializable
+internal data class ShowcaseVideoVersion(
+    val server: String,
+    val quality: String,
+    /** Path relative to the content server's root. */
+    val file: String,
 )
