@@ -28,6 +28,7 @@ import mihon.desktop.extension.dialog.ExtensionDialogsHost
 import mihon.desktop.presence.ReportsPresence
 import mihon.desktop.security.signin.SignInPromptHost
 import mihon.desktop.work.WorkCloseGuardDialog
+import mihon.presentation.kit.feedback.AppMessagesHost
 import mihon.presentation.kit.files.LocalSystemFileChooser
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
 import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
@@ -48,11 +49,12 @@ import javax.swing.JFrame
  * desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
- * as the player enter, the desktop's file chooser, which the screens' document pickers open, and the density of the
- * session's scale and the interface size. While it is open, extensions find the activity that stands for it in the
- * foreground ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity
- * open in it. Its focus is the app's foreground for sync ([ReportsForeground]), and whether it is minimized counts
- * toward the user being away, which locks the open profile again ([ReportsPresence]).
+ * as the player enter, the desktop's file chooser, which the screens' document pickers open, the app's messages, which
+ * show on the screen the user is on, the profile picker included, and the density of the session's scale and the
+ * interface size. While it is open, extensions find the activity that stands for it in the foreground
+ * ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity open in it.
+ * Its focus is the app's foreground for sync ([ReportsForeground]), and whether it is minimized counts toward the user
+ * being away, which locks the open profile again ([ReportsPresence]).
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -143,14 +145,19 @@ private fun WindowContent(
     ) {
         ProvideInterfaceDensity(graph.sessionScale, graph.interfaceSizePreferences) {
             AppUiRoot(graph) {
-                KeyboardShortcutsHost(shortcuts) {
-                    val backInput = rememberWindowBackInput()
-                    WindowShortcuts(fullScreen = fullScreen, backInput = backInput, onQuit = onQuit)
-                    InterfaceSizeShortcuts(graph.interfaceSizePreferences)
-                    Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(shortcuts, backInput)) { content() }
-                    ExtensionDialogsHost(graph.windowExtensionDialogs)
-                    SignInPromptHost(graph.signInPrompts, graph.systemSignIn)
-                    WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
+                // Around the profile gate too, so a message reaches its picker before a profile opens
+                AppMessagesHost(graph.appMessages) {
+                    KeyboardShortcutsHost(shortcuts) {
+                        val backInput = rememberWindowBackInput()
+                        WindowShortcuts(fullScreen = fullScreen, backInput = backInput, onQuit = onQuit)
+                        InterfaceSizeShortcuts(graph.interfaceSizePreferences)
+                        Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(shortcuts, backInput)) {
+                            content()
+                        }
+                        ExtensionDialogsHost(graph.windowExtensionDialogs)
+                        SignInPromptHost(graph.signInPrompts, graph.systemSignIn)
+                        WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
+                    }
                 }
             }
         }
