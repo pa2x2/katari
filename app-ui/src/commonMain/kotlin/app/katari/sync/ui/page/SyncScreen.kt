@@ -136,15 +136,10 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
                     navigator.push(ExtensionStoresScreen())
                 },
             )
-            SyncPageDialog.Disconnect -> ConfirmDialog(
-                title = stringResource(MR.strings.sync_disconnect_title),
-                text = stringResource(
-                    MR.strings.sync_disconnect_text,
-                    (status?.link as? SyncStatus.Link.Linked)?.server?.host.orEmpty(),
-                ),
-                confirmLabel = stringResource(MR.strings.sync_action_disconnect),
-                destructive = true,
-                onConfirm = {
+            SyncPageDialog.Disconnect -> DisconnectDialog(
+                status = status,
+                onSyncNow = model::syncNow,
+                onDisconnect = {
                     model.disconnect()
                     dialog = null
                 },
