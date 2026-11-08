@@ -19,7 +19,6 @@ internal object RequestChecks {
     private const val MAX_KEY_LENGTH = 512
     private const val MAX_KIND_LENGTH = 128
     private const val MAX_CHANGE_ID_LENGTH = 128
-    private const val MAX_DESCRIPTION_LENGTH = 128
     private const val MAX_CODE_LENGTH = 64
     private val sha256Hex = Regex("[0-9a-f]{64}")
 
@@ -69,7 +68,9 @@ internal object RequestChecks {
 
     private fun check(description: DeviceDescription) {
         listOf(description.name, description.platform, description.appVersion).forEach {
-            require(it.isNotBlank() && it.length <= MAX_DESCRIPTION_LENGTH) { "Device description field length" }
+            require(it.isNotBlank() && it.length <= DeviceDescription.MAX_FIELD_LENGTH) {
+                "Device description field length"
+            }
         }
     }
 

@@ -74,6 +74,7 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             openChoices = { navigator.push(FirstSyncScreen) },
             openQuestions = { navigator.push(SyncQuestionsScreen) },
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
+            renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
             disconnect = { dialog = SyncPageDialog.Disconnect },
             dismissEnded = model::dismissEnded,
@@ -106,6 +107,15 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
         when (val shown = dialog) {
             null -> Unit
             SyncPageDialog.LinkDevice -> LinkDeviceDialog(onDismissRequest = { dialog = null })
+            SyncPageDialog.RenameDevice -> RenameDeviceDialog(
+                name = model.naming.name(),
+                platformName = model.naming.platformName(),
+                onRename = {
+                    model.renameThisDevice(it)
+                    dialog = null
+                },
+                onDismissRequest = { dialog = null },
+            )
             is SyncPageDialog.RemoveDevice -> ConfirmDialog(
                 title = stringResource(MR.strings.sync_remove_device_title, shown.name),
                 text = stringResource(MR.strings.sync_remove_device_text, shown.name),
@@ -153,6 +163,7 @@ internal class SyncPageActions(
     val openChoices: () -> Unit,
     val openQuestions: () -> Unit,
     val linkDevice: () -> Unit,
+    val renameDevice: () -> Unit,
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
     val disconnect: () -> Unit,
     val dismissEnded: () -> Unit,

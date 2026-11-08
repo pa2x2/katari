@@ -18,7 +18,6 @@ import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
-import app.katari.sync.protocol.device.DeviceDescription
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +101,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     var appVersion = "test"
 
     private val thisDevice = object : ThisDevice {
-        override fun description() = DeviceDescription(name = file.nameWithoutExtension, platform = "Linux", appVersion)
+        override fun platformName() = file.nameWithoutExtension
+
+        override val platform = "Linux"
 
         override val appVersion get() = this@SyncTestDevice.appVersion
     }

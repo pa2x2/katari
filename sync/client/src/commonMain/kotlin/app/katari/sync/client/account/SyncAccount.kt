@@ -1,11 +1,11 @@
 package app.katari.sync.client.account
 
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
-import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.firstsync.ProfileChoice
 import app.katari.sync.client.firstsync.ProfilePairing
@@ -42,7 +42,7 @@ class SyncAccount(
     private val clients: SyncServerClients,
     private val connection: SyncConnection,
     private val tokens: DeviceTokenStore,
-    private val thisDevice: ThisDevice,
+    private val naming: DeviceNaming,
     private val capture: SyncCapture,
     private val runs: SyncRuns,
     private val resync: FullResync,
@@ -124,7 +124,7 @@ class SyncAccount(
         val check = checkServer(address)
         if (check !is ServerCheck.Ready) return JoinResult.ServerNotReady(check)
         val registered = try {
-            register(clients.of(check.server), thisDevice.description())
+            register(clients.of(check.server), naming.description())
         } catch (e: SyncFailure.Refused) {
             return JoinResult.Refused(e.reason)
         } catch (_: SyncFailure.Unreachable) {
@@ -134,10 +134,26 @@ class SyncAccount(
         }
         val choicesWaiting = runs.exclusive {
             start(check.server, registered)
-            compareWithAccount(clients.of(check.server, registered.token))
+            val client = clients.of(check.server, registered.token)
+            setNameApart(client, registered.device)
+            compareWithAccount(client)
         }
         runs.request()
         return JoinResult.Joined(choicesWaiting)
+    }
+
+    /**
+     * Numbers this device's name when another device of the account has it (D005), before the first pull tells the
+     * account. A server that can't be reached for the list leaves the name as it is.
+     */
+    private suspend fun setNameApart(client: SyncServerClient, device: DeviceId) {
+        val listed = try {
+            client.devices().devices
+        } catch (_: SyncFailure) {
+            return
+        }
+        devices.remember(listed)
+        naming.setApart(listed.filter { it.id != device }.map { it.description.name })
     }
 
     /**
@@ -180,7 +196,7 @@ class SyncAccount(
 
     suspend fun createLinkCode(): AccountCall<LinkCodeOffer> = linked { client, _ ->
         val code = client.createLinkCode()
-        val link = LinkCodeLink(client.server, code.code, connection.state().accountName, thisDevice.description().name)
+        val link = LinkCodeLink(client.server, code.code, connection.state().accountName, naming.name())
         LinkCodeOffer(code.code, code.expiresAtMillis, link)
     }
 

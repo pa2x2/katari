@@ -3337,6 +3337,9 @@
     <!-- %1$s is the device's name -->
     <string name="sync_remove_device_text">%1$s stops syncing and has to be linked again to rejoin. Its own data stays on it.</string>
     <string name="sync_remove_device_failed">Couldn\'t remove the device. Try again when the server can be reached.</string>
+    <string name="sync_rename_device_title">Rename this device</string>
+    <!-- %1$s is the name the device has from its system, such as the phone's model -->
+    <string name="sync_rename_device_hint">Your other devices show this name. Leave it empty to use %1$s.</string>
     <string name="sync_options">Options</string>
     <string name="sync_use_mobile_data">Use mobile data for covers, fonts and first download</string>
     <string name="sync_use_mobile_data_summary">Changes sync on any network</string>

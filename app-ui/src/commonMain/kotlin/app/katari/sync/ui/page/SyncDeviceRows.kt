@@ -18,8 +18,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The account's devices, this one first, each with its platform, app version and last sync, and a menu that removes
- * any other; then Link a device (D050). A device leaves by disconnecting, so its own row has no menu.
+ * The account's devices, this one first, each with its platform, app version and last sync, and a menu that renames
+ * this device (D005) or removes any other; then Link a device (D050). A device leaves by disconnecting, so its own
+ * menu doesn't remove it.
  */
 @Composable
 internal fun devicesGroup(
@@ -75,11 +76,17 @@ private fun DeviceRow(device: AccountDevice, actions: SyncPageActions) {
         },
         subtitleTone = if (device.isThisDevice) ContentTone.Primary else ContentTone.Inherit,
         icon = platformIcon(description.platform),
-        widget = if (device.isThisDevice) {
-            null
-        } else {
-            {
-                OverflowMenu { close ->
+        widget = {
+            OverflowMenu { close ->
+                if (device.isThisDevice) {
+                    DropdownMenuItem(
+                        label = stringResource(MR.strings.action_rename),
+                        onClick = {
+                            close()
+                            actions.renameDevice()
+                        },
+                    )
+                } else {
                     DropdownMenuItem(
                         label = stringResource(MR.strings.action_remove),
                         onClick = {

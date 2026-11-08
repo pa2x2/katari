@@ -4,7 +4,6 @@ import android.app.Application
 import android.os.Build
 import android.provider.Settings
 import app.katari.sync.client.connection.ThisDevice
-import app.katari.sync.protocol.device.DeviceDescription
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.settings.screen.about.versionText
 import mihon.app.ui.buildinfo.AppBuild
@@ -18,19 +17,17 @@ class AndroidThisDevice(
     private val application: Application,
     private val build: AppBuild,
 ) : ThisDevice {
-    override fun description(): DeviceDescription {
+    override fun platformName(): String {
         val named = Settings.Global.getString(application.contentResolver, Settings.Global.DEVICE_NAME)
         val model = if (Build.MODEL.startsWith(Build.MANUFACTURER, ignoreCase = true)) {
             Build.MODEL
         } else {
             "${Build.MANUFACTURER} ${Build.MODEL}"
         }
-        return DeviceDescription(
-            name = named?.takeIf(String::isNotBlank) ?: model,
-            platform = "Android",
-            appVersion = appVersion,
-        )
+        return named?.takeIf(String::isNotBlank) ?: model
     }
+
+    override val platform: String get() = "Android"
 
     override val appVersion: String get() = build.versionText()
 }
