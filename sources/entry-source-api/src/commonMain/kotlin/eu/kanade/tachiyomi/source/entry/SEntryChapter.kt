@@ -48,7 +48,7 @@ interface SEntryChapter {
      *
      * The JSON object is not visible to users and is intended for internal or
      * source-specific purposes. Apps may define their own namespaced keys
-     * (e.g. `"mihon.*"`) for sources to populate.
+     * (e.g. `"katari.*"`) for sources to populate.
      */
     var memo: JsonObject
 
