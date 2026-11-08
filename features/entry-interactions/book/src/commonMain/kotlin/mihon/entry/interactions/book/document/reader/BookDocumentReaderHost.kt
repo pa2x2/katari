@@ -14,8 +14,6 @@ internal class BookDocumentReaderHost(
     val context: PlatformContext,
     /** What the chapter's web menu offers, which leaves out what the platform can't do, such as sharing on desktop. */
     val webViewActions: List<EntryChildWebViewAction>,
-    /** Whether the selection menu offers Listen, which needs a speech engine the desktop doesn't have yet. */
-    val speaksSelections: Boolean,
     /** Shows a short message about what the reader just did, outside its own snackbars. */
     val showMessage: (String) -> Unit,
     val onClose: () -> Unit,

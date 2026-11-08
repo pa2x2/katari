@@ -11,8 +11,10 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ControlRow
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
 import mihon.tts.api.provider.TtsProviderDisclosure
+import mihon.tts.ui.engine.engineExplanation
 import mihon.tts.ui.settings.TtsPreviewState
 import mihon.tts.ui.settings.TtsSettingsState
 import mihon.tts.ui.settings.previewSample
@@ -45,6 +47,10 @@ internal fun TtsPreviewCard(
             icon = if (previewActive) MaterialSymbols.Rounded.Stop else MaterialSymbols.AutoMirroredRounded.VolumeUp,
             enabled = configurationReady,
         )
+        // The engine row only names the engine, so the disabled preview says what keeps it from speaking.
+        state.selectedEngineState?.status?.engineExplanation()?.takeUnless { configurationReady }?.let { explanation ->
+            Text(text = explanation, role = TextRole.Body, tone = ContentTone.Error)
+        }
         TtsPreviewStatus(
             preview = state.preview,
             onAcknowledgeDisclosure = onAcknowledgeDisclosure,

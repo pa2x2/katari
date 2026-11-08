@@ -26,8 +26,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The row under the timeline: episode skipping and the settings people change mid-episode on the left, the episode
- * list on the right. A missing previous or next episode drops its button, and Subtitles shows only when the stream has
+ * The row under the timeline: episode skipping, where playback is (the time and the chapter playing) and the settings
+ * people change mid-episode on the left, the episode list on the right. A missing previous or next episode drops its button, and Subtitles shows only when the stream has
  * subtitles to pick from. Rotate is null where the window doesn't turn or ignores the app's orientation, which drops it
  * too. The picture button switches between Fit and Fill, and takes a pinch's zoom back to Fit. [volume] follows it
  * where the controls set the volume, and the full-screen button closes the row where the window has a full screen
@@ -35,6 +35,10 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 @Composable
 internal fun VideoPlayerTimelineToolbar(
+    /** The playback time, given the slot it takes. */
+    position: @Composable (Modifier) -> Unit,
+    /** The chapter playing, given the slot it takes; null without chapters. */
+    chapter: (@Composable (Modifier) -> Unit)?,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,
     playbackSpeedLabel: String,
@@ -58,6 +62,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
                 contentDescription = stringResource(MR.strings.anime_playback_previous_episode),
                 onClick = onPreviousEpisode,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.PreviousEpisode,
@@ -68,23 +73,27 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipNext,
                 contentDescription = stringResource(MR.strings.anime_playback_next_episode),
                 onClick = onNextEpisode,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
                 shortcut = VideoPlayerShortcuts.NextEpisode,
             )
         }
+        position(Modifier.mediaToolbarSlot(labelDropOrder = POSITION_DROP_ORDER))
+        chapter?.invoke(Modifier.mediaToolbarSlot(fillsLeftover = true))
         MediaToolbarButton(
             icon = MaterialSymbols.Rounded.Speed,
             label = playbackSpeedLabel,
             onClick = onOpenSpeed,
             iconDescription = stringResource(MR.strings.anime_playback_speed),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER).videoPlayerControl(),
         )
         if (showSubtitles) {
             IconButton(
                 icon = MaterialSymbols.Rounded.Subtitles,
                 contentDescription = stringResource(MR.strings.anime_playback_subtitles),
                 onClick = onOpenSubtitles,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -94,6 +103,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.Rounded.MobileRotate,
                 contentDescription = stringResource(MR.strings.anime_playback_rotate),
                 onClick = onRotate,
+                modifier = Modifier.videoPlayerControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -103,7 +113,7 @@ internal fun VideoPlayerTimelineToolbar(
             label = picture.label(),
             onClick = onTogglePicture,
             iconDescription = stringResource(MR.strings.anime_playback_picture),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER).videoPlayerControl(),
         )
         volume?.invoke()
         MediaToolbarButton(
@@ -111,7 +121,9 @@ internal fun VideoPlayerTimelineToolbar(
             label = stringResource(MR.strings.episodes),
             onClick = onOpenEpisodes,
             iconDescription = stringResource(MR.strings.action_view_episodes),
-            modifier = Modifier.mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER),
+            modifier = Modifier
+                .mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER)
+                .videoPlayerControl(),
         )
         if (fullScreen != null) {
             Box(modifier = Modifier.mediaToolbarSlot(trailing = true)) {
@@ -129,6 +141,7 @@ internal fun VideoPlayerTimelineToolbar(
                         },
                     ),
                     onClick = onToggleFullScreen,
+                    modifier = Modifier.videoPlayerControl(),
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                     shortcut = VideoPlayerShortcuts.FullScreen,
@@ -138,7 +151,9 @@ internal fun VideoPlayerTimelineToolbar(
     }
 }
 
-// When the row is short of room, the episode list's label goes first, then the picture's, then the speed's.
+// When the row is short of room, the chapter name goes first (it only takes leftover room), then the episode list's
+// label, the picture's and the speed's, and then the time shortens to the position alone.
 private const val EPISODES_LABEL_DROP_ORDER = 0
 private const val PICTURE_LABEL_DROP_ORDER = 1
 private const val SPEED_LABEL_DROP_ORDER = 2
+private const val POSITION_DROP_ORDER = 3

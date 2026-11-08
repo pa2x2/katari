@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolumeControl
 import mihon.presentation.kit.control.MediaVolumeControl
@@ -26,6 +27,7 @@ internal fun VideoPlayerVolumeButton(
             player?.let { control.setMuted(it, !control.muted) }
             onInteraction()
         },
+        modifier = Modifier.videoPlayerControl(),
         muteShortcut = VideoPlayerShortcuts.Mute,
     )
 }

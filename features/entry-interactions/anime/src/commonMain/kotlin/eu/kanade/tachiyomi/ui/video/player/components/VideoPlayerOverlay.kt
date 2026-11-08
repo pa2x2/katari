@@ -8,7 +8,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
@@ -23,14 +22,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
@@ -42,7 +40,8 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -123,15 +122,18 @@ internal fun VideoPlayerOverlay(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long>,
+    /** The markers found online, whose spans the timeline colours by service. */
+    onlineMarkers: List<OnlineMarker>,
     chapter: VideoPlayerChapter?,
     onOpenChapters: () -> Unit,
     skipOffer: VideoPlayerSkipOffer?,
+    /** The service the offered skip's marker came from; null for the source's own. */
+    skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     /**
-     * Whether a mouse is over the bars or the centre buttons, which keeps them shown; null where nothing hovers, as on
-     * touch screens, which keeps the bars from taking touches off the picture beside their buttons.
+     * Whether a mouse rests on one of the controls, which keeps them shown; the bars around them and the gaps between
+     * them don't count. Null where nothing hovers, as on touch screens.
      */
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
     /** Where a mouse hovers over the timeline, null once it leaves; null where nothing hovers. */
@@ -174,9 +176,9 @@ internal fun VideoPlayerOverlay(
                 lockedChromeVisible = lockedChromeVisible,
                 skipVisible = skipVisible,
                 skipOffer = skipOffer,
+                skipService = skipService,
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
-                onControlsFootprintChange = onControlsFootprintChange,
                 onPointerOverControlsChange = onPointerOverControlsChange,
                 topBar = {
                     VideoPlayerTopBar(
@@ -204,19 +206,31 @@ internal fun VideoPlayerOverlay(
                         onScrubStarted = onScrubStarted,
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
-                        showsRemainingTime = showsRemainingTime,
-                        onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
-                        chapter = chapter,
-                        onOpenChapters = onOpenChapters,
+                        onlineMarkers = onlineMarkers,
                         onHover = onTimelineHover,
                         hoverPositionMs = timelineHoverMs,
                         hoverChapter = timelineHoverChapter,
-                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
-                            { VideoPlayerSkipButton(offer = offer, countdown = skipCountdown, onClick = onSkip) }
-                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
+                                position = { slot ->
+                                    VideoPlayerPositionButton(
+                                        positionMs = displayedPositionMs,
+                                        durationMs = playbackSnapshot.durationMs,
+                                        showsRemainingTime = showsRemainingTime,
+                                        onToggleRemainingTime = onToggleRemainingTime,
+                                        modifier = slot,
+                                    )
+                                },
+                                chapter = chapter?.let { playing ->
+                                    { slot ->
+                                        VideoPlayerChapterLabel(
+                                            chapter = playing,
+                                            onClick = onOpenChapters,
+                                            modifier = slot,
+                                        )
+                                    }
+                                },
                                 hasPreviousEpisode = hasPreviousEpisode,
                                 hasNextEpisode = hasNextEpisode,
                                 playbackSpeedLabel = playbackSpeedLabel,
@@ -322,142 +336,123 @@ private fun BoxScope.VideoPlayerControls(
     lockedChromeVisible: Boolean,
     skipVisible: Boolean,
     skipOffer: VideoPlayerSkipOffer?,
+    skipService: IntroTimesService?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
     locked: @Composable () -> Unit,
 ) {
-    var bottomRowHeight by remember { mutableIntStateOf(0) }
-    var centreButtonsBottom by remember { mutableIntStateOf(0) }
-    // Half-open on a table the controls sit under the picture, so the subtitles have nothing to clear
-    val footprint = if (transportVisible && posture !is VideoPlayerPosture.Tabletop) {
-        VideoControlsFootprint(
-            bottomRowTopPx = bottomRowHeight.toFloat(),
-            centreButtonsBottomPx = centreButtonsBottom.toFloat(),
-        )
-    } else {
-        VideoControlsFootprint.None
-    }
-    LaunchedEffect(footprint) { onControlsFootprintChange(footprint) }
-    val topBarHover = remember { MutableInteractionSource() }
-    val bottomHover = remember { MutableInteractionSource() }
-    val centreHover = remember { MutableInteractionSource() }
-    val pointerOverControls = topBarHover.collectIsHoveredAsState().value ||
-        bottomHover.collectIsHoveredAsState().value ||
-        centreHover.collectIsHoveredAsState().value
+    val controlHover = remember { MutableInteractionSource() }
+    val pointerOverControls by controlHover.collectIsHoveredAsState()
     LaunchedEffect(pointerOverControls) { onPointerOverControlsChange?.invoke(pointerOverControls) }
-    fun Modifier.hovers(source: MutableInteractionSource) =
-        if (onPointerOverControlsChange != null) hoverable(source) else this
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(2f),
+    CompositionLocalProvider(
+        LocalVideoPlayerControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
     ) {
-        AnimatedVisibility(
-            visible = topBarVisible,
-            enter = slideInVertically(
-                initialOffsetY = { -it },
-                animationSpec = overlayBarsSlideAnimationSpec,
-            ) + fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
-            exit = slideOutVertically(
-                targetOffsetY = { -it },
-                animationSpec = overlayBarsSlideAnimationSpec,
-            ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(2f),
         ) {
-            VideoPlayerChromeContainer(
-                modifier = Modifier.hovers(topBarHover),
-                contentAlignment = Alignment.TopCenter,
+            AnimatedVisibility(
+                visible = topBarVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = overlayBarsSlideAnimationSpec,
+                ) + fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = overlayBarsSlideAnimationSpec,
+                ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
-                topBar()
+                VideoPlayerChromeContainer(contentAlignment = Alignment.TopCenter) {
+                    topBar()
+                }
+            }
+
+            // Half-open on a table the centre buttons sit between the bars rather than over the picture
+            if (posture is VideoPlayerPosture.Tabletop) {
+                VideoPlayerCentreButtons(
+                    visible = transportVisible,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    centre = centre,
+                )
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            // Above the timeline's end while the controls show, at the bottom while they don't
+            AnimatedVisibility(
+                visible = skipVisible,
+                modifier = Modifier.align(Alignment.End),
+                enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+                exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+            ) {
+                skipOffer?.let { offer ->
+                    VideoPlayerSkipButton(
+                        offer = offer,
+                        service = skipService,
+                        countdown = skipCountdown,
+                        onClick = onSkip,
+                        modifier = Modifier
+                            .videoPlayerSafeContentPadding(includeBottom = !transportVisible)
+                            .padding(
+                                end = KatariTheme.spacing.l,
+                                bottom = if (transportVisible) KatariTheme.sizes.none else KatariTheme.spacing.l,
+                            ),
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = transportVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = overlayBarsSlideAnimationSpec,
+                ) + fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = overlayBarsSlideAnimationSpec,
+                ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+            ) {
+                VideoPlayerChromeContainer(contentAlignment = Alignment.Center) {
+                    timeline()
+                }
             }
         }
 
-        // Half-open on a table the centre buttons sit between the bars rather than over the picture
-        if (posture is VideoPlayerPosture.Tabletop) {
+        if (posture !is VideoPlayerPosture.Tabletop) {
             VideoPlayerCentreButtons(
                 visible = transportVisible,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                hover = centreHover.takeIf { onPointerOverControlsChange != null },
+                modifier = when (posture) {
+                    is VideoPlayerPosture.Book -> Modifier.align(Alignment.CenterStart).width(posture.startHalfWidth)
+                    else -> Modifier.align(Alignment.Center)
+                }.zIndex(1f),
                 centre = centre,
             )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
-        AnimatedVisibility(
-            visible = skipVisible && !transportVisible,
-            modifier = Modifier.align(Alignment.End),
-            enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
-            exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
-        ) {
-            skipOffer?.let { offer ->
-                VideoPlayerSkipButton(
-                    offer = offer,
-                    countdown = skipCountdown,
-                    onClick = onSkip,
-                    modifier = Modifier
-                        .videoPlayerSafeContentPadding(includeBottom = true)
-                        .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
-                )
-            }
         }
 
         AnimatedVisibility(
-            visible = transportVisible,
-            enter = slideInVertically(
-                initialOffsetY = { it },
-                animationSpec = overlayBarsSlideAnimationSpec,
-            ) + fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
-            exit = slideOutVertically(
-                targetOffsetY = { it },
-                animationSpec = overlayBarsSlideAnimationSpec,
-            ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+            visible = lockedChromeVisible,
+            modifier = Modifier.align(Alignment.TopCenter),
+            enter = fadeIn(animationSpec = overlayCenterFadeAnimationSpec) +
+                scaleIn(
+                    animationSpec = tween(120),
+                    initialScale = 0.94f,
+                ),
+            exit = fadeOut(animationSpec = overlayCenterFadeAnimationSpec) +
+                scaleOut(
+                    animationSpec = tween(100),
+                    targetScale = 0.97f,
+                ),
         ) {
             VideoPlayerChromeContainer(
-                modifier = Modifier.onSizeChanged { bottomRowHeight = it.height }.hovers(bottomHover),
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.TopCenter,
             ) {
-                timeline()
+                locked()
             }
-        }
-    }
-
-    if (posture !is VideoPlayerPosture.Tabletop) {
-        VideoPlayerCentreButtons(
-            visible = transportVisible,
-            modifier = when (posture) {
-                is VideoPlayerPosture.Book -> Modifier.align(Alignment.CenterStart).width(posture.startHalfWidth)
-                else -> Modifier.align(Alignment.Center)
-            }.zIndex(1f),
-            onBottomChange = { centreButtonsBottom = it },
-            hover = centreHover.takeIf { onPointerOverControlsChange != null },
-            centre = centre,
-        )
-    }
-
-    AnimatedVisibility(
-        visible = lockedChromeVisible,
-        modifier = Modifier.align(Alignment.TopCenter),
-        enter = fadeIn(animationSpec = overlayCenterFadeAnimationSpec) +
-            scaleIn(
-                animationSpec = tween(120),
-                initialScale = 0.94f,
-            ),
-        exit = fadeOut(animationSpec = overlayCenterFadeAnimationSpec) +
-            scaleOut(
-                animationSpec = tween(100),
-                targetScale = 0.97f,
-            ),
-    ) {
-        VideoPlayerChromeContainer(
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            locked()
         }
     }
 }
@@ -466,14 +461,8 @@ private fun BoxScope.VideoPlayerControls(
 private fun VideoPlayerCentreButtons(
     visible: Boolean,
     modifier: Modifier,
-    hover: MutableInteractionSource?,
-    onBottomChange: (Int) -> Unit = {},
     centre: @Composable () -> Unit,
 ) {
-    var areaHeight by remember { mutableIntStateOf(0) }
-    var buttonsHeight by remember { mutableIntStateOf(0) }
-    // The area centres the buttons in it, so their bottom edge is half the room they leave above the area's bottom
-    LaunchedEffect(areaHeight, buttonsHeight) { onBottomChange((areaHeight - buttonsHeight) / 2) }
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
@@ -488,12 +477,8 @@ private fun VideoPlayerCentreButtons(
                 targetScale = 0.97f,
             ),
     ) {
-        VideoPlayerChromeContainer(
-            modifier = Modifier.fillMaxSize().onSizeChanged { areaHeight = it.height },
-            matchParentHeight = true,
-        ) {
-            val hovers = if (hover != null) Modifier.hoverable(hover) else Modifier
-            Box(modifier = Modifier.onSizeChanged { buttonsHeight = it.height }.then(hovers)) { centre() }
+        VideoPlayerChromeContainer(modifier = Modifier.fillMaxSize(), matchParentHeight = true) {
+            centre()
         }
     }
 }

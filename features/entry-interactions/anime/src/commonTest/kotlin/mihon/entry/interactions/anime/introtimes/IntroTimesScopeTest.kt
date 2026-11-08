@@ -14,12 +14,14 @@ class IntroTimesScopeTest {
         val secondSeason = (13..24).map { episode(it.toDouble(), "s2") } + episode(18.5, "s2")
         val episodes = firstSeason + secondSeason
 
-        val thirteenth = introTimesEpisode(entry, secondSeason.first(), episodes)
+        val thirteenth = introTimesEpisode(entry, secondSeason.first(), episodes, mapOf("s2" to "Season 2"))
         thirteenth.number shouldBe 1
         thirteenth.scope.groupKey shouldBe "s2"
+        thirteenth.scope.seasonName shouldBe "Season 2"
         thirteenth.scope.episodeCount shouldBe 12
+        thirteenth.scope.firstNumber shouldBe 13
 
-        introTimesEpisode(entry, secondSeason.last(), episodes).number shouldBe null
+        introTimesEpisode(entry, secondSeason.last(), episodes, emptyMap()).number shouldBe null
     }
 
     private fun episode(number: Double, group: String) =

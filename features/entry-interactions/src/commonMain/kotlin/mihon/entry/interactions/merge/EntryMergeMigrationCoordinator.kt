@@ -33,19 +33,38 @@ internal class EntryMergeMigrationCoordinator(
         val expectedGroups = listOfNotNull(currentGroup, replacementGroup)
             .distinctBy(EntryMergeMembershipSnapshot::targetEntryId)
         val replacementSourceGroup = profile.sourceGroupOf(intent.replacement, replacementGroup)
-        val replacements = if (
-            intent.current.mergedBySource &&
-            currentGroup.targetEntryId == intent.current.id &&
-            replacementSourceGroup != null
-        ) {
-            listOfNotNull(sourceGroupReplacement(intent.current.id, currentGroup, replacementSourceGroup))
-        } else {
-            replacementGroups(
-                currentEntryId = intent.current.id,
-                replacementEntryId = intent.replacement.id,
-                currentGroup = currentGroup,
-                replacementGroup = replacementGroup,
-            )
+        // A merged entry's source placed its locked members, so they stay with it as it leaves the Library, as they
+        // would if it were removed; only the members a user added go on with the replacement
+        val currentSourceGroup = profile.sourceGroupOf(intent.current, currentGroup)
+            ?.takeIf { it.root.id == intent.current.id && it.membership != null }
+        val leaving = currentSourceGroup?.let { group ->
+            currentGroup.orderedEntryIds.filter {
+                it in group.lockedIds && it != intent.current.id && it != intent.replacement.id
+            }
+        }.orEmpty()
+        val carried = currentGroup.copy(orderedEntryIds = currentGroup.orderedEntryIds - leaving.toSet())
+        val replacements = buildList {
+            if (currentSourceGroup != null && replacementSourceGroup != null) {
+                sourceGroupReplacement(intent.current.id, carried, replacementSourceGroup)?.let(::add)
+            } else {
+                addAll(
+                    replacementGroups(
+                        currentEntryId = intent.current.id,
+                        replacementEntryId = intent.replacement.id,
+                        currentGroup = carried,
+                        replacementGroup = replacementGroup,
+                    ),
+                )
+            }
+            if (leaving.isNotEmpty()) {
+                add(
+                    EntryMergeMembershipSnapshot(
+                        currentGroup.profileId,
+                        intent.current.id,
+                        listOf(intent.current.id) + leaving,
+                    ),
+                )
+            }
         }
         val operationId = UUID.randomUUID().toString()
         return when (
@@ -57,6 +76,9 @@ internal class EntryMergeMigrationCoordinator(
                     currentEntryId = intent.current.id,
                     replacementEntryId = intent.replacement.id,
                     replacementGroups = replacements,
+                    libraryRemovalEntryIds = profile.entries(leaving)
+                        .filter(Entry::favorite)
+                        .mapTo(mutableSetOf(), Entry::id),
                 ),
             )
         ) {
@@ -77,6 +99,9 @@ internal class EntryMergeMigrationCoordinator(
             EntryMergeMemberPair(old, new)
         }
     }
+
+    override suspend fun lockedMembers(root: Entry): List<Entry> =
+        host.profile(root.profileId).lockedMembersInSourceOrder(root).orEmpty()
 
     private suspend fun EntryMergeProfileHost.lockedMembersInSourceOrder(root: Entry): List<Entry>? {
         val group = sourceGroupOf(root, membership(root.id))?.takeIf { it.root.id == root.id } ?: return null

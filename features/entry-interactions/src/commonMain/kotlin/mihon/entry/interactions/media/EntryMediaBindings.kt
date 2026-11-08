@@ -12,6 +12,7 @@ import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.media.backup.EntryIntroTimesMatchesBackupParticipant
 import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
+import mihon.entry.interactions.media.backup.EntryTheIntroDbMatchesBackupParticipant
 import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupParticipant
 import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
 import mihon.entry.interactions.media.migration.EntryViewerSettingsMigrationParticipant
@@ -25,6 +26,7 @@ import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
+import tachiyomi.domain.entry.repository.TheIntroDbMatchRepository
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -89,6 +91,12 @@ object EntryMediaBindings {
     internal fun introTimesMatchesBackupState(
         repository: () -> IntroTimesMatchRepository,
     ): EntryBackupStateParticipant = EntryIntroTimesMatchesBackupParticipant(repository)
+
+    @Provides
+    @IntoSet
+    internal fun theIntroDbMatchesBackupState(
+        repository: () -> TheIntroDbMatchRepository,
+    ): EntryBackupStateParticipant = EntryTheIntroDbMatchesBackupParticipant(repository)
 
     @Provides
     @IntoSet

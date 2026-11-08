@@ -11,6 +11,8 @@ internal val PlayerScopes = PreferenceScopeTable {
         "anime_auto_play_next",
         "anime_marker_skip",
         "anime_find_intro_times_online",
+        "anime_intro_times_from_aniskip",
+        "anime_intro_times_from_theintrodb",
         "anime_default_playback_speed_percent",
         "anime_shows_remaining_time",
         "anime_subtitles_in_picture",

@@ -84,7 +84,7 @@ internal class TranslatorViewModel(
     private val speechController = ShortFormSpeechController<TranslationResultSpeechTarget>(
         feature = ttsFeature,
         scope = viewModelScope,
-        onFailure = { eventChannel.trySend(TranslatorEvent.SpeechFailed) },
+        onFailure = { eventChannel.trySend(TranslatorEvent.SpeechFailed(it.explanation)) },
     )
     init {
         observeSession()

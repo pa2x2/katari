@@ -59,8 +59,8 @@ interface SecureActivityDelegate {
             // `requireUnlock` can be true on process start or if app was closed in locked state
             if (!BiometricAuthentication.isAuthenticating && !requireUnlock) {
                 requireUnlock = when (val lockDelay = preferences.lockAppAfter.get()) {
-                    -1 -> false // Never
-                    0 -> true // Always
+                    SecurityPreferences.LOCK_NEVER -> false
+                    SecurityPreferences.LOCK_ALWAYS -> true
                     else -> lastClosedPref.get() + lockDelay * 60_000 <= System.currentTimeMillis()
                 }
             }

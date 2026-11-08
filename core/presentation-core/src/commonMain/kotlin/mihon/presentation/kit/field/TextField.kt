@@ -179,7 +179,7 @@ private class DialogFieldBehaviour(
     confirm: (() -> Unit)?,
 ) {
     val keyboardActions: KeyboardActions = confirm?.let { KeyboardActions(onDone = { it() }) } ?: callerActions
-    val keyboardActionHandler: KeyboardActionHandler? = confirm?.let { KeyboardActionHandler { it() } }
+    val keyboardActionHandler: KeyboardActionHandler? = confirm?.let { action -> KeyboardActionHandler { action() } }
 }
 
 @Composable

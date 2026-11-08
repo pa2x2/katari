@@ -30,6 +30,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | The home destinations | `FloatingDockHost`, `FloatingDock`, `FloatingDockItem` | One dock for the app; screens don't add their own |
+| The dock's room for each screen a navigator swaps beside it, so a screen leaving in a transition keeps its layout | `DockedScreen` | Wraps each screen inside a `FloatingDockHost`, such as the root navigator's screens beside the home side dock |
 | Tabs over a fixed set of pages, such as Browse's sections or a sheet's tabs | `TabRow`, `Tab` | |
 | Tabs over pages the user defines, such as library categories | `PillTabRow`, `Tab` | |
 | Swipeable pages | `HorizontalPager`, `VerticalPager` | One page per wheel notch or touchpad swipe; never Compose's pagers |
@@ -159,6 +160,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A dialog's scrolling content, marked where more lies past an edge | `DialogScrollEdges` | |
 | Block the screen while work the user waits for runs | `ProgressDialog` | |
 | A window over the whole screen for a viewer | `FullScreenDialog` | |
+| Cover the whole window until something is done, such as the profile picker over a profile that locked again | `LockScreen` | The screens under it keep their state but get no input, focus or shortcuts |
 | A picture full screen, zoomable, dragged down to close | `PictureViewer` | |
 | A web page something outside the app puts up, such as an extension's check | `WebPageDialog` | |
 | A menu and its items | `DropdownMenu`, `DropdownMenuItem`, `CheckMenuItem`, `RadioMenuItem`, `NestedMenuItem`, `DropdownMenuDivider` | |
@@ -227,8 +229,9 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The background where media is loading or failed | `MediaBackdrop` | |
 | A shade behind controls along an edge of media | `MediaScrim` | |
 | Text straight over pages or video | `OutlinedMediaText` | |
-| A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton` | `Modifier.mediaToolbarSlot` puts a button at the end or orders its label's dropping |
-| A playback position bar over video | `MediaTimeline` | |
+| A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
+| A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
+| The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
 | A player's volume among its controls | `MediaVolumeControl` | |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |
@@ -266,6 +269,7 @@ See the `adaptive-layout` skill for which to use at which window size.
 | Job | Component | Notes |
 |---|---|---|
 | The hand cursor over something a click acts on | `Modifier.clickCursor` | |
+| Zooming with a touchpad pinch | `Modifier.touchpadPinch` | Pinches that start over the element, with the pointer to zoom about; desktop only |
 | A keyboard shortcut while something is shown | `KeyboardShortcutHandler`, `KeyboardShortcutScope` | |
 | The window's layout facts | `currentWindowLayout` | |
 

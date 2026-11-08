@@ -363,6 +363,30 @@ deleteIntroTimesPick:
 DELETE FROM intro_times_matches
 WHERE entry_id = :entryId AND group_key = :groupKey AND picked_by_user = 1;
 
+upsertTheIntroDbPick:
+INSERT INTO theintrodb_matches(
+    entry_id, group_key, tvdb_id, tmdb_id, imdb_id, title, year, season, first_episode, picked_by_user, checked_at
+)
+VALUES (
+    :entryId, :groupKey, :tvdbId, :tmdbId, :imdbId, :title, :year, :season, :firstEpisode, 1,
+    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
+)
+ON CONFLICT(entry_id, group_key) DO UPDATE SET
+    tvdb_id = excluded.tvdb_id,
+    tmdb_id = excluded.tmdb_id,
+    imdb_id = excluded.imdb_id,
+    title = excluded.title,
+    year = excluded.year,
+    season = excluded.season,
+    first_episode = excluded.first_episode,
+    picked_by_user = 1,
+    checked_at = excluded.checked_at;
+
+-- An automatic match is this device's own and stays.
+deleteTheIntroDbPick:
+DELETE FROM theintrodb_matches
+WHERE entry_id = :entryId AND group_key = :groupKey AND picked_by_user = 1;
+
 upsertPlaybackPreferences:
 INSERT INTO playback_preferences(
     entry_id, dub_key, stream_key, source_quality_key, subtitle_key, player_quality_mode, player_quality_height,

@@ -38,6 +38,8 @@ sealed interface EntryMergeHostTransition {
         val currentEntryId: Long,
         val replacementEntryId: Long,
         val replacementGroups: List<EntryMergeMembershipSnapshot>,
+        /** Members of [expectedGroups] that leave the Library with the replaced entry. */
+        val libraryRemovalEntryIds: Set<Long>,
     ) : EntryMergeHostTransition
 
     /**

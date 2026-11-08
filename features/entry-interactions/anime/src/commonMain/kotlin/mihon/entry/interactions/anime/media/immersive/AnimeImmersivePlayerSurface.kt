@@ -27,7 +27,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackSt
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
@@ -54,6 +53,7 @@ import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.abs
 
 @Composable
 internal fun AnimeImmersivePlayerSurface(
@@ -86,21 +86,21 @@ internal fun AnimeImmersivePlayerSurface(
         val durationMs = playbackSnapshot.durationMs.takeIf { it > 0L }
             ?: player.state.value.durationMs?.coerceAtLeast(0L)
             ?: 0L
-        player.seekTo(
-            resolveVideoPlayerSeekPosition(
-                positionMs = player.currentPositionMs,
-                durationMs = durationMs,
-                direction = direction,
-                stepSeconds = stepSeconds,
-            ),
+        val basePositionMs = player.currentPositionMs
+        val targetPositionMs = resolveVideoPlayerSeekPosition(
+            positionMs = basePositionMs,
+            durationMs = durationMs,
+            direction = direction,
+            stepSeconds = stepSeconds,
         )
+        player.seekTo(targetPositionMs)
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
         if (latestControlsVisible) latestOnToggleControls()
         seekFeedbackSequence += 1L
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
-            stepSeconds = stepSeconds,
+            movedMs = abs(targetPositionMs - basePositionMs),
             hidePlayerChrome = true,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),
@@ -195,7 +195,6 @@ internal fun AnimeImmersivePlayerSurface(
                     framing = PictureFraming.Fit,
                     appearance = DEFAULT_APPEARANCE,
                     keepInPicture = true,
-                    controls = VideoControlsFootprint.None,
                     gapPx = subtitleGapPx,
                 )
             },

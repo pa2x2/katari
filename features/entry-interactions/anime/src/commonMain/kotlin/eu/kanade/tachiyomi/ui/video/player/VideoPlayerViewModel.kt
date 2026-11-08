@@ -10,10 +10,12 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
 import eu.kanade.tachiyomi.ui.video.player.handoff.VideoPlayerProgressOffers
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerAiredEpisodes
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerMatchSearch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
+import eu.kanade.tachiyomi.ui.video.player.recovery.isUnofferedPick
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.recovery.switchTarget
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
@@ -54,7 +56,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
-import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
+import mihon.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
+import mihon.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
+import mihon.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.resumePositionMs
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
@@ -121,7 +125,9 @@ internal class VideoPlayerViewModel(
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
-    introTimesLookup: IntroTimesLookup,
+    introTimesEpisodes: IntroTimesEpisodeReader,
+    aniSkipLookup: AniSkipLookup,
+    theIntroDbLookup: TheIntroDbLookup,
     progressOffers: EntryProgressOffers,
     private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -132,8 +138,10 @@ internal class VideoPlayerViewModel(
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
 
-    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesLookup)
-    val seriesSearch = VideoPlayerSeriesSearch(viewModelScope, introTimesLookup)
+    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesEpisodes, aniSkipLookup, theIntroDbLookup)
+    val seriesSearch = VideoPlayerMatchSearch(viewModelScope, aniSkipLookup::search)
+    val mediaSearch = VideoPlayerMatchSearch(viewModelScope, theIntroDbLookup::search)
+    val airedEpisodes = VideoPlayerAiredEpisodes(viewModelScope, theIntroDbLookup)
     val progressOffers = VideoPlayerProgressOffers(
         scope = viewModelScope,
         offers = progressOffers,
@@ -287,6 +295,7 @@ internal class VideoPlayerViewModel(
             if (!isActive) return@launch
             resolvePlayback(
                 selection = selection,
+                pickedFrom = current.playback.sourceSelection,
                 explicitStreamPick = selection.streamKey != null &&
                     selection.streamKey != current.playback.sourceSelection.streamKey,
                 preservePositionMs = current.resumePositionMs,
@@ -343,7 +352,15 @@ internal class VideoPlayerViewModel(
             if (target.read()?.selection != selection) return@launch
 
             when (result) {
-                is ResolveVideoStream.Result.Success -> {
+                is ResolveVideoStream.Result.Success -> if (
+                    isUnofferedPick(
+                        listed = target.listed,
+                        picked = selection,
+                        answered = result.playbackData.selection,
+                    )
+                ) {
+                    target.write(VideoPlaybackPreviewState(selection = selection, notOffered = true))
+                } else {
                     cacheSelectionResult(target.episodeId, selection, result)
                     target.write(result.toPreview(selection))
                 }
@@ -444,6 +461,7 @@ internal class VideoPlayerViewModel(
             updatePlaybackPreferences(ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
             resolvePlayback(
                 selection = selection,
+                pickedFrom = listedSelection,
                 initial = true,
                 explicitStreamPick = selection.streamKey != null && selection.streamKey != listedSelection.streamKey,
                 listedBefore = listed,
@@ -879,8 +897,13 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * [pickedFrom] is the selection the viewer drafted [selection] from, when they picked it: an answer with another dub
+     * or server than they picked then fails as [ResolveVideoStream.Reason.PickNotOffered] instead of playing.
+     */
     private suspend fun resolvePlayback(
         selection: PlaybackSelection? = null,
+        pickedFrom: PlaybackSelection? = null,
         preservePositionMs: Long? = null,
         initial: Boolean = false,
         showLoading: Boolean = true,
@@ -923,6 +946,13 @@ internal class VideoPlayerViewModel(
             )
         }
         val result = when (listed) {
+            is ResolveVideoStream.Result.Success if pickedFrom != null && targetSelection != null &&
+                isUnofferedPick(
+                    listed = pickedFrom,
+                    picked = targetSelection,
+                    answered = listed.playbackData.selection,
+                ) ->
+                ResolveVideoStream.Result.Error(ResolveVideoStream.Reason.PickNotOffered, listed.playbackData)
             is ResolveVideoStream.Result.Success -> {
                 showListed(listed.playbackData, serverNotice)
                 withContext(resolveDispatcher) {
@@ -1087,6 +1117,7 @@ internal class VideoPlayerViewModel(
         targetVisibleEntryId: Long = visibleEntryId,
         targetOwnerEntryId: Long = ownerEntryId,
         selection: PlaybackSelection? = null,
+        pickedFrom: PlaybackSelection? = null,
         fallback: ServerFallback = ServerFallback(),
         explicitStreamPick: Boolean = false,
     ) {
@@ -1117,6 +1148,7 @@ internal class VideoPlayerViewModel(
         playbackSession = null
         resolvePlayback(
             selection = selection,
+            pickedFrom = pickedFrom,
             initial = true,
             changingEpisode = change,
             explicitStreamPick = explicitStreamPick,
@@ -1146,6 +1178,7 @@ internal class VideoPlayerViewModel(
                 targetVisibleEntryId = failed.visibleEntryId,
                 targetOwnerEntryId = failed.ownerEntryId,
                 selection = selection,
+                pickedFrom = listed,
                 fallback = fallback,
                 explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
             )

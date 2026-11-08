@@ -283,13 +283,50 @@ internal class DefaultEntryMigrationFeature(
             preparationHost.profile(profileId).inspectPair(reference.source.id, reference.target.id)
                 as? EntryMigrationHostInspectionResult.Ready
             )?.target ?: return EntryMigrationExecutionResult.Conflict
-        // Between merged entries, each member the old source supplied moves its progress to its pair first
-        if (reference.source.mergedBySource && refreshedTarget.mergedBySource) {
-            val pairs = mergeMigration.pairLockedMembers(reference.source, refreshedTarget)
-                .filter { validatePair(it.current, it.replacement) == null }
-            pairs.forEach { pair ->
-                val result = migrateMember(reference, intent, pair.current, pair.replacement)
-                if (result !is EntryMigrationExecutionResult.Applied) return result
+        val members = if (reference.source.mergedBySource) {
+            mergeMigration.lockedMembers(reference.source)
+        } else {
+            emptyList()
+        }
+        val pairing = when {
+            members.isEmpty() -> EntryMigrationChildPairing.ByNumber
+            refreshedTarget.mergedBySource -> {
+                // Between merged entries, each member the old source supplied moves its progress to its pair first
+                val pairs = mergeMigration.pairLockedMembers(reference.source, refreshedTarget)
+                    .filter { validatePair(it.current, it.replacement) == null }
+                pairs.forEach { pair ->
+                    val result = migrateMember(
+                        reference,
+                        intent,
+                        pair.current,
+                        pair.replacement,
+                        EntryMigrationChildPairing.ByNumber,
+                    )
+                    if (result !is EntryMigrationExecutionResult.Applied) return result
+                }
+                EntryMigrationChildPairing.ByNumber
+            }
+            else -> {
+                // Onto an entry that lists every season at once, each season the old source supplied takes the
+                // stretch after the root's chapters and the seasons before it
+                var offset = childCount(reference.source, refreshedTarget)
+                    ?: return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+                members.forEach { member ->
+                    val count = childCount(member, refreshedTarget)
+                        ?: return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+                    if (validatePair(member, refreshedTarget) == null) {
+                        val result = migrateMember(
+                            reference,
+                            intent,
+                            member,
+                            refreshedTarget,
+                            EntryMigrationChildPairing.ByPosition(offset),
+                        )
+                        if (result !is EntryMigrationExecutionResult.Applied) return result
+                    }
+                    offset += count
+                }
+                EntryMigrationChildPairing.ByPosition(offset = 0)
             }
         }
         val result = migrate(
@@ -300,6 +337,8 @@ internal class DefaultEntryMigrationFeature(
             targetId = reference.target.id,
             mode = intent.mode,
             selectedOptions = intent.selectedOptions,
+            pairing = pairing,
+            chapterStateOnly = false,
             authorized = { source, target ->
                 source.sameMigrationAuthorization(reference.source) &&
                     target.sameMigrationAuthorization(reference.target)
@@ -318,15 +357,23 @@ internal class DefaultEntryMigrationFeature(
         return result
     }
 
+    /**
+     * Migrates [source], a member the old merged entry's source supplied, ahead of the merged entry itself. A member
+     * landing on [reference]'s own target only brings its chapters' state and leaves the target's Library state to
+     * the merged entry, whose migration has yet to find it as it was.
+     */
     private suspend fun migrateMember(
         reference: FeatureEntryMigrationReference,
         intent: EntryMigrationExecuteIntent,
         source: Entry,
         target: Entry,
+        pairing: EntryMigrationChildPairing,
     ): EntryMigrationExecutionResult {
         val operationId = "${reference.sessionId}:${source.id}"
         val profile = executionHost.profile(source.profileId)
-        val fingerprint = migrationFingerprint(intent.mode, intent.selectedOptions)
+        val ownTarget = target.id != reference.target.id
+        val memberOptions = if (ownTarget) intent.selectedOptions else intent.selectedOptions intersect CHAPTER_OPTIONS
+        val fingerprint = migrationFingerprint(intent.mode, memberOptions)
         when (
             val replay = profile.replay(
                 EntryMigrationHostOperation(operationId, fingerprint, source.id, target.id, intent.mode),
@@ -352,13 +399,15 @@ internal class DefaultEntryMigrationFeature(
                 return EntryMigrationExecutionResult.OperationalFailure(result.retryable)
             }
         }
-        when (refreshTarget(inspection.target, fetchDetails = true, fetchChildren = true)) {
-            EntryMigrationTargetRefreshResult.Refreshed -> Unit
-            is EntryMigrationTargetRefreshResult.Rejected -> return EntryMigrationExecutionResult.Conflict
-            EntryMigrationTargetRefreshResult.SourceUnavailable,
-            EntryMigrationTargetRefreshResult.NoChildren,
-            is EntryMigrationTargetRefreshResult.OperationalFailure,
-            -> return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+        if (ownTarget) {
+            when (refreshTarget(inspection.target, fetchDetails = true, fetchChildren = true)) {
+                EntryMigrationTargetRefreshResult.Refreshed -> Unit
+                is EntryMigrationTargetRefreshResult.Rejected -> return EntryMigrationExecutionResult.Conflict
+                EntryMigrationTargetRefreshResult.SourceUnavailable,
+                EntryMigrationTargetRefreshResult.NoChildren,
+                is EntryMigrationTargetRefreshResult.OperationalFailure,
+                -> return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+            }
         }
         return migrate(
             profileId = source.profileId,
@@ -367,7 +416,9 @@ internal class DefaultEntryMigrationFeature(
             sourceId = source.id,
             targetId = target.id,
             mode = intent.mode,
-            selectedOptions = intent.selectedOptions intersect availableOptions(inspection),
+            selectedOptions = memberOptions intersect availableOptions(inspection),
+            pairing = pairing,
+            chapterStateOnly = !ownTarget,
             authorized = { inspectedSource, inspectedTarget ->
                 inspectedSource.sameMigrationAuthorization(inspection.source) &&
                     inspectedTarget.sameMigrationAuthorization(inspection.target)
@@ -375,7 +426,10 @@ internal class DefaultEntryMigrationFeature(
         )
     }
 
-    /** Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. */
+    /**
+     * Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. With
+     * [chapterStateOnly], the target keeps its own Library fields, tracking and choices, and only takes chapter state.
+     */
     private suspend fun migrate(
         profileId: Long,
         operationId: String,
@@ -384,6 +438,8 @@ internal class DefaultEntryMigrationFeature(
         targetId: Long,
         mode: EntryMigrationMode,
         selectedOptions: Set<EntryMigrationOption>,
+        pairing: EntryMigrationChildPairing,
+        chapterStateOnly: Boolean,
         authorized: (source: Entry, target: Entry) -> Boolean,
     ): EntryMigrationExecutionResult {
         val profile = executionHost.profile(profileId)
@@ -404,32 +460,37 @@ internal class DefaultEntryMigrationFeature(
             return EntryMigrationExecutionResult.Conflict
         }
 
-        val preparedTracks = when (
-            val result = tracking().prepareMigrationTracks(
-                source = inspected.source,
-                target = inspected.target,
-                tracks = inspected.sourceTracks.map { it.toTrackingRecord() },
-            )
-        ) {
-            is EntryTrackingMigrationPreparationResult.Prepared -> result.tracks.map { it.toDomainTrack() }
-            is EntryTrackingMigrationPreparationResult.Failed -> {
-                return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+        val preparedTracks = if (!chapterStateOnly) {
+            when (
+                val result = tracking().prepareMigrationTracks(
+                    source = inspected.source,
+                    target = inspected.target,
+                    tracks = inspected.sourceTracks.map { it.toTrackingRecord() },
+                )
+            ) {
+                is EntryTrackingMigrationPreparationResult.Prepared -> result.tracks.map { it.toDomainTrack() }
+                is EntryTrackingMigrationPreparationResult.Failed -> {
+                    return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+                }
             }
+        } else {
+            emptyList()
         }
 
         val transferChildren = EntryMigrationOption.CHILD_STATE in selectedOptions
+        val childPairs = pairing.pair(inspected.sourceChildren, inspected.targetChildren)
         val durableEvent = EntryMigrationDurableEvent(
             operationId = operationId,
             source = inspected.source,
             target = inspected.target,
             selectedOptions = selectedOptions,
-            sourceChildren = inspected.sourceChildren,
-            targetChildren = inspected.targetChildren,
+            childMatches = childPairs.matches,
+            chapterStateOnly = chapterStateOnly,
         )
         val childUpdates = if (transferChildren) {
             prepareMigrationChildUpdates(
                 sourceChildren = inspected.sourceChildren,
-                childMatches = durableEvent.childMatches,
+                childPairs = childPairs,
                 transfer = childStateTransfer(inspected.source.type),
             )
         } else {
@@ -450,14 +511,18 @@ internal class DefaultEntryMigrationFeature(
                 payload = record.payload.value,
             )
         }
-        val libraryFields = migratedLibraryFields(
-            source = inspected.source.libraryFields(),
-            target = inspected.target.libraryFields(),
-            replace = replace,
-            carryNotes = EntryMigrationOption.NOTES in selectedOptions,
-            now = clockMillis(),
-        )
-        val targetUpdate = inspected.target.withLibraryFields(libraryFields)
+        val targetUpdate = if (!chapterStateOnly) {
+            val libraryFields = migratedLibraryFields(
+                source = inspected.source.libraryFields(),
+                target = inspected.target.libraryFields(),
+                replace = replace,
+                carryNotes = EntryMigrationOption.NOTES in selectedOptions,
+                now = clockMillis(),
+            )
+            inspected.target.withLibraryFields(libraryFields)
+        } else {
+            inspected.target
+        }
         val transition = EntryMigrationHostTransition(
             operationId = operationId,
             intentFingerprint = fingerprint,
@@ -479,6 +544,8 @@ internal class DefaultEntryMigrationFeature(
                 .distinctBy { (sourceId) -> sourceId }
                 .toMap()
                 .takeIf { replace },
+            childOrder = childPairs.order,
+            chapterStateOnly = chapterStateOnly,
             expectedSourceTracks = inspected.sourceTracks,
             preparedTracks = preparedTracks,
             consequenceRequests = consequenceRequests,
@@ -519,6 +586,11 @@ internal class DefaultEntryMigrationFeature(
                 EntryMigrationExecutionResult.OperationalFailure(result.retryable)
             }
         }
+    }
+
+    private suspend fun childCount(entry: Entry, target: Entry): Int? {
+        val inspection = executionHost.profile(entry.profileId).inspectExecution(entry.id, target.id)
+        return (inspection as? EntryMigrationExecutionInspectionResult.Ready)?.sourceChildren?.size
     }
 
     private fun applied(
@@ -606,6 +678,9 @@ internal class DefaultEntryMigrationFeature(
 
     private fun executionRejected(reason: EntryMigrationRejection) = EntryMigrationExecutionResult.Rejected(reason)
 }
+
+/** The options a member folding into its merged entry's target takes: the rest are the merged entry's to carry. */
+private val CHAPTER_OPTIONS = setOf(EntryMigrationOption.CHILD_STATE, EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
 
 /** The types each Migration capability applies to, read from the providers the type modules contribute. */
 internal class EntryMigrationTypes(

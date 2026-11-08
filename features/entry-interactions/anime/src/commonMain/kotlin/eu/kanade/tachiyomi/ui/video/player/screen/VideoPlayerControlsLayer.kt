@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,8 +18,8 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
+import mihon.entry.interactions.anime.introtimes.OnlineMarker
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -44,6 +43,7 @@ internal fun VideoPlayerControlsLayer(
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
     markers: List<PlaybackMarker>,
+    onlineMarkers: List<OnlineMarker>,
     chapters: List<VideoPlayerChapter>,
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
@@ -58,10 +58,11 @@ internal fun VideoPlayerControlsLayer(
             markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
         }
     }
-    val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
-    LaunchedEffect(shown) {
-        if (!shown) ui.controlsFootprint = VideoControlsFootprint.None
+    val skipService = remember(skipOffer, onlineMarkers) {
+        skipOffer?.let { offer -> onlineMarkers.firstOrNull { it.marker == offer.marker }?.service }
     }
+    val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
+    VideoPlayerTimelineHoverEffect(ui)
     if (shown) {
         VideoPlayerOverlay(
             visible = ui.controlsVisible,
@@ -175,16 +176,17 @@ internal fun VideoPlayerControlsLayer(
                 ui.registerControllerInteraction(true)
             },
             markerBoundariesMs = markerBoundariesMs,
+            onlineMarkers = onlineMarkers,
             chapter = chapters.chapterAt(displayedPositionMs),
             onOpenChapters = { actions.openSettings(VideoPlayerSettingsSection.Chapters) },
             skipOffer = skipOffer,
+            skipService = skipService,
             skipCountdown = skipCountdown,
             onSkip = onSkip,
-            onControlsFootprintChange = { ui.controlsFootprint = it },
             onPointerOverControlsChange = { over: Boolean ->
                 ui.pointerOverControls = over
             }.takeIf { host.input.hovers },
-            onTimelineHover = { positionMs: Long? -> ui.timelineHoverMs = positionMs }.takeIf { host.input.hovers },
+            onTimelineHover = { positionMs: Long? -> ui.timelinePointerMs = positionMs }.takeIf { host.input.hovers },
             timelineHoverMs = ui.timelineHoverMs,
             timelineHoverChapter = ui.timelineHoverMs?.let(chapters::chapterAt),
             modifier = Modifier.fillMaxSize(),

@@ -69,6 +69,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Series, tracks, rules and hatching of charts. Series accents keep the order statistics assigns them. */
     val chart: ChartColors
 
+    /** Parts of a video marked by different sources, one colour each, light enough to read over video in either theme. */
+    val mediaMarks: List<Color>
+
     /** Text and icons drawn over video or page images, whatever the theme. */
     val onMedia: Color = MEDIA_LIGHT
 
@@ -78,7 +81,10 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Shade laid over video or page images behind controls. */
     val mediaScrim: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_ALPHA)
 
-    /** The darkest part of a controls shade, right at the image edge. */
+    /** The edge of the shade behind a player's controls, which fades out from there. */
+    val mediaControlsShade: Color = MEDIA_DARK.copy(alpha = MEDIA_CONTROLS_SHADE_ALPHA)
+
+    /** The darkest shade over video or page images, for a full-screen layer whose text must read over any picture. */
     val mediaScrimEdge: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_EDGE_ALPHA)
 
     /**
@@ -125,6 +131,7 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
         onWarningContainer = warning.onContainer
         active = ToneSet.of(ACTIVE_SEED.harmonize(primary), isDark).accent
         chart = ChartColors(scheme, CHART_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark).accent })
+        mediaMarks = MEDIA_MARK_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark = true).accent }
     }
 }
 
@@ -157,6 +164,7 @@ private const val DISABLED_CONTAINER_ALPHA = 0.12f
 private const val MEDIA_VARIANT_ALPHA = 0.7f
 private const val MEDIA_SCRIM_ALPHA = 0.6f
 private const val MEDIA_SCRIM_EDGE_ALPHA = 0.8f
+private const val MEDIA_CONTROLS_SHADE_ALPHA = 0.5f
 private const val CHROME_DARK_ALPHA = 0.9f
 private const val CHROME_LIGHT_ALPHA = 0.95f
 
@@ -165,6 +173,12 @@ private val MEDIA_DARK = Color.Black
 private val SUCCESS_SEED = Color(0xFF4CAF50)
 private val WARNING_SEED = Color(0xFFFFB300)
 private val ACTIVE_SEED = Color(0xFFFFC107)
+
+// Teal and amber: apart from each other and from the primary of the played part beside them.
+private val MEDIA_MARK_SEEDS = listOf(
+    Color(0xFF00897B),
+    Color(0xFFFFB300),
+)
 
 // Rose, sky, sage, plum and amber: the hues statistics used before they followed the theme.
 private val CHART_SEEDS = listOf(

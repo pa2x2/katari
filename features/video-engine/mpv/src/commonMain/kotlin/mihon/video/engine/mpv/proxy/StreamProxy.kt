@@ -27,7 +27,6 @@ import java.io.BufferedInputStream
 import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -60,6 +59,7 @@ internal class StreamProxy(
     private val bufferedAheadMs: () -> Long,
     /** What the player asks to play from a set of variants now; asked for every segment. */
     private val variantPick: (HlsVariantSet) -> HlsVariantPick,
+    private val relayLog: RelayLog,
 ) : Closeable {
 
     private val subtitles = stream.subtitles
@@ -143,11 +143,13 @@ internal class StreamProxy(
             }
             sockets += socket
             executor.execute {
+                val output = MpvConnectionOutput(socket.getOutputStream())
                 try {
                     socket.soTimeout = IDLE_TIMEOUT_MS
-                    serve(socket)
-                } catch (_: IOException) {
+                    serve(socket, output)
+                } catch (e: IOException) {
                     // mpv closed the connection, for example to seek.
+                    if (!closed) relayLog.connectionBroke(output.lastBody, e)
                 } finally {
                     sockets -= socket
                     runCatching { socket.close() }
@@ -156,9 +158,8 @@ internal class StreamProxy(
         }
     }
 
-    private fun serve(socket: Socket) {
+    private fun serve(socket: Socket, output: MpvConnectionOutput) {
         val input = BufferedInputStream(socket.getInputStream())
-        val output = socket.getOutputStream().buffered()
         while (!closed) {
             val request = ProxyRequest.read(input) ?: return
             val keepAlive = when (val target = routes.parse(request.path, request.query)) {
@@ -176,7 +177,7 @@ internal class StreamProxy(
     }
 
     /** Returns whether the connection can take another request. */
-    private fun serveRemote(request: ProxyRequest, target: ProxyTarget.Remote, output: OutputStream): Boolean {
+    private fun serveRemote(request: ProxyRequest, target: ProxyTarget.Remote, output: MpvConnectionOutput): Boolean {
         val call = client.newCall(
             upstreamRequest(target.url, target.headers, request.headers["range"], head = request.method == "HEAD"),
         )
@@ -199,7 +200,7 @@ internal class StreamProxy(
         request: ProxyRequest,
         target: ProxyTarget.Remote,
         response: Response,
-        output: OutputStream,
+        output: MpvConnectionOutput,
     ): Boolean {
         val url = target.url.toString()
         if (!response.isSuccessful) {
@@ -249,14 +250,15 @@ internal class StreamProxy(
 
     /**
      * Relays [response]'s body as it came, with [code] and [contentRange] as the client's view of it. [url] is what was
-     * asked for, which a failure is reported under.
+     * asked for, which a failure is reported under. A body the host ends before its length ends the connection, so
+     * FFmpeg sees it cut short rather than reading the next response as the rest of it.
      */
     private fun relayBody(
         request: ProxyRequest,
         headers: HeaderSet,
         url: String,
         response: Response,
-        output: OutputStream,
+        output: MpvConnectionOutput,
         code: Int,
         reason: String,
         contentRange: String?,
@@ -275,11 +277,12 @@ internal class StreamProxy(
             },
         )
         if (request.method == "HEAD") return length >= 0
-        val copied = copy(response.body.byteStream(), output, bandwidthMeter) {
-            recordFailure(headers, UpstreamFailure.Network(url, it))
+        val body = RelayedBody(headers, response.request.url.pathSegments.last(), length)
+        val whole = copy(response.body.byteStream(), body, output, bandwidthMeter) {
+            recordFailure(headers, UpstreamFailure.Network(url, it), body)
         }
-        if (copied) mediaServed(headers)
-        return length >= 0
+        if (whole) mediaServed(headers)
+        return length >= 0 && whole
     }
 
     /**
@@ -319,7 +322,11 @@ internal class StreamProxy(
         }
     }
 
-    private fun serveVariantSet(request: ProxyRequest, target: ProxyTarget.VariantSet, output: OutputStream): Boolean {
+    private fun serveVariantSet(
+        request: ProxyRequest,
+        target: ProxyTarget.VariantSet,
+        output: MpvConnectionOutput,
+    ): Boolean {
         val set = variantSets.getOrNull(target.set)
         val index = target.segment
         if (set == null || (index != null && index >= set.segmentCount)) {
@@ -404,7 +411,7 @@ internal class StreamProxy(
         }
     }
 
-    private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: OutputStream): Boolean {
+    private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: MpvConnectionOutput): Boolean {
         val uri = localFile(target) ?: run {
             output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
             return false
@@ -433,14 +440,14 @@ internal class StreamProxy(
                         add("Connection" to "keep-alive")
                     },
                 )
-                if (request.method != "HEAD") {
-                    val copied = copy(opened.stream, output, meter = null) {
-                        recordFailure(target.headers, UpstreamFailure.Local(uri, it))
-                    }
-                    if (copied) mediaServed(target.headers)
+                if (request.method == "HEAD") return true
+                val body = RelayedBody(target.headers, target.name, opened.length)
+                val whole = copy(opened.stream, body, output, meter = null) {
+                    recordFailure(target.headers, UpstreamFailure.Local(uri, it), body)
                 }
+                if (whole) mediaServed(target.headers)
+                return whole
             }
-            return true
         } catch (e: IOException) {
             recordFailure(target.headers, UpstreamFailure.Local(uri, e))
         } catch (e: SecurityException) {
@@ -477,26 +484,30 @@ internal class StreamProxy(
     }
 
     /**
-     * Copies [source] to [output], with [meter] timing the reads of a network source; a read failure is the
-     * upstream's, a write failure means mpv went away. Returns whether all of [source] was read.
+     * Copies [source] to [output] as [body], with [meter] timing the reads of a network source; a read failure is the
+     * upstream's, a write failure means mpv went away. Returns whether all of [body] was read and written.
      */
     private fun copy(
         source: InputStream,
-        output: OutputStream,
+        body: RelayedBody,
+        output: MpvConnectionOutput,
         meter: MpvBandwidthMeter?,
         onUpstreamFailure: (IOException) -> Unit,
     ): Boolean {
+        output.lastBody = body
         val buffer = ByteArray(BUFFER_SIZE)
         source.use {
             while (!closed) {
                 val read = try {
                     if (meter != null) meter.measure { source.read(buffer) } else source.read(buffer)
                 } catch (e: IOException) {
+                    body.state = RelayedBody.State.UpstreamFailed
                     if (!closed) onUpstreamFailure(e)
                     throw e
                 }
-                if (read < 0) return true
+                if (read < 0) return relayLog.sourceEnded(body)
                 output.write(buffer, 0, read)
+                body.copied += read
             }
         }
         return false
@@ -523,8 +534,9 @@ internal class StreamProxy(
                 audioTracks.getOrNull(headerSet.index)?.let { headers.trackExtras(it.request.url) }.orEmpty()
     }
 
-    private fun recordFailure(headers: HeaderSet, failure: UpstreamFailure) {
-        logcat(LogPriority.WARN) { "mpv stream proxy: $failure" }
+    /** [body] is the one being relayed when the failure came, if any. */
+    private fun recordFailure(headers: HeaderSet, failure: UpstreamFailure, body: RelayedBody? = null) {
+        logcat(LogPriority.WARN) { "mpv stream proxy: $failure${body?.let { " ($it)" }.orEmpty()}" }
         if (headers == HeaderSet.Stream) streamFailure.set(StreamFailure(failure, mediaServedSince = false))
     }
 

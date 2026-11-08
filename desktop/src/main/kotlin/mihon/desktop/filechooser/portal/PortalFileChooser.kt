@@ -37,7 +37,6 @@ import java.nio.file.Path
  * happened in a dialog the user already saw.
  */
 internal class PortalFileChooser(
-    private val displayBackend: DisplayBackend,
     private val fallback: SystemFileChooser,
 ) : SystemFileChooser {
     private val probe = Mutex()
@@ -54,7 +53,7 @@ internal class PortalFileChooser(
                 call.method,
                 signature = "ss",
                 // No title, as the Java dialogs had none: a request carries no words for one
-                arguments = listOf(portalParentWindow(parent, displayBackend), ""),
+                arguments = listOf(portalParentWindow(parent), ""),
                 options = call.options,
             )
         } catch (e: DbusException) {

@@ -11,6 +11,8 @@ import app.katari.sync.client.kind.entrychoice.IntroTimesPickKind
 import app.katari.sync.client.kind.entrychoice.IntroTimesPickPayload
 import app.katari.sync.client.kind.entrychoice.PlaybackPreferencesKind
 import app.katari.sync.client.kind.entrychoice.PlaybackPreferencesPayload
+import app.katari.sync.client.kind.entrychoice.TheIntroDbPickKind
+import app.katari.sync.client.kind.entrychoice.TheIntroDbPickPayload
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesKind
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesPayload
 import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
@@ -50,6 +52,11 @@ internal class CarriedEntryChoices(private val carry: ReplacementCarry) {
             }
             is IntroTimesPickPayload -> if (carry.isMove) {
                 carried(IntroTimesPickKind, from.groupKey) { to ->
+                    from.copy(entryKey = carry.to, match = pick(from.match, to?.match))
+                }
+            }
+            is TheIntroDbPickPayload -> if (carry.isMove) {
+                carried(TheIntroDbPickKind, from.groupKey) { to ->
                     from.copy(entryKey = carry.to, match = pick(from.match, to?.match))
                 }
             }

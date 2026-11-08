@@ -1,0 +1,58 @@
+import kotlin.Boolean;
+
+-- An entry's episodes use the TheIntroDB times of the series or film matched here, per season group when the entry has
+-- several (group_key '' when it has one or none). It is kept apart from the AniSkip match in intro_times_matches, as
+-- each service finds its own. A row without title matches nothing; season and first_episode are null for a film.
+CREATE TABLE theintrodb_matches(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL DEFAULT '',
+    tvdb_id INTEGER,
+    tmdb_id INTEGER,
+    imdb_id TEXT,
+    title TEXT,
+    year INTEGER,
+    season INTEGER,
+    first_episode INTEGER,
+    picked_by_user INTEGER AS Boolean NOT NULL,
+    checked_at INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+get:
+SELECT *
+FROM theintrodb_matches
+WHERE entry_id = :entryId AND group_key = :groupKey;
+
+getPickedByEntryId:
+SELECT *
+FROM theintrodb_matches
+WHERE entry_id = :entryId AND picked_by_user = 1;
+
+upsert:
+INSERT OR REPLACE INTO theintrodb_matches(
+    entry_id,
+    group_key,
+    tvdb_id,
+    tmdb_id,
+    imdb_id,
+    title,
+    year,
+    season,
+    first_episode,
+    picked_by_user,
+    checked_at
+)
+VALUES (
+    :entryId,
+    :groupKey,
+    :tvdbId,
+    :tmdbId,
+    :imdbId,
+    :title,
+    :year,
+    :season,
+    :firstEpisode,
+    :pickedByUser,
+    :checkedAt
+);

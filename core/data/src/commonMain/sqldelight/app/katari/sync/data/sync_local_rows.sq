@@ -183,6 +183,13 @@ WHERE entry_id = :entryId
 AND group_key = :groupKey
 AND picked_by_user = 1;
 
+theIntroDbPickRow:
+SELECT entry_id, group_key, tvdb_id, tmdb_id, imdb_id, title, year, season, first_episode
+FROM theintrodb_matches
+WHERE entry_id = :entryId
+AND group_key = :groupKey
+AND picked_by_user = 1;
+
 -- Picture framing, zoom and pan depend on the screen, and mpv_hint_shown is this device's own hint; neither syncs.
 playbackPreferencesRow:
 SELECT
@@ -215,10 +222,16 @@ AND M.entry_id = :entryId
 AND T.merged_by_source = 0;
 
 entryMigrationRow:
-SELECT source_entry_id, target_entry_id, intent_fingerprint
+SELECT source_entry_id, target_entry_id, intent_fingerprint, chapter_state_only
 FROM entry_migration_operations
 WHERE operation_id = :operationId
 AND mode = 'REPLACE';
+
+entryMigrationChapterPositions:
+SELECT source_chapter_url, target_chapter_url
+FROM entry_migration_chapter_positions
+WHERE operation_id = :operationId
+ORDER BY position;
 
 extensionRepositoryRow:
 SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord, format, extension_list_url

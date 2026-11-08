@@ -7,7 +7,6 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
-import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.player.WindowAnimePlayer
 import mihon.desktop.player.mediacontrols.MprisAnimePlayerMediaControls
@@ -26,10 +25,8 @@ object PlayerBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun pictureInPictureWindow(
-        preferences: WindowPreferences,
-        displayBackend: DisplayBackend,
-    ): AnimePlayerPictureInPictureWindow = ComposePictureInPictureWindow(preferences, displayBackend)
+    fun pictureInPictureWindow(preferences: WindowPreferences): AnimePlayerPictureInPictureWindow =
+        ComposePictureInPictureWindow(preferences)
 
     @Provides
     @SingleIn(AppScope::class)

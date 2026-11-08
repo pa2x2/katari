@@ -31,6 +31,7 @@ import mihon.tts.api.request.TtsParameters
 import mihon.tts.api.request.TtsRequest
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
+import mihon.tts.ui.playback.ShortFormSpeechFailure
 import org.junit.jupiter.api.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,7 +40,7 @@ class BookShortFormSpeechControllerTest {
     @Test
     fun `late obsolete preparation cannot replace the current speech owner`() = runTest {
         val feature = DeferredFirstPreparationFeature()
-        val failures = mutableListOf<BookShortFormSpeechFailure>()
+        val failures = mutableListOf<ShortFormSpeechFailure>()
         val controller = BookShortFormSpeechController(feature, backgroundScope, failures::add)
         val selection = request(BookShortFormSpeechOwner.Selection("selection"), "first")
         val translationTarget = TranslationResultSpeechTarget(

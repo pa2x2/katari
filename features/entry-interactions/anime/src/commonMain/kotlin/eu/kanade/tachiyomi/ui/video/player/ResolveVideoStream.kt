@@ -275,6 +275,9 @@ internal class ResolveVideoStream(
 
         data object OfflineNoDownload : Reason
 
+        /** The source answered a dub or server the viewer picked with another one: it doesn't offer the pick here. */
+        data object PickNotOffered : Reason
+
         data class StreamFetchFailed(val cause: Throwable) : Reason
     }
 

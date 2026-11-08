@@ -203,6 +203,8 @@ private object NoOpMergeMigrationFeature : EntryMergeMigrationFeature {
     ): EntryMergeMigrationReplacementResult = EntryMergeMigrationReplacementResult.Applied
 
     override suspend fun pairLockedMembers(current: Entry, replacement: Entry): List<EntryMergeMemberPair> = emptyList()
+
+    override suspend fun lockedMembers(root: Entry): List<Entry> = emptyList()
 }
 
 private class RecordingMigrationHost(

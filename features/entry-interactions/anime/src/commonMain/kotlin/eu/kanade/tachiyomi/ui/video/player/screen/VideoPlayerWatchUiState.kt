@@ -10,7 +10,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbac
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import tachiyomi.domain.entry.model.PictureFraming
 
@@ -49,12 +48,13 @@ internal class VideoPlayerWatchUiState(
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
 
-    var controlsFootprint by mutableStateOf(VideoControlsFootprint.None)
-
-    /** A mouse is over the bars or the centre buttons, which keeps them from hiding. */
+    /** A mouse rests on one of the controls, which keeps them from hiding after a while. */
     var pointerOverControls by mutableStateOf(false)
 
-    /** Where a mouse hovers over the timeline, which previews it; null while it doesn't. */
+    /** Where a mouse is over the timeline; null while it isn't. */
+    var timelinePointerMs by mutableStateOf<Long?>(null)
+
+    /** Where the timeline previews a hovering mouse, once it has rested on the bar; null while it doesn't. */
     var timelineHoverMs by mutableStateOf<Long?>(null)
 
     /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
@@ -70,12 +70,12 @@ internal class VideoPlayerWatchUiState(
         controllerInteractionSequence += 1L
     }
 
-    fun triggerSeekFeedback(direction: VideoPlayerSeekDirection, stepSeconds: Int, hidePlayerChrome: Boolean) {
+    fun triggerSeekFeedback(direction: VideoPlayerSeekDirection, movedMs: Long, hidePlayerChrome: Boolean) {
         seekFeedbackSequence += 1L
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
-            stepSeconds = stepSeconds,
+            movedMs = movedMs,
             hidePlayerChrome = hidePlayerChrome,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),

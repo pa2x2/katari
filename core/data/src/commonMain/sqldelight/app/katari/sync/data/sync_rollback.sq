@@ -70,3 +70,7 @@ WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
 deleteIntroTimesPicks:
 DELETE FROM intro_times_matches
 WHERE picked_by_user = 1 AND entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);
+
+deleteTheIntroDbPicks:
+DELETE FROM theintrodb_matches
+WHERE picked_by_user = 1 AND entry_id IN (SELECT _id FROM entries WHERE profile_id IN :profileIds);

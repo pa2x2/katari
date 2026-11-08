@@ -3,6 +3,9 @@ package app.katari.sync.client.kind.replacement.carry
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.LocalWrites
+import app.katari.sync.client.kind.replacement.EntryReplacementPayload
+import app.katari.sync.client.kind.replacement.MigratedChapters
+import app.katari.sync.client.kind.replacement.PairedChapter
 import app.katari.sync.client.kind.replacement.Replacement
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRef
@@ -11,19 +14,24 @@ import app.katari.sync.protocol.clock.HybridTimestamp
 import tachiyomi.domain.entry.migration.EntryMigrationOption
 
 /** One replacement of the entry [from], and how its later edits carry over to the entry that replaced it. */
-internal class ReplacementCarry(
-    val writes: LocalWrites,
-    val from: String,
-    replacement: Replacement,
+internal class ReplacementCarry(val writes: LocalWrites, payload: EntryReplacementPayload) {
+    val from: String = payload.from
+    private val replacement: Replacement = payload.replacement.value
+
     /** When the replacement was made; only edits after it carry over. */
-    val at: HybridTimestamp,
-) {
+    val at: HybridTimestamp = payload.replacement.at
     val to: String = replacement.to
     val isMove: Boolean = replacement.cause == Replacement.Cause.PROFILE_MOVE
     private val options: Set<EntryMigrationOption> =
         replacement.options.mapNotNullTo(HashSet()) { name ->
             EntryMigrationOption.entries.firstOrNull { it.name == name }
         }
+
+    /** The order a migration paired chapters in by position; empty when it paired them by number. */
+    val chapterOrder: List<PairedChapter> = payload.migratedChapters?.inOrder.orEmpty()
+
+    /** Whether the migration took only the old entry's chapter state ([MigratedChapters.chapterStateOnly]). */
+    val chapterStateOnly: Boolean = payload.migratedChapters?.chapterStateOnly == true
 
     /** Whether the replacement carried what [option] stands for: a move carries everything. */
     fun carries(option: EntryMigrationOption): Boolean = isMove || option in options

@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 CREATE TABLE entry_migration_operations(
     operation_id TEXT NOT NULL PRIMARY KEY,
     intent_fingerprint TEXT NOT NULL,
@@ -6,6 +8,8 @@ CREATE TABLE entry_migration_operations(
     target_entry_id INTEGER NOT NULL,
     mode TEXT NOT NULL,
     created_at INTEGER NOT NULL,
+    -- A season folding into the entry its merged entry migrated to, which takes only its chapters' state
+    chapter_state_only INTEGER AS Boolean NOT NULL DEFAULT 0,
     FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
@@ -22,6 +26,7 @@ INSERT INTO entry_migration_operations(
     source_entry_id,
     target_entry_id,
     mode,
+    chapter_state_only,
     created_at
 )
 VALUES (
@@ -31,5 +36,6 @@ VALUES (
     :sourceEntryId,
     :targetEntryId,
     :mode,
+    :chapterStateOnly,
     :createdAt
 );

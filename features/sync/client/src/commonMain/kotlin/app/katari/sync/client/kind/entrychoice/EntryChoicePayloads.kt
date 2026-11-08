@@ -64,6 +64,27 @@ data class IntroTimesMatch(
     @ProtoNumber(4) val year: Long? = null,
 )
 
+/** The series or film the person picked for a season group's TheIntroDB times. */
+@Serializable
+data class TheIntroDbPickPayload(
+    @ProtoNumber(1) val entryKey: String,
+    /** The season group, empty for the whole entry. */
+    @ProtoNumber(2) val groupKey: String,
+    @ProtoNumber(3) val match: Stamped<TheIntroDbPick>,
+)
+
+/** Without [title] it is None; [season] and [firstEpisode] are null for a film. */
+@Serializable
+data class TheIntroDbPick(
+    @ProtoNumber(1) val tvdbId: Long? = null,
+    @ProtoNumber(2) val tmdbId: Long? = null,
+    @ProtoNumber(3) val imdbId: String? = null,
+    @ProtoNumber(4) val title: String? = null,
+    @ProtoNumber(5) val year: Long? = null,
+    @ProtoNumber(6) val season: Long? = null,
+    @ProtoNumber(7) val firstEpisode: Long? = null,
+)
+
 /** What the player picks for the entry. Picture framing, zoom and pan stay with each screen. */
 @Serializable
 data class PlaybackPreferencesPayload(

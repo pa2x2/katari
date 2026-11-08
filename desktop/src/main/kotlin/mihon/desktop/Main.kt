@@ -26,6 +26,7 @@ import mihon.desktop.extension.startExtensionHost
 import mihon.desktop.home.HomeWindowContent
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.player.Host
+import mihon.desktop.security.signin.SignInCheckProcess
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.systemDesktopDirectories
 import mihon.desktop.update.DesktopAppUpdatePrompt
@@ -36,6 +37,8 @@ import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
 fun main(arguments: Array<String>) {
+    // Before anything of the app's: the check only talks to PAM and to the app that started it
+    SignInCheckProcess.serviceIn(arguments)?.let(SignInCheckProcess::run)
     val operatingSystem = DesktopOperatingSystem.current()
     val directories = systemDesktopDirectories(operatingSystem)
     val crashReport = CrashReportArgument.reportIn(arguments)
@@ -86,7 +89,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     AppProcessStart.runAppUpgradeMigrations(graph)
     AppProcessStart.startSync(graph)
     // Before anything starts AWT, which fixes the window toolkit for the run
-    graph.startDisplayBackend()
+    graph.displayBackend.start()
     SingletonImageLoader.setSafe { graph.imageLoader }
     // As Android's launch does before its first screen: the default profile exists, older preferences are moved and
     // the profile last open is active again, so the window opens in that profile's theme.
@@ -97,10 +100,11 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // Desktop's counterpart of WorkManager, which Android starts before the app's own start-up: the pending work
     // reads the profile and its sources, so it resumes once both are ready, before the first window opens
     graph.persistedWorkResume.start()
+    graph.profileRelock.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
     runWindow(graph, laterLaunches = instance.requests) {
-        HomeWindowContent(startup, graph.homeDestinations) { navigator ->
+        HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
             DesktopAppUpdatePrompt(graph.appUpdateController, graph.onboardingPreferences)
         }
@@ -116,14 +120,10 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
 /** Crash-report mode: the window shows only the crash screen, and nothing resumes the app's work. */
 private fun startCrashReport(graph: DesktopGraph, report: Path) {
     AppProcessStart.startCrashReport(graph)
-    graph.startDisplayBackend()
+    graph.displayBackend.start()
     // The debug info lists the extensions that misbehave, which loads them once logs are dumped
     graph.prepareExtensionHost()
     runWindow(graph, laterLaunches = emptyFlow()) { CrashReportWindowContent(report, graph.appRestart) }
-}
-
-private fun DesktopGraph.startDisplayBackend() {
-    displayBackend.start(preferNativeWayland = displayBackendPreferences.useNativeWayland.get())
 }
 
 /**

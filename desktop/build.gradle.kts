@@ -98,6 +98,7 @@ dependencies {
     implementation(projects.features.translation.providers.libretranslate)
     implementation(projects.features.translation.providers.serverConnection)
     implementation(projects.features.tts.runtime)
+    implementation(projects.features.tts.providers.speechDispatcher)
     implementation(projects.sources.webView.jcef)
 
     implementation(libs.metrox.viewmodel.compose)

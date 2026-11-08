@@ -7,8 +7,8 @@ import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.tts.api.engine.TtsEngineArtwork
 
 /**
- * An empty tile: engine artwork names Android drawables and application packages, which desktop can't load. Desktop
- * has no speech engine yet, so no engine card shows one.
+ * The glyph, or an empty tile for artwork that names Android drawables and application packages, which only engines
+ * of Android's own have.
  */
 @Composable
 internal actual fun TtsEngineArtwork(
@@ -16,5 +16,10 @@ internal actual fun TtsEngineArtwork(
     size: ArtworkTileSize,
     modifier: Modifier,
 ) {
-    ArtworkTile(size = size, modifier = modifier) {}
+    when (artwork) {
+        is TtsEngineArtwork.Glyph -> TtsEngineGlyph(artwork, size, modifier)
+        is TtsEngineArtwork.Bundled,
+        is TtsEngineArtwork.InstalledApplication,
+        -> ArtworkTile(size = size, modifier = modifier) {}
+    }
 }

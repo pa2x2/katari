@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -18,9 +17,8 @@ import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * The player's text and picture subtitles over the video, in the viewer's appearance, for a picture of [aspectRatio]
- * shown with [framing]. They move into the band under a fitted picture unless [keepSubtitlesInPicture], and rise
- * above the controls' bottom row while [controls] shows it. While the subtitle editor is open, its own preview shows
- * instead.
+ * shown with [framing]. They move into the band under a fitted picture unless [keepSubtitlesInPicture], and stay
+ * there while the controls come and go. While the subtitle editor is open, its own preview shows instead.
  */
 @Composable
 internal fun VideoPlayerSubtitles(
@@ -29,7 +27,6 @@ internal fun VideoPlayerSubtitles(
     ui: VideoPlayerWatchUiState,
     aspectRatio: Float?,
     framing: PictureFraming,
-    controls: VideoControlsFootprint,
     keepSubtitlesInPicture: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -49,7 +46,6 @@ internal fun VideoPlayerSubtitles(
                 framing = framing,
                 appearance = appearance,
                 keepInPicture = keepSubtitlesInPicture,
-                controls = controls,
                 gapPx = gapPx,
             )
         },

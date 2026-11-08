@@ -13,7 +13,6 @@ import mihon.data.di.RepositoryBindings
 import mihon.desktop.appearance.PreferenceAppLocaleStore
 import mihon.desktop.application.AppRestart
 import mihon.desktop.display.backend.DisplayBackend
-import mihon.desktop.display.backend.DisplayBackendPreferences
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
@@ -21,6 +20,11 @@ import mihon.desktop.extension.dialog.WindowExtensionDialogs
 import mihon.desktop.home.HomeDestinations
 import mihon.desktop.notification.DesktopNotifications
 import mihon.desktop.player.WindowAnimePlayer
+import mihon.desktop.presence.AppPresence
+import mihon.desktop.profile.ActiveProfileLock
+import mihon.desktop.profile.ProfileRelock
+import mihon.desktop.security.signin.SignInPrompts
+import mihon.desktop.security.signin.SystemSignIn
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.OpenWindow
 import mihon.desktop.window.WindowPreferences
@@ -87,7 +91,6 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend
-    val displayBackendPreferences: DisplayBackendPreferences
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
@@ -104,6 +107,11 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val windowExtensionDialogs: WindowExtensionDialogs
     val appUpdateController: AppUpdateController
     val windowAnimePlayer: WindowAnimePlayer
+    val activeProfileLock: ActiveProfileLock
+    val profileRelock: ProfileRelock
+    val appPresence: AppPresence
+    val signInPrompts: SignInPrompts
+    val systemSignIn: SystemSignIn
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

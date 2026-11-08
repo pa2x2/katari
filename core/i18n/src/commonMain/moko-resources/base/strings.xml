@@ -510,6 +510,18 @@
     <string name="tts_settings_engine_required">Choose an available speech engine.</string>
     <string name="tts_settings_audio_focus_unavailable">Another app currently owns audio playback.</string>
     <string name="tts_settings_provider_failed">The speech engine could not play the preview.</string>
+    <!-- Speech Dispatcher, the speech service of Linux desktops; its name and package names stay untranslated -->
+    <string name="tts_speech_dispatcher_description">Speech through Speech Dispatcher, the speech service of Linux desktops, in the voices installed for it.</string>
+    <string name="tts_speech_dispatcher_processing">Speech Dispatcher\'s voices run on this computer.</string>
+    <string name="tts_speech_dispatcher_privacy">Text you listen to is passed only to Speech Dispatcher and the voice it reads with.</string>
+    <string name="tts_speech_dispatcher_not_installed">Speech Dispatcher isn\'t installed. Install the speech-dispatcher package and a voice such as espeak-ng to hear text read aloud.</string>
+    <string name="tts_speech_dispatcher_start_failed">Speech Dispatcher couldn\'t start.</string>
+    <string name="tts_speech_dispatcher_start_failed_because">Speech Dispatcher couldn\'t start: %s</string>
+    <string name="tts_speech_dispatcher_unreachable">Speech Dispatcher couldn\'t be reached.</string>
+    <string name="tts_speech_dispatcher_unreachable_because">Speech Dispatcher couldn\'t be reached: %s</string>
+    <string name="tts_speech_dispatcher_no_voices">Speech Dispatcher has no voices. Install a voice such as espeak-ng.</string>
+    <string name="tts_speech_dispatcher_stopped_responding">Speech Dispatcher stopped responding.</string>
+    <string name="tts_speech_dispatcher_refused">Speech Dispatcher refused to speak: %s</string>
     <!-- Model artifacts -->
     <string name="model_artifacts_title">Downloaded models</string>
     <string name="model_artifacts_summary">Storage used by on-device models</string>
@@ -1035,6 +1047,16 @@
     <string name="secure_screen">Secure screen</string>
     <string name="secure_screen_summary">Secure screen hides app contents when switching apps and block screenshots</string>
     <string name="firebase_summary">Sending crash logs and analytics will allow us to identify and fix issues, improve performance, and make future updates more relevant to your needs</string>
+    <string name="sign_in_check_line">Enter the password you use to sign in to this computer as %1$s.</string>
+    <string name="sign_in_check_waiting">You can type your password once the reader stops waiting.</string>
+    <string name="sign_in_check_refused">Wrong password. Too many wrong tries can lock your account on this computer for a while.</string>
+    <string name="sign_in_check_failed">Katari couldn\'t check your sign-in on this computer.</string>
+    <string name="sign_in_check_checking">Checking…</string>
+    <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
+    <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
+    <string name="profile_lock_unavailable">Profile lock isn\'t available</string>
+    <string name="profile_lock_unavailable_summary">Katari can\'t check your sign-in on this computer.</string>
+    <string name="profile_locked_cant_check">%1$s is locked, and Katari can\'t check your sign-in on this computer.</string>
 
     <string name="pref_category_extensions">Extensions</string>
     <string name="pref_allowed_content_warnings">Allowed content warnings</string>
@@ -1686,10 +1708,7 @@
     <string name="pref_interface_size">Interface size</string>
     <string name="pref_interface_size_summary">On top of the desktop’s scale</string>
     <string name="action_edit_interface_size">Edit interface size</string>
-    <string name="pref_use_native_wayland">Use native Wayland</string>
-    <string name="pref_use_native_wayland_summary">Skips XWayland and scrolls smoothly on touchpads, but draws on the processor: text is slightly softer and the frame rate lower</string>
     <string name="restart_app_title">Restart now?</string>
-    <string name="restart_app_display_backend">The new display setting applies when the app starts again.</string>
     <string name="restart_app_language">The new language applies when the app starts again.</string>
     <string name="action_restart">Restart</string>
     <string name="action_later">Later</string>
@@ -1846,6 +1865,7 @@
     <string name="anime_playback_stream">Stream</string>
     <string name="anime_playback_server_failed">Didn\'t work</string>
     <string name="anime_playback_options_failed">Couldn\'t load these options</string>
+    <string name="anime_playback_options_not_offered">Not available for this episode</string>
     <string name="anime_playback_source_quality">Source quality</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
@@ -1919,7 +1939,7 @@
     <string name="anime_guide_right_click">Right-click for settings</string>
     <string name="anime_guide_scroll_volume">Scroll for volume</string>
     <string name="anime_guide_scroll_seek">Scroll sideways to seek</string>
-    <string name="anime_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="anime_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
     <string name="anime_guide_keys_play">Space to play or pause</string>
     <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>
     <string name="anime_guide_keys_list">? lists every key</string>
@@ -1931,6 +1951,7 @@
     <string name="anime_playback_server_fallback">%1$s didn\'t respond · Playing %2$s</string>
     <string name="anime_playback_change">Change</string>
     <string name="anime_playback_switch_failed">Couldn\'t switch to %1$s</string>
+    <string name="anime_playback_switch_not_offered">%1$s isn\'t available for this episode</string>
     <string name="anime_playback_member_episode">%1$s · %2$s</string>
     <!-- The window's title while an episode plays: the series, then the episode -->
     <string name="anime_playback_window_title">%1$s · %2$s</string>
@@ -1972,24 +1993,43 @@
     <string name="anime_marker_skip_button">Button</string>
     <string name="anime_marker_skip_countdown">Button, then skip</string>
     <string name="anime_marker_skip_automatic">Automatic</string>
-    <string name="anime_intro_times_found">Times from AniSkip</string>
+    <string name="anime_skip_with_service">%1$s · %2$s</string>
+    <string name="intro_times_service_aniskip" translatable="false">AniSkip</string>
+    <string name="intro_times_service_theintrodb" translatable="false">TheIntroDB</string>
+    <string name="anime_intro_times_in_use">In use</string>
+    <string name="anime_intro_times_found">Times for this episode</string>
+    <!-- Which kinds of times are used, such as "Credits, Preview" -->
+    <string name="anime_intro_times_partly_used">Used for %s</string>
+    <!-- The service whose times win, such as AniSkip -->
+    <string name="anime_intro_times_used_instead">%s’s times are used instead</string>
     <string name="anime_intro_times_matched">Matched to %1$s (%2$d)</string>
     <string name="anime_intro_times_matched_no_year">Matched to %s</string>
-    <string name="anime_intro_times_none_for_episode">AniSkip has no times for this episode</string>
-    <string name="anime_intro_times_none_for_unnumbered">AniSkip can\'t look up an episode without a number</string>
-    <string name="anime_intro_times_looking">Looking for times on AniSkip</string>
-    <string name="anime_intro_times_no_series">No AniSkip series found</string>
+    <string name="anime_intro_times_season_from">Season %1$d from episode %2$d</string>
+    <string name="anime_intro_times_none_for_episode">No times for this episode</string>
+    <string name="anime_intro_times_none_for_unnumbered">An episode without a number can\'t be looked up</string>
+    <string name="anime_intro_times_looking">Looking for times</string>
+    <string name="anime_intro_times_no_series">Nothing found by this title</string>
     <string name="anime_intro_times_searched_for">Searched for “%s”</string>
-    <string name="anime_intro_times_unreachable">Couldn\'t reach AniSkip</string>
+    <string name="anime_intro_times_unreachable">Couldn\'t look up times</string>
     <string name="anime_intro_times_unreachable_summary">Check the connection and retry</string>
-    <string name="anime_intro_times_turned_off">Not looked up for this series</string>
+    <string name="anime_intro_times_turned_off">Not looked up for this title</string>
     <string name="anime_intro_times_turned_off_summary">You picked None</string>
     <string name="anime_intro_times_change">Change</string>
     <string name="anime_intro_times_find">Find</string>
-    <string name="anime_intro_times_series">Series for intro times</string>
+    <!-- Title of the page that picks what a service's times come from, such as "Series for AniSkip" -->
+    <string name="anime_intro_times_series">Series for %s</string>
     <string name="anime_intro_times_search_placeholder">Search AniList</string>
     <string name="anime_intro_times_search_failed">Couldn\'t reach AniList</string>
-    <string name="anime_intro_times_series_none_summary">Don\'t look up times for this series</string>
+    <string name="anime_intro_times_media_search_placeholder">Search series and films</string>
+    <string name="anime_intro_times_media_search_failed">Couldn\'t reach Wikidata or TVmaze</string>
+    <string name="anime_intro_times_series_none_summary">Don\'t look up times for this title</string>
+    <string name="anime_intro_times_kind_series">Series</string>
+    <string name="anime_intro_times_kind_film">Film</string>
+    <string name="anime_intro_times_season">Season</string>
+    <string name="anime_intro_times_which_episode">Which episode is playing?</string>
+    <string name="anime_intro_times_episode_number">Episode %d</string>
+    <string name="anime_intro_times_episodes_failed">Couldn\'t reach TVmaze</string>
+    <string name="anime_intro_times_tvmaze_credit">Data from TVmaze</string>
     <string name="anime_series_format_tv">TV</string>
     <string name="anime_series_format_tv_short">TV short</string>
     <string name="anime_series_format_movie">Movie</string>
@@ -2016,6 +2056,8 @@
     <string name="anime_problem_unplayable_explanation">Katari can\'t play this stream\'s format.</string>
     <string name="anime_problem_not_found">Episode not found</string>
     <string name="anime_problem_not_found_explanation">It may have been removed from the source.</string>
+    <string name="anime_problem_not_offered">Not available for this episode</string>
+    <string name="anime_problem_not_offered_explanation">The source doesn\'t offer this choice for this episode.</string>
     <string name="anime_problem_not_found_episode_list">It may have been removed from the source. Refresh the episode list and try again.</string>
     <string name="anime_problem_episode_list">Episode list</string>
     <string name="anime_problem_source_missing">Source not installed</string>
@@ -2083,7 +2125,9 @@
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="pref_anime_marker_skip_summary">%s · where they\'re marked</string>
     <string name="pref_anime_find_intro_times_online">Find intro and credits times online</string>
-    <string name="pref_anime_find_intro_times_online_summary">Asks AniSkip when the source marks none. Sends series titles to AniList and episode numbers to AniSkip.</string>
+    <string name="pref_anime_find_intro_times_online_summary">Asks the services below when the source marks none</string>
+    <string name="pref_anime_intro_times_aniskip_summary">Anime. Sends series titles to AniList and episode numbers to AniSkip.</string>
+    <string name="pref_anime_intro_times_theintrodb_summary">Anime, series and films. Sends series titles to Wikidata and TVmaze, and their ids and episode numbers to TheIntroDB.</string>
     <string name="pref_anime_marker_skip_button">Show a button</string>
     <string name="pref_anime_marker_skip_countdown">Show a button, then skip</string>
     <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
@@ -2875,7 +2919,7 @@
     <string name="migrationListScreen.migrateDialog.migrateLabel">Migrate</string>
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.migrateDialog.copyMergedExplanation">Copying keeps selected members and matches in their current merged entries.</string>
-    <string name="migrationListScreen.migrateDialog.replaceRootExplanation">Each selected root is replaced by its match, which becomes the new root. Other members remain.</string>
+    <string name="migrationListScreen.migrateDialog.replaceRootExplanation">Each selected root is replaced by its match, which becomes the new root. Members you added stay with the new root; those that came from the old source leave with the old one.</string>
     <string name="migrationListScreen.migrateDialog.replaceMemberExplanation">Each selected member is replaced in place. Its root and the other members remain.</string>
     <string name="migrationListScreen.migrateDialog.sameGroupTargetExplanation">A match already belongs to the same merged entry. Replacing it removes the selected duplicate and may dissolve a two-member group.</string>
     <string name="migrationListScreen.migrateDialog.otherGroupTargetExplanation">A match belongs to another merged entry. It moves into the selected member’s group, and its previous group may be dissolved.</string>

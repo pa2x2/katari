@@ -38,8 +38,8 @@ import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
-import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
-import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
+import eu.kanade.tachiyomi.ui.video.player.introtimes.introTimesServices
+import eu.kanade.tachiyomi.ui.video.player.introtimes.onlineMarkers
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPictureScene
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
@@ -49,13 +49,12 @@ import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
-import kotlinx.coroutines.delay
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.handoff.ProgressOfferNote
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -67,10 +66,10 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.abs
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
-private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 
 /**
  * The screen while an episode plays: the video and its input, the controls, the end screen, the settings and the
@@ -195,10 +194,7 @@ internal fun VideoPlayerWatchScreen(
         ui.settingsVisible = true
         registerControllerInteraction(true)
     }
-    val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
-        ui.triggerSeekFeedback(direction, seekStepSeconds, hidePlayerChrome)
-    }
-    val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
+    val seekInDirection: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
         val durationMs = ui.playbackSnapshot.durationMs.takeIf { it > 0L }
             ?: currentPlayer.state.value.durationMs?.coerceAtLeast(0L)
             ?: 0L
@@ -214,12 +210,12 @@ internal fun VideoPlayerWatchScreen(
         ui.scrubPositionMs = targetPositionMs
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = targetPositionMs)
         currentPlayer.seekTo(targetPositionMs)
+        ui.triggerSeekFeedback(direction, abs(targetPositionMs - basePositionMs), hidePlayerChrome)
     }
     val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
         if (!controlsPinned) ui.controlsVisible = false
         registerControllerInteraction(false)
-        seekInDirection(direction)
-        triggerSeekFeedback(direction, true)
+        seekInDirection(direction, true)
     }
     val togglePlayback = {
         registerControllerInteraction(true)
@@ -237,10 +233,24 @@ internal fun VideoPlayerWatchScreen(
     val markerSkipMode = markerSkipSetting?.let { it.state.collectAsState().value.effectiveValue }
     val markerSkip = rememberVideoPlayerMarkerSkip(current.chapterId)
     val findsIntroTimesOnline = host.settings.findIntroTimesOnline.state.collectAsState().value.effectiveValue
-    val asksIntroTimes = asksIntroTimesOnline(findsIntroTimesOnline, current.stream.markers)
+    val fromAniSkip = host.settings.introTimesFromAniSkip.state.collectAsState().value.effectiveValue
+    val fromTheIntroDb = host.settings.introTimesFromTheIntroDb.state.collectAsState().value.effectiveValue
+    val introTimesServices = remember(findsIntroTimesOnline, fromAniSkip, fromTheIntroDb, current.stream.markers) {
+        introTimesServices(
+            settingOn = findsIntroTimesOnline,
+            turnedOn = buildSet {
+                if (fromAniSkip) add(IntroTimesService.ANISKIP)
+                if (fromTheIntroDb) add(IntroTimesService.THEINTRODB)
+            },
+            streamMarkers = current.stream.markers,
+        )
+    }
     val introTimes by viewModel.introTimes.state.collectAsState()
-    val markers = remember(current.stream.markers, current.chapterId, asksIntroTimes, introTimes) {
-        playbackMarkers(current.stream.markers, current.chapterId, asksIntroTimes, introTimes)
+    val onlineMarkers = remember(current.chapterId, introTimesServices, introTimes) {
+        onlineMarkers(current.chapterId, introTimesServices, introTimes)
+    }
+    val markers = remember(current.stream.markers, onlineMarkers) {
+        current.stream.markers + onlineMarkers.map { it.marker }
     }
     val skipOffer = markerSkip.offerAt(
         mode = markerSkipMode,
@@ -315,7 +325,7 @@ internal fun VideoPlayerWatchScreen(
         currentPlayer.seekTo(positionMs)
     }
 
-    viewModel.introTimes.Effect(current.chapterId, asksIntroTimes) { ui.playbackSnapshot.durationMs }
+    viewModel.introTimes.Effect(current.chapterId, introTimesServices) { ui.playbackSnapshot.durationMs }
 
     LaunchedEffect(current.playback.currentAdaptiveQuality, currentPlayer) {
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
@@ -341,35 +351,7 @@ internal fun VideoPlayerWatchScreen(
     )
     val scrub = rememberVideoPlayerScrub(ui, seekPreview, pictureInPicture, currentPlayer)
 
-    LaunchedEffect(
-        controlsPinned,
-        ui.controlsVisible,
-        ui.controllerInteractionSequence,
-        ui.playbackSnapshot.isPlaying,
-        ui.playbackSnapshot.isLoading,
-        ui.isScrubbing,
-        ui.settingsVisible,
-        ui.episodesDrawerVisible,
-        ui.startupOverlayVisible,
-        ui.pointerOverControls,
-    ) {
-        if (
-            ui.pointerOverControls ||
-            controlsPinned ||
-            !ui.controlsVisible ||
-            !ui.playbackSnapshot.isPlaying ||
-            ui.playbackSnapshot.isLoading ||
-            ui.isScrubbing ||
-            ui.settingsVisible ||
-            ui.episodesDrawerVisible ||
-            ui.startupOverlayVisible
-        ) {
-            return@LaunchedEffect
-        }
-
-        delay(CONTROLS_AUTO_HIDE_DELAY_MS)
-        ui.controlsVisible = false
-    }
+    VideoPlayerControlsAutoHide(ui, controlsPinned)
 
     val displayedPositionMs = if (ui.isScrubbing) {
         ui.scrubPositionMs.coerceToPlaybackDuration(ui.playbackSnapshot.durationMs)
@@ -412,18 +394,16 @@ internal fun VideoPlayerWatchScreen(
         togglePlayback = togglePlayback,
         seekFromControls = { direction ->
             registerControllerInteraction(true)
-            seekInDirection(direction)
-            triggerSeekFeedback(direction, false)
+            seekInDirection(direction, false)
         },
         gestureSeek = performGestureSeek,
         seekStep = { direction ->
             registerControllerInteraction(false)
-            seekInDirection(direction)
-            triggerSeekFeedback(direction, false)
+            seekInDirection(direction, false)
         },
         toggleFullScreen = {
             host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }
-            registerControllerInteraction(true)
+            registerControllerInteraction(false)
         },
         openEpisodes = {
             temporarySpeedBoostActive = false
@@ -503,7 +483,6 @@ internal fun VideoPlayerWatchScreen(
                 ui = ui,
                 aspectRatio = inputTarget.videoAspectRatio,
                 framing = inputTarget.pictureFraming,
-                controls = ui.controlsFootprint,
                 keepSubtitlesInPicture = visit.subtitlesInPicture,
                 modifier = pictureArea,
             )
@@ -531,7 +510,6 @@ internal fun VideoPlayerWatchScreen(
                             ui = ui,
                             aspectRatio = inputTarget.videoAspectRatio,
                             framing = PictureFraming.Fit,
-                            controls = VideoControlsFootprint.None,
                             keepSubtitlesInPicture = visit.subtitlesInPicture,
                             modifier = modifier,
                         )
@@ -571,6 +549,7 @@ internal fun VideoPlayerWatchScreen(
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
             markers = markers,
+            onlineMarkers = onlineMarkers,
             chapters = chapters,
             skipOffer = skipOffer,
             skipCountdown = skipCountdown,
@@ -623,7 +602,7 @@ internal fun VideoPlayerWatchScreen(
             engine = engine,
             markerSkipSetting = markerSkipSetting,
             markers = markers,
-            introTimes = introTimes?.takeIf { asksIntroTimes && it.chapterId == current.chapterId },
+            introTimes = introTimes?.takeIf { introTimesServices.isNotEmpty() && it.chapterId == current.chapterId },
             chapters = chapters,
             onSeek = seekToPosition,
         )

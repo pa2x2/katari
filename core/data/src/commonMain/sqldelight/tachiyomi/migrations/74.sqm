@@ -1,0 +1,12 @@
+import kotlin.Boolean;
+
+CREATE TABLE entry_migration_chapter_positions(
+    operation_id TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    source_chapter_url TEXT NOT NULL,
+    target_chapter_url TEXT,
+    PRIMARY KEY(operation_id, position),
+    FOREIGN KEY(operation_id) REFERENCES entry_migration_operations(operation_id) ON DELETE CASCADE
+);
+
+ALTER TABLE entry_migration_operations ADD COLUMN chapter_state_only INTEGER AS Boolean NOT NULL DEFAULT 0;

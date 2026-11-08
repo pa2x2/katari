@@ -138,7 +138,10 @@ internal class DesktopMpvSession(private val host: MpvSessionHost) : MpvSession 
         /** mpv's output when it draws through a render context; without one it has `vo=null`. */
         const val RENDERED_OUTPUT = "libmpv"
 
-        /** The least severe of mpv's messages the player hears: it keeps errors, for a failure's details. */
-        const val LOG_LEVEL = "error"
+        /**
+         * The least severe of mpv's messages the player hears: it keeps errors, for a failure's details, and puts
+         * warnings in the app's log too, where a stream's broken timestamps or cut-off downloads show.
+         */
+        const val LOG_LEVEL = "warn"
     }
 }

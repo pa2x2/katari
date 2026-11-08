@@ -20,13 +20,16 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.migration.EntryMigrationOption
 import tachiyomi.domain.entry.migration.MigrationChapterMarks
 import tachiyomi.domain.entry.migration.MigrationChapterMatch
-import tachiyomi.domain.entry.migration.matchMigrationChapters
+import tachiyomi.domain.entry.migration.MigrationChapterPairs
+import tachiyomi.domain.entry.migration.MigrationChapterPosition
 import tachiyomi.domain.entry.migration.migratedChapterMarks
+import tachiyomi.domain.entry.migration.pairMigrationChaptersByNumber
+import tachiyomi.domain.entry.migration.pairMigrationChaptersInOrder
 
 /**
- * What hangs off an entry's chapters, carried over a replacement to the chapters that stand for them, matched as
- * local migration matches them, by number or else by name: read and bookmark marks and positions when a migration
- * kept chapter state, and for a move also history, whose time read adds to the time read on the new chapter.
+ * What hangs off an entry's chapters, carried over a replacement to the chapters that stand for them ([pairs]): read
+ * and bookmark marks and positions when a migration kept chapter state, and for a move also history, whose time read
+ * adds to the time read on the new chapter.
  */
 internal class CarriedChapterState(private val carry: ReplacementCarry) {
 
@@ -39,10 +42,9 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
     suspend fun chapterMarks() {
         if (!carry.carries(EntryMigrationOption.CHILD_STATE)) return
         val sources = chapters(carry.from)
-        val targets = chapters(carry.to)
-        val matches = matchMigrationChapters(sources, targets, Chapter::number, Chapter::name)
+        val pairs = pairs(sources)
         if (carry.isMove) {
-            matches.forEach { match ->
+            pairs.matches.forEach { match ->
                 val source = match.source ?: return@forEach
                 write(
                     match.target,
@@ -57,16 +59,15 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         val rule = carry.writes.migrationRules.chapterMarks(type)
         migratedChapterMarks(
             sources = sources,
-            matches = matches,
+            pairs = pairs,
             transfer = rule,
             marks = { MigrationChapterMarks(it.read.value, it.bookmark.value) },
-            number = Chapter::number,
         ).forEach { (target, marks) ->
-            val match = matches.first { it.target === target }
+            val match = pairs.matches.first { it.target === target }
             val read = if (marks.read == target.read.value) {
                 target.read
             } else {
-                readCause(match, marks.read, sources, rule.read)?.let { Stamped(marks.read, it) } ?: target.read
+                readCause(match, marks.read, sources, pairs, rule.read)?.let { Stamped(marks.read, it) } ?: target.read
             }
             val bookmark = match.source?.bookmark
                 ?.takeIf { rule.bookmarks && marks.bookmark != target.bookmark.value && it.value == marks.bookmark }
@@ -84,12 +85,14 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         match: MigrationChapterMatch<Chapter>,
         read: Boolean,
         sources: List<Chapter>,
+        pairs: MigrationChapterPairs<Chapter>,
         carryRead: Boolean,
     ): HybridTimestamp? {
         val own = match.source?.read?.takeIf { carryRead && it.value == read }?.let(carry::after)?.at
-        val covering = if (read && carryRead && match.target.number >= 0.0) {
+        val place = pairs.number(match.target)
+        val covering = if (read && carryRead && place >= 0.0) {
             sources.filter {
-                it.read.value && it.number >= match.target.number
+                it.read.value && pairs.number(it) >= place
             }.mapNotNull { carry.after(it.read)?.at }.maxOrNull()
         } else {
             null
@@ -119,8 +122,9 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         if (locator == null && completed == null) return
         val targets = if (from.chapterKey != null) {
             if (!carry.carries(EntryMigrationOption.CHILD_STATE)) return
-            val source = chapters(carry.from).firstOrNull { it.key == from.chapterKey } ?: return
-            matchedChapters(source).map { it.key to it.url }
+            val sources = chapters(carry.from)
+            val source = sources.firstOrNull { it.key == from.chapterKey } ?: return
+            pairedTargets(sources, source).map { it.key to it.url }
         } else {
             listOf(null to from.resourceKey)
         }
@@ -154,8 +158,9 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         val lastRead = carry.after(from.lastRead)
         if (lastRead == null && from.timeRead.none { it.at > carry.at }) return
         val shares = from.timeRead.map { it.copy(from = it.from ?: from.chapterKey) }
-        val source = chapters(carry.from).firstOrNull { it.key == from.chapterKey } ?: return
-        matchedChapters(source).forEach { target ->
+        val sources = chapters(carry.from)
+        val source = sources.firstOrNull { it.key == from.chapterKey } ?: return
+        pairedTargets(sources, source).forEach { target ->
             carry.writes.change(
                 HistoryKind,
                 RecordKeys.derive(HistoryKind.name, target.key),
@@ -169,10 +174,34 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         }
     }
 
-    private suspend fun matchedChapters(source: Chapter): List<Chapter> =
-        matchMigrationChapters(listOf(source), chapters(carry.to), Chapter::number, Chapter::name)
-            .filter { it.source != null }
-            .map { it.target }
+    /** The new entry's chapters that stand for [source], one of [sources]. */
+    private suspend fun pairedTargets(sources: List<Chapter>, source: Chapter): List<Chapter> =
+        pairs(sources).matches.filter { it.source === source }.map { it.target }
+
+    /**
+     * The old entry's chapters, [sources], paired with the new entry's as the replacement paired them. A migration that
+     * paired them by position recorded the pairs, which are taken as they are, whatever this device's chapter lists
+     * hold now; any other pairs them as local migration does, by number or else by name. A move keeps its own chapter
+     * rows, so each pairs with itself by URL, also where two chapters share a number.
+     */
+    private suspend fun pairs(sources: List<Chapter>): MigrationChapterPairs<Chapter> {
+        val targets = chapters(carry.to)
+        val sourceByUrl = sources.associateBy(Chapter::url)
+        return when {
+            carry.isMove -> pairMigrationChaptersInOrder(
+                targets.map { MigrationChapterPosition(sourceByUrl[it.url], it) },
+            )
+            carry.chapterOrder.isNotEmpty() -> {
+                val targetByUrl = targets.associateBy(Chapter::url)
+                pairMigrationChaptersInOrder(
+                    carry.chapterOrder.map { paired ->
+                        MigrationChapterPosition(sourceByUrl[paired.sourceUrl], paired.targetUrl?.let(targetByUrl::get))
+                    },
+                )
+            }
+            else -> pairMigrationChaptersByNumber(sources, targets, Chapter::number, Chapter::name)
+        }
+    }
 
     /**
      * The chapters of [entryKey] on this device, with their marks as stored, unedited when nothing is. A move takes

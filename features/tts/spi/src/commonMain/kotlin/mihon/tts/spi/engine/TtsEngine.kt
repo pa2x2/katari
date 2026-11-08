@@ -38,7 +38,14 @@ interface TtsEngine {
 sealed interface TtsEngineDeviceAvailability {
     data object Available : TtsEngineDeviceAvailability
 
-    data object NotInstalled : TtsEngineDeviceAvailability
+    /** [reason] tells the user what to install, when the engine knows. */
+    data class NotInstalled(
+        val reason: String? = null,
+    ) : TtsEngineDeviceAvailability {
+        init {
+            require(reason == null || reason.isNotBlank())
+        }
+    }
 
     data class ConfigurationRequired(
         val reason: String,

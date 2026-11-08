@@ -13,8 +13,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind
+import eu.kanade.tachiyomi.ui.video.player.introtimes.label
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
+import mihon.entry.interactions.anime.introtimes.IntroTimesService
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
 import mihon.presentation.kit.content.Icon
@@ -35,6 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun VideoPlayerSkipButton(
     offer: VideoPlayerSkipOffer,
+    service: IntroTimesService?,
     countdown: VideoPlayerSkipCountdown?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -43,10 +46,10 @@ internal fun VideoPlayerSkipButton(
     val focus = remember { FocusRequester() }
     val takesFocus = LocalKeyboardShortcuts.current != null
     LaunchedEffect(takesFocus) { if (takesFocus) focus.requestFocus() }
-    val pill = if (takesFocus) modifier.focusRequester(focus) else modifier
+    val pill = (if (takesFocus) modifier.focusRequester(focus) else modifier).videoPlayerControl()
     if (countdown == null) {
         OverlayPill(modifier = pill, style = OverlayStyle.Scrim, onClick = onClick) {
-            SkipLabel(offer)
+            SkipLabel(offer, service)
         }
     } else {
         OverlayCountdownPill(
@@ -56,13 +59,13 @@ internal fun VideoPlayerSkipButton(
             dismissLabel = stringResource(MR.strings.anime_skip_dont_skip),
             modifier = pill,
         ) {
-            SkipLabel(offer)
+            SkipLabel(offer, service)
         }
     }
 }
 
 @Composable
-private fun SkipLabel(offer: VideoPlayerSkipOffer) {
+private fun SkipLabel(offer: VideoPlayerSkipOffer, service: IntroTimesService?) {
     val spacing = KatariTheme.spacing
     Row(
         modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
@@ -74,14 +77,16 @@ private fun SkipLabel(offer: VideoPlayerSkipOffer) {
             contentDescription = null,
             modifier = Modifier.size(KatariTheme.sizes.iconSmall),
         )
+        val label = stringResource(
+            if (offer.goesToNextEpisode) {
+                MR.strings.anime_playback_next_episode
+            } else {
+                offer.marker.kind.skipLabel
+            },
+        )
         Text(
-            text = stringResource(
-                if (offer.goesToNextEpisode) {
-                    MR.strings.anime_playback_next_episode
-                } else {
-                    offer.marker.kind.skipLabel
-                },
-            ),
+            text = service?.let { stringResource(MR.strings.anime_skip_with_service, label, stringResource(it.label)) }
+                ?: label,
             role = TextRole.Label,
             maxLines = 1,
         )
