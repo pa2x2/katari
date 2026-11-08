@@ -95,6 +95,8 @@ internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
         "writes the person-level keys other devices synced, which the scope tables already mark",
     "app/src/main/java/mihon/feature/profiles/core/AndroidLegacyProfilePreferenceKeys.kt" to
         "moves keys of earlier versions into profiles",
+    "app-ui/src/commonMain/kotlin/mihon/core/migration/migrations/TrackerDataCleanupMigration.kt" to
+        "deletes the keys trackers kept, which nothing owns since Katari dropped trackers",
     "features/entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/media/" +
         "DefaultEntryMediaCacheFeature.kt" to
         "reads the keys each cache declares through EntryMediaCacheAutoClearPreference",
@@ -112,6 +114,4 @@ internal val PREFERENCE_SCOPE_EXEMPT_FILES = mapOf(
     "features/entry-interactions/book/src/commonMain/kotlin/mihon/entry/interactions/book/download/" +
         "BookDownloadQueueFileBackend.kt" to
         "the download queue of earlier versions, in a file of its own",
-    "features/trackers/src/commonMain/kotlin/eu/kanade/domain/track/store/DelayedTrackingStore.kt" to
-        "the tracking queue, in a file of its own and keyed by tracker binding",
 )

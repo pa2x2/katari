@@ -12,8 +12,6 @@ import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.domain.track.service.GlobalTrackPreferences
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.screen.appearance.AppThemeHost
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
@@ -35,7 +33,6 @@ import tachiyomi.core.common.preference.PlatformPreferenceFiles
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
-import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.DuplicatePreferences
@@ -115,7 +112,6 @@ object AppPreferenceBindings {
     ): InstalledProfilePreferenceOwner<LibraryPreferences> =
         owners.register(
             id = ProfilePreferenceOwnerId("app.library"),
-            keyPatterns = LibraryPreferences.profileKeyPatterns,
             factory = ::LibraryPreferences,
         )
 
@@ -221,30 +217,6 @@ object AppPreferenceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun trackPreferencesOwner(
-        registry: ProfilePreferenceOwnerRegistry,
-        profileStore: ProfileStore,
-    ): InstalledProfilePreferenceOwner<TrackPreferences> =
-        ProfilePreferenceOwnerInstaller(registry) { profileStore.privateStore() }.register(
-            id = ProfilePreferenceOwnerId("app.tracking"),
-            keyPatterns = TrackPreferences.profileKeyPatterns,
-            factory = ::TrackPreferences,
-        )
-
-    @Provides
-    @IntoSet
-    fun trackPreferencesOwnerRegistration(
-        owner: InstalledProfilePreferenceOwner<TrackPreferences>,
-    ): InstalledProfilePreferenceOwner<*> = owner
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun trackPreferences(
-        owner: InstalledProfilePreferenceOwner<TrackPreferences>,
-    ): TrackPreferences = owner.create()
-
-    @Provides
-    @SingleIn(AppScope::class)
     fun uiPreferencesOwner(
         owners: ProfilePreferenceOwnerInstaller,
         themeHost: AppThemeHost,
@@ -333,12 +305,6 @@ object AppPreferenceBindings {
     fun globalLibraryPreferences(
         @BasePreferenceStore store: PreferenceStore,
     ): GlobalLibraryPreferences = GlobalLibraryPreferences(store)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun globalTrackPreferences(
-        @BasePreferenceStore store: PreferenceStore,
-    ): GlobalTrackPreferences = GlobalTrackPreferences(store)
 
     @Provides
     @SingleIn(AppScope::class)

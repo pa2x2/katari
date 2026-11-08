@@ -22,7 +22,6 @@ import app.katari.sync.client.kind.history.HistoryPayload
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.progress.ProgressPayload
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
-import app.katari.sync.client.kind.tracking.TrackerBindingKind
 import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.fillRecordGroups
@@ -116,7 +115,6 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
             ProgressKind,
             HistoryKind,
             CategoryMembershipKind,
-            TrackerBindingKind,
             ViewerSettingKind,
             PlaybackPreferencesKind,
             TranslationLanguagesKind,

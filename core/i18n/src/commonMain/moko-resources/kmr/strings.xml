@@ -10,7 +10,6 @@
     <string name="categories">Kom</string>
     <string name="manga">Babetên pirtûkxaneyê</string>
     <string name="chapters">Beş</string>
-    <string name="track">Şopandin</string>
     <string name="delete_downloaded">Daxistiyan rake</string>
     <string name="history">Dîrok</string>
     <string name="scanlator">Wergêr</string>
@@ -42,7 +41,6 @@
     <string name="action_filter">Fîltre</string>
     <string name="action_set_interval">Navberê diyar bike</string>
     <string name="action_filter_bookmarked">Nîşankirî</string>
-    <string name="action_filter_tracked">Tê şopandin</string>
     <string name="action_filter_unread">Nexwendî</string>
     <string name="action_filter_interval_custom">Frekansa nûkirinê ya taybet</string>
     <string name="action_filter_empty">Fîltreyê rake</string>
@@ -165,7 +163,6 @@
     <string name="pref_category_library">Pirtûkxane</string>
     <string name="pref_category_reader">Xwîner</string>
     <string name="pref_category_downloads">Daxistin</string>
-    <string name="pref_category_tracking">Şopandin</string>
     <string name="pref_category_advanced">Pêşketî</string>
     <string name="pref_category_about">Agahî</string>
     <string name="pref_appearance_summary">Tema, formata dîrok û demê</string>
@@ -175,7 +172,6 @@
     <string name="pref_library_summary">Kom, nûkirina giştî, beş kişandin</string>
     <string name="pref_reader_summary">Şêwaza xwendinê, dîmen, gerìn</string>
     <string name="pref_downloads_summary">Daxistina xwekar, peşwext daxistin</string>
-    <string name="pref_tracking_summary">Hevdemkirina pêşveçûnê ya yekalî, hevdemkirina pêşketî</string>
     <string name="pref_browse_summary">Çavkanî, pêvek, gera giştî</string>
     <string name="pref_security_summary">Kilîta sepanê, ekrana ewle</string>
     <string name="pref_category_theme">Tema</string>
@@ -204,10 +200,6 @@
     <string name="add_to_library">Têxa pirtûkxaneyê</string>
     <string name="manga_added_library">Têxistî pirtûkxaneyê</string>
     <string name="snack_add_to_library">Têxa pirtûkxaneyê?</string>
-    <string name="action_sort_tracker_score">Puana şopger</string>
-    <string name="services">Şopger</string>
-    <string name="tracking_guide">Rêbera şopandinê</string>
-    <string name="tracking_info">Hevdemkirina yekalî ji bo nûkirina pêşveçûna beşan a di xizmetên şopger ên derve de. Ji bişkoka şopandinê ya her babetî, şopsndinê saz bikê.</string>
     <string name="pref_date_format">Formata dirokê</string>
     <string name="pref_display_images_description">Wêneyên di danasîna mangayan de nîşan bide</string>
     <string name="pref_manage_notifications">Agahdarî rêveberî</string>

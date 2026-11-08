@@ -24,10 +24,6 @@
         <item quantity="one">Feito en %1$s con %2$s erro</item>
         <item quantity="other">Feito en %1$s con %2$s erros</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d servizo de seguemento</item>
-        <item quantity="other">%d servizos de seguemento</item>
-    </plurals>
     <plurals name="update_check_notification_ext_updates">
         <item quantity="one">Hai unha actualización dunha extensión</item>
         <item quantity="other">Hai actualizacións de %d extensións</item>

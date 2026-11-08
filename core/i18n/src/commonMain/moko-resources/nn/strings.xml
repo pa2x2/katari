@@ -8,14 +8,12 @@
     <string name="categories">Kategoriar</string>
     <string name="manga">Manga</string>
     <string name="chapters">Kapittel</string>
-    <string name="track">Sporing</string>
     <string name="history">Historikk</string>
     <string name="label_default">Standard</string>
     <string name="label_warning">Åtvaring</string>
     <string name="confirm_lock_change">Autentiser for å stadfesta endring</string>
     <string name="action_filter">Filter</string>
     <string name="action_filter_bookmarked">Bokmerket</string>
-    <string name="action_filter_tracked">Sporet</string>
     <string name="action_filter_unread">Ulesen</string>
     <string name="action_filter_empty">Fjern filter</string>
     <string name="action_sort_alpha">Alfabetisk</string>
@@ -176,10 +174,6 @@
     <string name="pref_lowest">Lågaste</string>
     <string name="pref_remove_exclude_categories">Utelatne kategoriar</string>
     <string name="save_chapter_as_cbz">Lagra som CBZ-arkiv</string>
-    <string name="services">Tenester</string>
-    <string name="enhanced_services">Forbetra tenester</string>
-    <string name="enhanced_tracking_info">Tenester som tilbyr forbetra tenester for spesifikke kjelder. Manga blir spora automatisk når dei blir lagt til i biblioteket ditt.</string>
-    <string name="action_track">Spor</string>
     <string name="pref_create_backup">Lag reservekopi</string>
     <string name="pref_restore_backup">Gjenopprett reservekopi</string>
     <string name="backup_created">Reservekopi oppretta</string>
@@ -202,7 +196,6 @@
     <string name="check_for_updates">Sjå etter oppdateringar</string>
     <string name="pref_incognito_mode">Inkognitomodus</string>
     <string name="username">Brukarnamn</string>
-    <string name="email">E-postadresse</string>
     <string name="password">Passord</string>
     <string name="unknown_error">Ukjend feil</string>
     <string name="updating_category">Oppdaterer kategori</string>
@@ -220,7 +213,6 @@
     <string name="cancelled">Kansellert</string>
     <string name="add_to_library">Legg til i bibliotek</string>
     <string name="ongoing">Pågåande</string>
-    <string name="manga_tracking_tab">Sporing</string>
     <string name="download_notifier_unknown_error">Kunne ikkje lasta ned kapittel grunna uventa feil</string>
     <string name="update_never">Av</string>
     <string name="update_6hour">Kvar sjette time</string>
@@ -232,7 +224,6 @@
     <string name="pref_backup_interval">Reservekopifrekvens</string>
     <string name="restoring_backup_canceled">Avbroten gjenoppretting</string>
     <string name="backup_restore_missing_sources">Manglande kjelder:</string>
-    <string name="backup_restore_missing_trackers">Sporingstenester ikkje logga inn i:</string>
     <string name="about_dont_kill_my_app">Nokre produsentar har ytterlegare appavgrensingar som drep bakgrunnstenester. Denne nettstaden har meir info om korleis det kan fiksast.</string>
     <string name="website">Nettstaden</string>
     <string name="local_filter_order_by">Sorter etter</string>

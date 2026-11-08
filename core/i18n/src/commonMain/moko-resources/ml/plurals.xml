@@ -52,10 +52,6 @@
         <item quantity="one">%1$s അധ്യായം</item>
         <item quantity="other">%1$s അധ്യായങ്ങൾ</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ട്രാക്കർ</item>
-        <item quantity="other">%d ട്രാക്കറുകൾ</item>
-    </plurals>
     <plurals name="notification_chapters_generic">
         <item quantity="one">%1$d പുതിയ അധ്യായം</item>
         <item quantity="other">%1$d പുതിയ അധ്യായങ്ങൾ</item>

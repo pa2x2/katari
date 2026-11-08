@@ -132,25 +132,6 @@ SELECT entry_id, mode
 FROM entry_update_modes
 WHERE entry_id = :entryId;
 
-trackerBindingRow:
-SELECT
-    entry_id,
-    sync_id,
-    remote_id,
-    library_id,
-    title,
-    last_chapter_read,
-    total_chapters,
-    status,
-    score,
-    remote_url,
-    start_date,
-    finish_date,
-    private
-FROM entry_sync
-WHERE entry_id = :entryId
-AND sync_id = :trackerId;
-
 excludedScanlatorRow:
 SELECT entry_id, scanlator
 FROM excluded_scanlators

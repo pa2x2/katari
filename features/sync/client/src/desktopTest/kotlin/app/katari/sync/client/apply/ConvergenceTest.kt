@@ -56,9 +56,8 @@ class ConvergenceTest {
                     """,
                     "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 10, 1000, 1000)",
                     """
-                    INSERT INTO entry_sync(entry_id, sync_id, remote_id, title, last_chapter_read, total_chapters,
-                        status, score, remote_url, start_date, finish_date)
-                    VALUES (1, 2, 99, 'Show', 1, 12, 1, 7, 'https://tracker/99', 0, 0)
+                    INSERT INTO viewer_setting_overrides(entry_id, provider_id, setting_key, encoded_value, updated_at)
+                    VALUES (1, 'player', 'speed', '1.0', 0)
                     """,
                 )
                 exchange.deliver(b, exchange.pushFrom(a))
@@ -76,7 +75,7 @@ class ConvergenceTest {
                 )
                 b.outboxKinds().shouldBeEmpty()
 
-                b.sql("UPDATE entry_sync SET score = 9")
+                b.sql("UPDATE viewer_setting_overrides SET encoded_value = '1.5'")
                 b.drainAll()
                 delay(5)
                 a.sql(
@@ -84,7 +83,7 @@ class ConvergenceTest {
                     "UPDATE chapters SET read = 0 WHERE url = '/show/1'",
                     "UPDATE chapters SET read = 1 WHERE url = '/show/2'",
                     "DELETE FROM history",
-                    "DELETE FROM entry_sync",
+                    "DELETE FROM viewer_setting_overrides",
                 )
                 a.drainAll()
                 delay(5)
@@ -106,9 +105,9 @@ class ConvergenceTest {
                     // B read on after A removed it from history, so it is back, with both devices' time
                     """["history","/show/1",3000,1500]""",
                 )
-                withClue("A unbound the tracker after B's edit of it") {
-                    a.rows("SELECT json_array(sync_id) FROM entry_sync").shouldBeEmpty()
-                    b.rows("SELECT json_array(sync_id) FROM entry_sync").shouldBeEmpty()
+                withClue("A reset the viewer setting after B's edit of it") {
+                    a.rows("SELECT json_array(setting_key) FROM viewer_setting_overrides").shouldBeEmpty()
+                    b.rows("SELECT json_array(setting_key) FROM viewer_setting_overrides").shouldBeEmpty()
                 }
             }
         }

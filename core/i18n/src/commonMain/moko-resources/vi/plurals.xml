@@ -18,9 +18,6 @@
     <plurals name="missing_chapters_warning">
         <item quantity="other">Đã bỏ qua %d chương, vì nguồn đang bị thiếu hoặc đã bị lọc ra</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d bộ theo dõi</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s chương</item>
     </plurals>

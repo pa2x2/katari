@@ -26,7 +26,7 @@ class BackupEntry(
     @ProtoNumber(10) var dateAdded: Long = 0,
     @ProtoNumber(11) var chapters: List<BackupChapter> = emptyList(),
     @ProtoNumber(12) var categories: List<Long> = emptyList(),
-    @ProtoNumber(13) var tracking: List<BackupTracking> = emptyList(),
+    // @ProtoNumber(13) var tracking, tracker links from before trackers were removed; never reuse
     @ProtoNumber(14) var favorite: Boolean = true,
     @ProtoNumber(15) var chapterFlags: Long = 0,
     @ProtoNumber(16) var viewerFlags: Long = 0,

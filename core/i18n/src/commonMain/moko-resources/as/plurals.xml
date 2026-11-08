@@ -56,10 +56,6 @@
         <item quantity="one">পৰৱৰ্তী অধ্যায়</item>
         <item quantity="other">পৰৱৰ্তী %d অধ্যায়সমূহ</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ট্ৰেকাৰ</item>
-        <item quantity="other">%d ট্ৰেকাৰসমূহ</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d অধ্যায় স্কিপ কৰা হৈছে, উৎসত নাইবা ফিল্টাৰ কৰি আঁতৰোৱা হৈছে</item>
         <item quantity="other">%d অধ্যায়সমূহ স্কিপ কৰা হৈছে, উৎসত নাইবা ফিল্টাৰ কৰি আঁতৰোৱা হৈছে</item>

@@ -134,7 +134,6 @@ class BackupCreator(
                     backupSourcePreferences = backupSourcePreferences(options),
                     backupProfiles = backupProfiles,
                     activeProfileUuid = activeProfile?.uuid,
-                    kitsuScoresNative = true,
                     createdAt = createdAt,
                 )
                 metadata.backupSources = sourcesBackupCreator(entrySourceKeys + metadata.referencedSourceKeys())

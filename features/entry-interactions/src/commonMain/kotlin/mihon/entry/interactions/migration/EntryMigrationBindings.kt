@@ -29,7 +29,6 @@ import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryBookmarkProcessor
 import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -81,7 +80,6 @@ object EntryMigrationBindings {
         mergeMigration: EntryMergeMigrationFeature,
         mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
         downloads: () -> EntryDownloadMaintenanceFeature,
-        tracking: () -> EntryTrackingFeature,
         durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
         consequences: EntryMigrationConsequenceDelivery,
     ): EntryMigrationFeature = DefaultEntryMigrationFeature(
@@ -97,7 +95,6 @@ object EntryMigrationBindings {
         mergeMigration = mergeMigration,
         mergeLibraryLifecycle = mergeLibraryLifecycle,
         downloads = downloads,
-        tracking = tracking,
         durableConsequences = durableConsequences,
         consequences = consequences,
     )

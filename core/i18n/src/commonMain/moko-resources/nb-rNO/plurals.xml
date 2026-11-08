@@ -24,10 +24,6 @@
         <item quantity="one">Gjort på %1$s med %2$s feil</item>
         <item quantity="other">Gjort på %1$s med %2$s feil</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d tracker</item>
-        <item quantity="other">%d trackere</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Hopper over %d kapittel, enten så mangler kilden den eller så har den blitt filtrert ut</item>
         <item quantity="other">Hopper over %d kapitler, enten så mangler kilden de eller så har de blitt filtrert ut</item>

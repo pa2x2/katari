@@ -14,7 +14,6 @@ import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
-import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationLanguagesRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationQueueRepositoryImpl
 import tachiyomi.data.entry.IntroTimesMatchRepositoryImpl
@@ -33,7 +32,6 @@ import tachiyomi.data.source.identity.SourceIdentityRepositoryImpl
 import tachiyomi.data.statistics.StatisticsRepositoryImpl
 import tachiyomi.data.statistics.entry.EntryActivityRepositoryImpl
 import tachiyomi.data.statistics.recap.StatisticsRecapRepositoryImpl
-import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
@@ -44,7 +42,6 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
@@ -62,7 +59,6 @@ import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.statistics.entry.EntryActivityRepository
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.repository.StatisticsRepository
-import tachiyomi.domain.track.repository.TrackRepository
 import tachiyomi.domain.updates.repository.UpdatesRepository
 
 @BindingContainer
@@ -107,9 +103,6 @@ interface RepositoryBindings {
     val DownloadPreferencesRepositoryImpl.downloadPreferencesRepository: DownloadPreferencesRepository
 
     @Binds
-    val EntrySyncRepositoryImpl.entrySyncRepository: EntrySyncRepository
-
-    @Binds
     val EntryCoverHashesRepositoryImpl.entryCoverHashesRepository: EntryCoverHashesRepository
 
     @Binds
@@ -123,9 +116,6 @@ interface RepositoryBindings {
 
     @Binds
     val ChapterGroupExpansionRepositoryImpl.chapterGroupExpansionRepository: ChapterGroupExpansionRepository
-
-    @Binds
-    val TrackRepositoryImpl.trackRepository: TrackRepository
 
     @Binds
     val HistoryRepositoryImpl.historyRepository: HistoryRepository

@@ -32,10 +32,6 @@
         <item quantity="one">1 ಚಾಪ್ಟರ್</item>
         <item quantity="other">%1$s ಚಾಪ್ಟರಗಳು</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">1 ಟ್ರಾಕರ್</item>
-        <item quantity="other">%d ಟ್ರಾಕರ್ ಗಳು</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">1 ಅಧ್ಯಾಯ ಕಾಣೆಯಾಗಿದೆ</item>
         <item quantity="other">%d ಅಧ್ಯಾಯ ಕಾಣೆಯಾಗಿವೆ</item>

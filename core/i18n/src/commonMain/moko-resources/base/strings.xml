@@ -19,7 +19,6 @@
     <string name="manga">Library entries</string>
     <string name="chapters">Chapters</string>
     <string name="items">Items</string>
-    <string name="track">Tracking</string>
     <string name="delete_downloaded">Delete downloaded</string>
     <string name="history">History</string>
     <string name="scanlator">Scanlator</string>
@@ -61,7 +60,6 @@
     <string name="action_filter_count">Filter · %1$d</string>
     <string name="action_set_interval">Set interval</string>
     <string name="action_filter_bookmarked">Bookmarked</string>
-    <string name="action_filter_tracked">Tracked</string>
     <string name="action_filter_unread">Unread</string>
     <string name="action_filter_unwatched">Unwatched</string>
     <string name="action_filter_unseen">Unseen</string>
@@ -80,7 +78,6 @@
     <string name="action_sort_latest_chapter">Latest item</string>
     <string name="action_sort_chapter_fetch_date">Item fetch date</string>
     <string name="action_sort_date_added">Date added</string>
-    <string name="action_sort_tracker_score">Tracker score</string>
     <string name="action_sort_random">Random</string>
     <string name="action_search">Search</string>
     <string name="action_search_hint">Search…</string>
@@ -981,7 +978,6 @@
     <string name="action_next_section">Next section</string>
     <string name="pref_category_downloads">Downloads</string>
     <string name="pref_category_download_behavior">Download behavior</string>
-    <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
 
@@ -992,7 +988,6 @@
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
-    <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
     <string name="pref_backup_summary">Manual &amp; automatic backups, storage space</string>
     <string name="pref_security_summary">App lock, secure screen</string>
@@ -1582,20 +1577,6 @@
     <string name="pref_download_concurrent_pages">Concurrent page downloads</string>
     <string name="pref_download_concurrent_pages_summary">Pages downloaded simultaneously per source</string>
 
-    <!-- Tracking section -->
-    <string name="tracking_guide">Tracking guide</string>
-    <string name="pref_auto_update_manga_sync">Update tracking after progress changes</string>
-    <string name="pref_auto_update_manga_on_mark_read">Update tracking when marked finished</string>
-    <string name="services">Trackers</string>
-    <string name="tracking_info">One-way sync to update progress in external tracker services. Set up tracking for individual entries from their tracking button.</string>
-    <string name="enhanced_services">Enhanced trackers</string>
-    <string name="enhanced_services_not_installed">Available but source not installed: %s</string>
-    <string name="enhanced_tracking_info">Provides enhanced features for specific sources. Entries are automatically tracked when added to your library.</string>
-    <string name="track_activity_name">Tracker login</string>
-    <string name="refresh_tracker_profile">Refresh tracker profile</string>
-    <string name="refresh_tracker_success">%s profile refreshed</string>
-    <string name="refresh_tracker_error">%1$s refresh error: %2$s</string>
-
       <!-- Browse section -->
     <string name="pref_hide_in_library_items">Hide entries already in library</string>
 
@@ -1615,8 +1596,7 @@
     <string name="invalid_backup_file_json">JSON backup not supported</string>
     <string name="invalid_backup_file_unknown">Backup file is corrupted</string>
     <string name="backup_restore_missing_sources">Missing sources:</string>
-    <string name="backup_restore_missing_trackers">Trackers not logged into:</string>
-    <string name="backup_restore_content_full">You may need to install any missing extensions and log in to tracking services afterwards to use them.</string>
+    <string name="backup_restore_content_full">You may need to install any missing extensions afterwards to use them.</string>
     <string name="restore_completed">Restore completed</string>
     <string name="restore_completed_profiles">Restored %1$s</string>
     <string name="restore_profile_new">New on this device</string>
@@ -1628,7 +1608,7 @@
     <string name="backup_choice">What do you want to backup?</string>
     <string name="app_settings">App settings</string>
     <string name="source_settings">Source settings</string>
-    <string name="private_settings">Include sensitive settings (e.g., tracker login tokens)</string>
+    <string name="private_settings">Include sensitive settings (e.g., login tokens)</string>
     <string name="non_library_settings">All read entries</string>
     <string name="creating_backup">Creating backup</string>
     <string name="creating_backup_entries_progress">Backing up entries %1$d/%2$d</string>
@@ -1727,7 +1707,7 @@
     <string name="profiles_manage_title">Manage profiles</string>
     <string name="profiles_choose_on_launch">Choose profile on launch</string>
     <string name="profiles_info_title">Profile-specific data</string>
-    <string name="profiles_info_description">Each profile has its own library data and profile-specific settings. This includes categories, library display and update behavior, source preferences, reader settings, appearance settings, security settings, tracking login/state, and the startup screen preference. Global app settings such as downloads, backups, networking, privacy, storage, and extension repository management stay shared across all profiles.</string>
+    <string name="profiles_info_description">Each profile has its own library data and profile-specific settings. This includes categories, library display and update behavior, source preferences, reader settings, appearance settings, security settings, and the startup screen preference. Global app settings such as downloads, backups, networking, privacy, storage, and extension repository management stay shared across all profiles.</string>
     <string name="profile_specific_chip">Profile</string>
     <string name="settings_draft_unsaved_changes">Unsaved changes</string>
     <string name="settings_draft_leave_title">Save changes?</string>
@@ -2155,16 +2135,8 @@
 
 
     <!-- Login dialog -->
-    <string name="login_title">Log in to %1$s</string>
     <string name="username">Username</string>
-    <string name="email">Email address</string>
     <string name="password">Password</string>
-    <string name="login">Login</string>
-    <string name="logging_in">Logging in…</string>
-    <string name="login_success">Logged in</string>
-    <string name="logout_title">Log out from %1$s?</string>
-    <string name="logout">Log out</string>
-    <string name="logout_success">You are now logged out</string>
     <string name="unknown_error">Unknown error</string>
 
     <!-- Library -->
@@ -2307,7 +2279,6 @@
     <string name="possible_duplicates_reason_description">Description</string>
     <string name="possible_duplicates_reason_genre">Genre</string>
     <string name="possible_duplicates_reason_status">Status</string>
-    <string name="possible_duplicates_reason_tracker">Tracker</string>
     <string name="possible_duplicates_reason_title">Title</string>
     <string name="manga_added_library">Added to library</string>
     <string name="manga_removed_library">Removed from library</string>
@@ -2331,8 +2302,8 @@
     <string name="pref_enable_extended_duplicate_detection">Enable extended duplicate detection</string>
     <string name="pref_enable_extended_duplicate_detection_summary">Uses richer multi-signal matching. When disabled, duplicate detection falls back to legacy title-based logic.</string>
     <string name="pref_duplicate_detection_minimum_score">Minimum match score</string>
-    <string name="pref_duplicate_detection_minimum_score_summary">Candidates below this score are ignored unless matched by tracker.</string>
-    <string name="pref_duplicate_detection_matching_info">Weights contribute to confidence, but score alone is not always enough. Duplicate detection also checks for convincing title, description, creator, genre, item-count, or tracker evidence before showing a match.</string>
+    <string name="pref_duplicate_detection_minimum_score_summary">Candidates below this score are ignored.</string>
+    <string name="pref_duplicate_detection_matching_info">Weights contribute to confidence, but score alone is not always enough. Duplicate detection also checks for convincing title, description, creator, genre, or item-count evidence before showing a match.</string>
     <string name="pref_duplicate_detection_unused_budget">Unused confidence budget: %1$d / %2$d</string>
     <string name="pref_duplicate_detection_weight_summary_description">Helps when titles differ. Allocated: %1$d / Max: %2$d</string>
     <string name="pref_duplicate_detection_weight_summary_author">Confirms matching creators. Allocated: %1$d / Max: %2$d</string>
@@ -2444,32 +2415,12 @@
     <string name="no_translators_found">No translators found</string>
     <string name="no_release_groups_found">No release groups found</string>
     <string name="no_scanlators_found">No scanlators found</string>
-    <string name="confirm_tracker_update">Update trackers to chapter %d?</string>
-    <string name="trackers_updated_summary">Trackers updated to chapter %d</string>
 
-    <!-- Tracking Screen -->
-    <string name="manga_tracking_tab">Tracking</string>
-    <string name="add_tracking">Add tracking</string>
-    <string name="action_track">Track</string>
-    <string name="track_search_score">Score %1$s</string>
     <string name="unread">Unread</string>
-    <string name="reading">Reading</string>
     <string name="completed">Completed</string>
-    <string name="dropped">Dropped</string>
-    <string name="on_hold">On hold</string>
     <string name="paused">Paused</string>
-    <string name="plan_to_read">Plan to read</string>
-    <string name="considering">Considering</string>
-    <string name="repeating">Rereading</string>
-    <string name="reading_list">Reading List</string>
-    <string name="wish_list">Wish List</string>
-    <string name="complete_list">Complete List</string>
-    <string name="on_hold_list">On Hold List</string>
-    <string name="unfinished_list">Unfinished List</string>
-    <string name="score">Score</string>
     <string name="title">Title</string>
     <string name="original_title">Original title</string>
-    <string name="status">Status</string>
     <string name="country">Country</string>
     <string name="studio">Studio</string>
     <string name="director">Director</string>
@@ -2477,25 +2428,8 @@
     <string name="writer">Writer</string>
     <string name="year">Year</string>
     <string name="duration">Duration</string>
-    <string name="track_status">Status</string>
-    <string name="track_progress">Progress</string>
-    <string name="track_value_unset">Not set</string>
-    <string name="track_started_reading_date">Start date</string>
-    <string name="track_finished_reading_date">Finish date</string>
-    <string name="tracked_privately">Tracked privately</string>
-    <string name="action_toggle_private_on">Track privately</string>
-    <string name="action_toggle_private_off">Track publicly</string>
-    <string name="track_type">Type</string>
-    <string name="myanimelist_relogin">Please login to MAL again</string>
     <string name="source_unsupported">Source is not supported</string>
     <string name="error_no_match">No match found</string>
-    <string name="track_error">%1$s error: %2$s</string>
-    <string name="track_remove_date_conf_title">Remove date?</string>
-    <string name="track_remove_start_date_conf_text">This will remove your previously selected start date from %s</string>
-    <string name="track_remove_finish_date_conf_text">This will remove your previously selected finish date from %s</string>
-    <string name="track_delete_title">Remove %s tracking?</string>
-    <string name="track_delete_text">This will remove the tracking locally.</string>
-    <string name="track_delete_remote_text">Also remove from %s</string>
 
     <!-- Category activity -->
     <string name="error_category_exists">A category with this name already exists!</string>
@@ -2668,9 +2602,6 @@
     <string name="label_titles_in_global_update">In global update</string>
     <string name="label_total_chapters">Total</string>
     <string name="label_read_chapters">Read</string>
-    <string name="label_tracker_section">Trackers</string>
-    <string name="label_tracked_titles">Tracked entries</string>
-    <string name="label_mean_score">Mean score</string>
     <string name="label_used">Used</string>
     <string name="not_applicable">N/A</string>
     <string name="day_short">%dd</string>
@@ -3304,7 +3235,6 @@
     <string name="sync_kind_history">history</string>
     <string name="sync_kind_statistics">statistics</string>
     <string name="sync_kind_categories">categories</string>
-    <string name="sync_kind_trackers">tracker links</string>
     <string name="sync_kind_settings">settings</string>
     <string name="sync_kind_fonts">fonts</string>
     <string name="sync_kind_profiles">profiles</string>
@@ -3316,7 +3246,7 @@
     <!-- Sync: before setup -->
     <string name="sync_intro">Keep your library, reading progress, history and settings the same on all your devices, through a server you run yourself. Each device keeps its own full copy and works offline.</string>
     <string name="sync_what_syncs_title">Synced</string>
-    <string name="sync_what_syncs">Library, categories, read state, progress, history, statistics, tracker links, your settings, custom covers and fonts</string>
+    <string name="sync_what_syncs">Library, categories, read state, progress, history, statistics, your settings, custom covers and fonts</string>
     <string name="sync_what_stays_title">Stays on this device</string>
     <string name="sync_what_stays">Downloads, logins, screen and storage settings</string>
     <string name="sync_action_sign_in_with_address">Sign in with server address</string>

@@ -32,10 +32,6 @@
         <item quantity="one">%1$s κεφάλαιο</item>
         <item quantity="other">%1$s κεφάλαια</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ιχνηλάτης</item>
-        <item quantity="other">%d ιχνηλάτες</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Παραλείπεται %d κεφάλαιο, είτε λείπει από την πηγή είτε έχει φιλτραριστεί</item>
         <item quantity="other">Παραλείπονται %d κεφάλαια, είτε λείπουν από την πηγή είτε έχουν φιλτραριστεί</item>

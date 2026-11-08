@@ -89,11 +89,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         }
     }
 
-    // Migration as the app does it for a type whose read and bookmark marks both carry, copying trackers as they are
+    // Migration as the app does it for a type whose read and bookmark marks both carry
     private val migrationRules = object : MigrationCarryRules {
         override fun chapterMarks(type: EntryType) = MigrationChildStateTransfer(read = true, bookmarks = true)
-
-        override fun copiesTrackerBinding(trackerId: Long) = true
     }
 
     /** The app version this device runs, which a test changes to stand for an update. */

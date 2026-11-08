@@ -40,11 +40,6 @@
         <item quantity="few">%1$s capitole</item>
         <item quantity="other">%1$s de capitole</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d serviciu de urmărire</item>
-        <item quantity="few">%d servicii de urmărire</item>
-        <item quantity="other">%d de servicii de urmărire</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Omiterea %d capitol, fie că sursa lipsește, fie că a fost filtrată</item>
         <item quantity="few">Omiterea a %d capitole, fie că sursa nu le are, fie că au fost filtrate</item>

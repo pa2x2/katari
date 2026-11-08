@@ -25,11 +25,6 @@
         <item quantity="one">%1$s atlikusi</item>
         <item quantity="other">%1$s atlikušas</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="zero">%d izsekotāju</item>
-        <item quantity="one">%d izsekotājs</item>
-        <item quantity="other">%d izsekotāji</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="zero">Izlaisti %d nodaļu, vai nu to nav avotā, vai arī tie ir izfiltrēti</item>
         <item quantity="one">Izlaists %d nodaļa, vai nu tā nav avotā, vai arī tā ir izfiltrēta</item>

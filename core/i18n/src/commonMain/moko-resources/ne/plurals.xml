@@ -40,10 +40,6 @@
         <item quantity="one">%d अध्याय छोड्दै, या त स्रोत सँग छैन वा यसलाई फिल्टर गरिएको छ</item>
         <item quantity="other">%d अध्यायहरू छोड्दै, या त स्रोत सँग छैन वा यसलाई फिल्टर गरिएको छ</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ट्र्याकर</item>
-        <item quantity="other">%d ट्र्याकरहरू</item>
-    </plurals>
     <plurals name="next_unread_chapters">
         <item quantity="one">अर्को नपढिएको अध्याय</item>
         <item quantity="other">अर्को %d नपढिएका अध्यायहरू</item>

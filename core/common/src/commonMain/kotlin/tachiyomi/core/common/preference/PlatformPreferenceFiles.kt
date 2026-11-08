@@ -18,8 +18,8 @@ enum class PlatformPreferenceFile {
      */
     DEFAULT,
 
-    /** Tracking updates waiting to be sent. */
-    TRACKING_QUEUE,
+    /** Tracker updates queued by versions that had trackers, which upgrading empties. */
+    LEGACY_TRACKING_QUEUE,
 
     /** The manga chapters queued for download. */
     MANGA_DOWNLOAD_QUEUE,

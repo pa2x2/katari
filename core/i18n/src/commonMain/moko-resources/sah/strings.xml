@@ -28,7 +28,6 @@
     <string name="action_menu">Талба</string>
     <string name="action_settings">Түстэл</string>
     <string name="history">История</string>
-    <string name="track">Кэтээһин</string>
     <string name="chapters">Түһүмэхтэр</string>
     <string name="manga">Маанга</string>
     <string name="categories">Бөлөхтөр</string>
@@ -80,7 +79,6 @@
     <string name="pref_category_theme">Тиэмэ</string>
     <string name="pref_category_about">Эбии туһунан</string>
     <string name="pref_category_advanced">Эбии</string>
-    <string name="pref_category_tracking">Кэтээһин</string>
     <string name="pref_category_downloads">Хачайдаммыттар</string>
     <string name="pref_category_reader">Ааҕааччы</string>
     <string name="pref_category_library">Бэбэлэтиэкэ</string>
@@ -215,7 +213,6 @@
     <string name="backup_in_progress">Хаппаас куопуйа оҥоруута туола турар</string>
     <string name="restore_duration">%1$02d мүнүүтэ %2$02d сөкүүндэ</string>
     <string name="restore_completed">Төнүҥнэри бүттэ</string>
-    <string name="backup_restore_missing_trackers">Трэкэрдар киирбэтилэр:</string>
     <string name="backup_restore_missing_sources">Суох төрүттэр:</string>
     <string name="invalid_backup_file_missing_manga">Хаппаас куопуйа маангата суох.</string>
     <string name="invalid_backup_file">Хаппаас куопуйа алдьаммыт билэтэ</string>
@@ -225,9 +222,6 @@
     <string name="pref_restore_backup">Хаппаас куопуйаны куолутунан туруоруу</string>
     <string name="pref_create_backup_summ">Билиҥни бибилиотеканы төнүннэрэргэ туттуохха сөп</string>
     <string name="pref_create_backup">Хаппаас куопуйаны оҥоруу</string>
-    <string name="tracking_info">Биир өттүттэн мэнэйдэһии, кэтээһин өҥөлөргө баар түһүмэхтэр туруктарын саҥардыыга. Маанга туспа суругун уонна талкыйын кэтээһинин түстэлгэ уларыт.</string>
-    <string name="services">Өҥөлөр</string>
-    <string name="pref_auto_update_manga_sync">Түһүмэх туругун ааҕы кэннэ саҥарт</string>
     <string name="pref_download_new">Саҥа түһүмэхтэри хачайдаа</string>
     <string name="fifth_to_last">Бүтэһик түһүмэхтэн бэһис</string>
     <string name="fourth_to_last">Бүтэһик түһүмэхтэн төрдүс</string>
@@ -267,15 +261,8 @@
     <string name="tabs_header">Кыбытыктар</string>
     <string name="updating_category">Бөлөх саҥардыыта</string>
     <string name="unknown_error">Биллибэт сыыһыы</string>
-    <string name="logout_success">Эн таҕыстын</string>
-    <string name="logout">Тахсыы</string>
-    <string name="logout_title">%1$s\'тан тахсаҕын?</string>
-    <string name="login_success">Киирдин</string>
-    <string name="login">Киири</string>
     <string name="password">Аһарык</string>
-    <string name="email">Эл.пуoчта аадырыһа</string>
     <string name="username">Туттааччы аата</string>
-    <string name="login_title">%1$s\'га киири</string>
     <string name="downloaded_only_summary">Бэбэлэтиэкэҕэ баар маанганы барытын биилтирдээһин</string>
     <string name="label_downloaded_only">Хачайдаммыт эрэ</string>
     <string name="pref_acra_summary">Ханнык баҕар сыаһалары көннөрөргө көмөлөһөр. Бэйэ дааннайдар ылыллыбаттар</string>
@@ -300,7 +287,6 @@
     <string name="action_global_search_query">\"%1$s\" толору көрдөө</string>
     <string name="pref_remove_bookmarked_chapters">Кыбытыылах түһүмэхтэри соттор</string>
     <string name="pref_category_delete_chapters">Түһүмэхтэри соттор</string>
-    <string name="manga_tracking_tab">Кэтээһин</string>
     <string name="confirm_delete_chapters">Талыллыбыт түһүмэхтэри сотторорго эрэллээххин дуу?</string>
     <string name="download_unread">Ааҕыллыбата</string>
     <string name="manga_download">Хачайдаа</string>
@@ -322,19 +308,9 @@
     <string name="dialog_with_checkbox_remove_description">Бу дьайыы түһүмэх ааҕыллыбыт кэмин сотторуо. Эрэллээххин дуо?</string>
     <string name="snack_categories_deleted">Бөлөхтөр соттороллубуттар</string>
     <string name="error_category_exists">Оннук ааттах бөлөх уруккуттан баар!</string>
-    <string name="track_type">Көрүҥ</string>
-    <string name="track_status">Турук</string>
-    <string name="status">Турук</string>
     <string name="title">Айымньы аата</string>
-    <string name="score">Сыанабыл</string>
-    <string name="repeating">Саҥаттаан ааҕабын</string>
-    <string name="plan_to_read">Ааҕаары гынабын</string>
     <string name="paused">Тохтотулунна</string>
-    <string name="on_hold">Тохтообут</string>
-    <string name="dropped">Быраҕыллыбыт</string>
     <string name="completed">Бүппүт</string>
-    <string name="reading">Ааҕабын</string>
-    <string name="add_tracking">эбии кэтээһини киллэрии</string>
     <string name="pref_category_for_this_series">Бу сиэриэҕэ</string>
     <string name="confirm_set_image_as_cover">Бу ойууну тас курдук туттаҕын дуо?</string>
     <string name="decode_image_error">Ойуу кыайан хачайдаммата</string>
@@ -374,7 +350,6 @@
     <string name="spen_previous_page">Иннинээҕи сирэй</string>
     <string name="file_picker_error">Билэни талар эбилик булуллубата</string>
     <string name="migration_help_guide">Төрүттэр көһөрүүтүн туһунан салалта</string>
-    <string name="myanimelist_relogin">Бука диэн MALга эмиэ киир</string>
     <string name="pref_viewer_nav">Нэбигээссийэ бэлиэтэ</string>
     <string name="edge_nav">Кытыы</string>
     <string name="kindlish_nav">Kindle курдук</string>
@@ -389,5 +364,4 @@
     <string name="action_order_by_upload_date">Хаһан хачайдаммытынан</string>
     <string name="action_display_show_number_of_items">Мал төһө элбэҕин көрдөр</string>
     <string name="action_sort_chapter_fetch_date">Кэлэр күнэ</string>
-    <string name="action_filter_tracked">Суолун көрө сылдьабыт</string>
 </resources>

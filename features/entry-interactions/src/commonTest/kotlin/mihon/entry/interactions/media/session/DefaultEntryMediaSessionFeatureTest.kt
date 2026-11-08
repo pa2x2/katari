@@ -9,7 +9,6 @@ import mihon.entry.interactions.download.EntryDownloadLifecycleEvent
 import mihon.entry.interactions.download.EntryDownloadLifecycleFeature
 import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.entry.interactions.state.EntryProgressFeature
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -19,7 +18,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 class DefaultEntryMediaSessionFeatureTest {
     @Test
-    fun `an incognito source records no progress, history or tracking but still drives downloads`() = runTest {
+    fun `an incognito source records no progress or history but still drives downloads`() = runTest {
         val event = progressedEvent()
         val repository = mockk<EntryRepository> {
             coEvery { getEntryById(event.child.entryId) } returns event.visibleEntry
@@ -27,7 +26,6 @@ class DefaultEntryMediaSessionFeatureTest {
         val progress = mockk<EntryProgressFeature>(relaxed = true)
         val downloads = mockk<EntryDownloadLifecycleFeature>(relaxed = true)
         val history = mockk<EntryHistoryFeature>(relaxed = true)
-        val tracking = mockk<EntryTrackingFeature>(relaxed = true)
         val types = setOf(EntryType.MANGA)
         val feature = DefaultEntryMediaSessionFeature(
             types = EntryMediaSessionTypes(
@@ -41,8 +39,6 @@ class DefaultEntryMediaSessionFeatureTest {
             progress = { progress },
             downloads = { downloads },
             history = { history },
-            tracking = { tracking },
-            automaticTrackingSynchronizationEnabled = { true },
             translateAhead = { error("Translate ahead does not apply") },
             settledListeners = { emptySet() },
         )
@@ -51,7 +47,6 @@ class DefaultEntryMediaSessionFeatureTest {
 
         coVerify(exactly = 0) { progress.recordMediaProgress(any()) }
         coVerify(exactly = 0) { history.record(any(), any()) }
-        coVerify(exactly = 0) { tracking.synchronizeProgress(any(), any(), any()) }
         coVerify { downloads.onEvent(any<EntryDownloadLifecycleEvent.Progressed>()) }
     }
 

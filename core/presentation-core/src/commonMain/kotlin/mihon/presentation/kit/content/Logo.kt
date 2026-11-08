@@ -29,9 +29,6 @@ enum class LogoSize(internal val side: (KatariSizes) -> Dp, internal val shape: 
     /** Leading a list row. */
     Row({ LogoRowSide }, { it.small }),
 
-    /** A logo that is itself the control, such as a tracker's. */
-    Large({ it.touchTarget }, { it.medium }),
-
     /** At the top of a details screen. */
     Header({ it.artworkLarge }, { it.medium }),
 }

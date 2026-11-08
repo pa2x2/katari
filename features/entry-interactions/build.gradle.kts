@@ -66,5 +66,5 @@ kotlin {
     }
 }
 
-// The source settings and tracker adapter features read sources' SharedPreferences
+// The source settings feature reads sources' SharedPreferences
 compileSharedCodeAgainstAndroidApi()

@@ -35,7 +35,6 @@
     <string name="action_menu">Menyu</string>
     <string name="action_settings">Sozlamalar</string>
     <string name="history">Tarix</string>
-    <string name="track">Kuzatish</string>
     <string name="chapters">Boblar</string>
     <string name="manga">Kutubxona yozuvlari</string>
     <string name="categories">Toifalar</string>
@@ -67,7 +66,6 @@
     <string name="action_sort_last_manga_update">Oxirgi yangilanish tekshiruvi</string>
     <string name="label_warning">Ogohlantirish</string>
     <string name="confirm_lock_change">O\'zgartirishni tasdiqlash uchun autentifikatsiya qiling</string>
-    <string name="action_filter_tracked">Kuzatilayotgan</string>
     <string name="action_display_show_number_of_items">Qismlar sonini ko\'rsatish</string>
     <string name="action_display_show_continue_reading_button">«Davom ettirish» tugmasi</string>
     <string name="action_pin">Pin</string>
@@ -82,7 +80,6 @@
     <string name="pref_category_reader">Rider</string>
     <string name="pref_appearance_summary">Mavzu, sana va vaqt formati</string>
     <string name="pref_reader_summary">O\'qish rejimi, ko\'rinish, navigatsiya</string>
-    <string name="pref_tracking_summary">Bir tomonlama sinxronlash, kengaytirilgan sinxronlash</string>
     <string name="theme_system">Tizimdagidek</string>
     <string name="theme_lavender">Lavanda</string>
     <string name="delete_category_confirmation">\"%s\" toifasini o\'chirishni hohlaysizmi?</string>
@@ -139,7 +136,6 @@
     <string name="action_move_to_top_all_for_series">Qismni boshiga ko\'chirish</string>
     <string name="pref_category_appearance">Ko\'rsatish</string>
     <string name="pref_category_downloads">Yuklamalar</string>
-    <string name="pref_category_tracking">Kuzatilayotgan</string>
     <string name="pref_category_about">Ma\'lumot</string>
     <string name="pref_app_theme">Ilova mavzusi</string>
     <string name="theme_midnightdusk">Yarim tungi oqshom</string>

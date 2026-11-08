@@ -32,10 +32,6 @@
         <item quantity="one">%1$s kapitel</item>
         <item quantity="other">%1$s kapitel</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d spårare</item>
-        <item quantity="other">%d spårare</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Hoppar över %d kapitel, antingen saknar källan det eller så har det filtrerats bort</item>
         <item quantity="other">Hoppar över %d kapitel, antingen saknar källan dem eller så har de filtrerats bort</item>

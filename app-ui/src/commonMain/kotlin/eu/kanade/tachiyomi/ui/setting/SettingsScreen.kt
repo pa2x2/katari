@@ -71,7 +71,6 @@ class SettingsScreen(
         val initialScreen = when (destination) {
             Destination.About.id -> Destination.About
             Destination.DataAndStorage.id -> Destination.DataAndStorage
-            Destination.Tracking.id -> Destination.Tracking
             Destination.Translation.id -> Destination.Translation
             Destination.Readers.id -> Destination.Readers
             Destination.TextRecognition.id -> Destination.TextRecognition
@@ -129,7 +128,6 @@ class SettingsScreen(
     sealed class Destination(val id: Int) {
         data object About : Destination(0)
         data object DataAndStorage : Destination(1)
-        data object Tracking : Destination(2)
         data object Translation : Destination(3)
         data object Readers : Destination(4)
         data object TextRecognition : Destination(5)

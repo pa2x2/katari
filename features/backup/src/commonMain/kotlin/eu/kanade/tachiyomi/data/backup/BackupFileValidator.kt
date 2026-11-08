@@ -5,8 +5,6 @@ import eu.kanade.tachiyomi.data.backup.models.toExtensionStore
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.CancellationException
 import mihon.domain.extension.model.ExtensionStore
-import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.feature.profiles.core.ProfileBackup
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceIdentityRepository
@@ -20,14 +18,9 @@ class BackupFileValidator(
     private val backupDecoder: BackupDecoder,
     private val sourceManager: SourceManager,
     private val sourceIdentities: SourceIdentityRepository,
-    private val trackingFeature: EntryTrackingFeature,
 ) {
 
-    /**
-     * Checks for critical backup file data.
-     *
-     * @return List of missing sources or missing trackers.
-     */
+    /** Checks for critical backup file data, such as the sources its entries need that aren't installed. */
     suspend fun validate(uri: DocumentUri): Results {
         val summary = try {
             backupDecoder.summarize(uri)
@@ -61,13 +54,8 @@ class BackupFileValidator(
             .distinctBy { it.identity }
             .sortedBy { it.name }
 
-        val missingTrackers = trackingFeature.missingLoginNames(
-            summary.trackingServiceIds.mapTo(mutableSetOf(), ::EntryTrackingServiceId),
-        )
-
         return Results(
             missingSources = missingSources,
-            missingTrackers = missingTrackers,
             extensionStores = backup.backupExtensionStores.map { it.toExtensionStore() },
             profiles = backup.backupProfiles.map { it.profile },
             createdAt = summary.createdAt,
@@ -80,7 +68,6 @@ class BackupFileValidator(
     /** [profiles] is empty for a backup made before profiles, which restores into the active profile. */
     data class Results(
         val missingSources: List<MissingSource>,
-        val missingTrackers: List<String>,
         /** The extension stores the backup restores, which may list what the missing sources need. */
         val extensionStores: List<ExtensionStore>,
         val profiles: List<ProfileBackup>,

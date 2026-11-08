@@ -40,11 +40,6 @@
         <item quantity="many">%1$s de capítols</item>
         <item quantity="other">%1$s capítols</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d servei de seguiment</item>
-        <item quantity="many">%d de serveis de seguiment</item>
-        <item quantity="other">%d serveis de seguiment</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">S’ha omès %d capítol. És possible que manqui a la font o que hagi estat filtrat</item>
         <item quantity="many">S’han omès %d de capítols. És possible que manquin a la font o que hagin estat filtrats</item>

@@ -16,7 +16,6 @@ internal class DefaultEntryLibraryFilterFeature(
         )
         val policy = request.policy
         val effectiveDownloaded = if (policy.downloadedOnly) TriState.ENABLED_IS else policy.downloaded
-        val activeTracking = policy.tracking.filterValues { it != TriState.DISABLED }
         val unconsumedFilter = policy.unconsumed.takeIf {
             availability.progressSummary.isAvailable
         } ?: TriState.DISABLED
@@ -35,8 +34,7 @@ internal class DefaultEntryLibraryFilterFeature(
                     notStartedFilter.matches(target.hasStarted?.not()) &&
                     bookmarkFilter.matches(target.hasBookmarks) &&
                     policy.completed.matches(target.isCompleted) &&
-                    releasePeriodFilter.matchesReleasePeriod(target, types.releasePeriod) &&
-                    activeTracking.matches(target.trackerIds)
+                    releasePeriodFilter.matchesReleasePeriod(target, types.releasePeriod)
             }
         }
 
@@ -49,7 +47,6 @@ internal class DefaultEntryLibraryFilterFeature(
                 bookmarkFilter,
                 policy.completed,
                 releasePeriodFilter,
-                *activeTracking.values.toTypedArray(),
             ).any { it != TriState.DISABLED },
             availability = availability,
         )
@@ -86,12 +83,4 @@ private fun TriState.matchesReleasePeriod(
 ): Boolean {
     if (target.type !in applicableTypes) return true
     return matches(target.isOutsideReleasePeriod)
-}
-
-private fun Map<Long, TriState>.matches(targetTrackerIds: Set<Long>): Boolean {
-    if (isEmpty()) return true
-    val excluded = filterValues { it == TriState.ENABLED_NOT }.keys
-    val included = filterValues { it == TriState.ENABLED_IS }.keys
-    return excluded.intersect(targetTrackerIds).isEmpty() &&
-        (included.isEmpty() || included.intersect(targetTrackerIds).isNotEmpty())
 }

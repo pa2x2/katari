@@ -32,10 +32,6 @@
         <item quantity="one">Na-restore sa loob ng %1$s na may %2$s error</item>
         <item quantity="other">Na-restore sa loob ng %1$s na may %2$s na mga error</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d tracker</item>
-        <item quantity="other">%d na tracker</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Nilaktawan ang %d na kabanata, maaaring ito ay wala sa source o na-filter ang mga ito</item>
         <item quantity="other">Nilaktawan ang %d na mga kabanata, maaaring wala sa source o na-filter ang mga ito</item>

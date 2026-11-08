@@ -14,7 +14,6 @@ import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
-import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.domain.category.model.NewCategory
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
@@ -22,7 +21,6 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
-import tachiyomi.domain.track.model.EntryTrack
 import java.io.File
 import java.util.Date
 
@@ -50,7 +48,6 @@ class ChangeCaptureTest {
             val chapters = EntryChapterRepositoryImpl(device.handler, device.defaultProfile)
             val categories = CategoryRepositoryImpl(device.handler, device.defaultProfile)
             val history = HistoryRepositoryImpl(device.handler, device.defaultProfile)
-            val tracks = TrackRepositoryImpl(device.handler, device.defaultProfile)
             val progress = EntryProgressRepositoryImpl(device.handler)
             val db = device.database
 
@@ -131,10 +128,6 @@ class ChangeCaptureTest {
             expect("entry update mode", "entry.update-mode") {
                 db.entry_update_modesQueries.upsert(1, "never")
             }
-            expect("tracker binding", "tracker.binding") {
-                val track = EntryTrack(0, 1, 2, 99, null, "Show", 3.0, 12, 1, 8.0, "https://t/99", 0, 0, false)
-                tracks.insert(1, track)
-            }
             expect("excluded scanlator", "entry.excluded-scanlator") {
                 db.excluded_scanlatorsQueries.insert(1, 1, "Group")
             }
@@ -181,7 +174,6 @@ class ChangeCaptureTest {
             expect("move to another profile", "entry", "entry.replacement") {
                 db.entriesQueries.moveToProfile(destinationProfileId = 2, sourceProfileId = 1, entryId = 2)
             }
-            expect("unbind tracker", "tracker.binding") { tracks.delete(1, 2) }
             expect("delete categories", "category", "category", "category.membership") {
                 categories.delete(categories.getAll(1).single { it.name == "Before sync" }.id)
                 categories.delete(categories.getAll(1).single { it.name == "Watching" }.id)

@@ -48,12 +48,6 @@
         <item quantity="many">%1$s розділів</item>
         <item quantity="other">%1$s розділів</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d трекер</item>
-        <item quantity="few">%d трекери</item>
-        <item quantity="many">%d трекерів</item>
-        <item quantity="other">%d трекерів</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Пропускається %d розділ, тому що джерело не має його, або він був відфільтрований</item>
         <item quantity="few">Пропускаються %d розділи, тому що джерело не має їх, або вони були відфільтровані</item>

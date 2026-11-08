@@ -9,7 +9,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal fun createComicInfo(
     entry: Entry,
     chapter: EntryChapter,
-    urls: List<String>,
     categories: List<String>?,
     sourceName: String,
 ): ComicInfo {
@@ -24,7 +23,7 @@ internal fun createComicInfo(
                 ComicInfo.Number(it.toString())
             }
         },
-        web = ComicInfo.Web(urls.joinToString(" ")),
+        web = ComicInfo.Web(chapter.url.trim()),
         summary = entry.description?.let { ComicInfo.Summary(it) },
         writer = entry.author?.let { ComicInfo.Writer(it) },
         penciller = entry.artist?.let { ComicInfo.Penciller(it) },

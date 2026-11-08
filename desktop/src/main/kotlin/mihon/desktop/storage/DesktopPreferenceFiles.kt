@@ -16,8 +16,8 @@ class DesktopPreferenceFiles(
     override fun open(file: PlatformPreferenceFile): PreferenceStore = when (file) {
         // The profile store's own instance, as two stores of one file would overwrite each other's writes
         PlatformPreferenceFile.DEFAULT -> profileStore.basePreferenceStore()
-        // In the data directory, since it holds progress not yet sent anywhere else.
-        PlatformPreferenceFile.TRACKING_QUEUE -> DesktopPreferenceStore(directories.data.resolve("tracking-queue.json"))
+        PlatformPreferenceFile.LEGACY_TRACKING_QUEUE ->
+            DesktopPreferenceStore(directories.data.resolve("tracking-queue.json"))
         PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE ->
             DesktopPreferenceStore(directories.data.resolve("manga-download-queue.json"))
         PlatformPreferenceFile.MANGA_CHAPTERS_TO_DELETE ->

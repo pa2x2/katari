@@ -23,10 +23,8 @@ import mihon.entry.interactions.migration.host.EntryMigrationPreparationProfileH
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.entry.EntryMapper
-import tachiyomi.data.track.TrackMapper
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.track.model.EntryTrack
 
 private const val MAX_ERROR_LENGTH = 2_000
 
@@ -206,7 +204,6 @@ internal class AppEntryMigrationHost(
                         sourceChildren = loadChildren(sourceEntryId),
                         targetChildren = loadChildren(targetEntryId),
                         sourceCategoryIds = loadCategoryIds(profileId, sourceEntryId),
-                        sourceTracks = loadTracks(profileId, sourceEntryId),
                     )
                 }
                 when (state) {
@@ -218,7 +215,6 @@ internal class AppEntryMigrationHost(
                         sourceChildren = state.sourceChildren,
                         targetChildren = state.targetChildren,
                         sourceCategoryIds = state.sourceCategoryIds,
-                        sourceTracks = state.sourceTracks,
                     )
                 }
             } catch (error: CancellationException) {
@@ -277,7 +273,6 @@ internal class AppEntryMigrationHost(
                     transition.historyChapterMoves?.let { moves ->
                         moveReadingTime(transition.expectedSource.id, transition.expectedTarget.id, moves)
                     }
-                    transition.preparedTracks.forEach { track -> insertTrack(profileId, track) }
                     participateMergeReplacement?.let { replacement ->
                         when (val result = replacement()) {
                             EntryMergeMigrationReplacementResult.Applied,
@@ -359,15 +354,8 @@ internal class AppEntryMigrationHost(
                     migrationConflict()
                 }
             }
-            if (
-                loadTracks(profileId, transition.expectedSource.id).sortedBy(EntryTrack::trackerId) !=
-                transition.expectedSourceTracks.sortedBy(EntryTrack::trackerId)
-            ) {
-                migrationConflict()
-            }
             if (transition.targetUpdate.id != transition.expectedTarget.id) migrationConflict()
             if (transition.sourceUpdate?.id?.let { it != transition.expectedSource.id } == true) migrationConflict()
-            if (transition.preparedTracks.any { it.entryId != transition.expectedTarget.id }) migrationConflict()
         }
     }
 
@@ -381,7 +369,6 @@ internal class AppEntryMigrationHost(
             val sourceChildren: List<EntryChapter>,
             val targetChildren: List<EntryChapter>,
             val sourceCategoryIds: List<Long>,
-            val sourceTracks: List<EntryTrack>,
         ) : ExecutionState
     }
 }
@@ -404,10 +391,6 @@ private suspend fun Database.loadChildren(entryId: Long): List<EntryChapter> {
 
 private suspend fun Database.loadCategoryIds(profileId: Long, entryId: Long): List<Long> {
     return categoriesQueries.getCategoriesByEntryId(profileId, entryId) { id, _, _, _ -> id }.awaitAsList()
-}
-
-private suspend fun Database.loadTracks(profileId: Long, entryId: Long): List<EntryTrack> {
-    return entry_syncQueries.getTracksByEntryId(profileId, entryId, TrackMapper::mapTrack).awaitAsList()
 }
 
 private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
@@ -472,24 +455,5 @@ private suspend fun Database.updateChild(child: EntryChapter) {
         dateUpload = child.dateUpload,
         memo = child.memo,
         chapterId = child.id,
-    )
-}
-
-private suspend fun Database.insertTrack(profileId: Long, track: EntryTrack) {
-    entry_syncQueries.upsert(
-        profileId = profileId,
-        entryId = track.entryId,
-        syncId = track.trackerId,
-        remoteId = track.remoteId,
-        libraryId = track.libraryId,
-        title = track.title,
-        lastChapterRead = track.progress,
-        totalChapters = track.total,
-        status = track.status,
-        score = track.score,
-        remoteUrl = track.remoteUrl,
-        startDate = track.startDate,
-        finishDate = track.finishDate,
-        private = track.private,
     )
 }

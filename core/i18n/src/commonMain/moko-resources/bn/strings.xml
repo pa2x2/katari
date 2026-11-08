@@ -4,7 +4,6 @@
     <string name="categories">বিভাগসমূহ</string>
     <string name="manga">পুস্তক সংগ্রহ</string>
     <string name="chapters">অধ্যায়সমূহ</string>
-    <string name="track">ট্র্যাকিং</string>
     <string name="history">ইতিহাস</string>
     <string name="label_settings">সেটিংস</string>
     <string name="label_download_queue">ডাউনলোড সারি</string>
@@ -63,7 +62,6 @@
     <string name="pref_category_general">সাধারণ</string>
     <string name="pref_category_reader">রিডার</string>
     <string name="pref_category_downloads">ডাউনলোডস</string>
-    <string name="pref_category_tracking">ট্র্যাকিং</string>
     <string name="pref_category_advanced">অ্যাডভান্সড</string>
     <string name="pref_category_about">সম্বন্ধে</string>
     <string name="pref_library_update_interval">নিজেথেকে আপডেট</string>
@@ -76,7 +74,6 @@
     <string name="all">সব</string>
     <string name="pref_library_update_restriction">নিজেথেকে আপডেটের সীমাবদ্ধতা</string>
     <string name="charging">চার্জ হচ্ছে</string>
-    <string name="pref_auto_update_manga_sync">পড়ার পরে অগ্রগতি আপডেট করুন</string>
     <string name="default_category">সাধারণ বিভাগ</string>
     <string name="default_category_summary">সর্বদা জিজ্ঞাসা করুন</string>
     <string name="pref_page_transitions">পৃষ্ঠা পালটানো এনিমেট করুন</string>
@@ -125,7 +122,6 @@
     <string name="fourth_to_last">৪র্থ থেকে শেষ অধ্যায়</string>
     <string name="fifth_to_last">৫ম থেকে শেষ অধ্যায়</string>
     <string name="pref_download_new">নতুন অধ্যায়গুলো ডাউনলোড করুন</string>
-    <string name="services">সেবা সমূহ</string>
     <string name="pref_create_backup">ব্যাকআপ তৈরী করুন</string>
     <string name="pref_create_backup_summ">বর্তমান সংগ্রহশালা পুনরুদ্ধারের জন্য ব্যাবহার করা যাবে</string>
     <string name="pref_restore_backup">ব্যাকআপ পুনরুদ্ধার</string>
@@ -148,11 +144,8 @@
     <string name="version">ভার্সন</string>
     <string name="pref_enable_acra">ক্র‍্যাশের প্রতিবেদন পাঠান</string>
     <string name="pref_acra_summary">বাগ ঠিক করার জন্য সাহায্য করুন। কোন সংবেদনশীল তথ্য পাঠানো হবে না</string>
-    <string name="login_title">প্রবেশ করুন %1$sতে</string>
     <string name="username">ব্যাবহারকারীর নাম</string>
     <string name="password">গোপন শব্দ</string>
-    <string name="login">প্রবেশ করুন</string>
-    <string name="login_success">প্রবেশ হয়েছে</string>
     <string name="unknown_error">অজানা ত্রুটি</string>
     <string name="updating_category">বিভাগের হালনাগাদ হচ্ছে</string>
     <string name="no_more_results">আর কোনও ফলাফল নেই</string>
@@ -177,15 +170,8 @@
     <string name="manga_download">ডাউনলোড</string>
     <string name="download_unread">অপঠিত</string>
     <string name="confirm_delete_chapters">আপনি কি নিশ্চিত যে আপনি নির্বাচিত অধ্যায়গুলো মুছে ফেলতে চান?</string>
-    <string name="manga_tracking_tab">অনুসরিত</string>
-    <string name="reading">পড়া হচ্ছে</string>
     <string name="completed">সম্পন্ন</string>
-    <string name="dropped">বাদ পড়েছে</string>
-    <string name="on_hold">স্থগিত</string>
-    <string name="plan_to_read">পড়ার জন্য পরিকল্পিত</string>
-    <string name="score">স্কোর</string>
     <string name="title">শিরোনাম</string>
-    <string name="status">স্থিতি</string>
     <string name="error_category_exists">এই নামের একটি বিভাগ ইতিমধ্যে বিদ্যমান!</string>
     <string name="snack_categories_deleted">বিভাগগুলি মোছা হয়েছে</string>
     <string name="dialog_with_checkbox_remove_description">এটা এই অধ্যায়ের পড়ার সময়কাল সরিয়ে ফেলবে। আপনি নিশ্চিত?</string>
@@ -241,9 +227,6 @@
     <string name="copy">অনুলিপি</string>
     <string name="pager_viewer">পেজড</string>
     <string name="source_not_installed">উৎস ইন্সটল করা নেই: %1$s</string>
-    <string name="repeating">পুনরায় পড়া</string>
-    <string name="track_status">স্থিতি</string>
-    <string name="track_type">ধরণ</string>
     <string name="transition_finished">শেষ:</string>
     <string name="transition_current">বর্তমান:</string>
     <string name="transition_next">পরবর্তী:</string>
@@ -270,7 +253,6 @@
     <string name="pref_category_library">লাইব্রেরি</string>
     <string name="ext_obsolete">অচল</string>
     <string name="obsolete_extension_message">এই এক্সটেনশন আর উপলব্ধ নয়।</string>
-    <string name="email">ইমেল ঠিকানা</string>
     <string name="in_library">লাইব্রেরিতে আছে</string>
     <string name="add_to_library">লাইব্রেরিতে যুক্ত করুন</string>
     <string name="manga_info_expand">আরও</string>
@@ -341,7 +323,6 @@
     <string name="ext_updates_pending">অনিষ্পন্ন হালনাগাদ</string>
     <string name="pref_library_update_refresh_metadata_summary">সংগ্রহশালা হালনাগেদের সময় নতুন মোড়ক এবং বর্ণনা খুঁজুন</string>
     <string name="pinned_sources">পিন করা</string>
-    <string name="backup_restore_missing_trackers">ট্র্যাকারগুলিতে প্রবেশ হয়নি:</string>
     <string name="pref_show_reading_mode_summary">রিডার খোলা থাকলে বর্তমান মোড সংক্ষেপে দেখান</string>
     <string name="tapping_inverted_both">উভয়</string>
     <string name="tapping_inverted_vertical">উল্লম্ব</string>
@@ -367,7 +348,6 @@
     <string name="pref_category_for_this_series">এই সিরিজের জন্য</string>
     <string name="share_page_info">%1$s: %2$s, পৃষ্ঠা %3$d</string>
     <string name="paused">বিরতি</string>
-    <string name="add_tracking">ট্র্যাকিং যোগ করুন</string>
     <string name="no_chapters_error">কোনও অধ্যায় পাওয়া যায় নি</string>
     <string name="also_set_chapter_settings_for_library">এছাড়াও আমার সংগ্রহশালার মাঙ্গাতে প্রয়োগ করুন</string>
     <string name="chapter_settings">অধ্যায় সেটিংস</string>
@@ -382,9 +362,6 @@
     <string name="tabs_header">ট্যাব গুলি</string>
     <string name="downloaded_chapters">ডাউনলোড করা অধ্যায়</string>
     <string name="manga_from_library">লাইব্রেরীর মাঙ্গা</string>
-    <string name="logout_success">আপনি এখন প্রস্থান করেছেন</string>
-    <string name="logout">প্রস্থান</string>
-    <string name="logout_title">প্রস্থান করবেন %1$s থেকে?</string>
     <string name="downloaded_only_summary">লাইব্রেরির সব এন্ট্রি ফিল্টার হবে</string>
     <string name="pref_incognito_mode_summary">পড়ার ইতিহাসে বিরতি দেয়</string>
     <string name="pref_incognito_mode">ছদ্মবেশী মোড</string>
@@ -400,17 +377,12 @@
     <string name="battery_optimization_disabled">ব্যাটারি অপ্টিমাইজেশন ইতিমধ্যে অক্ষম করা আছে</string>
     <string name="pref_disable_battery_optimization_summary">পিছেনে লাইব্রেরী হালনাগাদ ও ব্যাকআপে সাহায্য করে</string>
     <string name="pref_disable_battery_optimization">ব্যাটারি অপ্টিমাইজেশন অক্ষম করুন</string>
-    <string name="tracking_info">ট্র্যাকিং সার্ভিসে অধ্যায়ের অগ্রগতি হালনাগাদের একমুখী পথ। স্বতন্ত্র মাঙ্গার ট্র্যকিং সেটাপের জন্য তাদের নিজস্ব ট্র্যাকিং বাটন ব্যবহার করুন।</string>
-    <string name="action_filter_tracked">ট্র্যাক করা হয়েছে</string>
     <string name="pref_viewer_nav">ন্যাভিগেশন নকশা</string>
     <string name="action_display_show_number_of_items">আইটেমের সংখ্যা প্রদর্শন করুন</string>
     <string name="spen_next_page">পরের পৃষ্ঠা</string>
     <string name="spen_previous_page">আগের পৃষ্ঠা</string>
     <string name="file_picker_error">কোনো ফাইল বাছাইকারী অ্যাপ পাওয়া যায় নি</string>
     <string name="migration_help_guide">উৎস স্থানান্তর গাইড</string>
-    <string name="myanimelist_relogin">দয়া করে MAL এ আবার লগইন করুন</string>
-    <string name="track_finished_reading_date">শেষ করার তারিখ</string>
-    <string name="track_started_reading_date">শুরু করার তারিখ</string>
     <string name="pref_dump_crash_logs_summary">বিকাশকারীদের সাথে সেয়ার করার জন্য এরর লগগুলো একটি ফাইলে সংরক্ষণ করে</string>
     <string name="right_and_left_nav">ডান ও বাম</string>
     <string name="edge_nav">কিনার</string>
@@ -439,10 +411,6 @@
     <string name="pref_dns_over_https">এইচটিটিপিএস এর উপর ডিএনএস</string>
     <string name="restore_miui_warning">এমআইইউআই অপ্টিমাইজেশন নিষ্ক্রিয় থাকলে ব্যাকআপ/রিস্টোর সঠিকভাবে কাজ নাও করতে পারে।</string>
     <string name="backup_restore_content_full">সম্ভবত অনুপস্থিত এক্সটেনশন ইনস্টল করতে হবে এবং ট্র্যাকিং সার্ভিসগুলোতে পরে লগইন করতে হবে এগুলো ব্যবহার করতে।</string>
-    <string name="action_track">ট্র্যাক</string>
-    <string name="enhanced_tracking_info">নির্দিষ্ট উৎসের জন্য উন্নত বৈশিষ্ট্য প্রদান করে এমন পরিষেবা। আপনার লাইব্রেরিতে যোগ করা হলে মাঙ্গা স্বয়ংক্রিয়ভাবে ট্র্যাক করা হয়।</string>
-    <string name="enhanced_services">উন্নত সেবা</string>
-    <string name="tracking_guide">ট্র্যাকিং গাইড</string>
     <string name="pref_download_new_categories_details">বাদ দেওয়া ক্যাটাগরিতে থাকা মঙ্গা ডাউনলোড করা হবে না, যদিও সেগুলি অন্তর্ভুক্ত ক্যাটাগরিতেও আছে।</string>
     <string name="pref_category_auto_download">স্বয়ংক্রিয়ভাবে ডাউনলোড</string>
     <string name="pref_lowest">সর্বনিম্ন</string>
@@ -537,9 +505,6 @@
     <string name="action_display_cover_only_grid">শুধু প্রচ্ছদসহ গ্রিড</string>
     <string name="action_move_to_top_all_for_series">সিরিজ কে উপরে তুলুন</string>
     <string name="action_close">বন্ধ</string>
-    <string name="complete_list">লিস্ট সম্পূর্ন করুন</string>
-    <string name="unfinished_list">অসম্পূর্ণ তালিকা</string>
-    <string name="on_hold_list">স্থগিত তালিকা</string>
     <string name="auto_download_while_reading">পড়ার সময় সয়ংক্রিয়ভাবে ডাউনলোড</string>
     <string name="webview_data_deleted">ওয়েবভিউ ডাটা মুছা হয়েছে</string>
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
@@ -588,7 +553,6 @@
     <string name="onboarding_action_next">পরবর্তী</string>
     <string name="onboarding_permission_install_apps_description">সোর্স এক্সটেনশন ইনস্টল করার জন্য।</string>
     <string name="internal_error">ইন্টারনাল ইরর: বাকি ইনফরমেশন পেতে ক্যাশ লগ দেখুন</string>
-    <string name="action_sort_tracker_score">ট্রেকার স্কোর</string>
     <string name="action_ok">ওকে</string>
     <string name="action_sort_next_updated">পরবর্তী আপডেটের সম্ভাব্য সময়</string>
     <string name="action_copy_link">লিংক কপি করুন</string>
@@ -646,7 +610,6 @@
     <string name="pref_flash_style_white">সাদা</string>
     <string name="pref_flash_style_white_black">সাদা আর কালো</string>
     <string name="pref_downloads_summary">অটোমেটিক ডাউনলোড, আগাম ডাউনলোড</string>
-    <string name="pref_tracking_summary">ওয়ান-ওয়ে প্রগ্রেস সিঙ্ক, এনহ্যান্সড সিঙ্ক</string>
     <string name="pref_browse_summary">সোর্স, এক্সটেনশন, গ্লোবাল সার্চ</string>
     <string name="theme_catppuccin">ক্যাটপুচিন</string>
     <string name="theme_monochrome">মনোক্রোম</string>
@@ -674,9 +637,6 @@
     <string name="day_short">%d দিন</string>
     <string name="not_applicable">N/A</string>
     <string name="label_used">ব্যবহৃত</string>
-    <string name="label_mean_score">গড় স্কোর</string>
-    <string name="label_tracked_titles">ট্র্যাক করা এন্ট্রি</string>
-    <string name="label_tracker_section">ট্র্যাকারসমূহ</string>
     <string name="label_read_chapters">পড়া</string>
     <string name="label_total_chapters">মোট</string>
     <string name="label_titles_in_global_update">গ্লোবাল আপডেটে</string>
@@ -706,9 +666,6 @@
     <string name="pref_download_concurrent_sources">একসাথে কত সোর্স থেকে ডাউনলোড</string>
     <string name="pref_download_concurrent_pages">একসাথে পাতা ডাউনলোড</string>
     <string name="pref_download_concurrent_pages_summary">প্রতি সোর্স থেকে একসাথে ক’টি পাতা ডাউনলোড হবে</string>
-    <string name="pref_auto_update_manga_on_mark_read">পড়া হিসেবে চিহ্নিত হলে অগ্রগতি আপডেট হবে</string>
-    <string name="enhanced_services_not_installed">উপলব্ধ কিন্তু সোর্স ইনস্টল করা নেই: %s</string>
-    <string name="track_activity_name">ট্র্যাকার লগইন</string>
     <string name="pref_hide_in_library_items">লাইব্রেরিতে থাকা আইটেম লুকানো হবে</string>
     <string name="pref_storage_location">স্টোরেজের ঠিকানা</string>
     <string name="pref_storage_location_info">অটোমেটিক ব্যাকআপ এর জন্য, চ্যাপ্টার ডাউনলোড ও লোকাল সোর্স এর জন্য ব্যবহার হয়।</string>
@@ -743,7 +700,6 @@
     <string name="pref_update_library_manga_titles_summary">সতর্কতা: নাম পরিবর্তিত মাঙ্গা ডাউনলোড কিউ থেকে সরানো হবে (যদি থাকে)।</string>
     <string name="fdroid_warning">F‑Droid বিল্ডগুলো আনুষ্ঠানিকভাবে সমর্থিত নয়।\n বিস্তারিত জানতে ট্যাপ করুন।</string>
     <string name="pref_incognito_mode_extension_summary">এক্সটেনশনের জন্য রিডিং হিস্ট্রি বিরতি</string>
-    <string name="logging_in">লগইন হচ্ছে…</string>
     <string name="description_placeholder">কোনও বর্ণনা নেই</string>
     <string name="author">লেখক</string>
     <string name="artist">শিল্পী</string>
@@ -755,18 +711,11 @@
     <string name="custom_cover">নিজস্ব কভার</string>
     <string name="exclude_scanlators">স্ক্যানলেটর বাদ</string>
     <string name="no_scanlators_found">কোনো স্ক্যানলেটর পাওয়া যায়নি</string>
-    <string name="action_toggle_private_on">ব্যক্তিগত ট্র্যাকিং</string>
-    <string name="track_error">%1$s ত্রুটি: %2$s</string>
-    <string name="track_remove_date_conf_title">তারিখ মুছবেন?</string>
-    <string name="track_remove_start_date_conf_text">এটি %s থেকে পূর্বে নির্বাচিত শুরুর তারিখ মুছে ফেলবে</string>
-    <string name="track_remove_finish_date_conf_text">এটি %s থেকে পূর্বে নির্বাচিত শেষ তারিখ মুছে ফেলবে</string>
-    <string name="track_delete_title">%s ট্র্যাকিং মুছে ফেলা হবে?</string>
     <string name="updates_last_update_info">লাইব্রেরি সর্বশেষ আপডেট: %s</string>
     <string name="action_view_upcoming">আসন্ন আপডেটগুলো দেখুন</string>
     <string name="upcoming_guide">আসন্ন গাইড</string>
     <string name="upcoming_calendar_next">আগামী মাস</string>
     <string name="upcoming_calendar_prev">গত মাস</string>
-    <string name="track_delete_text">এটি লোকাল ট্র্যাকিং থেকে মুছে যাবে।</string>
     <string name="migrationListScreen.latestChapterLabel">সর্বশেষ: %1$s</string>
     <string name="migrationListScreen.unknownLatestChapter">অজানা</string>
     <string name="possible_duplicates_summary">লাইব্রেরিতে মিল থাকা নামে এন্ট্রি রয়েছে।\n\nমাইগ্রেট করার জন্য একটি এন্ট্রি সিলেক্ট করুন অথবা তবুও অ্যাড করুন।</string>

@@ -48,12 +48,6 @@
         <item quantity="many">%1$s глав</item>
         <item quantity="other">%1$s глав</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d сервис отслеживания</item>
-        <item quantity="few">%d сервиса отслеживания</item>
-        <item quantity="many">%d сервисов отслеживания</item>
-        <item quantity="other">%d сервисов отслеживания</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Была пропущена %d глава, поскольку она отсутствует в источнике или была отфильтрована</item>
         <item quantity="few">Были пропущены %d главы, поскольку они отсутствуют в источнике или были отфильтрованы</item>

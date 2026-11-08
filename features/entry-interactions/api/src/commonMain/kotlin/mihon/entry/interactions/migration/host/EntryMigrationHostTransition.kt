@@ -4,7 +4,6 @@ import mihon.entry.interactions.migration.EntryMigrationMode
 import tachiyomi.domain.entry.migration.MigrationChapterPosition
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.track.model.EntryTrack
 
 /** One Migration-owned optimistic database transition; it is not a reusable Entry or child mutation API. */
 data class EntryMigrationHostTransition(
@@ -30,11 +29,9 @@ data class EntryMigrationHostTransition(
     val childOrder: List<MigrationChapterPosition<EntryChapter>>?,
     /**
      * Whether only chapter state moves: a season folding into the entry its merged entry migrated to, which leaves the
-     * target's Library state, tracking and choices to the merged entry. Recorded with the operation for sync.
+     * target's Library state and choices to the merged entry. Recorded with the operation for sync.
      */
     val chapterStateOnly: Boolean,
-    val expectedSourceTracks: List<EntryTrack>,
-    val preparedTracks: List<EntryTrack>,
     val consequenceRequests: List<EntryMigrationConsequenceRequest> = emptyList(),
 )
 

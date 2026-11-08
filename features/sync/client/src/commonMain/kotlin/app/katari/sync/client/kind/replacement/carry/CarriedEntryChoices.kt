@@ -17,15 +17,13 @@ import app.katari.sync.client.kind.entrychoice.TranslationLanguagesKind
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesPayload
 import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
 import app.katari.sync.client.kind.entrychoice.ViewerSettingPayload
-import app.katari.sync.client.kind.tracking.TrackerBindingKind
-import app.katari.sync.client.kind.tracking.TrackerBindingPayload
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.SyncedKind
 import tachiyomi.domain.entry.migration.MigrationTranslationChoices
 
 /**
  * The person's choices about an entry, carried over a replacement to the entry that replaced it. A migration carries
- * the ones local migration does: tracker bindings, viewer settings, playback preferences and the translation choices
+ * the ones local migration does: viewer settings, playback preferences and the translation choices
  * [MigrationTranslationChoices] names. The update mode, excluded scanlators, download preferences and intro picks
  * stay with the old entry, as they do when migrating here; a move, being the same entry, takes them all.
  */
@@ -33,7 +31,6 @@ internal class CarriedEntryChoices(private val carry: ReplacementCarry) {
 
     suspend fun choice(from: Any) {
         when (from) {
-            is TrackerBindingPayload -> trackerBinding(from)
             is ViewerSettingPayload -> carried(ViewerSettingKind, from.providerId, from.settingKey) { to ->
                 from.copy(entryKey = carry.to, encodedValue = pick(from.encodedValue, to?.encodedValue))
             }
@@ -60,36 +57,6 @@ internal class CarriedEntryChoices(private val carry: ReplacementCarry) {
                     from.copy(entryKey = carry.to, match = pick(from.match, to?.match))
                 }
             }
-        }
-    }
-
-    /**
-     * Migration copies a binding to the new entry as it is, but a tracker that follows the source itself looks the new
-     * entry up again, so there the new binding's identity stays its own and a binding the new entry lacks isn't made.
-     */
-    private suspend fun trackerBinding(from: TrackerBindingPayload) {
-        val copied = carry.isMove || carry.writes.migrationRules.copiesTrackerBinding(from.trackerId)
-        carried(TrackerBindingKind, from.trackerId.toString()) { to ->
-            val identity = when {
-                copied -> from.copy(
-                    remoteId = pick(from.remoteId, to?.remoteId),
-                    libraryId = pick(from.libraryId, to?.libraryId),
-                    remoteUrl = pick(from.remoteUrl, to?.remoteUrl),
-                )
-                to != null -> from.copy(remoteId = to.remoteId, libraryId = to.libraryId, remoteUrl = to.remoteUrl)
-                else -> return@carried null
-            }
-            identity.copy(
-                entryKey = carry.to,
-                title = pick(from.title, to?.title),
-                lastChapterRead = pick(from.lastChapterRead, to?.lastChapterRead),
-                totalChapters = pick(from.totalChapters, to?.totalChapters),
-                status = pick(from.status, to?.status),
-                score = pick(from.score, to?.score),
-                startDate = pick(from.startDate, to?.startDate),
-                finishDate = pick(from.finishDate, to?.finishDate),
-                private = pick(from.private, to?.private),
-            )
         }
     }
 

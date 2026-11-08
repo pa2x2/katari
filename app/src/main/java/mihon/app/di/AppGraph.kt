@@ -14,7 +14,6 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateGraph
 import eu.kanade.tachiyomi.data.notification.NotificationReceiverGraph
 import eu.kanade.tachiyomi.data.schedule.ClockChangeScheduleGraph
 import eu.kanade.tachiyomi.data.statistics.StatisticsRecapGraph
-import eu.kanade.tachiyomi.data.track.oauth.TrackLoginGraph
 import eu.kanade.tachiyomi.extension.ExtensionGraph
 import eu.kanade.tachiyomi.ui.base.delegate.ActivityDelegateGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
@@ -28,7 +27,6 @@ import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.host.AndroidEntryHostBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
-import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
 import mihon.feature.migration.work.SourceMigrationWorkGraph
 
@@ -45,13 +43,11 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         SourceBindings::class,
         AppEntryHostBindings::class,
         AndroidEntryHostBindings::class,
-        EntryTrackingHostBindings::class,
         WorkBindings::class,
         BackupBindings::class,
         TranslationSetupBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
-        MessageBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
         WebViewBindings::class,
@@ -91,7 +87,6 @@ interface AppGraph :
     StatisticsRecapGraph,
     SyncWorkGraph,
     TabletUiGraph,
-    TrackLoginGraph,
     WidgetGraph {
     @DependencyGraph.Factory
     fun interface Factory {

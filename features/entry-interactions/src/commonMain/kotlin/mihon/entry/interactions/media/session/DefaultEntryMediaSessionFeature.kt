@@ -6,15 +6,13 @@ import mihon.entry.interactions.download.EntryDownloadLifecycleFeature
 import mihon.entry.interactions.history.EntryHistoryFeature
 import mihon.entry.interactions.state.EntryProgressFeature
 import mihon.entry.interactions.state.EntryProgressRecordingResult
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
 import tachiyomi.domain.entry.repository.EntryRepository
 
 /**
- * Applies the shared consequences of a media runtime's event, in order. Progress is recorded first because downloads,
- * history and tracking react to a child completing, and translate ahead runs after downloads have queued what they
- * fetch; the settled listeners hear last, once everything is recorded. An incognito source records no progress,
- * history or tracking, and so has nothing for them to send.
+ * Applies the shared consequences of a media runtime's event, in order. Progress is recorded first because downloads
+ * and history react to a child completing, and translate ahead runs after downloads have queued what they fetch; the
+ * settled listeners hear last, once everything is recorded. An incognito source records no progress or history.
  */
 internal class DefaultEntryMediaSessionFeature(
     private val types: EntryMediaSessionTypes,
@@ -23,8 +21,6 @@ internal class DefaultEntryMediaSessionFeature(
     private val progress: () -> EntryProgressFeature,
     private val downloads: () -> EntryDownloadLifecycleFeature,
     private val history: () -> EntryHistoryFeature,
-    private val tracking: () -> EntryTrackingFeature,
-    private val automaticTrackingSynchronizationEnabled: () -> Boolean,
     private val translateAhead: () -> EntryTranslateAhead,
     private val settledListeners: () -> Set<EntryMediaSessionSettledListener>,
 ) : EntryMediaSessionFeature {
@@ -41,7 +37,6 @@ internal class DefaultEntryMediaSessionFeature(
             ?.let { progress().recordMediaProgress(it) }
         if (progressed != null && type in types.download) updateDownloads(progressed, recorded)
         if (recording) recordHistory(event, recorded)
-        if (progressed != null && recording && type in types.progress) synchronizeTracking(progressed, recorded)
         if (progressed != null && type in types.translateAhead) translateAhead(progressed)
         val settled = event is EntryMediaSessionEvent.ActivityRecorded || progressed?.settled == true
         if (recording && settled) settledListeners().forEach { it.onSettled(event.visibleEntry.id) }
@@ -87,16 +82,6 @@ internal class DefaultEntryMediaSessionFeature(
             }
             is EntryMediaSessionEvent.ActivityRecorded -> history().record(event, event.activity)
         }
-    }
-
-    private suspend fun synchronizeTracking(
-        event: EntryMediaSessionEvent.Progressed,
-        recorded: EntryProgressRecordingResult?,
-    ) {
-        if (recorded?.completedNow != true) return
-        if (event.child.chapterNumber < 0.0) return
-        if (!automaticTrackingSynchronizationEnabled()) return
-        tracking().synchronizeProgress(entry = event.visibleEntry, progress = event.child.chapterNumber)
     }
 
     private suspend fun translateAhead(event: EntryMediaSessionEvent.Progressed) {

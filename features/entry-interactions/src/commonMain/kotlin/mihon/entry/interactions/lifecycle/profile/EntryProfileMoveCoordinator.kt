@@ -11,7 +11,6 @@ import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCov
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.merge.EntryMergeProfileMoveDestinationResult
 import mihon.entry.interactions.merge.EntryMergeProfileMoveExecutionResult
 import mihon.entry.interactions.merge.EntryMergeProfileMoveFeature
@@ -22,9 +21,9 @@ import tachiyomi.domain.entry.model.Entry
 
 /**
  * Moves entries to another profile. Merge groups move as one unit, so preview expands the selection to whole groups.
- * Inside the move transaction, downloads of replaced entries are collected and merge, scanlator filter, cover hash
- * and tracking state follow the entries; after commit, replaced custom covers and downloads are removed and the
- * moved entries' sources become visible in the destination profile.
+ * Inside the move transaction, downloads of replaced entries are collected and merge, scanlator filter and cover hash
+ * state follow the entries; after commit, replaced custom covers and downloads are removed and the moved entries'
+ * sources become visible in the destination profile.
  */
 internal class EntryProfileMoveCoordinator(
     private val host: EntryProfileMoveHost,
@@ -33,7 +32,6 @@ internal class EntryProfileMoveCoordinator(
     private val scanlatorFilterStateHost: EntryProfileMoveScanlatorFilterStateHost,
     private val scanlatorFilterTypes: Set<EntryType>,
     private val coverHashStateHost: EntryProfileMoveCoverHashStateHost,
-    private val trackingStateHost: EntryProfileMoveTrackingStateHost,
     private val customCoverHost: EntryProfileMoveCustomCoverHost,
     private val sourceVisibilityHost: EntryProfileMoveSourceVisibilityHost,
 ) : EntryProfileMoveFeature {
@@ -111,7 +109,6 @@ internal class EntryProfileMoveCoordinator(
                     if (type in scanlatorFilterTypes) scanlatorFilterStateHost.move(plan.stateRequest())
                     coverHashStateHost.move(plan.stateRequest())
                     reference.merge[type]?.let { mergeProfileMove().complete(plan.toMergeIntent(it)).requireApplied() }
-                    trackingStateHost.move(plan.stateRequest())
                 }
             },
         )

@@ -8,8 +8,8 @@ import tachiyomi.core.common.preference.PreferenceStore
 
 /**
  * Desktop keeps each profile's stores in files of their own. A profile's preference classes read its private
- * preferences, the tracker accounts, from its private store and all others from its profile store, so a backup reads
- * both and a restore puts each preference back into the one it is read from. App-state preferences aren't backed up.
+ * preferences from its private store and all others from its profile store, so a backup reads both and a restore puts
+ * each preference back into the one it is read from. App-state preferences aren't backed up.
  */
 @Inject
 class DesktopPreferenceBackupStores(private val profileStore: ProfileStore) : PreferenceBackupStores {

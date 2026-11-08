@@ -108,7 +108,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The app's button, including destructive confirms | `Button` | Style by its `style` enum and `destructive` |
 | An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs; with `arrows` drawn over a still icon, only they turn |
 | Lines between groups of icon buttons in one row, such as a formatting bar | `ButtonGroupDivider` | |
-| An item's actions in a row that scrolls or wraps, such as an entry's library and tracking actions | `ActionButtonRow`, `ActionButton` | |
+| An item's actions in a row that scrolls or wraps, such as an entry's library and web view actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |
 | A borderless button around content other buttons can't hold, such as an icon with a label over video | `ContentButton` | Not for an icon and a label in a row: check `ActionButton` and `StackedActionButton` first |
 | A chapter's download state as a button | `DownloadIndicator` | |

@@ -24,9 +24,6 @@
     <plurals name="manga_num_chapters">
         <item quantity="other">%1$s bab</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d pelacak</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">Melewati %d bab, entah sumbernya hilang atau telah difilter</item>
     </plurals>

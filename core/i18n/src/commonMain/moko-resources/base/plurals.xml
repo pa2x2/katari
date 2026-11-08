@@ -245,11 +245,6 @@
         <item quantity="other">Next %d items</item>
     </plurals>
 
-    <plurals name="num_trackers">
-        <item quantity="one">%d tracker</item>
-        <item quantity="other">%d trackers</item>
-    </plurals>
-
     <plurals name="missing_chapters_warning">
         <item quantity="one">Skipping %d chapter, either the source is missing it or it has been filtered out</item>
         <item quantity="other">Skipping %d chapters, either the source is missing them or they have been filtered out</item>

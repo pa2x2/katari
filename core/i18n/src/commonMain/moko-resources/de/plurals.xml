@@ -32,10 +32,6 @@
         <item quantity="one">%1$s Kapitel</item>
         <item quantity="other">%1$s Kapitel</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d Tracker</item>
-        <item quantity="other">%d Tracker</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d Kapitel wird übersprungen, da die Quelle dieses entweder nicht besitzt, oder weil es rausgefiltert wurde</item>
         <item quantity="other">%d Kapitel werden übersprungen, da die Quelle diese entweder nicht besitzt, oder weil sie rausgefiltert wurden</item>

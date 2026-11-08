@@ -19,7 +19,7 @@ class FoldedSeasonCarryTest {
 
     /**
      * Paired by number, an episode of a later season watched elsewhere after the migration marked the episode of that
-     * number in the first season of the entry listing them all, and the season's tracker binding took the new entry's.
+     * number in the first season of the entry listing them all, and the season's viewer setting stayed its own.
      */
     @Test
     fun `a season folded in by position carries only its episodes' state, to the episodes paired`(): Unit =
@@ -41,11 +41,8 @@ class FoldedSeasonCarryTest {
                             (12, 1, '/s2/3', 'Episode 3', 3)
                         """,
                         """
-                        INSERT INTO entry_sync(
-                            entry_id, sync_id, remote_id, title, last_chapter_read, total_chapters, status, score,
-                            remote_url, start_date, finish_date
-                        )
-                        VALUES (1, 2, 55, 'Show S2', 0, 3, 1, 0, 'https://anilist.co/anime/55', 0, 0)
+                        INSERT INTO viewer_setting_overrides(entry_id, provider_id, setting_key, encoded_value, updated_at)
+                        VALUES (1, 'player', 'speed', '1.0', 0)
                         """,
                         "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (2, -3, '/all', 'Show', 1, 'anime')",
                         """
@@ -55,11 +52,8 @@ class FoldedSeasonCarryTest {
                             (24, 2, '/all/5', 'Episode 5', 5), (25, 2, '/all/6', 'Episode 6', 6)
                         """,
                         """
-                        INSERT INTO entry_sync(
-                            entry_id, sync_id, remote_id, title, last_chapter_read, total_chapters, status, score,
-                            remote_url, start_date, finish_date
-                        )
-                        VALUES (2, 2, 99, 'Show', 0, 6, 1, 0, 'https://anilist.co/anime/99', 0, 0)
+                        INSERT INTO viewer_setting_overrides(entry_id, provider_id, setting_key, encoded_value, updated_at)
+                        VALUES (2, 'player', 'speed', '1.25', 0)
                         """,
                     )
                     exchange.settle(listOf(a, b))
@@ -75,7 +69,7 @@ class FoldedSeasonCarryTest {
                     )
 
                     // A folds the second season into the entry listing every season, after the first season's three
-                    // episodes, as local migration does: it leaves the library, and the new entry keeps its binding
+                    // episodes, as local migration does: it leaves the library, and the new entry keeps its viewer setting
                     a.sql(
                         "UPDATE entries SET favorite = 0 WHERE _id = 1",
                         """
@@ -95,14 +89,14 @@ class FoldedSeasonCarryTest {
                     )
                     a.drainAll()
                     delay(5)
-                    // B hasn't heard of it yet, watches the season's third episode and updates its tracker binding
+                    // B hasn't heard of it yet, watches the season's third episode and changes the season's speed
                     b.sql(
                         "UPDATE chapters SET read = 1 WHERE url = '/s2/3'",
                         """
                         INSERT INTO entry_progress_state(entry_id, chapter_id, resource_key, locator_kind, position)
                         SELECT entry_id, _id, '/s2/3', 'time', 600 FROM chapters WHERE url = '/s2/3'
                         """,
-                        "UPDATE entry_sync SET status = 2, score = 8 WHERE remote_id = 55",
+                        "UPDATE viewer_setting_overrides SET encoded_value = '1.5' WHERE encoded_value = '1.0'",
                     )
 
                     exchange.settle(listOf(a, b))
@@ -113,8 +107,8 @@ class FoldedSeasonCarryTest {
                         """["chapter","/all","/all/5",1,0]""",
                         """["chapter","/all","/all/6",1,0]""",
                         """["progress","/all","","/all/6",600,0]""",
-                        """["tracker","/all",2,99,1,0.0]""",
-                        """["tracker","/s2",2,55,2,8.0]""",
+                        """["viewer setting","/all","player","speed","1.25"]""",
+                        """["viewer setting","/s2","player","speed","1.5"]""",
                     )
                     a.library() shouldNotContainAnyOf listOf(
                         """["chapter","/all","/all/3",1,0]""",

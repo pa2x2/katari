@@ -24,9 +24,6 @@
     <plurals name="manga_num_chapters">
         <item quantity="other">共 %1$s 章</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="other">%d 个记录平台</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="other">跳过了 %d 章，可能是图源没有这些章节，或者被筛选规则排除了</item>
     </plurals>

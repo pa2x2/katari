@@ -40,7 +40,6 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
-import tachiyomi.domain.track.interactor.GetTracks
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -65,7 +64,6 @@ object MangaDownloadBindings {
         downloadPreferences: DownloadPreferences,
         xml: XML,
         getCategories: GetCategories,
-        getTracks: GetTracks,
         preferenceFiles: PlatformPreferenceFiles,
         json: Json,
         entryRepository: EntryRepository,
@@ -81,7 +79,6 @@ object MangaDownloadBindings {
         downloadPreferences = downloadPreferences,
         xml = xml,
         getCategories = getCategories,
-        getTracks = getTracks,
         scope = scope,
         store = DownloadStore(
             preferences = preferenceFiles.open(PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE),

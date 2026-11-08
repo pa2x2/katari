@@ -56,14 +56,6 @@
         <item quantity="many">تمَّ في %1$s وبه %2$s خطأً</item>
         <item quantity="other">تمَّ في %1$s وبه %2$s خطأ</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="zero">لا متتبّع</item>
-        <item quantity="one">متتبّع واحد</item>
-        <item quantity="two">متتبعان</item>
-        <item quantity="few">بضعة متتبّعين (%d)</item>
-        <item quantity="many">عدّة متتبّعين (%d)</item>
-        <item quantity="other">%d متتبّعاً</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="zero">لا فصول</item>
         <item quantity="one">فصل واحد</item>

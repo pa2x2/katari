@@ -32,10 +32,6 @@
         <item quantity="one">%1$s hoofdstuk</item>
         <item quantity="other">%1$s hoofdstukken</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d tracker</item>
-        <item quantity="other">%d trackers</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d hoofdstuk is overgeslagen, de bron mist of het is uitgefilterd</item>
         <item quantity="other">%d hoofdstukken zijn overgeslagen, de bron mist ze of ze zijn uitgefilterd</item>

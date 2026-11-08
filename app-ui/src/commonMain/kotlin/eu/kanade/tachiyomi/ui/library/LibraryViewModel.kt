@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -87,9 +86,6 @@ import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
-import mihon.entry.interactions.tracking.EntryTrackingAccount
-import mihon.entry.interactions.tracking.EntryTrackingCollectionTrack
-import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.feature.library.search.LibrarySearchMatcher
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileDatabase
@@ -98,7 +94,6 @@ import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.observeProfileScopedState
 import tachiyomi.core.common.preference.CheckboxState
-import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
@@ -159,7 +154,6 @@ class LibraryViewModel(
     private val entryConsumptionFeature: EntryConsumptionFeature,
     private val entryLibraryFilterFeature: EntryLibraryFilterFeature,
     private val sourceDescriptions: EntrySourceDescriptionResolutionPort,
-    private val trackingFeature: EntryTrackingFeature,
     private val profileStore: ProfileStore,
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
@@ -227,19 +221,12 @@ class LibraryViewModel(
         gatedScope.launchIO {
             observeProfileScopedState(profileStore.currentProfileIdFlow) { profileId ->
                 val scopedLibraryPreferences = LibraryPreferences(profileStore.profileStore(profileId))
-                val tracking = observeLibraryTrackingCollection(
-                    trackingFilters = getTrackingFiltersFlow(),
-                    categories = getCategories.subscribeForProfile(profileId),
-                    globalSort = scopedLibraryPreferences.sortingMode.changes(),
-                    collection = trackingFeature::observeCollection,
-                )
                 combine(
                     mutableState.map { it.searchQuery }.distinctUntilChanged().debounce(0.25.seconds),
                     getCategories.subscribeForProfile(profileId),
                     getLibraryItemsFlow(profileId),
-                    combine(tracking, getTrackingFiltersFlow(), ::Pair),
                     observeLibraryFilterPreferences(scopedLibraryPreferences),
-                ) { searchQuery, categories, favorites, (tracking, trackingFilters), itemPreferences ->
+                ) { searchQuery, categories, favorites, itemPreferences ->
                     val showSystemCategory = favorites.any { it.categories.contains(0L) }
                     val categoryNamesById = categories.associate { it.id to it.name }
                     val searchMatcher = searchQuery?.let { query ->
@@ -248,7 +235,7 @@ class LibraryViewModel(
                             categoryNamesById = categoryNamesById,
                         )
                     }
-                    val filterResult = favorites.applyFilters(tracking.entries, trackingFilters, itemPreferences)
+                    val filterResult = favorites.applyFilters(itemPreferences)
                     val filteredFavorites = filterResult.items
                         .let {
                             if (searchMatcher == null) {
@@ -266,8 +253,6 @@ class LibraryViewModel(
                         categories = categories,
                         favorites = filteredFavorites,
                         entryTypes = favorites.mapTo(mutableSetOf()) { it.entry.type },
-                        trackingEntries = tracking.entries,
-                        trackingScoreSupportedEntryTypes = tracking.scoreSupportedEntryTypes,
                         hasActiveFilters = filterResult.hasActiveFilters,
                         filterAvailability = filterResult.availability,
                     )
@@ -336,8 +321,6 @@ class LibraryViewModel(
                         applySort = { pages, data, sortingMode, randomSortSeed ->
                             pages.applySort(
                                 favoritesById = data.favoritesById,
-                                trackingEntries = data.trackingEntries,
-                                trackingScoreSupportedEntryTypes = data.trackingScoreSupportedEntryTypes,
                                 globalSort = sortingMode,
                                 randomSortSeed = randomSortSeed,
                             )
@@ -393,8 +376,6 @@ class LibraryViewModel(
     }
 
     private fun List<LibraryItem>.applyFilters(
-        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
-        trackingFilter: Map<Long, TriState>,
         preferences: LibraryFilterPreferences,
     ): AppliedLibraryFilters {
         val targets = map { item ->
@@ -406,8 +387,6 @@ class LibraryViewModel(
                 hasBookmarks = item.hasBookmarks,
                 isCompleted = item.entry.status == EntryStatus.COMPLETED,
                 isOutsideReleasePeriod = item.entry.fetchInterval < 0,
-                trackerIds = trackingEntries[item.key.id].orEmpty()
-                    .mapTo(mutableSetOf()) { it.serviceId.value },
             )
         }
         val result = entryLibraryFilterFeature.filter(
@@ -422,7 +401,6 @@ class LibraryViewModel(
                     completed = preferences.filterCompleted,
                     outsideReleasePeriod = preferences.filterIntervalCustom,
                     outsideReleasePeriodEnabled = releasePeriodFilter.isOffered && preferences.skipOutsideReleasePeriod,
-                    tracking = trackingFilter,
                 ),
             ),
         )
@@ -435,21 +413,9 @@ class LibraryViewModel(
 
     private fun List<LibraryPage>.applySort(
         favoritesById: Map<LibraryItemKey, LibraryItem>,
-        trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>>,
-        trackingScoreSupportedEntryTypes: Set<EntryType>,
         globalSort: LibrarySort,
         randomSortSeed: Int,
     ): List<LibraryPage> {
-        val defaultTrackerScoreSortValue = -1.0
-        val trackerScores by lazy {
-            trackingEntries.mapValues { entry ->
-                when {
-                    entry.value.isEmpty() -> null
-                    else -> entry.value.map(EntryTrackingCollectionTrack::normalizedScore).average()
-                }
-            }
-        }
-
         return map { page ->
             val sort = page.category.effectiveLibrarySort(globalSort)
             if (sort.type == LibrarySort.Type.Random) {
@@ -460,18 +426,9 @@ class LibraryViewModel(
                 )
             }
 
-            val comparator = librarySortComparator(
-                sort = sort,
-                trackerScores = trackerScores,
-                defaultTrackerScore = defaultTrackerScoreSortValue,
-            )
+            val comparator = librarySortComparator(sort)
             val itemsWithSortKeys = page.itemIds.mapNotNull { itemId ->
-                favoritesById[itemId]?.let { item ->
-                    itemId to item.toLibrarySortKey(
-                        trackingScoreSupportedEntryTypes,
-                        defaultTrackerScoreSortValue,
-                    )
-                }
+                favoritesById[itemId]?.let { item -> itemId to item.toLibrarySortKey() }
             }
 
             val sortedItemIds = itemsWithSortKeys
@@ -482,10 +439,7 @@ class LibraryViewModel(
         }
     }
 
-    private fun LibraryItem.toLibrarySortKey(
-        trackerSupportedEntryTypes: Set<EntryType>,
-        defaultTrackerScoreSortValue: Double,
-    ): LibrarySortKey {
+    private fun LibraryItem.toLibrarySortKey(): LibrarySortKey {
         return LibrarySortKey(
             id = entry.id,
             title = entry.displayTitle,
@@ -496,7 +450,6 @@ class LibraryViewModel(
             latestUpload = latestUpload,
             entryFetchDate = entry.lastUpdate,
             dateAdded = entry.dateAdded,
-            trackerScore = if (entry.type in trackerSupportedEntryTypes) null else defaultTrackerScoreSortValue,
         )
     }
 
@@ -531,26 +484,6 @@ class LibraryViewModel(
                 isLocal = singleSourceId == LOCAL_SOURCE_ID,
                 downloadCount = item.memberEntries.sumOf { downloadCounts[it.id] ?: 0 },
             )
-        }
-    }
-
-    /**
-     * Flow of tracking filter preferences
-     *
-     * @return map of track id with the filter value
-     */
-    private fun getTrackingFiltersFlow(): Flow<Map<Long, TriState>> {
-        return trackingFeature.observeAccounts().flatMapLatest { snapshot ->
-            val loggedInServices = snapshot.accounts.filter(EntryTrackingAccount::isLoggedIn)
-            if (loggedInServices.isEmpty()) {
-                flowOf(emptyMap())
-            } else {
-                val filterFlows = loggedInServices.map { account ->
-                    val serviceId = account.service.id.value
-                    libraryPreferences.filterTracking(serviceId.toInt()).changes().map { serviceId to it }
-                }
-                combine(filterFlows) { it.toMap() }
-            }
         }
     }
 
@@ -1179,8 +1112,6 @@ class LibraryViewModel(
         val favorites: List<LibraryItem> = emptyList(),
         /** Entry types in the whole library, before filters and search narrow it. */
         val entryTypes: Set<EntryType> = emptySet(),
-        val trackingEntries: Map<Long, List<EntryTrackingCollectionTrack>> = emptyMap(),
-        val trackingScoreSupportedEntryTypes: Set<EntryType> = emptySet(),
         val hasActiveFilters: Boolean = false,
         val filterAvailability: EntryLibraryFilterAvailability = EntryLibraryFilterAvailability(
             progressSummary = EntryLibraryFilterControlAvailability(emptySet(), emptySet()),

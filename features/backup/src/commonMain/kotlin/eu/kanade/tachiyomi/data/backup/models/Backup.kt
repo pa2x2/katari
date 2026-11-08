@@ -24,8 +24,7 @@ data class Backup(
     @ProtoNumber(201) var activeProfileUuid: String? = null,
     @ProtoNumber(202) internal val backupAnime: List<LegacyBackupAnime> = emptyList(),
     @ProtoNumber(203) var backupEntries: List<BackupEntry> = emptyList(),
-    /** Written since Kitsu scores moved to the native 2–20 scale; backups without it hold them halved. */
-    @ProtoNumber(204) var kitsuScoresNative: Boolean = false,
+    // @ProtoNumber(204) var kitsuScoresNative, a tracker score scale marker from before trackers were removed; never reuse
     /**
      * When the backup started reading the data it holds, in epoch milliseconds; 0 in backups made before it was
      * written ([eu.kanade.tachiyomi.data.backup.stream.BackupSummary.createdAt] says what stands in).

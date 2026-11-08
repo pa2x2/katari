@@ -32,10 +32,6 @@
         <item quantity="one">1 глава</item>
         <item quantity="other">%1$s глави</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">1 тракер</item>
-        <item quantity="other">%d тракери</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Има 1 липсваща глава, източникът липса или е филтриран</item>
         <item quantity="other">Има %d липсващи глави, източникът липса или е филтриран</item>

@@ -13,7 +13,7 @@ import tachiyomi.core.common.preference.PreferenceStore
 class AndroidPreferenceFiles(private val application: Application) : PlatformPreferenceFiles {
     override fun open(file: PlatformPreferenceFile): PreferenceStore = when (file) {
         PlatformPreferenceFile.DEFAULT -> AndroidPreferenceStore(application)
-        PlatformPreferenceFile.TRACKING_QUEUE -> named("tracking_queue")
+        PlatformPreferenceFile.LEGACY_TRACKING_QUEUE -> named("tracking_queue")
         PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE -> named("active_downloads")
         PlatformPreferenceFile.MANGA_CHAPTERS_TO_DELETE -> named("chapters_to_delete")
         PlatformPreferenceFile.ANIME_DOWNLOAD_QUEUE -> named("active_anime_downloads")

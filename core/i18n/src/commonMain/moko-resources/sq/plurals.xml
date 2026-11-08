@@ -40,10 +40,6 @@
         <item quantity="one">Kapitujt %1$s dhe 1 më shumë</item>
         <item quantity="other">Kapitujt %1$s dhe %2$d të tjerë</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d gjurmues</item>
-        <item quantity="other">%d gjurmuesit</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">%1$s kapitull</item>
         <item quantity="other">%1$s kapituj</item>

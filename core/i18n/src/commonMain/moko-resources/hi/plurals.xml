@@ -32,10 +32,6 @@
         <item quantity="one">%1$s अध्याय</item>
         <item quantity="other">%1$s अध्याय</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ट्रैकर</item>
-        <item quantity="other">%d ट्रैकरस</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d अध्याय छोड़ रहे हैं, या तो स्रोत में यह गायब है या इसे फ़िल्टर कर दिया गया है</item>
         <item quantity="other">%d अध्याय छोड़ रहे हैं, या तो स्रोत में वे गायब हैं या उन्हें फ़िल्टर कर दिया गया है</item>

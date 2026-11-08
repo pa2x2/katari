@@ -10,7 +10,6 @@
     <string name="categories">အမျိုးအစားများ</string>
     <string name="manga">စာအုပ်စင် မှတ်တမ်းများ</string>
     <string name="chapters">အပိုင်းများ</string>
-    <string name="track">ခြေရာခံ</string>
     <string name="scanlator">ဘာသာပြန်သူ</string>
     <string name="label_more">ပိုမို၍</string>
     <string name="label_download_queue">ဒေါင်းလုဒ် စာရင်း</string>
@@ -57,15 +56,12 @@
     <string name="pref_category_library">စာကြည့်တိုက်</string>
     <string name="pref_category_reader">စာဖတ်သူ</string>
     <string name="pref_category_downloads">ဒေါင်းလုဒ်များ</string>
-    <string name="pref_category_tracking">လမ်းညွှန်စက်များ</string>
     <string name="pref_category_advanced">မြင့်မားသော</string>
     <string name="pref_category_about">အကြောင်း</string>
     <string name="pref_appearance_summary">ပုံစံအနှစ်ချုပ်</string>
     <string name="pref_library_summary">စာကြည့်တိုက်အနှစ်ချုပ်</string>
-    <string name="pref_tracking_summary">လမ်းညွှန်စက်များအနှစ်ချုပ်</string>
     <string name="theme_dark">အမှောင်</string>
     <string name="action_filter_empty">စစ်ထုတ်မှု ဖယ်သည်။</string>
-    <string name="action_filter_tracked">ခြေရာခံထားသည်။</string>
     <string name="action_filter_unread">မဖတ်ရသေးသော</string>
     <string name="action_filter_interval_custom">စိတ်ကြိုက် အပ်ဒိတ် အကြိမ်ရေ</string>
     <string name="action_sort_alpha">အက္ခရာစဉ်အားဖြင့် စီပါ</string>
@@ -76,7 +72,6 @@
     <string name="action_sort_unread_count">မဖတ်ရသေးသော အရေအတွက်အားဖြင့် စီပါ</string>
     <string name="action_sort_chapter_fetch_date">အပိုင်းရရှိသည့် ရက်စွဲအားဖြင့် စီပါ</string>
     <string name="action_sort_date_added">ထည့်သွင်းသည့် ရက်စွဲအားဖြင့် စီပါ</string>
-    <string name="action_sort_tracker_score">ခြေရာခံ အမှတ်အားဖြင့် စီပါ</string>
     <string name="action_sort_random">ကျပန်းစီမှု</string>
     <string name="action_search">ရှာဖွေပါ</string>
     <string name="action_search_hint">ရှာဖွေလိုသည်ကို ထည့်ပါ…</string>

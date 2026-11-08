@@ -32,10 +32,6 @@
         <item quantity="one">%1$s bölüm</item>
         <item quantity="other">%1$s bölüm</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d izleyici</item>
-        <item quantity="other">%d izleyici</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">%d bölüm atlandı, kaynak mevcut değil ya da bölüm filtrelendi</item>
         <item quantity="other">%d bölüm atlandı, kaynak mevcut değil ya da bölümler filtrelendi</item>

@@ -225,12 +225,6 @@ class RestoreBackupScreen(
                                         body = unavailable.lines(),
                                     )
                                 }
-                                if (error.trackers.isNotEmpty()) {
-                                    RestoreErrorSection(
-                                        title = stringResource(MR.strings.backup_restore_missing_trackers),
-                                        body = error.trackers.joinToString(separator = "\n- ", prefix = "- "),
-                                    )
-                                }
                             }
 
                             is InvalidRestore -> {
@@ -326,19 +320,17 @@ internal class RestoreBackupViewModel(
                 options = setter(it.options, enabled),
             )
         }
-        showMissingComponents()
+        showMissingExtensions()
     }
 
-    private var missingComponents: MissingComponents? = null
+    private var missingExtensions: BackupMissingExtensions.Checked? = null
 
     /** What's missing, as restoring with the current options leaves it: the backup's stores may list extensions. */
-    private fun showMissingComponents() {
-        val missing = missingComponents ?: return
-        val extensions = missing.extensions?.extensions(withBackupStores = state.value.options.extensionStores)
-        setError(MissingRestoreComponents(uri, extensions.orEmpty(), missing.trackers), canRestore = true)
+    private fun showMissingExtensions() {
+        val missing = missingExtensions ?: return
+        val extensions = missing.extensions(withBackupStores = state.value.options.extensionStores)
+        setError(MissingRestoreComponents(uri, extensions), canRestore = true)
     }
-
-    private class MissingComponents(val extensions: BackupMissingExtensions.Checked?, val trackers: List<String>)
 
     fun toggleProfile(uuid: String, selected: Boolean) {
         state.update {
@@ -397,12 +389,9 @@ internal class RestoreBackupViewModel(
             it.copy(profiles = profiles, selectedProfileUuids = allUuids, createdAt = results.createdAt)
         }
 
-        if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
-            val extensions = results.missingSources.takeIf { it.isNotEmpty() }?.let {
-                backupMissingExtensions.check(it, results.extensionStores)
-            }
-            missingComponents = MissingComponents(extensions, results.missingTrackers)
-            showMissingComponents()
+        if (results.missingSources.isNotEmpty()) {
+            missingExtensions = backupMissingExtensions.check(results.missingSources, results.extensionStores)
+            showMissingExtensions()
             return
         }
 
@@ -451,7 +440,6 @@ internal enum class RestoreProfileTarget { New, Merge, Locked }
 private data class MissingRestoreComponents(
     val uri: DocumentUri,
     val extensions: List<MissingExtension>,
-    val trackers: List<String>,
 )
 
 private data class InvalidRestore(

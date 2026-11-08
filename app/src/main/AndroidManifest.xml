@@ -200,38 +200,6 @@
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <activity
-            android:name=".data.track.oauth.TrackLoginActivity"
-            android:exported="true"
-            android:label="@string/track_activity_name">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="mihon" />
-
-                <data android:host="anilist-auth" />
-                <data android:host="bangumi-auth" />
-                <data android:host="mangabaka-auth" />
-                <data android:host="myanimelist-auth" />
-                <data android:host="shikimori-auth" />
-                <data android:host="hikka-auth" />
-            </intent-filter>
-
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- Comick requires native reverse-domain schemes  -->
-                <data android:scheme="app.mihon" />
-                <data android:host="comick-auth" />
-            </intent-filter>
-        </activity>
-
         <receiver
             android:name=".data.notification.NotificationReceiver"
             android:exported="false" />

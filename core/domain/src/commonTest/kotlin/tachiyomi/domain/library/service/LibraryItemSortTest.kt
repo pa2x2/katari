@@ -30,7 +30,6 @@ class LibraryItemSortTest {
         latestUpload = latestUpload,
         entryFetchDate = entryFetchDate,
         dateAdded = dateAdded,
-        trackerScore = null,
     )
 
     @Test

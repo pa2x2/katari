@@ -304,7 +304,6 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.features.tts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.tts.providers.android.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.tts.ui.path)))
-    implementation(dependencies.project(mapOf("path" to projects.features.trackers.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.videoEngine.mpv.path)))
 
     // Compose
@@ -316,7 +315,7 @@ dependencies {
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
     implementation(libs.androidx.navigationEvent)
-    // Painters for the Compose resources of multiplatform modules, such as the trackers' logos
+    // Painters for the Compose resources of multiplatform modules, such as the translation engines' artwork
     implementation(libs.compose.multiplatform.resources)
 
     implementation(libs.androidx.interpolator)

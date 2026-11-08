@@ -1,8 +1,8 @@
 package mihon.domain.app
 
 /**
- * The running build of Katari as it names itself to the services it talks to, such as in trackers' user agents. Each
- * platform's graph provides it from that platform's build.
+ * The running build of Katari as it names itself, such as to extensions and in backup file names. Each platform's graph
+ * provides it from that platform's build.
  */
 data class AppIdentity(
     /** The installed application's ID, such as `app.katari.foss` on Android, including the build type's suffix. */

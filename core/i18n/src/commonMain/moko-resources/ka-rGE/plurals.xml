@@ -60,10 +60,6 @@
         <item quantity="one">შემდეგი თავი</item>
         <item quantity="other">შემდეგი %d თავი</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d ტრეკერი</item>
-        <item quantity="other">%d ტრეკერი</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">გამოტოვებულია %d ტავი. ან წყარო აღმოჩენილი არაა, ან ფილტრში მოჰყვა</item>
         <item quantity="other">გამოტოვებულია %d ტავი. ან წყარო აღმოჩენილი არაა, ან ფილტრში მოჰყვა</item>

@@ -18,4 +18,5 @@ val migrations: List<Migration>
         ContentWarningMigration(),
         CoverSizeMigration(),
         MigrationOptionsMigration(),
+        TrackerDataCleanupMigration(),
     )

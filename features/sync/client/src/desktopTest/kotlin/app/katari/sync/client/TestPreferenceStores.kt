@@ -45,7 +45,7 @@ internal class TestPreferenceStores(directory: File, handler: DatabaseHandler, s
     )
     private val owners = ProfilePreferenceOwnerRegistry().apply {
         ProfilePreferenceOwnerInstaller(this) { profiles.profileStore() }
-            .register(ProfilePreferenceOwnerId("app.library"), LibraryPreferences.profileKeyPatterns) {
+            .register(ProfilePreferenceOwnerId("app.library")) {
                 LibraryPreferences(it)
             }
     }

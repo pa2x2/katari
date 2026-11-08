@@ -72,12 +72,6 @@
         <item quantity="many">Наступныя %d раздзелаў</item>
         <item quantity="other">Наступныя %d раздзелаў</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">%d трэкер</item>
-        <item quantity="few">%d трэкеры</item>
-        <item quantity="many">%d трэкераў</item>
-        <item quantity="other">%d трэкераў</item>
-    </plurals>
     <plurals name="missing_chapters_warning">
         <item quantity="one">Прапускаецца %d раздзел: адсутнічае ў крыніцы або адфільтраваны</item>
         <item quantity="few">Прапускаюцца %d раздзелы: адсутнічаюць у крыніцы або адфільтраваныя</item>

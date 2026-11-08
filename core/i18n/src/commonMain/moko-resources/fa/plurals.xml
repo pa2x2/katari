@@ -28,10 +28,6 @@
         <item quantity="one">در %1$s با %2$s خطا انجام شد</item>
         <item quantity="other">در %1$s با %2$s خطا انجام شد</item>
     </plurals>
-    <plurals name="num_trackers">
-        <item quantity="one">۱ ردیاب</item>
-        <item quantity="other">%d ردیاب</item>
-    </plurals>
     <plurals name="manga_num_chapters">
         <item quantity="one">1 قسمت</item>
         <item quantity="other">%1$s قسمت</item>
