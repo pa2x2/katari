@@ -2,11 +2,13 @@ package app.katari.presentation.kit.sheet
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.content.MouseSelectableText
 import app.katari.presentation.kit.content.Text
@@ -37,7 +39,7 @@ fun ChapterSheet(
     preview: (@Composable (Modifier) -> Unit)? = null,
 ) {
     val spacing = KatariTheme.spacing
-    Sheet(onDismissRequest = onDismissRequest, modifier = modifier) {
+    Sheet(onDismissRequest = onDismissRequest, modifier = modifier, short = true) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -50,7 +52,10 @@ fun ChapterSheet(
                     ChapterPreview(preview = preview, onClick = null, modifier = Modifier.fillMaxWidth())
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
-                    Text(title, role = TextRole.SheetTitle)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(title, role = TextRole.SheetTitle, modifier = Modifier.weight(1f))
+                        SheetCloseButton()
+                    }
                     ChapterDetails(
                         read = false,
                         kind = kind,

@@ -37,7 +37,7 @@ fun UpdateSheetFrame(
     actions: @Composable () -> Unit,
     notes: (@Composable ColumnScope.() -> Unit)?,
 ) {
-    Sheet(onDismissRequest = onDismiss, capHeight = true) {
+    Sheet(short = true, onDismissRequest = onDismiss, capHeight = true) {
         Column {
             SheetHeader(
                 title = title,

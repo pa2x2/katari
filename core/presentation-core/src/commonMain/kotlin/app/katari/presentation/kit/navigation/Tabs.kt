@@ -4,6 +4,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
@@ -20,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -46,6 +49,22 @@ fun TabRow(
     container: SurfaceContainer = SurfaceContainer.Surface,
     tabs: @Composable () -> Unit,
 ) {
+    TabRow(modifier = modifier, container = container, buttonsFollow = false, tabs = tabs)
+}
+
+/**
+ * A [TabRow] that [buttonsFollow] on its line, such as a sheet's menu and close button: they bring their own spacing,
+ * so the row leaves out its end padding and keeps the room for its tabs.
+ */
+@Composable
+internal fun TabRow(
+    modifier: Modifier,
+    container: SurfaceContainer,
+    buttonsFollow: Boolean,
+    tabs: @Composable () -> Unit,
+) {
+    val padding = TabRowPadding
+    val layoutDirection = LocalLayoutDirection.current
     CompositionLocalProvider(
         LocalTabContainer provides container.raised(),
         LocalTabBringsItselfIntoView provides true,
@@ -56,7 +75,12 @@ fun TabRow(
                 modifier = rowModifier
                     .selectableGroup()
                     .horizontalScroll(scrollState)
-                    .padding(TabRowPadding),
+                    .padding(
+                        start = padding.calculateStartPadding(layoutDirection),
+                        top = padding.calculateTopPadding(),
+                        end = if (buttonsFollow) 0.dp else padding.calculateEndPadding(layoutDirection),
+                        bottom = padding.calculateBottomPadding(),
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 tabs()

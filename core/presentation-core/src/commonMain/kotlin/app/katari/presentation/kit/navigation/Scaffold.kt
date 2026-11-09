@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,7 +47,9 @@ import app.katari.presentation.kit.feedback.ScreenSnackbarHost
 import app.katari.presentation.kit.feedback.ScreenSnackbars
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.claimScreenMessages
-import app.katari.presentation.kit.layout.LocalContentFrameMargin
+import app.katari.presentation.kit.layout.ContentSides
+import app.katari.presentation.kit.layout.FrameMargins
+import app.katari.presentation.kit.layout.LocalContentSides
 import app.katari.presentation.kit.layout.LocalScreenFrameMargin
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.layout.width
@@ -94,14 +94,15 @@ import kotlin.math.max
  * @param floatingActionButton Main action button of the screen, typically a [FloatingActionButton]
  * @param container what the screen is filled with; [SurfaceContainer.None] for a scaffold laid over other content.
  * @param frame how wide the screen's content may grow. The frame is centred beside the dock: the top bar's contents,
- * the content padding and the FAB line up with it, and the content padding widens by the room left on each side.
+ * the kit layouts holding the content and the FAB line up with it.
  * @param contentWindowInsets window insets to be passed to content slot via PaddingValues params.
  * Scaffold will take the insets into account from the top/bottom only if the topBar/ bottomBar
  * are not present, as the scaffold expect topBar/bottomBar to handle insets instead
- * @param content content of the screen. The lambda receives a [PaddingValues] that should be
- * applied to the content root via [Modifier.padding] and [Modifier.consumeWindowInsets] to
- * properly offset top and bottom bars. If using [Modifier.verticalScroll], apply this modifier to
- * the child of the scroll, and not on the scroll itself.
+ * @param content content of the screen. The lambda receives the [PaddingValues] that keep it clear of the top and
+ * bottom bars, to apply via [Modifier.padding] or pass on as a list's content padding. The room on the sides (system
+ * bars, cutout, the side dock and the frame's margins) is not in it: the kit's layouts, such as `RowList`, `CardFlow`,
+ * `CoverGrid`, `TwoPanes` and `FramedContent`, apply it themselves, so a screen can't drop it. A `Scaffold` in the
+ * content takes over whatever of it nothing has applied yet.
  */
 @Composable
 fun Scaffold(
@@ -138,6 +139,7 @@ fun Scaffold(
         CompositionLocalProvider(LocalAppBarScrollBehavior provides topBarScrollBehavior) {
             ScaffoldLayout(
                 dockClearance = LocalDockClearance.current,
+                outerSides = LocalContentSides.current,
                 frame = frame,
                 window = currentWindowLayout(),
                 fabPosition = FabPosition.End,
@@ -159,6 +161,9 @@ fun Scaffold(
 /**
  * Layout for a [Scaffold]'s content.
  *
+ * @param outerSides the side room of a screen this scaffold is nested in that nothing has applied yet, which it keeps
+ * clear of as if the content around it had been padded by it
+
  * @param fabPosition [FabPosition] for the FAB (if present)
  * @param topBar the content to place at the top of the [Scaffold], typically a [SmallTopAppBar]
  * @param content the main 'body' of the [Scaffold]
@@ -172,6 +177,7 @@ fun Scaffold(
 @Composable
 private fun ScaffoldLayout(
     dockClearance: DockClearance,
+    outerSides: ContentSides,
     frame: ScreenFrame,
     window: WindowLayout,
     fabPosition: FabPosition,
@@ -189,12 +195,17 @@ private fun ScaffoldLayout(
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
 
         layout(layoutWidth, layoutHeight) {
-            val dockStart = dockClearance.start.roundToPx()
             val isLtr = layoutDirection == LayoutDirection.Ltr
-            val leftInset = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection) +
-                if (isLtr) dockStart else 0
-            val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection) +
-                if (isLtr) 0 else dockStart
+            val windowLeft = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection)
+            val windowRight = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection)
+            // The system bars and cutout are kept clear of once: the outer room already holds as much of them as it
+            // applies, as the insets a padded parent consumes
+            val insetStart = max((if (isLtr) windowLeft else windowRight).toDp(), outerSides.insetStart)
+            val insetEnd = max((if (isLtr) windowRight else windowLeft).toDp(), outerSides.insetEnd)
+            val roomStart = outerSides.start + insetStart - outerSides.insetStart + dockClearance.start
+            val roomEnd = outerSides.end + insetEnd - outerSides.insetEnd
+            val leftInset = (if (isLtr) roomStart else roomEnd).roundToPx()
+            val rightInset = (if (isLtr) roomEnd else roomStart).roundToPx()
             val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout) + dockClearance.bottom.roundToPx()
 
             // Tachiyomi: layoutWidth after horizontal insets
@@ -203,10 +214,14 @@ private fun ScaffoldLayout(
                 .coerceAtLeast(0.dp)
             val frameMarginPx = frameMargin.roundToPx()
 
-            // The kit's app bar keeps its own contents clear of a side dock and inside the frame while its container
-            // runs under them
+            // The kit's app bar keeps its own contents clear of the bars, cutout and side dock and inside the frame
+            // while its container runs under them
+            val topBarMargins = FrameMargins(
+                start = outerSides.start - outerSides.insetStart + frameMargin,
+                end = outerSides.end - outerSides.insetEnd + frameMargin,
+            )
             val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar) {
-                CompositionLocalProvider(LocalScreenFrameMargin provides frameMargin, content = topBar)
+                CompositionLocalProvider(LocalScreenFrameMargin provides topBarMargins, content = topBar)
             }.fastMap {
                 it.measure(looseConstraints)
             }
@@ -294,14 +309,18 @@ private fun ScaffoldLayout(
                     } else {
                         max(bottomBarHeightPx.toDp(), fabOffsetDp)
                     },
-                    start = insets.calculateStartPadding((this@SubcomposeLayout).layoutDirection) +
-                        dockClearance.start + frameMargin,
-                    end = insets.calculateEndPadding((this@SubcomposeLayout).layoutDirection) + frameMargin,
                 )
-                // The padding already clears the dock, so scaffolds nested in the content mustn't clear it again
+                val sides = ContentSides(
+                    start = roomStart + frameMargin,
+                    end = roomEnd + frameMargin,
+                    insetStart = insetStart,
+                    insetEnd = insetEnd,
+                    frameMargin = outerSides.frameMargin + frameMargin,
+                )
+                // The side room holds the dock's, so scaffolds nested in the content mustn't clear the dock again
                 CompositionLocalProvider(
                     LocalDockClearance provides DockClearance.None,
-                    LocalContentFrameMargin provides frameMargin,
+                    LocalContentSides provides sides,
                 ) {
                     content(innerPadding)
                 }

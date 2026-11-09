@@ -3,6 +3,7 @@ package app.katari.sync.client.preference
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.SettingsArea
 import dev.zacsweers.metro.Inject
@@ -47,6 +48,9 @@ class SyncPreferences(profileStore: ProfileStore) {
     /** Settings kept out of an area this device syncs. */
     val settingsOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_settings_off"))
 
+    /** Menus whose settings ([MenuSettings]) are kept out of an area this device syncs. */
+    val menusOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_menus_off"))
+
     /** Settings that stay on each device by default that this device syncs ([PreferenceScope.DEVICE_BY_DEFAULT]). */
     val settingsOn: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_settings_on"))
 
@@ -71,6 +75,7 @@ class SyncPreferences(profileStore: ProfileStore) {
             dataOff.changes(),
             areasOff.changes(),
             settingsOff.changes(),
+            menusOff.changes(),
             settingsOn.changes(),
             profilesOff.changes(),
             profilesAsking.changes(),
@@ -82,6 +87,7 @@ class SyncPreferences(profileStore: ProfileStore) {
         dataOff = dataOff.get().enumsOf(DataGroup.entries),
         areasOff = areasOff.get().enumsOf(SettingsArea.entries),
         settingsOff = settingsOff.get(),
+        menusOff = menusOff.get().enumsOf(MenuSettings.entries),
         settingsOn = settingsOn.get(),
         profilesOff = profilesOff.get() + profilesAsking.get(),
         askBeforeNewProfiles = askBeforeNewProfiles.get(),

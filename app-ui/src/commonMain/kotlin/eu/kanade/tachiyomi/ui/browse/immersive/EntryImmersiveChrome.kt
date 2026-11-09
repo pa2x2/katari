@@ -15,18 +15,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
-import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.FullscreenExit
-import app.katari.icons.materialsymbols.rounded.Info
-import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
-import app.katari.presentation.kit.button.IconButton
+import androidx.compose.ui.unit.Dp
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.content.Text
-import app.katari.presentation.kit.refresh.RefreshButton
+import app.katari.presentation.kit.layout.PanelBesideMedia
+import app.katari.presentation.kit.sheet.PopoverAnchor
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.surface.MediaScrim
 import app.katari.presentation.kit.surface.MediaScrimEdge
 import app.katari.presentation.kit.surface.OverlayPill
@@ -36,105 +35,105 @@ import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import app.katari.presentation.kit.window.stableNavigationBars
 import app.katari.presentation.kit.window.stableStatusBars
-import eu.kanade.presentation.entry.components.EntryActionIcons
-import eu.kanade.presentation.entry.entryTypePresentation
-import tachiyomi.domain.entry.model.Entry
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * The immersive view's controls over one title: the feed's pill at the top, and the title with its actions in a bar
+ * along the bottom, both shown while [visible]. Where the media, [mediaWidth] wide, leaves room beside it, the title
+ * and actions sit in a panel there instead, always shown. [titleSteps] are buttons to the previous and next title, at
+ * the media's end edge.
+ */
 @Composable
 internal fun ImmersiveOverlay(
     visible: Boolean,
-    entry: Entry,
-    chapterName: String?,
     contextLabel: String,
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
     onContextClick: (() -> Unit)?,
-    onExitImmersive: () -> Unit,
-    onEntryClick: () -> Unit,
-    onLibraryAction: () -> Unit,
-    showBackToTop: Boolean,
-    onBackToTop: () -> Unit,
-    onRefresh: () -> Unit,
-    refreshEnabled: Boolean,
-    onOpenChapter: (() -> Unit)?,
+    contextAnchor: PopoverAnchor?,
+    view: ImmersiveViewActions,
+    entry: ImmersiveEntryActions,
+    mediaWidth: Dp?,
     onBottomOverlaySize: (Int) -> Unit,
+    titleSteps: ImmersiveTitleSteps?,
 ) {
-    Box(Modifier.fillMaxSize()) {
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn() + slideInVertically { -it / 5 },
-            exit = fadeOut() + slideOutVertically { -it / 5 },
-            modifier = Modifier.align(Alignment.TopCenter),
-        ) {
-            MediaScrim(edge = MediaScrimEdge.Top, modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            start = KatariTheme.spacing.m,
-                            top = WindowInsets.stableStatusBars
-                                .asPaddingValues()
-                                .calculateTopPadding() + KatariTheme.spacing.m,
-                            end = KatariTheme.spacing.m,
-                            bottom = KatariTheme.spacing.xxl,
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ImmersiveContextPill(
-                        label = contextLabel,
-                        supportingLabel = contextSupportingLabel,
-                        leadingContent = contextLeadingContent,
-                        onClick = onContextClick,
-                        modifier = Modifier.weight(1f, fill = false),
-                    )
+    PanelBesideMedia(
+        mediaWidth = mediaWidth,
+        modifier = Modifier.fillMaxSize(),
+        panel = { ImmersiveSidePanel(view = view, entry = entry) },
+    ) { panelRoom ->
+        Box(Modifier.fillMaxSize()) {
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn() + slideInVertically { -it / 5 },
+                exit = fadeOut() + slideOutVertically { -it / 5 },
+                modifier = Modifier.align(Alignment.TopCenter),
+            ) {
+                MediaScrim(edge = MediaScrimEdge.Top, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = KatariTheme.spacing.m,
+                                top = WindowInsets.stableStatusBars
+                                    .asPaddingValues()
+                                    .calculateTopPadding() + KatariTheme.spacing.m,
+                                end = KatariTheme.spacing.m,
+                                bottom = KatariTheme.spacing.xxl,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        ImmersiveContextPill(
+                            label = contextLabel,
+                            supportingLabel = contextSupportingLabel,
+                            leadingContent = contextLeadingContent,
+                            onClick = onContextClick,
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .then(contextAnchor?.let { Modifier.popoverAnchor(it) } ?: Modifier),
+                        )
+                    }
                 }
             }
-        }
 
-        AnimatedVisibility(
-            visible = visible,
-            enter = fadeIn() + slideInVertically { it / 5 },
-            exit = fadeOut() + slideOutVertically { it / 5 },
-            modifier = Modifier.align(Alignment.BottomCenter),
-        ) {
-            MediaScrim(
-                edge = MediaScrimEdge.Bottom,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onSizeChanged { onBottomOverlaySize(it.height) },
-            ) {
-                ImmersiveBottomBar(
-                    entry = entry,
-                    chapterName = chapterName,
-                    onExitImmersive = onExitImmersive,
-                    onEntryClick = onEntryClick,
-                    onLibraryAction = onLibraryAction,
-                    showBackToTop = showBackToTop,
-                    onBackToTop = onBackToTop,
-                    onRefresh = onRefresh,
-                    refreshEnabled = refreshEnabled,
-                    onOpenChapter = onOpenChapter,
-                )
+            if (panelRoom == null) {
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn() + slideInVertically { it / 5 },
+                    exit = fadeOut() + slideOutVertically { it / 5 },
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                ) {
+                    MediaScrim(
+                        edge = MediaScrimEdge.Bottom,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onSizeChanged { onBottomOverlaySize(it.height) },
+                    ) {
+                        ImmersiveBottomBar(view = view, entry = entry)
+                    }
+                }
+            } else {
+                // The media's own controls, such as a page slider, go to the bottom edge with no bar over them
+                LaunchedEffect(Unit) { onBottomOverlaySize(0) }
+            }
+
+            if (titleSteps != null) {
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = (panelRoom ?: KatariTheme.sizes.none) + KatariTheme.spacing.m),
+                ) {
+                    ImmersiveTitleStepButtons(titleSteps)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ImmersiveBottomBar(
-    entry: Entry,
-    chapterName: String?,
-    onExitImmersive: () -> Unit,
-    onEntryClick: () -> Unit,
-    onLibraryAction: () -> Unit,
-    showBackToTop: Boolean,
-    onBackToTop: () -> Unit,
-    onRefresh: () -> Unit,
-    refreshEnabled: Boolean,
-    onOpenChapter: (() -> Unit)?,
-) {
+private fun ImmersiveBottomBar(view: ImmersiveViewActions, entry: ImmersiveEntryActions) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -154,13 +153,13 @@ private fun ImmersiveBottomBar(
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
         ) {
             Text(
-                text = entry.displayTitle,
+                text = entry.entry.displayTitle,
                 role = TextRole.SectionTitle,
                 tone = ContentTone.OnMedia,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            chapterName?.let {
+            entry.chapterName?.let {
                 Text(
                     text = it,
                     role = TextRole.Supporting,
@@ -174,38 +173,8 @@ private fun ImmersiveBottomBar(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RefreshButton(onClick = onRefresh, enabled = refreshEnabled)
-            if (showBackToTop) {
-                ImmersiveActionButton(
-                    label = stringResource(MR.strings.action_move_to_top),
-                    icon = MaterialSymbols.Rounded.KeyboardArrowUp,
-                    onClick = onBackToTop,
-                )
-            }
-            ImmersiveActionButton(
-                label = stringResource(MR.strings.browse_exit_immersive),
-                icon = MaterialSymbols.Rounded.FullscreenExit,
-                onClick = onExitImmersive,
-            )
-            ImmersiveActionButton(
-                label = stringResource(
-                    if (entry.favorite) MR.strings.remove_from_library else MR.strings.add_to_library,
-                ),
-                icon = EntryActionIcons.library(entry.favorite),
-                onClick = onLibraryAction,
-            )
-            ImmersiveActionButton(
-                label = stringResource(MR.strings.action_details),
-                icon = MaterialSymbols.Rounded.Info,
-                onClick = onEntryClick,
-            )
-            val presentation = entry.type.entryTypePresentation()
-            ImmersiveActionButton(
-                label = stringResource(presentation.immersiveOpenLabel),
-                icon = presentation.immersiveOpenIcon,
-                onClick = { onOpenChapter?.invoke() },
-                enabled = onOpenChapter != null,
-            )
+            ImmersiveViewActionButtons(view)
+            ImmersiveEntryActionButtons(entry)
         }
     }
 }
@@ -244,16 +213,5 @@ private fun ImmersiveContextPill(
             }
         }
     }
-    OverlayPill(modifier = modifier, style = OverlayStyle.Scrim, onClick = onClick, content = content)
-}
-
-// The bottom scrim already gives these buttons their contrast, so they are bare icons in the media content colour.
-@Composable
-private fun ImmersiveActionButton(
-    label: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-) {
-    IconButton(icon = icon, contentDescription = label, onClick = onClick, enabled = enabled)
+    OverlayPill(modifier = modifier.mediaControl(), style = OverlayStyle.Scrim, onClick = onClick, content = content)
 }

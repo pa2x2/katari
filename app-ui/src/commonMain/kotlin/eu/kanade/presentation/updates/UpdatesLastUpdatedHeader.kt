@@ -13,6 +13,8 @@ import app.katari.presentation.kit.content.TonedText
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdate
+import eu.kanade.presentation.library.update.libraryUpdateTimeOn
 import eu.kanade.presentation.util.relativeTimeSpanString
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -21,6 +23,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun LazyListScope.updatesLastUpdatedItem(
     lastUpdated: Long,
     failed: Int,
+    otherDevice: OtherDeviceLibraryUpdate?,
     pausedSources: List<String>,
     onClick: (() -> Unit)?,
 ) {
@@ -28,6 +31,7 @@ internal fun LazyListScope.updatesLastUpdatedItem(
         UpdatesLastUpdatedHeader(
             lastUpdated = lastUpdated,
             failed = failed,
+            otherDevice = otherDevice,
             pausedSources = pausedSources,
             onClick = onClick,
             modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
@@ -36,7 +40,10 @@ internal fun LazyListScope.updatesLastUpdatedItem(
 }
 
 /**
+ * @param lastUpdated when this device last updated the library.
  * @param failed entries the latest update failed to check, named so a failure is noticed without opening the report.
+ * @param otherDevice another device's update of the whole library that started after [lastUpdated], named in place of
+ * [lastUpdated] and [failed].
  * @param pausedSources the sources library updates leave out, named so a pause isn't forgotten.
  * @param onClick opens the latest update's report; null while there is none.
  */
@@ -44,10 +51,17 @@ internal fun LazyListScope.updatesLastUpdatedItem(
 internal fun UpdatesLastUpdatedHeader(
     lastUpdated: Long,
     failed: Int,
+    otherDevice: OtherDeviceLibraryUpdate?,
     pausedSources: List<String>,
     onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
+    val updatedAt = if (otherDevice != null) {
+        libraryUpdateTimeOn(relativeTimeSpanString(otherDevice.summary.run.startedAt), otherDevice.deviceName)
+    } else {
+        relativeTimeSpanString(lastUpdated)
+    }
+    val latestFailed = otherDevice?.summary?.failed ?: failed
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -56,12 +70,12 @@ internal fun UpdatesLastUpdatedHeader(
     ) {
         TonedText(
             spans = listOfNotNull(
-                TonedSpan(stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated))),
+                TonedSpan(stringResource(MR.strings.updates_last_update_info, updatedAt)),
                 TonedSpan(
-                    text = pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
+                    text = pluralStringResource(MR.plurals.library_updates_failed, latestFailed, latestFailed),
                     tone = ContentTone.Error,
                     keepWhole = true,
-                ).takeIf { failed > 0 },
+                ).takeIf { latestFailed > 0 },
             ),
             role = TextRole.Supporting,
             separator = " · ",

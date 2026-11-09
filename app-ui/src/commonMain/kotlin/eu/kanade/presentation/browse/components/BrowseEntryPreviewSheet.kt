@@ -32,6 +32,7 @@ import app.katari.entry.interactions.navigation.EntryOpenOptions
 import app.katari.entry.interactions.navigation.EntryOpenResult
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.sheet.Sheet
@@ -98,6 +99,7 @@ fun BrowseEntryPreviewSheet(
     }
 
     Sheet(
+        short = true,
         onDismissRequest = onDismissRequest,
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -191,28 +193,29 @@ private fun BrowseEntryPreviewDialogContent(
             )
         },
     ) { contentPadding ->
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .systemBarsPadding()
-                .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
-        ) {
-            PreviewContent(
-                state = displayedPreviewState,
-                size = previewSize,
-                onRetry = onRetry,
-                onPageLoad = onPageLoad,
-                onPageClick = onPageClick,
+        FramedContent(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+            BoxWithConstraints(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = maxHeight)
-                    .verticalScroll(rememberScrollState()),
-                centerStates = true,
-                loadingContent = {
-                    PreviewLoadingContent()
-                },
-            )
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+            ) {
+                PreviewContent(
+                    state = displayedPreviewState,
+                    size = previewSize,
+                    onRetry = onRetry,
+                    onPageLoad = onPageLoad,
+                    onPageClick = onPageClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = maxHeight)
+                        .verticalScroll(rememberScrollState()),
+                    centerStates = true,
+                    loadingContent = {
+                        PreviewLoadingContent()
+                    },
+                )
+            }
         }
     }
 }

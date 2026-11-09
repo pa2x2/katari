@@ -29,9 +29,11 @@ import androidx.compose.ui.window.DialogProperties
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.ProvideTextRole
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.list.LocalInDialog
 import app.katari.presentation.kit.list.LocalRowGroupFramed
 import app.katari.presentation.kit.list.LocalRowInset
+import app.katari.presentation.kit.sheet.LocalSheetColumns
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.Surface
 import app.katari.presentation.kit.surface.SurfaceContainer
@@ -80,16 +82,18 @@ fun Dialog(
 ) {
     val half = rememberFoldHalf()
     val panel: @Composable () -> Unit = {
-        KeyboardShortcutLayer {
-            DialogPanel(
-                title = title,
-                confirm = confirm,
-                dismiss = dismiss,
-                neutral = neutral,
-                icon = icon,
-                titleAction = titleAction,
-                content = content,
-            )
+        ApartFromScreen {
+            KeyboardShortcutLayer {
+                DialogPanel(
+                    title = title,
+                    confirm = confirm,
+                    dismiss = dismiss,
+                    neutral = neutral,
+                    icon = icon,
+                    titleAction = titleAction,
+                    content = content,
+                )
+            }
         }
     }
     if (half == null) {
@@ -170,6 +174,7 @@ private fun DialogPanel(
                         LocalRowGroupFramed provides false,
                         LocalInDialog provides true,
                         LocalDialogConfirm provides confirm,
+                        LocalSheetColumns provides 1,
                     ) {
                         ProvideTextRole(TextRole.Body, content)
                     }

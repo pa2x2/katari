@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -19,8 +17,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -35,7 +31,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
@@ -46,6 +41,7 @@ import app.katari.entry.interactions.child.EntryChildProgressLabel
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.entry.interactions.translate.EntryTranslateStatus
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedScrollColumn
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.layout.TwoPanes
@@ -56,6 +52,7 @@ import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.selection.ItemSelection
 import app.katari.presentation.kit.selection.SelectableItems
 import app.katari.presentation.kit.selection.SelectionActions
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.sync.ui.entry.EntrySync
 import app.katari.sync.ui.question.EntryQuestionBanner
@@ -97,6 +94,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
 import kotlin.time.Instant
 
 @Composable
@@ -137,6 +135,7 @@ fun EntryScreen(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -225,6 +224,7 @@ fun EntryScreen(
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
+            updatesAnchor = updatesAnchor,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -285,6 +285,7 @@ fun EntryScreen(
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
+            updatesAnchor = updatesAnchor,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -355,6 +356,7 @@ private fun EntryScreenSmallImpl(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -506,16 +508,11 @@ private fun EntryScreenSmallImpl(
             enabled = !isAnySelected,
             indicatorPadding = PaddingValues(top = topPadding),
         ) {
-            val layoutDirection = LocalLayoutDirection.current
             SelectableItems(selection = chapterSelection, actions = selectionActions) {
                 RowList(
                     modifier = Modifier.fillMaxHeight(),
                     state = chapterListState,
-                    contentPadding = PaddingValues(
-                        start = contentPadding.calculateStartPadding(layoutDirection),
-                        end = contentPadding.calculateEndPadding(layoutDirection),
-                        bottom = contentPadding.calculateBottomPadding(),
-                    ),
+                    contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
                     fastScroll = true,
                     fastScrollTopPadding = topPadding,
                 ) {
@@ -573,6 +570,7 @@ private fun EntryScreenSmallImpl(
                                 onWebViewLongClicked = onWebViewLongClicked,
                                 onDuplicatesClicked = onDuplicatesClicked,
                                 onUpdatesClicked = onUpdatesClicked,
+                                updatesAnchor = updatesAnchor,
                                 onEditCategory = onEditCategoryClicked,
                             )
                             activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
@@ -705,6 +703,7 @@ fun EntryScreenLargeImpl(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -739,7 +738,6 @@ fun EntryScreenLargeImpl(
     onPreviewPageClick: ((Long, Int) -> Unit)?,
     onOlderChaptersRetry: () -> Unit,
 ) {
-    val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
 
     val (chapters, listItem, isAnySelected) = remember(state) {
@@ -848,28 +846,18 @@ fun EntryScreenLargeImpl(
             refreshing = state.isRefreshingData,
             onRefresh = onRefresh,
             enabled = !isAnySelected,
-            indicatorPadding = PaddingValues(
-                start = insetPadding.calculateStartPadding(layoutDirection),
-                top = with(density) { topBarHeight.toDp() },
-                end = insetPadding.calculateEndPadding(layoutDirection),
-            ),
+            indicatorPadding = insetPadding + PaddingValues(top = with(density) { topBarHeight.toDp() }),
         ) {
-            val startPadding = contentPadding.calculateStartPadding(layoutDirection)
             TwoPanes(
-                modifier = Modifier.padding(end = contentPadding.calculateEndPadding(layoutDirection)),
-                contentPadding = PaddingValues(start = startPadding),
-                start = { panePadding ->
-                    val paneStart = panePadding.calculateStartPadding(layoutDirection)
-                    // Inset inside the scroll, whose bounds clip, so the backdrop can still reach the window's edge
-                    Column(
-                        modifier = Modifier
-                            .verticalScroll(rememberScrollState())
-                            .padding(start = paneStart, bottom = contentPadding.calculateBottomPadding()),
+                start = {
+                    // The backdrop bleeds into the pane's side room, so it can still reach the window's edge
+                    FramedScrollColumn(
+                        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
                     ) {
                         EntryInfoBox(
                             coverAbove = !currentWindowLayout().isShort,
                             appBarPadding = contentPadding.calculateTopPadding(),
-                            backdropBleed = PaddingValues(start = paneStart),
+                            backdropBleed = columnInset,
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,
@@ -900,6 +888,7 @@ fun EntryScreenLargeImpl(
                             onWebViewLongClicked = onWebViewLongClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
                             onUpdatesClicked = onUpdatesClicked,
+                            updatesAnchor = updatesAnchor,
                             onEditCategory = onEditCategoryClicked,
                             wrap = true,
                         )

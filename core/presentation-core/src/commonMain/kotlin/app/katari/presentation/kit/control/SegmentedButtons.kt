@@ -63,6 +63,40 @@ fun <T> SegmentedButtons(
     }
 }
 
+/**
+ * A row of mutually exclusive options drawn like [SegmentedButtons] but shown by their [icon] alone, for a control that
+ * sits beside the value it qualifies in a narrow row, such as a sort's direction arrows beside the sort. [description]
+ * names each option for assistive tools.
+ */
+@Composable
+fun <T> SegmentedIconButtons(
+    options: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    icon: (T) -> ImageVector,
+    description: @Composable (T) -> String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    ConnectedRow(modifier) {
+        options.forEachIndexed { index, option ->
+            val spoken = description(option)
+            ConnectedToggle(
+                checked = option == selected,
+                onCheckedChange = { onSelect(option) },
+                index = index,
+                count = options.size,
+                label = null,
+                icon = icon(option),
+                enabled = enabled,
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { contentDescription = spoken },
+            )
+        }
+    }
+}
+
 /** A row of options that can each be on or off, drawn like [SegmentedButtons]. */
 @Composable
 fun <T> MultiSegmentedButtons(

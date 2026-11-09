@@ -7,7 +7,6 @@ import app.katari.entry.interactions.child.EntryChildListRequest
 import app.katari.entry.interactions.child.EntryChildProgressLabel
 import app.katari.entry.interactions.child.EntryChildProgressRequest
 import app.katari.entry.interactions.media.EntryImmersiveHandle
-import app.katari.entry.interactions.media.EntryImmersiveProgress
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.entry.interactions.media.EntryPreviewConfig
 import app.katari.entry.interactions.media.EntryPreviewHandle
@@ -27,7 +26,9 @@ enum class EntryImmersiveLoadMode {
 @PlatformFacility
 interface EntryImmersiveProcessor {
     val loadMode: EntryImmersiveLoadMode
-    val preloadRadius: Int
+
+    /** How many titles after the shown one the feed loads and opens, so moving on starts them at once. */
+    val preloadAhead: Int
 
     suspend fun load(
         context: PlatformContext,
@@ -37,8 +38,6 @@ interface EntryImmersiveProcessor {
     ): EntryImmersiveHandle
 
     fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer
-
-    suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress)
 
     fun release(handle: EntryImmersiveHandle)
 }

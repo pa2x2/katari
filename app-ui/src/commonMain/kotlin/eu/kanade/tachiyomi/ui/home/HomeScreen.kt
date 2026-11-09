@@ -89,7 +89,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
             val selectedTab = tabNavigator.current.toHomeScreenTab()
             val onNavigationClick: (HomeScreenTabs) -> Unit = { tab ->
                 when (tab) {
-                    HomeScreenTabs.Profiles -> profileSwitcher?.open()
+                    HomeScreenTabs.Profiles -> profileSwitcher?.let { it.open(it.dockAnchor) }
 
                     HomeScreenTabs.Statistics -> navigator.push(StatsScreen())
                     else -> {
@@ -216,7 +216,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                         if (it == Tab.Profiles) {
                             val switcher = profileSwitcher
                             if (switcher != null) {
-                                switcher.open()
+                                switcher.open(switcher.dockAnchor)
                             } else {
                                 goToFallbackTab()
                             }

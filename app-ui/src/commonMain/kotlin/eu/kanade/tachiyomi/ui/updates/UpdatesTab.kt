@@ -13,6 +13,7 @@ import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.ui.di.LocalAppUiGraph
 import app.katari.upcoming.UpcomingScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -83,11 +84,13 @@ data object UpdatesTab : Tab {
         val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
 
         val latestUpdateSummary by viewModel.latestUpdateSummary.collectAsStateWithLifecycle()
+        val otherDeviceUpdate by viewModel.otherDeviceUpdate.collectAsStateWithLifecycle()
         val pausedSourceNames by viewModel.pausedSourceNames.collectAsStateWithLifecycle()
         // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
         val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
 
-        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
+        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }
+            .takeIf { latestUpdateSummary != null || otherDeviceUpdate != null }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -163,21 +166,24 @@ data object UpdatesTab : Tab {
             },
             emptyContent = { modifier ->
                 // An update that found nothing still says when it ran and what it couldn't check
-                Column(modifier = modifier.fillMaxSize()) {
-                    UpdatesLastUpdatedHeader(
-                        lastUpdated = viewModel.lastUpdated,
-                        failed = latestUpdateSummary?.failed ?: 0,
-                        pausedSources = pausedSourceNames,
-                        onClick = openUpdateReport,
-                    )
-                    if (feed.hiddenByFilters > 0) {
-                        UpdatesFilteredEmptyScreen(
-                            summary = filterSummary,
-                            onClearFilters = settingsViewModel::clearFilters,
-                            modifier = Modifier.weight(1f),
+                FramedContent(modifier = modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        UpdatesLastUpdatedHeader(
+                            lastUpdated = viewModel.lastUpdated,
+                            failed = latestUpdateSummary?.failed ?: 0,
+                            otherDevice = otherDeviceUpdate,
+                            pausedSources = pausedSourceNames,
+                            onClick = openUpdateReport,
                         )
-                    } else {
-                        EmptyScreen(stringRes = MR.strings.information_no_recent, modifier = Modifier.weight(1f))
+                        if (feed.hiddenByFilters > 0) {
+                            UpdatesFilteredEmptyScreen(
+                                summary = filterSummary,
+                                onClearFilters = settingsViewModel::clearFilters,
+                                modifier = Modifier.weight(1f),
+                            )
+                        } else {
+                            EmptyScreen(stringRes = MR.strings.information_no_recent, modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             },
@@ -185,6 +191,7 @@ data object UpdatesTab : Tab {
             updatesLastUpdatedItem(
                 lastUpdated = viewModel.lastUpdated,
                 failed = latestUpdateSummary?.failed ?: 0,
+                otherDevice = otherDeviceUpdate,
                 pausedSources = pausedSourceNames,
                 onClick = openUpdateReport,
             )

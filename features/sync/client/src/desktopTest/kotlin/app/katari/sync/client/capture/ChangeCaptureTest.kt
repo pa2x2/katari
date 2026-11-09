@@ -14,6 +14,7 @@ import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
+import tachiyomi.data.library.update.LibraryUpdateReportRepositoryImpl
 import tachiyomi.domain.category.model.NewCategory
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
@@ -21,6 +22,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
+import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import java.io.File
 import java.util.Date
 
@@ -117,6 +119,11 @@ class ChangeCaptureTest {
             }
             expect("statistics reset", "statistics.epoch") {
                 db.activityQueries.resetStatisticsEpoch(1, 300)
+            }
+            expect("library update started and finished", "library.update", "library.update") {
+                val reports = LibraryUpdateReportRepositoryImpl(device.handler, device.defaultProfile)
+                reports.startRun(1, startedAt = 100, trigger = LibraryUpdateTrigger.AUTOMATIC, librarySize = 2)
+                reports.finishRun(1, startedAt = 100, finishedAt = 200)
             }
             expect("category", "category") { categories.insert(NewCategory("Watching", 0)) }
             expect("category membership", "category.membership") {

@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -67,10 +68,8 @@ fun StatisticsEarlierActivityScreenContent(
                 }
             }
             RowList(
-                contentPadding = PaddingValues(
-                    top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
-                    bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
-                ),
+                contentPadding = paddingValues +
+                    PaddingValues(top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.xl),
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
             ) {
                 item {

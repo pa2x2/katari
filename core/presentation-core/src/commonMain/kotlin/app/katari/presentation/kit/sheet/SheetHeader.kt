@@ -20,7 +20,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * A sheet's title row, with optional [actions] such as a guide button and an overflow [menu] at its end. A page opened
+ * A sheet's title row, with optional [actions] such as a guide button and an overflow [menu] at its end, and in a side
+ * sheet a close button after them. A page opened
  * inside the sheet passes [onBack], which leads the row with a back button. [subtitle] sums up the page under the
  * title, such as how many of its items are selected.
  */
@@ -59,5 +60,6 @@ fun SheetHeader(
         }
         actions?.invoke(this)
         menu?.let { OverflowMenu(content = it) }
+        SheetCloseButton()
     }
 }

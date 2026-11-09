@@ -67,10 +67,12 @@ class SettingsLibraryUpdatesScreen : SearchableSettings() {
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.library_updates_last_update),
-                subtitle = state.lastRun?.let { libraryUpdateRunSummaryText(it) }
+                subtitle = state.otherDeviceRun?.let { libraryUpdateRunSummaryText(it) }
+                    ?: state.lastRun?.let { libraryUpdateRunSummaryText(it) }
                     ?: stringResource(MR.strings.library_updates_last_update_none),
                 isProfileSpecific = true,
-                onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { state.lastRun != null },
+                onClick = { navigator.push(LibraryUpdateReportScreen()) }
+                    .takeIf { state.lastRun != null || state.otherDeviceRun != null },
             ),
             Preference.PreferenceItem.CustomPreference(
                 title = stringResource(MR.strings.library_updates_next_automatic),

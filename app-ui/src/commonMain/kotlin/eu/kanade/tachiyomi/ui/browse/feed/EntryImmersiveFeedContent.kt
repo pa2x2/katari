@@ -23,6 +23,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.surface.Pill
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.window.stableStatusBars
@@ -50,6 +51,7 @@ internal fun EntryImmersiveFeedContent(
     activeSource: Source,
     feedLabel: FeedLabel,
     onShowFeedPicker: () -> Unit,
+    feedPickerAnchor: PopoverAnchor,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
@@ -121,6 +123,7 @@ internal fun EntryImmersiveFeedContent(
             LocalAppUiGraph.current.sourceRows.Icon(source = activeSource, size = LogoSize.Inline, modifier = Modifier)
         },
         onContextClick = onShowFeedPicker,
+        contextAnchor = feedPickerAnchor,
         onExitImmersive = onExitImmersive,
         onEntryClick = onEntryClick,
         onLibraryAction = onLibraryAction,

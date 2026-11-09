@@ -137,7 +137,7 @@ private fun Controls(scene: VideoPlayerPictureInPictureScene, onReturn: () -> Un
                 label = stringResource(if (snapshot.isPlaying) MR.strings.action_pause else MR.strings.action_play),
                 shortcut = VideoPlayerShortcuts.PlayPause,
                 size = IconButtonSize.Large,
-                onClick = input::togglePlayback,
+                onClick = { input.togglePlayback(showControls = true) },
             )
             ControlButton(
                 icon = seekForwardIcon(seekStep),

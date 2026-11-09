@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.LocalContentSides
+import app.katari.presentation.kit.layout.sidesPadding
 import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.theme.ContentTone
@@ -35,15 +37,17 @@ fun LoadingScreen(
     action: (@Composable () -> Unit)? = null,
 ) {
     val indicatorTone = if (onMedia) ContentTone.OnMedia else ContentTone.Primary
+    // Centred in the screen's frame, as the content it stands for will be
+    val framed = modifier.sidesPadding(LocalContentSides.current)
     if (message == null && progress == null && action == null) {
         // Also laid out where the height is unbounded, such as inside a dialog, which the weighted column can't be.
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = framed.fillMaxSize(), contentAlignment = Alignment.Center) {
             LoadingIndicator(tone = indicatorTone)
         }
         return
     }
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = framed.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Equal weights above and below keep the indicator centred however tall the status under it grows.

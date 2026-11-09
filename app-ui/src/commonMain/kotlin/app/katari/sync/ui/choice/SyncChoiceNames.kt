@@ -21,6 +21,7 @@ import app.katari.icons.materialsymbols.rounded.Tune
 import app.katari.icons.materialsymbols.rounded.Update
 import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.setting.scope.DeviceBound
+import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.SettingsArea
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
@@ -94,6 +95,24 @@ internal val SettingsArea.icon: ImageVector
         SettingsArea.EXTENSION_SETTINGS -> MaterialSymbols.Rounded.Extension
         SettingsArea.STATISTICS -> MaterialSymbols.Rounded.QueryStats
     }
+
+@Composable
+internal fun MenuSettings.title(): String = stringResource(
+    when (this) {
+        MenuSettings.LIBRARY_SORT -> MR.strings.sync_menu_library_sort
+        MenuSettings.LIBRARY_FILTERS -> MR.strings.sync_menu_library_filters
+        MenuSettings.CHAPTER_LIST_DEFAULTS -> MR.strings.sync_menu_chapter_list_defaults
+    },
+)
+
+/** Where a menu's settings are changed, as no Settings screen shows them. */
+@Composable
+internal fun MenuSettings.place(): String = stringResource(
+    when (this) {
+        MenuSettings.LIBRARY_SORT, MenuSettings.LIBRARY_FILTERS -> MR.strings.sync_menu_place_library
+        MenuSettings.CHAPTER_LIST_DEFAULTS -> MR.strings.sync_menu_place_chapter_list
+    },
+)
 
 /** Why a setting only works on the device it was made on. */
 @Composable

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.feedback.HoverTooltip
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.surface.OverlayPill
@@ -30,7 +31,7 @@ internal fun VideoPlayerTransportButton(
 ) {
     HoverTooltip(label, shortcut = shortcut) {
         OverlayPill(
-            modifier = modifier.videoPlayerControl(),
+            modifier = modifier.mediaControl(),
             style = OverlayStyle.Scrim,
             onClick = onClick,
             enabled = enabled,

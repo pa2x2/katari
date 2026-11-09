@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.navigation.MediaToolbarPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
@@ -40,6 +41,6 @@ internal fun VideoPlayerPositionButton(
                 MR.strings.anime_playback_show_remaining_time
             },
         ),
-        modifier = modifier.videoPlayerControl(),
+        modifier = modifier.mediaControl(),
     )
 }

@@ -3,11 +3,8 @@ package app.katari.presentation.kit.layout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,27 +39,27 @@ import app.katari.presentation.kit.window.currentWindowLayout
  * ([startPaneWidth]), and the end pane, a column of rows such as chapters or a settings page, takes the rest up to a
  * [RowList]'s width. Panes that don't fill the room sit centred in it, as the `ScreenFrame.ListDetail` frame does.
  *
- * Where the panes reach the window's edges, [contentPadding]'s start and the side dock are inside the start pane and
- * its end inside the end pane, and each pane gets the padding of its own side to keep clear of, so a backdrop in the
- * start pane can run under the dock. Panes centred in a wider window, or in a screen frame narrower than the window,
- * start where the content does and get no padding: the margins beside them stay empty.
+ * Where the panes reach the window's edges, the screen's side room and the side dock are inside the start pane and
+ * the room on the end inside the end pane, and each pane keeps clear of its own side's room the way a screen does:
+ * the kit's layouts in it apply the room, so a backdrop in the start pane can run under the dock. Panes centred in a
+ * wider window, or in a screen frame narrower than the window, start where the content does and have no room to keep
+ * clear of: the margins beside them stay empty.
  */
 @Composable
 fun TwoPanes(
-    start: @Composable BoxScope.(padding: PaddingValues) -> Unit,
-    end: @Composable BoxScope.(padding: PaddingValues) -> Unit,
+    start: @Composable BoxScope.() -> Unit,
+    end: @Composable BoxScope.() -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val direction = LocalLayoutDirection.current
     val density = LocalDensity.current
     val window = currentWindowLayout()
     val dockClearance = LocalDockClearance.current
-    val contentStart = contentPadding.calculateStartPadding(direction)
-    val startPadding = contentStart + dockClearance.start
-    val endPadding = contentPadding.calculateEndPadding(direction)
+    val sides = LocalContentSides.current
+    val startPadding = sides.start + dockClearance.start
+    val endPadding = sides.end
     val fold = window.fold?.takeIf { it.isVertical }
-    val frameMargin = LocalContentFrameMargin.current
+    val frameMargin = sides.frameMargin
     // Where the panes start in the window, to find the fold within them
     var left by remember { mutableStateOf<Dp?>(null) }
     BoxWithConstraints(
@@ -94,6 +91,11 @@ fun TwoPanes(
         // Each pane keeps clear of the insets on its own side only, such as a camera cutout beside the start pane
         CompositionLocalProvider(
             LocalDockClearance provides if (atEdges) dockClearance else dockClearance.copy(start = 0.dp),
+            LocalContentSides provides if (atEdges) {
+                ContentSides(start = sides.start, insetStart = sides.insetStart)
+            } else {
+                ContentSides.None
+            },
         ) {
             Box(
                 modifier = Modifier
@@ -102,11 +104,17 @@ fun TwoPanes(
                     .width(panes.start - startPadding + startInside)
                     .consumeWindowInsets(PaneInsets.only(WindowInsetsSides.End)),
             ) {
-                // The dock's room isn't part of the padding: the pane keeps clear of the dock itself
-                start(PaddingValues(start = if (atEdges) contentStart else 0.dp))
+                start()
             }
         }
-        CompositionLocalProvider(LocalDockClearance provides dockClearance.copy(start = 0.dp)) {
+        CompositionLocalProvider(
+            LocalDockClearance provides dockClearance.copy(start = 0.dp),
+            LocalContentSides provides if (atEdges) {
+                ContentSides(end = sides.end, insetEnd = sides.insetEnd)
+            } else {
+                ContentSides.None
+            },
+        ) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -114,7 +122,7 @@ fun TwoPanes(
                     .width(panes.end - endPadding + endInside)
                     .consumeWindowInsets(PaneInsets.only(WindowInsetsSides.Start)),
             ) {
-                end(PaddingValues(end = endInside))
+                end()
             }
         }
     }

@@ -1,5 +1,6 @@
 package app.katari.presentation.kit.layout
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -9,7 +10,7 @@ import app.katari.presentation.kit.window.WindowWidth
 
 /**
  * How wide a screen's content may grow, chosen by what the screen shows. The kit `Scaffold` centres a frame of at most
- * that width in the room beside the dock. The app bar, the content padding it hands the screen and the main action
+ * that width in the room beside the dock. The app bar, the kit layouts that hold the screen's content and the main action
  * all line up with the frame, so the title, tabs and list share one edge however wide the window is. A wider window
  * gives a screen more columns or panes, not longer rows.
  */
@@ -53,16 +54,14 @@ internal fun startPaneWidth(width: WindowWidth, available: Dp): Dp = when (width
 }
 
 /**
- * How far the app bar's contents sit in from each side of the room the screen's frame is centred in. The `Scaffold`
- * provides it to its top bar only, so a sheet or dialog opened from the content never inherits it.
+ * How far the app bar's contents sit in from each side, beyond the system bars, cutout and dock: the margins that
+ * centre the screen's frame, and the room of a screen around a `Scaffold` nested in it that it hasn't applied. The
+ * `Scaffold` provides it to its top bar only, so a sheet or dialog opened from the content never inherits it.
  */
-internal val LocalScreenFrameMargin = staticCompositionLocalOf { 0.dp }
+@Immutable
+internal data class FrameMargins(val start: Dp = 0.dp, val end: Dp = 0.dp)
 
-/**
- * The same margins for the `Scaffold`'s content, which already has them in its padding. [TwoPanes] reads them to know
- * its panes don't reach the window's edges, so a pane's backdrop stays out of the margins.
- */
-internal val LocalContentFrameMargin = staticCompositionLocalOf { 0.dp }
+internal val LocalScreenFrameMargin = staticCompositionLocalOf { FrameMargins() }
 
 // Material's Extra-large window class starts here: past it a wider frame would only spread the content apart
 private val WideFrameMaxWidth = 1600.dp

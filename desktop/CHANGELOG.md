@@ -1,5 +1,37 @@
 # Desktop Changelog
 
+## [1.0.0-beta.7] - 2026-11-09
+
+### ✨ Added
+
+- The immersive feed goes full screen with F or a bar button.
+- Clips in the immersive feed play at the player's volume, which Shift+↑/↓ and a slider on the sound button change.
+- The desktop's media controls and keys play and pause the shown clip in the immersive feed.
+
+### 🔄 Changed
+
+- The immersive feed no longer saves progress or adds to History.
+- Space and K play or pause in the player without bringing up hidden controls.
+
+### 🧩 Improved
+
+- The immersive feed fills the window, its controls show and hide with the mouse as the player's do, a click plays or pauses a clip, and buttons step to the previous or next title.
+- Tall media in the immersive feed has the title and its actions in a panel beside it.
+- Long-strip chapters in the immersive feed read down a column that the wheel scrolls.
+- The immersive feed shows a loading title's cover and name, loads the next two titles ahead, and offers Next title when media fails to load.
+- Enter, D and S work the shown title's actions in the immersive feed, and clip timelines always show the time played.
+- Sheets open at the side of the window you pressed and each has a close button, and short choices such as the profile switcher open beside their button.
+- In large windows, side sheets lay out their rows in two columns.
+- Extension filter pills open the filter, and the filter can search languages.
+- The player's skip button stays readable over dark credits.
+
+### 🐛 Fixed
+
+- Tab in an open sheet, dialog or reader panel now reaches its controls.
+- Settings pages opened from another page in two-pane Settings now have a back button.
+- Statistics lists no longer run under the side dock.
+- The last card on a Settings page no longer touches the bottom of the window.
+
 ## [1.0.0-beta.6] - 2026-11-09
 
 ### ✨ Added
@@ -194,7 +226,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.6...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.7...HEAD
+[1.0.0-beta.7]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.5
 [1.0.0-beta.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.4

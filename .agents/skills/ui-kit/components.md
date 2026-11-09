@@ -92,7 +92,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Figures laid out in columns inside a card | `FigureGrid` | |
 | A figure, such as a QR code, with the words that go with it, centred | `FigureWithText` | The words go under the figure, or beside it in a short window |
 | Facts on tiles of their own, such as an extension's version and language | `InfoTileRow`, `InfoTile` | |
-| A small rounded label for a value | `Pill` | |
+| A small rounded label for a value | `Pill` | With `onClick` it opens what sets the value, such as a list's filter summary opening the filter |
 | A status as a toned label, such as an engine's readiness | `StatusPill` | |
 | A plain fill with no shape, such as a full-screen background | `Surface`, `Modifier.background` | Not for cards, banners or pills: those are named components |
 | Content in a container's colours without its fill | `ContentOn` | |
@@ -121,6 +121,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | Mutually exclusive options as one connected row of equal buttons | `SegmentedButtons` | |
+| The same, shown by icons alone beside the value they qualify in a narrow row, such as a sort's direction arrows | `SegmentedIconButtons` | |
 | Options that can each be on or off, drawn as segments | `MultiSegmentedButtons` | |
 | A scrolling row of connected toggle buttons, such as content types | `ConnectedToggleRow` | |
 | A few connected options inline with other controls | `ConnectedToggleGroup` | |
@@ -151,8 +152,10 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
-| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet in wide windows; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
+| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet from medium windows on, at the side the press that opened it landed on, with two columns of rows in large windows (`short` keeps a few choices or a paragraph to one centred column); a side sheet's header ends with a close button, so give every sheet a `SheetHeader`; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
 | A sheet of settings split into tabs | `TabbedSheet` | |
+| A sheet's list in two parts, such as a filter's options beside its long list of languages | `SheetSplitList` | Side by side in a large window's two-column sheet, one list otherwise |
+| A short choice opened from a button, such as the profile switcher or an entry's update choices | `Popover`, `rememberPopoverAnchor` | Beside its button from medium windows on, nothing dimmed; the button marks itself with `Modifier.popoverAnchor`. A sheet in compact windows or when the button isn't on screen |
 | A sheet that explains one item, such as an engine or a library | `DetailsSheet`, `DetailsSection` | |
 | What a source says about one chapter or episode | `ChapterSheet` | |
 | A dialog | `Dialog`, `DialogActions` | |
@@ -232,7 +235,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
 | A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
 | The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
-| A player's volume among its controls | `MediaVolumeControl` | |
+| A player's volume among its controls | `MediaVolumeControl` | `MediaVolumeSlider.WhilePointed` opens the slider only while the mouse points at a lone button, such as a feed clip's; `wheelStep` lets the wheel over it change the level |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |
 | Where a reader's tap zones are | `TapZoneOverlay` | |
@@ -240,7 +243,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Marks for recognised text on a page | `PageTextMarks` | |
 | Running text in a readable column | `ReadingColumn` | |
 | Two pages side by side | `PageSpread` | |
-| A long strip of page images | `PageStrip` | |
+| A long strip of page images | `PageStrip` | With `maxWidth` it keeps the pages to a centred column, such as a strip previewed in the immersive feed |
+| Title and actions beside media that leaves room for them, such as a tall page in a wide window | `PanelBesideMedia` | Over the media otherwise; the caller says how wide the media is drawn |
 | A preview of reading colours | `ReadingPageSample`, `ReadingPaletteSwatch` | |
 
 ## Dashboards, charts and calendars
@@ -259,8 +263,10 @@ See the `adaptive-layout` skill for which to use at which window size.
 |---|---|---|
 | A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn`; `stickyRowGroupHeader` in its scope keeps a header at the top while its rows scroll |
 | Entries shown as rows by a grid | `RowGridColumn` | |
+| A scrolling grid of entries, such as a library page, catalog or feed | `CoverGrid` | Never a raw `LazyVerticalGrid`; `fastScroll = true` for long grids; its content is given the column count |
 | Columns for a cover grid, and how many a grid lays out | `coverGridCells`, `GridCells.columnCount` | |
 | Cards of varying height in columns | `CardFlow` | |
+| A screen's content that isn't one of these lists, grids or panes, such as a page laid out as one column, tabs above a pager or a button over a list | `FramedContent`, `FramedScrollColumn` | Keeps it in the screen's frame, clear of the side dock and system bars; `FramedScrollColumn` scrolls from edge to edge and lets artwork bleed with `columnInset` |
 | A lazy list or grid with a mouse scrollbar | `ScrollbarFrame` | |
 | List and detail side by side | `TwoPanes` | |
 

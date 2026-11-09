@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.progress.CombinedCircularProgressIndicator
 import app.katari.presentation.kit.surface.OverlayPanel
@@ -26,6 +27,14 @@ sealed interface ReaderMediaLoadState {
     data class Failed(val message: String) : ReaderMediaLoadState
 }
 
+/** A way past media that failed, offered under Retry, such as the immersive feed's next title. */
+class ReaderMediaSkip(val label: String, val onSkip: () -> Unit)
+
+/** Next title, where the immersive feed's media fails, so a title that can't play doesn't hold the feed on it. */
+@Composable
+fun nextTitleSkip(onNextTitle: (() -> Unit)?): ReaderMediaSkip? =
+    onNextTitle?.let { ReaderMediaSkip(stringResource(MR.strings.browse_immersive_next), it) }
+
 @Composable
 fun ReaderMediaLoadOverlay(
     state: ReaderMediaLoadState,
@@ -34,6 +43,7 @@ fun ReaderMediaLoadOverlay(
     showBackground: Boolean = true,
     onBackgroundClick: (() -> Unit)? = null,
     onRetry: (() -> Unit)? = null,
+    skip: ReaderMediaSkip? = null,
 ) {
     if (state == ReaderMediaLoadState.Ready) return
 
@@ -76,6 +86,14 @@ fun ReaderMediaLoadOverlay(
                                 label = stringResource(MR.strings.action_retry),
                                 onClick = retry,
                                 modifier = Modifier.padding(top = KatariTheme.spacing.m),
+                            )
+                        }
+                        skip?.let { skip ->
+                            Button(
+                                label = skip.label,
+                                onClick = skip.onSkip,
+                                modifier = Modifier.padding(top = KatariTheme.spacing.s),
+                                style = ButtonStyle.Tonal,
                             )
                         }
                     }

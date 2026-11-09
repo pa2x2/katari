@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
@@ -30,8 +29,8 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
+import app.katari.presentation.kit.layout.CoverGrid
 import app.katari.presentation.kit.layout.RowList
-import app.katari.presentation.kit.layout.ScrollbarFrame
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
 import app.katari.presentation.kit.list.RowGroupItem
@@ -275,48 +274,46 @@ private fun CatalogComfortableGrid(
         firstVisibleItemIndex = { gridState.firstVisibleItemIndex },
     )
 
-    ScrollbarFrame(state = gridState, contentPadding = contentPadding) {
-        LazyVerticalGrid(
-            columns = columns,
-            state = gridState,
-            contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    CoverGrid(
+        columns = columns,
+        state = gridState,
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    ) {
+        if (catalogList.loadState.prepend is LoadState.Loading) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                BrowseSourceLoadingItem()
+            }
+        }
+
+        items(
+            count = catalogList.itemCount,
+            key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-comfortable-$index" },
+        ) { index ->
+            val item = catalogList[index]?.collectAsState()?.value ?: return@items
+            val entryItem = item as? CatalogListItem.EntryItem
+            Box {
+                EntryComfortableGridItem(
+                    title = item.title,
+                    coverData = item.cover,
+                    coverType = sourceItemOrientation.toGridCoverType(),
+                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                    coverBadgeEnd = {
+                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                    },
+                    onLongClick = { onItemLongClick(item) },
+                    onClick = { onItemClick(item) },
+                )
+                itemMenu(item)
+            }
+        }
+
+        if (catalogList.loadState.refresh is LoadState.Loading ||
+            catalogList.loadState.append is LoadState.Loading
         ) {
-            if (catalogList.loadState.prepend is LoadState.Loading) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    BrowseSourceLoadingItem()
-                }
-            }
-
-            items(
-                count = catalogList.itemCount,
-                key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-comfortable-$index" },
-            ) { index ->
-                val item = catalogList[index]?.collectAsState()?.value ?: return@items
-                val entryItem = item as? CatalogListItem.EntryItem
-                Box {
-                    EntryComfortableGridItem(
-                        title = item.title,
-                        coverData = item.cover,
-                        coverType = sourceItemOrientation.toGridCoverType(),
-                        coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                        coverBadgeEnd = {
-                            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                        },
-                        onLongClick = { onItemLongClick(item) },
-                        onClick = { onItemClick(item) },
-                    )
-                    itemMenu(item)
-                }
-            }
-
-            if (catalogList.loadState.refresh is LoadState.Loading ||
-                catalogList.loadState.append is LoadState.Loading
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    BrowseSourceLoadingItem()
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                BrowseSourceLoadingItem()
             }
         }
     }
@@ -348,48 +345,46 @@ private fun CatalogCompactGrid(
         firstVisibleItemIndex = { gridState.firstVisibleItemIndex },
     )
 
-    ScrollbarFrame(state = gridState, contentPadding = contentPadding) {
-        LazyVerticalGrid(
-            columns = columns,
-            state = gridState,
-            contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    CoverGrid(
+        columns = columns,
+        state = gridState,
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    ) {
+        if (catalogList.loadState.prepend is LoadState.Loading) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                BrowseSourceLoadingItem()
+            }
+        }
+
+        items(
+            count = catalogList.itemCount,
+            key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-compact-$index" },
+        ) { index ->
+            val item = catalogList[index]?.collectAsState()?.value ?: return@items
+            val entryItem = item as? CatalogListItem.EntryItem
+            Box {
+                EntryCompactGridItem(
+                    coverData = item.cover,
+                    title = item.title,
+                    onClick = { onItemClick(item) },
+                    onLongClick = { onItemLongClick(item) },
+                    coverType = sourceItemOrientation.toGridCoverType(),
+                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                    coverBadgeEnd = {
+                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                    },
+                )
+                itemMenu(item)
+            }
+        }
+
+        if (catalogList.loadState.refresh is LoadState.Loading ||
+            catalogList.loadState.append is LoadState.Loading
         ) {
-            if (catalogList.loadState.prepend is LoadState.Loading) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    BrowseSourceLoadingItem()
-                }
-            }
-
-            items(
-                count = catalogList.itemCount,
-                key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-compact-$index" },
-            ) { index ->
-                val item = catalogList[index]?.collectAsState()?.value ?: return@items
-                val entryItem = item as? CatalogListItem.EntryItem
-                Box {
-                    EntryCompactGridItem(
-                        coverData = item.cover,
-                        title = item.title,
-                        onClick = { onItemClick(item) },
-                        onLongClick = { onItemLongClick(item) },
-                        coverType = sourceItemOrientation.toGridCoverType(),
-                        coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                        coverBadgeEnd = {
-                            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                        },
-                    )
-                    itemMenu(item)
-                }
-            }
-
-            if (catalogList.loadState.refresh is LoadState.Loading ||
-                catalogList.loadState.append is LoadState.Loading
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    BrowseSourceLoadingItem()
-                }
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                BrowseSourceLoadingItem()
             }
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.theme.KatariTheme
@@ -27,17 +28,19 @@ fun ProviderSetupScaffold(
     Scaffold(
         topBar = { scrollBehavior -> AppBar(title = title, navigateUp = onBack, scrollBehavior = scrollBehavior) },
     ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
-                .wrapContentWidth(Alignment.CenterHorizontally)
-                .widthIn(max = KatariTheme.sizes.readableWidth)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-            content = content,
-        )
+        FramedContent(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .widthIn(max = KatariTheme.sizes.readableWidth)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+                content = content,
+            )
+        }
     }
 }

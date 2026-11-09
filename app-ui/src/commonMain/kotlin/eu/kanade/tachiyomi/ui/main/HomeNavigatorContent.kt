@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.profiles.ui.switcher.ProfileSwitcherHost
@@ -66,14 +67,12 @@ fun HomeNavigatorContent(
             },
             contentWindowInsets = scaffoldInsets,
         ) { contentPadding ->
-            // Consume insets already used by app state banners
             Box {
-                HomeSideNavigationHost(
-                    navigator = navigator,
-                    modifier = Modifier
-                        .padding(contentPadding)
-                        .consumeWindowInsets(contentPadding),
-                )
+                // Inset by the room the banners and the navigation bar take, whose insets are consumed so each screen
+                // keeps clear of the rest itself
+                FramedContent(modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding)) {
+                    HomeSideNavigationHost(navigator = navigator)
+                }
 
                 overlay()
             }

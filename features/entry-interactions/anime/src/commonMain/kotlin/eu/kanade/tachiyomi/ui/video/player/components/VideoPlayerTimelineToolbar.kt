@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredroundedfilled.ViewList
 import app.katari.icons.materialsymbols.rounded.Fullscreen
@@ -64,7 +65,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipPrevious,
                 contentDescription = stringResource(MR.strings.anime_playback_previous_episode),
                 onClick = onPreviousEpisode,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 enabled = episodeNavigationEnabled,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
@@ -76,7 +77,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.RoundedFilled.SkipNext,
                 contentDescription = stringResource(MR.strings.anime_playback_next_episode),
                 onClick = onNextEpisode,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 enabled = episodeNavigationEnabled,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
@@ -90,14 +91,14 @@ internal fun VideoPlayerTimelineToolbar(
             label = playbackSpeedLabel,
             onClick = onOpenSpeed,
             iconDescription = stringResource(MR.strings.anime_playback_speed),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER).videoPlayerControl(),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = SPEED_LABEL_DROP_ORDER).mediaControl(),
         )
         if (showSubtitles) {
             IconButton(
                 icon = MaterialSymbols.Rounded.Subtitles,
                 contentDescription = stringResource(MR.strings.anime_playback_subtitles),
                 onClick = onOpenSubtitles,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -107,7 +108,7 @@ internal fun VideoPlayerTimelineToolbar(
                 icon = MaterialSymbols.Rounded.MobileRotate,
                 contentDescription = stringResource(MR.strings.anime_playback_rotate),
                 onClick = onRotate,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -117,7 +118,7 @@ internal fun VideoPlayerTimelineToolbar(
             label = picture.label(),
             onClick = onTogglePicture,
             iconDescription = stringResource(MR.strings.anime_playback_picture),
-            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER).videoPlayerControl(),
+            modifier = Modifier.mediaToolbarSlot(labelDropOrder = PICTURE_LABEL_DROP_ORDER).mediaControl(),
         )
         volume?.invoke()
         MediaToolbarButton(
@@ -127,7 +128,7 @@ internal fun VideoPlayerTimelineToolbar(
             iconDescription = stringResource(MR.strings.action_view_episodes),
             modifier = Modifier
                 .mediaToolbarSlot(trailing = true, labelDropOrder = EPISODES_LABEL_DROP_ORDER)
-                .videoPlayerControl(),
+                .mediaControl(),
         )
         if (fullScreen != null) {
             Box(modifier = Modifier.mediaToolbarSlot(trailing = true)) {
@@ -139,13 +140,13 @@ internal fun VideoPlayerTimelineToolbar(
                     },
                     contentDescription = stringResource(
                         if (fullScreen) {
-                            MR.strings.anime_playback_exit_full_screen
+                            MR.strings.action_exit_full_screen
                         } else {
-                            MR.strings.anime_playback_enter_full_screen
+                            MR.strings.action_enter_full_screen
                         },
                     ),
                     onClick = onToggleFullScreen,
-                    modifier = Modifier.videoPlayerControl(),
+                    modifier = Modifier.mediaControl(),
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                     shortcut = VideoPlayerShortcuts.FullScreen,

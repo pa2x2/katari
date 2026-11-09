@@ -14,11 +14,13 @@ interface AnimePlayerDestination {
 
 /**
  * The episode a player opens: [episodeId] of [entryId], the entry it was opened from, which [ownerEntryId] owns when a
- * merged entry shows another's episodes. [bypassMerge] keeps the player to [ownerEntryId]'s own episodes.
+ * merged entry shows another's episodes. [bypassMerge] keeps the player to [ownerEntryId]'s own episodes. It starts at
+ * [startPositionMs] when given, and otherwise where watching left off.
  */
 data class AnimePlayerRequest(
     val entryId: Long,
     val episodeId: Long,
     val ownerEntryId: Long,
     val bypassMerge: Boolean,
+    val startPositionMs: Long? = null,
 )

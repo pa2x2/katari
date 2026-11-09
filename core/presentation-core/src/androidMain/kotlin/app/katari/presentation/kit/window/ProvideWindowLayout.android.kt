@@ -31,10 +31,14 @@ internal actual fun rememberMultiWindowCheck(): () -> Boolean {
 }
 
 @Composable
-internal actual fun rememberWindowLastTouch(): LastTouch? {
+internal actual fun rememberWindowLastPress(): LastPress? {
     val activity = LocalActivity.current
-    return remember(activity) { activity?.window?.let(::lastTouchOf) }
+    return remember(activity) { activity?.window?.let(::lastPressOf) }
 }
+
+// The activity's window records its presses itself, see lastPressOf
+@Composable
+internal actual fun RecordingPresses(lastPress: LastPress?, content: @Composable () -> Unit) = content()
 
 private fun FoldingFeature.toWindowFold(density: Density): WindowFold = with(density) {
     val isVertical = orientation == FoldingFeature.Orientation.VERTICAL

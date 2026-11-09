@@ -34,7 +34,7 @@ internal fun TranslationSessionSheet(
     onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
     val onDismissRequest = onCollapse ?: onDismiss
-    Sheet(onDismissRequest = onDismissRequest) {
+    Sheet(short = true, onDismissRequest = onDismissRequest) {
         TranslationSessionContent(
             state = state,
             expanded = true,

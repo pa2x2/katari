@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.ContentCopy
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
 import app.katari.presentation.kit.navigation.Scaffold
@@ -60,14 +61,16 @@ class BackupSchemaScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            Text(
-                text = schema,
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(contentPadding)
-                    .padding(KatariTheme.spacing.l),
-                role = TextRole.Code,
-            )
+            FramedContent {
+                Text(
+                    text = schema,
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(contentPadding)
+                        .padding(KatariTheme.spacing.l),
+                    role = TextRole.Code,
+                )
+            }
         }
     }
 }

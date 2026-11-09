@@ -17,6 +17,7 @@ import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun StatisticsTopTitlesScreenContent(
@@ -63,10 +65,7 @@ fun StatisticsTopTitlesScreenContent(
     }
     RowList(
         state = listState,
-        contentPadding = PaddingValues(
-            top = paddingValues.calculateTopPadding() + KatariTheme.spacing.xs,
-            bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
-        ),
+        contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.xl),
     ) {
         itemsIndexed(state.titles, key = { _, entry -> entry.entryId }) { index, entry ->
             val type = typesById[entry.type]
@@ -100,7 +99,7 @@ fun StatisticsTopTitlesScreenContent(
 
 @Composable
 private fun LoadFailed(onRetry: () -> Unit, modifier: Modifier) {
-    Box(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
+    FramedContent(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
         Button(
             label = stringResource(MR.strings.statistics_could_not_load_activity) + " · " +
                 stringResource(MR.strings.action_retry),

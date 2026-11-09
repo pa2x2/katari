@@ -26,6 +26,7 @@ import app.katari.entry.interactions.navigation.EntryOpenOptions
 import app.katari.entry.interactions.navigation.EntryOpenResult
 import app.katari.entry.interactions.source.EntryWebViewResolution
 import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.sourcemigration.config.MigrationConfigScreen
 import app.katari.sync.ui.entry.rememberEntrySync
 import app.katari.sync.ui.question.SyncQuestionsScreen
@@ -46,7 +47,7 @@ import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.TranslatableChapter
-import eu.kanade.presentation.entry.updates.EntryUpdatesSheet
+import eu.kanade.presentation.entry.updates.EntryUpdatesPopover
 import eu.kanade.presentation.entry.updates.daysUntilRelease
 import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.presentation.entry.updates.entryUpdatesLabel
@@ -202,6 +203,7 @@ class EntryScreen(
         }
         val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        val updatesAnchor = rememberPopoverAnchor()
         val onMigrate = {
             viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(listOf(it))) }
             Unit
@@ -221,7 +223,8 @@ class EntryScreen(
             isUserInterval = successState.entry.fetchInterval < 0,
         )
         if (showUpdatesSheet) {
-            EntryUpdatesSheet(
+            EntryUpdatesPopover(
+                anchor = updatesAnchor,
                 entry = successState.entry,
                 mode = updatesState.mode,
                 status = updatesState.status,
@@ -360,6 +363,7 @@ class EntryScreen(
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = viewModel.library::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
+            updatesAnchor = updatesAnchor,
             onEditDisplayNameClicked = viewModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
             onManageMergeClicked = viewModel.merge::showManageSheet.takeIf { successState.isPartOfMerge },
             onOpenMergedEntryClicked = {

@@ -58,14 +58,6 @@ internal class ProviderBackedEntryImmersiveInteraction(
         return processors.requireProcessor("immersive feed", handle.entryType).renderer(handle)
     }
 
-    override suspend fun persistProgress(
-        handle: EntryImmersiveHandle,
-        progress: EntryImmersiveProgress,
-    ) {
-        processors.requireProcessor("immersive feed", handle.entryType)
-            .persistProgress(handle, progress)
-    }
-
     override fun release(handle: EntryImmersiveHandle) {
         processors.requireProcessor("immersive feed", handle.entryType).release(handle)
     }

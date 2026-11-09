@@ -16,6 +16,7 @@ import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.client.setting.read.settingRecords
+import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
@@ -125,12 +126,21 @@ class SyncChoiceChanges(
         val scope = PreferenceScopes.markOf(key)?.scope
         require(scope == PreferenceScope.PERSON || scope == PreferenceScope.DEVICE_BY_DEFAULT) { "$key never syncs" }
         if (on) handler.recordUnstamped(settingRecords(withSources = false) { it == key })
-        change(before = { if (on) it.keepAccountSetting(key) }) {
+        change(before = { if (on) it.keepAccountSettings(setOf(key)) }) {
             if (scope == PreferenceScope.PERSON) {
                 preferences.settingsOff.include(key, !on)
             } else {
                 preferences.settingsOn.include(key, on)
             }
+        }
+    }
+
+    /** [syncSetting] for every setting of [menu], which sync or stay together. */
+    suspend fun syncMenu(menu: MenuSettings, on: Boolean) {
+        val keys = PreferenceScopes.keysOf(menu)
+        if (on) handler.recordUnstamped(settingRecords(withSources = false) { it in keys })
+        change(before = { if (on) it.keepAccountSettings(keys) }) {
+            preferences.menusOff.include(menu.name, !on)
         }
     }
 

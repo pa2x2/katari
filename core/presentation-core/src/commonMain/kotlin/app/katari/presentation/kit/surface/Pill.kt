@@ -10,7 +10,10 @@ import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
-/** A small rounded label for a value, such as a slider's current setting, optionally led by an inline [Avatar]. */
+/**
+ * A small rounded label for a value, such as a slider's current setting, optionally led by an inline [Avatar]. With
+ * [onClick] it opens what sets the value, such as a list's filter summary opening the filter.
+ */
 @Composable
 fun Pill(
     text: String,
@@ -18,8 +21,9 @@ fun Pill(
     container: SurfaceContainer = SurfaceContainer.High,
     role: TextRole = TextRole.Body,
     leading: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
 ) {
-    Surface(modifier = modifier, container = container, shape = KatariTheme.shapes.full) {
+    val content: @Composable () -> Unit = {
         Row(
             modifier = Modifier.padding(
                 start = if (leading != null) KatariTheme.spacing.xxs else KatariTheme.spacing.s,
@@ -33,6 +37,17 @@ fun Pill(
             leading?.invoke()
             Text(text = text, role = role, maxLines = 1)
         }
+    }
+    if (onClick != null) {
+        Surface(
+            onClick = onClick,
+            modifier = modifier,
+            container = container,
+            shape = KatariTheme.shapes.full,
+            content = content,
+        )
+    } else {
+        Surface(modifier = modifier, container = container, shape = KatariTheme.shapes.full, content = content)
     }
 }
 

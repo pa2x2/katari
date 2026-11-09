@@ -99,14 +99,17 @@ fun <T> ConnectedToggleGroup(
     }
 }
 
-/** One option of a connected group: [index] of [count] picks which corners it rounds. */
+/**
+ * One option of a connected group: [index] of [count] picks which corners it rounds. Without a [label] the option is its
+ * [icon] alone, and the caller describes it to assistive tools.
+ */
 @Composable
 internal fun ConnectedToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     index: Int,
     count: Int,
-    label: String,
+    label: String?,
     icon: ImageVector?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -119,11 +122,20 @@ internal fun ConnectedToggle(
         enabled = enabled,
         shapes = connectedShapes(index, count),
         colors = connectedToggleColors(),
-        icon = icon?.let { { Icon(it, contentDescription = null, Modifier.size(KatariTheme.sizes.iconSmall)) } },
+        icon = icon?.takeIf { label != null }?.let {
+            { Icon(it, contentDescription = null, Modifier.size(KatariTheme.sizes.iconSmall)) }
+        },
         contentPadding = contentPadding
-            ?: ToggleButtonDefaults.contentPaddingFor(ToggleButtonDefaults.size, hasStartIcon = icon != null),
+            ?: ToggleButtonDefaults.contentPaddingFor(
+                ToggleButtonDefaults.size,
+                hasStartIcon = icon != null && label != null,
+            ),
     ) {
-        Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (label != null) {
+            Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        } else if (icon != null) {
+            Icon(icon, contentDescription = null, Modifier.size(KatariTheme.sizes.iconSmall))
+        }
     }
 }
 

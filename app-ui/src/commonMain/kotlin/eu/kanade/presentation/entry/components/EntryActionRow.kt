@@ -12,6 +12,8 @@ import app.katari.icons.materialsymbols.rounded.Update
 import app.katari.icons.materialsymbols.roundedfilled.Warning
 import app.katari.presentation.kit.button.ActionButton
 import app.katari.presentation.kit.button.ActionButtonRow
+import app.katari.presentation.kit.sheet.PopoverAnchor
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
@@ -29,6 +31,7 @@ fun EntryActionRow(
     onWebViewLongClicked: (() -> Unit)?,
     onDuplicatesClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
     wrap: Boolean = false,
@@ -62,6 +65,7 @@ fun EntryActionRow(
                 EntryUpdatesLabel.Emphasis.Error -> ContentTone.Error
             },
             onClick = { onUpdatesClicked?.invoke() },
+            modifier = Modifier.popoverAnchor(updatesAnchor),
         )
         if (onWebViewClicked != null) {
             ActionButton(

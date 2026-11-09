@@ -31,6 +31,7 @@ import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.RowListScope
+import app.katari.presentation.kit.sheet.LocalSheetColumns
 import app.katari.presentation.kit.surface.HorizontalDivider
 import app.katari.presentation.kit.surface.Surface
 import app.katari.presentation.kit.surface.SurfaceContainer
@@ -219,13 +220,18 @@ fun RowGroupGap() {
 
 /**
  * [rows] as one row group card in a plain column, for a short group composed in one piece rather than as a lazy list's
- * items.
+ * items. In a sheet with two columns of rows they fill the card line by line.
  */
 @Composable
 fun RowGroup(rows: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
+    val columns = wrappedGroupColumns()
     Column(modifier) {
-        rows.forEachIndexed { index, row ->
-            RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row)
+        if (columns > 1) {
+            RowGroupLines(rows, columns, key = null) { it() }
+        } else {
+            rows.forEachIndexed { index, row ->
+                RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row)
+            }
         }
     }
 }
@@ -234,18 +240,51 @@ fun RowGroup(rows: List<@Composable () -> Unit>, modifier: Modifier = Modifier) 
  * The rows [content] adds as one row group card in a plain column, for a group whose rows depend on conditions, such
  * as a sheet's filters that only show for some entry types. Conditions are decided when the group is built, so read
  * the state they depend on before it; state a row only displays belongs inside that row. Nothing is drawn when no row
- * is added.
+ * is added. In a sheet with two columns of rows they fill the card line by line.
  */
 @Composable
 fun RowGroup(modifier: Modifier = Modifier, content: RowGroupScope.() -> Unit) {
     val rows = RowGroupScope().apply(content).rows
     if (rows.isEmpty()) return
+    val columns = wrappedGroupColumns()
     Column(modifier) {
-        rows.forEachIndexed { index, row ->
-            key(row.key ?: index) {
-                RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row.content)
+        if (columns > 1) {
+            RowGroupLines(rows, columns, key = { it.key }) { it.content() }
+        } else {
+            rows.forEachIndexed { index, row ->
+                key(row.key ?: index) {
+                    RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row.content)
+                }
             }
         }
+    }
+}
+
+/** How many columns a plain row group's rows wrap into: those of the sheet around it, while its rows are on cards. */
+@Composable
+private fun wrappedGroupColumns(): Int = if (LocalRowGroupFramed.current) LocalSheetColumns.current else 1
+
+/** [rows] as the lines of one row group card, [columns] rows to a line. */
+@Composable
+private fun <T> RowGroupLines(
+    rows: List<T>,
+    columns: Int,
+    key: ((T) -> Any?)?,
+    content: @Composable (T) -> Unit,
+) {
+    val lines = rows.chunked(columns)
+    lines.forEachIndexed { index, line ->
+        RowGroupLine(
+            line = line,
+            columns = columns,
+            first = index == 0,
+            last = index == lines.lastIndex,
+            aboveShortLine = index == lines.lastIndex - 1 && lines.last().size < columns,
+            modifier = Modifier,
+            key = key,
+            selected = { false },
+            itemContent = content,
+        )
     }
 }
 
@@ -384,7 +423,7 @@ private fun <T> RowGroupLine(
     last: Boolean,
     aboveShortLine: Boolean,
     modifier: Modifier,
-    key: ((T) -> Any)?,
+    key: ((T) -> Any?)?,
     selected: (T) -> Boolean,
     itemContent: @Composable (T) -> Unit,
 ) {

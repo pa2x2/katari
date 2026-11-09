@@ -10,6 +10,13 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
+/**
+ * Draws one page's media in the immersive feed, centred in the page, over what the feed shows of the title until the
+ * media shows: a renderer paints no background of its own while it loads. [onMediaWidthChange] is told how wide the
+ * media is drawn once it shows, or null until then, so the feed can put its title and actions beside media that leaves
+ * room; the media's own [switches], such as a clip's subtitles, join the feed's controls. Media that fails offers
+ * [onNextTitle] beside its retry, null on the last title.
+ */
 fun interface EntryImmersiveRenderer {
     @Composable
     fun Content(
@@ -19,23 +26,11 @@ fun interface EntryImmersiveRenderer {
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveProgress) -> Unit,
+        place: EntryImmersivePlaceTracker,
+        onMediaWidthChange: (Dp?) -> Unit,
+        switches: EntryImmersiveMediaSwitches,
+        onNextTitle: (() -> Unit)?,
     )
-}
-
-sealed interface EntryImmersiveProgress {
-    data class ImagePage(
-        val pageIndex: Int,
-        val pageCount: Int,
-        val sessionDurationMs: Long,
-    ) : EntryImmersiveProgress
-
-    data class Playback(
-        val positionMs: Long,
-        val durationMs: Long,
-        val activeDurationMs: Long = 0L,
-        val resetSession: Boolean = false,
-    ) : EntryImmersiveProgress
 }
 
 sealed interface EntryImmersiveHandle {
@@ -52,7 +47,6 @@ sealed interface EntryImmersiveHandle {
         override val entryType: EntryType,
         override val chapterId: Long?,
         val stream: VideoStream,
-        val resumePositionMs: Long,
         val delegate: Any? = null,
     ) : EntryImmersiveHandle
 }
@@ -71,7 +65,7 @@ sealed interface EntryImmersiveSourceAvailability {
 
 sealed interface EntryImmersiveAvailability {
     data class Available(
-        val preloadRadius: Int,
+        val preloadAhead: Int,
         val childRequirement: EntryImmersiveChildRequirement,
     ) : EntryImmersiveAvailability
 
@@ -90,9 +84,10 @@ sealed interface EntryImmersiveUnavailableReason {
     data object NoReadingChild : EntryImmersiveUnavailableReason
 }
 
-sealed interface EntryImmersivePreloadRadiusResult {
-    data class Available(val radius: Int) : EntryImmersivePreloadRadiusResult
-    data class Inapplicable(val type: EntryType) : EntryImmersivePreloadRadiusResult
+/** How many titles after the shown one the feed loads and opens, by the shown title's type. */
+sealed interface EntryImmersivePreloadAheadResult {
+    data class Available(val titles: Int) : EntryImmersivePreloadAheadResult
+    data class Inapplicable(val type: EntryType) : EntryImmersivePreloadAheadResult
 }
 
 data class EntryImmersiveLoadRequest(

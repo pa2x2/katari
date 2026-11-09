@@ -411,11 +411,11 @@ fun AppBarExtension(modifier: Modifier = Modifier, actionMode: Boolean = false, 
 private val AppBarInsets: WindowInsets
     @Composable get() {
         val dock = LocalDockClearance.current.start
-        val margin = LocalScreenFrameMargin.current
+        val margins = LocalScreenFrameMargin.current
         val frameInsets = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
-            WindowInsets(left = dock + margin, right = margin)
+            WindowInsets(left = dock + margins.start, right = margins.end)
         } else {
-            WindowInsets(left = margin, right = dock + margin)
+            WindowInsets(left = margins.end, right = dock + margins.start)
         }
         return WindowInsets.systemBars.union(WindowInsets.displayCutout).add(frameInsets)
     }

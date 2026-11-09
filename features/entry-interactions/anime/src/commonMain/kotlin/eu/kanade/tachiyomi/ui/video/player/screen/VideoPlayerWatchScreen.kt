@@ -222,8 +222,8 @@ internal fun VideoPlayerWatchScreen(
         registerControllerInteraction(false)
         seekInDirection(direction, true)
     }
-    val togglePlayback = {
-        registerControllerInteraction(true)
+    val togglePlayback: (Boolean) -> Unit = { showControls ->
+        registerControllerInteraction(showControls)
         if (ui.playbackSnapshot.playbackEnded) {
             currentPlayer.seekTo(0L)
         }

@@ -23,6 +23,8 @@ import androidx.compose.ui.util.fastForEach
 import app.katari.presentation.kit.button.StackedActionButton
 import app.katari.presentation.kit.content.MouseSelectableText
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.layout.LocalContentSides
+import app.katari.presentation.kit.layout.sidesPadding
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
@@ -52,7 +54,10 @@ fun EmptyScreen(
     )
 }
 
-/** Fills a screen whose whole content is empty, with a kaomoji, a [message] and optional [actions]. */
+/**
+ * Fills a screen whose whole content is empty, with a kaomoji, a [message] and optional [actions], centred in the
+ * screen's frame.
+ */
 @Composable
 fun EmptyScreen(
     message: String,
@@ -64,6 +69,7 @@ fun EmptyScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .sidesPadding(LocalContentSides.current)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = KatariTheme.spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -110,6 +116,7 @@ fun NoResults(
     val face = remember { getRandomErrorFace() }
     Column(
         modifier = modifier
+            .sidesPadding(LocalContentSides.current)
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xl),
         horizontalAlignment = Alignment.CenterHorizontally,

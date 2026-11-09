@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
@@ -17,8 +16,8 @@ import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.child.EntryRelatedEntryGroup
 import app.katari.presentation.kit.content.BrowseMetrics
 import app.katari.presentation.kit.content.entryCoverScale
+import app.katari.presentation.kit.layout.CoverGrid
 import app.katari.presentation.kit.layout.RowList
-import app.katari.presentation.kit.layout.ScrollbarFrame
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupHeader
@@ -45,24 +44,22 @@ internal fun RelatedEntryGrid(
     onEntryClick: (Entry) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
-    ScrollbarFrame(state = gridState) {
-        LazyVerticalGrid(
-            state = gridState,
-            columns = coverGridCells(
-                size = CoverSize.Auto,
-                wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL,
-            ),
-            contentPadding = PaddingValues(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-        ) {
-            items(
-                items = entries,
-                key = { "${it.type}:${it.id}" },
-            ) { initialEntry ->
-                val entry by entryState(initialEntry)
-                RelatedEntryItem(entry, sourceItemOrientation, onClick = { onEntryClick(entry) })
-            }
+    CoverGrid(
+        state = gridState,
+        columns = coverGridCells(
+            size = CoverSize.Auto,
+            wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL,
+        ),
+        contentPadding = PaddingValues(KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    ) {
+        items(
+            items = entries,
+            key = { "${it.type}:${it.id}" },
+        ) { initialEntry ->
+            val entry by entryState(initialEntry)
+            RelatedEntryItem(entry, sourceItemOrientation, onClick = { onEntryClick(entry) })
         }
     }
 }
