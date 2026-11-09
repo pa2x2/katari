@@ -139,9 +139,9 @@ internal fun VideoPlayerTimelineToolbar(
                     },
                     contentDescription = stringResource(
                         if (fullScreen) {
-                            MR.strings.anime_playback_exit_full_screen
+                            MR.strings.action_exit_full_screen
                         } else {
-                            MR.strings.anime_playback_enter_full_screen
+                            MR.strings.action_enter_full_screen
                         },
                     ),
                     onClick = onToggleFullScreen,

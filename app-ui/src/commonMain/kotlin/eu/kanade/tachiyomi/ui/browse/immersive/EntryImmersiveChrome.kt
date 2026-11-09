@@ -21,6 +21,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Close
+import app.katari.icons.materialsymbols.rounded.Fullscreen
 import app.katari.icons.materialsymbols.rounded.FullscreenExit
 import app.katari.icons.materialsymbols.rounded.Info
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
@@ -34,6 +36,7 @@ import app.katari.presentation.kit.surface.OverlayStyle
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.presentation.kit.window.stableNavigationBars
 import app.katari.presentation.kit.window.stableStatusBars
 import eu.kanade.presentation.entry.components.EntryActionIcons
@@ -60,6 +63,7 @@ internal fun ImmersiveOverlay(
     refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
     onBottomOverlaySize: (Int) -> Unit,
+    fullScreen: WindowFullScreen?,
 ) {
     Box(Modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -116,6 +120,7 @@ internal fun ImmersiveOverlay(
                     onRefresh = onRefresh,
                     refreshEnabled = refreshEnabled,
                     onOpenChapter = onOpenChapter,
+                    fullScreen = fullScreen,
                 )
             }
         }
@@ -134,6 +139,7 @@ private fun ImmersiveBottomBar(
     onRefresh: () -> Unit,
     refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
+    fullScreen: WindowFullScreen?,
 ) {
     Row(
         modifier = Modifier
@@ -182,9 +188,26 @@ private fun ImmersiveBottomBar(
                     onClick = onBackToTop,
                 )
             }
+            if (fullScreen != null) {
+                ImmersiveActionButton(
+                    label = stringResource(
+                        if (fullScreen.isFullScreen) {
+                            MR.strings.action_exit_full_screen
+                        } else {
+                            MR.strings.action_enter_full_screen
+                        },
+                    ),
+                    icon = if (fullScreen.isFullScreen) {
+                        MaterialSymbols.Rounded.FullscreenExit
+                    } else {
+                        MaterialSymbols.Rounded.Fullscreen
+                    },
+                    onClick = fullScreen::toggle,
+                )
+            }
             ImmersiveActionButton(
                 label = stringResource(MR.strings.browse_exit_immersive),
-                icon = MaterialSymbols.Rounded.FullscreenExit,
+                icon = MaterialSymbols.Rounded.Close,
                 onClick = onExitImmersive,
             )
             ImmersiveActionButton(

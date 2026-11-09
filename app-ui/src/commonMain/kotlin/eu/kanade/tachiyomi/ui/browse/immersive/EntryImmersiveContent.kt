@@ -38,6 +38,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
@@ -142,90 +143,94 @@ internal fun EntryImmersiveContent(
             }
     }
 
-    PullRefresh(
-        refreshing = refreshing,
-        enabled = shouldEnableImmersivePullRefresh(pagerState.settledPage, pagingBlocked),
-        onRefresh = onRefresh,
-        modifier = modifier,
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            VerticalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SurfaceContainer.Media),
-                key = { page ->
-                    itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
-                },
-                userScrollEnabled = !pagingBlocked,
-                beyondViewportPageCount = preloadRadius,
-            ) { page ->
-                nonEntryPage(page)?.let { content ->
-                    content()
-                    return@VerticalPager
-                }
+    EntryImmersiveFullScreen { fullScreen ->
+        PullRefresh(
+            refreshing = refreshing,
+            enabled = shouldEnableImmersivePullRefresh(pagerState.settledPage, pagingBlocked),
+            onRefresh = onRefresh,
+            modifier = modifier,
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                VerticalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(SurfaceContainer.Media),
+                    key = { page ->
+                        itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
+                    },
+                    userScrollEnabled = !pagingBlocked,
+                    beyondViewportPageCount = preloadRadius,
+                ) { page ->
+                    nonEntryPage(page)?.let { content ->
+                        content()
+                        return@VerticalPager
+                    }
 
-                val entry = itemContent(page)
-                val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
-                val itemState = itemKey?.let(immersiveState.items::get)
-                val isActive = page == pagerState.settledPage
-                val preloadRange = (pagerState.currentPage - preloadRadius)..(pagerState.currentPage + preloadRadius)
+                    val entry = itemContent(page)
+                    val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
+                    val itemState = itemKey?.let(immersiveState.items::get)
+                    val isActive = page == pagerState.settledPage
+                    val preloadRange =
+                        (pagerState.currentPage - preloadRadius)..(pagerState.currentPage + preloadRadius)
 
-                if (entry != null && (page in preloadRange || isActive)) {
-                    LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
-                }
+                    if (entry != null && (page in preloadRange || isActive)) {
+                        LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
+                    }
 
-                EntryImmersivePage(
-                    entry = entry,
-                    itemState = itemState,
-                    isActive = isActive,
-                    immersiveModel = immersiveModel,
-                    contextLabel = contextLabel,
-                    contextSupportingLabel = contextSupportingLabel,
-                    contextLeadingContent = contextLeadingContent,
-                    controlsVisible = controlsVisible,
-                    onToggleControls = { controlsVisible = !controlsVisible },
-                    onContextClick = onContextClick,
-                    onExitImmersive = onExitImmersive,
-                    onEntryClick = onEntryClick,
-                    onLibraryAction = onLibraryAction,
-                    showBackToTop = pagerState.currentPage > 0,
-                    onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    onRefresh = refreshFromTop,
-                    refreshEnabled = refreshEnabled,
-                    onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
-                        val openTarget = immersiveFeature.openTarget(itemState.handle)
-                        val chapter = itemState.chapter
-                        if (openTarget is EntryImmersiveOpenTargetResult.Available &&
-                            chapter?.id == openTarget.childId
-                        ) {
-                            { place ->
-                                val result = entryOpenFeature.open(
-                                    context = context,
-                                    entry = entry,
-                                    chapter = chapter,
-                                    options = place.openOptions(),
-                                )
-                                openMessages.report(entry.type, result)
+                    EntryImmersivePage(
+                        entry = entry,
+                        itemState = itemState,
+                        isActive = isActive,
+                        immersiveModel = immersiveModel,
+                        contextLabel = contextLabel,
+                        contextSupportingLabel = contextSupportingLabel,
+                        contextLeadingContent = contextLeadingContent,
+                        controlsVisible = controlsVisible,
+                        onToggleControls = { controlsVisible = !controlsVisible },
+                        onContextClick = onContextClick,
+                        onExitImmersive = onExitImmersive,
+                        onEntryClick = onEntryClick,
+                        onLibraryAction = onLibraryAction,
+                        showBackToTop = pagerState.currentPage > 0,
+                        onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
+                        onRefresh = refreshFromTop,
+                        refreshEnabled = refreshEnabled,
+                        onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
+                            val openTarget = immersiveFeature.openTarget(itemState.handle)
+                            val chapter = itemState.chapter
+                            if (openTarget is EntryImmersiveOpenTargetResult.Available &&
+                                chapter?.id == openTarget.childId
+                            ) {
+                                { place ->
+                                    val result = entryOpenFeature.open(
+                                        context = context,
+                                        entry = entry,
+                                        chapter = chapter,
+                                        options = place.openOptions(),
+                                    )
+                                    openMessages.report(entry.type, result)
+                                }
+                            } else {
+                                null
                             }
                         } else {
                             null
-                        }
-                    } else {
-                        null
-                    },
-                    onPagingBlockedChange = { blocked ->
-                        pagingBlocked = blocked
-                        onPagingBlockedChange(blocked)
-                    },
-                    onRetry = { entry?.let { immersiveModel.retry(context, it) } },
-                )
-            }
+                        },
+                        onPagingBlockedChange = { blocked ->
+                            pagingBlocked = blocked
+                            onPagingBlockedChange(blocked)
+                        },
+                        onRetry = { entry?.let { immersiveModel.retry(context, it) } },
+                        fullScreen = fullScreen,
+                    )
+                }
 
-            overlayContent(pagerState)
+                overlayContent(pagerState)
+            }
         }
+        EntryImmersivePageKeys(pagerState = pagerState, enabled = !pagingBlocked)
     }
-    EntryImmersivePageKeys(pagerState = pagerState, enabled = !pagingBlocked)
 }
 
 internal fun shouldEnableImmersivePullRefresh(settledPage: Int, pagingBlocked: Boolean): Boolean {
@@ -255,6 +260,7 @@ private fun EntryImmersivePage(
     onOpenChapter: ((EntryImmersivePlace?) -> Unit)?,
     onPagingBlockedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
+    fullScreen: WindowFullScreen?,
 ) {
     var bottomOverlayHeightPx by remember { mutableIntStateOf(0) }
     val place = remember(itemState) { EntryImmersivePlaceTracker() }
@@ -341,6 +347,7 @@ private fun EntryImmersivePage(
                 refreshEnabled = refreshEnabled,
                 onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
+                fullScreen = fullScreen,
             )
         }
     }
