@@ -6,6 +6,7 @@ import app.katari.data.di.DatabaseBindings
 import app.katari.data.di.RepositoryBindings
 import app.katari.desktop.appearance.PreferenceAppLocaleStore
 import app.katari.desktop.application.AppRestart
+import app.katari.desktop.application.classdata.ClassDataArchive
 import app.katari.desktop.application.installation.AppInstallation
 import app.katari.desktop.display.backend.DisplayBackend
 import app.katari.desktop.display.size.InterfaceSizePreferences
@@ -91,6 +92,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
+    val classDataArchive: ClassDataArchive
     val appInstallation: AppInstallation
     val preferenceAppLocaleStore: PreferenceAppLocaleStore
     val workCloseGuard: WorkCloseGuard

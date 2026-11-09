@@ -37,9 +37,15 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         return
     }
     val identity = if (release) {
-        AppImageIdentity("app.katari.desktop", "Katari", "Katari", listOf("katari", "tachiyomi", "app.katari"))
+        AppImageIdentity(
+            "app.katari.desktop",
+            "Katari",
+            "Katari",
+            "katari",
+            listOf("katari", "tachiyomi", "app.katari"),
+        )
     } else {
-        AppImageIdentity("app.katari.desktop.dev", "Katari Dev", "Katari-Dev", emptyList())
+        AppImageIdentity("app.katari.desktop.dev", "Katari Dev", "Katari-Dev", "katari-dev", emptyList())
     }
     val application = (extensions.getByType<ComposeExtension>() as ExtensionAware).extensions
         .getByType<DesktopExtension>().application
@@ -88,6 +94,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         jvmArguments.set(provider { (application.jvmArgs + JCEF_NATIVE_ACCESS).distinct() })
         applicationId.set(identity.applicationId)
         displayName.set(identity.displayName)
+        directoryName.set(identity.directoryName)
         linkSchemes.set(identity.linkSchemes)
         this.icon.set(icon)
         appDir.set(layout.buildDirectory.dir("appimage/${identity.fileName}.AppDir"))
@@ -141,6 +148,8 @@ private class AppImageIdentity(
     val displayName: String,
     /** How the AppImage's file name starts. */
     val fileName: String,
+    /** The name of the app's own folder in each XDG base directory, as `DesktopAppVariant` names it. */
+    val directoryName: String,
     val linkSchemes: List<String>,
 )
 

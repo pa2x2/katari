@@ -29,8 +29,9 @@ object AppProcessStart {
     }
 
     /**
-     * Has [executor], the platform's main thread, build what the first screens need and run every [StartupWarmup], so
-     * they are ready by the time a screen asks. [graph] is only read when the executor runs them.
+     * Has [executor] build what the first screens need and run every [StartupWarmup], so they are ready by the time a
+     * screen asks: Android's main thread, or a thread of the desktop's own. [graph] is only read when the executor runs
+     * them.
      */
     @HostEntryPoint
     fun scheduleWarmups(executor: Executor, graph: () -> AppProcessGraph) {

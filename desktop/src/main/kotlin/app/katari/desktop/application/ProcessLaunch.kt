@@ -12,22 +12,28 @@ import kotlin.jvm.optionals.getOrNull
  */
 internal fun thisProcessLaunch(): List<String>? {
     val command = ProcessHandle.current().info().command().getOrNull() ?: return null
-    return if (Path(command).nameWithoutExtension == JAVA_LAUNCHER) javaLaunch(command) else listOf(command)
+    // The main class or jar comes last, after the JVM's options; the arguments after it are dropped
+    return thisJavaCommand()?.plus(javaTarget()) ?: listOf(command)
 }
 
 /**
- * The Java command line that started this process, rebuilt from what the JVM records of its start: on Linux, Java
- * reads no arguments of a command line as long as the app's class path makes it.
+ * The Java command that started this process with the JVM options it was given, up to the class it runs, rebuilt from
+ * what the JVM records of its start: on Linux, Java reads no arguments of a command line as long as the app's class
+ * path makes it. Null where a launcher of the app's own started it, or the system doesn't tell a process its command.
  */
-private fun javaLaunch(java: String): List<String> {
-    // The main class or jar comes first, before the arguments, which are dropped
+internal fun thisJavaCommand(): List<String>? {
+    val command = ProcessHandle.current().info().command().getOrNull() ?: return null
+    if (Path(command).nameWithoutExtension != JAVA_LAUNCHER) return null
+    return listOf(command) + ManagementFactory.getRuntimeMXBean().inputArguments
+}
+
+private fun javaTarget(): List<String> {
     val started = System.getProperty("sun.java.command").orEmpty().substringBefore(' ')
-    val target = if (started.endsWith(".jar")) {
+    return if (started.endsWith(".jar")) {
         listOf("-jar", started)
     } else {
         listOf("-cp", System.getProperty("java.class.path"), started)
     }
-    return listOf(java) + ManagementFactory.getRuntimeMXBean().inputArguments + target
 }
 
 private const val JAVA_LAUNCHER = "java"
