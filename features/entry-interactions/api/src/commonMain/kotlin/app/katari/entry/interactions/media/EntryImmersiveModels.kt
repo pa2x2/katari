@@ -14,7 +14,8 @@ import tachiyomi.domain.entry.model.EntryChapter
  * Draws one page's media in the immersive feed, centred in the page, over what the feed shows of the title until the
  * media shows: a renderer paints no background of its own while it loads. [onMediaWidthChange] is told how wide the
  * media is drawn once it shows, or null until then, so the feed can put its title and actions beside media that leaves
- * room; the media's own [switches], such as a clip's subtitles, join the feed's controls.
+ * room; the media's own [switches], such as a clip's subtitles, join the feed's controls. Media that fails offers
+ * [onNextTitle] beside its retry, null on the last title.
  */
 fun interface EntryImmersiveRenderer {
     @Composable
@@ -28,6 +29,7 @@ fun interface EntryImmersiveRenderer {
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
         switches: EntryImmersiveMediaSwitches,
+        onNextTitle: (() -> Unit)?,
     )
 }
 

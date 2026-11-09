@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.media.fittedMediaWidth
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.roundedfilled.Pause
@@ -80,6 +81,7 @@ internal fun AnimeImmersivePlayerSurface(
     onMutedChange: (Boolean) -> Unit,
     onClearError: () -> Unit,
     onMediaWidthChange: (Dp?) -> Unit,
+    onNextTitle: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     var speedBoostActive by remember(player) { mutableStateOf(false) }
@@ -338,6 +340,7 @@ internal fun AnimeImmersivePlayerSurface(
                 player.prepare()
                 player.play()
             },
+            skip = nextTitleSkip(onNextTitle),
             modifier = Modifier.fillMaxSize(),
         )
     }

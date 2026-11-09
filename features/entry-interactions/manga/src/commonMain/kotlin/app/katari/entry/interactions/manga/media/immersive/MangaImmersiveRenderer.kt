@@ -76,6 +76,7 @@ internal class MangaImmersiveRenderer(
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
         switches: EntryImmersiveMediaSwitches,
+        onNextTitle: (() -> Unit)?,
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }
@@ -153,6 +154,7 @@ internal class MangaImmersiveRenderer(
                     pages = pages,
                     state = stripState,
                     onTap = { if (active) onToggleControls() },
+                    onNextTitle = onNextTitle,
                     modifier = Modifier.fillMaxSize(),
                 )
             } else {
@@ -170,6 +172,7 @@ internal class MangaImmersiveRenderer(
                                 zoomedPageIndex = if (zoomed) pageIndex else zoomedPageIndex.takeIf { it != pageIndex }
                             }
                         },
+                        onNextTitle = onNextTitle,
                         onDisplayedSize = { pageSize ->
                             if (pageSize.height > 0) pageSizes[pageIndex] = pageSize
                             if (!strip && pageSize.isStrip()) {

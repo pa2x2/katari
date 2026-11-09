@@ -34,6 +34,7 @@ import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
 import app.katari.entry.interactions.media.openOptions
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
 import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.pager.VerticalPager
 import app.katari.presentation.kit.refresh.PullRefresh
@@ -195,6 +196,11 @@ internal fun EntryImmersiveContent(
                             contextSupportingLabel = contextSupportingLabel,
                             contextLeadingContent = contextLeadingContent,
                             controls = controls,
+                            onNextTitle = if (page < currentItemCount - 1) {
+                                { pagerState.stepTitle(scope, 1) }
+                            } else {
+                                null
+                            },
                             titleSteps = if (controls.followsPointer) {
                                 ImmersiveTitleSteps(
                                     hasPrevious = page > 0,
@@ -265,6 +271,7 @@ private fun EntryImmersivePage(
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
     controls: EntryImmersiveControls,
+    onNextTitle: (() -> Unit)?,
     titleSteps: ImmersiveTitleSteps?,
     onContextClick: (() -> Unit)?,
     onExitImmersive: () -> Unit,
@@ -288,6 +295,7 @@ private fun EntryImmersivePage(
     var mediaShown by remember(itemState) { mutableStateOf(false) }
     LaunchedEffect(mediaWidth) { if (mediaWidth != null) mediaShown = true }
     val chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name
+    val nextTitleSkip = nextTitleSkip(onNextTitle)
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
 
@@ -321,12 +329,14 @@ private fun EntryImmersivePage(
                         place = place,
                         onMediaWidthChange = { mediaWidth = it },
                         switches = switches,
+                        onNextTitle = onNextTitle,
                     )
                     is EntryImmersiveRendererResult.Failed -> ReaderMediaLoadOverlay(
                         state = ReaderMediaLoadState.Failed(
                             renderer.error.message ?: stringResource(MR.strings.unknown_error),
                         ),
                         onRetry = onRetry,
+                        skip = nextTitleSkip,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -336,16 +346,19 @@ private fun EntryImmersivePage(
                     itemState.throwable.message ?: stringResource(MR.strings.unknown_error),
                 ),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Inapplicable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(stringResource(MR.strings.source_unsupported)),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Unavailable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(immersiveUnavailableMessage(itemState.reason)),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Loading, null -> if (isActive) {

@@ -61,6 +61,7 @@ internal class AnimeImmersiveRenderer(
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
         switches: EntryImmersiveMediaSwitches,
+        onNextTitle: (() -> Unit)?,
     ) {
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
@@ -207,6 +208,7 @@ internal class AnimeImmersiveRenderer(
             },
             onClearError = { playerErrorMessage = null },
             onMediaWidthChange = onMediaWidthChange,
+            onNextTitle = onNextTitle,
             modifier = modifier,
         )
     }

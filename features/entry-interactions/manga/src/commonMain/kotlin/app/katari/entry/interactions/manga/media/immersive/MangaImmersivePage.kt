@@ -29,6 +29,7 @@ import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import app.katari.entry.interactions.manga.reader.image.tiles.TiledPageImage
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
@@ -59,6 +60,7 @@ internal fun MangaImmersivePage(
     onToggleControls: () -> Unit,
     onZoomedChange: (Boolean) -> Unit,
     onDisplayedSize: (IntSize) -> Unit,
+    onNextTitle: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(page) { page.chapter.pageLoader?.selectPage(page) }
@@ -145,6 +147,7 @@ internal fun MangaImmersivePage(
             showBackground = false,
             onBackgroundClick = onToggleControls,
             onRetry = { page.chapter.pageLoader?.retryPage(page) },
+            skip = nextTitleSkip(onNextTitle),
             modifier = Modifier.fillMaxSize(),
         )
     }

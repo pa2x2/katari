@@ -26,6 +26,7 @@ import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import app.katari.entry.interactions.manga.reader.image.strips.StripPageImage
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
 import app.katari.presentation.kit.layout.PageStrip
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -45,6 +46,7 @@ internal fun MangaImmersiveStrip(
     pages: List<ReaderPage>,
     state: LazyListState,
     onTap: () -> Unit,
+    onNextTitle: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val latestOnTap by rememberUpdatedState(onTap)
@@ -57,17 +59,22 @@ internal fun MangaImmersiveStrip(
     ) { columnWidth ->
         itemsIndexed(pages, key = { index, _ -> index }) { _, page ->
             val widthPx = with(LocalDensity.current) { columnWidth.roundToPx() }
-            StripSlice(page = page, width = widthPx, modifier = Modifier.fillMaxWidth())
+            StripSlice(page = page, width = widthPx, onNextTitle = onNextTitle, modifier = Modifier.fillMaxWidth())
         }
     }
 }
 
 /**
  * One page of the strip, [width] pixels wide: as tall as the page once its size is known and a screen tall before,
- * its progressive preview while it arrives, the page itself, or why it failed with a retry.
+ * its progressive preview while it arrives, the page itself, or why it failed with a retry and the next title.
  */
 @Composable
-private fun LazyItemScope.StripSlice(page: ReaderPage, width: Int, modifier: Modifier = Modifier) {
+private fun LazyItemScope.StripSlice(
+    page: ReaderPage,
+    width: Int,
+    onNextTitle: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     val contentState = rememberReaderPageContent(page, settingsKey = null, request = { ImmersivePageRequest })
     val content = contentState.content
     val progressive by page.progressiveImageState.collectAsState(null)
@@ -117,6 +124,7 @@ private fun LazyItemScope.StripSlice(page: ReaderPage, width: Int, modifier: Mod
             },
             showBackground = previewImage == null,
             onRetry = { page.chapter.pageLoader?.retryPage(page) },
+            skip = nextTitleSkip(onNextTitle),
             modifier = Modifier.fillMaxSize(),
         )
     }
