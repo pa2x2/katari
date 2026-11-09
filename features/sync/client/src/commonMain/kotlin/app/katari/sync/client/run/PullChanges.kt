@@ -1,5 +1,6 @@
 package app.katari.sync.client.run
 
+import app.katari.sync.client.account.DeviceDirectory
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.SyncConnection
@@ -29,6 +30,7 @@ class PullChanges(
     private val incoming: IncomingRecords,
     private val handOff: EntryHandOff,
     private val naming: DeviceNaming,
+    private val devices: DeviceDirectory,
 ) {
     /** [onPage] hears where each page applied moved the device, and the account's sequence then. */
     suspend fun pullAll(
@@ -58,6 +60,8 @@ class PullChanges(
                 }
             }
             continuity.check(page.server)
+            // Before applying, so the records name their devices as soon as they show
+            devices.learn(page.records, device, client)
             handOff.watching(client, device, page.records) { incoming.apply(page) }
             onPage(page.nextCursor, page.server.sequence)
             if (!page.hasMore) return

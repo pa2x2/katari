@@ -1149,6 +1149,13 @@
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
     <string name="library_update_report_with_rechecked">%s · rechecked</string>
+    <string name="library_update_on_device">%1$s on %2$s</string>
+    <string name="library_update_on_other_device">%s on another device</string>
+    <string name="library_update_report_from_device">Updated on %s. Each entry\'s result stays on that device.</string>
+    <string name="library_update_report_from_other_device">Updated on another device. Each entry\'s result stays on that device.</string>
+    <string name="library_update_report_checked_entries">Checked</string>
+    <string name="library_update_report_this_device">On this device</string>
+    <string name="library_update_report_this_device_update">Last update here</string>
     <string name="upcoming_not_checked">Won\'t be checked · %s</string>
     <string name="library_update_reason_never">Set to never check</string>
     <string name="library_update_reason_category_off">Category switched off</string>
