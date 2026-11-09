@@ -149,10 +149,6 @@ internal class DefaultEntryImmersiveFeature(
             )
     }
 
-    override suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress) {
-        interaction.persistProgress(handle, progress)
-    }
-
     override fun openTarget(handle: EntryImmersiveHandle): EntryImmersiveOpenTargetResult {
         if (handle.entryType !in openTypes) return EntryImmersiveOpenTargetResult.Inapplicable(handle.entryType)
         val childId = handle.chapterId ?: return EntryImmersiveOpenTargetResult.NotOpenable

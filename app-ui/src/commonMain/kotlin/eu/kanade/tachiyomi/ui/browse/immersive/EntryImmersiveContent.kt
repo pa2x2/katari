@@ -23,9 +23,12 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalDensity
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.media.EntryImmersiveOpenTargetResult
+import app.katari.entry.interactions.media.EntryImmersivePlace
+import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersivePreloadRadiusResult
 import app.katari.entry.interactions.media.EntryImmersiveRendererResult
 import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
+import app.katari.entry.interactions.media.openOptions
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
@@ -196,8 +199,13 @@ internal fun EntryImmersiveContent(
                         if (openTarget is EntryImmersiveOpenTargetResult.Available &&
                             chapter?.id == openTarget.childId
                         ) {
-                            {
-                                val result = entryOpenFeature.open(context = context, entry = entry, chapter = chapter)
+                            { place ->
+                                val result = entryOpenFeature.open(
+                                    context = context,
+                                    entry = entry,
+                                    chapter = chapter,
+                                    options = place.openOptions(),
+                                )
                                 openMessages.report(entry.type, result)
                             }
                         } else {
@@ -243,11 +251,13 @@ private fun EntryImmersivePage(
     onBackToTop: () -> Unit,
     onRefresh: () -> Unit,
     refreshEnabled: Boolean,
-    onOpenChapter: (() -> Unit)?,
+    /** Opens the episode or chapter at the place the feed shows it. */
+    onOpenChapter: ((EntryImmersivePlace?) -> Unit)?,
     onPagingBlockedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
 ) {
     var bottomOverlayHeightPx by remember { mutableIntStateOf(0) }
+    val place = remember(itemState) { EntryImmersivePlaceTracker() }
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
 
@@ -276,7 +286,7 @@ private fun EntryImmersivePage(
                         controlsBottomInset = controlsBottomInset,
                         onToggleControls = onToggleControls,
                         onPagingBlockedChange = onPagingBlockedChange,
-                        onProgress = { immersiveModel.persistProgress(itemState.handle, it) },
+                        place = place,
                     )
                     is EntryImmersiveRendererResult.Failed -> ReaderMediaLoadOverlay(
                         state = ReaderMediaLoadState.Failed(
@@ -329,7 +339,7 @@ private fun EntryImmersivePage(
                 onBackToTop = onBackToTop,
                 onRefresh = onRefresh,
                 refreshEnabled = refreshEnabled,
-                onOpenChapter = onOpenChapter,
+                onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
             )
         }

@@ -7,7 +7,6 @@ import app.katari.entry.interactions.child.EntryChildListRequest
 import app.katari.entry.interactions.child.EntryChildProgressLabel
 import app.katari.entry.interactions.child.EntryChildProgressRequest
 import app.katari.entry.interactions.media.EntryImmersiveHandle
-import app.katari.entry.interactions.media.EntryImmersiveProgress
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.entry.interactions.media.EntryPreviewConfig
 import app.katari.entry.interactions.media.EntryPreviewHandle
@@ -37,8 +36,6 @@ interface EntryImmersiveProcessor {
     ): EntryImmersiveHandle
 
     fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer
-
-    suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress)
 
     fun release(handle: EntryImmersiveHandle)
 }

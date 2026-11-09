@@ -125,6 +125,9 @@ class VideoPlayerActivity : AppCompatActivity() {
         val ownerAnimeId = intent.extras?.getLong(EXTRA_OWNER_VIDEO_ID, animeId) ?: animeId
         val episodeId = intent.extras?.getLong(EXTRA_EPISODE_ID, INVALID_ID) ?: INVALID_ID
         val bypassMerge = intent.extras?.getBoolean(EXTRA_BYPASS_MERGE, false) ?: false
+        val startPositionMs = intent.extras
+            ?.takeIf { it.containsKey(EXTRA_START_POSITION_MS) }
+            ?.getLong(EXTRA_START_POSITION_MS)
         if (animeId == INVALID_ID || episodeId == INVALID_ID) {
             finish()
             return
@@ -134,6 +137,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             chapterId = episodeId,
             ownerEntryId = ownerAnimeId,
             bypassMerge = bypassMerge,
+            startPositionMs = startPositionMs,
             defaultPlaybackSpeed = settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue / 100f,
         )
 
@@ -306,6 +310,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         private const val EXTRA_OWNER_VIDEO_ID = "owner_video_id"
         private const val EXTRA_EPISODE_ID = "episode_id"
         private const val EXTRA_BYPASS_MERGE = "bypass_merge"
+        private const val EXTRA_START_POSITION_MS = "start_position_ms"
         private const val INVALID_ID = -1L
 
         fun newIntent(
@@ -314,6 +319,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             chapter: tachiyomi.domain.entry.model.EntryChapter,
             ownerEntryId: Long = chapter.entryId,
             bypassMerge: Boolean = false,
+            startPositionMs: Long? = null,
         ): Intent {
             return Intent(context, VideoPlayerActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -321,6 +327,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 putExtra(EXTRA_OWNER_VIDEO_ID, ownerEntryId)
                 putExtra(EXTRA_EPISODE_ID, chapter.id)
                 putExtra(EXTRA_BYPASS_MERGE, bypassMerge)
+                startPositionMs?.let { putExtra(EXTRA_START_POSITION_MS, it) }
             }
         }
     }

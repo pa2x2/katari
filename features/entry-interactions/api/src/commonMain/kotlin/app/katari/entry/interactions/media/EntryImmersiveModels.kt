@@ -19,23 +19,8 @@ fun interface EntryImmersiveRenderer {
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveProgress) -> Unit,
+        place: EntryImmersivePlaceTracker,
     )
-}
-
-sealed interface EntryImmersiveProgress {
-    data class ImagePage(
-        val pageIndex: Int,
-        val pageCount: Int,
-        val sessionDurationMs: Long,
-    ) : EntryImmersiveProgress
-
-    data class Playback(
-        val positionMs: Long,
-        val durationMs: Long,
-        val activeDurationMs: Long = 0L,
-        val resetSession: Boolean = false,
-    ) : EntryImmersiveProgress
 }
 
 sealed interface EntryImmersiveHandle {
@@ -52,7 +37,6 @@ sealed interface EntryImmersiveHandle {
         override val entryType: EntryType,
         override val chapterId: Long?,
         val stream: VideoStream,
-        val resumePositionMs: Long,
         val delegate: Any? = null,
     ) : EntryImmersiveHandle
 }

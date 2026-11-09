@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -16,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -26,7 +26,8 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
-import app.katari.entry.interactions.media.EntryImmersiveProgress
+import app.katari.entry.interactions.media.EntryImmersivePlace
+import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.presentation.kit.pager.WheelTurns
@@ -38,20 +39,21 @@ import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.pagerMouseDrags
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.abs
-import kotlin.time.TimeSource
 
 /**
  * A chapter in the immersive feed: its pages side by side, turned by a swipe, a mouse drag, a sideways scroll or ← and
  * →, with a page slider while the controls show. The feed itself moves on ↑, ↓ and the wheel, so the chapter leaves
- * those to it. While a page is zoomed or the slider is held, the feed holds its paging.
+ * those to it. While a page is zoomed or the slider is held, the feed holds its paging. It opens at the chapter's saved
+ * page and follows it when the reader or another device moves it, but never saves a page of its own.
  */
 internal class MangaImmersiveRenderer(
     private val media: MangaImmersiveMedia,
+    private val savedPageIndex: Flow<Int>,
     private val keepScreenOn: ViewerSettingBinding<Boolean>,
     private val platform: MangaImmersivePlatform,
 ) : EntryImmersiveRenderer {
@@ -64,7 +66,7 @@ internal class MangaImmersiveRenderer(
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveProgress) -> Unit,
+        place: EntryImmersivePlaceTracker,
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }
@@ -72,9 +74,7 @@ internal class MangaImmersiveRenderer(
         var zoomedPageIndex by remember { mutableStateOf<Int?>(null) }
         var isScrubbing by remember { mutableStateOf(false) }
         val isZoomed by remember { derivedStateOf { zoomedPageIndex == pagerState.currentPage } }
-        val latestProgress by rememberUpdatedState(onProgress)
         val keepScreenOnSetting by keepScreenOn.state.collectAsState()
-        var lastProgressAt by remember { mutableStateOf(TimeSource.Monotonic.markNow()) }
         MangaImmersivePagePreloader(
             pages = pages,
             currentPage = pagerState.settledPage,
@@ -83,22 +83,16 @@ internal class MangaImmersiveRenderer(
         LaunchedEffect(active, isZoomed, isScrubbing) {
             if (active) onPagingBlockedChange(isZoomed || isScrubbing)
         }
-        LaunchedEffect(active, pagerState, pages.size) {
-            if (!active) return@LaunchedEffect
-            lastProgressAt = TimeSource.Monotonic.markNow()
-            snapshotFlow { pagerState.settledPage }
-                .distinctUntilChanged()
-                .collect { pageIndex ->
-                    val now = TimeSource.Monotonic.markNow()
-                    latestProgress(
-                        EntryImmersiveProgress.ImagePage(
-                            pageIndex = pageIndex,
-                            pageCount = pages.size,
-                            sessionDurationMs = (now - lastProgressAt).inWholeMilliseconds.coerceAtLeast(0L),
-                        ),
-                    )
-                    lastProgressAt = now
-                }
+        LaunchedEffect(pagerState, pages.size) {
+            var followed = media.initialPageIndex
+            savedPageIndex.collect { saved ->
+                if (saved != followed && pages.isNotEmpty()) pagerState.scrollToPage(saved.coerceIn(0, pages.lastIndex))
+                followed = saved
+            }
+        }
+        DisposableEffect(pagerState, place) {
+            place.track { EntryImmersivePlace.ImagePage(pagerState.settledPage) }
+            onDispose { place.untrack() }
         }
 
         platform.KeepAwake(active && keepScreenOnSetting.effectiveValue)
@@ -149,17 +143,7 @@ internal class MangaImmersiveRenderer(
             }
         }
 
-        EntryImmersiveActiveSessionEffect(active, onPagingBlockedChange) {
-            val now = TimeSource.Monotonic.markNow()
-            latestProgress(
-                EntryImmersiveProgress.ImagePage(
-                    pageIndex = pagerState.settledPage,
-                    pageCount = pages.size,
-                    sessionDurationMs = (now - lastProgressAt).inWholeMilliseconds.coerceAtLeast(0L),
-                ),
-            )
-            lastProgressAt = now
-        }
+        EntryImmersiveActiveSessionEffect(active, onPagingBlockedChange)
     }
 }
 

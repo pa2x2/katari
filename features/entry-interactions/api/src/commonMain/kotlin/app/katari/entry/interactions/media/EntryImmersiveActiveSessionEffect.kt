@@ -8,7 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 fun EntryImmersiveActiveSessionEffect(
     active: Boolean,
     onPagingBlockedChange: (Boolean) -> Unit,
-    onDeactivated: () -> Unit,
+    onDeactivated: () -> Unit = {},
 ) {
     val latestOnPagingBlockedChange = rememberUpdatedState(onPagingBlockedChange)
     val latestOnDeactivated = rememberUpdatedState(onDeactivated)

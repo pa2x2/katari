@@ -2,7 +2,6 @@ package app.katari.entry.interactions.manga.media.immersive
 
 import app.katari.core.platform.PlatformContext
 import app.katari.entry.interactions.media.EntryImmersiveHandle
-import app.katari.entry.interactions.media.EntryImmersiveProgress
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.entry.interactions.runtime.EntryImmersiveProcessor
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -22,9 +21,6 @@ internal class MangaImmersiveProcessor(private val chapters: MangaImmersiveChapt
     ): EntryImmersiveHandle = chapters.load(context, entry, chapter, source)
 
     override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer = chapters.renderer(handle)
-
-    override suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress) =
-        chapters.persistProgress(handle, progress)
 
     override fun release(handle: EntryImmersiveHandle) = chapters.release(handle)
 }

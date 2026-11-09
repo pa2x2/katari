@@ -231,10 +231,14 @@ internal class VideoPlayerViewModel(
         chapterId: Long,
         ownerEntryId: Long = entryId,
         bypassMerge: Boolean = false,
+        startPositionMs: Long? = null,
         defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
     ) {
         if (initialized) return
         initialized = true
+        // Asked once: a player brought back after its process died carries on from where it saved, not from here.
+        val start = startPositionMs?.takeUnless { savedState.get<Boolean>(START_POSITION_TAKEN_KEY) == true }
+        savedState[START_POSITION_TAKEN_KEY] = true
         this.defaultPlaybackSpeed = defaultPlaybackSpeed
         // A speed saved across process death outranks the default the player starts with.
         if (savedState.get<Float>(SESSION_PLAYBACK_SPEED_KEY) == null) sessionPlaybackSpeed = defaultPlaybackSpeed
@@ -260,7 +264,7 @@ internal class VideoPlayerViewModel(
                 episodeName = chapter?.name,
             )
             if (mutableState.value is State.Loading) mutableState.value = loadingState
-            resolvePlayback(initial = true)
+            resolvePlayback(initial = true, preservePositionMs = start?.coerceAtLeast(0L))
         }
     }
 
@@ -1626,6 +1630,7 @@ internal class VideoPlayerViewModel(
         private const val OWNER_VIDEO_ID_KEY = "owner_video_id"
         private const val EPISODE_ID_KEY = "episode_id"
         private const val BYPASS_MERGE_KEY = "bypass_merge"
+        private const val START_POSITION_TAKEN_KEY = "start_position_taken"
         private const val SESSION_PLAYBACK_SPEED_KEY = "session_playback_speed"
         private const val INVALID_ID = -1L
         private const val SELECTION_CACHE_LIMIT = 12

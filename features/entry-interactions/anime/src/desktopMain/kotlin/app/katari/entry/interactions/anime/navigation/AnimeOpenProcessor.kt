@@ -20,6 +20,7 @@ internal class AnimeOpenProcessor(private val destination: AnimePlayerDestinatio
                 episodeId = chapter.id,
                 ownerEntryId = options.ownerEntryId ?: chapter.entryId,
                 bypassMerge = options.bypassMerge,
+                startPositionMs = options.startPositionMs,
             ),
         )
     }

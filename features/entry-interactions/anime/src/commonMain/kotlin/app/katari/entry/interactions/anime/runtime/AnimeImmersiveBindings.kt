@@ -2,7 +2,6 @@ package app.katari.entry.interactions.anime.runtime
 
 import app.katari.entry.interactions.anime.media.immersive.AnimeClipPlatform
 import app.katari.entry.interactions.anime.media.immersive.AnimeImmersiveClips
-import app.katari.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import app.katari.video.engine.spi.VideoEngine
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -26,14 +25,12 @@ object AnimeImmersiveBindings {
     internal fun clips(
         entryProgressRepository: EntryProgressRepository,
         resolveVideoStream: () -> VideoStreamResolver,
-        mediaSession: AnimeMediaSessionProcessor,
         videoEngine: () -> VideoEngine,
         basePreferences: () -> AnimePlayerBasePreferences,
         clipPlatform: AnimeClipPlatform,
     ): AnimeImmersiveClips = AnimeImmersiveClips(
         entryProgressRepository = entryProgressRepository,
         resolveVideoStream = resolveVideoStream,
-        mediaSession = mediaSession,
         videoEngine = videoEngine,
         basePreferences = basePreferences,
         clipPlatform = clipPlatform,
