@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityViewModel
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.plus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -102,10 +103,7 @@ private fun ActivitySessionList(
 
     val sessions = state.sessions
     RowList(
-        contentPadding = PaddingValues(
-            top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
-            bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
-        ),
+        contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.xl),
     ) {
         // Always present so the list stays anchored at the top when the summary arrives after the first page.
         item("summary") {
