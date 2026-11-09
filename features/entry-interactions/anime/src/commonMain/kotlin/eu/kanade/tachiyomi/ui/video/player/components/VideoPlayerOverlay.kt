@@ -31,12 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
 import app.katari.entry.interactions.source.EntryChildWebViewAction
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -360,13 +362,17 @@ private fun BoxScope.VideoPlayerControls(
     LaunchedEffect(pointerOverControls) { onPointerOverControlsChange?.invoke(pointerOverControls) }
     var topBarHeight by remember { mutableIntStateOf(0) }
     var bottomBarHeight by remember { mutableIntStateOf(0) }
+
+    // How far the timeline rises above the window's bottom inset, which the skip button keeps while the timeline hides
+    var timelineLift by remember { mutableIntStateOf(0) }
+    val bottomInset = videoPlayerSafeBottomInset()
     LaunchedEffect(topBarHeight, bottomBarHeight) {
         if (topBarHeight > 0 && bottomBarHeight > 0) {
             onBarReachChange?.invoke(VideoPlayerBarReach(top = topBarHeight, bottom = bottomBarHeight))
         }
     }
     CompositionLocalProvider(
-        LocalVideoPlayerControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
+        LocalMediaControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
     ) {
         Column(
             modifier = Modifier
@@ -403,29 +409,6 @@ private fun BoxScope.VideoPlayerControls(
                 Spacer(modifier = Modifier.weight(1f))
             }
 
-            // Above the timeline's end while the controls show, at the bottom while they don't
-            AnimatedVisibility(
-                visible = skipVisible,
-                modifier = Modifier.align(Alignment.End),
-                enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
-                exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
-            ) {
-                skipOffer?.let { offer ->
-                    VideoPlayerSkipButton(
-                        offer = offer,
-                        service = skipService,
-                        countdown = skipCountdown,
-                        onClick = onSkip,
-                        modifier = Modifier
-                            .videoPlayerSafeContentPadding(includeBottom = !transportVisible)
-                            .padding(
-                                end = KatariTheme.spacing.l,
-                                bottom = if (transportVisible) KatariTheme.sizes.none else KatariTheme.spacing.l,
-                            ),
-                    )
-                }
-            }
-
             AnimatedVisibility(
                 visible = transportVisible,
                 enter = slideInVertically(
@@ -438,11 +421,42 @@ private fun BoxScope.VideoPlayerControls(
                 ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
                 VideoPlayerChromeContainer(
-                    modifier = Modifier.onSizeChanged { bottomBarHeight = it.height },
+                    modifier = Modifier.onSizeChanged {
+                        bottomBarHeight = it.height
+                        timelineLift = it.height - bottomInset
+                    },
                     contentAlignment = Alignment.Center,
                 ) {
                     timeline()
                 }
+            }
+        }
+
+        // Above the timeline's end, where it stays while the timeline hides, so it never moves under the pointer
+        AnimatedVisibility(
+            visible = skipVisible,
+            modifier = Modifier.align(Alignment.BottomEnd).zIndex(2f),
+            enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+            exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+        ) {
+            skipOffer?.let { offer ->
+                VideoPlayerSkipButton(
+                    offer = offer,
+                    service = skipService,
+                    countdown = skipCountdown,
+                    onClick = onSkip,
+                    modifier = Modifier
+                        .videoPlayerSafeContentPadding(includeBottom = true)
+                        .padding(
+                            end = KatariTheme.spacing.l,
+                            // Clear of the edge until the timeline has shown once
+                            bottom = if (timelineLift > 0) {
+                                with(LocalDensity.current) { timelineLift.toDp() }
+                            } else {
+                                KatariTheme.spacing.l
+                            },
+                        ),
+                )
             }
         }
 

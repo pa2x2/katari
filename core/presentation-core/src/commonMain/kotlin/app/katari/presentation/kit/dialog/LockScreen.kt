@@ -7,8 +7,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.navigation.DockClearance
-import app.katari.presentation.kit.navigation.LocalDockClearance
 import app.katari.presentation.kit.navigation.LocalDockOnScreen
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 
@@ -27,10 +27,11 @@ fun LockScreen(content: @Composable () -> Unit) {
         ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            CompositionLocalProvider(
-                LocalDockClearance provides DockClearance.None,
-                LocalDockOnScreen provides DockClearance.None,
-            ) { KeyboardShortcutLayer(content) }
+            ApartFromScreen {
+                CompositionLocalProvider(LocalDockOnScreen provides DockClearance.None) {
+                    KeyboardShortcutLayer(content)
+                }
+            }
         }
     }
 }

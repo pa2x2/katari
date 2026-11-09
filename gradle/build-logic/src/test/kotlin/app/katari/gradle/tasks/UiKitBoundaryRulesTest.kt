@@ -135,6 +135,40 @@ class UiKitBoundaryRulesTest {
         assertEquals(listOf(2, 3, 4), findings.map { it.lineNumber })
     }
 
+    @Test
+    fun `raw scrolling grids outside the kit are reported`() {
+        val findings = check(
+            "app/src/main/java/Screen.kt",
+            """
+            import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+            LazyVerticalGrid(columns = cells) { }
+            LazyVerticalStaggeredGrid(columns = cells) { }
+            CoverGrid(columns = cells) { }
+            CardFlow { }
+            """.trimIndent(),
+        )
+
+        assertEquals(listOf(2, 3), findings.map { it.lineNumber })
+    }
+
+    @Test
+    fun `reading a padding's sides outside the kit is reported`() {
+        val findings = check(
+            "app/src/main/java/Screen.kt",
+            """
+            import androidx.compose.foundation.layout.PaddingValues
+            val start = contentPadding.calculateStartPadding(direction)
+            val end = contentPadding.calculateEndPadding(direction)
+            val left = padding.calculateLeftPadding(direction)
+            val right = padding.calculateRightPadding(direction)
+            val top = contentPadding.calculateTopPadding()
+            RowList(contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.m)) { }
+            """.trimIndent(),
+        )
+
+        assertEquals(listOf(2, 3, 4, 5), findings.map { it.lineNumber })
+    }
+
     private fun check(path: String, content: String): List<UiKitBoundaryFinding> {
         return checkUiKitBoundaries(listOf(UiKitBoundarySource(path, content)), emptyList())
     }

@@ -4,7 +4,6 @@ import app.katari.entry.interactions.manga.media.MangaPageImageCache
 import app.katari.entry.interactions.manga.media.MangaPreviews
 import app.katari.entry.interactions.manga.media.immersive.MangaImmersiveChapters
 import app.katari.entry.interactions.manga.media.immersive.MangaImmersivePlatform
-import app.katari.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.runtime.EntryPageImageCache
 import app.katari.entry.interactions.settings.EntryInteractionPreferences
@@ -36,14 +35,12 @@ object MangaMediaBindings {
     @SingleIn(AppScope::class)
     internal fun immersiveChapters(
         entryProgressRepository: EntryProgressRepository,
-        mediaSession: MangaMediaSessionProcessor,
         pageSessionLoader: Lazy<ReaderPageSessionLoader>,
         readerSettings: MangaReaderSettings,
         viewerSettingBinder: ViewerSettingBinder,
         platform: MangaImmersivePlatform,
     ): MangaImmersiveChapters = MangaImmersiveChapters(
         entryProgressRepository = entryProgressRepository,
-        mediaSession = mediaSession,
         loadPageSession = { context, entry, chapter -> pageSessionLoader.value.load(context, entry, chapter) },
         bindKeepScreenOn = { entryId -> viewerSettingBinder.bind(readerSettings.display.keepScreenOn, entryId) },
         platform = platform,

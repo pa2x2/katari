@@ -48,8 +48,8 @@ enum class DockPlacement { Bottom, Side }
 
 /**
  * Lays [dock], typically a [FloatingDock], over [content] at the [placement] edge. Content scrolls on under the dock:
- * every [Scaffold] inside adds the dock's footprint to its bottom or start padding and keeps its FAB and snackbars clear
- * of it, for as long as [dockVisible] holds. Screens that a navigator swaps inside the host each take their room from a
+ * every [Scaffold] inside adds the dock's footprint to its bottom padding or the room on its start side and keeps its
+ * FAB and snackbars clear of it, for as long as [dockVisible] holds. Screens that a navigator swaps inside the host each take their room from a
  * [DockedScreen] instead.
  */
 @Composable

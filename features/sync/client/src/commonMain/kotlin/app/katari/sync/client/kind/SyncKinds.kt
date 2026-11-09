@@ -19,6 +19,7 @@ import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
 import app.katari.sync.client.kind.extension.ExtensionRepositoryKind
 import app.katari.sync.client.kind.font.ImportedFontKind
 import app.katari.sync.client.kind.history.HistoryKind
+import app.katari.sync.client.kind.libraryupdate.LibraryUpdateKind
 import app.katari.sync.client.kind.merge.MergeMemberKind
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.progress.ProgressKind
@@ -46,6 +47,7 @@ object SyncKinds {
         ActivitySegmentKind,
         ActivityCompletionKind,
         StatisticsEpochKind,
+        LibraryUpdateKind,
         CategoryKind,
         CategoryMembershipKind,
         CategoryUpdateRulesKind,

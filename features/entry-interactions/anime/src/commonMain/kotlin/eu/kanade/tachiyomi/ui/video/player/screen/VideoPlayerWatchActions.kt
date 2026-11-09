@@ -11,7 +11,9 @@ internal class VideoPlayerWatchActions(
     /** Opens the settings at a section, or at their start for null. */
     val openSettings: (VideoPlayerSettingsSection?) -> Unit,
     val dismissSettings: () -> Unit,
-    val togglePlayback: () -> Unit,
+
+    /** Plays or pauses, showing the controls when asked to, or leaving them as they are. */
+    val togglePlayback: (showControls: Boolean) -> Unit,
 
     /** Seeks one step from the seek buttons, with their feedback. */
     val seekFromControls: (VideoPlayerSeekDirection) -> Unit,

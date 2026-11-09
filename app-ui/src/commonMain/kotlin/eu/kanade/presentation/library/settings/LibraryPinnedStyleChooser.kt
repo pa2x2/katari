@@ -57,12 +57,7 @@ private fun LibraryPinnedStyleChoice(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val label = stringResource(
-        when (style) {
-            LibraryPinnedDisplayStyle.TonalGroup -> MR.strings.pref_library_pinned_style_tonal
-            LibraryPinnedDisplayStyle.Shelf -> MR.strings.pref_library_pinned_style_shelf
-        },
-    )
+    val label = stringResource(style.labelRes)
     ChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.s),

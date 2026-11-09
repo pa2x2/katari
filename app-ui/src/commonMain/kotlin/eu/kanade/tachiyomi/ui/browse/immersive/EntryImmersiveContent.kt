@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,14 +22,20 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import app.katari.core.platform.currentPlatformContext
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
 import app.katari.entry.interactions.media.EntryImmersiveOpenTargetResult
-import app.katari.entry.interactions.media.EntryImmersivePreloadRadiusResult
+import app.katari.entry.interactions.media.EntryImmersivePlace
+import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
+import app.katari.entry.interactions.media.EntryImmersivePreloadAheadResult
 import app.katari.entry.interactions.media.EntryImmersiveRendererResult
 import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
+import app.katari.entry.interactions.media.openOptions
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
-import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
+import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.pager.VerticalPager
 import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.sheet.PopoverAnchor
@@ -36,6 +43,8 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.window.ReportScreenTitle
+import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
@@ -90,20 +99,26 @@ internal fun EntryImmersiveContent(
     val currentOnPageSettled by rememberUpdatedState(onPageSettled)
     val currentOnNearEnd by rememberUpdatedState(onNearEnd)
     var pagingBlocked by remember { mutableStateOf(false) }
-    var controlsVisible by remember { mutableStateOf(false) }
+    val controls = rememberEntryImmersiveControls()
 
-    val preloadRadius = when (
-        val result = itemIdentity(pagerState.currentPage)?.type?.let(immersiveFeature::preloadRadius)
+    val preloadAhead = when (
+        val result = itemIdentity(pagerState.currentPage)?.type?.let(immersiveFeature::preloadAhead)
     ) {
-        is EntryImmersivePreloadRadiusResult.Available -> result.radius
-        is EntryImmersivePreloadRadiusResult.Inapplicable, null -> 0
+        is EntryImmersivePreloadAheadResult.Available -> result.titles
+        is EntryImmersivePreloadAheadResult.Inapplicable, null -> 0
     }
+    // The title before stays open for going back; further back is let go
+    val preloadRange = (
+        pagerState.currentPage - preloadAhead.coerceAtMost(
+            PRELOAD_BEHIND,
+        )
+        )..(pagerState.currentPage + preloadAhead)
     val retainedItemKeys = buildSet {
         pagerState.settledPage
             .takeIf { it in 0 until currentItemCount }
             ?.let(itemIdentity)
             ?.let(::add)
-        for (page in pagerState.currentPage - preloadRadius..pagerState.currentPage + preloadRadius) {
+        for (page in preloadRange) {
             if (page in 0 until currentItemCount) itemIdentity(page)?.let(::add)
         }
     }
@@ -141,86 +156,112 @@ internal fun EntryImmersiveContent(
             }
     }
 
-    PullRefresh(
-        refreshing = refreshing,
-        enabled = shouldEnableImmersivePullRefresh(pagerState.settledPage, pagingBlocked),
-        onRefresh = onRefresh,
-        modifier = modifier,
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            VerticalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SurfaceContainer.Media),
-                key = { page ->
-                    itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
-                },
-                userScrollEnabled = !pagingBlocked,
-                beyondViewportPageCount = preloadRadius,
-            ) { page ->
-                nonEntryPage(page)?.let { content ->
-                    content()
-                    return@VerticalPager
-                }
+    // The window names the title shown, as the readers and the player name theirs
+    ReportScreenTitle(pagerState.settledPage.takeIf { it in 0 until currentItemCount }?.let { itemContent(it) }?.title)
 
-                val entry = itemContent(page)
-                val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
-                val itemState = itemKey?.let(immersiveState.items::get)
-                val isActive = page == pagerState.settledPage
-                val preloadRange = (pagerState.currentPage - preloadRadius)..(pagerState.currentPage + preloadRadius)
-
-                if (entry != null && (page in preloadRange || isActive)) {
-                    LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
-                }
-
-                EntryImmersivePage(
-                    entry = entry,
-                    itemState = itemState,
-                    isActive = isActive,
-                    immersiveModel = immersiveModel,
-                    contextLabel = contextLabel,
-                    contextSupportingLabel = contextSupportingLabel,
-                    contextLeadingContent = contextLeadingContent,
-                    controlsVisible = controlsVisible,
-                    onToggleControls = { controlsVisible = !controlsVisible },
-                    onContextClick = onContextClick,
-                    contextAnchor = contextAnchor,
-                    onExitImmersive = onExitImmersive,
-                    onEntryClick = onEntryClick,
-                    onLibraryAction = onLibraryAction,
-                    showBackToTop = pagerState.currentPage > 0,
-                    onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    onRefresh = refreshFromTop,
-                    refreshEnabled = refreshEnabled,
-                    onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
-                        val openTarget = immersiveFeature.openTarget(itemState.handle)
-                        val chapter = itemState.chapter
-                        if (openTarget is EntryImmersiveOpenTargetResult.Available &&
-                            chapter?.id == openTarget.childId
-                        ) {
-                            {
-                                val result = entryOpenFeature.open(context = context, entry = entry, chapter = chapter)
-                                openMessages.report(entry.type, result)
-                            }
-                        } else {
-                            null
+    CompositionLocalProvider(LocalMediaControlHover provides controls.hover.takeIf { controls.followsPointer }) {
+        EntryImmersiveFullScreen { fullScreen ->
+            PullRefresh(
+                refreshing = refreshing,
+                enabled = shouldEnableImmersivePullRefresh(pagerState.settledPage, pagingBlocked),
+                onRefresh = onRefresh,
+                modifier = modifier,
+            ) {
+                Box(modifier = Modifier.fillMaxSize().immersiveControlsFollowPointer(controls)) {
+                    VerticalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(SurfaceContainer.Media),
+                        key = { page ->
+                            itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
+                        },
+                        userScrollEnabled = !pagingBlocked,
+                        beyondViewportPageCount = preloadAhead,
+                    ) { page ->
+                        nonEntryPage(page)?.let { content ->
+                            content()
+                            return@VerticalPager
                         }
-                    } else {
-                        null
-                    },
-                    onPagingBlockedChange = { blocked ->
-                        pagingBlocked = blocked
-                        onPagingBlockedChange(blocked)
-                    },
-                    onRetry = { entry?.let { immersiveModel.retry(context, it) } },
-                )
-            }
 
-            overlayContent(pagerState)
+                        val entry = itemContent(page)
+                        val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
+                        val itemState = itemKey?.let(immersiveState.items::get)
+                        val isActive = page == pagerState.settledPage
+
+                        if (entry != null && (page in preloadRange || isActive)) {
+                            LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
+                        }
+
+                        EntryImmersivePage(
+                            entry = entry,
+                            itemState = itemState,
+                            isActive = isActive,
+                            immersiveModel = immersiveModel,
+                            contextLabel = contextLabel,
+                            contextSupportingLabel = contextSupportingLabel,
+                            contextLeadingContent = contextLeadingContent,
+                            controls = controls,
+                            onNextTitle = if (page < currentItemCount - 1) {
+                                { pagerState.stepTitle(scope, 1) }
+                            } else {
+                                null
+                            },
+                            titleSteps = if (controls.followsPointer) {
+                                ImmersiveTitleSteps(
+                                    hasPrevious = page > 0,
+                                    hasNext = page < currentItemCount - 1,
+                                    onPrevious = { pagerState.stepTitle(scope, -1) },
+                                    onNext = { pagerState.stepTitle(scope, 1) },
+                                )
+                            } else {
+                                null
+                            },
+                            onContextClick = onContextClick,
+                            contextAnchor = contextAnchor,
+                            onExitImmersive = onExitImmersive,
+                            onEntryClick = onEntryClick,
+                            onLibraryAction = onLibraryAction,
+                            showBackToTop = pagerState.currentPage > 0,
+                            onBackToTop = { scope.launch { pagerState.animateScrollToPage(0) } },
+                            onRefresh = refreshFromTop,
+                            refreshEnabled = refreshEnabled,
+                            onOpenChapter = if (entry != null && itemState is EntryImmersiveViewModel.ItemState.Ready) {
+                                val openTarget = immersiveFeature.openTarget(itemState.handle)
+                                val chapter = itemState.chapter
+                                if (openTarget is EntryImmersiveOpenTargetResult.Available &&
+                                    chapter?.id == openTarget.childId
+                                ) {
+                                    { place ->
+                                        val result = entryOpenFeature.open(
+                                            context = context,
+                                            entry = entry,
+                                            chapter = chapter,
+                                            options = place.openOptions(),
+                                        )
+                                        openMessages.report(entry.type, result)
+                                    }
+                                } else {
+                                    null
+                                }
+                            } else {
+                                null
+                            },
+                            onPagingBlockedChange = { blocked ->
+                                pagingBlocked = blocked
+                                onPagingBlockedChange(blocked)
+                            },
+                            onRetry = { entry?.let { immersiveModel.retry(context, it) } },
+                            fullScreen = fullScreen,
+                        )
+                    }
+
+                    overlayContent(pagerState)
+                }
+            }
+            EntryImmersivePageKeys(pagerState = pagerState, enabled = !pagingBlocked)
         }
     }
-    EntryImmersivePageKeys(pagerState = pagerState, enabled = !pagingBlocked)
 }
 
 internal fun shouldEnableImmersivePullRefresh(settledPage: Int, pagingBlocked: Boolean): Boolean {
@@ -236,8 +277,9 @@ private fun EntryImmersivePage(
     contextLabel: String,
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
-    controlsVisible: Boolean,
-    onToggleControls: () -> Unit,
+    controls: EntryImmersiveControls,
+    onNextTitle: (() -> Unit)?,
+    titleSteps: ImmersiveTitleSteps?,
     onContextClick: (() -> Unit)?,
     contextAnchor: PopoverAnchor?,
     onExitImmersive: () -> Unit,
@@ -247,11 +289,21 @@ private fun EntryImmersivePage(
     onBackToTop: () -> Unit,
     onRefresh: () -> Unit,
     refreshEnabled: Boolean,
-    onOpenChapter: (() -> Unit)?,
+    /** Opens the episode or chapter at the place the feed shows it. */
+    onOpenChapter: ((EntryImmersivePlace?) -> Unit)?,
     onPagingBlockedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
+    fullScreen: WindowFullScreen?,
 ) {
     var bottomOverlayHeightPx by remember { mutableIntStateOf(0) }
+    val place = remember(itemState) { EntryImmersivePlaceTracker() }
+    val switches = remember(itemState) { EntryImmersiveMediaSwitches() }
+    var mediaWidth by remember(itemState) { mutableStateOf<Dp?>(null) }
+    // Once the media has shown, a page of it loading later doesn't bring the title's cover back
+    var mediaShown by remember(itemState) { mutableStateOf(false) }
+    LaunchedEffect(mediaWidth) { if (mediaWidth != null) mediaShown = true }
+    val chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name
+    val nextTitleSkip = nextTitleSkip(onNextTitle)
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
 
@@ -264,7 +316,9 @@ private fun EntryImmersivePage(
             .focusGroup()
             .background(SurfaceContainer.Media),
     ) {
-        ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
+        if (entry != null && !mediaShown) {
+            EntryImmersiveComingUp(entry = entry, chapterName = chapterName, modifier = Modifier.fillMaxSize())
+        }
 
         when (itemState) {
             is EntryImmersiveViewModel.ItemState.Ready -> {
@@ -276,17 +330,21 @@ private fun EntryImmersivePage(
                     is EntryImmersiveRendererResult.Available -> renderer.renderer.Content(
                         modifier = Modifier.fillMaxSize(),
                         active = isActive,
-                        controlsVisible = controlsVisible,
+                        controlsVisible = controls.visible,
                         controlsBottomInset = controlsBottomInset,
-                        onToggleControls = onToggleControls,
+                        onToggleControls = controls::onMediaTap,
                         onPagingBlockedChange = onPagingBlockedChange,
-                        onProgress = { immersiveModel.persistProgress(itemState.handle, it) },
+                        place = place,
+                        onMediaWidthChange = { mediaWidth = it },
+                        switches = switches,
+                        onNextTitle = onNextTitle,
                     )
                     is EntryImmersiveRendererResult.Failed -> ReaderMediaLoadOverlay(
                         state = ReaderMediaLoadState.Failed(
                             renderer.error.message ?: stringResource(MR.strings.unknown_error),
                         ),
                         onRetry = onRetry,
+                        skip = nextTitleSkip,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -296,47 +354,60 @@ private fun EntryImmersivePage(
                     itemState.throwable.message ?: stringResource(MR.strings.unknown_error),
                 ),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Inapplicable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(stringResource(MR.strings.source_unsupported)),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Unavailable -> ReaderMediaLoadOverlay(
                 state = ReaderMediaLoadState.Failed(immersiveUnavailableMessage(itemState.reason)),
                 onRetry = onRetry,
+                skip = nextTitleSkip,
                 modifier = Modifier.fillMaxSize(),
             )
             is EntryImmersiveViewModel.ItemState.Loading, null -> if (isActive) {
                 ReaderMediaLoadOverlay(
                     state = ReaderMediaLoadState.Loading(),
-                    onBackgroundClick = onToggleControls,
+                    showBackground = entry == null,
+                    onBackgroundClick = controls::onMediaTap,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
         }
 
         if (entry != null) {
-            ImmersiveOverlay(
-                visible = controlsVisible,
+            val entryActions = ImmersiveEntryActions(
                 entry = entry,
-                chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name,
+                chapterName = chapterName,
+                onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
+                onLibraryAction = { onLibraryAction(entry) },
+                onDetails = { onEntryClick(entry) },
+            )
+            ImmersiveEntryKeys(actions = entryActions, enabled = isActive)
+            ImmersiveOverlay(
+                visible = controls.visible,
                 contextLabel = contextLabel,
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,
                 onContextClick = onContextClick,
                 // Every composed page has its own pill; only the shown one is where the switcher opens
                 contextAnchor = contextAnchor?.takeIf { isActive },
-                onExitImmersive = onExitImmersive,
-                onEntryClick = { onEntryClick(entry) },
-                onLibraryAction = { onLibraryAction(entry) },
-                showBackToTop = showBackToTop,
-                onBackToTop = onBackToTop,
-                onRefresh = onRefresh,
-                refreshEnabled = refreshEnabled,
-                onOpenChapter = onOpenChapter,
+                view = ImmersiveViewActions(
+                    onRefresh = onRefresh,
+                    refreshEnabled = refreshEnabled,
+                    onBackToTop = onBackToTop.takeIf { showBackToTop },
+                    fullScreen = fullScreen,
+                    onExit = onExitImmersive,
+                    mediaSwitches = switches.offered,
+                ),
+                entry = entryActions,
+                mediaWidth = mediaWidth,
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
+                titleSteps = titleSteps,
             )
         }
     }
@@ -352,3 +423,5 @@ private fun immersiveUnavailableMessage(reason: EntryImmersiveUnavailableReason)
 }
 
 private const val LOAD_MORE_PAGE_THRESHOLD = 3
+
+private const val PRELOAD_BEHIND = 1

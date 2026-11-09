@@ -16,4 +16,7 @@ object BrowseMetrics {
 
     /** Widest an entry's cover gets in the side-by-side list of source migration, current entry beside its match. */
     val migrationCoverMaxWidth: Dp = 150.dp
+
+    /** Width of the cover a page of the immersive feed shows while its media loads. */
+    val immersiveLoadingCoverWidth: Dp = 120.dp
 }

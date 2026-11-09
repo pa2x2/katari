@@ -17,7 +17,7 @@ import app.katari.presentation.kit.layout.ScrollbarFrame
 import app.katari.presentation.kit.pointer.LocalWindowHasMouse
 
 @Composable
-fun FastScrollLazyVerticalGrid(
+internal fun FastScrollLazyVerticalGrid(
     columns: GridCells,
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),

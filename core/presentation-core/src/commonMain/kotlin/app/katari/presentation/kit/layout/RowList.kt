@@ -30,7 +30,8 @@ import tachiyomi.presentation.core.util.drawVerticalScrollbar
  * A scrolling list of rows, such as row group cards, history or sources. However wide the window, the rows stay in a
  * column at most [RowListMaxWidth] wide, so a row's buttons stay near the name they act on; the list still scrolls
  * from anywhere across its width. A screen of rows gets a frame that wide (`ScreenFrame.Rows`); in a wider frame the
- * column keeps to the frame's start edge, under the title. With [wrapGroups], a list of row groups whose frame holds two
+ * column keeps to the frame's start edge, under the title. The list keeps clear of the screen's side room itself, so
+ * [contentPadding] only adds to it, such as the room under the app bar. With [wrapGroups], a list of row groups whose frame holds two
  * columns of rows fills its width instead: the rows `rowGroupItems` adds wrap into lines across each group's card, while
  * group headers and anything else span the width; in a sheet with two columns of rows its groups always wrap into
  * both. Every list shows a scroll indicator at its edge while it scrolls;
@@ -50,27 +51,30 @@ fun RowList(
     content: RowListScope.() -> Unit,
 ) {
     val direction = LocalLayoutDirection.current
-    val end = contentPadding.calculateEndPadding(direction)
+    val framedPadding = contentPadding.plusSides(LocalContentSides.current, direction)
+    val end = framedPadding.calculateEndPadding(direction)
     val sheetColumns = LocalSheetColumns.current
     BoxWithConstraints(modifier = modifier, propagateMinConstraints = true) {
         val groupColumns = groupColumns(
-            width = maxWidth - contentPadding.calculateStartPadding(direction) - end,
+            width = maxWidth - framedPadding.calculateStartPadding(direction) - end,
             wrapGroups = wrapGroups,
             sheetColumns = sheetColumns,
         )
-        val padding = if (groupColumns > 1) contentPadding else contentPadding.inRowColumn(maxWidth, direction)
+        val padding = if (groupColumns > 1) framedPadding else framedPadding.inRowColumn(maxWidth, direction)
         val columnInset = PaddingValues(
             start = padding.calculateStartPadding(direction),
             end = padding.calculateEndPadding(direction),
         )
         val list = @Composable { listModifier: Modifier ->
-            LazyColumn(
-                modifier = listModifier,
-                state = state,
-                contentPadding = padding,
-                verticalArrangement = verticalArrangement,
-            ) {
-                RowListScopeImpl(this, columnInset, groupColumns).content()
+            SidesApplied {
+                LazyColumn(
+                    modifier = listModifier,
+                    state = state,
+                    contentPadding = padding,
+                    verticalArrangement = verticalArrangement,
+                ) {
+                    RowListScopeImpl(this, columnInset, groupColumns).content()
+                }
             }
         }
         if (LocalWindowHasMouse.current) {
@@ -78,7 +82,7 @@ fun RowList(
                 state = state,
                 contentPadding = PaddingValues(
                     top = fastScrollTopPadding,
-                    bottom = contentPadding.calculateBottomPadding(),
+                    bottom = framedPadding.calculateBottomPadding(),
                     end = end,
                 ),
             ) {
@@ -101,19 +105,21 @@ fun RowList(
 
 /**
  * What sits above a [RowList] and stays put while it scrolls, such as a search field over its rows. It keeps to the
- * rows' column, so it lines up with them however the list places them; [wrapGroups] is the list's.
+ * rows' column and the side room the list keeps clear of, so it lines up with them however the list places them;
+ * [wrapGroups] is the list's.
  */
 @Composable
 fun RowListHeader(modifier: Modifier = Modifier, wrapGroups: Boolean = false, content: @Composable () -> Unit) {
     val direction = LocalLayoutDirection.current
     val sheetColumns = LocalSheetColumns.current
+    val sides = LocalContentSides.current
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val padding = if (groupColumns(maxWidth, wrapGroups, sheetColumns) > 1) {
-            PaddingValues(0.dp)
+        val padding = if (groupColumns(maxWidth - sides.start - sides.end, wrapGroups, sheetColumns) > 1) {
+            sides.padding
         } else {
-            PaddingValues(0.dp).inRowColumn(maxWidth, direction)
+            sides.padding.inRowColumn(maxWidth, direction)
         }
-        Box(Modifier.padding(padding)) { content() }
+        Box(Modifier.padding(padding)) { SidesApplied(content) }
     }
 }
 
@@ -126,7 +132,8 @@ private fun groupColumns(width: Dp, wrapGroups: Boolean, sheetColumns: Int): Int
 /** The rows of a [RowList]. */
 interface RowListScope : LazyListScope {
     /**
-     * How far the rows sit in from the list's sides, its content padding included, so artwork behind the first rows,
+     * How far the rows sit in from the list's sides, its content padding and the screen's side room included, so artwork
+     * behind the first rows,
      * such as an `ArtworkBackdrop`, can bleed out to the list's edges.
      */
     val columnInset: PaddingValues

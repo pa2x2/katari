@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.roundedfilled.SkipNext
 import app.katari.presentation.kit.content.Icon
@@ -46,9 +47,9 @@ internal fun VideoPlayerSkipButton(
     val focus = remember { FocusRequester() }
     val takesFocus = LocalKeyboardShortcuts.current != null
     LaunchedEffect(takesFocus) { if (takesFocus) focus.requestFocus() }
-    val pill = (if (takesFocus) modifier.focusRequester(focus) else modifier).videoPlayerControl()
+    val pill = (if (takesFocus) modifier.focusRequester(focus) else modifier).mediaControl()
     if (countdown == null) {
-        OverlayPill(modifier = pill, style = OverlayStyle.Scrim, onClick = onClick) {
+        OverlayPill(modifier = pill, style = OverlayStyle.Raised, onClick = onClick) {
             SkipLabel(offer, service)
         }
     } else {

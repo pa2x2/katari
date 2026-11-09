@@ -39,7 +39,6 @@ internal fun LibraryCompactGrid(
                 state = gridState,
                 items = pinnedItems,
                 style = displaySettings.pinnedDisplayStyle,
-                contentPadding = contentPadding,
             ),
         state = gridState,
         columns = columns,

@@ -1,6 +1,5 @@
 package app.katari.entry.interactions.manga.media.immersive
 
-import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import tachiyomi.domain.entry.model.Entry
@@ -11,7 +10,6 @@ internal data class MangaImmersiveMedia(
     val initialPageIndex: Int,
     val entry: Entry,
     val child: EntryChapter,
-    val activitySession: EntryMediaSessionActivitySession = EntryMediaSessionActivitySession(),
 ) {
     val pages: List<ReaderPage>
         get() = readerChapter.pages.orEmpty()

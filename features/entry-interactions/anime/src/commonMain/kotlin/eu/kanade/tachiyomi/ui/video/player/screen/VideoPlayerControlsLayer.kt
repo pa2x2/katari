@@ -164,7 +164,7 @@ internal fun VideoPlayerControlsLayer(
             },
             onPreviousEpisode = actions.previousEpisode,
             onSeekBackward = { actions.seekFromControls(VideoPlayerSeekDirection.Backward) },
-            onTogglePlayback = actions.togglePlayback,
+            onTogglePlayback = { actions.togglePlayback(true) },
             onSeekForward = { actions.seekFromControls(VideoPlayerSeekDirection.Forward) },
             onNextEpisode = actions.nextEpisode,
             onScrubStarted = scrub::start,

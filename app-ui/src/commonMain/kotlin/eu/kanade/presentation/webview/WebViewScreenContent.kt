@@ -18,6 +18,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.navigation.Scaffold
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
@@ -144,14 +145,11 @@ fun WebViewScreenContent(
             )
         },
     ) { contentPadding ->
-        // Keyed to the page, so switching tabs shows the other page's browser rather than loading it into this one
-        key(page) {
-            browserView.Page(
-                page = page,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding),
-            )
+        FramedContent(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+            // Keyed to the page, so switching tabs shows the other page's browser rather than loading it into this one
+            key(page) {
+                browserView.Page(page = page, modifier = Modifier.fillMaxSize())
+            }
         }
     }
 

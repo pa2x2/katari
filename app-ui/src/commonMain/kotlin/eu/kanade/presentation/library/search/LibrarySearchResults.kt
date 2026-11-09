@@ -1,12 +1,10 @@
 package eu.kanade.presentation.library.search
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +27,8 @@ import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.layout.CoverGrid
 import app.katari.presentation.kit.layout.RowGridColumn
-import app.katari.presentation.kit.layout.columnCount
 import app.katari.presentation.kit.layout.coverGridCells
 import app.katari.presentation.kit.layout.coverListCells
 import app.katari.presentation.kit.list.RowGroupHeader
@@ -57,7 +54,6 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
@@ -100,11 +96,10 @@ internal fun LibrarySearchResults(
 
     val gridState = rememberLazyGridState()
     BindScrollToTop(scrollToTopTarget, gridState) { gridState.animateScrollToItem(0) }
-    val results: @Composable (cells: GridCells, columns: Int, contentPadding: PaddingValues) -> Unit =
-        { cells, columns, gridContentPadding ->
+    val results: @Composable (cells: GridCells, contentPadding: PaddingValues) -> Unit =
+        { cells, gridContentPadding ->
             LibrarySearchResultsGrid(
                 cells = cells,
-                columns = columns,
                 contentPadding = gridContentPadding + PaddingValues(gridPadding),
                 gridState = gridState,
                 sections = sections,
@@ -120,27 +115,22 @@ internal fun LibrarySearchResults(
             )
         }
     if (displayMode == LibraryDisplayMode.List) {
-        RowGridColumn(contentPadding, modifier.fillMaxSize()) { cells, rowPadding -> results(cells, 1, rowPadding) }
+        RowGridColumn(contentPadding, modifier.fillMaxSize()) { cells, rowPadding -> results(cells, rowPadding) }
     } else {
-        BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-            val direction = LocalLayoutDirection.current
-            val cells = if (displayMode == LibraryDisplayMode.ComfortableList) {
-                coverListCells()
-            } else {
-                coverGridCells(coverSize)
-            }
-            // The width the grid lays its columns across, so the preview fills whole lines of them
-            val gridWidth = maxWidth - contentPadding.calculateStartPadding(direction) -
-                contentPadding.calculateEndPadding(direction) - gridPadding * 2
-            results(cells, cells.columnCount(gridWidth, CommonEntryItemDefaults.GridHorizontalSpacer), contentPadding)
+        val cells = if (displayMode ==
+            LibraryDisplayMode.ComfortableList
+        ) {
+            coverListCells()
+        } else {
+            coverGridCells(coverSize)
         }
+        Box(modifier = modifier.fillMaxSize()) { results(cells, contentPadding) }
     }
 }
 
 @Composable
 private fun LibrarySearchResultsGrid(
     cells: GridCells,
-    columns: Int,
     contentPadding: PaddingValues,
     gridState: LazyGridState,
     sections: List<Pair<LibraryPage, List<LibraryItem>>>,
@@ -155,10 +145,11 @@ private fun LibrarySearchResultsGrid(
     onGlobalSearchClicked: (() -> Unit)?,
 ) {
     val defaultCategoryTitle = stringResource(MR.strings.label_default)
-    FastScrollLazyVerticalGrid(
+    CoverGrid(
         columns = cells,
         state = gridState,
         contentPadding = contentPadding,
+        fastScroll = true,
         // List rows are slices of one card per section, so no gap may open between them.
         verticalArrangement = Arrangement.spacedBy(
             if (displayMode == LibraryDisplayMode.List) {
@@ -168,7 +159,7 @@ private fun LibrarySearchResultsGrid(
             },
         ),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-    ) {
+    ) { columns ->
         if (onGlobalSearchClicked != null) {
             item(span = { GridItemSpan(maxLineSpan) }, contentType = "library_global_search_item") {
                 GlobalSearchItem(

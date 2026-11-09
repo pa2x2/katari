@@ -35,7 +35,5 @@ interface EntryImmersiveInteraction {
 
     fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer
 
-    suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress)
-
     fun release(handle: EntryImmersiveHandle)
 }

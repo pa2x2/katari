@@ -4,6 +4,7 @@ import app.katari.sync.client.server.SyncFailure
 import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.LinkedDevice
+import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -53,6 +54,14 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
         val found = listed.firstOrNull { it.id == device }
         if (found == null) unlisted = unlisted + device
         return found?.description?.name
+    }
+
+    /**
+     * Learns the names of the devices other than [thisDevice] that pushed [records], so what they edited can be named
+     * as they come, by a device that joined the account after this one too.
+     */
+    suspend fun learn(records: List<SequencedRecord>, thisDevice: DeviceId, client: SyncServerClient) {
+        records.map { it.record.device }.distinct().filter { it != thisDevice }.forEach { nameOf(it, client) }
     }
 
     suspend fun forget() {

@@ -1,8 +1,5 @@
 package app.katari.entry.interactions.manga.media.immersive
 
-import app.katari.entry.interactions.manga.media.session.MangaMediaSessionProcessor
-import app.katari.entry.interactions.media.session.EntryMediaSessionEventSink
-import app.katari.entry.interactions.media.session.EntryMediaSessionResult
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -35,7 +32,6 @@ class MangaImmersiveChaptersTest {
         }
         val chapters = MangaImmersiveChapters(
             entryProgressRepository = progressRepository,
-            mediaSession = MangaMediaSessionProcessor(EntryMediaSessionEventSink { EntryMediaSessionResult.Handled }),
             loadPageSession = { _, _, _ -> readerChapter },
             bindKeepScreenOn = { error("Rendering is not part of loading") },
             platform = AndroidMangaImmersivePlatform,

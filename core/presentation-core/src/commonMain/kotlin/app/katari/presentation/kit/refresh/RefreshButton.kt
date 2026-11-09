@@ -1,6 +1,7 @@
 package app.katari.presentation.kit.refresh
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Refresh
 import app.katari.presentation.kit.button.IconButton
@@ -17,6 +18,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun RefreshButton(
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true,
     label: String = stringResource(MR.strings.action_refresh),
 ) {
@@ -26,6 +28,7 @@ fun RefreshButton(
         icon = MaterialSymbols.Rounded.Refresh,
         contentDescription = label,
         onClick = onClick,
+        modifier = modifier,
         enabled = enabled,
         shortcut = shortcut,
     )

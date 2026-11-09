@@ -21,6 +21,7 @@ internal fun animePlayerIntent(
         chapter = chapter,
         ownerEntryId = options.ownerEntryId ?: chapter.entryId,
         bypassMerge = options.bypassMerge,
+        startPositionMs = options.startPositionMs,
     ).applyEntryOpenOptions(options)
 }
 

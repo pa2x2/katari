@@ -235,7 +235,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
 | A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
 | The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
-| A player's volume among its controls | `MediaVolumeControl` | |
+| A player's volume among its controls | `MediaVolumeControl` | `MediaVolumeSlider.WhilePointed` opens the slider only while the mouse points at a lone button, such as a feed clip's; `wheelStep` lets the wheel over it change the level |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |
 | Where a reader's tap zones are | `TapZoneOverlay` | |
@@ -243,7 +243,8 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Marks for recognised text on a page | `PageTextMarks` | |
 | Running text in a readable column | `ReadingColumn` | |
 | Two pages side by side | `PageSpread` | |
-| A long strip of page images | `PageStrip` | |
+| A long strip of page images | `PageStrip` | With `maxWidth` it keeps the pages to a centred column, such as a strip previewed in the immersive feed |
+| Title and actions beside media that leaves room for them, such as a tall page in a wide window | `PanelBesideMedia` | Over the media otherwise; the caller says how wide the media is drawn |
 | A preview of reading colours | `ReadingPageSample`, `ReadingPaletteSwatch` | |
 
 ## Dashboards, charts and calendars
@@ -262,8 +263,10 @@ See the `adaptive-layout` skill for which to use at which window size.
 |---|---|---|
 | A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn`; `stickyRowGroupHeader` in its scope keeps a header at the top while its rows scroll |
 | Entries shown as rows by a grid | `RowGridColumn` | |
+| A scrolling grid of entries, such as a library page, catalog or feed | `CoverGrid` | Never a raw `LazyVerticalGrid`; `fastScroll = true` for long grids; its content is given the column count |
 | Columns for a cover grid, and how many a grid lays out | `coverGridCells`, `GridCells.columnCount` | |
 | Cards of varying height in columns | `CardFlow` | |
+| A screen's content that isn't one of these lists, grids or panes, such as a page laid out as one column, tabs above a pager or a button over a list | `FramedContent`, `FramedScrollColumn` | Keeps it in the screen's frame, clear of the side dock and system bars; `FramedScrollColumn` scrolls from edge to edge and lets artwork bleed with `columnInset` |
 | A lazy list or grid with a mouse scrollbar | `ScrollbarFrame` | |
 | List and detail side by side | `TwoPanes` | |
 

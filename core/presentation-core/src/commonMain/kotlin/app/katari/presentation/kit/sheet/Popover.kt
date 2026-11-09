@@ -24,11 +24,10 @@ import androidx.compose.ui.unit.roundToIntRect
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.list.LocalRowGroupContainer
 import app.katari.presentation.kit.list.ProvideRowDensity
 import app.katari.presentation.kit.list.RowDensity
-import app.katari.presentation.kit.navigation.DockClearance
-import app.katari.presentation.kit.navigation.LocalDockClearance
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
@@ -111,14 +110,16 @@ fun Popover(
             contentColor = KatariTheme.colors.onSurface,
             shadowElevation = PopoverShadow,
         ) {
-            // The popover is its own window over the floating dock, so a Scaffold in it has nothing to clear
-            CompositionLocalProvider(
-                LocalRowGroupContainer provides SurfaceContainer.Highest,
-                LocalDockClearance provides DockClearance.None,
-                LocalSheetForm provides SheetForm.Popover,
-                LocalSheetColumns provides 1,
-            ) {
-                KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+            // The popover is its own window over the floating dock and the screen, so a Scaffold or list in it has
+            // nothing to clear
+            ApartFromScreen {
+                CompositionLocalProvider(
+                    LocalRowGroupContainer provides SurfaceContainer.Highest,
+                    LocalSheetForm provides SheetForm.Popover,
+                    LocalSheetColumns provides 1,
+                ) {
+                    KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                }
             }
         }
     }

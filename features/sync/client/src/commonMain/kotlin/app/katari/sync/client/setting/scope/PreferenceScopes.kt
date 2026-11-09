@@ -38,6 +38,12 @@ object PreferenceScopes {
         return prefixes.firstOrNull { key.startsWith(it.key) }?.value
     }
 
+    /** The keys that sync or stay with [menu]'s settings. */
+    fun keysOf(menu: MenuSettings): Set<String> = keys.filterValues { it.menu == menu }.keys
+
+    /** The area [menu]'s settings belong to. */
+    fun areaOf(menu: MenuSettings): SettingsArea = checkNotNull(keys.values.first { it.menu == menu }.area)
+
     private fun merge(of: (PreferenceScopeTable) -> Map<String, PreferenceMark>): Map<String, PreferenceMark> {
         val merged = HashMap<String, PreferenceMark>()
         tables.forEach { table ->

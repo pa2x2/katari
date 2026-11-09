@@ -14,26 +14,37 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import app.katari.entry.interactions.media.EntryImmersiveHandle
-import app.katari.entry.interactions.media.EntryImmersiveProgress
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitch
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
+import app.katari.entry.interactions.media.EntryImmersivePlace
+import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Subtitles
 import app.katari.video.engine.spi.VideoEngine
 import app.katari.video.engine.spi.VideoPlayerRole
 import app.katari.video.engine.spi.loading.resolvedRequest
+import app.katari.video.engine.spi.player.VideoPlayer
 import app.katari.video.engine.spi.player.VideoPlayerEvent
 import app.katari.video.engine.spi.player.VideoPlayerState
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
-import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.playbackSnapshot
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.Flow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
+/**
+ * A clip in the immersive feed. It starts where the episode was left and follows that place when the player or another
+ * device moves it, but never saves a place of its own: watching in the feed is a preview.
+ */
 internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
+    private val savedPositionMs: Flow<Long>,
+    private val savedSubtitleKey: String?,
+    private val metadata: VideoMetadata,
     private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
     private val platform: AnimeClipPlatform,
@@ -47,7 +58,10 @@ internal class AnimeImmersiveRenderer(
         controlsBottomInset: Dp,
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
-        onProgress: (EntryImmersiveProgress) -> Unit,
+        place: EntryImmersivePlaceTracker,
+        onMediaWidthChange: (Dp?) -> Unit,
+        switches: EntryImmersiveMediaSwitches,
+        onNextTitle: (() -> Unit)?,
     ) {
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
@@ -58,10 +72,7 @@ internal class AnimeImmersiveRenderer(
         var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             mutableStateOf(false)
         }
-        val activePlaybackClock = remember(handle.chapterId, handle.stream.resolvedRequest.url) {
-            VideoActivePlaybackClock()
-        }
-        val player = remember(handle.chapterId, handle.stream.resolvedRequest.url, activePlaybackClock) {
+        val player = remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             videoEngine.createPlayer(
                 stream = handle.stream,
                 role = VideoPlayerRole.Feed,
@@ -86,16 +97,26 @@ internal class AnimeImmersiveRenderer(
         var playIntent by remember(player) { mutableStateOf(true) }
         var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted) }
         val latestPlayIntent by rememberUpdatedState(playIntent)
+        val latestActive by rememberUpdatedState(active)
 
         LaunchedEffect(active) {
             if (active) onPagingBlockedChange(false)
         }
-        LaunchedEffect(player, handle.resumePositionMs) {
-            if (handle.resumePositionMs > 0L) player.seekTo(handle.resumePositionMs)
-            player.setPlayWhenReady(active)
-            player.prepare()
+        LaunchedEffect(player) {
+            var followed: Long? = null
+            savedPositionMs.collect { saved ->
+                if (followed == null) {
+                    if (saved > 0L) player.seekTo(saved)
+                    player.setPlayWhenReady(latestActive)
+                    player.prepare()
+                } else {
+                    player.seekTo(saved)
+                }
+                followed = saved
+            }
         }
-        LaunchedEffect(player, active, muted) {
+        val volumePercent = platform.playerVolume?.collectAsState()?.value
+        LaunchedEffect(player, active, muted, volumePercent) {
             if (active) {
                 val storedMuted = preferences.immersiveFeedMuted
                 if (storedMuted != muted) {
@@ -103,7 +124,8 @@ internal class AnimeImmersiveRenderer(
                     return@LaunchedEffect
                 }
             }
-            player.setVolume(if (active && !muted) 1f else 0f)
+            player.setVolume(if (active && !muted) clipVolume(volumePercent) else 0f)
+            volumePercent?.let { player.setVolumeBoost(it.coerceAtLeast(VideoPlayer.NO_VOLUME_BOOST_PERCENT)) }
             if (active && playIntent) {
                 player.play()
             } else if (!active) {
@@ -121,51 +143,46 @@ internal class AnimeImmersiveRenderer(
         LaunchedEffect(player) {
             player.state.collect { playbackSnapshot = it.playbackSnapshot() }
         }
-        LaunchedEffect(player, activePlaybackClock) {
-            player.state.map { it.isPlaying }.distinctUntilChanged().collect(activePlaybackClock::setActive)
-        }
-        LaunchedEffect(player, handle.chapterId, active) {
-            if (!active) return@LaunchedEffect
-            while (isActive) {
-                delay(PROGRESS_SAVE_INTERVAL_MS)
-                val snapshot = player.capturePlaybackSnapshot()
-                onProgress(
-                    EntryImmersiveProgress.Playback(
-                        positionMs = snapshot.positionMs,
-                        durationMs = snapshot.durationMs,
-                        activeDurationMs = activePlaybackClock.checkpoint(),
-                    ),
-                )
-            }
-        }
         EntryImmersiveActiveSessionEffect(active, onPagingBlockedChange) {
-            val snapshot = player.capturePlaybackSnapshot()
-            onProgress(
-                EntryImmersiveProgress.Playback(
-                    positionMs = snapshot.positionMs,
-                    durationMs = snapshot.durationMs,
-                    activeDurationMs = activePlaybackClock.checkpoint(),
-                    resetSession = true,
-                ),
-            )
             player.pause()
-            player.seekTo(0L)
             playIntent = true
             playbackSnapshot = player.capturePlaybackSnapshot()
         }
         DisposableEffect(player) {
             onDispose {
-                val snapshot = player.capturePlaybackSnapshot()
-                onProgress(
-                    EntryImmersiveProgress.Playback(
-                        positionMs = snapshot.positionMs,
-                        durationMs = snapshot.durationMs,
-                        activeDurationMs = activePlaybackClock.checkpoint(),
-                    ),
-                )
                 player.stop()
                 player.release()
             }
+        }
+        val subtitles = rememberAnimeClipSubtitles(
+            player = player,
+            external = handle.stream.subtitles,
+            savedKey = savedSubtitleKey,
+            preferences = preferences,
+            active = active,
+        )
+        val subtitlesLabel = stringResource(MR.strings.anime_playback_subtitles)
+        DisposableEffect(switches, subtitles.available, subtitles.shown, subtitlesLabel) {
+            switches.offer(
+                if (subtitles.available) {
+                    listOf(
+                        EntryImmersiveMediaSwitch(
+                            label = subtitlesLabel,
+                            icon = MaterialSymbols.Rounded.Subtitles,
+                            on = subtitles.shown,
+                            onToggle = subtitles::toggle,
+                        ),
+                    )
+                } else {
+                    emptyList()
+                },
+            )
+            onDispose { switches.offer(emptyList()) }
+        }
+        // Declared after the release above so it is disposed first, before the player it reads is gone.
+        DisposableEffect(player, place) {
+            place.track { EntryImmersivePlace.Playback(player.currentPositionMs.coerceAtLeast(0L)) }
+            onDispose { place.untrack() }
         }
 
         AnimeImmersivePlayerSurface(
@@ -180,6 +197,8 @@ internal class AnimeImmersiveRenderer(
             keepAwake = keepAwake,
             playerErrorMessage = playerErrorMessage,
             muted = muted,
+            subtitles = subtitles,
+            metadata = metadata,
             onToggleControls = onToggleControls,
             onPlaybackSnapshotChange = { playbackSnapshot = it },
             onPlayIntentChange = { playIntent = it },
@@ -188,9 +207,18 @@ internal class AnimeImmersiveRenderer(
                 preferences.immersiveFeedMuted = it
             },
             onClearError = { playerErrorMessage = null },
+            onMediaWidthChange = onMediaWidthChange,
+            onNextTitle = onNextTitle,
             modifier = modifier,
         )
     }
 }
 
-private const val PROGRESS_SAVE_INTERVAL_MS = 10_000L
+/**
+ * A clip's volume for the player's own [percent] where it has one, up to as recorded; the rest of a level above that is
+ * the boost. Without one, the device's volume rules, and the clip plays as recorded under it.
+ */
+private fun clipVolume(percent: Int?): Float {
+    percent ?: return 1f
+    return percent.coerceIn(0, VideoPlayer.NO_VOLUME_BOOST_PERCENT) / VideoPlayer.NO_VOLUME_BOOST_PERCENT.toFloat()
+}

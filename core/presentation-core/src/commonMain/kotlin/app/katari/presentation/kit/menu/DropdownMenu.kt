@@ -31,6 +31,7 @@ import app.katari.presentation.kit.automation.exposeTestTags
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.control.Checkbox
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.HorizontalDivider
 import app.katari.presentation.kit.theme.ContentTone
@@ -76,10 +77,13 @@ fun DropdownMenu(
         shadowElevation = MenuDefaults.ShadowElevation,
         border = null,
     ) {
-        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) {
-            // A menu opened over selectable text, such as a reader's, would otherwise give the text's selection its
-            // items, which it can't place: they are in the popup's own window, and a press on one crashes
-            DisableSelection { KeyboardShortcutLayer { content() } }
+        // The menu is a window apart from the screen, so a list in it has none of the screen's side room to clear
+        ApartFromScreen {
+            CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) {
+                // A menu opened over selectable text, such as a reader's, would otherwise give the text's selection
+                // its items, which it can't place: they are in the popup's own window, and a press on one crashes
+                DisableSelection { KeyboardShortcutLayer { content() } }
+            }
         }
     }
 }

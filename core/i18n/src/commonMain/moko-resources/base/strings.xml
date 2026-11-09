@@ -985,7 +985,7 @@
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
-    <string name="pref_library_summary_unified">Categories, display, and behavior</string>
+    <string name="pref_library_summary_unified">Categories, display, cover badges, chapters</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
@@ -1150,6 +1150,13 @@
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
     <string name="library_update_report_with_rechecked">%s · rechecked</string>
+    <string name="library_update_on_device">%1$s on %2$s</string>
+    <string name="library_update_on_other_device">%s on another device</string>
+    <string name="library_update_report_from_device">Updated on %s. Each entry\'s result stays on that device.</string>
+    <string name="library_update_report_from_other_device">Updated on another device. Each entry\'s result stays on that device.</string>
+    <string name="library_update_report_checked_entries">Checked</string>
+    <string name="library_update_report_this_device">On this device</string>
+    <string name="library_update_report_this_device_update">Last update here</string>
     <string name="upcoming_not_checked">Won\'t be checked · %s</string>
     <string name="library_update_reason_never">Set to never check</string>
     <string name="library_update_reason_category_off">Category switched off</string>
@@ -1187,22 +1194,24 @@
 
     <string name="default_category">Default category</string>
     <string name="default_category_summary">Always ask</string>
-    <string name="categorized_display_settings">Per-category settings for sort</string>
+    <string name="categorized_display_settings">Sort each category separately</string>
     <string name="all">All</string>
     <string name="none">None</string>
     <string name="include">Include: %s</string>
     <string name="exclude">Exclude: %s</string>
 
     <string name="pref_behavior">Behavior</string>
+    <!-- Settings › Library heading for how a title's chapter or episode list behaves -->
+    <string name="pref_chapter_lists">Chapters and episodes</string>
     <!-- This should be to the left for RTL locales -->
-    <string name="pref_chapter_swipe_end">Item on swipe to right</string>
+    <string name="pref_chapter_swipe_end">Swipe right</string>
     <!-- This should be to the right for RTL locales -->
-    <string name="pref_chapter_swipe_start">Item on swipe to left</string>
-    <string name="pref_mark_duplicate_read_chapter_read">Mark duplicate seen item as seen</string>
-    <string name="pref_mark_duplicate_read_chapter_read_existing">After seeing an item</string>
-    <string name="pref_mark_duplicate_read_chapter_read_new">After fetching a new item</string>
+    <string name="pref_chapter_swipe_start">Swipe left</string>
+    <string name="pref_mark_duplicate_read_chapter_read">Mark duplicates as seen</string>
+    <string name="pref_mark_duplicate_read_chapter_read_existing">After you finish one</string>
+    <string name="pref_mark_duplicate_read_chapter_read_new">When a seen one is fetched again</string>
 
-    <string name="pref_hide_missing_chapter_indicators">Hide missing item indicators</string>
+    <string name="pref_hide_missing_chapter_indicators">Hide gaps in numbering</string>
     <string name="pref_disallow_non_ascii_filenames">Disallow non-ASCII filenames</string>
     <string name="pref_disallow_non_ascii_filenames_details">Ensures compatibility with certain storage media that don't support Unicode. When this is enabled, you'll need to manually rename source and entry folders by replacing non-ASCII characters with their lowercase UTF-8 hexadecimal representations. Downloaded files don't need to be renamed.</string>
     <string name="pref_download_name_hash">Add a unique code to download names</string>
@@ -1945,8 +1954,8 @@
     <string name="anime_playback_member_episode">%1$s · %2$s</string>
     <!-- The window's title while an episode plays: the series, then the episode -->
     <string name="anime_playback_window_title">%1$s · %2$s</string>
-    <string name="anime_playback_enter_full_screen">Full screen</string>
-    <string name="anime_playback_exit_full_screen">Exit full screen</string>
+    <string name="action_enter_full_screen">Full screen</string>
+    <string name="action_exit_full_screen">Exit full screen</string>
     <!-- The player's keyboard shortcuts, as the shortcut list names them -->
     <string name="anime_shortcut_play_pause">Play or pause</string>
     <string name="anime_shortcut_volume_up">Volume up</string>
@@ -2190,6 +2199,8 @@
     <string name="browse_exit_immersive">Exit immersive mode</string>
     <string name="browse_immersive_previous">Previous title</string>
     <string name="browse_immersive_next">Next title</string>
+    <!-- A clip's badge in the immersive feed while it plays without sound and its controls are hidden -->
+    <string name="browse_immersive_muted">Muted</string>
     <string name="browse_feeds">Feeds</string>
     <string name="browse_feeds_empty">No feeds yet</string>
     <string name="browse_feeds_empty_summary">A feed follows one source\'s Popular, Latest or a saved filter, and remembers where you stopped.</string>
@@ -3406,6 +3417,12 @@
     <string name="sync_choice_group_synced">Synced</string>
     <string name="sync_choice_group_device_default">This device by default</string>
     <string name="sync_choice_group_device_only">Only on this device</string>
+    <!-- Settings changed together from a menu rather than Settings, synced or kept on the device as one -->
+    <string name="sync_menu_library_sort">Library sort</string>
+    <string name="sync_menu_library_filters">Library filters</string>
+    <string name="sync_menu_chapter_list_defaults">Chapter list defaults</string>
+    <string name="sync_menu_place_library">Set in the library menu</string>
+    <string name="sync_menu_place_chapter_list">Saved with Set as default on a title\'s page</string>
     <string name="sync_choice_area_off_note">These settings stay on this device while their area isn't synced.</string>
     <string name="sync_choice_never_downloads">Downloads</string>
     <string name="sync_choice_never_downloads_summary">Chapters and episodes stay where they were downloaded</string>
@@ -3443,8 +3460,8 @@
     <string name="sync_profile_sync">Sync this profile</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_area_switch">Sync %1$s settings</string>
-    <!-- A setting in a sync area's list, after the Settings screen it is on: "Manga reader · Off · kept on this device" -->
-    <string name="sync_choice_setting_on_screen">%1$s · %2$s</string>
+    <!-- Two parts of a setting's line in a sync area's list: where Settings shows it and whether it syncs, as in "Manga reader · Display · Off · kept on this device" -->
+    <string name="sync_choice_setting_detail">%1$s · %2$s</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_area_again_title">Sync %1$s settings again?</string>
     <string name="sync_area_again_text">This device changed them while they weren't synced.</string>

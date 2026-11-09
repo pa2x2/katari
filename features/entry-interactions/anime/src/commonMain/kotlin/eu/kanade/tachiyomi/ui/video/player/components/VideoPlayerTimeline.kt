@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.control.MediaMarkedSpan
 import app.katari.presentation.kit.control.MediaTimeline
 import app.katari.presentation.kit.surface.MediaScrim
@@ -118,7 +119,7 @@ internal fun VideoPlayerTimeline(
                             )
                         }
                     },
-                    modifier = Modifier.videoPlayerControl(),
+                    modifier = Modifier.mediaControl(),
                 )
 
                 if (footerContent != null) {
@@ -135,6 +136,10 @@ internal fun VideoPlayerTimeline(
     }
 }
 
+/**
+ * The slim timeline of a clip in the immersive feed: the time played and the length above it, and the time under a
+ * hovering mouse floating over the bar. Scrubbing moves only the shown time; the clip seeks when it is let go.
+ */
 @Composable
 internal fun VideoPlayerCompactTimeline(
     positionMs: Long,
@@ -147,19 +152,19 @@ internal fun VideoPlayerCompactTimeline(
     var isScrubbing by remember(effectiveDurationMs) { mutableStateOf(false) }
     var scrubPositionMs by remember(effectiveDurationMs) { mutableStateOf(positionMs) }
     val displayedPositionMs = if (isScrubbing) scrubPositionMs else positionMs
+    var hoverMs by remember(effectiveDurationMs) { mutableStateOf<Long?>(null) }
+    val durationLabel = if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--"
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.m),
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (isScrubbing) {
-            Pill(
-                text = "${formatPlaybackTimestamp(scrubPositionMs)} / " + formatPlaybackTimestamp(effectiveDurationMs),
-                container = SurfaceContainer.MediaScrim,
-            )
-        }
+        Pill(
+            text = "${formatPlaybackTimestamp(displayedPositionMs)} / $durationLabel",
+            container = SurfaceContainer.MediaScrim,
+        )
+        val shownHoverMs = hoverMs?.takeIf { !isScrubbing && effectiveDurationMs > 0L }
         MediaTimeline(
             played = displayedPositionMs.fractionOf(effectiveDurationMs),
             buffered = bufferedPositionMs.fractionOf(effectiveDurationMs),
@@ -173,10 +178,15 @@ internal fun VideoPlayerCompactTimeline(
             positionDescription = stringResource(
                 MR.strings.anime_playback_position_of_duration,
                 formatPlaybackTimestamp(displayedPositionMs),
-                formatPlaybackTimestamp(effectiveDurationMs),
+                durationLabel,
             ),
             enabled = effectiveDurationMs > 0L,
             compact = true,
+            onHover = { fraction -> hoverMs = fraction?.let { playbackPositionAt(it, effectiveDurationMs) } },
+            previewAt = shownHoverMs?.fractionOf(effectiveDurationMs),
+            preview = shownHoverMs?.let { at ->
+                { Pill(text = formatPlaybackTimestamp(at), container = SurfaceContainer.MediaScrim) }
+            },
         )
     }
 }

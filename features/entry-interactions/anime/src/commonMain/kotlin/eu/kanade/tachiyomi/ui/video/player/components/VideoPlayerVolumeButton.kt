@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.control.MediaVolumeControl
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
@@ -27,7 +28,7 @@ internal fun VideoPlayerVolumeButton(
             player?.let { control.setMuted(it, !control.muted) }
             onInteraction()
         },
-        modifier = Modifier.videoPlayerControl(),
+        modifier = Modifier.mediaControl(),
         muteShortcut = VideoPlayerShortcuts.Mute,
     )
 }

@@ -24,7 +24,6 @@ import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.chip.AssistChip
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
-import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.progress.LinearProgressIndicator
@@ -35,14 +34,13 @@ import eu.kanade.presentation.library.update.report.components.FailingSourceGrou
 import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportRow
+import eu.kanade.presentation.library.update.report.components.ReportRunNote
 import eu.kanade.presentation.library.update.report.components.ReportSectionHeader
 import eu.kanade.presentation.library.update.report.components.reasonGroups
 import eu.kanade.presentation.library.update.report.components.reasonSection
-import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
-import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -75,18 +73,7 @@ fun LibraryUpdateReportContent(
             }
         }
         item(key = "header") {
-            RowGroupNote(
-                text = listOf(
-                    relativeTimeSpanString(report.run.startedAt),
-                    stringResource(report.run.trigger.labelRes),
-                    pluralStringResource(
-                        MR.plurals.library_update_report_considered,
-                        report.run.librarySize,
-                        report.run.librarySize,
-                    ),
-                )
-                    .joinToString(" · "),
-            )
+            ReportRunNote(report.run)
         }
 
         val (repeatedSources, failedSources) = report.failingSources.partition { it.isFailingRepeatedly }
@@ -310,10 +297,3 @@ private fun LazyListScope.failingSourceItems(
 private fun LibraryUpdateReport.Item.withRecheck(subtitle: String): String {
     return if (isRechecked) stringResource(MR.strings.library_update_report_with_rechecked, subtitle) else subtitle
 }
-
-private val LibraryUpdateTrigger.labelRes
-    get() = when (this) {
-        LibraryUpdateTrigger.AUTOMATIC -> MR.strings.library_update_trigger_automatic
-        LibraryUpdateTrigger.MANUAL -> MR.strings.library_update_trigger_manual
-        LibraryUpdateTrigger.SELECTION -> MR.strings.library_update_trigger_selection
-    }

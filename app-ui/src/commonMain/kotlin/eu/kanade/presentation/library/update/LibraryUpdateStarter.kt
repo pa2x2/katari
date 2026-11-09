@@ -11,8 +11,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.katari.core.platform.PlatformContext
 import app.katari.core.platform.currentPlatformContext
-import app.katari.library.update.report.LibraryUpdateRunSummary
-import app.katari.library.update.report.subscribeLatestSummary
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.SnackbarResult
@@ -20,7 +18,9 @@ import app.katari.ui.di.LocalAppUiGraph
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
 import tachiyomi.domain.library.update.model.LibraryUpdateStart
+import tachiyomi.domain.library.update.model.subscribeLatestSummary
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.pluralStringResource
 import tachiyomi.i18n.platform.stringResource

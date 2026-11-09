@@ -155,7 +155,7 @@ internal class VideoPlayerWatchInputTarget(
         if (ready.playback.pictureFraming == framing) ui.picturePreview = null
     }
 
-    override fun togglePlayback() = actions.togglePlayback()
+    override fun togglePlayback(showControls: Boolean) = actions.togglePlayback(showControls)
 
     override fun seekStep(direction: VideoPlayerSeekDirection) = actions.seekStep(direction)
 
