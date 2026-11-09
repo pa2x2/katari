@@ -110,6 +110,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     graph.profileRelock.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
+    graph.classDataArchive.start()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
@@ -118,6 +119,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
     }
+    graph.classDataArchive.stop()
     // The work they show ends with the app
     graph.desktopNotifications.close()
     // Before a restart's launch, whose web view would find Chromium's profile still in use
