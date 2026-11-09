@@ -42,6 +42,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
+import app.katari.presentation.kit.window.ReportScreenTitle
 import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
@@ -152,6 +153,9 @@ internal fun EntryImmersiveContent(
                 if (page >= currentItemCount - LOAD_MORE_PAGE_THRESHOLD - 1) currentOnNearEnd(page)
             }
     }
+
+    // The window names the title shown, as the readers and the player name theirs
+    ReportScreenTitle(pagerState.settledPage.takeIf { it in 0 until currentItemCount }?.let { itemContent(it) }?.title)
 
     CompositionLocalProvider(LocalMediaControlHover provides controls.hover.takeIf { controls.followsPointer }) {
         EntryImmersiveFullScreen { fullScreen ->
@@ -372,6 +376,14 @@ private fun EntryImmersivePage(
         }
 
         if (entry != null) {
+            val entryActions = ImmersiveEntryActions(
+                entry = entry,
+                chapterName = chapterName,
+                onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
+                onLibraryAction = { onLibraryAction(entry) },
+                onDetails = { onEntryClick(entry) },
+            )
+            ImmersiveEntryKeys(actions = entryActions, enabled = isActive)
             ImmersiveOverlay(
                 visible = controls.visible,
                 contextLabel = contextLabel,
@@ -386,13 +398,7 @@ private fun EntryImmersivePage(
                     onExit = onExitImmersive,
                     mediaSwitches = switches.offered,
                 ),
-                entry = ImmersiveEntryActions(
-                    entry = entry,
-                    chapterName = chapterName,
-                    onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
-                    onLibraryAction = { onLibraryAction(entry) },
-                    onDetails = { onEntryClick(entry) },
-                ),
+                entry = entryActions,
                 mediaWidth = mediaWidth,
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
                 titleSteps = titleSteps,
