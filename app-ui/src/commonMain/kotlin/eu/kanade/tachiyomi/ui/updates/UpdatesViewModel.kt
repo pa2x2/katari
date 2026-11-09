@@ -29,11 +29,10 @@ import app.katari.entry.interactions.translate.EntryTranslateStatus
 import app.katari.entry.interactions.translation.EntryTranslationLanguagesFeature
 import app.katari.library.update.pause.LibrarySourcePauses
 import app.katari.library.update.pause.PausedLibrarySources
-import app.katari.library.update.report.LibraryUpdateRunSummary
-import app.katari.library.update.report.subscribeLatestSummary
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.profiles.core.ProfileScopedStateEvent
 import app.katari.profiles.core.observeProfileScopedState
+import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdate
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -54,6 +53,7 @@ import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSetupHost
+import eu.kanade.tachiyomi.ui.library.update.report.NewerOtherDeviceUpdate
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,7 +93,9 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
 import tachiyomi.domain.library.update.model.LibraryUpdateStart
+import tachiyomi.domain.library.update.model.subscribeLatestSummary
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -130,6 +132,7 @@ class UpdatesViewModel(
     context: PlatformContext,
     private val libraryUpdateQueue: LibraryUpdateQueue,
     reportRepository: LibraryUpdateReportRepository,
+    newerOtherDeviceUpdate: NewerOtherDeviceUpdate,
     sourceRepository: SourceRepository,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
@@ -181,6 +184,9 @@ class UpdatesViewModel(
     val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(viewModelScope)
 
     val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val otherDeviceUpdate: StateFlow<OtherDeviceLibraryUpdate?> = newerOtherDeviceUpdate.subscribe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
