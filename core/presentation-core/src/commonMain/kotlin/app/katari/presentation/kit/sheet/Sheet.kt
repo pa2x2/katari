@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -144,6 +145,7 @@ fun Sheet(
                     LocalRowGroupContainer provides SurfaceContainer.Highest,
                     LocalScreenMessages provides messages,
                     LocalDockClearance provides DockClearance.None,
+                    LocalSheetForm provides if (edge == SheetEdge.Bottom) SheetForm.Bottom else SheetForm.Side,
                 ) {
                     KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
                 }
@@ -160,6 +162,12 @@ enum class SheetBackdrop {
     /** Left as it is, for a sheet whose changes show behind it as they are made, such as a reader's appearance. */
     Clear,
 }
+
+/** The form an open sheet's content is shown in, for the parts that differ, such as a side sheet's close button. */
+internal enum class SheetForm { Bottom, Side, Popover }
+
+/** The form of the sheet or [Popover] around the content, or null outside one. */
+internal val LocalSheetForm = staticCompositionLocalOf<SheetForm?> { null }
 
 /** The window edge a sheet slides in from and is dragged back to, as seen on screen whatever the layout direction. */
 internal enum class SheetEdge { Bottom, Left, Right }

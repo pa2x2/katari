@@ -56,6 +56,7 @@ import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.selection.ItemSelection
 import app.katari.presentation.kit.selection.SelectableItems
 import app.katari.presentation.kit.selection.SelectionActions
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.sync.ui.entry.EntrySync
 import app.katari.sync.ui.question.EntryQuestionBanner
@@ -137,6 +138,7 @@ fun EntryScreen(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -225,6 +227,7 @@ fun EntryScreen(
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
+            updatesAnchor = updatesAnchor,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -285,6 +288,7 @@ fun EntryScreen(
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
+            updatesAnchor = updatesAnchor,
             onEditDisplayNameClicked = onEditDisplayNameClicked,
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
@@ -355,6 +359,7 @@ private fun EntryScreenSmallImpl(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -573,6 +578,7 @@ private fun EntryScreenSmallImpl(
                                 onWebViewLongClicked = onWebViewLongClicked,
                                 onDuplicatesClicked = onDuplicatesClicked,
                                 onUpdatesClicked = onUpdatesClicked,
+                                updatesAnchor = updatesAnchor,
                                 onEditCategory = onEditCategoryClicked,
                             )
                             activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
@@ -705,6 +711,7 @@ fun EntryScreenLargeImpl(
     bookmarkedDownloadsSupported: Boolean,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
+    updatesAnchor: PopoverAnchor,
     onEditDisplayNameClicked: (() -> Unit)?,
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
@@ -900,6 +907,7 @@ fun EntryScreenLargeImpl(
                             onWebViewLongClicked = onWebViewLongClicked,
                             onDuplicatesClicked = onDuplicatesClicked,
                             onUpdatesClicked = onUpdatesClicked,
+                            updatesAnchor = updatesAnchor,
                             onEditCategory = onEditCategoryClicked,
                             wrap = true,
                         )

@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.sheet.popoverAnchor
+import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.presentation.kit.surface.AvatarSize
 import app.katari.presentation.kit.surface.Card
 import app.katari.presentation.kit.theme.KatariTheme
@@ -23,7 +25,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun ActiveProfileCard(modifier: Modifier = Modifier) {
     val switcher = LocalProfileSwitcher.current ?: return
-    Card(modifier = modifier, onClick = switcher.open) {
+    val anchor = rememberPopoverAnchor()
+    Card(modifier = modifier, onClick = { switcher.open(anchor) }) {
         Row(
             modifier = Modifier.padding(KatariTheme.spacing.l),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
@@ -43,7 +46,8 @@ fun ActiveProfileCard(modifier: Modifier = Modifier) {
             }
             Button(
                 label = stringResource(MR.strings.action_switch),
-                onClick = switcher.open,
+                onClick = { switcher.open(anchor) },
+                modifier = Modifier.popoverAnchor(anchor),
                 style = ButtonStyle.Tonal,
             )
         }

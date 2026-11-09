@@ -31,6 +31,7 @@ import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
 import app.katari.presentation.kit.pager.VerticalPager
 import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.surface.SurfaceContainer
@@ -61,6 +62,7 @@ internal fun EntryImmersiveContent(
     contextSupportingLabel: String? = null,
     contextLeadingContent: (@Composable () -> Unit)? = null,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor? = null,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
@@ -183,6 +185,7 @@ internal fun EntryImmersiveContent(
                     controlsVisible = controlsVisible,
                     onToggleControls = { controlsVisible = !controlsVisible },
                     onContextClick = onContextClick,
+                    contextAnchor = contextAnchor,
                     onExitImmersive = onExitImmersive,
                     onEntryClick = onEntryClick,
                     onLibraryAction = onLibraryAction,
@@ -236,6 +239,7 @@ private fun EntryImmersivePage(
     controlsVisible: Boolean,
     onToggleControls: () -> Unit,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor?,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
@@ -322,6 +326,7 @@ private fun EntryImmersivePage(
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,
                 onContextClick = onContextClick,
+                contextAnchor = contextAnchor,
                 onExitImmersive = onExitImmersive,
                 onEntryClick = { onEntryClick(entry) },
                 onLibraryAction = { onLibraryAction(entry) },

@@ -15,7 +15,8 @@ import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.SettingsRow
-import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.Popover
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.surface.AvatarSize
 import app.katari.presentation.kit.theme.ContentTone
@@ -25,9 +26,13 @@ import app.katari.profiles.ui.components.ProfileAvatar
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The visible profiles to switch between, the active one ticked and locked ones marked, then profile management. */
+/**
+ * The visible profiles to switch between, the active one ticked and locked ones marked, then profile management; beside
+ * the button at [anchor] that opened it.
+ */
 @Composable
-internal fun ProfileSwitcherSheet(
+internal fun ProfileSwitcherPopover(
+    anchor: PopoverAnchor?,
     profiles: List<Profile>,
     activeProfileId: Long,
     isLocked: (Profile) -> Boolean,
@@ -35,7 +40,7 @@ internal fun ProfileSwitcherSheet(
     onManageProfiles: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
+    Popover(anchor = anchor, onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             SheetHeader(title = stringResource(MR.strings.profiles_switch_summary))
             RowGroup {

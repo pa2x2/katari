@@ -11,12 +11,13 @@ import app.katari.presentation.kit.feedback.Tooltip
 fun AppBarAvatarButton(
     contentDescription: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     avatar: @Composable () -> Unit,
 ) {
     Tooltip(contentDescription) {
         androidx.compose.material3.IconButton(
             onClick = onClick,
-            modifier = Modifier.semantics { this.contentDescription = contentDescription },
+            modifier = modifier.semantics { this.contentDescription = contentDescription },
         ) {
             avatar()
         }

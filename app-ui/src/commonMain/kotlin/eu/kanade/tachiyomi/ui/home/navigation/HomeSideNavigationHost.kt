@@ -5,10 +5,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import app.katari.core.common.HomeScreenTabs
 import app.katari.presentation.kit.navigation.DockPlacement
 import app.katari.presentation.kit.navigation.DockedScreen
 import app.katari.presentation.kit.navigation.FloatingDockHost
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.window.currentWindowLayout
+import app.katari.profiles.ui.switcher.LocalProfileSwitcher
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
@@ -32,6 +35,7 @@ fun HomeSideNavigationHost(
     }
     val configuration = state.configuration
     val selectedTab = state.markedTab(navigator)
+    val profileSwitcher = LocalProfileSwitcher.current
     CompositionLocalProvider(LocalHomeNavigation provides state) {
         HomeShortcuts(navigator = navigator, state = state)
         FloatingDockHost(
@@ -44,6 +48,15 @@ fun HomeSideNavigationHost(
                     selectedTab = selectedTab,
                     onClick = { tab -> state.open(tab, navigator) },
                     placement = DockPlacement.Side,
+                    itemModifier = { tab ->
+                        // The switcher opened from this destination opens beside it
+                        val switcher = profileSwitcher
+                        if (tab == HomeScreenTabs.Profiles && switcher != null) {
+                            Modifier.popoverAnchor(switcher.dockAnchor)
+                        } else {
+                            Modifier
+                        }
+                    },
                     actions = listOfNotNull(rememberDockSyncAction(navigator)),
                 )
             },

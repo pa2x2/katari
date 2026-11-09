@@ -27,6 +27,8 @@ import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
 import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.refresh.RefreshButton
+import app.katari.presentation.kit.sheet.PopoverAnchor
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.surface.MediaScrim
 import app.katari.presentation.kit.surface.MediaScrimEdge
 import app.katari.presentation.kit.surface.OverlayPill
@@ -51,6 +53,7 @@ internal fun ImmersiveOverlay(
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor?,
     onExitImmersive: () -> Unit,
     onEntryClick: () -> Unit,
     onLibraryAction: () -> Unit,
@@ -87,7 +90,9 @@ internal fun ImmersiveOverlay(
                         supportingLabel = contextSupportingLabel,
                         leadingContent = contextLeadingContent,
                         onClick = onContextClick,
-                        modifier = Modifier.weight(1f, fill = false),
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .then(contextAnchor?.let { Modifier.popoverAnchor(it) } ?: Modifier),
                     )
                 }
             }

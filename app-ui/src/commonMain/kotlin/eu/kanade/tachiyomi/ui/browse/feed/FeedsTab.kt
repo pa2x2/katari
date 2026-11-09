@@ -48,6 +48,7 @@ import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.FloatingToolbarBox
 import app.katari.presentation.kit.refresh.PullRefresh
 import app.katari.presentation.kit.refresh.refreshAppBarAction
+import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.core.screen.Screen
@@ -70,7 +71,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.RenameFeedDialog
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBar
-import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
+import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerPopover
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -271,6 +272,7 @@ private fun Screen.FeedsTabContent(
             viewModel.sourceDisplayMode(activeFeed.sourceId),
         )
         var showFeedPicker by remember(activeFeed.id) { mutableStateOf(false) }
+        val feedPickerAnchor = rememberPopoverAnchor()
         var jumpToNewestRequest by remember(activeFeed.id) { mutableIntStateOf(0) }
 
         Column(
@@ -338,6 +340,7 @@ private fun Screen.FeedsTabContent(
                             activeSource = activeSource,
                             feedLabel = rememberFeedLabel(activeFeed, activeSource, activePreset),
                             onShowFeedPicker = { showFeedPicker = true },
+                            feedPickerAnchor = feedPickerAnchor,
                             onExitImmersive = { onFeedViewModeChange(FeedViewMode.Regular) },
                             onEntryClick = { navigator.push(EntryScreen(it.id, fromSource = true)) },
                             onLibraryAction = actionModel::confirmBrowseLibraryAction,
@@ -441,7 +444,8 @@ private fun Screen.FeedsTabContent(
                 }
 
                 if (showFeedPicker && feedViewMode == FeedViewMode.Immersive) {
-                    FeedPickerSheet(
+                    FeedPickerPopover(
+                        anchor = feedPickerAnchor,
                         feeds = enabledFeeds,
                         selectedFeedId = activeFeed.id,
                         sourceFor = viewModel::sourceFor,
