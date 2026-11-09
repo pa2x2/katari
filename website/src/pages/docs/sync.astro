@@ -107,7 +107,7 @@ import { sitePath } from "../../site/links.ts";
     <p>
       Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
       the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs with
-      <strong>Sync in the background</strong> on, every hour unless <strong>How often</strong> says otherwise. <strong>Pause syncing</strong>
+      <strong>Sync in the background</strong> on, every 30 minutes unless <strong>How often</strong> says otherwise. <strong>Pause syncing</strong>
       keeps changes on the device until you turn it off.
     </p>
     <p>
@@ -115,6 +115,7 @@ import { sitePath } from "../../site/links.ts";
       <strong>Desktop is further</strong> over <strong>Chapter 12, page 18</strong>. Select <strong>Go there</strong> to jump, or dismiss it
       to stay.
     </p>
+    <p>History names the device a title was last read on when it wasn't this one.</p>
   </Task>
 
   <Task id="questions" title="Needs your answer">
@@ -156,6 +157,11 @@ import { sitePath } from "../../site/links.ts";
   </Task>
 
   <Task id="status" title="What the status means">
+    <p>
+      Sync's status icon sits in the app bar of Library, Updates, History and Statistics, or at the foot of the side dock in a wide window,
+      and opens the Sync page. When sync stops until you act, a message on the screen you're on says why. On the Sync page,
+      <strong>Live</strong> after the account means changes from other devices arrive as they happen.
+    </p>
     <table>
       <thead>
         <tr><th>The Sync page says</th> <th>What to do</th></tr>
@@ -172,6 +178,13 @@ import { sitePath } from "../../site/links.ts";
         <tr>
           <td><strong>Syncing paused</strong>, or <strong>Changes wait for Wi-Fi</strong></td>
           <td>Changes wait on the device. Turn off <strong>Pause syncing</strong>, or connect to Wi-Fi.</td>
+        </tr>
+        <tr>
+          <td><strong>Live updates aren't working</strong></td>
+          <td>
+            Changes from other devices come when you open Katari and every few minutes, not as they happen. Whoever runs the server lets
+            WebSockets through its proxy, as <a href={sitePath("docs/sync-server/#https")}>HTTPS behind a reverse proxy</a> describes.
+          </td>
         </tr>
         <tr>
           <td><strong>Sync failed on this device</strong></td>
