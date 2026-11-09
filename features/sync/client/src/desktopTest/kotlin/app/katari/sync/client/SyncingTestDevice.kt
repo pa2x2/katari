@@ -21,7 +21,6 @@ import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
-import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
@@ -66,11 +65,11 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.firstSync,
         connection,
         ExistingRows(local.driver, local.handler, local.drain),
-        ExistingFiles(local.handler, local.ownedFiles),
+        ExistingFiles(local.handler, local.ownedFiles, local.syncPreferences),
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
         resync,
     )
-    val preferences = SyncPreferences(local.preferences.profiles)
+    val preferences = local.syncPreferences
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
@@ -97,7 +96,9 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             ),
             local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,
-            FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
+            FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories, preferences),
+            handOff,
+            disconnection,
             steps,
             UngroupedRecords(local.handler),
         ),
@@ -126,7 +127,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.pending,
         local.questions,
         local.held,
-        PendingFiles(local.handler),
+        PendingFiles(local.handler, preferences),
         fileRule,
         steps,
     )

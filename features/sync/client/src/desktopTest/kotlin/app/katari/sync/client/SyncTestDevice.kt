@@ -78,8 +78,8 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
     val files = TestFileStore(file.resolveSibling("${file.nameWithoutExtension}-files"), scope)
     val ownedFiles = OwnedFiles(files)
-    val fileCapture = FileCapture(handler, ownedFiles)
     val syncPreferences = SyncPreferences(preferences.profiles)
+    val fileCapture = FileCapture(handler, ownedFiles, syncPreferences)
     val drain = OutboxDrain(handler, preferences.reads, syncPreferences)
 
     // What the app's deletion does to the database and preferences; the test devices own no files

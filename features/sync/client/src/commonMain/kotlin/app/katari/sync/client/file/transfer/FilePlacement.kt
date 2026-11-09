@@ -7,9 +7,11 @@ import app.katari.core.platform.storage.AppPrivateDirectories
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.OwnedFiles
 import app.katari.sync.client.file.local.contentOf
+import app.katari.sync.client.file.local.dataGroup
 import app.katari.sync.client.file.local.fileCategoryOf
 import app.katari.sync.client.file.local.stored
 import app.katari.sync.client.payload.SyncedFile
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.data.Sync_local_files
@@ -42,10 +44,16 @@ class FilePlacement(
     private val files: OwnedFiles,
     private val rule: FileTransferRule,
     private val directories: AppPrivateDirectories,
+    private val preferences: SyncPreferences,
 ) {
-    /** Places what the records name, reporting to [progress] how many of the files wanted are placed. */
+    /**
+     * Places what the records name, reporting to [progress] how many of the files wanted are placed. Files of a kind
+     * this device doesn't sync stay as they are.
+     */
     suspend fun place(client: SyncServerClient, progress: (done: Long, total: Long) -> Unit) {
+        val choices = preferences.choices()
         val unsettled = handler.await { sync_filesQueries.unsettled().awaitAsList() }
+            .filter { choices.syncs(fileCategoryOf(it.category).dataGroup) }
         val (removals, wanted) = unsettled.partition { it.wanted_sha256 == null }
         // Copies first, so a file whose owner gives it up, as an entry moved to another profile does, is still there to
         // copy from.

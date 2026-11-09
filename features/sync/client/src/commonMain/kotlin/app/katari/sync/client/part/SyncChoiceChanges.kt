@@ -5,6 +5,8 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplySession
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.connection.SyncConnection
+import app.katari.sync.client.file.capture.FileCapture
+import app.katari.sync.client.file.local.dataGroup
 import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.outbox.recordEditsMadeNow
@@ -17,6 +19,7 @@ import app.katari.sync.client.setting.read.settingRecords
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
+import app.katari.sync.protocol.file.FileCategory
 import dev.zacsweers.metro.Inject
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.minusAssign
@@ -36,9 +39,17 @@ class SyncChoiceChanges(
     private val settings: SettingReads,
     private val connection: SyncConnection,
     private val runs: SyncRuns,
+    private val fileCapture: FileCapture,
 ) {
-    suspend fun syncData(group: DataGroup, on: Boolean) = change {
-        preferences.dataOff.include(group.name, !on)
+    /**
+     * Turns syncing [group] on or off. Turned on, the files of a group of files that changed here meanwhile are
+     * recorded as changed now ([FileCapture.rescan]).
+     */
+    suspend fun syncData(group: DataGroup, on: Boolean) {
+        val files = FileCategory.entries.firstOrNull { it.dataGroup == group }
+        change(then = { if (on && files != null) fileCapture.rescan(files) }) {
+            preferences.dataOff.include(group.name, !on)
+        }
     }
 
     /**
@@ -120,9 +131,14 @@ class SyncChoiceChanges(
         }
     }
 
+    /**
+     * Saves a choice with [save] and brings this device in line with it: [before] and [after] run in the same write as
+     * [ApplySession.followChoices], and [then] once it is done, before the sync run it asks for.
+     */
     private suspend fun change(
         before: suspend (ApplySession) -> Unit = {},
         after: suspend (ApplySession) -> Unit = {},
+        then: suspend () -> Unit = {},
         save: () -> Unit,
     ) {
         save()
@@ -132,6 +148,7 @@ class SyncChoiceChanges(
             session.followChoices()
             after(session)
         }
+        then()
         runs.request()
     }
 }

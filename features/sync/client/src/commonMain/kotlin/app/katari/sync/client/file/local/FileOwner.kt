@@ -1,5 +1,6 @@
 package app.katari.sync.client.file.local
 
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.protocol.file.FileCategory
 
@@ -38,3 +39,10 @@ internal val FileCategory.stored: String
 
 internal fun fileCategoryOf(stored: String): FileCategory =
     FileCategory.entries.first { it.stored == stored }
+
+/** The data group whose switch decides whether this device syncs files of this category. */
+internal val FileCategory.dataGroup: DataGroup
+    get() = when (this) {
+        FileCategory.COVER -> DataGroup.COVERS
+        FileCategory.FONT -> DataGroup.FONTS
+    }
