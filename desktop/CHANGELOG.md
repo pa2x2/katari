@@ -28,6 +28,7 @@
 ### 🐛 Fixed
 
 - Tab in an open sheet, dialog or reader panel now reaches its controls.
+- A video paused for several minutes no longer drops frames shortly after it resumes.
 - Settings pages opened from another page in two-pane Settings now have a back button.
 - Statistics lists no longer run under the side dock.
 - The last card on a Settings page no longer touches the bottom of the window.

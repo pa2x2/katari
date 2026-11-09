@@ -145,7 +145,6 @@ internal class StreamProxy(
             executor.execute {
                 val output = MpvConnectionOutput(socket.getOutputStream())
                 try {
-                    socket.soTimeout = IDLE_TIMEOUT_MS
                     serve(socket, output)
                 } catch (e: IOException) {
                     // mpv closed the connection, for example to seek.
@@ -172,7 +171,26 @@ internal class StreamProxy(
                 is ProxyTarget.VariantSet -> serveVariantSet(request, target, output)
             }
             output.flush()
-            if (!keepAlive || !request.keepAlive) return
+            if (!keepAlive || !request.keepAlive) {
+                awaitMpvClose(socket, input)
+                return
+            }
+        }
+    }
+
+    /**
+     * Ends what the proxy sends on [socket] and holds the socket until mpv closes its end. The last response can still
+     * sit unread in the socket's buffers, as it does while playback is paused mid-segment, and Linux discards a closed
+     * socket's unsent data once the reader hasn't read for some minutes, so mpv would get the segment cut short.
+     */
+    private fun awaitMpvClose(socket: Socket, input: InputStream) {
+        socket.shutdownOutput()
+        try {
+            do {
+                val read = input.read()
+            } while (read >= 0)
+        } catch (_: IOException) {
+            // mpv reset the connection instead of closing it, as it does when it stops reading a body to seek.
         }
     }
 
@@ -560,7 +578,6 @@ internal class StreamProxy(
     private companion object {
         const val LOOPBACK = "127.0.0.1"
         const val BACKLOG = 16
-        const val IDLE_TIMEOUT_MS = 60_000
         const val BUFFER_SIZE = 64 * 1024
         const val SNIFF_BYTES = 16L
         const val OK = 200
