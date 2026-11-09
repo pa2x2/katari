@@ -590,9 +590,9 @@
     <string name="extensionStoresScreen.addStore.processing">در حال پردازش…</string>
     <string name="migrationConfigScreen.deepSearchModeSubtitle">عنوان را برای جستجوی گسترده‌تر به کلمات کلیدی تجزیه می‌کند</string>
     <string name="are_you_sure">مطمئن هستید؟</string>
-    <string name="pref_firebase">تحلیل‌ها و گزارش‌های خرابی</string>
+    <string name="pref_telemetry">تحلیل‌ها و گزارش‌های خرابی</string>
     <string name="pref_onboarding_guide">راهنمای آشناسازی</string>
-    <string name="firebase_summary">ارسال گزارش‌های خرابی و داده‌های تحلیلی به ما امکان می‌دهد تا مشکلات را شناسایی و برطرف کنیم، عملکرد را بهبود بخشیم و به‌روزرسانی‌های آینده را متناسب‌تر با نیازهای شما ارائه دهیم</string>
+    <string name="telemetry_summary">ارسال گزارش‌های خرابی و داده‌های تحلیلی به ما امکان می‌دهد تا مشکلات را شناسایی و برطرف کنیم، عملکرد را بهبود بخشیم و به‌روزرسانی‌های آینده را متناسب‌تر با نیازهای شما ارائه دهیم</string>
     <string name="pref_disallow_non_ascii_filenames_details">این قابلیت سازگاری با برخی رسانه‌های ذخیره‌سازی را که از یونیکد پشتیبانی نمی‌کنند، تضمین می‌کند. با فعال‌سازی این گزینه، باید نام پوشه‌های منبع و مانگا را به‌صورت دستی تغییر دهید و کاراکترهای غیر-ASCII را با معادل‌های هگزادسیمال UTF-8 آن‌ها (به‌صورت حروف کوچک) جایگزین کنید. نیازی به تغییر نام فایل‌های فصل‌ها نیست.</string>
     <string name="fdroid_warning">نسخه‌های F-Droid به‌طور رسمی پشتیبانی نمی‌شوند.\nبرای کسب اطلاعات بیشتر، ضربه بزنید.</string>
     <string name="updates_last_update_info_just_now">همین الان</string>
@@ -630,7 +630,7 @@
     <string name="pref_incognito_mode_extension_summary">توقف ثبت تاریخچه مطالعه برای افزونه</string>
     <string name="pref_hide_missing_chapter_indicators">پنهان‌سازی نشانگرهای چپترهای مفقود</string>
     <string name="learn_more">برای کسب اطلاعات بیشتر ضربه بزنید</string>
-    <string name="onboarding_permission_crashlytics_description">گزارش‌های خرابیِ ناشناس‌سازی‌شده را برای توسعه‌دهندگان ارسال کنید.</string>
+    <string name="onboarding_permission_crash_reports_description">گزارش‌های خرابیِ ناشناس‌سازی‌شده را برای توسعه‌دهندگان ارسال کنید.</string>
     <string name="intervals_header">فواصل</string>
     <string name="day_short">%dروز</string>
     <string name="download_bookmarked">نشان‌گذاری شد</string>
@@ -720,7 +720,7 @@
     <string name="pref_download_new_unread_chapters_only">صرف‌نظر از بارگیری چپترهای خوانده‌شده‌ تکراری</string>
     <string name="description_placeholder">بدون توضیحات</string>
     <string name="privacy_policy">سیاست حفظ حریم خصوصی</string>
-    <string name="onboarding_permission_crashlytics">ارسال گزارش‌های خرابی</string>
+    <string name="onboarding_permission_crash_reports">ارسال گزارش‌های خرابی</string>
     <string name="error_user_agent_string_invalid">رشتهٔ عامل کاربر نامعتبر است</string>
     <string name="migrationListScreen.migrateNowActionLabel">مهاجرت همین حالا</string>
     <string name="migrationListScreen.migrateActionLabel">مهاجرت کردن</string>

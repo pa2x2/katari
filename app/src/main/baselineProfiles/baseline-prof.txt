@@ -22711,7 +22711,7 @@ Leu/kanade/tachiyomi/R$style;
 Leu/kanade/tachiyomi/core/security/PrivacyPreferences;
 HSPLeu/kanade/tachiyomi/core/security/PrivacyPreferences;-><init>(Ltachiyomi/core/common/preference/PreferenceStore;)V
 HSPLeu/kanade/tachiyomi/core/security/PrivacyPreferences;->getAnalytics()Ltachiyomi/core/common/preference/Preference;
-HSPLeu/kanade/tachiyomi/core/security/PrivacyPreferences;->getCrashlytics()Ltachiyomi/core/common/preference/Preference;
+HSPLeu/kanade/tachiyomi/core/security/PrivacyPreferences;->getCrashReports()Ltachiyomi/core/common/preference/Preference;
 Leu/kanade/tachiyomi/core/security/SecurityPreferences;
 HSPLeu/kanade/tachiyomi/core/security/SecurityPreferences;-><init>(Ltachiyomi/core/common/preference/PreferenceStore;)V
 HSPLeu/kanade/tachiyomi/core/security/SecurityPreferences;->getSecureScreen()Ltachiyomi/core/common/preference/Preference;
@@ -38631,12 +38631,6 @@ HSPLapp/katari/presentation/kit/widget/WidgetMetrics;->getCoverScreenBottomInset
 Lapp/katari/presentation/kit/widget/WidgetStylesKt;
 HSPLapp/katari/presentation/kit/widget/WidgetStylesKt;-><clinit>()V
 HSPLapp/katari/presentation/kit/widget/WidgetStylesKt;->getWidgetOnCoverScreen()Landroidx/glance/unit/ColorProvider;
-Lapp/katari/telemetry/TelemetryConfig;
-HSPLapp/katari/telemetry/TelemetryConfig;-><clinit>()V
-HSPLapp/katari/telemetry/TelemetryConfig;-><init>()V
-HSPLapp/katari/telemetry/TelemetryConfig;->init(Landroid/content/Context;)V
-HSPLapp/katari/telemetry/TelemetryConfig;->setAnalyticsEnabled(Z)V
-HSPLapp/katari/telemetry/TelemetryConfig;->setCrashlyticsEnabled(Z)V
 Lapp/katari/text/recognition/api/component/KnownTextRecognitionComponent;
 HSPLapp/katari/text/recognition/api/component/KnownTextRecognitionComponent;-><init>(Ljava/lang/String;Ljava/lang/String;Lapp/katari/text/recognition/api/component/TextRecognitionComponentRole;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;Ljava/util/List;)V
 HSPLapp/katari/text/recognition/api/component/KnownTextRecognitionComponent;-><init>(Ljava/lang/String;Ljava/lang/String;Lapp/katari/text/recognition/api/component/TextRecognitionComponentRole;Ljava/lang/String;Ljava/lang/String;Ljava/util/Set;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

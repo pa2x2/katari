@@ -111,6 +111,10 @@ jobs:
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
+      # The PostHog Gradle plugin uploads the R8 mapping with it, so PostHog can deobfuscate the release's crash reports
+      - name: Install the PostHog CLI
+        run: npm install --global @posthog/cli@0.19.0
+
       - name: Build
         run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
         env:
@@ -120,6 +124,9 @@ jobs:
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
 
       - name: Rename APK
         run: |
@@ -288,7 +295,7 @@ jobs:
           cache-read-only: true
 
       - name: Build
-        run: ./gradlew :desktop:packageAppImage -Pdesktop-release
+        run: ./gradlew :desktop:packageAppImage -Pdesktop-release -Pinclude-telemetry
 
       # Only the release build is named Katari-<version>; a development build, made without -Pdesktop-release,
       # finds nothing to upload and fails the release.

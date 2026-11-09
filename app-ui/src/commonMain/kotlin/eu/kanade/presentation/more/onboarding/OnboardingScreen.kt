@@ -11,6 +11,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.presentation.kit.feedback.GuideScreen
+import app.katari.telemetry.Telemetry
 import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,7 +31,7 @@ fun OnboardingScreen(
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     var start by rememberSaveable { mutableStateOf(OnboardingStart.New) }
     val steps = remember(graph, start, offersMihon, onOpenMihon, onChooseMihonBackup) {
-        val hasPermissionStep = graph.onboardingPermissions.isOffered || graph.appBuild.telemetryIncluded
+        val hasPermissionStep = graph.onboardingPermissions.isOffered || Telemetry.isIncluded
         listOfNotNull(
             WelcomeStep(start = start, onStartChange = { start = it }, offersMihon = offersMihon),
             when (start) {
@@ -43,7 +44,7 @@ fun OnboardingScreen(
             PermissionStep(
                 permissions = graph.onboardingPermissions,
                 privacyPreferences = graph.privacyPreferences,
-                telemetryIncluded = graph.appBuild.telemetryIncluded,
+                telemetryIncluded = Telemetry.isIncluded,
             ).takeIf { hasPermissionStep },
             SyncStep(graph.syncStatusState),
             FinishStep(),

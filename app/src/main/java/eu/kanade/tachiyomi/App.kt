@@ -21,7 +21,7 @@ import app.katari.android.work.RetiredWorkerFactory
 import app.katari.core.metro.GraphProvider
 import app.katari.extension.runtime.injekt.MetroInjektRegistrar
 import app.katari.profiles.sourcepreferences.extensionPreferenceSourceId
-import app.katari.telemetry.TelemetryConfig
+import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
 import app.katari.ui.host.AppVisibility
 import coil3.ImageLoader
@@ -29,7 +29,6 @@ import coil3.SingletonImageLoader
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
-import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.crash.ActivityCrashPresenter
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -76,7 +75,6 @@ class App :
             .build()
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
-    private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
@@ -101,8 +99,6 @@ class App :
             return
         }
 
-        TelemetryConfig.init(applicationContext)
-
         AppProcessStart.installCrashHandling(ActivityCrashPresenter(applicationContext))
 
         // The graph and the code after it read the default preferences straight away. Loading them takes a disk
@@ -119,6 +115,7 @@ class App :
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
         val scope = graph.appScope
+        AppProcessStart.startTelemetry(graph, TelemetryHost(this))
 
         LocalNetworkPermissionPrompter(this).install(scope)
 
@@ -149,16 +146,6 @@ class App :
                     cancelNotification(Notifications.ID_INCOGNITO_MODE)
                 }
             }
-            .launchIn(scope)
-
-        privacyPreferences.analytics
-            .changes()
-            .onEach(TelemetryConfig::setAnalyticsEnabled)
-            .launchIn(scope)
-
-        privacyPreferences.crashlytics
-            .changes()
-            .onEach(TelemetryConfig::setCrashlyticsEnabled)
             .launchIn(scope)
 
         basePreferences.hardwareBitmapThreshold.let { preference ->
