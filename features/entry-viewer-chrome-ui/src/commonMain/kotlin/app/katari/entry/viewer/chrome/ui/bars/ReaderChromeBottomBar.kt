@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.surface.Surface
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.ContentTone
@@ -40,7 +41,8 @@ fun ReaderChromeBottomBar(
 
 /**
  * Reader chrome action whose full share of the bottom bar is touchable. [shareWidth] false keeps it at its own touch
- * target, for a row of controls that floats over the page instead of spanning the window.
+ * target, for a row of controls that floats over the page instead of spanning the window. [shortcut] is the key that
+ * does the same, which the button's tooltip names.
  */
 @Composable
 fun RowScope.ReaderChromeBottomBarAction(
@@ -50,6 +52,7 @@ fun RowScope.ReaderChromeBottomBarAction(
     modifier: Modifier = Modifier,
     tone: ContentTone = ContentTone.Inherit,
     shareWidth: Boolean = true,
+    shortcut: KeyboardShortcut? = null,
 ) {
     IconButton(
         icon = icon,
@@ -63,5 +66,6 @@ fun RowScope.ReaderChromeBottomBarAction(
             modifier
         },
         tone = tone,
+        shortcut = shortcut,
     )
 }

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import app.katari.entry.interactions.manga.reader.text.ui.MangaReaderTextShortcuts
 import app.katari.entry.interactions.reader.settings.ReaderOrientation
 import app.katari.entry.interactions.reader.settings.ReadingMode
 import app.katari.entry.viewer.chrome.ui.bars.ReaderChromeBottomBarAction
@@ -97,6 +98,7 @@ fun RowScope.ReaderBottomBarActions(
             modifier = Modifier.semantics { stateDescription = textTranslationState },
             tone = if (textTranslationActive) ContentTone.Primary else ContentTone.Inherit,
             shareWidth = shareWidth,
+            shortcut = MangaReaderTextShortcuts.Translate,
         )
     }
 

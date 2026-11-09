@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import app.katari.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import app.katari.entry.interactions.manga.reader.text.session.MangaReaderTextProgress
 import app.katari.entry.interactions.manga.reader.text.translation.MangaPageTranslationIssue
+import app.katari.entry.interactions.manga.reader.text.ui.MangaReaderTextShortcuts
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.ArrowDropDown
 import app.katari.icons.materialsymbols.rounded.Close
@@ -36,6 +37,7 @@ import app.katari.presentation.kit.chip.AssistChip
 import app.katari.presentation.kit.menu.DropdownMenuItem
 import app.katari.presentation.kit.menu.OverflowMenu
 import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.surface.OverlayPanel
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -127,11 +129,16 @@ internal fun MangaReaderTextToolbar(
                         onClick = onChooseLanguage,
                         style = ButtonStyle.Text,
                     )
-                    else -> IconButton(
-                        icon = MaterialSymbols.Rounded.InkSelection,
-                        contentDescription = stringResource(MR.strings.reader_text_select_area),
-                        onClick = onSelectArea,
-                    )
+                    else -> {
+                        val shortcut = MangaReaderTextShortcuts.SelectArea
+                        KeyboardShortcutHandler(shortcut, onTrigger = onSelectArea)
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.InkSelection,
+                            contentDescription = stringResource(MR.strings.reader_text_select_area),
+                            onClick = onSelectArea,
+                            shortcut = shortcut,
+                        )
+                    }
                 }
                 IconButton(
                     icon = MaterialSymbols.Rounded.Subtitles,
@@ -140,6 +147,8 @@ internal fun MangaReaderTextToolbar(
                     tone = if (overlay) ContentTone.Primary else ContentTone.Inherit,
                 )
                 if (overlay) {
+                    val shortcut = MangaReaderTextShortcuts.ToggleOriginal(showOriginal)
+                    KeyboardShortcutHandler(shortcut, onTrigger = onToggleOriginal)
                     IconButton(
                         icon = if (showOriginal) {
                             MaterialSymbols.Rounded.Visibility
@@ -154,6 +163,7 @@ internal fun MangaReaderTextToolbar(
                             },
                         ),
                         onClick = onToggleOriginal,
+                        shortcut = shortcut,
                     )
                 }
                 if (stored) {
@@ -190,7 +200,7 @@ private fun progressText(
     MangaReaderTextProgress.Recognizing -> stringResource(MR.strings.reader_text_recognizing)
     MangaReaderTextProgress.Translating -> stringResource(MR.strings.reader_text_translating)
     is MangaReaderTextProgress.TranslationUnavailable -> mangaPageTranslationIssueMessage(progress.issue)
-    MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
+    MangaReaderTextProgress.Ready -> stringResource(readyHint)
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {

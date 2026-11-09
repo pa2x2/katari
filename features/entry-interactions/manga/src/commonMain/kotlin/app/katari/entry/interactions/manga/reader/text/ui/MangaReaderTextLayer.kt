@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import app.katari.core.platform.clipboard.TextClipboard
 import app.katari.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import app.katari.entry.interactions.manga.reader.text.session.MangaReaderTextBlocker
 import app.katari.entry.interactions.manga.reader.text.session.MangaReaderTextState
@@ -26,8 +27,6 @@ import app.katari.entry.interactions.manga.reader.text.ui.controls.MangaReaderTe
 import app.katari.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsPlacement
 import app.katari.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextFloatingControls
 import app.katari.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextToolbar
-import app.katari.entry.interactions.runtime.rememberEntryInteractionLinkOpening
-import app.katari.entry.interactions.runtime.rememberEntryInteractionTextClipboard
 import app.katari.language.api.tag.LanguageTag
 import app.katari.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import app.katari.model.artifacts.api.download.ModelArtifactDownloadApproval
@@ -74,6 +73,8 @@ internal fun MangaReaderTextLayer(
     onToggleOriginal: () -> Unit,
     onDeleteStoredTranslation: () -> Unit,
     onOpenTranslationSettings: () -> Unit,
+    openLink: (String) -> Unit,
+    clipboard: TextClipboard,
     onClose: () -> Unit,
 ) {
     val messages = rememberScreenMessages()
@@ -171,8 +172,8 @@ internal fun MangaReaderTextLayer(
 
         CoordinatedTranslationSessionHost(
             coordinator = translationCoordinator,
-            openLink = rememberEntryInteractionLinkOpening(),
-            clipboard = rememberEntryInteractionTextClipboard(),
+            openLink = openLink,
+            clipboard = clipboard,
             modifier = Modifier.fillMaxSize(),
             onDismiss = onDismissTranslation,
             popupAvoids = controlsBounds.takeIf { controlsShown },

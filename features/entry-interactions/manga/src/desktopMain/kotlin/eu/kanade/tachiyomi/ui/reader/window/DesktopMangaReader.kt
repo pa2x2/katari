@@ -24,10 +24,12 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.savedstate.savedState
 import app.katari.core.platform.PlatformContext
+import app.katari.core.platform.clipboard.TextClipboard
 import app.katari.core.platform.currentPlatformContext
 import app.katari.core.platform.link.LinkOpener
 import app.katari.core.platform.power.ScreenIdleInhibitor
 import app.katari.entry.interactions.manga.reader.settings.MangaReaderPreferences
+import app.katari.entry.interactions.manga.reader.text.ui.MangaReaderTextFeatures
 import app.katari.entry.interactions.reader.window.MangaReader
 import app.katari.entry.interactions.reader.window.MangaReaderNavigation
 import app.katari.entry.interactions.reader.window.MangaReaderRequest
@@ -57,14 +59,15 @@ import tachiyomi.presentation.core.i18n.stringResource
  * them. It takes the keyboard ([MangaReaderKeys]), hides the mouse pointer while it rests over the pages
  * ([rememberReaderPointer]), offers the window's full screen, keeps the screen awake as the reader's setting says, and
  * shows a guide to the mouse and keys the first time it opens in a profile ([MangaReaderInputGuide]). While it fills
- * the window, the window's title names the series and chapter. There is no text recognition on the desktop, so the
- * text features stay out.
+ * the window, the window's title names the series and chapter. The text features over the pages are the shared ones,
+ * opening their settings over the reader.
  */
 @Inject
 internal class DesktopMangaReader(
     private val sharedSettingsRegistry: ReaderSharedSettingsRegistry,
     preferenceStore: PreferenceStore,
     private val linkOpener: LinkOpener,
+    private val textClipboard: TextClipboard,
     private val screenIdleInhibitor: ScreenIdleInhibitor,
     private val deviceControls: ViewerDeviceControls,
 ) : MangaReader {
@@ -94,7 +97,7 @@ internal class DesktopMangaReader(
             viewer = next
         }
 
-        val host = remember(controller, context) { screenHost(context, viewModel, latestNavigation) }
+        val host = remember(controller, context) { screenHost(context, controller, latestNavigation) }
         ReportScreenTitle(
             state.manga?.displayTitle?.let { series ->
                 val chapter = state.currentChapter?.chapter?.name
@@ -124,7 +127,7 @@ internal class DesktopMangaReader(
 
     private fun screenHost(
         context: PlatformContext,
-        viewModel: ReaderViewModel,
+        controller: MangaReaderController,
         navigation: MangaReaderNavigation,
     ) = MangaReaderScreenHost(
         context = context,
@@ -136,17 +139,31 @@ internal class DesktopMangaReader(
         deviceControls = deviceControls,
         onNavigateUp = navigation::close,
         onClose = navigation::close,
-        onOpenEntry = { viewModel.manga?.id?.let(navigation::openEntry) },
+        onOpenEntry = { controller.viewModel.manga?.id?.let(navigation::openEntry) },
         onOpenWebView = { action, resolution ->
             when (action) {
                 EntryChildWebViewAction.OPEN_IN_WEB_VIEW ->
-                    navigation.openWebView(resolution.url, viewModel.manga?.displayTitle, resolution.sourceId)
+                    navigation.openWebView(
+                        resolution.url,
+                        controller.viewModel.manga?.displayTitle,
+                        resolution.sourceId,
+                    )
                 EntryChildWebViewAction.OPEN_IN_BROWSER -> linkOpener.open(context, resolution.url)
                 EntryChildWebViewAction.SHARE -> error("The desktop reader offers no sharing")
             }
         },
         onOpenDefaultSettings = navigation::openReaderSettings,
-        textLayer = null,
+        textLayer = { menuVisible, menuBounds ->
+            MangaReaderTextFeatures(
+                controller = controller,
+                menuVisible = menuVisible,
+                menuBounds = menuBounds,
+                onChoosePipeline = navigation::openTextRecognitionPipelineChoice,
+                onOpenTranslationSettings = navigation::openTranslationSettings,
+                openLink = { url -> linkOpener.open(context, url) },
+                clipboard = textClipboard,
+            )
+        },
     )
 }
 
