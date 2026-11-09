@@ -22,14 +22,14 @@ import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.more.settings.screen.AppEntryViewerSettingsScreenProjection
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
-import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
+import eu.kanade.presentation.more.settings.screen.SettingsMainList
 import eu.kanade.presentation.more.settings.screen.resolveSettingsStartScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberScreenHostFinish
-import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(
     private val destination: Int? = null,
@@ -57,10 +57,13 @@ class SettingsScreen(
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
                 null
             } else {
-                val screen = viewerSettingsFeature
-                    .destinations
-                    .firstOrNull { it.surfaceId == viewerSettingsSurfaceId }
-                    ?.projection as? VoyagerScreen
+                val screen = (
+                    viewerSettingsFeature
+                        .destinations
+                        .firstOrNull { it.surfaceId == viewerSettingsSurfaceId }
+                        ?.projection as? AppEntryViewerSettingsScreenProjection
+                    )
+                    ?.newScreen()
                 // Set like a settings search result: before the screen's list first composes, which clears it.
                 if (screen != null && viewerSettingsHighlight != null) {
                     SearchableSettings.highlightKey = viewerSettingsHighlight
@@ -116,7 +119,7 @@ class SettingsScreen(
                         .consumeWindowInsets(insets),
                     start = {
                         CompositionLocalProvider(LocalBackPress provides close) {
-                            SettingsMainScreen.Content(twoPane = true)
+                            SettingsMainList(twoPane = true)
                         }
                     },
                     end = { screens() },

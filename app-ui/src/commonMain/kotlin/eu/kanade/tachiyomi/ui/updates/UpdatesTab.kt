@@ -254,7 +254,7 @@ data object UpdatesTab : Tab {
             }
         }
         LaunchedEffect(Unit) {
-            reselectEvent.receiveAsFlow().collect { navigator.push(DownloadQueueScreen) }
+            reselectEvent.receiveAsFlow().collect { navigator.push(DownloadQueueScreen()) }
         }
     }
 

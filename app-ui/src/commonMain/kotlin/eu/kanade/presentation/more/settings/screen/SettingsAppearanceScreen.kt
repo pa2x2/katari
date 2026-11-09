@@ -36,7 +36,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import kotlin.time.Clock
 
-object SettingsAppearanceScreen : SearchableSettings {
+class SettingsAppearanceScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable

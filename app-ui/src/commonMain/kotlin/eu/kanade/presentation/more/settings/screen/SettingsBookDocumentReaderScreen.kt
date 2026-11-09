@@ -29,8 +29,10 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection() {
+class SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection() {
     override val surfaceId = BookDocumentReaderSettings.SURFACE_ID
+
+    override fun newScreen() = SettingsBookDocumentReaderScreen()
 
     @ReadOnlyComposable
     @Composable

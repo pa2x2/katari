@@ -32,7 +32,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LinkIcon
 import tachiyomi.presentation.core.i18n.stringResource
 
-object AboutScreen : Screen() {
+class AboutScreen : Screen() {
 
     @Composable
     override fun Content() {

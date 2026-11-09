@@ -243,7 +243,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                             navigator.push(EntryScreen(it.entryIdToOpen))
                         }
                         if (it is Tab.More && resolvedTab::class == MoreTab::class && it.toDownloads) {
-                            navigator.push(DownloadQueueScreen)
+                            navigator.push(DownloadQueueScreen())
                         }
                     }
                 }

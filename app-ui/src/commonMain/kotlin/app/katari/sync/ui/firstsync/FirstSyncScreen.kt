@@ -45,7 +45,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * account's, and whose settings each paired profile keeps. Data is always merged and device-level settings are never
  * replaced. Leaving without starting keeps the device waiting here, which the Sync page offers again.
  */
-data object FirstSyncScreen : Screen() {
+class FirstSyncScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

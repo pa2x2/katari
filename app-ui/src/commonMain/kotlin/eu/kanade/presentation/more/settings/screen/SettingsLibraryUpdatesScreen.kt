@@ -50,10 +50,7 @@ import androidx.compose.runtime.collectAsState as collectFlowAsState
  * Categories, sources and types are switches that take their entries out of updates; the skip rules leave out entries
  * that probably have nothing new. The entry screen can override all of it for one entry.
  */
-object SettingsLibraryUpdatesScreen : SearchableSettings {
-    private fun readResolve(): Any = SettingsLibraryUpdatesScreen
-
-    private const val COLLAPSED_ROWS = 5
+class SettingsLibraryUpdatesScreen : SearchableSettings() {
 
     @Composable
     @ReadOnlyComposable
@@ -298,3 +295,5 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
         onClick = onToggle,
     )
 }
+
+private const val COLLAPSED_ROWS = 5

@@ -30,7 +30,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** The profiles themselves, managed in place, followed by the settings about profiles that search can find. */
-object SettingsProfilesScreen : SearchableSettings {
+class SettingsProfilesScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable

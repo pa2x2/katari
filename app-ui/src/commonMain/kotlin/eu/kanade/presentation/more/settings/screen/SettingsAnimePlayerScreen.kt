@@ -15,9 +15,11 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
+class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = AnimePlayerPreferences.PROVIDER_ID
+
+    override fun newScreen() = SettingsAnimePlayerScreen()
 
     @ReadOnlyComposable
     @Composable

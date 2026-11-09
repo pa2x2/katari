@@ -12,5 +12,5 @@ interface SyncJoinOrigin
  */
 internal fun Navigator.leaveJoined(joined: SyncJoinViewModel.JoinState.Joined) {
     popUntil { it is SyncJoinOrigin }
-    if (joined.choicesWaiting) push(FirstSyncScreen)
+    if (joined.choicesWaiting) push(FirstSyncScreen())
 }

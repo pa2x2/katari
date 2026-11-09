@@ -11,15 +11,15 @@ internal fun resolveSettingsStartScreen(
     viewerSettingsScreen: Screen? = null,
 ): Screen {
     val requestedScreen = when (destination) {
-        SettingsScreen.Destination.About -> AboutScreen
-        SettingsScreen.Destination.DataAndStorage -> SettingsDataScreen
-        SettingsScreen.Destination.Translation -> SettingsTranslationScreen
-        SettingsScreen.Destination.TextRecognition -> SettingsTextRecognitionScreen
-        SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen
-        SettingsScreen.Destination.LibraryUpdates -> SettingsLibraryUpdatesScreen
-        SettingsScreen.Destination.Profiles -> SettingsProfilesScreen
-        SettingsScreen.Destination.Sync -> SyncScreen
-        null -> if (twoPane) SettingsAppearanceScreen else SettingsMainScreen
+        SettingsScreen.Destination.About -> AboutScreen()
+        SettingsScreen.Destination.DataAndStorage -> SettingsDataScreen()
+        SettingsScreen.Destination.Translation -> SettingsTranslationScreen()
+        SettingsScreen.Destination.TextRecognition -> SettingsTextRecognitionScreen()
+        SettingsScreen.Destination.Readers -> viewerSettingsScreen ?: SettingsReaderScreen()
+        SettingsScreen.Destination.LibraryUpdates -> SettingsLibraryUpdatesScreen()
+        SettingsScreen.Destination.Profiles -> SettingsProfilesScreen()
+        SettingsScreen.Destination.Sync -> SyncScreen()
+        null -> if (twoPane) SettingsAppearanceScreen() else SettingsMainScreen()
     }
 
     return requestedScreen

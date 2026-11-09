@@ -43,7 +43,7 @@ data object MoreTab : Tab {
             onDownloadedOnlyChange = { viewModel.downloadedOnly = it },
             incognitoMode = viewModel.incognitoMode,
             onIncognitoModeChange = { viewModel.incognitoMode = it },
-            onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
+            onClickDownloadQueue = { navigator.push(DownloadQueueScreen()) },
             onClickSync = { navigator.push(SettingsScreen(SettingsScreen.Destination.Sync)) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             onClickStats = { navigator.push(StatsScreen()) },

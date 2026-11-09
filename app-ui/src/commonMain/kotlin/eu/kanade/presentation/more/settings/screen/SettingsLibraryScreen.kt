@@ -54,7 +54,7 @@ internal fun visibleLibrarySettingsSections(): List<LibrarySettingsSection> {
     )
 }
 
-object SettingsLibraryScreen : SearchableSettings {
+class SettingsLibraryScreen : SearchableSettings() {
 
     @Composable
     @ReadOnlyComposable

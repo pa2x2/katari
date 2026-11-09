@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.ui.di.AppUiGraph
+import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -19,10 +20,10 @@ import eu.kanade.presentation.more.settings.screen.tts.presentation.ttsSettingsP
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePickerScreen
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
-import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberPageViewModel
 import tachiyomi.i18n.*
 
-object SettingsTtsScreen : SearchableSettings {
+class SettingsTtsScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -73,5 +74,5 @@ object SettingsTtsScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTtsSettingsViewModel(): TtsSettingsViewModel =
-    SettingsTtsScreen.rememberScreenViewModel<TtsSettingsViewModel>()
+internal fun Screen.rememberTtsSettingsViewModel(): TtsSettingsViewModel =
+    rememberPageViewModel<SettingsTtsScreen, TtsSettingsViewModel>()
