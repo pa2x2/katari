@@ -19,7 +19,7 @@ plugins {
 
 // The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
 // workflow reads it from this line.
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.5"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("app.katari.desktop.application")
