@@ -32,6 +32,7 @@ import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.storage.systemDesktopDirectories
 import app.katari.desktop.update.DesktopAppUpdatePrompt
 import app.katari.desktop.window.KatariWindow
+import app.katari.desktop.window.WindowThreadFreezes
 import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
 import coil3.SingletonImageLoader
@@ -125,6 +126,8 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         }
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
+        // Once the window is up: the watch posts to the window thread, which would start AWT before the display backend
+        LaunchedEffect(Unit) { WindowThreadFreezes.watch() }
     }
     graph.classDataArchive.stop()
     // The work they show ends with the app
