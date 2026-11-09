@@ -481,6 +481,10 @@
         <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
         <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>
     </plurals>
+    <plurals name="sync_status_held_aside">
+        <item quantity="one">%d synced change waits for a Katari update</item>
+        <item quantity="other">%d synced changes wait for a Katari update</item>
+    </plurals>
     <plurals name="sync_questions_waiting">
         <item quantity="one">%d question needs your answer</item>
         <item quantity="other">%d questions need your answer</item>

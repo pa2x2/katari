@@ -39,6 +39,8 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
         relativeTimeSpanString(headline.sinceMillis),
     )
     is SyncHeadline.HeldKinds -> stringResource(MR.strings.sync_status_held_kinds, heldKindsText(headline.kinds))
+    is SyncHeadline.HeldAside ->
+        pluralStringResource(MR.plurals.sync_status_held_aside, headline.count.toInt(), headline.count.toInt())
     is SyncHeadline.Downloading ->
         headline.percent
             ?.let { stringResource(MR.strings.sync_status_downloading, it) }
@@ -102,8 +104,8 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
     -> ContentTone.Error
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Unsent,
-    SyncHeadline.FirstDownloadWaitsForWifi,
+    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
+    is SyncHeadline.Unsent, SyncHeadline.FirstDownloadWaitsForWifi,
     -> ContentTone.Warning
     is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
         ContentTone.Primary
@@ -122,7 +124,8 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.Failed,
+    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
+    is SyncHeadline.Failed,
     -> MaterialSymbols.Rounded.SyncProblem
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff

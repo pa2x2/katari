@@ -34,6 +34,9 @@ sealed interface SyncHeadline {
     /** Records of kinds a newer app version syncs wait here until this app is updated (D031). */
     data class HeldKinds(val kinds: List<String>) : SyncHeadline
 
+    /** [count] synced records failed to apply here and wait for an update while the rest sync. */
+    data class HeldAside(val count: Long) : SyncHeadline
+
     /** A first download or full resync; [percent] done, or null when unknown. */
     data class Downloading(val percent: Int?) : SyncHeadline
 
@@ -69,11 +72,11 @@ sealed interface SyncHeadline {
         data class MissingOnServer(val count: Long) : FilesNote
     }
 
-    /** Whether this is trouble the person should notice: shown in colour and as a warning in the Library toolbar. */
+    /** Whether this is trouble the person should notice, which the Library toolbar shows as a warning. */
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,
-            is Questions, is UnreachableLong, is Failed,
+            is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
             -> true
             else -> false
         }
@@ -106,6 +109,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
         return SyncHeadline.UnreachableLong(server, activity.sinceMillis)
     }
     if (heldKinds.isNotEmpty()) return SyncHeadline.HeldKinds(heldKinds)
+    if (heldAside > 0) return SyncHeadline.HeldAside(heldAside)
     return when (activity) {
         is SyncStatus.Activity.Syncing -> when {
             activity.catchingUp -> SyncHeadline.CatchingUp(activity.percent)

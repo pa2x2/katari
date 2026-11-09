@@ -51,8 +51,6 @@ fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.Wifi, onClick = onClick)
         headline is SyncHeadline.Offline || headline is SyncHeadline.Unreachable ->
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudOff, onClick = onClick)
-        headline is SyncHeadline.HeldKinds ->
-            AppBar.Action(title = title, icon = MaterialSymbols.Rounded.SyncProblem, onClick = onClick)
         else -> AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudDone, onClick = onClick)
     }
 }
