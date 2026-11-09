@@ -69,6 +69,7 @@ fun TabbedSheet(
                 TabRow(
                     modifier = Modifier.weight(1f),
                     container = SurfaceContainer.High,
+                    buttonsFollow = menu != null || LocalSheetClose.current != null,
                 ) {
                     tabTitles.fastForEachIndexed { index, title ->
                         Tab(
