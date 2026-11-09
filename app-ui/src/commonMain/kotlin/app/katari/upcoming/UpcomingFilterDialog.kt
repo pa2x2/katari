@@ -12,6 +12,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.TriStateRow
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.category.visualName
@@ -77,6 +78,7 @@ fun UpcomingFilterDialog(
 ) {
     TabbedSheet(
         onDismissRequest = viewModel::resetDialog,
+        backdrop = SheetBackdrop.Light,
         tabTitles = listOf(stringResource(MR.strings.categories)),
     ) {
         CategoryFilterSheet(viewModel = viewModel)

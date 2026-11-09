@@ -51,8 +51,9 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import app.katari.presentation.kit.dialog.ClearDialogWindowDim
 import app.katari.presentation.kit.dialog.DialogBackHandler
+import app.katari.presentation.kit.dialog.DialogDim
+import app.katari.presentation.kit.dialog.DialogWindowDim
 import app.katari.presentation.kit.dialog.OutsideTapArea
 import app.katari.presentation.kit.dialog.kitDialogProperties
 import app.katari.presentation.kit.feedback.LocalScreenMessages
@@ -120,15 +121,20 @@ fun Sheet(
     val twoColumns = edge != SheetEdge.Bottom && half == null && window.width >= WindowWidth.Large
     val messages = rememberScreenMessagesFor(remember { SnackbarHostState() })
     val messagesHost = claimScreenMessages(messages)
-    val dimsBehind = backdrop != SheetBackdrop.Clear
+    val dim = when {
+        backdrop == SheetBackdrop.Clear -> DialogDim.None
+        // A bottom sheet covers most of what it acts on, so its dim hides little
+        backdrop == SheetBackdrop.Light && edge != SheetEdge.Bottom -> DialogDim.Light
+        else -> DialogDim.Full
+    }
     Dialog(
         onDismissRequest = onDismissRequest,
         // The sheet owns window insets, including the IME. Letting the platform fit them would leave the keyboard to
         // pan the window based on where the focused field was when it appeared, which misplaces sheets that request
         // text focus while still sliding in.
-        properties = kitDialogProperties(fitsSystemWindows = false, dimsBehind = dimsBehind),
+        properties = kitDialogProperties(fitsSystemWindows = false, dim = dim),
     ) {
-        if (!dimsBehind) ClearDialogWindowDim()
+        DialogWindowDim(dim)
         BoxWithConstraints(Modifier.fillMaxSize()) {
             SheetLayout(
                 edge = edge,
@@ -170,6 +176,12 @@ fun Sheet(
 enum class SheetBackdrop {
     /** Dimmed, setting the sheet apart from what it covers. */
     Dimmed,
+
+    /**
+     * Lightly dimmed beside a side sheet, for a sheet whose changes apply at once to what it covers, such as a list's
+     * filters, so the list stays readable; dimmed in full under a bottom sheet, which covers most of it anyway.
+     */
+    Light,
 
     /** Left as it is, for a sheet whose changes show behind it as they are made, such as a reader's appearance. */
     Clear,

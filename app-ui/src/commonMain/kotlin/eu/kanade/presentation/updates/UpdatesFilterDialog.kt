@@ -10,6 +10,7 @@ import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.TriStateRow
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import app.katari.presentation.kit.theme.KatariTheme
 import dev.icerock.moko.resources.StringResource
@@ -49,6 +50,7 @@ fun UpdatesFilterDialog(
     }
     TabbedSheet(
         onDismissRequest = onDismissRequest,
+        backdrop = SheetBackdrop.Light,
         tabTitles = tabs.map { stringResource(it.title) },
     ) { page ->
         when (tabs[page]) {
