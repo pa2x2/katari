@@ -113,6 +113,25 @@ volumes:
       <li>allows WebSocket upgrades, which bring changes to devices as they happen;</li>
       <li>accepts request bodies up to 64 MB, the largest cover or font a device uploads.</li>
     </ul>
+    <p>nginx does none of these by default. In the <code>server</code> block that holds your certificate:</p>
+    <Snippet
+      lang="nginx"
+      file="nginx.conf"
+      code={`location / {
+    proxy_pass http://localhost:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 64m;
+}`}
+    />
+    <p>
+      If a proxy blocks WebSocket upgrades, sync still works, but changes from other devices no longer show within seconds. They come
+      when the app is opened or brought to the front, when the device sends its own changes, and otherwise every few minutes.
+    </p>
     <Callout label="Trusted proxies" tone="warning">
       <p>
         Leave <code>KATARI_SYNC_TRUSTED_PROXIES</code> at <code>0</code> when devices connect to the server directly. Set above 0 without a
