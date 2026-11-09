@@ -79,6 +79,9 @@ class DesktopProfileStore(private val directories: DesktopDirectories) : Profile
         listOf(activeProfileStore, activeAppStateStore, activePrivateStore).any { it.owns(preference) } ||
             stores.any { (path, store) -> path.startsWith(profilesDirectory()) && store.owns(preference) }
 
+    // Each profile keeps its preferences in files of its own, under the keys they are asked for.
+    override fun preferenceKey(preference: Preference<*>): String = preference.key()
+
     // Only the shared store and each profile's own: what the app-state and private files hold never leaves the device.
     override fun watchPreferenceWrites(listener: (PreferenceWrite) -> Unit): AutoCloseable {
         writeObservers += listener

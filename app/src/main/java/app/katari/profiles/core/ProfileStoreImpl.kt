@@ -112,6 +112,9 @@ class ProfileStoreImpl(
             key.startsWith(Preference.privateKey("profile_"))
     }
 
+    override fun preferenceKey(preference: Preference<*>): String =
+        ProfileAwarePreferenceStore.Namespace.preferenceWrite(preference.key()).key
+
     // The shared store's file holds every profile's preferences too, so its listener hears them all. Shared
     // preferences hold listeners weakly; the handle keeps this one.
     override fun watchPreferenceWrites(listener: (PreferenceWrite) -> Unit): AutoCloseable {

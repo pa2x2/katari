@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.presentation.kit.button.IconButton
+import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -17,7 +18,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun SettingsAreaSyncAction(preferences: List<Preference>) {
     if (rememberSettingSyncMarks() == null) return
-    val area = preferences.syncArea()?.takeIf { it.hasPage } ?: return
+    val area = preferences.syncArea(LocalAppUiGraph.current.profileStore)?.takeIf { it.hasPage } ?: return
     val navigator = LocalNavigator.currentOrThrow
     IconButton(
         icon = MaterialSymbols.Rounded.CloudSync,

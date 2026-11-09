@@ -2,6 +2,7 @@ package app.katari.sync.ui.choice
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.setting.scope.PreferenceMark
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
@@ -23,7 +24,7 @@ internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
     val screens = remember(graph) { settingsScreens(graph) }
     return screens.flatMap { screen ->
         val screenTitle = stringResource(screen.getTitleRes())
-        screen.getPreferences().storedSettings().mapNotNull { (key, title) ->
+        screen.getPreferences().storedSettings(graph.profileStore).mapNotNull { (key, title) ->
             val mark = PreferenceScopes.markOf(key)?.takeIf { it.area == area } ?: return@mapNotNull null
             AreaSetting(key, title, screenTitle, mark)
         }
@@ -41,7 +42,7 @@ internal val SettingsArea.hasPage: Boolean
  * The Settings area most of these rows' settings sync with, such as Readers for a reader's settings; null for a screen
  * whose settings stay on the device.
  */
-internal fun List<Preference>.syncArea(): SettingsArea? = storedSettings()
+internal fun List<Preference>.syncArea(profileStore: ProfileStore): SettingsArea? = storedSettings(profileStore)
     .mapNotNull { (key, _) -> PreferenceScopes.markOf(key)?.area }
     .groupingBy { it }
     .eachCount()
@@ -49,9 +50,10 @@ internal fun List<Preference>.syncArea(): SettingsArea? = storedSettings()
     ?.key
 
 /** The key and title of every row that stores its value in a preference. */
-private fun List<Preference>.storedSettings(): List<Pair<String, String>> = flatMap { preference ->
-    when (preference) {
-        is Preference.PreferenceGroup -> preference.preferenceItems
-        is Preference.PreferenceItem<*, *> -> listOf(preference)
-    }
-}.mapNotNull { item -> item.storedPreference?.let { it.key() to item.title } }
+private fun List<Preference>.storedSettings(profileStore: ProfileStore): List<Pair<String, String>> =
+    flatMap { preference ->
+        when (preference) {
+            is Preference.PreferenceGroup -> preference.preferenceItems
+            is Preference.PreferenceItem<*, *> -> listOf(preference)
+        }
+    }.mapNotNull { item -> item.storedPreference?.let { profileStore.preferenceKey(it) to item.title } }

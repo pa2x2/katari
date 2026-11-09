@@ -74,7 +74,7 @@ internal fun PreferenceItem(
         item = item,
         highlightKey = highlightKey,
         groupPosition = groupPosition,
-        syncMark = item.storedPreference?.key()?.let { syncMarks?.of(it) },
+        syncMark = item.storedPreference?.let { syncMarks?.of(it) },
     ) {
         when (item) {
             is Preference.PreferenceItem.SwitchPreference -> {
