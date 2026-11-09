@@ -21,6 +21,7 @@ import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.handoff.LastReadDevices
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
@@ -59,9 +60,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
     private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
-    private val directory = DeviceDirectory()
+    private val directory = DeviceDirectory(local.handler)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
-    private val disconnection = Disconnection(capture, connection, handOff)
+    private val disconnection = Disconnection(capture, connection, handOff, directory)
+    val lastReadDevices = LastReadDevices(local.handler, connection, directory)
     private val resync = FullResync(local.handler, local.writing)
     private val firstSync = FirstSyncSteps(
         local.firstSync,

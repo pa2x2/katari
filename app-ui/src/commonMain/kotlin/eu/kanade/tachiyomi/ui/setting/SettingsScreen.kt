@@ -39,6 +39,8 @@ class SettingsScreen(
 ) : Screen() {
 
     constructor(destination: Destination) : this(destination.id)
+
+    fun opensAt(destination: Destination): Boolean = this.destination == destination.id
     constructor(destination: Destination, viewerSettingsSurfaceId: String?, viewerSettingsHighlight: String?) :
         this(destination.id, viewerSettingsSurfaceId, viewerSettingsHighlight)
 

@@ -10,6 +10,7 @@ import app.katari.entry.interactions.navigation.EntryContinueFeature
 import app.katari.entry.interactions.navigation.EntryContinueResult
 import app.katari.profiles.core.ProfileScopedStateEvent
 import app.katari.profiles.core.observeProfileScopedState
+import app.katari.sync.client.handoff.LastReadDevices
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -68,6 +69,7 @@ class HistoryViewModel(
     private val getHistory: GetHistory,
     private val removeHistory: RemoveHistory,
     private val activeProfileProvider: ActiveProfileProvider,
+    private val lastReadDevices: LastReadDevices,
     statisticsRepository: StatisticsRepository,
 ) : GatedStateViewModel<HistoryViewModel.State>(State()) {
 
@@ -174,6 +176,11 @@ class HistoryViewModel(
                 ?.firstOrNull()
                 ?.item
         }
+    }
+
+    suspend fun otherReadingDevice(item: HistoryItem): String? {
+        val readAt = item.history.readAt ?: return null
+        return lastReadDevices.otherDeviceName(item.history.chapterId, readAt.time)
     }
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)

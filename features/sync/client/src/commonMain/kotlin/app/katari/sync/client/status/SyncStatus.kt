@@ -8,7 +8,7 @@ import okhttp3.HttpUrl
 import kotlin.time.Duration.Companion.days
 
 /**
- * Everything the Sync page, the More row and the Library toolbar show about sync (D028, D050, D054, D055), in one
+ * Everything the Sync page, the More row and sync's status icon show about sync (D028, D050, D054, D055), in one
  * value: whether the device is linked and to what, what it is doing, what waits to be sent and why, and what waits
  * for the person.
  */

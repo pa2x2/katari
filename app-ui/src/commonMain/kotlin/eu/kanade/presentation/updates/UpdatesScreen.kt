@@ -56,6 +56,7 @@ fun <T> UpdatesScreen(
     onCalendarClicked: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasActiveFilters: Boolean,
+    syncAction: AppBar.Action?,
     filterSummary: (@Composable () -> Unit)? = null,
     loadingContent: @Composable (Modifier) -> Unit = { LoadingScreen(it) },
     emptyContent: @Composable (Modifier) -> Unit = {
@@ -83,6 +84,7 @@ fun <T> UpdatesScreen(
                     onUpdateLibrary = onUpdateLibrary?.let { update -> { scope.launch { update() } } },
                     onFilterClicked = onFilterClicked,
                     hasFilters = hasActiveFilters,
+                    syncAction = syncAction,
                     actionModeCounter = state.selectedCount,
                     onSelectAll = { onSelectAll(true) },
                     onInvertSelection = onInvertSelection,
@@ -176,6 +178,7 @@ private fun UpdatesAppBar(
     onUpdateLibrary: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasFilters: Boolean,
+    syncAction: AppBar.Action?,
     actionModeCounter: Int,
     onSelectAll: () -> Unit,
     onInvertSelection: () -> Unit,
@@ -188,6 +191,7 @@ private fun UpdatesAppBar(
         title = stringResource(MR.strings.label_recent_updates),
         actions = {
             val actions = buildList {
+                syncAction?.let(::add)
                 if (onFilterClicked != null) {
                     add(
                         AppBar.Action(

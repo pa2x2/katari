@@ -16,13 +16,14 @@ import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.theme.ContentTone
 
 /**
- * Sync's icon in the Library toolbar (D028, D055), always there once the device is set up: a cloud whose arrows turn
- * while it syncs, so it doesn't read as library update's refresh beside it; a count while changes wait to be sent, a
- * warning when it needs the person, a check mark when up to date. It opens the Sync page. A standalone device shows
- * none: there the Sync row in More is sync's only trace (D028).
+ * Sync's status icon (D028, D055), in an app bar or at the foot of the side dock wherever the home destinations place it
+ * ([eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction]): a cloud whose arrows turn while it syncs, so it
+ * doesn't read as library update's refresh beside it; a count while changes wait to be sent, a warning when it needs the
+ * person, a check mark when up to date. It opens the Sync page. A standalone device shows none: there the Sync row in
+ * More is sync's only trace (D028).
  */
 @Composable
-fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
+fun rememberSyncStatusAction(onClick: () -> Unit): AppBar.Action? {
     val headline = rememberSyncHeadline() ?: return null
     if (headline == SyncHeadline.NotSetUp) return null
     val title = syncHeadlineText(headline)

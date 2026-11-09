@@ -39,6 +39,7 @@ import app.katari.android.sync.SyncNavigation
 import app.katari.appupdate.ui.AppUpdatePrompt
 import app.katari.entry.interactions.source.EntrySourceNavigation
 import app.katari.entry.viewer.settings.navigation.ViewerSettingsNavigation
+import app.katari.presentation.kit.feedback.AppMessagesHost
 import app.katari.presentation.kit.feedback.isLight
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
@@ -142,29 +143,32 @@ class MainActivity : BaseActivity() {
         }
 
         setComposeContent {
-            HomeHost(
-                launchState = homeLaunch,
-                launchScope = lifecycleScope,
-                onReady = { ready = true },
-                profileGate = { banners, home -> ProfileStartupGate(startupRestorationDecision, banners, home) },
-                onNavigator = ::onHomeNavigator,
-                overlay = {
-                    // Draw navigation bar scrim when needed
-                    if (remember { isNavigationBarNeedsScrim() }) {
-                        Spacer(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                .background(SurfaceContainer.Chrome),
-                        )
-                    }
-                },
-                navigatorContent = {
-                    if (!isBenchmarkBuildType) AppUpdatePrompt()
-                },
-                offersOnboarding = !isBenchmarkBuildType,
-            )
+            // Around the profile gate too, as on desktop, so a message waits for a screen to show it on
+            AppMessagesHost(appGraph.appMessages) {
+                HomeHost(
+                    launchState = homeLaunch,
+                    launchScope = lifecycleScope,
+                    onReady = { ready = true },
+                    profileGate = { banners, home -> ProfileStartupGate(startupRestorationDecision, banners, home) },
+                    onNavigator = ::onHomeNavigator,
+                    overlay = {
+                        // Draw navigation bar scrim when needed
+                        if (remember { isNavigationBarNeedsScrim() }) {
+                            Spacer(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                    .background(SurfaceContainer.Chrome),
+                            )
+                        }
+                    },
+                    navigatorContent = {
+                        if (!isBenchmarkBuildType) AppUpdatePrompt()
+                    },
+                    offersOnboarding = !isBenchmarkBuildType,
+                )
+            }
         }
 
         splashScreen?.setKeepOnScreenCondition {

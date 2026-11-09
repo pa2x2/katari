@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import app.katari.sync.ui.notice.SyncStopMessages
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
@@ -16,6 +17,7 @@ import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.ui.home.HomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
+import eu.kanade.tachiyomi.ui.home.navigation.openSyncFromRoot
 import eu.kanade.tachiyomi.ui.main.AppStateBannerState
 import eu.kanade.tachiyomi.ui.main.HomeNavigatorContent
 import eu.kanade.tachiyomi.ui.main.OnboardingOnFirstStart
@@ -82,6 +84,7 @@ fun HomeHost(
                     currentOnReady()
                 }
                 HomeNavigatorContent(navigator = navigator, banners = banners, overlay = overlay)
+                SyncStopMessages(onOpen = { openSyncFromRoot(navigator) })
                 navigatorContent(navigator)
                 if (offersOnboarding) OnboardingOnFirstStart()
             }

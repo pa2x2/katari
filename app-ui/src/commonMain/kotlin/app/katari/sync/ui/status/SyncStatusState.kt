@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 /**
- * The one [SyncStatus] every place that shows sync reads (the Sync rows, the Library toolbar, the dot on More, the
+ * The one [SyncStatus] every place that shows sync reads (the Sync rows, sync's status icon, the dot on More, the
  * notifications), so its many inputs are watched once however many of them show. Null until first read.
  */
 @Inject

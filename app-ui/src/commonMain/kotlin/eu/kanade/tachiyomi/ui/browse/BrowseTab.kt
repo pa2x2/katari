@@ -6,9 +6,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.common.HomeScreenTabs
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.ui.di.LocalAppUiGraph
+import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.components.TabbedScreen
@@ -20,6 +23,7 @@ import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
@@ -53,6 +57,7 @@ data object BrowseTab : Tab {
 
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
         val customPreferences = remember { graph.customPreferences }
         val feedsEnabled by customPreferences.enableFeeds.collectAsState()
@@ -96,6 +101,7 @@ data object BrowseTab : Tab {
             onChangeSearchQuery = extensionsViewModel::search,
             // Feeds are cover grids
             frame = ScreenFrame.Wide,
+            screenActions = listOfNotNull(rememberBarSyncAction(HomeScreenTabs.Browse, navigator)),
         )
         LaunchedEffect(state, sourcesTabIndex) {
             switchToPageChannel.receiveAsFlow()
