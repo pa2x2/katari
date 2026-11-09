@@ -5,7 +5,6 @@ import tachiyomi.core.common.util.system.logcat
 import java.io.BufferedOutputStream
 import java.io.IOException
 import java.io.OutputStream
-import java.net.SocketTimeoutException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -36,9 +35,8 @@ internal class RelayLog(private val player: String, private val connectionBreaks
 
     /** The connection [lastBody] was relayed on last broke with [cause]. */
     fun connectionBroke(lastBody: RelayedBody?, cause: IOException) {
-        // A timeout only ends an idle connection mpv kept for later, and a failed upstream read is logged as such.
-        if (!connectionBreaks || cause is SocketTimeoutException) return
-        if (lastBody?.state == RelayedBody.State.UpstreamFailed) return
+        // A failed upstream read is logged as such.
+        if (!connectionBreaks || lastBody?.state == RelayedBody.State.UpstreamFailed) return
         logcat(LogPriority.INFO) {
             "$PREFIX ($player): mpv's connection broke ($cause) ${lastBody?.let { "on $it" } ?: "before any body"}"
         }

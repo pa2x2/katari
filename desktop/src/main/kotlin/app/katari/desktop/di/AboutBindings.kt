@@ -18,7 +18,6 @@ interface AboutBindings {
     val DesktopOpenSourceLibraryDefinitions.openSourceLibraryDefinitions: OpenSourceLibraryDefinitions
 
     companion object {
-        // Firebase isn't built into desktop builds.
         @Provides
         fun appBuild(): AppBuild {
             val release = DesktopAppVariant.current == DesktopAppVariant.RELEASE
@@ -31,7 +30,6 @@ interface AboutBindings {
                 commitSha = DesktopBuildInfo.COMMIT_SHA,
                 commitCount = DesktopBuildInfo.COMMIT_COUNT,
                 buildTime = DesktopBuildInfo.BUILD_TIME,
-                telemetryIncluded = false,
                 releaseNotesUrl = if (release) DesktopRelease.pageUrl else null,
                 hidesUnfinishedFeatures = release,
             )

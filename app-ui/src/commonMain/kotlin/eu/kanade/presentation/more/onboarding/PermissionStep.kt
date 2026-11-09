@@ -62,13 +62,13 @@ internal class PermissionStep(
                 RowGroup(
                     rows = listOf(
                         {
-                            val crashlyticsPref = privacyPreferences.crashlytics
-                            val crashlytics by crashlyticsPref.collectAsState()
+                            val crashReportsPref = privacyPreferences.crashReports
+                            val crashReports by crashReportsPref.collectAsState()
                             PermissionSwitch(
-                                title = stringResource(MR.strings.onboarding_permission_crashlytics),
-                                subtitle = stringResource(MR.strings.onboarding_permission_crashlytics_description),
-                                granted = crashlytics,
-                                onToggleChange = crashlyticsPref::set,
+                                title = stringResource(MR.strings.onboarding_permission_crash_reports),
+                                subtitle = stringResource(MR.strings.onboarding_permission_crash_reports_description),
+                                granted = crashReports,
+                                onToggleChange = crashReportsPref::set,
                             )
                         },
                         {

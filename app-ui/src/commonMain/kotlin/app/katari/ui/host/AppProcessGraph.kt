@@ -1,5 +1,6 @@
 package app.katari.ui.host
 
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.core.metro.StartupWarmup
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.trigger.SyncTriggers
@@ -7,8 +8,10 @@ import app.katari.sync.ui.notice.SyncNotices
 import app.katari.ui.buildinfo.AppBuild
 import app.katari.upgrade.MigrationGraph
 import dev.zacsweers.metro.Multibinds
+import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import kotlinx.coroutines.CoroutineScope
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.data.Database
@@ -16,8 +19,12 @@ import tachiyomi.domain.source.service.SourceManager
 
 /** What [AppProcessStart] reads from the graph of the platform it starts. */
 interface AppProcessGraph : MigrationGraph {
+    @AppCoroutineScope
+    val appScope: CoroutineScope
+
     val appBuild: AppBuild
     val networkPreferences: NetworkPreferences
+    val privacyPreferences: PrivacyPreferences
 
     /** The store the version the app-upgrade migrations last ran for is kept in. */
     val preferenceStore: PreferenceStore

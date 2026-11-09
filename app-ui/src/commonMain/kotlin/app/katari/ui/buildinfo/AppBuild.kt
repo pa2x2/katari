@@ -1,8 +1,8 @@
 package app.katari.ui.buildinfo
 
 /**
- * The running build as the settings describe it: About and the debug info name its version, and the security settings
- * offer the telemetry it carries. Each platform's graph fills it from that platform's build.
+ * The running build as the settings describe it: About and the debug info name its version. Each platform's graph fills
+ * it from that platform's build.
  */
 data class AppBuild(
     val type: AppBuildType,
@@ -15,8 +15,6 @@ data class AppBuild(
     val commitCount: String,
     /** When the build was made, as an ISO 8601 instant; shown as it is where it doesn't parse. */
     val buildTime: String,
-    /** Whether the build carries Firebase's crash reports and analytics, which the user can then switch off. */
-    val telemetryIncluded: Boolean,
     /** The page with the running version's release notes; null where there is none, such as for debug builds. */
     val releaseNotesUrl: String?,
     /** Whether features not ready for stable releases, such as setting update intervals by hand, are hidden. */

@@ -1,0 +1,155 @@
+---
+import Path from "../guide/Path.astro";
+import Page from "../site/Page.astro";
+import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
+---
+
+<Page title="Privacy policy · Katari" description="What Katari sends, where it goes, and how to turn it off.">
+  <main data-pagefind-body data-pagefind-filter="section:Privacy">
+    <h1>Privacy policy</h1>
+    <p class="updated">Last updated 9 November 2026</p>
+    <p>
+      Katari keeps your library, reading and watching progress, history, downloads, backups and settings on your device.
+      It has no accounts, and no server of its own that receives them. This page lists everything that leaves your
+      device, where it goes, and how to stop it.
+    </p>
+
+    <h2 id="crash-logs-and-usage-data">Crash logs and usage data</h2>
+    <p>
+      Only Katari and Katari for Linux as released on GitHub send them. <strong>Katari FOSS</strong> and builds made from
+      the source code send nothing.
+    </p>
+    <p>
+      Two switches decide what is sent. Setup shows them, and you can change them any time in
+      <Path>Settings › Security and privacy</Path>:
+    </p>
+    <ul>
+      <li><strong>Send crash logs</strong> is on until you turn it off.</li>
+      <li><strong>Allow analytics</strong> is off until you turn it on.</li>
+    </ul>
+    <p>With both off, Katari sends nothing. Turning a switch off stops what it covers from then on.</p>
+
+    <h3>What they contain</h3>
+    <ul>
+      <li>
+        <strong>Crash logs</strong>: the error and where in Katari's code it happened, including when Katari stops
+        responding. An error's message can include what Katari was working on, such as a web address from a source.
+      </li>
+      <li><strong>Usage data</strong>: when Katari is installed, updated, opened and put in the background.</li>
+      <li>
+        <strong>Both</strong>: the screen that was showing and the kind of entry it was about, such as a comic or a
+        video, but never its title. Katari's version. Your device's maker and model, system version, language and screen
+        size, and on Android its network type and mobile carrier. On Linux, the distribution, the desktop and the
+        session type.
+      </li>
+      <li>
+        A random identifier created on your device, so that reports from one installation can be told apart. It is not
+        linked to your name, an email address or any account. Clearing Katari's data or installing it again creates a
+        new one.
+      </li>
+    </ul>
+
+    <h3>Where they go</h3>
+    <p>
+      Reports go to <a href="https://posthog.com" {...leavesSite()}>PostHog</a>, a product analytics service, and are
+      stored in its EU cloud. PostHog works out an approximate location, the country and city, from the IP address a
+      report comes from, then discards the address without storing it. <a href="https://posthog.com/privacy" {...leavesSite()}>PostHog's privacy policy</a>
+      covers how it handles them.
+    </p>
+    <p>
+      Only Katari's developer reads them, to find and fix problems and to learn which parts of the app are used. They
+      are not sold, shared with anyone else or used for advertising.
+    </p>
+
+    <h2 id="connections-you-choose">Connections you choose</h2>
+    <p>Everything else Katari sends goes only where you point it, or to a service you turn on.</p>
+    <ul>
+      <li>
+        <strong>Extensions</strong> connect to the sites they read comics, books and videos from, and the extension
+        stores you add send their list of extensions. Katari doesn't run those sites; their own privacy policies apply.
+        Cookies they set stay on your device.
+      </li>
+      <li>
+        <strong>Sync</strong> sends your library, progress, history and settings only to the
+        <a href={sitePath("docs/sync-server/")}>sync server</a> you run yourself.
+      </li>
+      <li>
+        <strong>Check for updates on launch</strong>, in <Path>Settings › About</Path>, asks GitHub for the newest
+        release when Katari opens and every 6 hours while it stays open. Updates download from GitHub too.
+        <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" {...leavesSite()}>GitHub's
+        privacy statement</a> applies.
+      </li>
+      <li>
+        <Path>Settings › Players › Anime player › Find intro and credits times online</Path> is off until you turn it
+        on. Then, when a source marks no intro or credits, Katari sends the series title and episode number to the
+        services you leave on below it: AniSkip, which it finds the series for through AniList, and TheIntroDB, through
+        TVmaze and Wikidata.
+      </li>
+      <li>
+        <strong>Translation</strong> with a <strong>DeepL-compatible server</strong> or a
+        <strong>LibreTranslate Server</strong> sends the text to that server. Katari asks you to accept the engine's
+        privacy disclosure before it translates anything. The other engines translate on the device.
+      </li>
+      <li>
+        <strong>Text recognition</strong> reads pages on the device, with models downloaded once from Hugging Face.
+      </li>
+      <li>
+        <strong>Text to speech</strong> uses the voices your system provides. A network voice sends the text to its
+        engine's service.
+      </li>
+      <li>
+        <Path>Settings › Advanced › DNS over HTTPS (DoH)</Path> is off until you pick a provider. Then that provider
+        learns the names of the sites Katari connects to.
+      </li>
+    </ul>
+
+    <h2 id="this-website">This website</h2>
+    <p>
+      This website uses no cookies, analytics or trackers. If you pick a theme, your browser remembers it, and it never
+      leaves your browser. GitHub hosts the site, and
+      <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" {...leavesSite()}>GitHub's
+      privacy statement</a> covers what it logs about visits.
+    </p>
+
+    <h2 id="changes-and-questions">Changes and questions</h2>
+    <p>
+      When what Katari sends changes, this page changes with it. Ask about anything here by
+      <a href={`${REPOSITORY}/issues`} {...leavesSite()}>opening an issue on GitHub</a>.
+    </p>
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  .updated {
+    margin-top: 0;
+    color: var(--text-muted);
+  }
+
+  h2 {
+    margin: 2.5rem 0 0.75rem;
+  }
+
+  h3 {
+    margin: 1.75rem 0 0.5rem;
+  }
+
+  main p,
+  main li {
+    color: var(--text);
+  }
+
+  main li + li {
+    margin-top: 0.5rem;
+  }
+</style>

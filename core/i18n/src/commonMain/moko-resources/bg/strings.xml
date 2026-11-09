@@ -687,8 +687,8 @@
     <string name="app_migrating_title">Завършване на актуализацията</string>
     <string name="app_migrating_summary">Подготвяне на всичко необходимо след актуализацията. Това може да отнеме няколко минути, затова дръжте приложението отворено.</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Избягвайте прекъсвания на продължителни актуализации на библиотеки, изтегляния и възстановявания от резервни копия.</string>
-    <string name="onboarding_permission_crashlytics">Изпрати записи от сривове</string>
-    <string name="onboarding_permission_crashlytics_description">Изпрати анонимни записи от сривове на разработчиците.</string>
+    <string name="onboarding_permission_crash_reports">Изпрати записи от сривове</string>
+    <string name="onboarding_permission_crash_reports_description">Изпрати анонимни записи от сривове на разработчиците.</string>
     <string name="onboarding_permission_analytics">Разрешаване на анализи</string>
     <string name="onboarding_permission_analytics_description">Изпращайте анонимизирани данни за използването, за да подобрите функциите на приложението.</string>
     <string name="onboarding_permission_action_grant">Позволи</string>
@@ -697,8 +697,8 @@
     <string name="pref_relative_format">Относителни времеви отпечатъци</string>
     <string name="pref_display_images_description">Изобразяване на изображения в описанията на манга</string>
     <string name="pref_security">Сигурност</string>
-    <string name="pref_firebase">Анализи и записи от сривове</string>
-    <string name="firebase_summary">Изпращането на записи от сривове и данни за анализ ще ни позволи да откриваме и отстраняваме проблеми, да подобряваме производителността и да правим бъдещите актуализации по-съобразени с вашите нужди.</string>
+    <string name="pref_telemetry">Анализи и записи от сривове</string>
+    <string name="telemetry_summary">Изпращането на записи от сривове и данни за анализ ще ни позволи да откриваме и отстраняваме проблеми, да подобряваме производителността и да правим бъдещите актуализации по-съобразени с вашите нужди.</string>
     <string name="pref_category_extensions">Разширения</string>
     <string name="file_null_uri_error">Не е избран файл</string>
     <string name="pref_hardware_bitmap_threshold_default">По подразбиране (%d)</string>

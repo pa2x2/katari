@@ -14,6 +14,10 @@
 - Extension filter pills open the filter, and the filter can search languages.
 - The player's skip button stays readable over dark credits.
 
+### 🐛 Fixed
+
+- With mpv, a video paused for several minutes no longer drops frames shortly after it resumes.
+
 ## [3.1.1] - 2026-11-09
 
 ### ✨ Added

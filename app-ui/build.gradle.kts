@@ -32,6 +32,8 @@ kotlin {
                 api(libs.bundles.voyager)
 
                 api(projects.features.appUpdate)
+                // AppProcessStart.startTelemetry takes the platform's TelemetryHost.
+                api(projects.core.telemetry)
                 implementation(projects.core.common)
                 implementation(projects.core.image)
                 implementation(projects.core.platform)

@@ -1,6 +1,8 @@
 package app.katari.ui.host
 
 import app.katari.core.metro.StartupWarmup
+import app.katari.telemetry.Telemetry
+import app.katari.telemetry.TelemetryHost
 import app.katari.ui.buildinfo.AppBuildType
 import app.katari.upgrade.Migrator
 import app.katari.upgrade.migrations.migrations
@@ -42,6 +44,15 @@ object AppProcessStart {
             startGraph.database
             startGraph.startupWarmups.forEach(StartupWarmup::warmUp)
         }
+    }
+
+    /**
+     * Starts sending the crash reports and usage statistics the user allows, in builds that carry telemetry. A crash
+     * before it goes unreported, so it runs as soon as the graph is built.
+     */
+    @HostEntryPoint
+    fun startTelemetry(graph: AppProcessGraph, host: TelemetryHost) {
+        Telemetry.start(host, graph.privacyPreferences, graph.appScope)
     }
 
     /** Run as the graph is built, before anything else reads from it, since anything may copy or back up a profile. */

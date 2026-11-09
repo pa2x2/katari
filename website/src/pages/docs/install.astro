@@ -1,5 +1,6 @@
 ---
 import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
 import PlatformAnswers from "../../guide/PlatformAnswers.astro";
 import Question from "../../guide/Question.astro";
 import { sitePath } from "../../site/links.ts";
@@ -84,12 +85,11 @@ import { sitePath } from "../../site/links.ts";
   </Question>
 
   <Question id="data-sent" question="What does Katari send, and can I turn it off?">
-    <PlatformAnswers>
-      <p slot="android">
-        Katari can send anonymized crash logs and usage data. Its setup shows both as switches, and you can change
-        them any time in Settings › Security and privacy. Katari FOSS sends neither.
-      </p>
-      <p slot="linux">Neither crash logs nor usage data: Katari for Linux has nothing that sends them.</p>
-    </PlatformAnswers>
+    <p>
+      Katari can send crash logs and usage data. Its setup shows both as switches, and you can change them any time in
+      <Path>Settings › Security and privacy</Path>. Crash logs are on until you turn them off, and usage data is off until
+      you turn it on. The <a href={sitePath("privacy/")}>privacy policy</a> lists what they contain and everything else
+      Katari sends. Katari FOSS for Android sends neither.
+    </p>
   </Question>
 </GuidePage>

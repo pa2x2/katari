@@ -461,7 +461,7 @@
     <string name="source_empty_screen">Neniu fonto trovita</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="onboarding_permission_analytics">Permesi analizojn</string>
-    <string name="onboarding_permission_crashlytics_description">Sendi anonimigajn prikolapsajn protokolojn al la programistoj.</string>
+    <string name="onboarding_permission_crash_reports_description">Sendi anonimigajn prikolapsajn protokolojn al la programistoj.</string>
     <string name="pref_security">Sekureco</string>
     <string name="action_copy_link">Kopii ligilon</string>
     <string name="action_sort_random">Hazarde</string>
@@ -472,7 +472,7 @@
     <string name="onboarding_permission_install_apps">Permeso por instali apojn</string>
     <string name="onboarding_permission_ignore_battery_opts">Fona bateria uzado</string>
     <string name="onboarding_permission_notifications_description">Ricevi sciigojn pri bibliotekaj ĝisdatigoj kaj pli.</string>
-    <string name="onboarding_permission_crashlytics">Sendi prikolapsajn protokolojn</string>
+    <string name="onboarding_permission_crash_reports">Sendi prikolapsajn protokolojn</string>
     <string name="onboarding_permission_analytics_description">Sendi anonimigaj uzadaj datumoj por plibonigi funkciojn de apo.</string>
     <string name="onboarding_permission_action_grant">Permesi</string>
     <string name="pref_backup_summary">Permanaj k aŭtomataj savkopioj, konserveja spaco</string>
@@ -500,8 +500,8 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Malebligi interrompojn por longedaŭraj bibliotekaj ĝisdatigoj, elŝutoj kaj savkopiaj restaŭroj.</string>
     <string name="onboarding_permission_notifications">Sciiga permeso</string>
     <string name="pref_reader_summary">Legada reĝimo, montrado, navigado</string>
-    <string name="pref_firebase">Analitikoj kaj protokoloj</string>
-    <string name="firebase_summary">Sendado de prikolapsaj protokoloj kaj analitikoj eblos al ni identigi kaj ripari problemojn, plibonigi rendimenton kaj igi estontajn ĝisdatigojn pli rilataj al viaj bezonoj</string>
+    <string name="pref_telemetry">Analitikoj kaj protokoloj</string>
+    <string name="telemetry_summary">Sendado de prikolapsaj protokoloj kaj analitikoj eblos al ni identigi kaj ripari problemojn, plibonigi rendimenton kaj igi estontajn ĝisdatigojn pli rilataj al viaj bezonoj</string>
     <string name="pref_category_extensions">Etendaĵoj</string>
     <string name="pref_apply_content_warnings_to_installed">Ankaŭ apliki al instalitaj etendaĵoj</string>
     <string name="pref_apply_content_warnings_to_installed_summary">Kiam malŝaltita, etendaĵoj kiuj vi jam instalis daŭras ŝargi kaj ĝisdatigi malgraŭ iliaj avertoj</string>
