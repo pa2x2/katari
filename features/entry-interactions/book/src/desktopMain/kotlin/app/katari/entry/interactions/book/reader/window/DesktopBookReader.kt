@@ -52,7 +52,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * takes the keyboard ([BookReaderKeys]), hides the mouse pointer while it rests over the book ([rememberReaderPointer]),
  * offers the window's full screen, keeps the screen awake as the reader's setting says, shows a guide to the mouse and
  * keys the first time it opens in a profile ([BookReaderInputGuide]), and names the book and chapter in the window's
- * title while it fills the window. There is no speech engine on the desktop yet, so Listen stays out.
+ * title while it fills the window.
  */
 @Inject
 internal class DesktopBookReader(
