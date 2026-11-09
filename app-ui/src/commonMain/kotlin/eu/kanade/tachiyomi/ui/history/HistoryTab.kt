@@ -86,6 +86,7 @@ data object HistoryTab : Tab {
             onClickDelete = { history -> viewModel.setDialog(HistoryViewModel.Dialog.Delete(history)) },
             onDialogChange = viewModel::setDialog,
             syncAction = rememberBarSyncAction(HomeScreenTabs.History, navigator),
+            otherReadingDevice = viewModel::otherReadingDevice,
         )
 
         val onDismissRequest = { viewModel.setDialog(null) }

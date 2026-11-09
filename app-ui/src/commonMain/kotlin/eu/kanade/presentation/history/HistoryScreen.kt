@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -53,6 +55,8 @@ fun HistoryScreen(
     onClickDelete: (HistoryItem) -> Unit,
     onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
     syncAction: AppBar.Action?,
+    /** The other device an item was last read on, null when it was this one. */
+    otherReadingDevice: suspend (HistoryItem) -> String?,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -102,6 +106,7 @@ fun HistoryScreen(
                     canResume = canResume,
                     onClickResume = onClickResume,
                     onClickDelete = onClickDelete,
+                    otherReadingDevice = otherReadingDevice,
                 )
             }
         }
@@ -118,6 +123,7 @@ private fun HistoryScreenContent(
     canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
+    otherReadingDevice: suspend (HistoryItem) -> String?,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter()
     val timeFormatter = rememberTimeFormatter()
@@ -155,8 +161,13 @@ private fun HistoryScreenContent(
                         position = positions[index] ?: RowGroupPosition.Alone,
                         modifier = Modifier.animateItem(),
                     ) {
+                        val historyItem = item.item.historyItem
+                        val readOn by produceState<String?>(null, historyItem.history.chapterId, historyItem.readAt) {
+                            value = otherReadingDevice(historyItem)
+                        }
                         HistoryListItem(
                             item = item.item,
+                            readOn = readOn,
                             timeFormatter = timeFormatter,
                             onClickCover = { onClickCover(item.item) },
                             onClickResume = if (canResume(item.item)) {
@@ -197,6 +208,7 @@ internal fun HistoryScreenPreviews(
             onClickDelete = {},
             onDialogChange = {},
             syncAction = null,
+            otherReadingDevice = { null },
         )
     }
 }

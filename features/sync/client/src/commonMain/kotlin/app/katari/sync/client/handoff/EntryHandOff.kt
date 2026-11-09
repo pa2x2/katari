@@ -202,7 +202,6 @@ class EntryHandOff(
     internal fun forget() {
         synchronized(checkIds) { checkIds.clear() }
         checkStates.value = emptyMap()
-        devices.forget()
     }
 
     private class Candidate(val entryKey: String, val at: HybridTimestamp)

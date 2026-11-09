@@ -1840,6 +1840,8 @@
     <string name="downloaded_only_summary_anime">Filters library entries with cached anime data</string>
     <string name="information_no_recent_anime">Nothing watched recently</string>
     <string name="information_no_recent_history">Nothing read or watched recently</string>
+    <!-- Ends a History row's line after when it was read: %1$s is the other device it was read on, such as "Desk PC" -->
+    <string name="history_read_on_device">• %1$s</string>
     <string name="anime_no_episodes">No episodes available</string>
     <string name="anime_no_description">No description available</string>
     <string name="anime_watched">Watched</string>

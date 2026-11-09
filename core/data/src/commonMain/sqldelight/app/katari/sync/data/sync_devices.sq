@@ -1,0 +1,17 @@
+-- The account's devices as the server last listed them, so History can name the device a chapter was last read on
+-- without asking the server. Replaced whole on each listing; cleared when this device leaves the account.
+CREATE TABLE sync_devices(
+    device_id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+all:
+SELECT device_id, name
+FROM sync_devices;
+
+insert:
+INSERT INTO sync_devices(device_id, name)
+VALUES (:deviceId, :name);
+
+clear:
+DELETE FROM sync_devices;

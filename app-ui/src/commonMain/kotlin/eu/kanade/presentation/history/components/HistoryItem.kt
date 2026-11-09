@@ -34,6 +34,8 @@ import java.time.format.FormatStyle
 @Composable
 fun HistoryListItem(
     item: HistoryUiItem,
+    /** The other device the item was last read on; null when it was this one. */
+    readOn: String?,
     timeFormatter: DateTimeFormatter,
     onClickCover: () -> Unit,
     onClickResume: (() -> Unit)?,
@@ -110,6 +112,14 @@ fun HistoryListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            readOn?.let { device ->
+                Text(
+                    text = stringResource(MR.strings.history_read_on_device, device),
+                    role = TextRole.Supporting,
+                    tone = ContentTone.Disabled,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
@@ -124,6 +134,7 @@ private fun HistoryListItemPreviews(
         Surface {
             HistoryListItem(
                 item = item,
+                readOn = null,
                 timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT),
                 onClickCover = {},
                 onClickResume = {},

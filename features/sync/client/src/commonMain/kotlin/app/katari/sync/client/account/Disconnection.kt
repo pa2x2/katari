@@ -17,10 +17,12 @@ class Disconnection(
     private val capture: SyncCapture,
     private val connection: SyncConnection,
     private val handOff: EntryHandOff,
+    private val devices: DeviceDirectory,
 ) {
     internal suspend fun leave(reason: SyncStop?) {
         capture.stop()
         connection.forget(reason)
         handOff.forget()
+        devices.forget()
     }
 }
