@@ -26,6 +26,7 @@ class PreferenceScopeTable(area: SettingsArea? = null, declare: Builder.() -> Un
     class Builder internal constructor(private var area: SettingsArea?) {
         internal val keys = LinkedHashMap<String, PreferenceMark>()
         internal val prefixes = LinkedHashMap<String, PreferenceMark>()
+        private var menu: MenuSettings? = null
 
         /** Marks the keys [declare] marks as belonging to [area] rather than the table's. */
         fun area(area: SettingsArea, declare: Builder.() -> Unit) {
@@ -33,6 +34,13 @@ class PreferenceScopeTable(area: SettingsArea? = null, declare: Builder.() -> Un
             this.area = area
             declare()
             this.area = table
+        }
+
+        /** Marks the keys [declare] marks person as syncing or staying with [menu]'s settings. */
+        fun menu(menu: MenuSettings, declare: Builder.() -> Unit) {
+            this.menu = menu
+            declare()
+            this.menu = null
         }
 
         fun person(vararg keys: String) = mark(this.keys, keys, synced(PreferenceScope.PERSON))
@@ -50,10 +58,14 @@ class PreferenceScopeTable(area: SettingsArea? = null, declare: Builder.() -> Un
 
         private fun synced(scope: PreferenceScope): PreferenceMark {
             val area = requireNotNull(area) { "Keys that can sync belong to a Settings area" }
-            return PreferenceMark(scope, area, bound = null)
+            require(menu == null || scope == PreferenceScope.PERSON) { "A menu's settings sync by default" }
+            return PreferenceMark(scope, area, bound = null, menu)
         }
 
-        private fun bound(bound: DeviceBound) = PreferenceMark(PreferenceScope.DEVICE, area, bound)
+        private fun bound(bound: DeviceBound): PreferenceMark {
+            require(menu == null) { "A menu's settings can sync" }
+            return PreferenceMark(PreferenceScope.DEVICE, area, bound)
+        }
 
         private fun mark(into: MutableMap<String, PreferenceMark>, keys: Array<out String>, mark: PreferenceMark) {
             keys.forEach { key -> require(into.put(key, mark) == null) { "$key is marked twice" } }

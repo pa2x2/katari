@@ -11,6 +11,7 @@ import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.part.ProfileSyncStates
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -84,6 +85,10 @@ class WhatSyncsViewModel(
 
     fun syncSetting(key: String, on: Boolean) {
         appScope.launchIO { changes.syncSetting(key, on) }
+    }
+
+    fun syncMenu(menu: MenuSettings, on: Boolean) {
+        appScope.launchIO { changes.syncMenu(menu, on) }
     }
 
     /** Turns syncing [profile] on, or off, first asking when that takes it off this device. */

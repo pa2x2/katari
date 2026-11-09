@@ -5,7 +5,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -28,6 +27,7 @@ import kotlinx.coroutines.launch
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -37,22 +37,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
-
-internal enum class LibrarySettingsSection {
-    Categories,
-    Display,
-    Group,
-    Behavior,
-}
-
-internal fun visibleLibrarySettingsSections(): List<LibrarySettingsSection> {
-    return listOf(
-        LibrarySettingsSection.Categories,
-        LibrarySettingsSection.Display,
-        LibrarySettingsSection.Group,
-        LibrarySettingsSection.Behavior,
-    )
-}
 
 class SettingsLibraryScreen : SearchableSettings() {
 
@@ -68,31 +52,14 @@ class SettingsLibraryScreen : SearchableSettings() {
         val globalLibraryPreferences = graph.globalLibraryPreferences
         val allCategories by getCategories.subscribe().collectAsState(initial = emptyList())
         val navigator = LocalNavigator.currentOrThrow
-        val visibleSections = remember {
-            visibleLibrarySettingsSections()
-        }
 
-        return listOfNotNull(
-            if (LibrarySettingsSection.Categories in visibleSections) {
-                getCategoriesGroup(navigator, allCategories, libraryPreferences)
-            } else {
-                null
-            },
-            if (LibrarySettingsSection.Display in visibleSections) {
-                getDisplayGroup(libraryPreferences)
-            } else {
-                null
-            },
-            if (LibrarySettingsSection.Group in visibleSections) {
-                getGroupGroup(libraryPreferences)
-            } else {
-                null
-            },
-            if (LibrarySettingsSection.Behavior in visibleSections) {
-                getBehaviorGroup(libraryPreferences, globalLibraryPreferences)
-            } else {
-                null
-            },
+        return listOf(
+            getCategoriesGroup(navigator, allCategories, libraryPreferences),
+            getDisplayGroup(libraryPreferences),
+            getCoverBadgesGroup(libraryPreferences),
+            getCoverActionsGroup(libraryPreferences),
+            getGroupGroup(libraryPreferences),
+            getChapterListsGroup(libraryPreferences, globalLibraryPreferences),
         )
     }
 
@@ -146,12 +113,12 @@ class SettingsLibraryScreen : SearchableSettings() {
     }
 
     @Composable
-    private fun getBehaviorGroup(
+    private fun getChapterListsGroup(
         libraryPreferences: LibraryPreferences,
         globalLibraryPreferences: GlobalLibraryPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_behavior),
+            title = stringResource(MR.strings.pref_chapter_lists),
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.swipeToStartAction,
@@ -204,8 +171,6 @@ class SettingsLibraryScreen : SearchableSettings() {
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val displayMode by libraryPreferences.displayMode.collectAsState()
-        val unreadBadgeTitle = MR.strings.action_display_unseen_badge
-        val continueButtonTitle = MR.strings.action_display_show_continue_button
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.action_display),
@@ -226,35 +191,67 @@ class SettingsLibraryScreen : SearchableSettings() {
                     title = stringResource(MR.strings.action_display_mode),
                 ),
                 Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.pinnedDisplayStyle,
+                    entries = LibraryPinnedDisplayStyle.entries.associateWith { stringResource(it.labelRes) },
+                    title = stringResource(MR.strings.pref_library_pinned_display_style),
+                ),
+                Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.coverSize,
                     entries = CoverSize.entries.associateWith { stringResource(it.labelRes) },
                     title = stringResource(MR.strings.pref_library_cover_size),
                     visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
                 ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.unreadBadge,
-                    title = stringResource(unreadBadgeTitle),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.languageBadge,
-                    title = stringResource(MR.strings.action_display_language_badge),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.entryTypeBadge,
-                    title = stringResource(MR.strings.action_display_entry_type_badge),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.mergedBadge,
-                    title = stringResource(MR.strings.action_display_merged_badge),
-                ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.showContinueReadingButton,
-                    title = stringResource(continueButtonTitle),
-                ),
             ),
         )
     }
+
+    /** The same badges, in the same order, as the library's Display menu. */
+    @Composable
+    private fun getCoverBadgesGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup = Preference.PreferenceGroup(
+        title = stringResource(MR.strings.overlay_header),
+        preferenceItems = persistentListOf(
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.downloadBadge,
+                title = stringResource(MR.strings.action_display_download_badge),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.unreadBadge,
+                title = stringResource(MR.strings.action_display_unseen_badge),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.localBadge,
+                title = stringResource(MR.strings.action_display_local_badge),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.languageBadge,
+                title = stringResource(MR.strings.action_display_language_badge),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.entryTypeBadge,
+                title = stringResource(MR.strings.action_display_entry_type_badge),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.mergedBadge,
+                title = stringResource(MR.strings.action_display_merged_badge),
+            ),
+        ),
+    )
+
+    @Composable
+    private fun getCoverActionsGroup(
+        libraryPreferences: LibraryPreferences,
+    ): Preference.PreferenceGroup = Preference.PreferenceGroup(
+        title = stringResource(MR.strings.library_cover_actions_header),
+        preferenceItems = persistentListOf(
+            Preference.PreferenceItem.SwitchPreference(
+                preference = libraryPreferences.showContinueReadingButton,
+                title = stringResource(MR.strings.action_display_show_continue_button),
+            ),
+        ),
+    )
 
     @Composable
     private fun getGroupGroup(
@@ -277,7 +274,7 @@ class SettingsLibraryScreen : SearchableSettings() {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.library_grouping_hierarchy),
                     subtitle = libraryGroupingSummary(grouping),
-                    isProfileSpecific = true,
+                    storedPreference = libraryPreferences.grouping,
                     onClick = { showGroupingSheet = true },
                 ),
                 Preference.PreferenceItem.SwitchPreference(

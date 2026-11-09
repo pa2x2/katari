@@ -31,6 +31,8 @@ sealed class Preference {
             override val subtitle: String? = null,
             override val visible: Boolean = true,
             override val isProfileSpecific: Boolean = false,
+            /** The preference the screen this row opens stores its value in, such as a sheet's. */
+            override val storedPreference: PreferenceData<*>? = null,
             val widget: @Composable (() -> Unit)? = null,
             val onClick: (() -> Unit)? = null,
         ) : PreferenceItem<String, Unit>() {

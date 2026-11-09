@@ -9,14 +9,7 @@ internal val LibraryScopes = PreferenceScopeTable(SettingsArea.LIBRARY) {
     person(
         "pref_display_mode_library",
         "pref_library_pinned_display_style",
-        "library_sorting_mode",
         "display_continue_reading_button",
-        "pref_filter_library_downloaded_v2",
-        "pref_filter_library_unread_v2",
-        "pref_filter_library_bookmarked_v2",
-        "pref_filter_library_completed_v2",
-        "pref_filter_library_not_started",
-        "pref_filter_library_interval_custom",
         "pref_group_library_type",
         "display_download_badge",
         "display_unread_badge",
@@ -30,6 +23,19 @@ internal val LibraryScopes = PreferenceScopeTable(SettingsArea.LIBRARY) {
         "display_number_of_items",
         "categorized_display",
     )
+    menu(MenuSettings.LIBRARY_SORT) {
+        person("library_sorting_mode")
+    }
+    menu(MenuSettings.LIBRARY_FILTERS) {
+        person(
+            "pref_filter_library_downloaded_v2",
+            "pref_filter_library_unread_v2",
+            "pref_filter_library_bookmarked_v2",
+            "pref_filter_library_completed_v2",
+            "pref_filter_library_not_started",
+            "pref_filter_library_interval_custom",
+        )
+    }
     // The cover size fits the screen; the random order's seed is redrawn on each device.
     deviceByDefault("pref_library_cover_size")
     device(DeviceBound.APP, "library_random_sort_seed")
@@ -49,15 +55,19 @@ internal val LibraryScopes = PreferenceScopeTable(SettingsArea.LIBRARY) {
     device(DeviceBound.NETWORK, "library_update_restriction")
 
     // LibraryPreferences: chapter list defaults and swipe actions
+    menu(MenuSettings.CHAPTER_LIST_DEFAULTS) {
+        person(
+            "default_chapter_filter_by_read",
+            "default_chapter_filter_by_downloaded",
+            "default_chapter_filter_by_bookmarked",
+            "default_chapter_filter_by_filler",
+            "default_chapter_show_previews",
+            "default_chapter_sort_by_source_or_number",
+            "default_chapter_display_by_name_or_number",
+            "default_chapter_sort_by_ascending_or_descending",
+        )
+    }
     person(
-        "default_chapter_filter_by_read",
-        "default_chapter_filter_by_downloaded",
-        "default_chapter_filter_by_bookmarked",
-        "default_chapter_filter_by_filler",
-        "default_chapter_show_previews",
-        "default_chapter_sort_by_source_or_number",
-        "default_chapter_display_by_name_or_number",
-        "default_chapter_sort_by_ascending_or_descending",
         "pref_hide_missing_chapter_indicators",
         "pref_chapter_swipe_end_action",
         "pref_chapter_swipe_start_action",

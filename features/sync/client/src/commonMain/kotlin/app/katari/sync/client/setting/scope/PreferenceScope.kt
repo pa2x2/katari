@@ -20,10 +20,12 @@ enum class PreferenceScope {
 /**
  * How a key or key family syncs. [area] is the Settings area it belongs to: the one it syncs with, or, for a key that
  * only works on the device, the one whose page lists it as staying there; null for such a key no area lists. [bound]
- * says why a key only works on the device.
+ * says why a key only works on the device. [menu] names the menu's settings a key syncs or stays with, instead of on
+ * its own.
  */
 class PreferenceMark internal constructor(
     val scope: PreferenceScope,
     val area: SettingsArea?,
     val bound: DeviceBound?,
+    val menu: MenuSettings? = null,
 )
