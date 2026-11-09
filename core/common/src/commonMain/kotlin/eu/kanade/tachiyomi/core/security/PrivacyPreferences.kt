@@ -9,5 +9,6 @@ class PrivacyPreferences(
     // Stored under the name of the crash reporter the app first had, which keeps the choice of those who made it
     val crashReports: Preference<Boolean> = preferenceStore.getBoolean("crashlytics", true)
 
-    val analytics: Preference<Boolean> = preferenceStore.getBoolean("analytics", true)
+    // Off until the user turns it on: usage statistics are sent only with the user's consent
+    val analytics: Preference<Boolean> = preferenceStore.getBoolean("analytics", false)
 }
