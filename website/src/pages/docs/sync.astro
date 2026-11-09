@@ -26,8 +26,15 @@ import { sitePath } from "../../site/links.ts";
       </tbody>
     </table>
     <p>
-      Each profile syncs as itself, so a family's profiles stay apart on every device. Titles whose extension isn't installed on a device are
-      listed under <strong>Install extensions for your titles</strong> on its Sync page.
+      Each device chooses what it syncs under <Path>Settings › Sync › What syncs</Path>: reading history, statistics, categories, covers,
+      fonts and other data, the settings of each Settings area, and which profiles. <strong>Library and reading progress</strong> always
+      syncs. While the device syncs, Settings marks which settings sync, and the app bar of each Settings screen opens its area's list.
+    </p>
+    <p>
+      Each profile syncs as itself, so a family's profiles stay apart on every device. In a profile's menu under
+      <Path>Settings › Profiles</Path>, <strong>Sync this profile</strong> turns it on or off for this device. A profile made on another
+      device comes here on its own, unless <strong>Ask before a new profile comes here</strong> is on. Titles whose extension isn't
+      installed on a device are listed under <strong>Install extensions for your titles</strong> on its Sync page.
     </p>
     <p>
       Sync needs a server. One person runs it, and everyone with an account on it can sync;
@@ -50,7 +57,8 @@ import { sitePath } from "../../site/links.ts";
     </ol>
     <p>
       The first sync uploads this device's library, or downloads the account's. Covers, fonts and the first download wait for Wi-Fi unless
-      <strong>Use mobile data for covers, fonts and first download</strong> is on; changes sync on any network.
+      <strong>Use mobile data for covers, fonts and first download</strong> is on. Changes sync on any network unless
+      <strong>Use mobile data for changes</strong> is off.
     </p>
     <p>
       When this device and the account both have data, <strong>Before the first sync</strong> shows how they come together: libraries, read
@@ -98,8 +106,9 @@ import { sitePath } from "../../site/links.ts";
   >
     <p>
       Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
-      the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs every hour with
-      <strong>Sync in the background</strong> on.
+      the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs with
+      <strong>Sync in the background</strong> on, every hour unless <strong>How often</strong> says otherwise. <strong>Pause syncing</strong>
+      keeps changes on the device until you turn it off.
     </p>
     <p>
       When another device got further in a title, opening it in the reader or player offers to go there, such as
@@ -161,6 +170,10 @@ import { sitePath } from "../../site/links.ts";
           <td>Connect to Wi-Fi, or turn on <strong>Use mobile data for covers, fonts and first download</strong>.</td>
         </tr>
         <tr>
+          <td><strong>Syncing paused</strong>, or <strong>Changes wait for Wi-Fi</strong></td>
+          <td>Changes wait on the device. Turn off <strong>Pause syncing</strong>, or connect to Wi-Fi.</td>
+        </tr>
+        <tr>
           <td><strong>Sync failed on this device</strong></td>
           <td>
             Something on the device stopped the sync, not the connection. <strong>Sync now</strong> tries again; if it keeps failing, update
@@ -175,7 +188,10 @@ import { sitePath } from "../../site/links.ts";
           </td>
         </tr>
         <tr>
-          <td><strong>Update Katari to keep syncing</strong>, or <strong>Update Katari to sync</strong> something</td>
+          <td>
+            <strong>Update Katari to keep syncing</strong>, <strong>Update Katari to sync</strong> something, or synced changes
+            <strong>wait for a Katari update</strong>
+          </td>
           <td>Another device or the server is newer than this app. Update Katari on this device.</td>
         </tr>
         <tr>
