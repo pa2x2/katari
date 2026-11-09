@@ -12,6 +12,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -75,6 +76,8 @@ object EntryUpdateModeKind : SyncedKind<EntryUpdateModePayload>(
     EntryUpdateModePayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers("entry_update_modes", listOf("entry_id"), listOf(Field(2, "mode")))
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<EntryUpdateModePayload> {
@@ -109,6 +112,8 @@ object ExcludedScanlatorKind : SyncedKind<ExcludedScanlatorPayload>(
     ExcludedScanlatorPayload.serializer(),
     Absence.REMOVED_FLAG,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = listOf(
         CaptureTrigger("excluded_scanlators", Event.INSERT, listOf("NEW.entry_id", "NEW.scanlator")),
         CaptureTrigger(
@@ -159,6 +164,8 @@ object ViewerSettingKind : SyncedKind<ViewerSettingPayload>(
     ViewerSettingPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "viewer_setting_overrides",
         listOf("entry_id", "provider_id", "setting_key"),
@@ -209,6 +216,8 @@ object DownloadPreferencesKind : SyncedKind<DownloadPreferencesPayload>(
     DownloadPreferencesPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "download_preferences",
         listOf("entry_id"),
@@ -275,6 +284,8 @@ object TranslationLanguagesKind : SyncedKind<TranslationLanguagesPayload>(
     TranslationLanguagesPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "entry_translation_languages",
         listOf("entry_id"),
@@ -328,6 +339,8 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
     IntroTimesPickPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "intro_times_matches",
         listOf("entry_id", "group_key"),
@@ -383,6 +396,8 @@ object TheIntroDbPickKind : SyncedKind<TheIntroDbPickPayload>(
     TheIntroDbPickPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "theintrodb_matches",
         listOf("entry_id", "group_key"),
@@ -461,6 +476,8 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
     PlaybackPreferencesPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.TITLE_CHOICES
+
     override val capture = triggers(
         "playback_preferences",
         listOf("entry_id"),

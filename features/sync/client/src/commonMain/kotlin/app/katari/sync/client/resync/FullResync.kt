@@ -33,6 +33,8 @@ import tachiyomi.data.DatabaseHandler
  *   elsewhere, and is deleted here without pushing; one it changed since is pushed, the change outliving a deletion it
  *   can't be compared with; one never synced is pushed as it would have been.
  *
+ * Records of parts of the account this device doesn't sync wait to be pushed until it syncs them again.
+ *
  * Pushes are of merged copies and carry change ids, so pushing a record again changes nothing on any device. Every
  * custom cover and font in place here is offered to the server again, which uploads those a lost server lacks, and
  * files the server reported missing are asked for again, as other devices may have uploaded them since.
@@ -53,8 +55,9 @@ class FullResync(
 
     suspend fun finish(stage: SyncStage) {
         if (stage == SyncStage.RESYNC_WITHOUT_DELETIONS) deleteWhatWasDeletedElsewhere()
-        handler.await(inTransaction = true) {
+        writing.write { session ->
             sync_recordsQueries.pushUnseen()
+            session.holdBackOffChanges()
             sync_filesQueries.queuePlaced()
             sync_filesQueries.forgetUnavailable()
             sync_stateQueries.setStage(SyncStage.READY.stored, 0)

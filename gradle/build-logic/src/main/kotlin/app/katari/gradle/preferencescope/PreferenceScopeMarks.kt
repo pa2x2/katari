@@ -1,6 +1,6 @@
 package app.katari.gradle.preferencescope
 
-/** A key or key prefix one of sync's `PreferenceScopeTable`s marks person or device. */
+/** A key or key prefix one of sync's `PreferenceScopeTable`s marks person, device by default or device. */
 internal class PreferenceScopeMark(
     val relativePath: String,
     val lineNumber: Int,
@@ -19,7 +19,8 @@ internal fun preferenceScopeMarks(files: List<KotlinSourceText>): PreferenceScop
             if (FUNCTION_BEFORE.containsMatchIn(file.codeOutsideStrings.substring(0, call.range.first))) return@call
             val line = file.lineOf(call.range.first)
             val arguments = file.argumentsFrom(call.range.last + 1)?.values.orEmpty()
-            arguments.forEach { argument ->
+            // A device mark first says why the keys only work on the device
+            arguments.filterNot { DEVICE_BOUND.matches(it) }.forEach { argument ->
                 val literal = LITERAL.matchEntire(argument)?.groupValues?.get(1)
                 if (literal == null) {
                     malformed += PreferenceScopeFinding(
@@ -37,7 +38,9 @@ internal fun preferenceScopeMarks(files: List<KotlinSourceText>): PreferenceScop
     return PreferenceScopeMarks(marks, malformed)
 }
 
-private val TABLE = Regex("""\bPreferenceScopeTable\s*\{""")
-private val MARK_CALL = Regex("""(?<![\w.])(person|device|personPrefix|devicePrefix)\s*\(""")
+private val TABLE = Regex("""\bPreferenceScopeTable\s*(\(\s*SettingsArea\.\w+\s*\)\s*)?\{""")
+private val MARK_CALL =
+    Regex("""(?<![\w.])(person|deviceByDefault|device|personPrefix|deviceByDefaultPrefix|devicePrefix)\s*\(""")
+private val DEVICE_BOUND = Regex("""DeviceBound\.\w+""")
 private val FUNCTION_BEFORE = Regex("""\bfun\s+$""")
 private val LITERAL = Regex(""""([^"\\$]*)"""")

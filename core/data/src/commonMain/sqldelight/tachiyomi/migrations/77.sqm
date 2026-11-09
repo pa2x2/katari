@@ -1,0 +1,4 @@
+import kotlin.Boolean;
+
+-- A device can choose not to sync parts of its account; the changes of a part it doesn't sync wait unpushed.
+ALTER TABLE sync_records ADD COLUMN held_back INTEGER AS Boolean NOT NULL DEFAULT 0;

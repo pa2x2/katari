@@ -3,20 +3,23 @@ package app.katari.presentation.kit.list
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.offset
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LogoSize
@@ -28,6 +31,8 @@ import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.LocalContentColor
 import app.katari.presentation.kit.theme.TextRole
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
@@ -163,21 +168,64 @@ internal fun RowFrame(
     }
 }
 
+/**
+ * A row's title and what follows it, such as a profile chip or a sync mark: after the title's last word when it fits
+ * there, otherwise on the next line, so a title that wraps doesn't leave it on a line of its own.
+ */
 @Composable
 internal fun RowTitle(title: String, suffix: (@Composable () -> Unit)? = null) {
     val role = LocalRowDensity.current.titleRole
     if (suffix == null) {
         Text(title, role = role)
-    } else {
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-            itemVerticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(title, role = role)
-            suffix()
+        return
+    }
+    val gap = KatariTheme.spacing.s
+    val lineGap = KatariTheme.spacing.xs
+    val titleLayout = remember { TitleLayout() }
+    Layout(
+        content = {
+            Text(title, role = role, onTextLayout = { titleLayout.result = it })
+            Row(horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
+                suffix()
+            }
+        },
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val text = measurables[0].measure(loose)
+        val trailing = measurables[1].measure(loose)
+        val lines = titleLayout.result
+        val last = (lines?.lineCount ?: 1) - 1
+        // How far the last line reaches from the start edge, which is the right one in a right-to-left layout
+        val lineEnd = when {
+            lines == null -> text.width
+            layoutDirection == LayoutDirection.Ltr -> lines.getLineRight(last).roundToInt()
+            else -> text.width - lines.getLineLeft(last).roundToInt()
+        }
+        val afterTitle = lineEnd + gap.roundToPx()
+        if (afterTitle + trailing.width <= constraints.maxWidth) {
+            val lineMiddle = lines?.let { (it.getLineTop(last) + it.getLineBottom(last)) / 2 } ?: (text.height / 2f)
+            val trailingTop = (lineMiddle - trailing.height / 2f).roundToInt()
+            val shift = (-trailingTop).coerceAtLeast(0)
+            layout(
+                width = max(text.width, afterTitle + trailing.width),
+                height = max(text.height + shift, trailingTop + shift + trailing.height),
+            ) {
+                text.placeRelative(0, shift)
+                trailing.placeRelative(afterTitle, trailingTop + shift)
+            }
+        } else {
+            val trailingTop = text.height + lineGap.roundToPx()
+            layout(width = max(text.width, trailing.width), height = trailingTop + trailing.height) {
+                text.placeRelative(0, 0)
+                trailing.placeRelative(0, trailingTop)
+            }
         }
     }
+}
+
+/** The title's lines as last laid out, read by [RowTitle] to place what follows the last one. */
+private class TitleLayout {
+    var result: TextLayoutResult? = null
 }
 
 /** Fills a choice row while it is chosen, when it sits in a dialog; elsewhere its row group or control shows that. */

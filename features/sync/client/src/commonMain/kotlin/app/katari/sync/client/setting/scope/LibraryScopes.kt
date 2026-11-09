@@ -4,7 +4,7 @@ package app.katari.sync.client.setting.scope
  * The library, its updates and the lists built from it: `LibraryPreferences`, `GlobalLibraryPreferences`,
  * `DuplicatePreferences`, `UpdatesPreferences` and `UpcomingPreferences`.
  */
-internal val LibraryScopes = PreferenceScopeTable {
+internal val LibraryScopes = PreferenceScopeTable(SettingsArea.LIBRARY) {
     // LibraryPreferences: display, sorting, filters, grouping, badges and categories
     person(
         "pref_display_mode_library",
@@ -31,17 +31,22 @@ internal val LibraryScopes = PreferenceScopeTable {
         "categorized_display",
     )
     // The cover size fits the screen; the random order's seed is redrawn on each device.
-    device("pref_library_cover_size", "library_random_sort_seed")
+    deviceByDefault("pref_library_cover_size")
+    device(DeviceBound.APP, "library_random_sort_seed")
 
-    // LibraryPreferences: the rules of library updates sync, when and on what network they run stays
-    person(
-        "library_update_manga_restriction",
-        "library_update_paused_sources",
-        "library_update_excluded_entry_types",
-        "auto_update_metadata",
-        "pref_update_library_manga_titles",
-    )
-    device("pref_library_update_interval_key", "library_update_restriction")
+    // LibraryPreferences: the rules of library updates sync, how often they run stays unless the person syncs it, and
+    // on what network and power they run stays
+    area(SettingsArea.LIBRARY_UPDATES) {
+        person(
+            "library_update_manga_restriction",
+            "library_update_paused_sources",
+            "library_update_excluded_entry_types",
+            "auto_update_metadata",
+            "pref_update_library_manga_titles",
+        )
+        deviceByDefault("pref_library_update_interval_key")
+    }
+    device(DeviceBound.NETWORK, "library_update_restriction")
 
     // LibraryPreferences: chapter list defaults and swipe actions
     person(
@@ -60,6 +65,7 @@ internal val LibraryScopes = PreferenceScopeTable {
 
     // Keys of earlier versions, read only to convert them
     device(
+        DeviceBound.APP,
         "library_update_categories",
         "library_update_categories_exclude",
         "library_update_excluded_sources",
@@ -69,7 +75,7 @@ internal val LibraryScopes = PreferenceScopeTable {
 
     // GlobalLibraryPreferences, in the store all profiles share. File names follow the device's storage.
     person("mark_duplicate_read_chapter_read")
-    device("disallow_non_ascii_filenames", "pref_enable_chapter_name_hash")
+    device(DeviceBound.STORAGE, "disallow_non_ascii_filenames", "pref_enable_chapter_name_hash")
 
     // DuplicatePreferences
     person(

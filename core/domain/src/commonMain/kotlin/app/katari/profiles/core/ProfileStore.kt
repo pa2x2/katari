@@ -25,6 +25,12 @@ interface ProfileStore {
     fun isProfilePreference(preference: Preference<*>): Boolean
 
     /**
+     * [preference]'s key as preference classes ask for it ([PreferenceWrite.key]), without the profile a store may
+     * keep it under. Sync's scope tables and Settings name settings by it.
+     */
+    fun preferenceKey(preference: Preference<*>): String
+
+    /**
      * Calls [listener] with every write to the shared store or to any profile's own stores, from every writer, on the
      * writing thread once the new value can be read, until the returned handle is closed.
      */

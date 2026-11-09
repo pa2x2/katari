@@ -26,10 +26,3 @@ fun ProfileSpecificChip() {
         leading = namedProfile?.let { { ProfileAvatar(colorSeed = it.colorSeed, size = AvatarSize.Inline) } },
     )
 }
-
-internal fun profileSpecificSuffix(isProfileSpecific: Boolean): (@Composable () -> Unit)? =
-    if (isProfileSpecific) {
-        { ProfileSpecificChip() }
-    } else {
-        null
-    }

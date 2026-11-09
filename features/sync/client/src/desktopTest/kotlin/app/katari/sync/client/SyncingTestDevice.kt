@@ -21,7 +21,7 @@ import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
-import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import kotlin.time.Duration
 
 /**
  * A [SyncTestDevice] with sync's transport wired as the app wires it, talking to a real server over [http]: a test
@@ -66,11 +67,11 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.firstSync,
         connection,
         ExistingRows(local.driver, local.handler, local.drain),
-        ExistingFiles(local.handler, local.ownedFiles),
+        ExistingFiles(local.handler, local.ownedFiles, local.syncPreferences),
         ExistingSettings(local.handler, local.preferences.reads, local.drain),
         resync,
     )
-    val preferences = SyncPreferences(local.preferences.profiles)
+    val preferences = local.syncPreferences
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
@@ -97,11 +98,22 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             ),
             local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,
-            FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories), handOff, disconnection,
+            FilePlacement(local.handler, local.ownedFiles, fileRule, local.files.directories, preferences),
+            handOff,
+            disconnection,
             steps,
             UngroupedRecords(local.handler),
         ),
         steps,
+    )
+    val choiceChanges = SyncChoiceChanges(
+        local.handler,
+        preferences,
+        local.writing,
+        local.preferences.reads,
+        connection,
+        runs,
+        local.fileCapture,
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(
@@ -110,7 +122,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     )
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff),
+        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences),
         LocalChanges(local.driver),
         work,
         connection,
@@ -118,6 +130,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.handler,
         local.preferences.profiles,
         handOff,
+        network,
     )
     val status = SyncStatusFlow(
         connection,
@@ -126,9 +139,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.pending,
         local.questions,
         local.held,
-        PendingFiles(local.handler),
+        PendingFiles(local.handler, preferences),
         fileRule,
         steps,
+        preferences,
     )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */
@@ -189,7 +203,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         var periodic = false
             private set
 
-        override suspend fun schedulePeriodic(enabled: Boolean) {
+        override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
             periodic = enabled
         }
 

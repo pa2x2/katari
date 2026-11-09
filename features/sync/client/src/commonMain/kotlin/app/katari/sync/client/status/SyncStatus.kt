@@ -60,6 +60,12 @@ data class SyncStatus(
         /** A first download waits for Wi-Fi (D022). */
         data object WaitingForWifi : Activity
 
+        /** Changes wait for Wi-Fi, the person having chosen not to sync them on mobile data. */
+        data object ChangesWaitForWifi : Activity
+
+        /** The person paused syncing on this device. */
+        data object Paused : Activity
+
         data object Offline : Activity
 
         /** The server hasn't answered since [sinceMillis]. */
@@ -105,6 +111,12 @@ data class SyncStatus(
 
         /** Syncing is stopped, such as until the app or the server is updated, or until the person signs in again. */
         STOPPED,
+
+        /** The person paused syncing. */
+        PAUSED,
+
+        /** Changes wait for Wi-Fi, as the person chose. */
+        WAITING_FOR_WIFI,
     }
 
     /** Whether something waits for the person, which More marks with a dot (D028). */

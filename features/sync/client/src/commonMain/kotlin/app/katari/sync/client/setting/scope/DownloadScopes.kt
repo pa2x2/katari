@@ -7,6 +7,7 @@ package app.katari.sync.client.setting.scope
  */
 internal val DownloadScopes = PreferenceScopeTable {
     device(
+        DeviceBound.DOWNLOADS,
         "pref_download_only_over_wifi_key",
         "save_chapter_as_cbz",
         "auto_download_while_reading",
@@ -22,8 +23,13 @@ internal val DownloadScopes = PreferenceScopeTable {
         "download_parallel_page_limit",
     )
 
-    device("backup_interval")
+    device(DeviceBound.STORAGE, "backup_interval")
 
     // EntryMediaCacheAutoClearPreference keys of the manga, book and anime caches
-    device("auto_clear_chapter_cache", "auto_clear_book_materialization_cache", "auto_clear_anime_playback_cache")
+    device(
+        DeviceBound.STORAGE,
+        "auto_clear_chapter_cache",
+        "auto_clear_book_materialization_cache",
+        "auto_clear_anime_playback_cache",
+    )
 }

@@ -6,7 +6,9 @@ import app.katari.sync.client.file.local.OwnedFiles
 import app.katari.sync.client.file.local.stored
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.font.ImportedFontKind
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.payload.SyncedFile
+import app.katari.sync.client.preference.SyncPreferences
 import dev.zacsweers.metro.Inject
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
@@ -17,20 +19,27 @@ import tachiyomi.data.DatabaseHandler
  * field, so the file fills in what the account lacks and gives way to every cover or font set anywhere since. Local-
  * source entries' covers never sync (D016).
  *
- * Recording twice is harmless, as with rows.
+ * Recording twice is harmless, as with rows. Files of a kind this device doesn't sync are left for
+ * [app.katari.sync.client.file.capture.FileCapture.rescan] once it does.
  */
 @Inject
 class ExistingFiles(
     private val handler: DatabaseHandler,
     private val files: OwnedFiles,
+    private val preferences: SyncPreferences,
 ) {
     suspend fun record() {
-        handler.await { sync_filesQueries.syncedEntryIds().awaitAsList() }.forEach { entryId ->
-            record(FileOwner.CustomCover(entryId), EntryKind.name)
+        val choices = preferences.choices()
+        if (choices.syncs(DataGroup.COVERS)) {
+            handler.await { sync_filesQueries.syncedEntryIds().awaitAsList() }.forEach { entryId ->
+                record(FileOwner.CustomCover(entryId), EntryKind.name)
+            }
         }
-        handler.await { sync_local_rowsQueries.profiles().awaitAsList() }.forEach { profile ->
-            files.locked { fonts(profile._id) }.forEach { fileName ->
-                record(FileOwner.Font(profile._id, fileName), ImportedFontKind.name)
+        if (choices.syncs(DataGroup.FONTS)) {
+            handler.await { sync_local_rowsQueries.profiles().awaitAsList() }.forEach { profile ->
+                files.locked { fonts(profile._id) }.forEach { fileName ->
+                    record(FileOwner.Font(profile._id, fileName), ImportedFontKind.name)
+                }
             }
         }
     }

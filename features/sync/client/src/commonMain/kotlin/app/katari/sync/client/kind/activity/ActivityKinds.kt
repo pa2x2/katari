@@ -12,6 +12,7 @@ import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.replacement.chapterFollowingMove
 import app.katari.sync.client.kind.replacement.entryFollowingReplacement
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -25,6 +26,8 @@ object ActivitySessionKind : SyncedKind<ActivitySessionPayload>(
     ActivitySessionPayload.serializer(),
     Absence.KEEP,
 ) {
+    override val dataGroup = DataGroup.STATISTICS
+
     override val capture = listOf(
         CaptureTrigger("activity_sessions", Event.INSERT, listOf("NEW.session_id")),
         CaptureTrigger(
@@ -77,6 +80,8 @@ object ActivitySegmentKind : SyncedKind<ActivitySegmentPayload>(
     Absence.KEEP,
 ) {
     private val ref = listOf("NEW.session_id", "NEW.chapter_id", "NEW.local_date", "NEW.time_zone_id")
+
+    override val dataGroup = DataGroup.STATISTICS
 
     override val capture = listOf(
         CaptureTrigger("activity_segments", Event.INSERT, ref),
@@ -149,6 +154,8 @@ object ActivityCompletionKind : SyncedKind<ActivityCompletionPayload>(
     ActivityCompletionPayload.serializer(),
     Absence.KEEP,
 ) {
+    override val dataGroup = DataGroup.STATISTICS
+
     override val capture = listOf(CaptureTrigger("activity_completion_events", Event.INSERT, listOf("NEW.event_id")))
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ActivityCompletionPayload> {

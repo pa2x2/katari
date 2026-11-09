@@ -117,6 +117,12 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Container of a disabled control. */
     val disabledContainer: Color = scheme.onSurface.copy(alpha = DISABLED_CONTAINER_ALPHA)
 
+    /**
+     * Container of a disabled control that is on, such as a switch's track: the accent, dimmed, so a disabled control
+     * still reads as on or off, which [disabledContainer] alone loses in a dark scheme.
+     */
+    val disabledSelectedContainer: Color = scheme.primary.copy(alpha = DISABLED_CONTENT_ALPHA)
+
     init {
         val primary = scheme.primary
         val success = ToneSet.of(SUCCESS_SEED.harmonize(primary), isDark)

@@ -6,8 +6,8 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplySession
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.SyncKinds
-import app.katari.sync.client.kind.setting.ProfileSettingKind
-import app.katari.sync.client.kind.setting.SharedSettingKind
+import app.katari.sync.client.kind.setting.ProfileSettings
+import app.katari.sync.client.kind.setting.SharedSettings
 import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.payload.Tombstone
@@ -79,14 +79,14 @@ class RestoreStamping(
         return result
     }
 
-    /** Every person-level preference this device holds, as the records they are. */
+    /** Every preference this device holds that can sync, as the records they are. */
     private suspend fun preferences(database: Database): List<Touched> {
         val profiles = database.sync_local_rowsQueries.profiles().awaitAsList()
         return buildList {
-            settings.sharedKeys().forEach { add(Touched(SharedSettingKind, SharedSettingKind.ref(it))) }
+            settings.sharedKeys().forEach { key -> SharedSettings.of(key)?.let { add(Touched(it, it.ref(key))) } }
             profiles.forEach { profile ->
-                settings.profileKeys(profile._id).forEach {
-                    add(Touched(ProfileSettingKind, ProfileSettingKind.ref(profile._id, it)))
+                settings.profileKeys(profile._id).forEach { key ->
+                    ProfileSettings.of(key)?.let { add(Touched(it, it.ref(profile._id, key))) }
                 }
                 settings.sourceKeys(profile._id).forEach { (sourceId, keys) ->
                     keys.forEach { add(Touched(SourceSettingKind, SourceSettingKind.ref(profile._id, sourceId, it))) }

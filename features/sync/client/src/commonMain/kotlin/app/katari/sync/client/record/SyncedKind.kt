@@ -3,7 +3,11 @@ package app.katari.sync.client.record
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
+import app.katari.sync.client.part.ChoiceSet
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.payload.UnknownFields
+import app.katari.sync.client.setting.scope.PreferenceScopes
+import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.protocol.file.FileReference
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -56,6 +60,21 @@ abstract class SyncedKind<P : Any>(
 
     /** The entry a record of this kind belongs to, so records of an entry another one replaced follow it there. */
     internal open fun entryKeyOf(payload: P): String? = null
+
+    /** The data group whose switch this kind follows; null for one that always syncs, or follows something else. */
+    internal open val dataGroup: DataGroup? = null
+
+    /** Whether this device syncs [payload] by what it chose ([ChoiceSet]), its profile aside. */
+    internal open fun syncsOn(choices: ChoiceSet, payload: P): Boolean = dataGroup?.let(choices::syncs) ?: true
+
+    /** The uuid of the profile a record of this kind is in, when its payload names one rather than an entry. */
+    internal open fun profileOf(payload: P): String? = null
+
+    /** The key of the app preference a setting record holds; null for a record that holds none. */
+    internal open fun settingKey(payload: P): String? = null
+
+    /** The Settings area of a setting record; null for a record that is no setting. */
+    internal open fun settingsArea(payload: P): SettingsArea? = settingKey(payload)?.let(PreferenceScopes::markOf)?.area
 
     /**
      * The files [payload] names, which the envelope lists so the server keeps them while the record is live

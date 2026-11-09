@@ -7,6 +7,7 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.merge.larger
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -22,6 +23,8 @@ object ExtensionRepositoryKind : SyncedKind<ExtensionRepositoryPayload>(
     ExtensionRepositoryPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.EXTENSION_REPOSITORIES
+
     override val capture = listOf(
         CaptureTrigger("extension_store", Event.INSERT, listOf("NEW.index_url")),
         CaptureTrigger("extension_store", Event.DELETE, listOf("OLD.index_url")),

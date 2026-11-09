@@ -11,6 +11,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.earlier
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -31,6 +32,10 @@ object StatisticsEpochKind : SyncedKind<StatisticsEpochPayload>(
     Absence.KEEP,
 ) {
     override val oldestReadableVersion = 1
+
+    override val dataGroup = DataGroup.STATISTICS
+
+    override fun profileOf(payload: StatisticsEpochPayload) = payload.profileUuid
 
     override val capture = listOf(
         CaptureTrigger("statistics_epochs", Event.INSERT, listOf("NEW.profile_id")),

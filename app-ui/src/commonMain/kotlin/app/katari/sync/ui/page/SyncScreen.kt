@@ -12,8 +12,10 @@ import app.katari.missingextensions.ui.MissingExtensionsNoticeViewModel
 import app.katari.missingextensions.ui.MissingExtensionsSheet
 import app.katari.presentation.kit.dialog.ConfirmDialog
 import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
+import app.katari.sync.ui.choice.WhatSyncsScreen
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.link.LinkDeviceDialog
@@ -62,6 +64,8 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
         val status by model.status.collectAsState()
         val devices by model.devices.collectAsState()
         val canKeepSignIn by model.canKeepSignIn.collectAsState()
+        val choices by model.choices.collectAsState()
+        val profilesNotSynced by model.profilesNotSynced.collectAsState()
         val headline = rememberSyncHeadline()
         val messages = rememberScreenMessages()
 
@@ -83,6 +87,8 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
             openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
+            openWhatSyncs = { navigator.push(WhatSyncsScreen()) },
+            answerArrivingProfile = model::answerArrivingProfile,
         )
         val missingExtensions by metroViewModel<MissingExtensionsNoticeViewModel>().installable.collectAsState()
 
@@ -101,6 +107,8 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
                         headline = headline,
                         devices = devices,
                         preferences = model.preferences,
+                        choices = choices,
+                        profilesNotSynced = profilesNotSynced,
                         knowsWifi = knowsWifi,
                         missingExtensions = missingExtensions,
                         actions = actions,
@@ -172,4 +180,7 @@ internal class SyncPageActions(
     val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,
     val openMissingExtensions: () -> Unit,
+    val openWhatSyncs: () -> Unit,
+    /** Says whether a profile made on another device comes to this one. */
+    val answerArrivingProfile: (ProfileSync, comesHere: Boolean) -> Unit,
 )

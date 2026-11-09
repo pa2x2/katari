@@ -1,6 +1,7 @@
 package app.katari.sync.client.trigger
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.handoff.EntryHandOff
@@ -18,10 +19,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -38,11 +41,12 @@ import kotlin.time.TimeSource
  *   server has it.
  * - The app coming to the front: a run that fetches the entry Resume continues first (D052), then pulls and pushes.
  * - While in front: the live channel ([LiveUpdates]).
- * - In the background: the platform's periodic work while background sync is on.
+ * - In the background: the platform's periodic work while background sync is on, at the interval the person chose.
+ * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
  *   progress and goes on when the app leaves the front.
  *
- * None of it runs while the device isn't linked to an account (D001).
+ * None of it runs while the device isn't linked to an account (D001); while syncing is paused, runs end at once.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -56,6 +60,7 @@ class SyncTriggers(
     private val handler: DatabaseHandler,
     private val profileStore: ProfileStore,
     private val handOff: EntryHandOff,
+    private val network: NetworkConnectivity,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val foreground = MutableStateFlow(false)
@@ -82,13 +87,32 @@ class SyncTriggers(
         }
         scope.launch { linked.collect { isLinked -> if (!isLinked) work.dropLongRun() } }
         scope.launch {
-            combine(linked, preferences.syncInBackground.changes()) { isLinked, inBackground ->
-                isLinked && inBackground
+            combine(
+                linked,
+                preferences.syncInBackground.changes(),
+                preferences.paused.changes(),
+                preferences.backgroundInterval.changes(),
+            ) { isLinked, inBackground, paused, minutes ->
+                (isLinked && inBackground && !paused) to minutes.minutes
             }
                 .distinctUntilChanged()
-                .collect { work.schedulePeriodic(it) }
+                .collect { (enabled, every) -> work.schedulePeriodic(enabled, every) }
+        }
+        // What waited for syncing to resume, or for Wi-Fi, goes as soon as it may
+        scope.launch {
+            combine(linked, preferences.paused.changes(), changesWaitForWifi()) { isLinked, paused, waits ->
+                isLinked && !paused && !waits
+            }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { mayGo -> if (mayGo) runs.request(SyncRequest()) }
         }
     }
+
+    private fun changesWaitForWifi() = combine(
+        preferences.changesOnMobileData.changes(),
+        network.state(),
+    ) { onMobileData, network -> !onMobileData && !network.countsAsWifi }.distinctUntilChanged()
 
     fun appCameToFront() {
         foreground.value = true

@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import app.katari.sync.ui.choice.SettingsAreaSyncAction
 import app.katari.ui.di.AppUiGraph
 import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
@@ -40,7 +41,10 @@ abstract class SearchableSettings : Screen() {
             titleRes = getTitleRes(),
             isProfileSpecific = items.isNotEmpty() && items.all { it.belongsToProfile(profileStore) },
             onBackPressed = if (handleBack != null) handleBack::invoke else null,
-            actions = { AppBarAction() },
+            actions = {
+                SettingsAreaSyncAction(items)
+                AppBarAction()
+            },
             itemsProvider = { items },
         )
     }

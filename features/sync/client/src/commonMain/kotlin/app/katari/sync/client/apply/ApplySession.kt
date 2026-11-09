@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
+import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.question.QuestionDetection
@@ -17,6 +18,7 @@ import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.merge.merge
 import app.katari.sync.client.merge.newestEdit
 import app.katari.sync.client.outbox.EditStamper
+import app.katari.sync.client.part.OffParts
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -24,6 +26,7 @@ import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.apply.SettingWrites
+import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.data.Sync_pending
 import app.katari.sync.protocol.clock.HybridLogicalClock
 import app.katari.sync.protocol.clock.HybridTimestamp
@@ -51,6 +54,11 @@ import tachiyomi.domain.source.identity.SourceIdScheme
  * Applying a record that throws fails as [RecordApplyFailure], naming that record even when it was written on behalf of
  * another, as a parent is when its child resolves it. The transaction then runs again with the record in [failing],
  * which holds it aside ([HoldReason.FAILED]) as far as the failure got, and every other record applies (D067).
+ *
+ * A record of a part of the account this device chose not to sync ([OffParts]) is held as received
+ * ([HoldReason.TURNED_OFF]) and not merged: its local row isn't written, and merging into the stored copy alone would
+ * pair the row's values with the account's edit times the next time the row is drained. [followChoices] takes it in
+ * once the part is synced again.
  */
 internal class ApplySession(
     override val database: Database,
@@ -58,6 +66,7 @@ internal class ApplySession(
     override val profileDeletion: LocalProfileDeletion,
     override val migrationRules: MigrationCarryRules,
     override val activeProfileId: Long,
+    private val parts: OffParts,
     private val device: DeviceId,
     private val appVersion: String,
     private val failing: Map<String, FailedStage>,
@@ -101,6 +110,7 @@ internal class ApplySession(
         val envelope = record.record
         var stage = FailedStage.STORING
         try {
+            if (parts.isOff(kind, envelope.deleted, envelope.payload)) return hold(record, HoldReason.TURNED_OFF)
             val incoming = RecordState.of(envelope.deleted, envelope.payload)
             val edited = kind.newestEdit(incoming)
             if (edited != null && edited.physicalMillis - now() > HybridLogicalClock.MAX_AHEAD.inWholeMilliseconds) {
@@ -158,6 +168,12 @@ internal class ApplySession(
         val kind = SyncKinds.named(stored.kind) ?: return null
         try {
             val state = RecordState.of(stored.deleted, stored.payload)
+            if (parts.isOff(kind, stored.deleted, stored.payload)) {
+                held?.let {
+                    hold(ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), it.record), HoldReason.TURNED_OFF)
+                }
+                return null
+            }
             val outcome = if (key in failing) {
                 ApplyOutcome.Held(HoldReason.FAILED)
             } else {
@@ -404,6 +420,7 @@ internal class ApplySession(
             changeId = newChangeId(),
             recordGroup = RecordGroups.of(kind.name, key, merged.deleted, merged.bytes),
         )
+        holdBackIfOff(kind, key, merged)
         settle(kind, key, write(kind, key, merged, stored?.local_ref), stored?.local_ref, record = null)
     }
 
@@ -430,8 +447,140 @@ internal class ApplySession(
                 changeId = newChangeId(),
                 recordGroup = RecordGroups.of(kind.name, key, merged.deleted, merged.bytes),
             )
+            holdBackIfOff(kind, key, merged)
         }
         settle(kind, key, write(kind, key, merged, ref), ref, record = null)
+    }
+
+    private suspend fun holdBackIfOff(kind: SyncedKind<*>, key: String, state: RecordState) {
+        if (parts.isOff(kind, state.deleted, state.bytes)) database.sync_recordsQueries.holdBack(key)
+    }
+
+    /**
+     * Brings the records here in line with what this device chose to sync: the changes of parts it stopped syncing
+     * are held back from pushing, those of parts it syncs again are let go, and the records that arrived for those
+     * parts while they were off are taken in, merged by edit time like any others.
+     */
+    suspend fun followChoices() {
+        holdBackOffChanges()
+        val records = database.sync_recordsQueries
+        records.heldBack().awaitAsList().forEach { held ->
+            val kind = SyncKinds.named(held.kind)
+            if (kind == null || !parts.isOff(kind, held.deleted, held.payload)) records.letGo(held.record_key)
+        }
+        database.sync_pendingQueries.turnedOff().awaitAsList().forEach { held ->
+            val record = ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record)
+            val kind = SyncKinds.named(record.record.kind)
+            if (kind != null && parts.isOff(kind, record.record.deleted, record.record.payload)) return@forEach
+            database.sync_pendingQueries.release(held.record_key)
+            receive(record)
+        }
+    }
+
+    /** Holds back the changes waiting to be pushed that belong to parts this device doesn't sync. */
+    suspend fun holdBackOffChanges() {
+        val records = database.sync_recordsQueries
+        records.pushable().awaitAsList().forEach { change ->
+            val kind = SyncKinds.named(change.kind) ?: return@forEach
+            if (parts.isOff(kind, change.deleted, change.payload)) records.holdBack(change.record_key)
+        }
+    }
+
+    /**
+     * Removes the account profile [uuid], which this device stopped syncing, from this device as deleting it here
+     * does, but with no deletion to push: the rows go inside this write, whose capture is dropped, and the profile's
+     * records stay, let go of their rows, so [restoreProfile] can write them again.
+     */
+    suspend fun removeProfile(uuid: String) {
+        val profileId = database.sync_applyQueries.profileId(uuid).awaitAsOneOrNull() ?: return
+        check(profileId != activeProfileId) { "The open profile can't leave this device" }
+        forEachRecordOf(uuid) { key, _ -> database.sync_recordsQueries.setLocalRef(localRef = null, recordKey = key) }
+        database.sync_filesQueries.releaseProfile(fontOwnerPrefix = "[$profileId,%", profileId = profileId)
+        profileDeletion.delete(profileId)
+    }
+
+    /** Takes in the records of the profile [uuid] the person said comes here ([OffParts.admit]). */
+    fun admitProfile(uuid: String) = parts.admit(uuid)
+
+    /** Writes every record of the profile [uuid] here again, once this device syncs the profile. */
+    suspend fun restoreProfile(uuid: String) {
+        reapply(ProfileKind.key(uuid))
+        forEachRecordOf(uuid) { key, deleted -> if (!deleted) reapply(key) }
+    }
+
+    /**
+     * Calls [action] with every record of the profile [uuid]: those it holds outside its titles, then each of its
+     * titles followed by the records in the title's group. Titles' groups hold most of an account's records, so reading
+     * only this profile's spares decoding every other profile's chapters and progress.
+     */
+    private suspend fun forEachRecordOf(uuid: String, action: suspend (key: String, deleted: Boolean) -> Unit) {
+        val records = database.sync_recordsQueries
+        suspend fun visit(key: String, kindName: String, deleted: Boolean, payload: ByteArray) {
+            val kind = SyncKinds.named(kindName) ?: return
+            if (parts.profileOf(kind, deleted, payload) == uuid) action(key, deleted)
+        }
+        var after = ""
+        while (true) {
+            val page = records.outsideTitlesAfter(RecordGroups.PROFILES, EntryKind.name, after, PAGE).awaitAsList()
+            page.forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
+            after = page.lastOrNull()?.record_key ?: break
+        }
+        after = ""
+        while (true) {
+            val page = records.kindPageAfter(EntryKind.name, after, PAGE).awaitAsList()
+            page.forEach { title ->
+                if (parts.profileOf(EntryKind, title.deleted, title.payload) != uuid) return@forEach
+                action(title.record_key, title.deleted)
+                records.inGroup(RecordGroups.entry(title.record_key)).awaitAsList()
+                    .filter { it.record_key != title.record_key }
+                    .forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
+            }
+            after = page.lastOrNull()?.record_key ?: break
+        }
+    }
+
+    /**
+     * Drops the changes this device made to [area]'s settings while it didn't sync them, for the account's settings,
+     * which the records held for the area bring when [followChoices] takes them in.
+     */
+    suspend fun keepAccountSettings(area: SettingsArea) = keepAccountSettings { it.settingsArea == area }
+
+    /** [keepAccountSettings] for the preference [key] alone, in every profile. */
+    suspend fun keepAccountSetting(key: String) = keepAccountSettings { it.key == key }
+
+    /**
+     * Drops the changes held back of the settings [matching] picks that this device syncs now. A setting the account
+     * had no copy of keeps this device's value, unless one arrived meanwhile.
+     */
+    private suspend fun keepAccountSettings(matching: (Setting) -> Boolean) {
+        val records = database.sync_recordsQueries
+        records.heldBack().awaitAsList().forEach { held ->
+            val kind = SyncKinds.named(held.kind) ?: return@forEach
+            val setting = kind.settingOf(held.deleted, held.payload)
+            if (setting == null || !matching(setting) || parts.isOff(kind, held.deleted, held.payload)) return@forEach
+            when {
+                held.base_payload != null -> {
+                    records.takeBase(held.record_key)
+                    reapply(held.record_key)
+                }
+                database.sync_pendingQueries.get(held.record_key).awaitAsOneOrNull() != null ->
+                    records.forget(held.record_key)
+            }
+        }
+    }
+
+    /**
+     * Whether this device changed settings of [area] it would sync with the area on while the area was off, which it
+     * then asks about.
+     */
+    suspend fun changedWhileOff(area: SettingsArea): Boolean {
+        val turnedOn = OffParts(parts.choices.copy(areasOff = parts.choices.areasOff - area), database)
+        return database.sync_recordsQueries.heldBack().awaitAsList().any { held ->
+            val kind = SyncKinds.named(held.kind) ?: return@any false
+            held.change_id != null &&
+                kind.settingOf(held.deleted, held.payload)?.settingsArea == area &&
+                !turnedOn.isOff(kind, held.deleted, held.payload)
+        }
     }
 
     /**
@@ -458,12 +607,23 @@ internal class ApplySession(
     private companion object {
         /** Categories merged into ones merged again; a chain this long can only be a loop. */
         const val MAX_REPLACEMENTS = 16
+
+        const val PAGE = 500L
     }
 }
 
 private fun <P : Any> SyncedKind<P>.newestEdit(state: RecordState): HybridTimestamp? = when (state) {
     is RecordState.Live -> newestEdit(serializer, decode(state.bytes))
     is RecordState.Deleted -> state.tombstone.deletedAt
+}
+
+/** Which setting a record is: its Settings area, and the preference key for an app preference. */
+private class Setting(val settingsArea: SettingsArea, val key: String?)
+
+private fun <P : Any> SyncedKind<P>.settingOf(deleted: Boolean, bytes: ByteArray): Setting? {
+    val live = RecordState.of(deleted, bytes) as? RecordState.Live ?: return null
+    val payload = decode(live.bytes)
+    return settingsArea(payload)?.let { Setting(it, settingKey(payload)) }
 }
 
 private fun <P : Any> SyncedKind<P>.sameRecord(a: RecordState, b: RecordState): Boolean = when {

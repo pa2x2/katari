@@ -2,7 +2,7 @@ package app.katari.sync.client.setting.scope
 
 import tachiyomi.core.common.preference.Preference
 
-/** The scope of every preference key, from the tables of every area. */
+/** The mark of every preference key, from the tables of every part of the app. */
 object PreferenceScopes {
     private val tables = listOf(
         AppearanceScopes,
@@ -25,20 +25,23 @@ object PreferenceScopes {
     private val keys = merge { it.keys }
     private val prefixes = merge { it.prefixes }.entries.sortedByDescending { it.key.length }
 
+    fun of(key: String): PreferenceScope = markOf(key)?.scope ?: PreferenceScope.DEVICE
+
     /**
-     * [key] as preference classes ask a store for it. A key in a family takes the scope of the longest prefix it
-     * starts with; a key no table marks stays on the device.
+     * The mark of [key] as preference classes ask a store for it. A key in a family takes the mark of the longest
+     * prefix it starts with. Null for an app-state or private key, and for a key no table marks, which stays on the
+     * device.
      */
-    fun of(key: String): PreferenceScope {
-        if (Preference.isAppState(key) || Preference.isPrivate(key)) return PreferenceScope.DEVICE
+    fun markOf(key: String): PreferenceMark? {
+        if (Preference.isAppState(key) || Preference.isPrivate(key)) return null
         keys[key]?.let { return it }
-        return prefixes.firstOrNull { key.startsWith(it.key) }?.value ?: PreferenceScope.DEVICE
+        return prefixes.firstOrNull { key.startsWith(it.key) }?.value
     }
 
-    private fun merge(of: (PreferenceScopeTable) -> Map<String, PreferenceScope>): Map<String, PreferenceScope> {
-        val merged = HashMap<String, PreferenceScope>()
+    private fun merge(of: (PreferenceScopeTable) -> Map<String, PreferenceMark>): Map<String, PreferenceMark> {
+        val merged = HashMap<String, PreferenceMark>()
         tables.forEach { table ->
-            of(table).forEach { (key, scope) -> require(merged.put(key, scope) == null) { "$key is marked twice" } }
+            of(table).forEach { (key, mark) -> require(merged.put(key, mark) == null) { "$key is marked twice" } }
         }
         return merged
     }

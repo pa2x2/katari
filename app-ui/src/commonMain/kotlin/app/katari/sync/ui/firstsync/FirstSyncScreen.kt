@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
@@ -32,6 +34,8 @@ import app.katari.profiles.core.Profile
 import app.katari.profiles.ui.components.ProfileAvatar
 import app.katari.sync.client.firstsync.ProfilePairing
 import app.katari.sync.client.firstsync.SettingsWinner
+import app.katari.sync.ui.choice.WhatSyncsScreen
+import app.katari.sync.ui.choice.whatSyncsSummary
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -42,8 +46,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The one screen a device with data sees before its first sync (D027, D047): which of its profiles are which of the
- * account's, and whose settings each paired profile keeps. Data is always merged and device-level settings are never
- * replaced. Leaving without starting keeps the device waiting here, which the Sync page offers again.
+ * account's, or stay only here, and whose settings each paired profile keeps; then what else this device syncs, chosen
+ * on What syncs. Data is always merged and device-level settings are never replaced. Leaving without starting keeps
+ * the device waiting here, which the Sync page offers again.
  */
 class FirstSyncScreen : Screen() {
     @Composable
@@ -52,6 +57,7 @@ class FirstSyncScreen : Screen() {
         val model = metroViewModel<FirstSyncViewModel>()
         val state by model.state.collectAsState()
         val profiles by model.profiles.collectAsState()
+        val syncChoices by model.syncChoices.collectAsState()
         val choosing = state as? FirstSyncViewModel.State.Choosing
         LaunchedEffect(state) { if (state == FirstSyncViewModel.State.Started) navigator.pop() }
 
@@ -99,14 +105,26 @@ class FirstSyncScreen : Screen() {
                         ProfileRow(
                             pairing = pairing,
                             profile = byId[pairing.profileId],
-                            paired = shown.isPaired(pairing),
+                            join = shown.joinOf(pairing),
                             settings = shown.choices.getValue(pairing.profileId).settings,
-                            onPairedChange = { model.setPaired(pairing.profileId, it) },
+                            onJoinChange = { model.setJoin(pairing.profileId, it) },
                             onSettingsChange = { model.setSettings(pairing.profileId, it) },
                         )
                     }
                     item {
                         RowGroupNote(stringResource(MR.strings.sync_first_sync_device_settings), showIcon = true)
+                    }
+                    rowGroupItems(listOf(WHAT_SYNCS), key = { it }) {
+                        SettingsRow(
+                            title = stringResource(MR.strings.sync_choices_title),
+                            subtitle = whatSyncsSummary(
+                                syncChoices,
+                                shown.pairings.filter { shown.joinOf(it) == FirstSyncViewModel.Join.ONLY_HERE }
+                                    .mapNotNull { byId[it.profileId]?.name },
+                            ),
+                            icon = MaterialSymbols.Rounded.CloudSync,
+                            onClick = { navigator.push(WhatSyncsScreen()) },
+                        )
                     }
                 }
             }
@@ -114,44 +132,59 @@ class FirstSyncScreen : Screen() {
     }
 }
 
+private const val WHAT_SYNCS = "what-syncs"
+
 /**
  * One of this device's profiles, in one row: how it joins the account, with its library's size to tell profiles of
- * one name apart, and, once paired, whose settings it keeps. A profile that matches an account profile only by name
- * gets a pill to pair it or add it as new in place of saying how it pairs.
+ * one name apart, and, once paired, whose settings it keeps. A profile with a choice of how it joins (an account
+ * profile matched only by name, a new one, or none, staying here) gets a pill in place of saying how it joins.
  */
 @Composable
 private fun ProfileRow(
     pairing: ProfilePairing,
     profile: Profile?,
-    paired: Boolean,
+    join: FirstSyncViewModel.Join,
     settings: SettingsWinner,
-    onPairedChange: (Boolean) -> Unit,
+    onJoinChange: (FirstSyncViewModel.Join) -> Unit,
     onSettingsChange: (SettingsWinner) -> Unit,
 ) {
     val accountProfile = pairing.pairedWith
     val size = pairing.librarySize
     val titles = pluralStringResource(MR.plurals.sync_first_sync_titles, size.toInt(), size)
-    val choosesPairing = accountProfile != null && !pairing.sameProfile
+    val joins = buildList {
+        if (accountProfile != null && !pairing.sameProfile) add(FirstSyncViewModel.Join.PAIRED)
+        if (pairing.canStayHere) {
+            add(FirstSyncViewModel.Join.NEW)
+            add(FirstSyncViewModel.Join.ONLY_HERE)
+        }
+    }
+    val paired = join == FirstSyncViewModel.Join.PAIRED
     SettingsRow(
         title = pairing.name,
-        subtitle = if (choosesPairing) {
+        subtitle = if (joins.size > 1) {
             titles
         } else {
             val pairs = if (paired) MR.strings.sync_first_sync_paired else MR.strings.sync_first_sync_add_new
             stringResource(MR.strings.sync_first_sync_profile_line, stringResource(pairs), titles)
         },
         leading = profile?.let { { ProfileAvatar(colorSeed = it.colorSeed, size = AvatarSize.Row) } },
-        below = accountProfile?.takeIf { choosesPairing }?.let {
+        below = if (joins.size > 1) {
             {
                 ChoicePill(
-                    selected = if (paired) 0 else 1,
-                    options = listOf(
-                        stringResource(MR.strings.sync_first_sync_same_as, it.name),
-                        stringResource(MR.strings.sync_first_sync_add_new),
-                    ),
-                    onSelect = { index -> onPairedChange(index == 0) },
+                    selected = joins.indexOf(join),
+                    options = joins.map { option ->
+                        when (option) {
+                            FirstSyncViewModel.Join.PAIRED ->
+                                stringResource(MR.strings.sync_first_sync_same_as, accountProfile?.name.orEmpty())
+                            FirstSyncViewModel.Join.NEW -> stringResource(MR.strings.sync_first_sync_add_new)
+                            FirstSyncViewModel.Join.ONLY_HERE -> stringResource(MR.strings.sync_profile_only_here)
+                        }
+                    },
+                    onSelect = { onJoinChange(joins[it]) },
                 )
             }
+        } else {
+            null
         },
         trailing = if (paired) {
             {

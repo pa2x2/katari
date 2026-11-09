@@ -41,12 +41,12 @@ internal fun checkPreferenceScopes(
             when {
                 mark != null || key is ResolvedKey.DeviceByDefinition -> null
                 key is ResolvedKey.Exact -> request.finding(
-                    "the preference key \"${key.key}\" isn't marked person or device; mark it in a " +
+                    "the preference key \"${key.key}\" isn't marked person, deviceByDefault or device; mark it in a " +
                         "PreferenceScopeTable under $SCOPE_TABLES",
                 )
                 key is ResolvedKey.Family -> request.finding(
-                    "the preference keys starting with \"${key.prefix}\" aren't marked person or device; mark the " +
-                        "prefix with personPrefix or devicePrefix under $SCOPE_TABLES",
+                    "the preference keys starting with \"${key.prefix}\" aren't marked; mark the prefix with " +
+                        "personPrefix, deviceByDefaultPrefix or devicePrefix under $SCOPE_TABLES",
                 )
                 else -> null
             }
