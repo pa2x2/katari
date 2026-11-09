@@ -1,6 +1,10 @@
 package app.katari.sync.client.preference
 
 import app.katari.profiles.core.ProfileStore
+import app.katari.sync.client.part.ChoiceSet
+import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.setting.scope.PreferenceScope
+import app.katari.sync.client.setting.scope.SettingsArea
 import dev.zacsweers.metro.Inject
 import tachiyomi.core.common.preference.Preference
 
@@ -20,4 +24,36 @@ class SyncPreferences(profileStore: ProfileStore) {
      * so no backup carries it to another device.
      */
     val deviceName: Preference<String> = store.getString(Preference.appStateKey("sync_device_name"))
+
+    // What this device syncs. App state, like its name: a backup restored on another device must not carry them there.
+    val dataOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_data_off"))
+    val areasOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_areas_off"))
+
+    /** Settings kept out of an area this device syncs. */
+    val settingsOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_settings_off"))
+
+    /** Settings that stay on each device by default that this device syncs ([PreferenceScope.DEVICE_BY_DEFAULT]). */
+    val settingsOn: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_settings_on"))
+
+    /** The uuids of profiles this device doesn't sync: its own kept here, or the account's not on it. */
+    val profilesOff: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_profiles_off"))
+
+    /** The uuids of profiles made on another device that wait for the person to say whether they come here. */
+    val profilesAsking: Preference<Set<String>> = store.getStringSet(Preference.appStateKey("sync_profiles_asking"))
+
+    /** Whether a profile made on another device asks before it arrives here. */
+    val askBeforeNewProfiles: Preference<Boolean> =
+        store.getBoolean(Preference.appStateKey("sync_ask_before_new_profiles"), false)
+
+    fun choices(): ChoiceSet = ChoiceSet(
+        dataOff = dataOff.get().enumsOf(DataGroup.entries),
+        areasOff = areasOff.get().enumsOf(SettingsArea.entries),
+        settingsOff = settingsOff.get(),
+        settingsOn = settingsOn.get(),
+        profilesOff = profilesOff.get() + profilesAsking.get(),
+    )
 }
+
+// A name a later version wrote and this one doesn't know chooses nothing here
+private fun <E : Enum<E>> Set<String>.enumsOf(entries: List<E>): Set<E> =
+    mapNotNullTo(HashSet()) { name -> entries.firstOrNull { it.name == name } }

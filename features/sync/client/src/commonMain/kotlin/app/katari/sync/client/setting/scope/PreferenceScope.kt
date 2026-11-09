@@ -6,8 +6,20 @@ enum class PreferenceScope {
     PERSON,
 
     /**
-     * Screen size and layout, hardware, storage, network, power, notifications, installation, update channel and
-     * telemetry, and every key no table marks: never synced.
+     * Fitted to the device, as screen sizes and layouts are, so it stays on the device unless the person chooses to
+     * sync it there ([app.katari.sync.client.choice.SyncChoices]).
+     */
+    DEVICE_BY_DEFAULT,
+
+    /**
+     * Only works on the device it was set on ([DeviceBound] says why), and every key no table marks: never synced.
      */
     DEVICE,
 }
+
+/** How a key or key family syncs. [area] is null for keys that only work on the device; [bound] says why they do. */
+class PreferenceMark internal constructor(
+    val scope: PreferenceScope,
+    val area: SettingsArea?,
+    val bound: DeviceBound?,
+)

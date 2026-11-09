@@ -1,7 +1,9 @@
 package app.katari.sync.client.setting.scope
 
 /**
- * The preference keys of one area of the app, each marked [PreferenceScope.PERSON] or [PreferenceScope.DEVICE].
+ * The preference keys of one part of the app, each marked [PreferenceScope.PERSON], [PreferenceScope.DEVICE_BY_DEFAULT]
+ * or [PreferenceScope.DEVICE] with why it only works on the device, and the Settings [area] the synced ones belong to
+ * ([Builder.area] names another for some of them).
  *
  * Every key a preference store is asked for anywhere in the app is marked in exactly one table, which the build
  * enforces: `checkPreferenceScopes` reads the tables from their source and fails on a key no table marks, on a key two
@@ -11,30 +13,50 @@ package app.katari.sync.client.setting.scope
  * Keys under [tachiyomi.core.common.preference.Preference]'s app-state or private prefix are the device's by
  * definition and are not listed.
  */
-class PreferenceScopeTable(declare: Builder.() -> Unit) {
-    internal val keys: Map<String, PreferenceScope>
-    internal val prefixes: Map<String, PreferenceScope>
+class PreferenceScopeTable(area: SettingsArea? = null, declare: Builder.() -> Unit) {
+    internal val keys: Map<String, PreferenceMark>
+    internal val prefixes: Map<String, PreferenceMark>
 
     init {
-        val builder = Builder().apply(declare)
+        val builder = Builder(area).apply(declare)
         keys = builder.keys
         prefixes = builder.prefixes
     }
 
-    class Builder internal constructor() {
-        internal val keys = LinkedHashMap<String, PreferenceScope>()
-        internal val prefixes = LinkedHashMap<String, PreferenceScope>()
+    class Builder internal constructor(private var area: SettingsArea?) {
+        internal val keys = LinkedHashMap<String, PreferenceMark>()
+        internal val prefixes = LinkedHashMap<String, PreferenceMark>()
 
-        fun person(vararg keys: String) = mark(this.keys, keys, PreferenceScope.PERSON)
+        /** Marks the keys [declare] marks as belonging to [area] rather than the table's. */
+        fun area(area: SettingsArea, declare: Builder.() -> Unit) {
+            val table = this.area
+            this.area = area
+            declare()
+            this.area = table
+        }
 
-        fun device(vararg keys: String) = mark(this.keys, keys, PreferenceScope.DEVICE)
+        fun person(vararg keys: String) = mark(this.keys, keys, synced(PreferenceScope.PERSON))
 
-        fun personPrefix(vararg prefixes: String) = mark(this.prefixes, prefixes, PreferenceScope.PERSON)
+        fun deviceByDefault(vararg keys: String) = mark(this.keys, keys, synced(PreferenceScope.DEVICE_BY_DEFAULT))
 
-        fun devicePrefix(vararg prefixes: String) = mark(this.prefixes, prefixes, PreferenceScope.DEVICE)
+        fun device(bound: DeviceBound, vararg keys: String) = mark(this.keys, keys, bound(bound))
 
-        private fun mark(into: MutableMap<String, PreferenceScope>, keys: Array<out String>, scope: PreferenceScope) {
-            keys.forEach { key -> require(into.put(key, scope) == null) { "$key is marked twice" } }
+        fun personPrefix(vararg prefixes: String) = mark(this.prefixes, prefixes, synced(PreferenceScope.PERSON))
+
+        fun deviceByDefaultPrefix(vararg prefixes: String) =
+            mark(this.prefixes, prefixes, synced(PreferenceScope.DEVICE_BY_DEFAULT))
+
+        fun devicePrefix(bound: DeviceBound, vararg prefixes: String) = mark(this.prefixes, prefixes, bound(bound))
+
+        private fun synced(scope: PreferenceScope): PreferenceMark {
+            val area = requireNotNull(area) { "Keys that can sync belong to a Settings area" }
+            return PreferenceMark(scope, area, bound = null)
+        }
+
+        private fun bound(bound: DeviceBound) = PreferenceMark(PreferenceScope.DEVICE, area = null, bound)
+
+        private fun mark(into: MutableMap<String, PreferenceMark>, keys: Array<out String>, mark: PreferenceMark) {
+            keys.forEach { key -> require(into.put(key, mark) == null) { "$key is marked twice" } }
         }
     }
 }

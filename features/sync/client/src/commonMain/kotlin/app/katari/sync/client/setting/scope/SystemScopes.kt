@@ -5,9 +5,11 @@ package app.katari.sync.client.setting.scope
  * and Android's `BasePreferences` and extension installer.
  */
 internal val SystemScopes = PreferenceScopeTable {
-    device("redact_sensitive_headers", "verbose_logging", "doh_provider", "default_user_agent")
-    device("crashlytics", "analytics")
-    device("progressive_image_loading")
-    device("app_update_check_on_launch", "app_update_channel")
-    device("pref_hardware_bitmap_threshold", "extension_installer")
+    device(DeviceBound.DIAGNOSTICS, "redact_sensitive_headers", "verbose_logging")
+    device(DeviceBound.NETWORK, "doh_provider", "default_user_agent")
+    device(DeviceBound.DIAGNOSTICS, "crashlytics", "analytics")
+    device(DeviceBound.HARDWARE, "progressive_image_loading")
+    device(DeviceBound.APP, "app_update_check_on_launch", "app_update_channel")
+    device(DeviceBound.HARDWARE, "pref_hardware_bitmap_threshold")
+    device(DeviceBound.INSTALLED, "extension_installer")
 }
