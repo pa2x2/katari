@@ -30,6 +30,7 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.rememberScreenHostFinish
+import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(
     private val destination: Int? = null,
@@ -103,7 +104,14 @@ class SettingsScreen(
                 navigator.replaceAll(settingsStackFor(twoPane, navigator.items))
                 stackTwoPane = twoPane
             }
-            val screens = remember(navigator) { movableContentOf { DefaultNavigatorScreenTransition(navigator) } }
+            // Each page gets its own up action, given by the layout it is shown in
+            val screens = remember(navigator) {
+                movableContentOf { backFor: (VoyagerScreen) -> (() -> Unit)? ->
+                    DefaultNavigatorScreenTransition(navigator) { screen ->
+                        CompositionLocalProvider(LocalBackPress provides backFor(screen)) { screen.Content() }
+                    }
+                }
+            }
             if (!twoPane) {
                 val pop: () -> Unit = {
                     if (navigator.canPop) {
@@ -112,7 +120,7 @@ class SettingsScreen(
                         close()
                     }
                 }
-                CompositionLocalProvider(LocalBackPress provides pop) { screens() }
+                screens { pop }
             } else {
                 val insets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
                 TwoPanes(
@@ -124,7 +132,11 @@ class SettingsScreen(
                             SettingsMainList(twoPane = true)
                         }
                     },
-                    end = { screens() },
+                    // The page the list opened sits beside it and has nowhere to go back to; a page opened from
+                    // another page goes back to that one
+                    end = {
+                        screens { screen -> if (screen !== navigator.items.first()) navigator::pop else null }
+                    },
                 )
             }
         }
