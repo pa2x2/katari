@@ -28,9 +28,8 @@ import tachiyomi.core.common.util.lang.launchUI
 /**
  * What syncs and its area pages: this device's choices as they change, and changing them. A choice made here goes
  * through [SyncChoiceChanges], which saves it and then brings what this device holds in line with it. That can take a
- * while, such as finding a profile's records among all the account's, so it runs in the app's scope: leaving the
- * screen meanwhile would otherwise stop it after the choice was saved, and the device would keep holding back what it
- * now syncs.
+ * while, such as writing a profile's records here again, so it runs in the app's scope: leaving the screen meanwhile
+ * would otherwise stop it after the choice was saved, and the device would keep holding back what it now syncs.
  */
 @Inject
 @ViewModelKey

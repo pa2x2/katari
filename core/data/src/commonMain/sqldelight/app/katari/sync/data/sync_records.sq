@@ -128,13 +128,31 @@ ON CONFLICT(record_key) DO UPDATE SET
     base_payload = excluded.base_payload,
     record_group = excluded.record_group;
 
--- A page of every record, in key order, after :afterKey.
-pageAfter:
+-- A page, in key order after :afterKey, of the records other than titles that are in no title's group: those a profile
+-- holds besides its titles, such as its settings and categories, the profiles themselves (:profilesGroup), and records
+-- stored before groups were kept, until their groups are filled in.
+outsideTitlesAfter:
 SELECT record_key, kind, deleted, payload
 FROM sync_records
-WHERE record_key > :afterKey
+WHERE (record_group IS NULL OR record_group = '' OR record_group = :profilesGroup)
+    AND kind != :titleKind AND record_key > :afterKey
 ORDER BY record_key
 LIMIT :limit;
+
+-- A page of the records of :kind, in key order after :afterKey.
+kindPageAfter:
+SELECT record_key, deleted, payload
+FROM sync_records
+WHERE kind = :kind AND record_key > :afterKey
+ORDER BY record_key
+LIMIT :limit;
+
+-- The records in :recordGroup, such as a title with its chapters, progress and history.
+inGroup:
+SELECT record_key, kind, deleted, payload
+FROM sync_records
+WHERE record_group = :recordGroup
+ORDER BY record_key;
 
 holdBack:
 UPDATE sync_records

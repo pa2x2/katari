@@ -6,6 +6,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
+import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.kind.question.QuestionDetection
@@ -507,17 +508,34 @@ internal class ApplySession(
         forEachRecordOf(uuid) { key, deleted -> if (!deleted) reapply(key) }
     }
 
+    /**
+     * Calls [action] with every record of the profile [uuid]: those it holds outside its titles, then each of its
+     * titles followed by the records in the title's group. Titles' groups hold most of an account's records, so reading
+     * only this profile's spares decoding every other profile's chapters and progress.
+     */
     private suspend fun forEachRecordOf(uuid: String, action: suspend (key: String, deleted: Boolean) -> Unit) {
+        val records = database.sync_recordsQueries
+        suspend fun visit(key: String, kindName: String, deleted: Boolean, payload: ByteArray) {
+            val kind = SyncKinds.named(kindName) ?: return
+            if (parts.profileOf(kind, deleted, payload) == uuid) action(key, deleted)
+        }
         var after = ""
         while (true) {
-            val page = database.sync_recordsQueries.pageAfter(after, PAGE).awaitAsList()
-            page.forEach { record ->
-                val kind = SyncKinds.named(record.kind) ?: return@forEach
-                if (parts.profileOf(kind, record.deleted, record.payload) == uuid) {
-                    action(record.record_key, record.deleted)
-                }
+            val page = records.outsideTitlesAfter(RecordGroups.PROFILES, EntryKind.name, after, PAGE).awaitAsList()
+            page.forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
+            after = page.lastOrNull()?.record_key ?: break
+        }
+        after = ""
+        while (true) {
+            val page = records.kindPageAfter(EntryKind.name, after, PAGE).awaitAsList()
+            page.forEach { title ->
+                if (parts.profileOf(EntryKind, title.deleted, title.payload) != uuid) return@forEach
+                action(title.record_key, title.deleted)
+                records.inGroup(RecordGroups.entry(title.record_key)).awaitAsList()
+                    .filter { it.record_key != title.record_key }
+                    .forEach { visit(it.record_key, it.kind, it.deleted, it.payload) }
             }
-            after = page.lastOrNull()?.record_key ?: return
+            after = page.lastOrNull()?.record_key ?: break
         }
     }
 
