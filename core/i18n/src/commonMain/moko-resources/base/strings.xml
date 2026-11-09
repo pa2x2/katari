@@ -3443,8 +3443,8 @@
     <string name="sync_profile_sync">Sync this profile</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_area_switch">Sync %1$s settings</string>
-    <!-- A setting in a sync area's list, after the Settings screen it is on: "Manga reader · Off · kept on this device" -->
-    <string name="sync_choice_setting_on_screen">%1$s · %2$s</string>
+    <!-- Two parts of a setting's line in a sync area's list: where Settings shows it and whether it syncs, as in "Manga reader · Display · Off · kept on this device" -->
+    <string name="sync_choice_setting_detail">%1$s · %2$s</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_area_again_title">Sync %1$s settings again?</string>
     <string name="sync_area_again_text">This device changed them while they weren't synced.</string>

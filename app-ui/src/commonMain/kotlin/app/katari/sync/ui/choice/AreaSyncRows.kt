@@ -23,13 +23,11 @@ internal fun areaSyncPreferences(
     onSyncSetting: (key: String, on: Boolean) -> Unit,
 ): List<Preference> {
     val synced = choices.syncs(area)
-    // A setting's screen tells apart settings of the same name, such as each reader's own
-    val onSeveralScreens = settings.distinctBy { it.screen }.size > 1
+    // Where a setting is tells apart settings of the same name, such as each reader's own, and says what a title
+    // such as "Entry type" is about
     val subtitle: @Composable (AreaSetting, String?) -> String? = { setting, state ->
-        when {
-            !onSeveralScreens -> state
-            state == null -> setting.screen
-            else -> stringResource(MR.strings.sync_choice_setting_on_screen, setting.screen, state)
+        listOfNotNull(setting.screen, setting.group, state).reduceOrNull { detail, part ->
+            stringResource(MR.strings.sync_choice_setting_detail, detail, part)
         }
     }
     val byScope = settings.groupBy { it.mark.scope }
