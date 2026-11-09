@@ -36,6 +36,7 @@ import app.katari.presentation.kit.control.dropInsertionIndicator
 import app.katari.presentation.kit.feedback.SnackbarDuration
 import app.katari.presentation.kit.feedback.SnackbarHost
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.navigation.AppBar
@@ -228,7 +229,7 @@ internal fun HomeNavigationEditorContent(
                 )
             },
         ) { contentPadding ->
-            Box(
+            FramedContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding),

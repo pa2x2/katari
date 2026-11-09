@@ -55,11 +55,10 @@ import app.katari.presentation.kit.feedback.ScreenSnackbarHost
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.feedback.claimScreenMessages
 import app.katari.presentation.kit.feedback.rememberScreenMessagesFor
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.list.LocalRowGroupContainer
 import app.katari.presentation.kit.list.ProvideRowDensity
 import app.katari.presentation.kit.list.RowDensity
-import app.katari.presentation.kit.navigation.DockClearance
-import app.katari.presentation.kit.navigation.LocalDockClearance
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
@@ -122,13 +121,15 @@ fun Sheet(
                     modifier
                 },
             ) {
-                // The sheet is a window over the floating dock, so a Scaffold in it has nothing to clear
-                CompositionLocalProvider(
-                    LocalRowGroupContainer provides SurfaceContainer.Highest,
-                    LocalScreenMessages provides messages,
-                    LocalDockClearance provides DockClearance.None,
-                ) {
-                    KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                // The sheet is a window over the floating dock and the screen, so a Scaffold or list in it has nothing
+                // to clear
+                ApartFromScreen {
+                    CompositionLocalProvider(
+                        LocalRowGroupContainer provides SurfaceContainer.Highest,
+                        LocalScreenMessages provides messages,
+                    ) {
+                        KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                    }
                 }
             }
         }

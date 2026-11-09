@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,10 +15,10 @@ internal fun Modifier.libraryPinnedGridDecoration(
     state: LazyGridState,
     items: List<LibraryItem>,
     style: LibraryPinnedDisplayStyle,
-    contentPadding: PaddingValues,
 ): Modifier {
     if (items.isEmpty() || style == LibraryPinnedDisplayStyle.Shelf) return this
     val keys = rememberPinnedSectionKeys(items)
+    // The library's grids keep their items this far in from their sides (the page's frame is applied around them)
     val gridInset = KatariTheme.spacing.s
     return groupCardBehind {
         val visibleItems = state.layoutInfo.visibleItemsInfo.filter { it.key in keys }
@@ -34,8 +33,8 @@ internal fun Modifier.libraryPinnedGridDecoration(
         } else {
             size.height
         }
-        val left = (contentPadding.calculateLeftPadding(layoutDirection) + gridInset).toPx()
-        val right = size.width - (contentPadding.calculateRightPadding(layoutDirection) + gridInset).toPx()
+        val left = gridInset.toPx()
+        val right = size.width - gridInset.toPx()
         Rect(left, top, right, bottom)
     }
 }

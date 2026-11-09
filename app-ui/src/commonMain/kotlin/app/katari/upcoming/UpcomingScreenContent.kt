@@ -16,6 +16,7 @@ import app.katari.icons.materialsymbols.automirroredrounded.Help
 import app.katari.icons.materialsymbols.rounded.FilterList
 import app.katari.presentation.kit.content.Badge
 import app.katari.presentation.kit.content.BadgeTone
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.layout.TwoPanes
@@ -184,12 +185,14 @@ private fun UpcomingScreenLargeImpl(
     TwoPanes(
         modifier = Modifier.padding(paddingValues),
         start = {
-            Calendar(
-                selectedYearMonth = selectedYearMonth,
-                events = events,
-                setSelectedYearMonth = setSelectedYearMonth,
-                onClickDay = onClickDay,
-            )
+            FramedContent {
+                Calendar(
+                    selectedYearMonth = selectedYearMonth,
+                    events = events,
+                    setSelectedYearMonth = setSelectedYearMonth,
+                    onClickDay = onClickDay,
+                )
+            }
         },
         end = {
             RowList(fastScroll = true, state = listState) {

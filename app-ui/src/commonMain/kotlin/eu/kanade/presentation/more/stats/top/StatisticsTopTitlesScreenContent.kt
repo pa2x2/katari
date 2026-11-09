@@ -17,6 +17,7 @@ import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -98,7 +99,7 @@ fun StatisticsTopTitlesScreenContent(
 
 @Composable
 private fun LoadFailed(onRetry: () -> Unit, modifier: Modifier) {
-    Box(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
+    FramedContent(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
         Button(
             label = stringResource(MR.strings.statistics_could_not_load_activity) + " · " +
                 stringResource(MR.strings.action_retry),

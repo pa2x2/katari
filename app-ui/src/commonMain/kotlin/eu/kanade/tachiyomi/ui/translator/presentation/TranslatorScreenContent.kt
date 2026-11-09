@@ -16,6 +16,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Settings
 import app.katari.language.api.tag.LanguageTag
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
 import app.katari.presentation.kit.navigation.Scaffold
@@ -109,54 +110,56 @@ internal fun TranslatorScreenContent(
         },
         snackbarHostState = snackbarHostState,
     ) { contentPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(contentPadding)
-                .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s)
-                .fillMaxWidth()
-                .widthIn(max = KatariTheme.sizes.readableWidth),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            TranslationLanguagePairSelector(
-                source = sourceLanguageLabel(state),
-                target = targetLanguageLabel(state),
-                // The swap control stays enabled; TranslatorViewModel answers every click either
-                // by exchanging the languages or with a SwapUnavailable event.
-                canSwap = true,
-                onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },
-                onChooseTarget = { onShowPicker(TranslatorPicker.TargetLanguage) },
-                onSwap = onSwap,
-            )
-            TranslationEngineSelectorRow(
-                engineName = when {
-                    !state.engineSelectionResolved ->
-                        stringResource(MR.strings.translation_engine_status_checking)
-                    selectedEngine != null -> selectedEngine.engine.engineName
-                    else -> stringResource(MR.strings.translation_choose_engine)
-                },
-                onClick = { onShowPicker(TranslatorPicker.Engine) },
-            )
-            TranslationWorkbench(
-                text = state.text,
-                session = state.session,
-                sourceSpeechTarget = sourceSpeechTarget,
-                speechState = state.speech,
-                onTextChange = onTextChange,
-                onClear = onClearText,
-                onSpeechToggle = onSpeechToggle,
-                onCopy = { text -> textClipboard.copy(clipboardLabel, text) },
-                onShare = { text: String -> textSharing.share(context, text) }.takeIf { textSharing.isAvailable },
-                onExecute = onExecute,
-                onRetry = onRetry,
-                onSelectSource = onSelectSource,
-                onSelectEngine = { selection ->
-                    (selection as? TranslationEngineSelection.Explicit)?.engine?.let(onSelectEngine)
-                },
-                onExternalAction = onExternalAction,
-            )
+        FramedContent(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(contentPadding)
+                    .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s)
+                    .fillMaxWidth()
+                    .widthIn(max = KatariTheme.sizes.readableWidth),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TranslationLanguagePairSelector(
+                    source = sourceLanguageLabel(state),
+                    target = targetLanguageLabel(state),
+                    // The swap control stays enabled; TranslatorViewModel answers every click either
+                    // by exchanging the languages or with a SwapUnavailable event.
+                    canSwap = true,
+                    onChooseSource = { onShowPicker(TranslatorPicker.SourceLanguage) },
+                    onChooseTarget = { onShowPicker(TranslatorPicker.TargetLanguage) },
+                    onSwap = onSwap,
+                )
+                TranslationEngineSelectorRow(
+                    engineName = when {
+                        !state.engineSelectionResolved ->
+                            stringResource(MR.strings.translation_engine_status_checking)
+                        selectedEngine != null -> selectedEngine.engine.engineName
+                        else -> stringResource(MR.strings.translation_choose_engine)
+                    },
+                    onClick = { onShowPicker(TranslatorPicker.Engine) },
+                )
+                TranslationWorkbench(
+                    text = state.text,
+                    session = state.session,
+                    sourceSpeechTarget = sourceSpeechTarget,
+                    speechState = state.speech,
+                    onTextChange = onTextChange,
+                    onClear = onClearText,
+                    onSpeechToggle = onSpeechToggle,
+                    onCopy = { text -> textClipboard.copy(clipboardLabel, text) },
+                    onShare = { text: String -> textSharing.share(context, text) }.takeIf { textSharing.isAvailable },
+                    onExecute = onExecute,
+                    onRetry = onRetry,
+                    onSelectSource = onSelectSource,
+                    onSelectEngine = { selection ->
+                        (selection as? TranslationEngineSelection.Explicit)?.engine?.let(onSelectEngine)
+                    },
+                    onExternalAction = onExternalAction,
+                )
+            }
         }
     }
 

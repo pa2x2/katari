@@ -2,8 +2,6 @@ package eu.kanade.presentation.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
@@ -13,10 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
@@ -72,45 +70,43 @@ fun TabbedScreen(
         },
         snackbarHostState = snackbarHostState,
     ) { contentPadding ->
-        Column(
-            modifier = Modifier.padding(
-                top = if (chromeVisible) contentPadding.calculateTopPadding() else 0.dp,
-                start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
-                end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-            ),
+        FramedContent(
+            modifier = Modifier.padding(top = if (chromeVisible) contentPadding.calculateTopPadding() else 0.dp),
         ) {
-            if (chromeVisible) {
-                TabRow(modifier = Modifier.zIndex(1f)) {
-                    tabs.forEachIndexed { index, tab ->
-                        val selected = state.currentPage == index
-                        val onClick: () -> Unit = { scope.launch { state.animateScrollToPage(index) } }
-                        val label = tab.tabLabel
-                        if (label != null) {
-                            Tab(selected = selected, onClick = onClick, label = label)
-                        } else {
-                            Tab(
-                                title = stringResource(tab.titleRes),
-                                selected = selected,
-                                onClick = onClick,
-                                count = tab.badgeNumber,
-                            )
+            Column {
+                if (chromeVisible) {
+                    TabRow(modifier = Modifier.zIndex(1f)) {
+                        tabs.forEachIndexed { index, tab ->
+                            val selected = state.currentPage == index
+                            val onClick: () -> Unit = { scope.launch { state.animateScrollToPage(index) } }
+                            val label = tab.tabLabel
+                            if (label != null) {
+                                Tab(selected = selected, onClick = onClick, label = label)
+                            } else {
+                                Tab(
+                                    title = stringResource(tab.titleRes),
+                                    selected = selected,
+                                    onClick = onClick,
+                                    count = tab.badgeNumber,
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            HorizontalPager(
-                modifier = Modifier.fillMaxSize(),
-                state = state,
-                userScrollEnabled = chromeVisible,
-                verticalAlignment = Alignment.Top,
-            ) { page ->
-                // The pager composes neighbouring pages ahead of showing them
-                KeyboardShortcutScope(active = page == state.currentPage) {
-                    tabs[page].content(
-                        PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                        snackbarHostState,
-                    )
+                HorizontalPager(
+                    modifier = Modifier.fillMaxSize(),
+                    state = state,
+                    userScrollEnabled = chromeVisible,
+                    verticalAlignment = Alignment.Top,
+                ) { page ->
+                    // The pager composes neighbouring pages ahead of showing them
+                    KeyboardShortcutScope(active = page == state.currentPage) {
+                        tabs[page].content(
+                            PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                            snackbarHostState,
+                        )
+                    }
                 }
             }
         }

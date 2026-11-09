@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
@@ -30,8 +31,9 @@ fun FloatingPanel(
             color = KatariTheme.colors.surfaceContainerHigh,
             contentColor = KatariTheme.colors.onSurface,
             shadowElevation = FloatingPanelShadow,
-            content = content,
-        )
+        ) {
+            ApartFromScreen(content)
+        }
     }
 }
 

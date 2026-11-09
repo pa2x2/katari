@@ -2,8 +2,6 @@ package eu.kanade.presentation.more.stats
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
@@ -15,7 +13,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.Tab
 import app.katari.presentation.kit.navigation.TabRow
 import app.katari.presentation.kit.pager.HorizontalPager
@@ -60,7 +58,6 @@ fun StatsScreenContent(
     val selectedPage = pages.indexOf(state.selectedType).coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = selectedPage) { pages.size }
     val scope = rememberCoroutineScope()
-    val layoutDirection = LocalLayoutDirection.current
 
     LaunchedEffect(state.profileId, state.selectedType, pages) {
         if (pagerState.currentPage != selectedPage) {
@@ -93,51 +90,45 @@ fun StatsScreenContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                top = paddingValues.calculateTopPadding(),
-                start = paddingValues.calculateStartPadding(layoutDirection),
-                end = paddingValues.calculateEndPadding(layoutDirection),
-            ),
-    ) {
-        newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
-        TabRow {
-            pages.forEachIndexed { index, type ->
-                val label = if (type == null) {
-                    stringResource(MR.strings.label_overview_section)
-                } else {
-                    stringResource(state.types.first { it.type == type }.displayName)
+    FramedContent(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
+            TabRow {
+                pages.forEachIndexed { index, type ->
+                    val label = if (type == null) {
+                        stringResource(MR.strings.label_overview_section)
+                    } else {
+                        stringResource(state.types.first { it.type == type }.displayName)
+                    }
+                    Tab(
+                        title = label,
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                    )
                 }
-                Tab(
-                    title = label,
-                    selected = pagerState.currentPage == index,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+            }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.Top,
+                key = { pages[it]?.name ?: "overview" },
+            ) { page ->
+                StatisticsDashboardPage(
+                    state = state,
+                    selectedType = pages[page],
+                    bottomPadding = paddingValues.calculateBottomPadding(),
+                    onRangeSelected = onRangeSelected,
+                    onTypeSelected = onTypeSelected,
+                    onNavigateActivity = onNavigateActivity,
+                    onPageActivity = onPageActivity,
+                    onShowToday = onShowToday,
+                    onRetryActivity = onRetryActivity,
+                    onOpenActivity = onOpenActivity,
+                    onOpenEntry = onOpenEntry,
+                    onOpenEarlierActivity = onOpenEarlierActivity,
+                    onOpenTopTitles = onOpenTopTitles,
                 )
             }
-        }
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.Top,
-            key = { pages[it]?.name ?: "overview" },
-        ) { page ->
-            StatisticsDashboardPage(
-                state = state,
-                selectedType = pages[page],
-                bottomPadding = paddingValues.calculateBottomPadding(),
-                onRangeSelected = onRangeSelected,
-                onTypeSelected = onTypeSelected,
-                onNavigateActivity = onNavigateActivity,
-                onPageActivity = onPageActivity,
-                onShowToday = onShowToday,
-                onRetryActivity = onRetryActivity,
-                onOpenActivity = onOpenActivity,
-                onOpenEntry = onOpenEntry,
-                onOpenEarlierActivity = onOpenEarlierActivity,
-                onOpenTopTitles = onOpenTopTitles,
-            )
         }
     }
 }

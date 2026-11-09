@@ -6,13 +6,12 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import app.katari.presentation.kit.layout.CoverGrid
 import app.katari.presentation.kit.layout.RowList
-import app.katari.presentation.kit.layout.ScrollbarFrame
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.theme.KatariTheme
@@ -70,25 +69,23 @@ internal fun FeedLazyGrid(
     rowContent: @Composable (FeedRow) -> Unit,
     footer: @Composable () -> Unit,
 ) {
-    ScrollbarFrame(state = gridState, contentPadding = contentPadding) {
-        LazyVerticalGrid(
-            columns = columns,
-            state = gridState,
-            contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-        ) {
-            items(
-                items = rows,
-                key = FeedRow::key,
-                span = { row -> if (row is FeedRow.Item) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
-                contentType = FeedRow::contentType,
-            ) { row ->
-                rowContent(row)
-            }
-            if (showFooter) {
-                item(key = FOOTER_KEY, span = { GridItemSpan(maxLineSpan) }) { footer() }
-            }
+    CoverGrid(
+        columns = columns,
+        state = gridState,
+        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+    ) {
+        items(
+            items = rows,
+            key = FeedRow::key,
+            span = { row -> if (row is FeedRow.Item) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
+            contentType = FeedRow::contentType,
+        ) { row ->
+            rowContent(row)
+        }
+        if (showFooter) {
+            item(key = FOOTER_KEY, span = { GridItemSpan(maxLineSpan) }) { footer() }
         }
     }
 }

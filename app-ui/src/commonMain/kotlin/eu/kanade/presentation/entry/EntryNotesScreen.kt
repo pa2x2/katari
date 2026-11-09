@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarTitle
 import app.katari.presentation.kit.navigation.Scaffold
@@ -34,15 +35,14 @@ fun EntryNotesScreen(
             )
         },
     ) { contentPadding ->
-        EntryNotesTextArea(
-            state = state,
-            onUpdate = onUpdate,
-            onFinish = onFinish,
-            modifier = Modifier
-                .padding(contentPadding)
-                .consumeWindowInsets(contentPadding)
-                .imePadding(),
-        )
+        FramedContent(modifier = Modifier.padding(contentPadding).consumeWindowInsets(contentPadding)) {
+            EntryNotesTextArea(
+                state = state,
+                onUpdate = onUpdate,
+                onFinish = onFinish,
+                modifier = Modifier.imePadding(),
+            )
+        }
     }
 }
 

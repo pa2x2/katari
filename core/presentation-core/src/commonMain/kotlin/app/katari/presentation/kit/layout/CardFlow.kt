@@ -21,8 +21,9 @@ import kotlin.math.min
  * stays between [CardMinWidth] and [CardMaxWidth] wide, so a wider window adds columns rather than stretching cards; a
  * window too narrow for two columns has one card across its width. A card goes into the shortest column, so cards of
  * different heights leave no gaps; one that needs the width, such as a wide chart, spans every column with
- * `StaggeredGridItemSpan.FullLine`. The flow adds no space of its own: row group and dashboard cards already keep
- * their side margin and the gap below them, so one column looks as it does in a [RowList].
+ * `StaggeredGridItemSpan.FullLine`. The flow keeps clear of the screen's side room itself, so [contentPadding] only adds
+ * to it, and adds no space of its own: row group and dashboard cards already keep their side margin and the gap below
+ * them, so one column looks as it does in a [RowList].
  *
  * [maxColumns] caps the columns for content whose sections are too short to fill them; the cards then widen to share
  * the width, past [CardMaxWidth].
@@ -36,17 +37,19 @@ fun CardFlow(
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
     val direction = LocalLayoutDirection.current
+    val padding = contentPadding.plusSides(LocalContentSides.current, direction)
     BoxWithConstraints(modifier = modifier) {
-        val width = maxWidth - contentPadding.calculateStartPadding(direction) -
-            contentPadding.calculateEndPadding(direction)
+        val width = maxWidth - padding.calculateStartPadding(direction) - padding.calculateEndPadding(direction)
         val fitted = min((width / CardMinWidth).toInt(), ceil(width / CardMaxWidth).toInt())
         val columns = min(fitted, maxColumns ?: fitted).coerceAtLeast(1)
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(columns),
-            state = state,
-            contentPadding = contentPadding,
-            content = content,
-        )
+        SidesApplied {
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(columns),
+                state = state,
+                contentPadding = padding,
+                content = content,
+            )
+        }
     }
 }
 

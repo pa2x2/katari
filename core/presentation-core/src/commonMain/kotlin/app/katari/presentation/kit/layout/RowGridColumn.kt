@@ -10,7 +10,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 /**
  * Entries shown as rows by a lazy grid, such as the list display mode of library search results, which shares the
  * grid's items, headers and scroll state with its cover modes. [grid] lays out the grid with the [GridCells] and
- * content padding it is given: one column at most [RowListMaxWidth] wide, at the frame's start edge, as in a [RowList].
+ * content padding it is given: one column at most [RowListMaxWidth] wide, at the frame's start edge and clear of the
+ * screen's side room, as in a [RowList]; [contentPadding] only adds to that room.
  */
 @Composable
 fun RowGridColumn(
@@ -19,8 +20,9 @@ fun RowGridColumn(
     grid: @Composable (columns: GridCells, contentPadding: PaddingValues) -> Unit,
 ) {
     val direction = LocalLayoutDirection.current
+    val padding = contentPadding.plusSides(LocalContentSides.current, direction)
     BoxWithConstraints(modifier = modifier, propagateMinConstraints = true) {
-        grid(SingleColumn, contentPadding.inRowColumn(maxWidth, direction))
+        SidesApplied { grid(SingleColumn, padding.inRowColumn(maxWidth, direction)) }
     }
 }
 

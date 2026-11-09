@@ -259,8 +259,10 @@ See the `adaptive-layout` skill for which to use at which window size.
 |---|---|---|
 | A vertical list of rows, and what stays above it | `RowList`, `RowListHeader` | Never a raw `LazyColumn`; `stickyRowGroupHeader` in its scope keeps a header at the top while its rows scroll |
 | Entries shown as rows by a grid | `RowGridColumn` | |
+| A scrolling grid of entries, such as a library page, catalog or feed | `CoverGrid` | Never a raw `LazyVerticalGrid`; `fastScroll = true` for long grids; its content is given the column count |
 | Columns for a cover grid, and how many a grid lays out | `coverGridCells`, `GridCells.columnCount` | |
 | Cards of varying height in columns | `CardFlow` | |
+| A screen's content that isn't one of these lists, grids or panes, such as a page laid out as one column, tabs above a pager or a button over a list | `FramedContent`, `FramedScrollColumn` | Keeps it in the screen's frame, clear of the side dock and system bars; `FramedScrollColumn` scrolls from edge to edge and lets artwork bleed with `columnInset` |
 | A lazy list or grid with a mouse scrollbar | `ScrollbarFrame` | |
 | List and detail side by side | `TwoPanes` | |
 

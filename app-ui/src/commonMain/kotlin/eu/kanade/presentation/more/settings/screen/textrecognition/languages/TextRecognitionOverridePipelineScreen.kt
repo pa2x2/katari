@@ -1,8 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.languages
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -12,12 +10,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
 import app.katari.language.api.tag.LanguageTag
 import app.katari.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import app.katari.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.feedback.LoadingScreen
+import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.BottomActionBar
 import app.katari.presentation.kit.navigation.Scaffold
@@ -84,51 +82,44 @@ class TextRecognitionOverridePipelineScreen(
                 (loaded.presets + loaded.custom).firstOrNull { it.selection == selection }
             }
             val missingModels = candidateOption?.missingModels.orEmpty()
-            val layoutDirection = LocalLayoutDirection.current
             // The action bar pads itself above the navigation bar, so the scaffold's bottom padding is left to it.
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        start = contentPadding.calculateStartPadding(layoutDirection),
-                        top = contentPadding.calculateTopPadding(),
-                        end = contentPadding.calculateEndPadding(layoutDirection),
-                    ),
-            ) {
-                TextRecognitionPipelinePickerList(
-                    choices = loaded,
-                    selected = candidate,
-                    onSelect = { candidate = it },
-                    onDownload = { approval = PipelineDownloadApproval(it, confirmAfterwards = false) },
-                    onCancelDownload = model.controller::cancelDownloads,
-                    modifier = Modifier.weight(1f),
-                )
-                BottomActionBar {
-                    Button(
-                        label = if (missingModels.isEmpty()) {
-                            stringResource(
-                                MR.strings.text_recognition_settings_use_pipeline_for,
-                                language.displayName(),
-                            )
-                        } else {
-                            stringResource(MR.strings.text_recognition_settings_download_and_use)
-                        },
-                        onClick = {
-                            if (missingModels.isEmpty()) {
-                                confirm(candidate)
-                            } else {
-                                approval = PipelineDownloadApproval(missingModels, confirmAfterwards = true)
-                            }
-                        },
+            FramedContent(modifier = Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    TextRecognitionPipelinePickerList(
+                        choices = loaded,
+                        selected = candidate,
+                        onSelect = { candidate = it },
+                        onDownload = { approval = PipelineDownloadApproval(it, confirmAfterwards = false) },
+                        onCancelDownload = model.controller::cancelDownloads,
                         modifier = Modifier.weight(1f),
-                        enabled = if (candidate ==
-                            null
-                        ) {
-                            loaded.automatic != null
-                        } else {
-                            candidateOption?.included == true
-                        },
                     )
+                    BottomActionBar {
+                        Button(
+                            label = if (missingModels.isEmpty()) {
+                                stringResource(
+                                    MR.strings.text_recognition_settings_use_pipeline_for,
+                                    language.displayName(),
+                                )
+                            } else {
+                                stringResource(MR.strings.text_recognition_settings_download_and_use)
+                            },
+                            onClick = {
+                                if (missingModels.isEmpty()) {
+                                    confirm(candidate)
+                                } else {
+                                    approval = PipelineDownloadApproval(missingModels, confirmAfterwards = true)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = if (candidate ==
+                                null
+                            ) {
+                                loaded.automatic != null
+                            } else {
+                                candidateOption?.included == true
+                            },
+                        )
+                    }
                 }
             }
             approval?.let { pending ->

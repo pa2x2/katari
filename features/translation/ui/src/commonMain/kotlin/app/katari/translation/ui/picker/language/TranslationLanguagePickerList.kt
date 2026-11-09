@@ -14,6 +14,7 @@ import app.katari.language.api.tag.LanguageTag
 import app.katari.presentation.kit.feedback.NoResults
 import app.katari.presentation.kit.field.SearchField
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.RowListHeader
 import app.katari.presentation.kit.list.ChoiceRow
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupHeader
@@ -65,22 +66,26 @@ fun TranslationLanguagePickerList(
         unpairable?.options.orEmpty().matching(normalizedQuery)
     }
     Column(modifier = modifier) {
-        if (shortcuts.isNotEmpty()) {
-            TranslationLanguageShortcutsRow(
-                title = shortcutsTitle,
-                shortcuts = shortcuts,
-                selected = selected,
-                onSelect = onSelect,
-            )
+        RowListHeader {
+            Column {
+                if (shortcuts.isNotEmpty()) {
+                    TranslationLanguageShortcutsRow(
+                        title = shortcutsTitle,
+                        shortcuts = shortcuts,
+                        selected = selected,
+                        onSelect = onSelect,
+                    )
+                }
+                SearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    placeholder = stringResource(MR.strings.translation_settings_language_search),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+                )
+            }
         }
-        SearchField(
-            query = query,
-            onQueryChange = { query = it },
-            placeholder = stringResource(MR.strings.translation_settings_language_search),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-        )
         RowList(contentPadding = PaddingValues(bottom = KatariTheme.spacing.m)) {
             // The default stands apart from the languages it can resolve to.
             if (defaultOption != null && normalizedQuery.isEmpty()) {

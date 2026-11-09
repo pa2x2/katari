@@ -12,7 +12,8 @@ package app.katari.gradle.tasks
  * skill that explains its rule: .agents/skills/ui-kit, or .agents/skills/adaptive-layout for the window rules below.
  *
  * The kit also owns how a screen adapts to the window (.agents/skills/adaptive-layout): outside it, nothing reads the
- * window's size or orientation, builds a raw vertical lazy list or picks a grid's columns.
+ * window's size or orientation, builds a raw vertical lazy list or grid, picks a grid's columns or reads a padding's
+ * sides, which hold the room the kit keeps beside a screen's content.
  */
 
 internal data class UiKitBoundarySource(val relativePath: String, val content: String)
@@ -155,6 +156,15 @@ private val ADAPTIVE_LAYOUT_RULES = listOf(
         "Grid columns come from the kit: coverGridCells for covers, coverListCells for covers one to a line, " +
             "RowGridColumn for entries shown as rows, CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
         Regex("""\b(GridCells|StaggeredGridCells)\s*\.\s*(Fixed|Adaptive|FixedSize)\b"""),
+    ),
+    UiKitRule(
+        "A scrolling grid is the kit's CoverGrid, or CardFlow for cards of varying height; $ADAPTIVE_LAYOUT_SKILL",
+        Regex("""\b(LazyVerticalGrid|LazyVerticalStaggeredGrid)\s*[({]"""),
+    ),
+    UiKitRule(
+        "The room on a screen's sides is the kit's: its layouts keep clear of it, FramedContent holds content that " +
+            "isn't one of them, and padding is passed on whole or added to with +; $ADAPTIVE_LAYOUT_SKILL",
+        Regex("""\bcalculate(Start|End|Left|Right)Padding\b"""),
     ),
 )
 
