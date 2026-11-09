@@ -2,6 +2,7 @@ package app.katari.sync.ui.page
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.AccountDevice
 import app.katari.sync.client.account.SyncAccount
@@ -19,6 +20,7 @@ import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +45,7 @@ class SyncViewModel(
     val naming: DeviceNaming,
     private val choiceChanges: SyncChoiceChanges,
     profileStates: ProfileSyncStates,
+    @AppCoroutineScope private val appScope: CoroutineScope,
 ) : ViewModel() {
     val status: StateFlow<SyncStatus?> = statusState.status
 
@@ -86,8 +89,9 @@ class SyncViewModel(
         }
     }
 
+    /** In the app's scope, so leaving the page doesn't stop bringing the profile here after the answer was saved. */
     fun answerArrivingProfile(profile: ProfileSync, comesHere: Boolean) {
-        viewModelScope.launchIO { choiceChanges.syncProfile(profile.uuid, on = comesHere) }
+        appScope.launchIO { choiceChanges.syncProfile(profile.uuid, on = comesHere) }
     }
 
     fun refreshDevices() {

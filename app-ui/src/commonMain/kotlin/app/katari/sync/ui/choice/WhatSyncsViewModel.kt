@@ -2,6 +2,7 @@ package app.katari.sync.ui.choice
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.part.ChoiceSet
@@ -15,17 +16,21 @@ import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.launchUI
 
 /**
  * What syncs and its area pages: this device's choices as they change, and changing them. A choice made here goes
- * through [SyncChoiceChanges], which brings what this device holds in line with it.
+ * through [SyncChoiceChanges], which saves it and then brings what this device holds in line with it. That can take a
+ * while, such as finding a profile's records among all the account's, so it runs in the app's scope: leaving the
+ * screen meanwhile would otherwise stop it after the choice was saved, and the device would keep holding back what it
+ * now syncs.
  */
 @Inject
 @ViewModelKey
@@ -35,6 +40,7 @@ class WhatSyncsViewModel(
     profileStates: ProfileSyncStates,
     connection: SyncConnection,
     val preferences: SyncPreferences,
+    @AppCoroutineScope private val appScope: CoroutineScope,
 ) : ViewModel() {
     val choices: StateFlow<ChoiceSet> =
         preferences.choicesChanges().stateIn(viewModelScope, SharingStarted.Eagerly, preferences.choices())
@@ -54,11 +60,11 @@ class WhatSyncsViewModel(
         field = MutableStateFlow<ProfileSync?>(null)
 
     fun syncData(group: DataGroup, on: Boolean) {
-        viewModelScope.launchIO { changes.syncData(group, on) }
+        appScope.launchIO { changes.syncData(group, on) }
     }
 
     fun syncArea(area: SettingsArea, on: Boolean) {
-        viewModelScope.launchIO {
+        appScope.launchIO {
             if (on && changes.asksWhoseSettings(area)) {
                 askingArea.value = area
             } else {
@@ -70,7 +76,7 @@ class WhatSyncsViewModel(
     fun answerArea(keep: SettingsWinner) {
         val area = askingArea.value ?: return
         askingArea.value = null
-        viewModelScope.launchIO { changes.syncArea(area, on = true, keep = keep) }
+        appScope.launchIO { changes.syncArea(area, on = true, keep = keep) }
     }
 
     fun dismissAreaQuestion() {
@@ -78,12 +84,12 @@ class WhatSyncsViewModel(
     }
 
     fun syncSetting(key: String, on: Boolean) {
-        viewModelScope.launchIO { changes.syncSetting(key, on) }
+        appScope.launchIO { changes.syncSetting(key, on) }
     }
 
     /** Turns syncing [profile] on, or off, first asking when that takes it off this device. */
     fun syncProfile(profile: ProfileSync, on: Boolean) {
-        viewModelScope.launchIO {
+        appScope.launchIO {
             if (!on && profile.isHere && changes.leavesThisDevice(profile.uuid)) {
                 removingProfile.value = profile
             } else {
@@ -94,13 +100,14 @@ class WhatSyncsViewModel(
 
     /**
      * Takes the profile being switched off off this device, once [switchAway] moved to another profile where it is
-     * the open one; nothing changes when the switch didn't happen.
+     * the open one; nothing changes when the switch didn't happen. The switch may close this screen, so the removal
+     * doesn't depend on it staying open.
      */
     fun removeProfile(switchAway: (suspend () -> Boolean)?) {
         val profile = removingProfile.value ?: return
         removingProfile.value = null
-        viewModelScope.launch {
-            if (switchAway != null && !switchAway()) return@launch
+        appScope.launchUI {
+            if (switchAway != null && !switchAway()) return@launchUI
             changes.syncProfile(profile.uuid, on = false)
         }
     }
