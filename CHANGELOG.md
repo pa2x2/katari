@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.1.0] - 2026-11-09
+
+### ✨ Added
+
+- Each device chooses what it syncs: history, statistics, covers, fonts and other data, settings by area, and which profiles.
+- Syncing can be paused, run in the background as often as you choose, and keep changes off mobile data.
+- Settings rows show whether each setting syncs, and each Settings screen opens its sync choices.
+
+### 🧩 Improved
+
+- The sync status warns when synced changes wait for a Katari update.
+
+### 🐛 Fixed
+
+- Chapters a library update finds on one device now reach your other devices.
+- A device's first library update no longer fills Updates with a title's old chapters.
+- Opening the Sync page from a notification while it is already open no longer crashes the app.
+
 ## [3.0.1] - 2026-11-08
 
 ### 🧩 Improved
@@ -1113,7 +1131,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.0.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/pa2x2/katari/releases/tag/v3.1.0
 [3.0.1]: https://github.com/pa2x2/katari/releases/tag/v3.0.1
 [3.0.0]: https://github.com/pa2x2/katari/releases/tag/v3.0.0
 [2.0.6]: https://github.com/pa2x2/katari/releases/tag/v2.0.6
