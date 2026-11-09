@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.1.2] - 2026-11-09
+
+### 🔄 Changed
+
+- The immersive feed no longer saves progress or adds to History.
+
+### 🧩 Improved
+
+- Tablets, foldables and phones in landscape open sheets at the side of the window you pressed, each with a close button.
+- In large windows, short choices such as the profile switcher open beside their button, and side sheets lay out their rows in two columns.
+- The immersive feed shows a loading title's cover and name, loads the next two titles ahead, and offers Next title when media fails to load.
+- Extension filter pills open the filter, and the filter can search languages.
+- The player's skip button stays readable over dark credits.
+
 ## [3.1.1] - 2026-11-09
 
 ### ✨ Added
@@ -1154,7 +1168,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.2...HEAD
+[3.1.2]: https://github.com/pa2x2/katari/releases/tag/v3.1.2
 [3.1.1]: https://github.com/pa2x2/katari/releases/tag/v3.1.1
 [3.1.0]: https://github.com/pa2x2/katari/releases/tag/v3.1.0
 [3.0.1]: https://github.com/pa2x2/katari/releases/tag/v3.0.1
