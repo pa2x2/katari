@@ -78,11 +78,7 @@ fun PreferenceScreen(
                             syncMarks = syncMarks,
                         )
                     }
-                    item {
-                        if (i < items.lastIndex) {
-                            RowGroupGap()
-                        }
-                    }
+                    item { RowGroupGap() }
                 }
 
                 // Create Preference Item
@@ -96,6 +92,11 @@ fun PreferenceScreen(
                     )
                 }
             }
+        }
+        // Every group ends with a gap, the last one too, so the list's last card keeps clear of the window's bottom
+        // edge; a list that ends on rows outside a group gets the same gap
+        if (items.lastOrNull { it.visible } is Preference.PreferenceItem<*, *>) {
+            item { RowGroupGap() }
         }
     }
 }
