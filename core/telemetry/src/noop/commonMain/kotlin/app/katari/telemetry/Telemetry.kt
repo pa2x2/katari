@@ -9,5 +9,7 @@ object Telemetry {
 
     fun start(host: TelemetryHost, preferences: PrivacyPreferences, scope: CoroutineScope) = Unit
 
+    fun setShownScreen(screen: String, entryType: String?, density: Float) = Unit
+
     fun recordException(throwable: Throwable) = Unit
 }

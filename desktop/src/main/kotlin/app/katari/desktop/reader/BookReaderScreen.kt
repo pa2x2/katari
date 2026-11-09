@@ -3,9 +3,11 @@ package app.katari.desktop.reader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import app.katari.entry.interactions.reader.window.BookReaderWindowRequest
+import app.katari.ui.telemetry.EntryTypeScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 
 /**
@@ -16,7 +18,9 @@ import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 internal class BookReaderScreen(
     private val request: BookReaderWindowRequest,
     private val windowReader: WindowBookReader,
-) : Screen(), FullWindowScreen {
+) : Screen(), FullWindowScreen, EntryTypeScreen {
+    override val entryType: EntryType = EntryType.BOOK
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

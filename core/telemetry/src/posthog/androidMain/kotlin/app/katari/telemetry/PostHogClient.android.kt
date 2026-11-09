@@ -8,10 +8,14 @@ import com.posthog.android.PostHogAndroidConfig
 import kotlinx.coroutines.CoroutineScope
 
 internal actual object PostHogClient {
-    actual fun start(host: TelemetryHost, consent: TelemetryConsent, scope: CoroutineScope) {
+    actual fun setUp(
+        host: TelemetryHost,
+        addedProperties: (event: String) -> Map<String, Any>?,
+        scope: CoroutineScope,
+    ) {
         val application = host.application
-        // Forks and Katari's other builds, such as the development and preview ones, would mix into the release's data
-        if (application.packageName != KATARI_PACKAGE) return
+        val resumedActivity = ResumedActivity()
+        application.registerActivityLifecycleCallbacks(resumedActivity)
 
         val config = PostHogAndroidConfig(PostHogProject.TOKEN, PostHogProject.HOST).apply {
             // Screen views name activities, which say nothing in an app of one activity, and a deep link can carry
@@ -24,16 +28,29 @@ internal actual object PostHogClient {
 
             errorTrackingConfig.autoCapture = true
             errorTrackingConfig.captureNativeCrashes = true
-            addBeforeSend { event -> event.takeIf { consent.allows(it.event) } }
+            addBeforeSend { event ->
+                addedProperties(event.event)?.let { added ->
+                    val properties = event.properties.orEmpty() + added + resumedActivity.properties
+                    event.copy(properties = properties.toMutableMap())
+                }
+            }
         }
         PostHogAndroid.setup(application, config)
+        // PostHog keeps an opt-out from an earlier run, while the user's switches are what decide
+        if (PostHog.isOptOut()) PostHog.optIn()
         PostHog.register("preferred_abi", Build.SUPPORTED_ABIS[0])
         ApplicationNotRespondingReports(application).reportNew(scope)
+    }
+
+    actual fun optIn() {
+        PostHog.optIn()
+    }
+
+    actual fun optOut() {
+        PostHog.optOut()
     }
 
     actual fun captureException(throwable: Throwable) {
         PostHog.captureException(throwable)
     }
 }
-
-private const val KATARI_PACKAGE = "app.katari"

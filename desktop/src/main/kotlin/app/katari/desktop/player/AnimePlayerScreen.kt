@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.surface.MediaBackdrop
+import app.katari.ui.telemetry.EntryTypeScreen
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 
 /**
@@ -12,7 +14,9 @@ import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
  * it, and screens it opens go over it. The player itself is drawn over it by [Host], so it can leave the navigation
  * for picture-in-picture and come back without being composed anew; this shows only the media colour under it.
  */
-internal class AnimePlayerScreen : Screen(), FullWindowScreen {
+internal class AnimePlayerScreen : Screen(), FullWindowScreen, EntryTypeScreen {
+    override val entryType: EntryType = EntryType.ANIME
+
     @Composable
     override fun Content() {
         MediaBackdrop(Modifier.fillMaxSize())

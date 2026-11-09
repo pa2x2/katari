@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.application
 import app.katari.core.common.platform.DesktopOperatingSystem
 import app.katari.desktop.application.AppRelaunch
+import app.katari.desktop.application.DesktopAppVariant
 import app.katari.desktop.application.DesktopBuildInfo
 import app.katari.desktop.application.installation.systemAppInstallation
 import app.katari.desktop.application.instance.InstanceClaim
@@ -31,6 +32,7 @@ import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.storage.systemDesktopDirectories
 import app.katari.desktop.update.DesktopAppUpdatePrompt
 import app.katari.desktop.window.KatariWindow
+import app.katari.desktop.window.WindowThreadFreezes
 import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
 import coil3.SingletonImageLoader
@@ -95,7 +97,8 @@ private fun createGraph(directories: DesktopDirectories): DesktopGraph {
 
 private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launch: LaunchArguments) {
     AppProcessStart.installLogging(graph)
-    AppProcessStart.startTelemetry(graph, TelemetryHost(DesktopBuildInfo.VERSION_NAME))
+    val isRelease = DesktopAppVariant.current == DesktopAppVariant.RELEASE
+    AppProcessStart.startTelemetry(graph, TelemetryHost(DesktopBuildInfo.VERSION_NAME, isKatariRelease = isRelease))
     launch.logIgnored()
     AppProcessStart.runAppUpgradeMigrations(graph)
     AppProcessStart.startSync(graph)
@@ -123,6 +126,8 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         }
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
+        // Once the window is up: the watch posts to the window thread, which would start AWT before the display backend
+        LaunchedEffect(Unit) { WindowThreadFreezes.watch() }
     }
     graph.classDataArchive.stop()
     // The work they show ends with the app

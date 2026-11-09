@@ -12,6 +12,7 @@ import app.katari.presentation.kit.navigation.FloatingDockHost
 import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.profiles.ui.switcher.LocalProfileSwitcher
+import app.katari.ui.telemetry.ShownScreenReport
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
@@ -38,6 +39,7 @@ fun HomeSideNavigationHost(
     val profileSwitcher = LocalProfileSwitcher.current
     CompositionLocalProvider(LocalHomeNavigation provides state) {
         HomeShortcuts(navigator = navigator, state = state)
+        ShownScreenReport(navigator = navigator, homeTab = { state.selectedTab })
         FloatingDockHost(
             dockVisible = besideDock(navigator.lastItem),
             placement = DockPlacement.Side,
