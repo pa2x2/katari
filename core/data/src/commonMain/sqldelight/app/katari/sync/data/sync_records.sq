@@ -238,6 +238,10 @@ WHERE record_key = :recordKey;
 
 -- A full resync starts: no copy is known to be on the server until the resync's pull brings it again.
 -- The records of :kind stored under a version older than :version, once they are queued to be read again under it.
+-- Whether a record of :kind is stored under a version older than :version, to be read again.
+hasOutdated:
+SELECT EXISTS(SELECT 1 FROM sync_records WHERE kind = :kind AND kind_version < :version);
+
 raiseVersion:
 UPDATE sync_records
 SET kind_version = :version

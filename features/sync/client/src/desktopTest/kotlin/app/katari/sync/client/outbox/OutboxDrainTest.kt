@@ -1,5 +1,6 @@
 package app.katari.sync.client.outbox
 
+import app.cash.sqldelight.Query
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.SyncTestDevice
 import app.katari.sync.client.kind.entry.EntryKind
@@ -62,6 +63,29 @@ class OutboxDrainTest {
             )
             device.drainAll()
             device.entryRecord().change_id shouldBe null
+        }
+    }
+
+    @Test
+    fun `a drain with nothing to read again leaves the outbox's listeners alone`() = runTest {
+        SyncTestDevice(directory.resolve("device.db")).use { device ->
+            device.startSync(deviceId = 1)
+            device.sql(
+                "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                """
+                INSERT INTO entries(_id, source, url, title, favorite, type)
+                VALUES (1, -2, '/show', 'Show', 1, 'anime')
+                """,
+            )
+            device.drainAll()
+            var heard = 0
+            val listener = Query.Listener { heard++ }
+            device.driver.addListener("sync_outbox", listener = listener)
+
+            device.drain.drain() shouldBe 0
+
+            device.driver.removeListener("sync_outbox", listener = listener)
+            heard shouldBe 0
         }
     }
 
