@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredrounded.VolumeOff
 import app.katari.icons.materialsymbols.automirroredrounded.VolumeUp
@@ -161,7 +162,9 @@ internal fun AnimeImmersivePlayerSurface(
         playbackSnapshot.isPlaying,
         isBuffering,
     ) {
-        if (!active || !controlsVisible || !playbackSnapshot.isPlaying || isBuffering) {
+        if (!platform.controlsHideWhilePlaying || !active || !controlsVisible || !playbackSnapshot.isPlaying ||
+            isBuffering
+        ) {
             return@LaunchedEffect
         }
 
@@ -235,11 +238,12 @@ internal fun AnimeImmersivePlayerSurface(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = controlsBottomInset + spacing.xs),
+                    .padding(bottom = controlsBottomInset + spacing.xs)
+                    .mediaControl(),
             )
             OverlayPill(
                 onClick = togglePlayback,
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier.align(Alignment.Center).mediaControl(),
                 style = OverlayStyle.Scrim,
                 enabled = !isBuffering,
             ) {
@@ -271,7 +275,8 @@ internal fun AnimeImmersivePlayerSurface(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
-                    .size(KatariTheme.sizes.touchTarget),
+                    .size(KatariTheme.sizes.touchTarget)
+                    .mediaControl(),
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     OverlayPill(style = OverlayStyle.Scrim) {

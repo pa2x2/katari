@@ -20,13 +20,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Close
 import app.katari.icons.materialsymbols.rounded.Fullscreen
 import app.katari.icons.materialsymbols.rounded.FullscreenExit
 import app.katari.icons.materialsymbols.rounded.Info
+import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
 import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.button.IconButtonSize
+import app.katari.presentation.kit.button.IconButtonStyle
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.refresh.RefreshButton
 import app.katari.presentation.kit.surface.MediaScrim
@@ -44,6 +48,14 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+
+/** The previous and next title buttons: [hasPrevious] and [hasNext] say whether there is a title that way. */
+internal class ImmersiveTitleSteps(
+    val hasPrevious: Boolean,
+    val hasNext: Boolean,
+    val onPrevious: () -> Unit,
+    val onNext: () -> Unit,
+)
 
 @Composable
 internal fun ImmersiveOverlay(
@@ -64,6 +76,8 @@ internal fun ImmersiveOverlay(
     onOpenChapter: (() -> Unit)?,
     onBottomOverlaySize: (Int) -> Unit,
     fullScreen: WindowFullScreen?,
+    /** Buttons to the previous and next title, where the mouse has no swipe to move between them; null for none. */
+    titleSteps: ImmersiveTitleSteps?,
 ) {
     Box(Modifier.fillMaxSize()) {
         AnimatedVisibility(
@@ -124,6 +138,45 @@ internal fun ImmersiveOverlay(
                 )
             }
         }
+
+        if (titleSteps != null) {
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = KatariTheme.spacing.m),
+            ) {
+                ImmersiveTitleStepButtons(titleSteps)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImmersiveTitleStepButtons(steps: ImmersiveTitleSteps) {
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
+        IconButton(
+            icon = MaterialSymbols.Rounded.KeyboardArrowUp,
+            contentDescription = stringResource(MR.strings.browse_immersive_previous),
+            onClick = steps.onPrevious,
+            modifier = Modifier.mediaControl(),
+            style = IconButtonStyle.Tonal,
+            size = IconButtonSize.Large,
+            enabled = steps.hasPrevious,
+            shortcut = previousTitleShortcut(),
+        )
+        IconButton(
+            icon = MaterialSymbols.Rounded.KeyboardArrowDown,
+            contentDescription = stringResource(MR.strings.browse_immersive_next),
+            onClick = steps.onNext,
+            modifier = Modifier.mediaControl(),
+            style = IconButtonStyle.Tonal,
+            size = IconButtonSize.Large,
+            enabled = steps.hasNext,
+            shortcut = nextTitleShortcut(),
+        )
     }
 }
 
@@ -180,7 +233,7 @@ private fun ImmersiveBottomBar(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RefreshButton(onClick = onRefresh, enabled = refreshEnabled)
+            RefreshButton(onClick = onRefresh, modifier = Modifier.mediaControl(), enabled = refreshEnabled)
             if (showBackToTop) {
                 ImmersiveActionButton(
                     label = stringResource(MR.strings.action_move_to_top),
@@ -267,7 +320,7 @@ private fun ImmersiveContextPill(
             }
         }
     }
-    OverlayPill(modifier = modifier, style = OverlayStyle.Scrim, onClick = onClick, content = content)
+    OverlayPill(modifier = modifier.mediaControl(), style = OverlayStyle.Scrim, onClick = onClick, content = content)
 }
 
 // The bottom scrim already gives these buttons their contrast, so they are bare icons in the media content colour.
@@ -278,5 +331,11 @@ private fun ImmersiveActionButton(
     onClick: () -> Unit,
     enabled: Boolean = true,
 ) {
-    IconButton(icon = icon, contentDescription = label, onClick = onClick, enabled = enabled)
+    IconButton(
+        icon = icon,
+        contentDescription = label,
+        onClick = onClick,
+        modifier = Modifier.mediaControl(),
+        enabled = enabled,
+    )
 }

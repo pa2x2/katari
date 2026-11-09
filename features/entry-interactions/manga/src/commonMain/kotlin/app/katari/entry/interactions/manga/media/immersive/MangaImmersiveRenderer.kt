@@ -29,6 +29,7 @@ import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.presentation.kit.pager.WheelTurns
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
@@ -138,7 +139,8 @@ internal class MangaImmersiveRenderer(
                     onScrubbingChange = { isScrubbing = it },
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = controlsBottomInset + KatariTheme.spacing.xs),
+                        .padding(bottom = controlsBottomInset + KatariTheme.spacing.xs)
+                        .mediaControl(),
                 )
             }
         }

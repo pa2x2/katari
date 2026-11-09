@@ -12,6 +12,12 @@ import app.katari.video.engine.spi.player.VideoPlayer
  */
 @PlatformFacility
 internal interface AnimeClipPlatform {
+    /**
+     * Whether a playing clip's controls hide by themselves a while after they show, as on a touch screen. With a mouse
+     * the feed hides them once the mouse rests, so the clip leaves them be.
+     */
+    val controlsHideWhilePlaying: Boolean
+
     /** [player]'s picture, fitted, taking the viewer's input for [target]. */
     @Composable
     fun Picture(player: VideoPlayer, aspectRatio: Float?, target: AnimeClipInputTarget, modifier: Modifier)

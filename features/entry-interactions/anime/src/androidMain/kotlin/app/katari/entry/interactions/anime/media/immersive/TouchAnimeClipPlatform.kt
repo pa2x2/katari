@@ -31,6 +31,8 @@ import tachiyomi.domain.entry.model.PictureFraming
  * The window keeps the screen on while a clip plays, and raising the media volume unmutes the feed.
  */
 internal object TouchAnimeClipPlatform : AnimeClipPlatform {
+    override val controlsHideWhilePlaying = true
+
     @Composable
     override fun Picture(player: VideoPlayer, aspectRatio: Float?, target: AnimeClipInputTarget, modifier: Modifier) {
         Box(modifier = modifier) {
