@@ -66,9 +66,9 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                     number = row.chapter_number,
                     scanlator = row.scanlator,
                     dateUpload = row.date_upload,
-                    dateFetch = row.date_fetch,
-                    sourceOrder = row.source_order,
                 ),
+                dateFetch = row.date_fetch,
+                sourceOrder = row.source_order,
             )
         }
     }
@@ -80,8 +80,12 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
     override fun merge(local: ChapterPayload, incoming: ChapterPayload) = local.copy(
         read = latest(local.read, incoming.read),
         bookmark = latest(local.bookmark, incoming.bookmark),
-        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata }
-            .copy(dateFetch = maxOf(local.metadata.dateFetch, incoming.metadata.dateFetch)),
+        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+        dateFetch = maxOf(local.dateFetch, incoming.dateFetch),
+        // A copy from a device that doesn't know the place never takes it away
+        sourceOrder = fieldOfNewer(serializer, local, incoming) { it.sourceOrder }
+            ?: local.sourceOrder
+            ?: incoming.sourceOrder,
     )
 
     /**
@@ -94,7 +98,7 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         val metadata = payload.metadata
         val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
         val chapterId = if (existing == null) {
-            val place = metadata.sourceOrder
+            val place = payload.sourceOrder
             if (place != null && queries.chapterHoldsPlace(entryId, place).awaitAsOne()) {
                 queries.freeChapterPlace(entryId, place).await()
             }
@@ -107,19 +111,19 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 chapterNumber = metadata.number,
                 scanlator = metadata.scanlator,
                 dateUpload = metadata.dateUpload,
-                dateFetch = metadata.dateFetch,
+                dateFetch = payload.dateFetch,
                 sourceOrder = place ?: queries.placeAfterChapters(entryId).awaitAsOne(),
             ).awaitAsOne()
         } else {
             queries.updateChapterMarks(
                 read = payload.read.value,
                 bookmark = payload.bookmark.value,
-                dateFetch = metadata.dateFetch,
+                dateFetch = payload.dateFetch,
                 chapterId = existing,
             )
             existing
         }
-        queries.noteNewChapter(dateFetch = metadata.dateFetch, entryId = entryId)
+        queries.noteNewChapter(dateFetch = payload.dateFetch, entryId = entryId)
         return ApplyOutcome.Applied(ref(chapterId))
     }
 
