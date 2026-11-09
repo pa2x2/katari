@@ -11,7 +11,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 /** The desktop's manga chapters in the immersive feed: the shared [MangaImmersiveChapters]. */
 internal class MangaImmersiveProcessor(private val chapters: MangaImmersiveChapters) : EntryImmersiveProcessor {
     override val loadMode get() = chapters.loadMode
-    override val preloadRadius get() = chapters.preloadRadius
+    override val preloadAhead get() = chapters.preloadAhead
 
     override suspend fun load(
         context: PlatformContext,

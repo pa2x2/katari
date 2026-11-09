@@ -13,7 +13,7 @@ interface EntryImmersiveFeature {
 
     fun availability(context: EntryImmersiveContext): EntryImmersiveAvailability
 
-    fun preloadRadius(type: EntryType): EntryImmersivePreloadRadiusResult
+    fun preloadAhead(type: EntryType): EntryImmersivePreloadAheadResult
 
     suspend fun refreshChildren(entry: Entry): EntryImmersiveChildRefreshResult
 

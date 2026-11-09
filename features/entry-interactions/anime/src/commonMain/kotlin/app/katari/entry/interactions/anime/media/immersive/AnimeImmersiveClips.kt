@@ -36,8 +36,8 @@ internal class AnimeImmersiveClips(
 ) {
     val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
 
-    // The clips beside the shown one are loaded and opened too, so moving to one starts it at once.
-    val preloadRadius: Int = 1
+    // Two, so skipping quickly through clips finds the next one open
+    val preloadAhead: Int = 2
 
     suspend fun load(
         context: PlatformContext,

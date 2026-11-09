@@ -1,6 +1,5 @@
 package app.katari.entry.interactions.manga.media.immersive
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -44,8 +43,6 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ShortcutGroup
 import app.katari.presentation.kit.shortcut.ShortcutKeys
-import app.katari.presentation.kit.surface.SurfaceContainer
-import app.katari.presentation.kit.surface.background
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.pagerMouseDrags
 import kotlinx.coroutines.flow.Flow
@@ -148,7 +145,6 @@ internal class MangaImmersiveRenderer(
         Box(
             modifier = modifier
                 .onSizeChanged { size = it }
-                .background(SurfaceContainer.Media)
                 .sidewaysScrollTurns(enabled = { latestTurns }, onTurn = turnBy)
                 .pagerMouseDrags(pagerState, vertical = false, scope = scope, enabled = { latestTurns }),
         ) {

@@ -28,13 +28,12 @@ import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
 import app.katari.entry.interactions.media.EntryImmersiveOpenTargetResult
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
-import app.katari.entry.interactions.media.EntryImmersivePreloadRadiusResult
+import app.katari.entry.interactions.media.EntryImmersivePreloadAheadResult
 import app.katari.entry.interactions.media.EntryImmersiveRendererResult
 import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
 import app.katari.entry.interactions.media.openOptions
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
-import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadingBackground
 import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.pager.VerticalPager
 import app.katari.presentation.kit.refresh.PullRefresh
@@ -98,18 +97,24 @@ internal fun EntryImmersiveContent(
     var pagingBlocked by remember { mutableStateOf(false) }
     val controls = rememberEntryImmersiveControls()
 
-    val preloadRadius = when (
-        val result = itemIdentity(pagerState.currentPage)?.type?.let(immersiveFeature::preloadRadius)
+    val preloadAhead = when (
+        val result = itemIdentity(pagerState.currentPage)?.type?.let(immersiveFeature::preloadAhead)
     ) {
-        is EntryImmersivePreloadRadiusResult.Available -> result.radius
-        is EntryImmersivePreloadRadiusResult.Inapplicable, null -> 0
+        is EntryImmersivePreloadAheadResult.Available -> result.titles
+        is EntryImmersivePreloadAheadResult.Inapplicable, null -> 0
     }
+    // The title before stays open for going back; further back is let go
+    val preloadRange = (
+        pagerState.currentPage - preloadAhead.coerceAtMost(
+            PRELOAD_BEHIND,
+        )
+        )..(pagerState.currentPage + preloadAhead)
     val retainedItemKeys = buildSet {
         pagerState.settledPage
             .takeIf { it in 0 until currentItemCount }
             ?.let(itemIdentity)
             ?.let(::add)
-        for (page in pagerState.currentPage - preloadRadius..pagerState.currentPage + preloadRadius) {
+        for (page in preloadRange) {
             if (page in 0 until currentItemCount) itemIdentity(page)?.let(::add)
         }
     }
@@ -165,7 +170,7 @@ internal fun EntryImmersiveContent(
                             itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
                         },
                         userScrollEnabled = !pagingBlocked,
-                        beyondViewportPageCount = preloadRadius,
+                        beyondViewportPageCount = preloadAhead,
                     ) { page ->
                         nonEntryPage(page)?.let { content ->
                             content()
@@ -176,8 +181,6 @@ internal fun EntryImmersiveContent(
                         val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
                         val itemState = itemKey?.let(immersiveState.items::get)
                         val isActive = page == pagerState.settledPage
-                        val preloadRange =
-                            (pagerState.currentPage - preloadRadius)..(pagerState.currentPage + preloadRadius)
 
                         if (entry != null && (page in preloadRange || isActive)) {
                             LaunchedEffect(itemKey) { immersiveModel.load(context, entry) }
@@ -281,6 +284,10 @@ private fun EntryImmersivePage(
     val place = remember(itemState) { EntryImmersivePlaceTracker() }
     val switches = remember(itemState) { EntryImmersiveMediaSwitches() }
     var mediaWidth by remember(itemState) { mutableStateOf<Dp?>(null) }
+    // Once the media has shown, a page of it loading later doesn't bring the title's cover back
+    var mediaShown by remember(itemState) { mutableStateOf(false) }
+    LaunchedEffect(mediaWidth) { if (mediaWidth != null) mediaShown = true }
+    val chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
 
@@ -293,7 +300,9 @@ private fun EntryImmersivePage(
             .focusGroup()
             .background(SurfaceContainer.Media),
     ) {
-        ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
+        if (entry != null && !mediaShown) {
+            EntryImmersiveComingUp(entry = entry, chapterName = chapterName, modifier = Modifier.fillMaxSize())
+        }
 
         when (itemState) {
             is EntryImmersiveViewModel.ItemState.Ready -> {
@@ -342,6 +351,7 @@ private fun EntryImmersivePage(
             is EntryImmersiveViewModel.ItemState.Loading, null -> if (isActive) {
                 ReaderMediaLoadOverlay(
                     state = ReaderMediaLoadState.Loading(),
+                    showBackground = entry == null,
                     onBackgroundClick = controls::onMediaTap,
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -365,7 +375,7 @@ private fun EntryImmersivePage(
                 ),
                 entry = ImmersiveEntryActions(
                     entry = entry,
-                    chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name,
+                    chapterName = chapterName,
                     onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
                     onLibraryAction = { onLibraryAction(entry) },
                     onDetails = { onEntryClick(entry) },
@@ -388,3 +398,5 @@ private fun immersiveUnavailableMessage(reason: EntryImmersiveUnavailableReason)
 }
 
 private const val LOAD_MORE_PAGE_THRESHOLD = 3
+
+private const val PRELOAD_BEHIND = 1

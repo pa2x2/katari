@@ -11,7 +11,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 /** Android's anime clips in the immersive feed: the shared [AnimeImmersiveClips], on ExoPlayer with touch gestures. */
 internal class AnimeImmersiveProcessor(private val clips: AnimeImmersiveClips) : EntryImmersiveProcessor {
     override val loadMode get() = clips.loadMode
-    override val preloadRadius get() = clips.preloadRadius
+    override val preloadAhead get() = clips.preloadAhead
 
     override suspend fun load(
         context: PlatformContext,

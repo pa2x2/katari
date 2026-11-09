@@ -26,7 +26,9 @@ enum class EntryImmersiveLoadMode {
 @PlatformFacility
 interface EntryImmersiveProcessor {
     val loadMode: EntryImmersiveLoadMode
-    val preloadRadius: Int
+
+    /** How many titles after the shown one the feed loads and opens, so moving on starts them at once. */
+    val preloadAhead: Int
 
     suspend fun load(
         context: PlatformContext,

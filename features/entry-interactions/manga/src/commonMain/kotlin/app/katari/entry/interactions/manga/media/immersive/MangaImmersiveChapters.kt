@@ -30,7 +30,9 @@ internal class MangaImmersiveChapters(
     private val platform: MangaImmersivePlatform,
 ) {
     val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
-    val preloadRadius: Int = 1
+
+    // Two, as clips, so skipping quickly through chapters finds the next one open
+    val preloadAhead: Int = 2
 
     suspend fun load(
         context: PlatformContext,

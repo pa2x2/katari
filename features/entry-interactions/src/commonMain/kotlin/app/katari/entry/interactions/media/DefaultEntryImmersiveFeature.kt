@@ -32,8 +32,8 @@ internal class DefaultEntryImmersiveFeature(
                 "missing EntryChildList providers for $missingChildList"
         }
         immersiveTypes.forEach { type ->
-            val radius = requireNotNull(interaction.processor(type)).preloadRadius
-            require(radius >= 0) { "Immersive preload radius must be non-negative for $type: $radius" }
+            val ahead = requireNotNull(interaction.processor(type)).preloadAhead
+            require(ahead >= 0) { "Immersive titles loaded ahead must be non-negative for $type: $ahead" }
         }
     }
 
@@ -57,15 +57,15 @@ internal class DefaultEntryImmersiveFeature(
             return EntryImmersiveAvailability.ContextuallyUnavailable(EntryImmersiveUnavailableReason.SourceUnavailable)
         }
         return EntryImmersiveAvailability.Available(
-            preloadRadius = processor.preloadRadius,
+            preloadAhead = processor.preloadAhead,
             childRequirement = processor.loadMode.toChildRequirement(),
         )
     }
 
-    override fun preloadRadius(type: EntryType): EntryImmersivePreloadRadiusResult {
+    override fun preloadAhead(type: EntryType): EntryImmersivePreloadAheadResult {
         val processor = interaction.processor(type)
-            ?: return EntryImmersivePreloadRadiusResult.Inapplicable(type)
-        return EntryImmersivePreloadRadiusResult.Available(processor.preloadRadius)
+            ?: return EntryImmersivePreloadAheadResult.Inapplicable(type)
+        return EntryImmersivePreloadAheadResult.Available(processor.preloadAhead)
     }
 
     override suspend fun refreshChildren(entry: Entry): EntryImmersiveChildRefreshResult {

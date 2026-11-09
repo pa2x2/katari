@@ -19,7 +19,6 @@ import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
-import app.katari.core.image.progressive.ProgressiveImageVisual
 import app.katari.core.image.progressive.rememberProgressivePreview
 import app.katari.entry.interactions.manga.reader.image.animation.AnimatedPageImage
 import app.katari.entry.interactions.manga.reader.image.layout.PageBitmap
@@ -136,15 +135,14 @@ internal fun MangaImmersivePage(
             }
         }
         val unknownError = stringResource(MR.strings.unknown_error)
-        val hasPreview = progressive?.visual is ProgressiveImageVisual.Still ||
-            progressive?.animation?.frames?.isNotEmpty() == true
         ReaderMediaLoadOverlay(
             state = when (content) {
                 is PageContent.Shown -> ReaderMediaLoadState.Ready
                 is PageContent.Failed -> ReaderMediaLoadState.Failed(content.error?.message ?: unknownError)
                 is PageContent.Loading -> ReaderMediaLoadState.Loading(progress = content.progress)
             },
-            showBackground = !hasPreview,
+            // The feed shows the title behind a page until the page shows
+            showBackground = false,
             onBackgroundClick = onToggleControls,
             onRetry = { page.chapter.pageLoader?.retryPage(page) },
             modifier = Modifier.fillMaxSize(),

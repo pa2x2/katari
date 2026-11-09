@@ -207,7 +207,9 @@ internal fun AnimeImmersivePlayerSurface(
     var size by remember { mutableStateOf(IntSize.Zero) }
     val mediaWidth = fittedMediaWidth(size, aspectRatio)?.let { with(density) { it.toDp() } }
     val latestOnMediaWidthChange by rememberUpdatedState(onMediaWidthChange)
-    LaunchedEffect(mediaWidth) { latestOnMediaWidthChange(mediaWidth) }
+    LaunchedEffect(mediaWidth, hasRenderedFirstFrame) {
+        latestOnMediaWidthChange(mediaWidth?.takeIf { hasRenderedFirstFrame })
+    }
     platform.KeepAwake(playing = keepAwake)
     if (active) platform.MediaControls(player = player, metadata = metadata, target = inputTarget)
     Box(modifier = modifier.onSizeChanged { size = it }) {
@@ -327,7 +329,8 @@ internal fun AnimeImmersivePlayerSurface(
                 !hasRenderedFirstFrame || (isBuffering && !controlsVisible) -> ReaderMediaLoadState.Loading()
                 else -> ReaderMediaLoadState.Ready
             },
-            showBackground = !hasRenderedFirstFrame,
+            // The feed shows the title behind a clip until its picture shows
+            showBackground = false,
             onBackgroundClick = latestOnToggleControls,
             onRetry = {
                 onClearError()

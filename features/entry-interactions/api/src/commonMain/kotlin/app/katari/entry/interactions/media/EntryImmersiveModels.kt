@@ -11,9 +11,10 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * Draws one page's media in the immersive feed, centred in the page. [onMediaWidthChange] is told how wide the media is
- * drawn, or null while that isn't known, so the feed can put its title and actions beside media that leaves room; the
- * media's own [switches], such as a clip's subtitles, join the feed's controls.
+ * Draws one page's media in the immersive feed, centred in the page, over what the feed shows of the title until the
+ * media shows: a renderer paints no background of its own while it loads. [onMediaWidthChange] is told how wide the
+ * media is drawn once it shows, or null until then, so the feed can put its title and actions beside media that leaves
+ * room; the media's own [switches], such as a clip's subtitles, join the feed's controls.
  */
 fun interface EntryImmersiveRenderer {
     @Composable
@@ -62,7 +63,7 @@ sealed interface EntryImmersiveSourceAvailability {
 
 sealed interface EntryImmersiveAvailability {
     data class Available(
-        val preloadRadius: Int,
+        val preloadAhead: Int,
         val childRequirement: EntryImmersiveChildRequirement,
     ) : EntryImmersiveAvailability
 
@@ -81,9 +82,10 @@ sealed interface EntryImmersiveUnavailableReason {
     data object NoReadingChild : EntryImmersiveUnavailableReason
 }
 
-sealed interface EntryImmersivePreloadRadiusResult {
-    data class Available(val radius: Int) : EntryImmersivePreloadRadiusResult
-    data class Inapplicable(val type: EntryType) : EntryImmersivePreloadRadiusResult
+/** How many titles after the shown one the feed loads and opens, by the shown title's type. */
+sealed interface EntryImmersivePreloadAheadResult {
+    data class Available(val titles: Int) : EntryImmersivePreloadAheadResult
+    data class Inapplicable(val type: EntryType) : EntryImmersivePreloadAheadResult
 }
 
 data class EntryImmersiveLoadRequest(
