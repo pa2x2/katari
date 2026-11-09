@@ -2,6 +2,7 @@ package app.katari.telemetry
 
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlin.concurrent.Volatile
@@ -19,11 +20,22 @@ internal class TelemetryConsent {
     @Volatile
     private var usageStatistics = false
 
-    fun follow(preferences: PrivacyPreferences, scope: CoroutineScope) {
+    /**
+     * Reads the switches and follows them for as long as [scope] lives. [onAllowsAnything] hears whether either is on:
+     * on the calling thread before this returns, then again, from [scope], with each change, and possibly with the
+     * same value as before.
+     */
+    fun follow(preferences: PrivacyPreferences, scope: CoroutineScope, onAllowsAnything: (Boolean) -> Unit) {
         crashReports = preferences.crashReports.get()
         usageStatistics = preferences.analytics.get()
-        preferences.crashReports.changes().onEach { crashReports = it }.launchIn(scope)
-        preferences.analytics.changes().onEach { usageStatistics = it }.launchIn(scope)
+        onAllowsAnything(crashReports || usageStatistics)
+        combine(preferences.crashReports.changes(), preferences.analytics.changes()) { crashReports, analytics ->
+            this.crashReports = crashReports
+            usageStatistics = analytics
+            crashReports || analytics
+        }
+            .onEach(onAllowsAnything)
+            .launchIn(scope)
     }
 
     fun allows(event: String): Boolean = if (event == EXCEPTION_EVENT) crashReports else usageStatistics
