@@ -8,12 +8,6 @@ import com.sun.jna.Pointer
 
 /** What libmpv and its rendering need of the operating system the app runs on. */
 internal interface MpvSystem {
-    /**
-     * Readies the process for libmpv, once it loads: libmpv refuses to create an instance unless the C library's
-     * numbers are formatted with a dot.
-     */
-    fun prepareProcess()
-
     /** The best of the system's renderers that starts for the mpv instance [handle], or null when none does. */
     fun createFrames(mpv: LibMpv, handle: Pointer): MemoryFrames?
 }

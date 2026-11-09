@@ -79,9 +79,11 @@ internal object MpvFormatCode {
 }
 
 /**
- * libmpv, loaded on first use: the copy the app carries, built for x86_64 Linux, or else the system's, and the process
- * readied for it ([MpvSystem.prepareProcess]). Throws [MpvUnavailableException] when neither loads; that is decided
- * once per run.
+ * libmpv, loaded on first use: the copy the app carries, built for x86_64 Linux, or else the system's. Throws
+ * [MpvUnavailableException] when neither loads; that is decided once per run.
+ *
+ * libmpv refuses to create an instance unless the C library formats numbers with a decimal point, which the app sets
+ * for its whole process when it starts.
  */
 internal fun libMpv(): LibMpv = loadedLibMpv.getOrElse { throw MpvUnavailableException(it) }
 
@@ -97,9 +99,7 @@ private val loadedLibMpv: Result<LibMpv> by lazy {
     } + SYSTEM_LIBRARY_NAMES
     for (name in names) {
         try {
-            val library = Native.load(name, LibMpv::class.java, LIBRARY_OPTIONS)
-            mpvSystem.prepareProcess()
-            return@lazy Result.success(library)
+            return@lazy Result.success(Native.load(name, LibMpv::class.java, LIBRARY_OPTIONS))
         } catch (e: UnsatisfiedLinkError) {
             failures += e
         }

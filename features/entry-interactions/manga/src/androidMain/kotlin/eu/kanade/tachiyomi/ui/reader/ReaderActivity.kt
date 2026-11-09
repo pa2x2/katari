@@ -49,6 +49,8 @@ import app.katari.entry.interactions.reader.settings.ReadingMode
 import app.katari.entry.interactions.reader.settings.activityOrientation
 import app.katari.entry.interactions.runtime.EntryInteractionActivity
 import app.katari.entry.interactions.runtime.EntryInteractionActivityGraph
+import app.katari.entry.interactions.runtime.rememberEntryInteractionLinkOpening
+import app.katari.entry.interactions.runtime.rememberEntryInteractionTextClipboard
 import app.katari.entry.interactions.source.EntryChildWebViewAction
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.launchEntryChildWebViewAction
@@ -257,6 +259,8 @@ class ReaderActivity : EntryInteractionActivity() {
                 menuBounds = menuBounds,
                 onChoosePipeline = ::openTextRecognitionPipelineChoice,
                 onOpenTranslationSettings = ::openTranslationSettings,
+                openLink = rememberEntryInteractionLinkOpening(),
+                clipboard = rememberEntryInteractionTextClipboard(),
             )
         },
     )
