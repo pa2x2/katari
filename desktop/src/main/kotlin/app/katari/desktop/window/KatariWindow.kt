@@ -58,9 +58,9 @@ import javax.swing.JFrame
  * profile picker included, and the density of the session's scale and the interface size. While it is open,
  * extensions find the activity that stands for it in the foreground
  * ([app.katari.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity open in it.
- * While it is open and not minimized the app shows, which keeps sync's live channel open ([ReportsShown]); its focus
- * is the app's front, which the rest of sync follows ([ReportsForeground]); and whether it is minimized counts toward
- * the user being away, which locks the open profile again ([ReportsPresence]).
+ * The app is open for as long as it is, minimized or not, which keeps sync's live channel open ([ReportsOpen]); its
+ * focus is the app's front, which the rest of sync follows ([ReportsForeground]); and whether it is minimized counts
+ * toward the user being away, which locks the open profile again ([ReportsPresence]).
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -135,9 +135,9 @@ private fun WindowContent(
         graph.windowActivity.onWindowOpened()
         onDispose { graph.windowActivity.onWindowClosed() }
     }
+    ReportsOpen(graph)
     ReportsForeground(window, graph)
     ReportsPresence(window, graph.windowAnimePlayer, graph.appPresence)
-    ReportsShown(graph, graph.appPresence)
     AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,

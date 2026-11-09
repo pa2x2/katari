@@ -30,10 +30,9 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
 /**
- * When sync runs (D021), on every platform; the platforms call in when the app shows or hides and when it comes to the
- * front or leaves it, and the readers and the player when a period of reading or watching was recorded. A desktop
- * window can show without being in front, open on another monitor or behind other windows; on Android the two go
- * together.
+ * When sync runs (D021), on every platform; the platforms call in when the app opens or closes and when it comes to the
+ * front or leaves it, and the readers and the player when a period of reading or watching was recorded. A desktop app
+ * stays open while its window is minimized or behind others; on Android the two go together.
  *
  * - A local edit: a run [QUIET] after the last edit of a burst, or [MAX_WAIT] after its first, whichever comes first,
  *   so marking 200 chapters read is one push. Reading position counts as an edit, so it goes 5 seconds after the last
@@ -42,7 +41,7 @@ import kotlin.time.TimeSource
  *   platform's hand-off work ([SyncBackgroundWork.handOff]), which finishes in the background and retries until the
  *   server has it.
  * - The app coming to the front: a run that fetches the entry Resume continues first (D052), then pulls and pushes.
- * - While shown: the live channel ([LiveUpdates]).
+ * - While open: the live channel ([LiveUpdates]).
  * - In the background: the platform's periodic work while background sync is on, at the interval the person chose.
  * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
@@ -65,7 +64,7 @@ class SyncTriggers(
     private val network: NetworkConnectivity,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val shown = MutableStateFlow(false)
+    private val isOpen = MutableStateFlow(false)
     private var started = false
 
     /** Starts the triggers that watch by themselves, once a process, after capture has resumed. */
@@ -75,7 +74,7 @@ class SyncTriggers(
             started = true
         }
         val linked = connection.states().map { it.isLinked }.distinctUntilChanged()
-        scope.launch { live.wanted(shown).collectLatest { wanted -> if (wanted) live.listen() } }
+        scope.launch { live.wanted(isOpen).collectLatest { wanted -> if (wanted) live.listen() } }
         scope.launch { linked.collectLatest { isLinked -> if (isLinked) sendLocalEdits() } }
         scope.launch {
             connection.states().map { state -> state.stage.takeIf { state.isLinked && it.movesLibrary } }
@@ -116,12 +115,12 @@ class SyncTriggers(
         network.state(),
     ) { onMobileData, network -> !onMobileData && !network.countsAsWifi }.distinctUntilChanged()
 
-    fun appShown() {
-        shown.value = true
+    fun appOpened() {
+        isOpen.value = true
     }
 
-    fun appHidden() {
-        shown.value = false
+    fun appClosed() {
+        isOpen.value = false
     }
 
     fun appCameToFront() {
