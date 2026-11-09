@@ -29,9 +29,13 @@ fun rememberBarSyncAction(destination: HomeScreenTabs, navigator: Navigator): Ap
     }
 }
 
-/** Sync's status icon at the foot of the side dock; like the dock's destinations, it opens from the home's root. */
+/** Sync's status icon at the foot of the side dock. */
 @Composable
-internal fun rememberDockSyncAction(navigator: Navigator): AppBar.Action? = rememberSyncStatusAction {
+internal fun rememberDockSyncAction(navigator: Navigator): AppBar.Action? =
+    rememberSyncStatusAction { openSyncFromRoot(navigator) }
+
+/** Opens the Sync page from the home's root, as the dock's destinations open, for what shows beside every screen. */
+internal fun openSyncFromRoot(navigator: Navigator) {
     navigator.popUntilRoot()
     navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
 }
