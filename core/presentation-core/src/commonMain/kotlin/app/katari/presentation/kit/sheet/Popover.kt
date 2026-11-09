@@ -1,6 +1,8 @@
 package app.katari.presentation.kit.sheet
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -12,6 +14,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -75,17 +78,25 @@ fun Popover(
         return
     }
     val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
     val spacing = KatariTheme.spacing
-    val positionProvider = remember(anchorBounds, density) {
-        with(density) {
-            BesideAnchor(
-                anchor = anchorBounds,
-                gap = spacing.s.roundToPx(),
-                margin = spacing.m.roundToPx(),
-                sideZone = PopoverSideZone.roundToPx(),
-            )
-        }
+    val insets = WindowInsets.safeDrawing
+    // The area the popover stays in, in the anchor's window coordinates: the window inside its bars and cutout
+    val room = with(density) {
+        val margin = spacing.m.roundToPx()
+        IntRect(
+            left = insets.getLeft(this, layoutDirection) + margin,
+            top = insets.getTop(this) + margin,
+            right = window.size.width.roundToPx() - insets.getRight(this, layoutDirection) - margin,
+            bottom = window.size.height.roundToPx() - insets.getBottom(this) - margin,
+        )
     }
+    val gap = with(density) { spacing.s.roundToPx() }
+    val sideZone = with(density) { PopoverSideZone.roundToPx() }
+    val positionProvider = remember(anchorBounds, room, gap, sideZone) {
+        BesideAnchor(anchor = anchorBounds, room = room, gap = gap, sideZone = sideZone)
+    }
+    val maxHeight = with(density) { popoverMaxHeight(anchorBounds, room, gap, sideZone).toDp() }
     Popup(
         popupPositionProvider = positionProvider,
         onDismissRequest = onDismissRequest,
@@ -94,7 +105,7 @@ fun Popover(
         androidx.compose.material3.Surface(
             modifier = modifier
                 .width(PopoverWidth)
-                .heightIn(max = window.size.height - spacing.m * 2),
+                .heightIn(max = maxHeight),
             shape = KatariTheme.shapes.extraLarge,
             color = KatariTheme.colors.surfaceContainerHigh,
             contentColor = KatariTheme.colors.onSurface,
@@ -113,10 +124,14 @@ fun Popover(
     }
 }
 
+/**
+ * Places the popover from the kit's own window room rather than the window size the popup is handed: on Android that
+ * is the visible frame, without the bars, while the anchor is in window coordinates, so the two would disagree.
+ */
 private class BesideAnchor(
     private val anchor: IntRect,
+    private val room: IntRect,
     private val gap: Int,
-    private val margin: Int,
     private val sideZone: Int,
 ) : PopupPositionProvider {
     override fun calculatePosition(
@@ -124,45 +139,53 @@ private class BesideAnchor(
         windowSize: IntSize,
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
-    ): IntOffset = popoverPosition(anchor, windowSize, popupContentSize, gap, margin, sideZone)
+    ): IntOffset = popoverPosition(anchor, room, popupContentSize, gap, sideZone)
 }
 
 /**
- * Where a popover of [popup]'s size goes for a button at [anchor] in a window of [window]'s size, all in pixels. Under a
- * button near the top, such as an app bar's; beside one at a side edge, such as the side dock's, so it covers no other
- * dock button; elsewhere under the button, or over it when there is more room above. It lines up with the button's
- * outer side and stays [margin] inside the window.
+ * Where a popover of [popup]'s size goes for a button at [anchor], kept inside [room], all in pixels. Under a button
+ * near the top, such as an app bar's; beside one at a side edge, such as the side dock's, so it covers no other dock
+ * button; elsewhere under the button, or over it when there is more room above. It lines up with the button's outer
+ * side.
  */
-internal fun popoverPosition(
-    anchor: IntRect,
-    window: IntSize,
-    popup: IntSize,
-    gap: Int,
-    margin: Int,
-    sideZone: Int,
-): IntOffset {
-    val nearTop = anchor.center.y < window.height / TOP_FRACTION
-    val atLeft = anchor.center.x < sideZone
-    val atRight = anchor.center.x > window.width - sideZone
-    val (x, y) = when {
-        !nearTop && atLeft -> anchor.right + gap to anchor.center.y - popup.height / 2
-        !nearTop && atRight -> anchor.left - gap - popup.width to anchor.center.y - popup.height / 2
-        else -> {
-            val x = if (anchor.center.x > window.width / 2) anchor.right - popup.width else anchor.left
-            val roomBelow = window.height - margin - anchor.bottom - gap
-            val roomAbove = anchor.top - gap - margin
-            val y = if (nearTop || popup.height <= roomBelow || roomBelow >= roomAbove) {
-                anchor.bottom + gap
-            } else {
-                anchor.top - gap - popup.height
-            }
+internal fun popoverPosition(anchor: IntRect, room: IntRect, popup: IntSize, gap: Int, sideZone: Int): IntOffset {
+    val placement = popoverPlacement(anchor, room, sideZone)
+    val (x, y) = when (placement) {
+        PopoverPlacement.RightOf -> anchor.right + gap to anchor.center.y - popup.height / 2
+        PopoverPlacement.LeftOf -> anchor.left - gap - popup.width to anchor.center.y - popup.height / 2
+        PopoverPlacement.Under, PopoverPlacement.UnderOrOver -> {
+            val x = if (anchor.center.x > room.center.x) anchor.right - popup.width else anchor.left
+            val roomBelow = room.bottom - anchor.bottom - gap
+            val roomAbove = anchor.top - gap - room.top
+            val under = placement == PopoverPlacement.Under || popup.height <= roomBelow || roomBelow >= roomAbove
+            val y = if (under) anchor.bottom + gap else anchor.top - gap - popup.height
             x to y
         }
     }
     return IntOffset(
-        x = x.coerceIn(margin, (window.width - margin - popup.width).coerceAtLeast(margin)),
-        y = y.coerceIn(margin, (window.height - margin - popup.height).coerceAtLeast(margin)),
+        x = x.coerceIn(room.left, (room.right - popup.width).coerceAtLeast(room.left)),
+        y = y.coerceIn(room.top, (room.bottom - popup.height).coerceAtLeast(room.top)),
     )
+}
+
+/**
+ * The tallest a popover may be, in pixels, to fit where [popoverPosition] puts it without covering its button, such as
+ * under an app bar's button in a low window; its content scrolls past that.
+ */
+internal fun popoverMaxHeight(anchor: IntRect, room: IntRect, gap: Int, sideZone: Int): Int =
+    when (popoverPlacement(anchor, room, sideZone)) {
+        PopoverPlacement.RightOf, PopoverPlacement.LeftOf -> room.height
+        PopoverPlacement.Under -> room.bottom - anchor.bottom - gap
+        PopoverPlacement.UnderOrOver -> maxOf(room.bottom - anchor.bottom - gap, anchor.top - gap - room.top)
+    }.coerceAtLeast(0)
+
+private enum class PopoverPlacement { Under, RightOf, LeftOf, UnderOrOver }
+
+private fun popoverPlacement(anchor: IntRect, room: IntRect, sideZone: Int): PopoverPlacement = when {
+    anchor.center.y < room.top + room.height / TOP_FRACTION -> PopoverPlacement.Under
+    anchor.center.x < room.left + sideZone -> PopoverPlacement.RightOf
+    anchor.center.x > room.right - sideZone -> PopoverPlacement.LeftOf
+    else -> PopoverPlacement.UnderOrOver
 }
 
 // A button in the top fifth of the window, such as an app bar's, opens its popover under it
