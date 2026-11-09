@@ -18,6 +18,9 @@ expect val PlatformBitmap.byteCount: Long
 /** The colour of the pixel at [x], [y] as ARGB without premultiplied alpha. */
 expect fun PlatformBitmap.argbPixel(x: Int, y: Int): Int
 
+/** Every pixel as ARGB without premultiplied alpha, row by row, in an array the caller owns. */
+expect fun PlatformBitmap.argbPixels(): IntArray
+
 /** Frees the pixels at once rather than when the bitmap is collected; the bitmap is not used afterwards. */
 expect fun PlatformBitmap.release()
 

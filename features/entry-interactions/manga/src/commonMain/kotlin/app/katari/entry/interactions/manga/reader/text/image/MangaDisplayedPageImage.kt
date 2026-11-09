@@ -1,15 +1,15 @@
 package app.katari.entry.interactions.manga.reader.text.image
 
-import android.graphics.Bitmap
-import android.graphics.Rect
+import androidx.compose.ui.unit.IntRect
+import app.katari.core.image.decode.ImageRegionDecoder
 import app.katari.entry.interactions.manga.reader.text.geometry.MangaDisplayedPageGeometry
 import app.katari.text.recognition.api.image.ImageContentKey
 import app.katari.text.recognition.api.image.ImageRect
 import app.katari.text.recognition.api.image.ImageSize
+import app.katari.text.recognition.api.image.TextRecognitionBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okio.ByteString
-import tachiyomi.decoder.ImageDecoder
 
 /**
  * The still image a reader page currently displays, decoded exactly as the viewer decodes it.
@@ -24,20 +24,22 @@ internal class MangaDisplayedPageImage private constructor(
     override val size: ImageSize,
     override val geometry: MangaDisplayedPageGeometry,
     override val rawContent: ImageContentKey,
-    private var decoder: ImageDecoder?,
+    private var decoder: ImageRegionDecoder?,
 ) : DisplayedPageImage {
 
-    override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): Bitmap = withContext(Dispatchers.IO) {
-        synchronized(this@MangaDisplayedPageImage) {
-            val decoder = decoder ?: newDecoder(encoded, cropBorders).also { decoder = it }
-            decoder.decode(Rect(region.left, region.top, region.right, region.bottom), sampleSize)
-                ?: error("Page region $region could not be decoded")
+    override suspend fun decodeRegion(region: ImageRect, sampleSize: Int): TextRecognitionBitmap =
+        withContext(Dispatchers.IO) {
+            synchronized(this@MangaDisplayedPageImage) {
+                val decoder = decoder ?: newDecoder(encoded, cropBorders).also { decoder = it }
+                val decoded = decoder.decode(IntRect(region.left, region.top, region.right, region.bottom), sampleSize)
+                    ?: error("Page region $region could not be decoded")
+                decoded.toTextRecognitionBitmap()
+            }
         }
-    }
 
     @Synchronized
     override fun close() {
-        decoder?.recycle()
+        decoder?.close()
         decoder = null
     }
 
@@ -63,13 +65,13 @@ internal class MangaDisplayedPageImage private constructor(
                     decoder = decoder,
                 )
             } catch (error: Throwable) {
-                decoder.recycle()
+                decoder.close()
                 throw error
             }
         }
 
-        private fun newDecoder(encoded: ByteString, cropBorders: Boolean): ImageDecoder =
-            requireNotNull(ImageDecoder.newInstance(encoded.toByteArray().inputStream(), cropBorders)) {
+        private fun newDecoder(encoded: ByteString, cropBorders: Boolean): ImageRegionDecoder =
+            requireNotNull(ImageRegionDecoder.open(encoded.toByteArray().inputStream(), cropBorders)) {
                 "Unsupported page image"
             }
 
