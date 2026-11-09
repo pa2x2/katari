@@ -66,6 +66,7 @@ import app.katari.presentation.kit.list.ProvideRowDensity
 import app.katari.presentation.kit.list.RowDensity
 import app.katari.presentation.kit.navigation.DockClearance
 import app.katari.presentation.kit.navigation.LocalDockClearance
+import app.katari.presentation.kit.navigation.LocalDockOnScreen
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
@@ -229,7 +230,7 @@ internal fun sheetEdge(sideSheets: Boolean, half: FoldHalf?, windowWidth: Dp, pr
 /** The room the side dock takes at [edge], so a sheet there opens beside the dock rather than over it. */
 @Composable
 private fun dockRoomBeside(edge: SheetEdge): Dp {
-    val dockStart = LocalDockClearance.current.start
+    val dockStart = LocalDockOnScreen.current.start
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     return when (edge) {
         SheetEdge.Left -> if (rtl) 0.dp else dockStart
