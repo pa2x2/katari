@@ -2,7 +2,7 @@ package app.katari.entry.interactions.manga.reader.text.overlay
 
 import app.katari.text.recognition.api.image.ImageRect
 import app.katari.text.recognition.api.image.TextRecognitionImage
-import app.katari.text.recognition.api.image.readArgbPixels
+import app.katari.text.recognition.api.image.readPixels
 import app.katari.text.recognition.api.image.release
 
 /**
@@ -14,7 +14,7 @@ internal suspend fun sampleTextBackground(image: TextRecognitionImage, area: Ima
     while (maxOf(area.width, area.height) / (sampleSize * 2) >= SAMPLE_EDGE) sampleSize *= 2
     val bitmap = image.decodeRegion(area, sampleSize)
     try {
-        val pixels = bitmap.readArgbPixels()
+        val pixels = bitmap.readPixels().values
         val counts = HashMap<Int, Int>()
         val buckets = IntArray(pixels.size) { index ->
             val pixel = pixels[index]
