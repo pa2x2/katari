@@ -3369,6 +3369,8 @@
     <string name="sync_choices_all_but">All but %1$s</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_choices_area_settings">%1$s settings</string>
+    <!-- %1$s is a profile's name, such as "Work" -->
+    <string name="sync_choices_profile">%1$s profile</string>
     <string name="sync_choices_data">Data</string>
     <string name="sync_choices_settings">Settings</string>
     <string name="sync_choices_profiles">Profiles</string>

@@ -117,7 +117,11 @@ class FirstSyncScreen : Screen() {
                     rowGroupItems(listOf(WHAT_SYNCS), key = { it }) {
                         SettingsRow(
                             title = stringResource(MR.strings.sync_choices_title),
-                            subtitle = whatSyncsSummary(syncChoices),
+                            subtitle = whatSyncsSummary(
+                                syncChoices,
+                                shown.pairings.filter { shown.joinOf(it) == FirstSyncViewModel.Join.ONLY_HERE }
+                                    .mapNotNull { byId[it.profileId]?.name },
+                            ),
                             icon = MaterialSymbols.Rounded.CloudSync,
                             onClick = { navigator.push(WhatSyncsScreen()) },
                         )

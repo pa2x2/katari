@@ -20,6 +20,7 @@ import app.katari.presentation.kit.list.RowActions
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.ProfileSync
+import app.katari.sync.client.part.ProfileSyncState
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
@@ -51,7 +52,7 @@ internal fun linkedPreferences(
     devices: SyncViewModel.DevicesState,
     preferences: SyncPreferences,
     choices: ChoiceSet,
-    arrivingProfiles: List<ProfileSync>,
+    profilesNotSynced: List<ProfileSync>,
     knowsWifi: Boolean,
     missingExtensions: List<MissingExtension>,
     actions: SyncPageActions,
@@ -59,7 +60,7 @@ internal fun linkedPreferences(
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
-    arrivingProfiles.forEach { add(arrivingProfileRow(it, actions)) }
+    profilesNotSynced.filter { it.state == ProfileSyncState.ASKING }.forEach { add(arrivingProfileRow(it, actions)) }
     if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
         val count = status.heldAside.toInt()
@@ -71,7 +72,10 @@ internal fun linkedPreferences(
             status.activity != SyncStatus.Activity.Offline
         add(devicesGroup(devices, reachable, actions))
     }
-    val linkedOptions = listOf(whatSyncsRow(choices, actions), serverAddressRow(link, actions))
+    val linkedOptions = listOf(
+        whatSyncsRow(choices, profilesNotSynced.map { it.name }, actions),
+        serverAddressRow(link, actions),
+    )
     add(syncOptionsGroup(preferences, knowsWifi, linkedOptions))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
@@ -226,12 +230,16 @@ private fun arrivingProfileRow(profile: ProfileSync, actions: SyncPageActions): 
 
 /** What this device syncs, summed up, opening the page that chooses it. */
 @Composable
-private fun whatSyncsRow(choices: ChoiceSet, actions: SyncPageActions): Preference.PreferenceItem<out Any, out Any> {
+private fun whatSyncsRow(
+    choices: ChoiceSet,
+    profilesNotSynced: List<String>,
+    actions: SyncPageActions,
+): Preference.PreferenceItem<out Any, out Any> {
     val title = stringResource(MR.strings.sync_choices_title)
     return Preference.PreferenceItem.CustomPreference(title = title) {
         TextPreferenceWidget(
             title = title,
-            subtitle = whatSyncsSummary(choices),
+            subtitle = whatSyncsSummary(choices, profilesNotSynced),
             icon = MaterialSymbols.Rounded.CloudSync,
             onPreferenceClick = actions.openWhatSyncs,
         )

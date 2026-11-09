@@ -65,7 +65,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
         val devices by model.devices.collectAsState()
         val canKeepSignIn by model.canKeepSignIn.collectAsState()
         val choices by model.choices.collectAsState()
-        val arrivingProfiles by model.arrivingProfiles.collectAsState()
+        val profilesNotSynced by model.profilesNotSynced.collectAsState()
         val headline = rememberSyncHeadline()
         val messages = rememberScreenMessages()
 
@@ -108,7 +108,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
                         devices = devices,
                         preferences = model.preferences,
                         choices = choices,
-                        arrivingProfiles = arrivingProfiles,
+                        profilesNotSynced = profilesNotSynced,
                         knowsWifi = knowsWifi,
                         missingExtensions = missingExtensions,
                         actions = actions,

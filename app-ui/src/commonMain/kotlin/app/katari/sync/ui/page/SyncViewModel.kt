@@ -52,9 +52,9 @@ class SyncViewModel(
     val choices: StateFlow<ChoiceSet> =
         preferences.choicesChanges().stateIn(viewModelScope, SharingStarted.Eagerly, preferences.choices())
 
-    /** Profiles made on another device that wait for the person to say whether they come here. */
-    val arrivingProfiles: StateFlow<List<ProfileSync>> = profileStates.profiles()
-        .map { profiles -> profiles.filter { it.state == ProfileSyncState.ASKING } }
+    /** The profiles this device doesn't sync: kept to itself, or made on another device and waiting for an answer. */
+    val profilesNotSynced: StateFlow<List<ProfileSync>> = profileStates.profiles()
+        .map { profiles -> profiles.filter { it.state != ProfileSyncState.SYNCED } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val devices: StateFlow<DevicesState>
