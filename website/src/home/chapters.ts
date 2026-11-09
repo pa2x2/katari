@@ -246,6 +246,7 @@ export const chapters: Chapter[] = [
           "Every device keeps its whole library and works offline",
           "Pick up on one device where you stopped on another",
           "Link a new device by scanning a code",
+          "Choose what each device syncs, down to single settings and profiles",
         ],
         arrangement: "scene",
         shots: [

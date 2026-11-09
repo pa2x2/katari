@@ -2,9 +2,10 @@ package app.katari.sync.client.setting.scope
 
 /**
  * The book reader: `BookDocumentReaderPreferences`, its remembered processors and remote-resource consents. Text,
- * theme and paging sync; page layout, text size, margins, bars and keys stay with the screen they suit.
+ * theme and paging sync; page layout, text size, margins, bars and keys stay with the screen they suit unless the
+ * person syncs them.
  */
-internal val BookReaderScopes = PreferenceScopeTable {
+internal val BookReaderScopes = PreferenceScopeTable(SettingsArea.READERS) {
     person(
         "book_document_reader_reading_mode",
         "book_document_reader_tap_zones",
@@ -22,7 +23,7 @@ internal val BookReaderScopes = PreferenceScopeTable {
         "book_document_reader_reading_progress_style",
         "book_document_reader_chapter_transition",
     )
-    device(
+    deviceByDefault(
         "book_document_reader_page_layout",
         "book_document_reader_text_size_percent",
         "book_document_reader_margins",
@@ -32,10 +33,11 @@ internal val BookReaderScopes = PreferenceScopeTable {
         "book_document_reader_show_status_bar",
         "book_document_reader_show_time_and_battery",
         "book_document_reader_show_navigation_bar",
-        "book_document_reader_input_guide_shown",
     )
+    device(DeviceBound.APP, "book_document_reader_input_guide_shown")
 
     // Which processor opens each kind of publication depends on the processors this device has; consents are keyed
     // by a hash of the publication's ID, which can be a path on this device.
-    devicePrefix("book_processor_", "entry_interactions_book_remote_resource_consent_")
+    devicePrefix(DeviceBound.INSTALLED, "book_processor_")
+    devicePrefix(DeviceBound.APP, "entry_interactions_book_remote_resource_consent_")
 }

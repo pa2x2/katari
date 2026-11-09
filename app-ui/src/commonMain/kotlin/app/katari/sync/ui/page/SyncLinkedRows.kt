@@ -1,20 +1,30 @@
 package app.katari.sync.ui.page
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.icons.materialsymbols.rounded.Dns
 import app.katari.icons.materialsymbols.rounded.Extension
 import app.katari.icons.materialsymbols.rounded.Logout
+import app.katari.icons.materialsymbols.rounded.Person
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.ui.noticeText
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.list.RowAction
+import app.katari.presentation.kit.list.RowActions
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.client.part.ChoiceSet
+import app.katari.sync.client.part.ProfileSync
+import app.katari.sync.client.part.ProfileSyncState
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.choice.whatSyncsSummary
 import app.katari.sync.ui.guide.ServerFix
 import app.katari.sync.ui.guide.rememberOpenSyncGuide
 import app.katari.sync.ui.guide.serverFixLabel
@@ -22,11 +32,13 @@ import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
 import app.katari.sync.ui.status.stopsSync
 import app.katari.sync.ui.status.syncHeadlineText
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 /**
  * The page of a linked device (D050): the status card, what waits for the person, how many records are held aside
@@ -39,6 +51,8 @@ internal fun linkedPreferences(
     headline: SyncHeadline?,
     devices: SyncViewModel.DevicesState,
     preferences: SyncPreferences,
+    choices: ChoiceSet,
+    profilesNotSynced: List<ProfileSync>,
     knowsWifi: Boolean,
     missingExtensions: List<MissingExtension>,
     actions: SyncPageActions,
@@ -46,6 +60,7 @@ internal fun linkedPreferences(
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
+    profilesNotSynced.filter { it.state == ProfileSyncState.ASKING }.forEach { add(arrivingProfileRow(it, actions)) }
     if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
         val count = status.heldAside.toInt()
@@ -57,7 +72,11 @@ internal fun linkedPreferences(
             status.activity != SyncStatus.Activity.Offline
         add(devicesGroup(devices, reachable, actions))
     }
-    add(syncOptionsGroup(preferences, knowsWifi, serverAddressRow(link, actions)))
+    val linkedOptions = listOf(
+        whatSyncsRow(choices, profilesNotSynced.map { it.name }, actions),
+        serverAddressRow(link, actions),
+    )
+    add(syncOptionsGroup(preferences, knowsWifi, linkedOptions))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
             TextPreferenceWidget(
@@ -183,6 +202,50 @@ private fun attentionRows(
     }
 }
 
+/** A profile made on another device, asking whether it comes to this one. */
+@Composable
+private fun arrivingProfileRow(profile: ProfileSync, actions: SyncPageActions): Preference.PreferenceItem<*, *> {
+    val title = stringResource(MR.strings.sync_profile_arriving, profile.name)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        Column {
+            TextPreferenceWidget(
+                title = title,
+                icon = MaterialSymbols.Rounded.Person,
+            )
+            RowActions(
+                listOf(
+                    RowAction(
+                        label = stringResource(MR.strings.sync_profile_not_here),
+                        onClick = { actions.answerArrivingProfile(profile, false) },
+                    ),
+                    RowAction(
+                        label = stringResource(MR.strings.sync_profile_add_here),
+                        onClick = { actions.answerArrivingProfile(profile, true) },
+                    ),
+                ),
+            )
+        }
+    }
+}
+
+/** What this device syncs, summed up, opening the page that chooses it. */
+@Composable
+private fun whatSyncsRow(
+    choices: ChoiceSet,
+    profilesNotSynced: List<String>,
+    actions: SyncPageActions,
+): Preference.PreferenceItem<out Any, out Any> {
+    val title = stringResource(MR.strings.sync_choices_title)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = whatSyncsSummary(choices, profilesNotSynced),
+            icon = MaterialSymbols.Rounded.CloudSync,
+            onPreferenceClick = actions.openWhatSyncs,
+        )
+    }
+}
+
 /** Where this device's server is, opening the dialog that follows it to a new address. */
 @Composable
 private fun serverAddressRow(
@@ -201,30 +264,66 @@ private fun serverAddressRow(
 }
 
 /**
- * The device's own sync options, which every device sets for itself (D022, D050), led by [serverAddress] once linked.
- * Where the platform can't tell Wi-Fi ([knowsWifi] false), the mobile data switch holds files back on networks the
- * system marks metered, and says so.
+ * The device's own sync options, which every device sets for itself (D022, D050), led by [leading] rows once linked:
+ * what syncs and the server's address. Where the platform can't tell Wi-Fi ([knowsWifi] false), the mobile data
+ * switches hold files and changes back on networks the system marks metered, and say so.
  */
 @Composable
 internal fun syncOptionsGroup(
     preferences: SyncPreferences,
     knowsWifi: Boolean,
-    serverAddress: Preference.PreferenceItem<out Any, out Any>? = null,
-) = Preference.PreferenceGroup(
-    title = stringResource(MR.strings.sync_options),
-    preferenceItems = listOfNotNull(
-        serverAddress,
-        Preference.PreferenceItem.SwitchPreference(
-            preference = preferences.useMobileData,
-            title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),
-            subtitle = stringResource(
-                if (knowsWifi) MR.strings.sync_use_mobile_data_summary else MR.strings.sync_use_metered_summary,
+    leading: List<Preference.PreferenceItem<out Any, out Any>> = emptyList(),
+): Preference.PreferenceGroup {
+    val inBackground by preferences.syncInBackground.collectAsState()
+    val intervals = SyncPreferences.BACKGROUND_INTERVALS.associateWith { stringResource(intervalName(it)) }
+    return Preference.PreferenceGroup(
+        title = stringResource(MR.strings.sync_options),
+        preferenceItems = leading + listOf(
+            Preference.PreferenceItem.SwitchPreference(
+                preference = preferences.paused,
+                title = stringResource(MR.strings.sync_pause),
+                subtitle = stringResource(MR.strings.sync_pause_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = preferences.useMobileData,
+                title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),
+                subtitle = if (knowsWifi) null else stringResource(MR.strings.sync_use_metered_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = preferences.changesOnMobileData,
+                title = stringResource(
+                    if (knowsWifi) MR.strings.sync_changes_on_mobile_data else MR.strings.sync_changes_on_metered,
+                ),
+                subtitle = stringResource(
+                    if (knowsWifi) {
+                        MR.strings.sync_changes_on_mobile_data_summary
+                    } else {
+                        MR.strings.sync_changes_on_metered_summary
+                    },
+                ),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = preferences.syncInBackground,
+                title = stringResource(MR.strings.sync_in_background),
+                subtitle = stringResource(MR.strings.sync_in_background_summary),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                preference = preferences.backgroundInterval,
+                entries = intervals,
+                title = stringResource(MR.strings.sync_background_interval),
+                visible = inBackground,
             ),
         ),
-        Preference.PreferenceItem.SwitchPreference(
-            preference = preferences.syncInBackground,
-            title = stringResource(MR.strings.sync_in_background),
-            subtitle = stringResource(MR.strings.sync_in_background_summary),
-        ),
-    ),
-)
+    )
+}
+
+private fun intervalName(minutes: Int): StringResource = when (minutes) {
+    15 -> MR.strings.update_15min
+    30 -> MR.strings.update_30min
+    60 -> MR.strings.update_1hour
+    180 -> MR.strings.update_3hour
+    360 -> MR.strings.update_6hour
+    720 -> MR.strings.update_12hour
+    1440 -> MR.strings.update_24hour
+    else -> error("No name for syncing every $minutes minutes")
+}

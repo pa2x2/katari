@@ -18,6 +18,7 @@ import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.restore.RestoreStamping
@@ -77,8 +78,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         SettingsCapture(handler, preferences.profiles, preferences.sourceFiles, preferences.reads)
     val files = TestFileStore(file.resolveSibling("${file.nameWithoutExtension}-files"), scope)
     val ownedFiles = OwnedFiles(files)
-    val fileCapture = FileCapture(handler, ownedFiles)
-    val drain = OutboxDrain(handler, preferences.reads)
+    val syncPreferences = SyncPreferences(preferences.profiles)
+    val fileCapture = FileCapture(handler, ownedFiles, syncPreferences)
+    val drain = OutboxDrain(handler, preferences.reads, syncPreferences)
 
     // What the app's deletion does to the database and preferences; the test devices own no files
     private val profileDeletion = object : LocalProfileDeletion {
@@ -114,12 +116,13 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         migrationRules,
         preferences.profiles,
         thisDevice,
+        syncPreferences,
     )
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)
     val held = HeldRecords(handler)
-    val firstSync = FirstSync(handler, writing, preferences.reads, preferences.profiles)
+    val firstSync = FirstSync(handler, writing, preferences.reads, preferences.profiles, syncPreferences)
     val restoreStamping = RestoreStamping(handler, writing, settingsCapture, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {

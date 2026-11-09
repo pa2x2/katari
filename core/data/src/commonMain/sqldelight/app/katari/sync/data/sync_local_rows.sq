@@ -7,7 +7,7 @@ FROM profiles
 WHERE uuid = :uuid;
 
 profiles:
-SELECT _id, uuid, name
+SELECT _id, uuid, name, color_seed
 FROM profiles
 ORDER BY position, _id;
 
@@ -48,7 +48,7 @@ LEFT JOIN sources Name ON Name._id = Entry.source
 WHERE Entry._id = :entryId;
 
 chapterRow:
-SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload
+SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order
 FROM chapters
 WHERE _id = :chapterId;
 

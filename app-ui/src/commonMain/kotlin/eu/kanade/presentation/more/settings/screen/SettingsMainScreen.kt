@@ -52,224 +52,225 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
-object SettingsMainScreen : Screen() {
+class SettingsMainScreen : Screen() {
 
     @Composable
     override fun Content() {
-        Content(twoPane = false)
+        SettingsMainList(twoPane = false)
     }
+}
 
-    @Composable
-    fun Content(twoPane: Boolean) {
-        val navigator = LocalNavigator.currentOrThrow
-        val backPress = LocalBackPress.currentOrThrow
-        val graph = LocalAppUiGraph.current
-        val groups = remember(graph) {
-            itemGroups()
-                .map { group -> group.filter { (it.screen as? SearchableSettings)?.isOffered(graph) != false } }
-                .filter { it.isNotEmpty() }
-        }
-        // In two panes the list sits on a paler container than the screen beside it.
-        val container = if (twoPane) SurfaceContainer.Lowest else SurfaceContainer.Surface
-        val topBarScrollBehavior = rememberAppBarScrollBehavior()
+/** The list of settings pages: the screen in one pane, and the start pane beside the open page in two. */
+@Composable
+internal fun SettingsMainList(twoPane: Boolean) {
+    val navigator = LocalNavigator.currentOrThrow
+    val backPress = LocalBackPress.currentOrThrow
+    val graph = LocalAppUiGraph.current
+    val groups = remember(graph) {
+        itemGroups()
+            .map { group -> group.filter { (it.screen as? SearchableSettings)?.isOffered(graph) != false } }
+            .filter { it.isNotEmpty() }
+    }
+    // In two panes the list sits on a paler container than the screen beside it.
+    val container = if (twoPane) SurfaceContainer.Lowest else SurfaceContainer.Surface
+    val topBarScrollBehavior = rememberAppBarScrollBehavior()
 
-        Scaffold(
-            topBarScrollBehavior = topBarScrollBehavior,
-            topBar = { scrollBehavior ->
-                AppBar(
-                    title = stringResource(MR.strings.label_settings),
-                    navigateUp = backPress::invoke,
-                    actions = {
-                        AppBarActions(
-                            listOf(
-                                AppBar.Action(
-                                    title = stringResource(MR.strings.action_search),
-                                    icon = MaterialSymbols.Rounded.Search,
-                                    onClick = { navigator.navigate(SettingsSearchScreen(), twoPane) },
-                                    shortcut = ScreenShortcuts.Search,
-                                ),
+    Scaffold(
+        topBarScrollBehavior = topBarScrollBehavior,
+        topBar = { scrollBehavior ->
+            AppBar(
+                title = stringResource(MR.strings.label_settings),
+                navigateUp = backPress::invoke,
+                actions = {
+                    AppBarActions(
+                        listOf(
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_search),
+                                icon = MaterialSymbols.Rounded.Search,
+                                onClick = { navigator.navigate(SettingsSearchScreen(), twoPane) },
+                                shortcut = ScreenShortcuts.Search,
                             ),
-                        )
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
-            },
-            container = container,
-            content = { contentPadding ->
-                val state = rememberLazyListState()
-                val selectedItem = if (twoPane) {
-                    val selectedScreen = navigator.items.first()
-                    groups.flatten().firstOrNull { item ->
-                        item.screen::class == selectedScreen::class ||
-                            (
-                                item.screen == SettingsReaderScreen &&
-                                    selectedScreen is AppEntryViewerSettingsScreenProjection
-                                )
-                    }
-                } else {
-                    null
-                }
-                if (selectedItem != null) {
-                    LaunchedEffect(Unit) {
-                        // Every group before the selected row adds a spacer item after its rows.
-                        val groupIndex = groups.indexOfFirst { selectedItem in it }
-                        val lazyIndex =
-                            groups.take(groupIndex).sumOf { it.size + 1 } + groups[groupIndex].indexOf(selectedItem)
-                        state.animateScrollToItem(lazyIndex)
-                        if (lazyIndex > 0) {
-                            // The list starts scrolled, so the bar starts collapsed to match.
-                            topBarScrollBehavior.state.heightOffset = topBarScrollBehavior.state.heightOffsetLimit
-                        }
-                    }
-                }
-
-                RowList(
-                    state = state,
-                    contentPadding = contentPadding,
-                ) {
-                    groups.forEachIndexed { groupIndex, group ->
-                        rowGroupItems(
-                            items = group,
-                            key = { item -> item.hashCode() },
-                            selected = { item -> item == selectedItem },
-                        ) { item ->
-                            TextPreferenceWidget(
-                                title = stringResource(item.titleRes),
-                                subtitle = item.formatSubtitle(),
-                                icon = item.icon,
-                                onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                            )
-                        }
-                        item(key = "spacer-$groupIndex") {
-                            RowGroupGap()
-                        }
-                    }
-                }
-            },
-        )
-    }
-
-    private fun Navigator.navigate(screen: VoyagerScreen, twoPane: Boolean) {
-        if (twoPane) replaceAll(screen) else push(screen)
-    }
-
-    private data class Item(
-        val titleRes: StringResource,
-        val subtitleRes: StringResource? = null,
-        val formatSubtitle: @Composable () -> String? = { subtitleRes?.let { stringResource(it) } },
-        val icon: ImageVector,
-        val screen: VoyagerScreen,
-    )
-
-    /** Look, library, reading and media, services, and the app itself. */
-    private fun itemGroups() = listOf(
-        listOf(
-            Item(
-                titleRes = MR.strings.pref_category_appearance,
-                subtitleRes = MR.strings.pref_appearance_summary,
-                icon = MaterialSymbols.Rounded.Palette,
-                screen = SettingsAppearanceScreen,
-            ),
-        ),
-        listOf(
-            Item(
-                titleRes = MR.strings.pref_category_library,
-                subtitleRes = MR.strings.pref_library_summary_unified,
-                icon = MaterialSymbols.Rounded.CollectionsBookmark,
-                screen = SettingsLibraryScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_library_updates,
-                subtitleRes = MR.strings.pref_library_updates_summary,
-                icon = MaterialSymbols.Rounded.Update,
-                screen = SettingsLibraryUpdatesScreen,
-            ),
-        ),
-        listOf(
-            Item(
-                titleRes = MR.strings.pref_category_readers,
-                subtitleRes = MR.strings.pref_reader_summary,
-                icon = MaterialSymbols.AutoMirroredRounded.ChromeReaderMode,
-                screen = SettingsReaderScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_players,
-                subtitleRes = MR.strings.pref_player_summary,
-                icon = MaterialSymbols.Rounded.PlayCircle,
-                screen = SettingsPlayerScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_downloads,
-                subtitleRes = MR.strings.pref_downloads_summary,
-                icon = MaterialSymbols.Rounded.Download,
-                screen = SettingsDownloadScreen,
-            ),
-        ),
-        listOf(
-            Item(
-                titleRes = MR.strings.translation_title,
-                subtitleRes = MR.strings.translation_settings_summary,
-                icon = MaterialSymbols.Rounded.Translate,
-                screen = SettingsTranslationScreen,
-            ),
-            Item(
-                titleRes = MR.strings.tts_title,
-                subtitleRes = MR.strings.tts_settings_summary,
-                icon = MaterialSymbols.Rounded.RecordVoiceOver,
-                screen = SettingsTtsScreen,
-            ),
-            Item(
-                titleRes = MR.strings.text_recognition_title,
-                subtitleRes = MR.strings.text_recognition_settings_summary,
-                icon = MaterialSymbols.Rounded.DocumentScanner,
-                screen = SettingsTextRecognitionScreen,
-            ),
-        ),
-        listOf(
-            Item(
-                titleRes = MR.strings.browse,
-                subtitleRes = MR.strings.pref_browse_summary,
-                icon = MaterialSymbols.Rounded.Explore,
-                screen = SettingsBrowseScreen,
-            ),
-            Item(
-                titleRes = MR.strings.label_data_storage,
-                subtitleRes = MR.strings.pref_backup_summary,
-                icon = MaterialSymbols.Rounded.Storage,
-                screen = SettingsDataScreen,
-            ),
-            Item(
-                titleRes = MR.strings.sync_title,
-                formatSubtitle = { rememberSyncHeadline()?.let { syncHeadlineText(it) } },
-                icon = MaterialSymbols.Rounded.CloudSync,
-                screen = SyncScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_security,
-                subtitleRes = MR.strings.pref_security_summary,
-                icon = MaterialSymbols.Rounded.Security,
-                screen = SettingsSecurityScreen,
-            ),
-            Item(
-                titleRes = MR.strings.profiles_title,
-                subtitleRes = MR.strings.profiles_summary,
-                icon = MaterialSymbols.Rounded.AccountCircle,
-                screen = SettingsProfilesScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_advanced,
-                subtitleRes = MR.strings.pref_advanced_logs_network_summary,
-                icon = MaterialSymbols.Rounded.Code,
-                screen = SettingsAdvancedScreen,
-            ),
-            Item(
-                titleRes = MR.strings.pref_category_about,
-                formatSubtitle = {
-                    "${stringResource(MR.strings.app_name)} ${LocalAppUiGraph.current.appBuild.versionText()}"
+                        ),
+                    )
                 },
-                icon = MaterialSymbols.Rounded.Info,
-                screen = AboutScreen,
-            ),
-        ),
+                scrollBehavior = scrollBehavior,
+            )
+        },
+        container = container,
+        content = { contentPadding ->
+            val state = rememberLazyListState()
+            val selectedItem = if (twoPane) {
+                val selectedScreen = navigator.items.first()
+                groups.flatten().firstOrNull { item ->
+                    item.screen::class == selectedScreen::class ||
+                        (
+                            item.screen is SettingsReaderScreen &&
+                                selectedScreen is AppEntryViewerSettingsScreenProjection
+                            )
+                }
+            } else {
+                null
+            }
+            if (selectedItem != null) {
+                LaunchedEffect(Unit) {
+                    // Every group before the selected row adds a spacer item after its rows.
+                    val groupIndex = groups.indexOfFirst { selectedItem in it }
+                    val lazyIndex =
+                        groups.take(groupIndex).sumOf { it.size + 1 } + groups[groupIndex].indexOf(selectedItem)
+                    state.animateScrollToItem(lazyIndex)
+                    if (lazyIndex > 0) {
+                        // The list starts scrolled, so the bar starts collapsed to match.
+                        topBarScrollBehavior.state.heightOffset = topBarScrollBehavior.state.heightOffsetLimit
+                    }
+                }
+            }
+
+            RowList(
+                state = state,
+                contentPadding = contentPadding,
+            ) {
+                groups.forEachIndexed { groupIndex, group ->
+                    rowGroupItems(
+                        items = group,
+                        key = { item -> item.hashCode() },
+                        selected = { item -> item == selectedItem },
+                    ) { item ->
+                        TextPreferenceWidget(
+                            title = stringResource(item.titleRes),
+                            subtitle = item.formatSubtitle(),
+                            icon = item.icon,
+                            onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
+                        )
+                    }
+                    item(key = "spacer-$groupIndex") {
+                        RowGroupGap()
+                    }
+                }
+            }
+        },
     )
 }
+
+private fun Navigator.navigate(screen: VoyagerScreen, twoPane: Boolean) {
+    if (twoPane) replaceAll(screen) else push(screen)
+}
+
+private data class Item(
+    val titleRes: StringResource,
+    val subtitleRes: StringResource? = null,
+    val formatSubtitle: @Composable () -> String? = { subtitleRes?.let { stringResource(it) } },
+    val icon: ImageVector,
+    val screen: VoyagerScreen,
+)
+
+/** Look, library, reading and media, services, and the app itself. */
+private fun itemGroups() = listOf(
+    listOf(
+        Item(
+            titleRes = MR.strings.pref_category_appearance,
+            subtitleRes = MR.strings.pref_appearance_summary,
+            icon = MaterialSymbols.Rounded.Palette,
+            screen = SettingsAppearanceScreen(),
+        ),
+    ),
+    listOf(
+        Item(
+            titleRes = MR.strings.pref_category_library,
+            subtitleRes = MR.strings.pref_library_summary_unified,
+            icon = MaterialSymbols.Rounded.CollectionsBookmark,
+            screen = SettingsLibraryScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_library_updates,
+            subtitleRes = MR.strings.pref_library_updates_summary,
+            icon = MaterialSymbols.Rounded.Update,
+            screen = SettingsLibraryUpdatesScreen(),
+        ),
+    ),
+    listOf(
+        Item(
+            titleRes = MR.strings.pref_category_readers,
+            subtitleRes = MR.strings.pref_reader_summary,
+            icon = MaterialSymbols.AutoMirroredRounded.ChromeReaderMode,
+            screen = SettingsReaderScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_players,
+            subtitleRes = MR.strings.pref_player_summary,
+            icon = MaterialSymbols.Rounded.PlayCircle,
+            screen = SettingsPlayerScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_downloads,
+            subtitleRes = MR.strings.pref_downloads_summary,
+            icon = MaterialSymbols.Rounded.Download,
+            screen = SettingsDownloadScreen(),
+        ),
+    ),
+    listOf(
+        Item(
+            titleRes = MR.strings.translation_title,
+            subtitleRes = MR.strings.translation_settings_summary,
+            icon = MaterialSymbols.Rounded.Translate,
+            screen = SettingsTranslationScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.tts_title,
+            subtitleRes = MR.strings.tts_settings_summary,
+            icon = MaterialSymbols.Rounded.RecordVoiceOver,
+            screen = SettingsTtsScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.text_recognition_title,
+            subtitleRes = MR.strings.text_recognition_settings_summary,
+            icon = MaterialSymbols.Rounded.DocumentScanner,
+            screen = SettingsTextRecognitionScreen(),
+        ),
+    ),
+    listOf(
+        Item(
+            titleRes = MR.strings.browse,
+            subtitleRes = MR.strings.pref_browse_summary,
+            icon = MaterialSymbols.Rounded.Explore,
+            screen = SettingsBrowseScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.label_data_storage,
+            subtitleRes = MR.strings.pref_backup_summary,
+            icon = MaterialSymbols.Rounded.Storage,
+            screen = SettingsDataScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.sync_title,
+            formatSubtitle = { rememberSyncHeadline()?.let { syncHeadlineText(it) } },
+            icon = MaterialSymbols.Rounded.CloudSync,
+            screen = SyncScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_security,
+            subtitleRes = MR.strings.pref_security_summary,
+            icon = MaterialSymbols.Rounded.Security,
+            screen = SettingsSecurityScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.profiles_title,
+            subtitleRes = MR.strings.profiles_summary,
+            icon = MaterialSymbols.Rounded.AccountCircle,
+            screen = SettingsProfilesScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_advanced,
+            subtitleRes = MR.strings.pref_advanced_logs_network_summary,
+            icon = MaterialSymbols.Rounded.Code,
+            screen = SettingsAdvancedScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_about,
+            formatSubtitle = {
+                "${stringResource(MR.strings.app_name)} ${LocalAppUiGraph.current.appBuild.versionText()}"
+            },
+            icon = MaterialSymbols.Rounded.Info,
+            screen = AboutScreen(),
+        ),
+    ),
+)

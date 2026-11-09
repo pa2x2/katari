@@ -12,14 +12,14 @@ import app.katari.translation.spi.setup.TranslationEngineSetup
 import app.katari.translation.spi.setup.TranslationSetupResult
 
 /**
- * Sets up an engine that translates through a server of the user's own: the connection is configured on
- * [setupScreen], which [destination] opens, and accepting the [disclosure] is kept with the connection.
+ * Sets up an engine that translates through a server of the user's own: the connection is configured on a screen
+ * from [setupScreen], which [destination] opens, and accepting the [disclosure] is kept with the connection.
  */
 class ServerEngineSetup(
     private val settings: ServerConnectionSettings,
     override val engine: TranslationEngineId,
     private val disclosure: TranslationProviderDisclosure,
-    private val setupScreen: ProviderSetupScreen,
+    private val setupScreen: () -> ProviderSetupScreen,
     private val destination: ServerSetupDestination,
 ) : TranslationEngineSetup {
     override val supportsSetup = true
@@ -29,7 +29,7 @@ class ServerEngineSetup(
         settings.disclosureAccepted = true
     }
 
-    override suspend fun openSetup(): TranslationSetupResult = if (destination.open(setupScreen)) {
+    override suspend fun openSetup(): TranslationSetupResult = if (destination.open(setupScreen())) {
         TranslationSetupResult.Opened(TranslationSetupDestination.InApp)
     } else {
         TranslationSetupResult.SettingsUnavailable

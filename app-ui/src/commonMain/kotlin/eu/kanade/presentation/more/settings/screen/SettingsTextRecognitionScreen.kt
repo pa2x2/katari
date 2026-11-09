@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import app.katari.presentation.kit.files.DocumentPickerRequest
 import app.katari.presentation.kit.files.rememberDocumentPicker
 import app.katari.ui.di.AppUiGraph
+import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -18,10 +19,10 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.models.ModelA
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.TextRecognitionSettingsContent
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
-import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberPageViewModel
 import tachiyomi.i18n.*
 
-object SettingsTextRecognitionScreen : SearchableSettings {
+class SettingsTextRecognitionScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -65,5 +66,5 @@ object SettingsTextRecognitionScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTextRecognitionSettingsViewModel(): TextRecognitionSettingsViewModel =
-    SettingsTextRecognitionScreen.rememberScreenViewModel<TextRecognitionSettingsViewModel>()
+internal fun Screen.rememberTextRecognitionSettingsViewModel(): TextRecognitionSettingsViewModel =
+    rememberPageViewModel<SettingsTextRecognitionScreen, TextRecognitionSettingsViewModel>()

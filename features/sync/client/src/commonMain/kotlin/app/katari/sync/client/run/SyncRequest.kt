@@ -24,7 +24,7 @@ enum class SyncOutcome {
     /** Pulled and pushed everything, or had nothing to send. */
     SYNCED,
 
-    /** Not set up, stopped, or waiting for the person's first-sync choices: nothing to run. */
+    /** Not set up, stopped, paused, or waiting for the person's first-sync choices: nothing to run. */
     IDLE,
 
     /** No network. */
@@ -33,7 +33,10 @@ enum class SyncOutcome {
     /** A network, but the server didn't answer, or not as a sync server. */
     UNREACHABLE,
 
-    /** A first download waits for Wi-Fi, which the person didn't allow to wait for mobile data. */
+    /**
+     * A first download waits for Wi-Fi, which the person didn't allow to use mobile data, or changes do, which the
+     * person keeps off mobile data.
+     */
     WAITING_FOR_WIFI,
 
     /** Something went wrong that retrying later may fix, such as a write that failed. */

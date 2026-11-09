@@ -25,9 +25,10 @@ dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
         exclusiveContent {
-            // Reduced ONNX Runtime build, published as a GitHub release by the scripts in
-            // tools/onnxruntime and checked against gradle/verification-metadata.xml.
-            // -PlocalOnnxRuntime reads the copy build-aar.sh stages instead, to try it before publishing.
+            // Reduced ONNX Runtime builds, the Android AAR and the desktop app's Linux jar, published together
+            // as a GitHub release by the scripts in tools/onnxruntime and checked against
+            // gradle/verification-metadata.xml. -PlocalOnnxRuntime reads the copies build.sh stages instead, to
+            // try them before publishing.
             forRepository {
                 ivy {
                     name = "KatariOnnxRuntime"

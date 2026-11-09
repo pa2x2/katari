@@ -20,7 +20,8 @@ import eu.kanade.tachiyomi.source.entry.EntryType
  *   the anime player and the manga and book readers, which their types' desktop parts bind as their open processors,
  *   anime's clips and manga's chapters in the immersive view, manga's previews and page cache, and the book's
  *   materialized resources. A type whose viewer a platform lacks binds an `EntryViewerStandIn` in its place.
- * - Translating downloaded chapters goes through the manga reader's page store, so it applies to no type yet either.
+ * - Translating downloaded chapters goes through the manga reader's page store, so manga binds it on both platforms
+ *   and no other type does.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer

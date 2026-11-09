@@ -511,7 +511,6 @@ class EntryRepositoryImpl(
     override suspend fun updateFromSourceSync(
         entry: Entry,
         profileId: Long,
-        updateDateAdded: Boolean,
         updateTitle: Boolean,
     ): Entry? {
         return handler.await(inTransaction = true) {
@@ -529,8 +528,6 @@ class EntryRepositoryImpl(
                 nextUpdate = entry.nextUpdate,
                 initialized = entry.initialized,
                 coverLastModified = entry.coverLastModified,
-                updateDateAdded = updateDateAdded.toLong(),
-                dateAdded = entry.dateAdded,
                 updateStrategy = entry.updateStrategy,
                 calculateInterval = entry.fetchInterval.toLong(),
                 memo = entry.memo,

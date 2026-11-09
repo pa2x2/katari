@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.util.system.setBackoffCriteria
 import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.domain.work.WorkBackoff
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -27,19 +28,20 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Inject
 class AndroidSyncBackgroundWork(private val application: Application) : SyncBackgroundWork {
-    override suspend fun schedulePeriodic(enabled: Boolean) {
+    override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
         if (!enabled) {
             application.workManager.cancelUniqueWork(PERIODIC)
             return
         }
-        val request = PeriodicWorkRequestBuilder<SyncJob>(SyncBackgroundWork.PERIOD.inWholeMinutes, TimeUnit.MINUTES)
+        val request = PeriodicWorkRequestBuilder<SyncJob>(every.inWholeMinutes, TimeUnit.MINUTES)
             .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
             .setInputData(workDataOf(SyncJob.KIND to SyncJob.PERIODIC))
             .addTag(PERIODIC)
             .build()
         application.workManager.enqueueUniquePeriodicWorkFromCurrentClock(
             PERIODIC,
-            ExistingPeriodicWorkPolicy.KEEP,
+            // Keeps the schedule's start, taking a new interval
+            ExistingPeriodicWorkPolicy.UPDATE,
             request,
         )
     }

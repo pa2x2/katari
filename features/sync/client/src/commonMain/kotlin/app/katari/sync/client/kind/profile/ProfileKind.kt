@@ -19,6 +19,8 @@ import app.katari.sync.protocol.clock.HybridTimestamp
 
 /** Profiles, keyed by their uuid, which is random for every profile but `default`. Local ref: `[uuid]`. */
 object ProfileKind : SyncedKind<ProfilePayload>("profile", 1, ProfilePayload.serializer(), Absence.TOMBSTONE) {
+    override fun profileOf(payload: ProfilePayload) = payload.uuid
+
     override val capture = listOf(
         CaptureTrigger("profiles", Event.INSERT, listOf("NEW.uuid")),
         CaptureTrigger(

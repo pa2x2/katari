@@ -53,7 +53,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A group that opens and closes, such as a volume of chapters, a report section or a filter group | `CollapsibleRowGroupHeader`, `CollapsibleRowGroupSubheader` | The subheader is a row inside a card. Optional icon, `error` tone, toned summary and `actions`; `opensPage` for a group shown on a page of its own. Never a clickable row with an arrow of your own |
 | The base of every row: icon, title, subtitle, trailing control | `SettingsRow` | Use a more specific row below when one fits. `subtitleTone` for a subtitle that reports a state, such as a warning; `iconAlert` for a row that tells of a problem its subtitle explains calmly |
 | Answers to the row above in the same card, such as which side of a conflict to keep | `RowActions` | The last is the proposed one and stands out; they wrap where the card is narrow |
-| An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density |
+| An on/off setting | `ToggleRow` | Switch on screens, checkbox in sheets, picked by row density; `leading` for a picture such as a profile's avatar; `onOpen` for a setting with a page of its own, such as a sync area: the text opens the page and only the switch toggles |
 | One of a set where any number can be picked | `CheckRow` | |
 | One of a set where only one can be chosen | `ChoiceRow` | |
 | A filter that includes, excludes or ignores | `TriStateRow` | |

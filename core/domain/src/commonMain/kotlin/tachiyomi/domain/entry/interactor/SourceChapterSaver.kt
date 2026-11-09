@@ -40,6 +40,12 @@ internal class SourceChapterSaver(
         removal: ChapterRemoval,
         now: Long,
         dateFetch: Long = now,
+        /**
+         * Set when the list is the back catalogue of an entry this device never listed: the chapters it inserts after
+         * the newest stored chapter it lists, or all of them when it lists none, take this fetch time instead of
+         * [dateFetch]. Those it inserts before that chapter are newer than anything stored, so new releases.
+         */
+        backCatalogueDateFetch: Long? = null,
         commitAlways: Boolean = false,
         afterSave: suspend (listedChapterIds: List<Long>, nextSourceOrder: Long) -> Unit = { _, _ -> },
     ): SavedChapters {
@@ -129,6 +135,8 @@ internal class SourceChapterSaver(
         val chaptersToUpdate = mutableListOf<EntryChapter>()
         val progressResourcesToRekey = mutableListOf<ProgressResourceRekey>()
         val matchedChapterIds = mutableSetOf<Long>()
+        // The list runs newest first, so the first chapter matched to a stored one is the newest stored it lists
+        var newestStoredOrder: Long? = null
         val chapterMatcher = EntrySourceChapterMatcher(
             chapters = representativeChapters,
             currentSourceUrls = currentSourceUrls,
@@ -172,6 +180,7 @@ internal class SourceChapterSaver(
             }
 
             matchedChapterIds += existingChapter.id
+            if (newestStoredOrder == null) newestStoredOrder = sourceChapter.sourceOrder
 
             val updatedChapter = existingChapter.copyFrom(sourceChapter.chapter, sourceChapter.sourceOrder)
                 .copy(
@@ -192,6 +201,18 @@ internal class SourceChapterSaver(
                         oldResourceKey = existingChapter.progressResourceKey,
                         newResourceKey = updatedChapter.progressResourceKey,
                     )
+                }
+            }
+        }
+        val backCatalogue = mutableSetOf<String>()
+        if (backCatalogueDateFetch != null) {
+            val newestStored = newestStoredOrder
+            chaptersToInsert.replaceAll { chapter ->
+                if (newestStored == null || chapter.sourceOrder > newestStored) {
+                    backCatalogue += chapter.url
+                    chapter.copy(dateFetch = backCatalogueDateFetch)
+                } else {
+                    chapter
                 }
             }
         }
@@ -264,6 +285,7 @@ internal class SourceChapterSaver(
             updatedCount = chaptersToUpdate.size,
             removedIds = chaptersToRemove,
             nextSourceOrder = nextSourceOrder,
+            backCatalogueUrls = backCatalogue,
         )
     }
 
@@ -339,4 +361,6 @@ internal data class SavedChapters(
     val removedIds: List<Long>,
     /** [EntryChapter.sourceOrder] a following older part starts at. */
     val nextSourceOrder: Long,
+    /** URLs of the [inserted] chapters dated as back catalogue, which are no new releases. */
+    val backCatalogueUrls: Set<String>,
 )

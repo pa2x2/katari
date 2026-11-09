@@ -8,6 +8,7 @@ import app.katari.icons.materialsymbols.rounded.Cloud
 import app.katari.icons.materialsymbols.rounded.CloudDone
 import app.katari.icons.materialsymbols.rounded.CloudOff
 import app.katari.icons.materialsymbols.rounded.CloudUpload
+import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.icons.materialsymbols.rounded.Wifi
 import app.katari.presentation.kit.content.Spin
@@ -47,12 +48,12 @@ fun rememberSyncToolbarAction(onClick: () -> Unit): AppBar.Action? {
             onClick = onClick,
             badgeCount = headline.count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
         )
-        headline is SyncHeadline.FirstDownloadWaitsForWifi ->
+        headline is SyncHeadline.FirstDownloadWaitsForWifi || headline is SyncHeadline.ChangesWaitForWifi ->
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.Wifi, onClick = onClick)
+        headline is SyncHeadline.Paused ->
+            AppBar.Action(title = title, icon = MaterialSymbols.Rounded.SyncDisabled, onClick = onClick)
         headline is SyncHeadline.Offline || headline is SyncHeadline.Unreachable ->
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudOff, onClick = onClick)
-        headline is SyncHeadline.HeldKinds ->
-            AppBar.Action(title = title, icon = MaterialSymbols.Rounded.SyncProblem, onClick = onClick)
         else -> AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudDone, onClick = onClick)
     }
 }

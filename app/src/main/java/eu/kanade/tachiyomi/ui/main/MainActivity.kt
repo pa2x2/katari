@@ -522,7 +522,7 @@ class MainActivity : BaseActivity() {
             }
             SyncNavigation.ACTION_OPEN_SYNC_QUESTIONS -> {
                 navigator.popUntilRoot()
-                navigator.push(SyncQuestionsScreen)
+                navigator.push(SyncQuestionsScreen())
                 null
             }
             LibraryUpdateSettingsNavigation.ACTION_OPEN_SETTINGS -> {

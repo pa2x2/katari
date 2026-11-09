@@ -13,7 +13,10 @@ import sys
 import urllib.request
 from pathlib import Path
 
-SOURCES = Path(__file__).resolve().parents[2] / "src/main/java/app/katari/text/recognition/provider/onnx"
+SOURCES = (
+    Path(__file__).resolve().parents[3]
+    / "features/text-recognition/providers/onnx/src/commonMain/kotlin/app/katari/text/recognition/provider/onnx"
+)
 
 
 def constants(source):

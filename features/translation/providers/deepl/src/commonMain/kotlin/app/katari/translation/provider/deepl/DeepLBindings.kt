@@ -37,7 +37,7 @@ object DeepLBindings {
                     settings = configuration,
                     engine = DeepLServerEngine.ENGINE_ID,
                     disclosure = DeepLServerEngine.DISCLOSURE,
-                    setupScreen = DeepLServerSetupScreen,
+                    setupScreen = ::DeepLServerSetupScreen,
                     destination = setupDestination,
                 ),
                 order = DEEPL_SERVER_ORDER,

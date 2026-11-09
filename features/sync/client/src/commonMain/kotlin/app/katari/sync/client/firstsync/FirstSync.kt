@@ -6,15 +6,19 @@ import app.katari.domain.profile.ProfileSeedPreferences
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.profile.ProfileKind
-import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.outbox.recordEditsMadeNow
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.setting.read.SettingReads
+import app.katari.sync.client.setting.read.isPersonLevel
+import app.katari.sync.client.setting.read.settingRecords
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
+import tachiyomi.core.common.preference.minusAssign
+import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
-import kotlin.time.Clock
 
 /**
  * The merge side of a device's first sync (D018, D027, D047). Data is always merged; what the person decides is which
@@ -41,6 +45,7 @@ class FirstSync(
     private val writing: SyncWriting,
     private val settings: SettingReads,
     private val profileStore: ProfileStore,
+    private val preferences: SyncPreferences,
 ) {
     /**
      * Whether this device holds the person's data: anything in its database beyond the untouched default profile, or
@@ -93,7 +98,7 @@ class FirstSync(
     /**
      * Makes each profile in [choices] the account profile it was paired with, and records the settings of those that
      * keep the device's as edits made now. The default profile's choice covers the settings shared by all profiles.
-     * A profile added as new keeps its own identity.
+     * A profile added as new keeps its own identity; one kept only here is one this device doesn't sync.
      */
     suspend fun pair(choices: List<ProfileChoice>) {
         val local = localProfiles().associateBy { it.id }
@@ -111,6 +116,16 @@ class FirstSync(
                 "Profile ${holder?.id} already is the account profile paired with profile ${choice.profileId}"
             }
         }
+        // The answer stands over a profile switched on or off on What syncs before it
+        choices.forEach { choice ->
+            val uuid = checkNotNull(local[choice.profileId]) { "No profile ${choice.profileId}" }.uuid
+            if (choice.onlyHere) {
+                require(uuid != ProfileKind.DEFAULT_UUID) { "The default profile always syncs" }
+                preferences.profilesOff += uuid
+            } else {
+                preferences.profilesOff -= uuid
+            }
+        }
         val keeps = keepsRecords()
         // Writing drains the edits not recorded yet first, under the identities they were made under
         writing.write {
@@ -123,20 +138,9 @@ class FirstSync(
         }
         val edits = paired.filter { it.settings == SettingsWinner.DEVICE }.flatMap { choice ->
             val profile = local.getValue(choice.profileId)
-            settings.personLevelSettings(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
+            settings.settingRecords(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
         }
-        recordEdits(edits)
-    }
-
-    /** Records [edits] as the settings capture records a person's, outside sync's writes, which would drop them. */
-    private suspend fun recordEdits(edits: List<Pair<String, LocalRef>>) {
-        if (edits.isEmpty()) return
-        val now = Clock.System.now().toEpochMilliseconds()
-        handler.await(inTransaction = true) {
-            edits.forEach { (kind, ref) ->
-                sync_outboxQueries.recordEdit(kind = kind, localRef = ref.json, changedAt = now)
-            }
-        }
+        handler.recordEditsMadeNow(edits)
     }
 
     private suspend fun localProfiles(): List<LocalProfile> = handler.await {

@@ -86,6 +86,7 @@ fun ApplicationScope.KatariWindow(
         onKeyEvent = shortcuts::onKeyEvent,
     ) {
         OpensAtBounds(window, state, opening)
+        RestoresFloatingBounds(window, state, graph.windowPreferences)
         LeavesFullScreenToMaximized(window, state)
         WindowContent(
             graph = graph,

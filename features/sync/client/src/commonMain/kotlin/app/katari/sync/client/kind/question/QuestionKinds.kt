@@ -66,6 +66,8 @@ object ProfileDeletionQuestionKind : QuestionKind<ProfileDeletionQuestionPayload
     "question.profile-deletion",
     ProfileDeletionQuestionPayload.serializer(),
 ) {
+    override fun profileOf(payload: ProfileDeletionQuestionPayload) = payload.profileUuid
+
     override fun merge(local: ProfileDeletionQuestionPayload, incoming: ProfileDeletionQuestionPayload) = local.copy(
         conflict = latest(local.conflict, incoming.conflict),
         answer = latest(local.answer, incoming.answer),

@@ -122,13 +122,13 @@ class HomeDestinations(
                 navigator.push(SettingsScreen(SettingsScreen.Destination.LibraryUpdates))
             is HomeDestination.StatisticsRecap -> navigator.push(StatisticsRecapScreen(destination.period))
             is HomeDestination.Entry -> navigator.push(EntryScreen(destination.entryId))
-            HomeDestination.DownloadQueue -> navigator.push(DownloadQueueScreen)
+            HomeDestination.DownloadQueue -> navigator.push(DownloadQueueScreen())
             is HomeDestination.SourceMigrationReview ->
                 navigator.push(SourceMigrationReviewScreen(destination.sessionId))
             HomeDestination.Extensions -> HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Extensions))
             is HomeDestination.Link -> navigator.openAppLink(destination.link)
             HomeDestination.SyncPage -> navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
-            HomeDestination.SyncQuestions -> navigator.push(SyncQuestionsScreen)
+            HomeDestination.SyncQuestions -> navigator.push(SyncQuestionsScreen())
         }
     }
 

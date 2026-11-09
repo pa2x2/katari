@@ -14,6 +14,7 @@ import app.katari.desktop.application.instance.SingleInstance
 import app.katari.desktop.application.instance.systemSingleInstance
 import app.katari.desktop.application.launch.LaunchArguments
 import app.katari.desktop.application.launch.LaunchLinks
+import app.katari.desktop.application.useCNumberFormat
 import app.katari.desktop.crash.CrashReportArgument
 import app.katari.desktop.crash.CrashReportWindowContent
 import app.katari.desktop.crash.RelaunchCrashPresenter
@@ -35,12 +36,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Path
-import java.util.concurrent.Executor
-import javax.swing.SwingUtilities
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 fun main(arguments: Array<String>) {
     val operatingSystem = DesktopOperatingSystem.current()
+    useCNumberFormat(operatingSystem)
     // Before anything of the app's: the check only talks to the system and to the app that started it
     SignInCheckProcess.configurationIn(arguments)?.let { configuration ->
         SignInCheckProcess.run(systemSignInCheck(operatingSystem), configuration)
@@ -108,8 +109,10 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // reads the profile and its sources, so it resumes once both are ready, before the first window opens
     graph.persistedWorkResume.start()
     graph.profileRelock.start()
-    // The warmups build the source manager, which needs the extension host
-    AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
+    // The warmups build the source manager, which needs the extension host. On a thread of their own, as the window
+    // thread would hold back the window and every frame after it until they are done
+    AppProcessStart.scheduleWarmups({ warmups -> thread(name = "Startup warmups") { warmups.run() } }) { graph }
+    graph.classDataArchive.start()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
@@ -118,6 +121,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
     }
+    graph.classDataArchive.stop()
     // The work they show ends with the app
     graph.desktopNotifications.close()
     // Before a restart's launch, whose web view would find Chromium's profile still in use

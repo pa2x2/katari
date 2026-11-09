@@ -124,7 +124,7 @@ class EntryScreen(
         }
 
         // Before the entry loads, so its progress is asked of the other devices at once
-        val sync = rememberEntrySync(entryId) { navigator.push(SyncQuestionsScreen) }
+        val sync = rememberEntrySync(entryId) { navigator.push(SyncQuestionsScreen()) }
         val state by viewModel.state.collectAsStateWithLifecycle()
 
         if (state is EntryViewModel.State.Loading) {

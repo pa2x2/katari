@@ -22,9 +22,11 @@ import tachiyomi.presentation.core.util.collectAsState
 import java.text.NumberFormat
 import tachiyomi.core.common.preference.Preference as CorePreference
 
-object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
+class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
 
     override val surfaceId: String = MangaReaderSettings.PROVIDER_ID
+
+    override fun newScreen() = SettingsMangaReaderScreen()
 
     @ReadOnlyComposable
     @Composable

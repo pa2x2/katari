@@ -12,8 +12,10 @@ import app.katari.missingextensions.ui.MissingExtensionsNoticeViewModel
 import app.katari.missingextensions.ui.MissingExtensionsSheet
 import app.katari.presentation.kit.dialog.ConfirmDialog
 import app.katari.presentation.kit.feedback.rememberScreenMessages
+import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
+import app.katari.sync.ui.choice.WhatSyncsScreen
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.link.LinkDeviceDialog
@@ -40,7 +42,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * setup it explains what syncs and offers the ways in; once linked it shows the status, the account's devices, the
  * options and leaving; after the device was removed or its account disabled, it says so and offers to sign in again.
  */
-object SyncScreen : SearchableSettings, SyncJoinOrigin {
+class SyncScreen : SearchableSettings(), SyncJoinOrigin {
 
     @ReadOnlyComposable
     @Composable
@@ -62,6 +64,8 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
         val status by model.status.collectAsState()
         val devices by model.devices.collectAsState()
         val canKeepSignIn by model.canKeepSignIn.collectAsState()
+        val choices by model.choices.collectAsState()
+        val profilesNotSynced by model.profilesNotSynced.collectAsState()
         val headline = rememberSyncHeadline()
         val messages = rememberScreenMessages()
 
@@ -74,8 +78,8 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             signIn = { server, account -> navigator.push(SyncSignInScreen(server, account)) },
             enterCode = { navigator.push(linkCodeEntryScreen()) },
             syncNow = model::syncNow,
-            openChoices = { navigator.push(FirstSyncScreen) },
-            openQuestions = { navigator.push(SyncQuestionsScreen) },
+            openChoices = { navigator.push(FirstSyncScreen()) },
+            openQuestions = { navigator.push(SyncQuestionsScreen()) },
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
             renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
@@ -83,6 +87,8 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
             openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
+            openWhatSyncs = { navigator.push(WhatSyncsScreen()) },
+            answerArrivingProfile = model::answerArrivingProfile,
         )
         val missingExtensions by metroViewModel<MissingExtensionsNoticeViewModel>().installable.collectAsState()
 
@@ -101,6 +107,8 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
                         headline = headline,
                         devices = devices,
                         preferences = model.preferences,
+                        choices = choices,
+                        profilesNotSynced = profilesNotSynced,
                         knowsWifi = knowsWifi,
                         missingExtensions = missingExtensions,
                         actions = actions,
@@ -172,4 +180,7 @@ internal class SyncPageActions(
     val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,
     val openMissingExtensions: () -> Unit,
+    val openWhatSyncs: () -> Unit,
+    /** Says whether a profile made on another device comes to this one. */
+    val answerArrivingProfile: (ProfileSync, comesHere: Boolean) -> Unit,
 )

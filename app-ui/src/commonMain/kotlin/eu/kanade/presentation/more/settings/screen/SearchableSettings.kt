@@ -3,32 +3,33 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import app.katari.sync.ui.choice.SettingsAreaSyncAction
 import app.katari.ui.di.AppUiGraph
 import app.katari.ui.di.LocalAppUiGraph
-import cafe.adriel.voyager.core.screen.Screen
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.belongsToProfile
 import eu.kanade.presentation.util.LocalBackPress
+import eu.kanade.presentation.util.Screen
 
-interface SearchableSettings : Screen {
+abstract class SearchableSettings : Screen() {
 
     @Composable
     @ReadOnlyComposable
-    fun getTitleRes(): StringResource
+    abstract fun getTitleRes(): StringResource
 
     @Composable
-    fun getPreferences(): List<Preference>
+    abstract fun getPreferences(): List<Preference>
 
     /**
      * False where the platform offers nothing this screen sets, such as speech settings without speech; the settings
      * list and the settings search then leave the screen out.
      */
-    fun isOffered(graph: AppUiGraph): Boolean = true
+    open fun isOffered(graph: AppUiGraph): Boolean = true
 
     @Composable
-    fun RowScope.AppBarAction() {
+    open fun RowScope.AppBarAction() {
     }
 
     @Composable
@@ -40,7 +41,10 @@ interface SearchableSettings : Screen {
             titleRes = getTitleRes(),
             isProfileSpecific = items.isNotEmpty() && items.all { it.belongsToProfile(profileStore) },
             onBackPressed = if (handleBack != null) handleBack::invoke else null,
-            actions = { AppBarAction() },
+            actions = {
+                SettingsAreaSyncAction(items)
+                AppBarAction()
+            },
             itemsProvider = { items },
         )
     }

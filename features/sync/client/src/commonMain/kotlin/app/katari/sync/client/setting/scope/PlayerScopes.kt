@@ -2,9 +2,10 @@ package app.katari.sync.client.setting.scope
 
 /**
  * The video player: `AnimePlayerPreferences` and `AnimePlayerDevicePreferences`. Playback habits sync; picture-in-
- * picture, background playback, orientation, quality and brightness belong to the device and its screen.
+ * picture, background playback, orientation, quality and brightness suit the device and its screen, so they stay unless
+ * the person syncs them.
  */
-internal val PlayerScopes = PreferenceScopeTable {
+internal val PlayerScopes = PreferenceScopeTable(SettingsArea.PLAYERS) {
     person(
         "enable_anime_seek_preview",
         "anime_seek_step_seconds",
@@ -17,12 +18,12 @@ internal val PlayerScopes = PreferenceScopeTable {
         "anime_shows_remaining_time",
         "anime_subtitles_in_picture",
     )
-    device(
+    deviceByDefault(
         "enable_anime_picture_in_picture",
         "anime_background_playback",
         "anime_preferred_quality_height",
         "anime_player_orientation",
-        "anime_gesture_guide_shown_seek_swipe",
         "anime_player_remember_brightness",
     )
+    device(DeviceBound.APP, "anime_gesture_guide_shown_seek_swipe")
 }

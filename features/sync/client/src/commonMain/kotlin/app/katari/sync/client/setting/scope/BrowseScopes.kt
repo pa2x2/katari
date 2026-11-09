@@ -1,7 +1,7 @@
 package app.katari.sync.client.setting.scope
 
 /** Sources, extensions, feeds and migration: `SourcePreferences` and `GlobalSourcePreferences`. */
-internal val BrowseScopes = PreferenceScopeTable {
+internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
     // SourcePreferences
     person(
         "enabled_content_warnings",
@@ -30,6 +30,7 @@ internal val BrowseScopes = PreferenceScopeTable {
     // 18+ switch before content warnings, the repositories before they had their own table, and the migration options
     // before only the download choice was remembered.
     device(
+        DeviceBound.APP,
         "hidden_catalogues",
         "hidden_manga_catalogues",
         "hidden_anime_catalogues",
@@ -41,5 +42,5 @@ internal val BrowseScopes = PreferenceScopeTable {
     )
 
     // GlobalSourcePreferences: how many installed extensions have updates
-    device("ext_updates_count")
+    device(DeviceBound.APP, "ext_updates_count")
 }

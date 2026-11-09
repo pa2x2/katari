@@ -84,7 +84,7 @@ moko-resources = "0.27.1"
 nanohttpd = "2.3.1"
 okhttp = "5.5.1"
 okio = "3.18.2"
-onnxruntime = "1.31.0" # Built and published by tools/onnxruntime/upgrade.sh
+onnxruntime = "1.31.0-2" # Both libraries built and published by tools/onnxruntime/upgrade.sh
 photoView = "2.3.0"
 quickjs-kt = "1.0.18-fork.1" # Released by pa2x2/quickjs-kt, pinned in gradle/verification-metadata.xml
 reorderable = "3.1.0"
@@ -263,6 +263,7 @@ okhttp-mockwebserver3 = { module = "com.squareup.okhttp3:mockwebserver3", versio
 okhttp-zstd = { module = "com.squareup.okhttp3:okhttp-zstd", version.ref = "okhttp" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 onnxruntime-android = { module = "app.katari.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
+onnxruntime-linux-x64 = { module = "app.katari.onnxruntime:onnxruntime-linux-x86-64", version.ref = "onnxruntime" }
 photoView = { module = "com.github.chrisbanes:PhotoView", version.ref = "photoView" }
 quickjs-kt-android = { module = "io.github.pa2x2:quickjs-kt-android", version.ref = "quickjs-kt" }
 quickjs-kt-jvm = { module = "io.github.pa2x2:quickjs-kt-jvm", version.ref = "quickjs-kt" }

@@ -2,11 +2,17 @@ package app.katari.sync.ui.page
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.sync.client.account.AccountCall
 import app.katari.sync.client.account.AccountDevice
 import app.katari.sync.client.account.SyncAccount
 import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
+import app.katari.sync.client.part.ChoiceSet
+import app.katari.sync.client.part.ProfileSync
+import app.katari.sync.client.part.ProfileSyncState
+import app.katari.sync.client.part.ProfileSyncStates
+import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncStatusState
@@ -14,13 +20,16 @@ import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
 
@@ -34,8 +43,19 @@ class SyncViewModel(
     statusState: SyncStatusState,
     val preferences: SyncPreferences,
     val naming: DeviceNaming,
+    private val choiceChanges: SyncChoiceChanges,
+    profileStates: ProfileSyncStates,
+    @AppCoroutineScope private val appScope: CoroutineScope,
 ) : ViewModel() {
     val status: StateFlow<SyncStatus?> = statusState.status
+
+    val choices: StateFlow<ChoiceSet> =
+        preferences.choicesChanges().stateIn(viewModelScope, SharingStarted.Eagerly, preferences.choices())
+
+    /** The profiles this device doesn't sync: kept to itself, or made on another device and waiting for an answer. */
+    val profilesNotSynced: StateFlow<List<ProfileSync>> = profileStates.profiles()
+        .map { profiles -> profiles.filter { it.state != ProfileSyncState.SYNCED } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val devices: StateFlow<DevicesState>
         field = MutableStateFlow<DevicesState>(DevicesState.Loading)
@@ -67,6 +87,11 @@ class SyncViewModel(
         viewModelScope.launch {
             account.deviceListChanges.drop(1).collect { refreshDevices() }
         }
+    }
+
+    /** In the app's scope, so leaving the page doesn't stop bringing the profile here after the answer was saved. */
+    fun answerArrivingProfile(profile: ProfileSync, comesHere: Boolean) {
+        appScope.launchIO { choiceChanges.syncProfile(profile.uuid, on = comesHere) }
     }
 
     fun refreshDevices() {

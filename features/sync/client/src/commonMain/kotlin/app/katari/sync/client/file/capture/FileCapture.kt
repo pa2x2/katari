@@ -1,13 +1,18 @@
 package app.katari.sync.client.file.capture
 
+import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.OwnedFiles
+import app.katari.sync.client.file.local.dataGroup
 import app.katari.sync.client.file.local.stored
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.font.ImportedFontKind
 import app.katari.sync.client.payload.SyncedFile
+import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.record.LocalRef
+import app.katari.sync.protocol.file.FileCategory
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -36,12 +41,16 @@ import kotlin.time.Clock
  * the owner's record names. A file sync put there itself, or a change back to what the record names, is no edit; any
  * other content is the person's, recorded with the time it was heard and queued for upload. Local-source entries'
  * covers never sync (D016).
+ *
+ * Files of a kind this device doesn't sync ([FileCategory.dataGroup]) are left alone, neither recorded nor uploaded;
+ * [rescan] records what changed among them meanwhile once the device syncs them again.
  */
 @Inject
 @SingleIn(AppScope::class)
 class FileCapture(
     private val handler: DatabaseHandler,
     private val files: OwnedFiles,
+    private val preferences: SyncPreferences,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var running: Running? = null
@@ -79,6 +88,23 @@ class FileCapture(
         stopped.recording.cancel()
     }
 
+    /**
+     * Records what changed in [category]'s files while this device didn't sync them, as changes made now: every owner
+     * with a file here, and every owner sync knew the file of. A file still as sync last placed it is no change, and
+     * takes what its record names now.
+     */
+    suspend fun rescan(category: FileCategory) {
+        val known = handler.await { sync_filesQueries.ownersOf(category.stored).awaitAsList() }
+            .map { FileOwner.of(category, LocalRef(it)) }
+        val present = when (category) {
+            FileCategory.COVER -> handler.await { sync_filesQueries.syncedEntryIds().awaitAsList() }
+                .map { FileOwner.CustomCover(it) }
+            FileCategory.FONT -> handler.await { sync_local_rowsQueries.profiles().awaitAsList() }
+                .flatMap { profile -> files.locked { fonts(profile._id) }.map { FileOwner.Font(profile._id, it) } }
+        }
+        (known + present).distinct().forEach { record(Change(it)) }
+    }
+
     private suspend fun record(change: Change) {
         try {
             files.locked {
@@ -104,6 +130,7 @@ class FileCapture(
             if (row != null) sync_filesQueries.delete(category, ref)
             return
         }
+        if (!preferences.choices().syncs(owner.category.dataGroup)) return
         when {
             row == null && (now == null || !synced) -> return
             row != null && now?.sha256 == row.placed_sha256 -> return

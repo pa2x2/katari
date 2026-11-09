@@ -103,21 +103,64 @@ SELECT _id, url, name, chapter_number
 FROM chapters
 WHERE entry_id = :entryId;
 
--- After the entry's other chapters, in a place none of them holds until a refresh places it: chapters sharing a place
--- read to a refresh as copies of one chapter.
+-- A chapter sync adds takes a place none of the entry's chapters holds until a refresh places it: chapters sharing a
+-- place read to a refresh as copies of one chapter. Its own place, when its record gives one, is made free by moving
+-- the chapters from there on, and the rest of a walk of the list with them, one place older; otherwise it goes after
+-- them.
+chapterHoldsPlace:
+SELECT count(*) > 0
+FROM chapters
+WHERE entry_id = :entryId AND source_order = :sourceOrder;
+
+freeChapterPlace {
+    UPDATE chapters
+    SET source_order = source_order + 1
+    WHERE entry_id = :entryId AND source_order >= :sourceOrder;
+
+    UPDATE chapter_list_walks
+    SET next_source_order = next_source_order + 1
+    WHERE entry_id = :entryId AND next_source_order >= :sourceOrder;
+}
+
+placeAfterChapters:
+SELECT coalesce(max(source_order) + 1, 0)
+FROM chapters
+WHERE entry_id = :entryId;
+
+-- A record that doesn't say when the chapter was found dates it no later than its entry joined the Library, so it
+-- isn't taken for a new release.
 insertChapter:
 INSERT INTO chapters(entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order)
 VALUES (
     :entryId, :url, :name, :read, :bookmark, :chapterNumber, :scanlator, :dateUpload,
-    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER),
-    (SELECT coalesce(max(source_order) + 1, 0) FROM chapters WHERE entry_id = :entryId)
+    CASE
+        WHEN :dateFetch > 0 THEN :dateFetch
+        ELSE coalesce(
+            (
+                SELECT min(date_added, CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER))
+                FROM entries
+                WHERE _id = :entryId AND favorite = 1 AND date_added > 0
+            ),
+            CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
+        )
+    END,
+    :sourceOrder
 )
 RETURNING _id;
 
+-- The time the chapter was found is the one every device agrees on, when the record has one.
 updateChapterMarks:
 UPDATE chapters
-SET read = :read, bookmark = :bookmark
+SET read = :read,
+    bookmark = :bookmark,
+    date_fetch = CASE WHEN :dateFetch > 0 THEN :dateFetch ELSE date_fetch END
 WHERE _id = :chapterId;
+
+-- A new release another device found is the entry's last update here too, as finding it here would have made it.
+noteNewChapter:
+UPDATE entries
+SET last_update = :dateFetch
+WHERE _id = :entryId AND favorite = 1 AND :dateFetch > date_added AND :dateFetch > coalesce(last_update, 0);
 
 -- Reading and playback positions. The update times are when the device that made them did, so the newest
 -- position is the same one on every device.

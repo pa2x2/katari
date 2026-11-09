@@ -75,6 +75,12 @@ UPDATE sync_local_files
 SET placed_sha256 = :sha256
 WHERE category = :category AND owner = :owner;
 
+-- The owners of :category sync knows a file of, or knows to have none.
+ownersOf:
+SELECT owner
+FROM sync_local_files
+WHERE category = :category;
+
 delete:
 DELETE FROM sync_local_files
 WHERE category = :category AND owner = :owner;
@@ -97,11 +103,13 @@ SET unavailable_since = :at
 WHERE category = :category AND wanted_sha256 = :sha256;
 
 -- Files waiting to be fetched: named by a record, not in place, and not reported missing from the server.
+-- The files of :categories that records name and aren't here yet.
 downloadCount:
 SELECT count(*) FROM (
     SELECT DISTINCT category, wanted_sha256
     FROM sync_local_files
     WHERE wanted_sha256 IS NOT NULL AND wanted_sha256 IS NOT placed_sha256 AND unavailable_since IS NULL
+    AND category IN :categories
 );
 
 unavailableCount:

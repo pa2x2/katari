@@ -2,7 +2,6 @@ package app.katari.sync.client.trigger
 
 import app.katari.core.common.platform.PlatformFacility
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 
 /**
  * How the platform runs sync when no screen asks for it (D021, D022): Android's WorkManager, which also runs while
@@ -11,8 +10,8 @@ import kotlin.time.Duration.Companion.hours
  */
 @PlatformFacility
 interface SyncBackgroundWork {
-    /** Runs [SyncBackgroundRun.periodic] about every [PERIOD] while [enabled], or stops doing so. */
-    suspend fun schedulePeriodic(enabled: Boolean)
+    /** Runs [SyncBackgroundRun.periodic] about [every] while [enabled], or stops doing so. */
+    suspend fun schedulePeriodic(enabled: Boolean, every: Duration)
 
     /**
      * Runs [SyncBackgroundRun.handOff] as soon as there is a network, as work the platform lets finish when the app
@@ -36,8 +35,4 @@ interface SyncBackgroundWork {
 
     /** False while battery saver or a background restriction is on, which pauses background sync (D022). */
     fun allowsBackgroundSync(): Boolean
-
-    companion object {
-        val PERIOD: Duration = 1.hours
-    }
 }

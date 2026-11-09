@@ -18,7 +18,7 @@ import app.katari.entry.interactions.manga.reader.image.layout.pieces
 import app.katari.entry.interactions.manga.reader.image.layout.sourcePoint
 import app.katari.entry.interactions.manga.reader.text.image.DisplayedPageImage
 import app.katari.entry.interactions.manga.reader.text.image.DisplayedStillImage
-import app.katari.entry.interactions.manga.reader.text.image.openDisplayedPageImage
+import app.katari.entry.interactions.manga.reader.text.image.MangaDisplayedPageImage
 import app.katari.text.recognition.api.image.ImageRect
 import app.katari.text.recognition.api.image.ImageSize
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -52,7 +52,9 @@ internal class ViewerPageTextSurface(override val page: ReaderPage) : MangaPageT
         val still = shown ?: return null
         val stream = page.stream ?: return null
         val bytes = withIOContext { stream().use { it.readBytes() } }
-        return openDisplayedPageImage(DisplayedStillImage(bytes.toByteString(), still.cropBorders, rawContent = null))
+        return MangaDisplayedPageImage.open(
+            DisplayedStillImage(bytes.toByteString(), still.cropBorders, rawContent = null),
+        )
     }
 
     // Every piece showing part of the rectangle counts, so the whole image of a stacked spread spans both halves

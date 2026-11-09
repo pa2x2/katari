@@ -19,7 +19,7 @@ plugins {
 
 // The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
 // workflow reads it from this line.
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.5"
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("app.katari.desktop.application")
@@ -91,6 +91,8 @@ dependencies {
     implementation(projects.features.language.runtime)
     implementation(projects.features.modelArtifacts.runtime)
     implementation(projects.features.textRecognition.runtime)
+    implementation(projects.features.textRecognition.providers.onnx)
+    implementation(projects.features.textRecognition.ui)
     implementation(projects.features.translation.api)
     implementation(projects.features.translation.runtime)
     implementation(projects.features.translation.providers.deepl)

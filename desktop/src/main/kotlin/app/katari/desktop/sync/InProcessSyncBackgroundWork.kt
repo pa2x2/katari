@@ -10,6 +10,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import tachiyomi.domain.work.WorkBackoff
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -28,13 +29,13 @@ class InProcessSyncBackgroundWork(
 ) : SyncBackgroundWork, ResumableWork {
     override val kinds: Set<String> = setOf(PERIODIC, HAND_OFF, LONG_RUN)
 
-    override suspend fun schedulePeriodic(enabled: Boolean) {
+    override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
         if (!enabled) {
             work.cancelPeriodic(PERIODIC)
             return
         }
         val request = InProcessWorkRequest(resumeAs = PERIODIC, requiresNetwork = true) { run().periodic() }
-        work.schedulePeriodic(PERIODIC, SyncBackgroundWork.PERIOD, request)
+        work.schedulePeriodic(PERIODIC, every, request)
     }
 
     override fun handOff() {

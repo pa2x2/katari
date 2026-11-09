@@ -25,9 +25,9 @@ class PreferenceScopeRulesTest {
             }
         """.trimIndent()
         val table = """
-            internal val ReaderScopes = PreferenceScopeTable {
+            internal val ReaderScopes = PreferenceScopeTable(SettingsArea.READERS) {
                 person("reader_theme")
-                devicePrefix("reader_zoom:")
+                devicePrefix(DeviceBound.HARDWARE, "reader_zoom:")
             }
         """.trimIndent()
 

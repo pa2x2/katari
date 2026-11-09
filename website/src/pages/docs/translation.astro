@@ -9,7 +9,6 @@ import translator from "../../captures/translator.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
-import PlatformAnswers from "../../guide/PlatformAnswers.astro";
 import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 ---
@@ -19,16 +18,6 @@ import Task from "../../guide/Task.astro";
   slug="translation"
   lead="Katari translates the text on comic pages and anything you type, with an engine in the app or a server."
 >
-  <PlatformAnswers>
-    <p slot="android">
-      Katari finds the text on a comic page and translates it. Text recognition always runs on the phone; with the right engine,
-      translation does too.
-    </p>
-    <p slot="linux">
-      Typed text translates through a DeepL-compatible or LibreTranslate server. Comic pages can't be translated on Linux yet.
-    </p>
-  </PlatformAnswers>
-
   <Task id="engine" title="Pick a translation engine" shot={{ image: translationEngines, alt: "The translation engines, each saying whether it is ready", caption: "Translation engine" }}>
     <p>
       Under <strong>Playground</strong> in <Path>Settings › Translation</Path>, select the engine's name to pick another under <strong>Translation engine</strong>, and
@@ -56,25 +45,29 @@ import Task from "../../guide/Task.astro";
     </ol>
   </Task>
 
-  <Task id="page" title="Translate a comic page" platform="Android" shot={{ image: translationAfter, alt: "A comic page with its speech bubbles translated into English", caption: "Translations on the page" }}>
+  <Task id="page" title="Translate a comic page" shot={{ image: translationAfter, alt: "A comic page with its speech bubbles translated into English", caption: "Translations on the page" }}>
     <ol>
-      <li>In the reader, tap the translate button in the bottom bar. A translation bar opens.</li>
+      <li>In the reader, select the translate button in the bottom bar. A translation bar opens.</li>
       <li>
         The first time, the bar asks what it needs: <strong>Which language is the text in?</strong>, how to read that language, and the
         models to download. Answer each with its button.
       </li>
-      <li>Once the bar shows the page's languages, such as Japanese → English, tap a speech bubble.</li>
+      <li>Once the bar shows the page's languages, such as Japanese → English, tap or click a speech bubble.</li>
     </ol>
     <p>
       The subtitles button in the bar draws every bubble's translation over the page. The selection button beside it translates text
       you drag over, for writing outside the bubbles.
     </p>
+    <p>
+      <PlatformLabel platform="Linux" lead />T turns translation on and off. While the bar shows their buttons, S selects an area and O
+      switches between the original text and the translations; Esc leaves area selection.
+    </p>
   </Task>
 
-  <Task id="bubble" title="Hear a bubble read aloud" platform="Android" shot={{ image: translationPopup, alt: "One speech bubble's translation with buttons to hear it read aloud", caption: "One bubble" }}>
+  <Task id="bubble" title="Hear a bubble read aloud" shot={{ image: translationPopup, alt: "One speech bubble's translation with buttons to hear it read aloud", caption: "One bubble" }}>
     <p>
-      A tapped bubble shows its translation beside the original. The speaker beside each language reads that one aloud with the phone's
-      text-to-speech voices.
+      A selected bubble shows its translation beside the original. The speaker beside each language reads that one aloud with the
+      device's text-to-speech voices.
     </p>
     <p>
       Pick the speech engine, the voice and its pitch under <Path>Settings › Text to speech</Path>, and hear them with <strong>Play preview</strong>. A voice
@@ -82,12 +75,15 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="text-recognition" title="Choose how text is recognized" platform="Android" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
-    <p>Katari reads the page with models it downloads once and keeps on the phone. The bar picks them by the page's language:</p>
+  <Task id="text-recognition" title="Choose how text is recognized" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
+    <p>Katari reads the page with models it downloads once and keeps on the device. The bar picks them by the page's language:</p>
     <ul>
       <li><strong>Japanese manga</strong> reads Japanese, vertical text and furigana included.</li>
       <li>Other languages have their own option, such as <strong>Korean comics</strong> or <strong>Cyrillic comics</strong>.</li>
-      <li><strong>Comics with ML Kit</strong> uses Google's text recognition instead. It reads vertical text less reliably.</li>
+      <li>
+        <PlatformLabel platform="Android" lead /><strong>Comics with ML Kit</strong> uses Google's text recognition instead. It reads
+        vertical text less reliably.
+      </li>
     </ul>
     <p>
       <Path>Settings › Text recognition</Path> changes the engine and the choice per language, lists <strong>Downloaded models</strong> with
@@ -105,9 +101,9 @@ import Task from "../../guide/Task.astro";
     </Callout>
   </Task>
 
-  <Task id="series" title="Keep a series' languages" platform="Android" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
+  <Task id="series" title="Keep a series' languages" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
     <p>
-      Tap the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
+      Select the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
       <strong>Translate to</strong> stay with the series. After you change the page language, Katari reads its pages again. <strong>Translate downloads</strong>
       translates the series' chapters in the background once they're downloaded. In a merged entry, each member keeps its own languages.
     </p>
@@ -117,10 +113,10 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="chapters" title="Translate whole chapters ahead" platform="Android" shot={{ image: beforeTranslating, alt: "What a chapter still needs before it can be translated, each with a button to fix it", caption: "Before translating" }}>
+  <Task id="chapters" title="Translate whole chapters ahead" shot={{ image: beforeTranslating, alt: "What a chapter still needs before it can be translated, each with a button to fix it", caption: "Before translating" }}>
     <ol>
-      <li>On a title's page, long-press chapters to select them and tap <strong>Translate</strong>.</li>
-      <li><strong>Before translating</strong> lists anything still missing, each with a button to fix it. Then tap <strong>Translate</strong>.</li>
+      <li>On a title's page, long-press chapters to select them and select <strong>Translate</strong>.</li>
+      <li><strong>Before translating</strong> lists anything still missing, each with a button to fix it. Then select <strong>Translate</strong>.</li>
     </ol>
     <p>
       Under <Path>Settings › Downloads › Auto-translate</Path>, Katari can translate downloaded chapters by itself, as they arrive and
@@ -140,8 +136,10 @@ import Task from "../../guide/Task.astro";
       The <strong>Translator</strong> tab translates anything you type or paste, with <strong>Detect language</strong> for text you can't
       place. It is hidden at first; add it under <Path>Settings › Appearance › Home screen tabs</Path>.
     </p>
-    <p><PlatformLabel platform="Android" lead />In books, select text to get <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong> for that passage.</p>
-    <p><PlatformLabel platform="Linux" lead />In books, right-click a selection to get <strong>Copy</strong> and <strong>Translate</strong> for that passage.</p>
+    <p>
+      In books, select a passage to get <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong> for it. On Linux,
+      they're in the selection's right-click menu.
+    </p>
   </Task>
 
   <Task id="backups" title="What a backup carries over">

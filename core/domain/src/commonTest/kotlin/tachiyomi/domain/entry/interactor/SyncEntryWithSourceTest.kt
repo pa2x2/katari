@@ -160,7 +160,7 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
-    fun `first chapter sync after library addition establishes updates baseline`() = runTest {
+    fun `first chapter sync after library addition keeps the back catalogue out of updates`() = runTest {
         val insertedChapters = slot<List<EntryChapter>>()
         val chapterRepository = chapterRepository(emptyList(), inserted = insertedChapters)
         coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
@@ -170,7 +170,7 @@ class SyncEntryWithSourceTest {
         val updatedEntries = mutableListOf<Entry>()
         coEvery { entryRepository.update(capture(updatedEntries)) } returns true
 
-        sync(
+        val result = sync(
             source = TestSource(chapters = listOf(sourceChapter())),
             repository = chapterRepository,
             entryRepository = entryRepository,
@@ -180,8 +180,44 @@ class SyncEntryWithSourceTest {
             fetchDetails = false,
         )
 
-        insertedChapters.captured.single().dateFetch shouldBe 1000L
-        updatedEntries.last().dateAdded shouldBe 1000L
+        insertedChapters.captured.single().dateFetch shouldBe 900L
+        updatedEntries.last().dateAdded shouldBe 900L
+        result.insertedChapters shouldBe emptyList()
+    }
+
+    @Test
+    fun `first listing of an entry holding chapters from another device reports only newer ones`() = runTest {
+        // Only the chapter read on another device is stored, as sync leaves an entry this device never listed
+        val stored =
+            chapter(id = 1L, url = "/2", name = "Chapter 2", chapterNumber = 2.0, sourceOrder = 0L, read = true)
+        val insertedChapters = slot<List<EntryChapter>>()
+        val chapterRepository = chapterRepository(listOf(stored), inserted = insertedChapters)
+        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
+            listOf(stored) + insertedChapters.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+        }
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
+
+        val result = sync(
+            source = TestSource(
+                chapters = listOf(
+                    sourceChapter(url = "/3", name = "Chapter 3", chapterNumber = 3.0),
+                    sourceChapter(url = "/2", name = "Chapter 2", chapterNumber = 2.0),
+                    sourceChapter(url = "/1", name = "Chapter 1", chapterNumber = 1.0),
+                ),
+            ),
+            repository = chapterRepository,
+            entryRepository = entryRepository,
+            now = { 1000L },
+        )(
+            entry().copy(favorite = true, dateAdded = 900L),
+            fetchDetails = false,
+        )
+
+        insertedChapters.captured.associate { it.url to it.dateFetch } shouldBe mapOf("/3" to 1000L, "/1" to 900L)
+        result.insertedChapters.map(EntryChapter::url) shouldBe listOf("/3")
+        updatedEntries.last().dateAdded shouldBe 900L
     }
 
     @Test
@@ -256,8 +292,8 @@ class SyncEntryWithSourceTest {
                 this as EntrySourceSyncRepository
                 coEvery { hasStoredChildren(1L) } returns true
                 coEvery { isListedBySourceMerge(1L, any()) } returns listedBySourceMerge
-                coEvery { updateFromSourceSync(any(), any(), any(), any()) } answers {
-                    if (arg(3)) storedTitle = firstArg<Entry>().title
+                coEvery { updateFromSourceSync(any(), any(), any()) } answers {
+                    if (arg(2)) storedTitle = firstArg<Entry>().title
                     firstArg<Entry>().copy(title = storedTitle)
                 }
             }

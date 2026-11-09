@@ -6,11 +6,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntSize
 
 /**
  * Gives [LocalWindowLayout] to [content] from its window: its size, and the fold the platform reports crossing it. It
  * also gives the window's last touch, for [rememberFoldHalf]. Nested calls reuse the outer layout, so a theme applied
- * inside another stays cheap.
+ * inside another stays cheap. [content] waits for the window to have a size: Compose on desktop composes a window's
+ * content as it attaches it, before it reads the window's size, and screens laid out for no size would open in the
+ * compact layout and change to the window's own on its first frames, its dock moving from the bottom to the side.
  */
 @Composable
 fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> Unit) {
@@ -20,6 +23,7 @@ fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> 
     }
     val density = LocalDensity.current
     val containerSize = LocalWindowInfo.current.containerSize
+    if (containerSize == IntSize.Zero) return
     val fold = rememberWindowFold()
     val inMultiWindow = rememberMultiWindowCheck()
     val layout = remember(containerSize, density, fold, wideLayoutsAllowed) {

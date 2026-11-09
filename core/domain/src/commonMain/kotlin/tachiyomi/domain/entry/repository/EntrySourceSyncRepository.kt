@@ -10,7 +10,6 @@ interface EntrySourceSyncRepository {
     suspend fun updateFromSourceSync(
         entry: Entry,
         profileId: Long,
-        updateDateAdded: Boolean,
         updateTitle: Boolean,
     ): Entry?
 

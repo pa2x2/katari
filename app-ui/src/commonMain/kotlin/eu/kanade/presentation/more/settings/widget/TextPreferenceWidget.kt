@@ -26,7 +26,7 @@ fun TextPreferenceWidget(
         icon = icon,
         iconAlert = iconAlert,
         trailing = widget,
-        titleSuffix = profileSpecificSuffix(isProfileSpecific),
+        titleSuffix = settingTitleSuffix(isProfileSpecific),
         subtitleMaxLines = SUBTITLE_MAX_LINES,
         subtitleTone = subtitleTone,
         enabled = enabled,

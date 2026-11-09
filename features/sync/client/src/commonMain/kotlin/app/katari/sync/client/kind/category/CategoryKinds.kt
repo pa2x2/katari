@@ -13,6 +13,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -30,6 +31,10 @@ object CategoryKind : SyncedKind<CategoryPayload>(
     CategoryPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.CATEGORIES
+
+    override fun profileOf(payload: CategoryPayload) = payload.profileUuid
+
     override val capture = listOf(
         CaptureTrigger("categories", Event.INSERT, listOf("NEW._id"), condition = "NEW._id != 0"),
         CaptureTrigger(
@@ -84,6 +89,8 @@ object CategoryMembershipKind : SyncedKind<CategoryMembershipPayload>(
     CategoryMembershipPayload.serializer(),
     Absence.REMOVED_FLAG,
 ) {
+    override val dataGroup = DataGroup.CATEGORIES
+
     override val capture = listOf(
         CaptureTrigger("entries_categories", Event.INSERT, listOf("NEW.entry_id", "NEW.category_id")),
         CaptureTrigger(
@@ -148,6 +155,10 @@ object CategoryUpdateRulesKind : SyncedKind<CategoryUpdateRulesPayload>(
     Absence.TOMBSTONE,
 ) {
     private val newRef = listOf("NEW.profile_id", "NEW.category_id")
+
+    override val dataGroup = DataGroup.CATEGORIES
+
+    override fun profileOf(payload: CategoryUpdateRulesPayload) = payload.profileUuid
 
     override val capture = listOf(
         CaptureTrigger("category_update_rules", Event.INSERT, newRef),

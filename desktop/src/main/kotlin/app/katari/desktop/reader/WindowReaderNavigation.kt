@@ -2,14 +2,17 @@ package app.katari.desktop.reader
 
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.reader.window.MangaReaderNavigation
+import app.katari.language.api.tag.LanguageTag
 import cafe.adriel.voyager.navigator.Navigator
+import eu.kanade.presentation.more.settings.screen.textrecognition.languages.TextRecognitionOverridePipelineScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 
 /**
- * Where [screen]'s reader leaves for: its settings and the web view open over it, as Android's open over the reader's
- * activity, and the entry takes its place, as Android's reader gives way to the main screen showing it.
+ * Where [screen]'s reader leaves for: its settings, the settings its text features need and the web view open over it,
+ * as Android's open over the reader's activity, and the entry takes its place, as Android's reader gives way to the
+ * main screen showing it.
  */
 internal class WindowReaderNavigation(
     private val navigator: Navigator,
@@ -30,6 +33,14 @@ internal class WindowReaderNavigation(
                 viewerSettingsHighlight = null,
             ),
         )
+    }
+
+    override fun openTextRecognitionPipelineChoice(language: LanguageTag) {
+        navigator.push(TextRecognitionOverridePipelineScreen(language.value, storeOnConfirm = true))
+    }
+
+    override fun openTranslationSettings() {
+        navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
     }
 
     override fun openEntry(entryId: Long) {

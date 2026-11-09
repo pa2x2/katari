@@ -79,6 +79,8 @@ internal class FileProfileStore(private val directory: File) : ProfileStore {
 
     override fun isProfilePreference(preference: Preference<*>): Boolean = throw UnsupportedOperationException()
 
+    override fun preferenceKey(preference: Preference<*>): String = throw UnsupportedOperationException()
+
     override fun watchPreferenceWrites(listener: (PreferenceWrite) -> Unit): AutoCloseable {
         listeners += listener
         return AutoCloseable { listeners -= listener }

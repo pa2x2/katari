@@ -36,7 +36,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * shows until it is answered, with the answers that settle it. Opened from the Sync rows and an entry's banner, it goes
  * back there once the last question is answered.
  */
-data object SyncQuestionsScreen : Screen() {
+class SyncQuestionsScreen : Screen() {
 
     @Composable
     override fun Content() {

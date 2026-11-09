@@ -1,0 +1,11 @@
+{
+  "uniqueId": "app.katari.onnxruntime:onnxruntime-android",
+  "artifactVersion": "1.31.0-2",
+  "name": "ONNX Runtime",
+  "description": "Runs the on-device text recognition models.",
+  "website": "https://onnxruntime.ai",
+  "licenses": [
+    "onnxruntime-mit",
+    "onnxruntime-third-party-notices"
+  ]
+}

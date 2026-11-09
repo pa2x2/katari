@@ -1,6 +1,10 @@
 package app.katari.presentation.kit.list
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
@@ -14,15 +18,19 @@ import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.control.Checkbox
 import app.katari.presentation.kit.control.RadioButton
 import app.katari.presentation.kit.control.Switch
+import app.katari.presentation.kit.surface.VerticalDivider
 import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * An on/off setting. The row's density picks the control: a trailing switch on screens, a leading checkbox in sheets.
- * The checkbox takes the place of [icon], so a compact row shows no icon. [onDisabledClick] runs when the row is tapped
- * while disabled, such as to explain or fix why.
+ * The checkbox takes the place of [icon], or of [leading], a picture such as a profile's avatar, so a compact row shows
+ * neither. [onDisabledClick] runs when the row is tapped
+ * while disabled, such as to explain or fix why. With [onOpen], the setting also has a page of its own, such as a sync
+ * area's list of settings: the row's text opens it, and only the switch, set apart by a line, turns it on and off.
  */
 @Composable
 fun ToggleRow(
@@ -32,11 +40,35 @@ fun ToggleRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    leading: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     titleSuffix: (@Composable () -> Unit)? = null,
     onDisabledClick: (() -> Unit)? = null,
+    onOpen: (() -> Unit)? = null,
 ) {
     val compact = LocalRowDensity.current == RowDensity.Compact
+    if (onOpen != null && !compact) {
+        SettingsRow(
+            title = title,
+            modifier = modifier,
+            subtitle = subtitle,
+            icon = icon,
+            leading = leading,
+            trailing = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    VerticalDivider(
+                        Modifier
+                            .padding(end = KatariTheme.spacing.l)
+                            .height(KatariTheme.sizes.icon + KatariTheme.spacing.s),
+                    )
+                    Switch(checked, onCheckedChange = onCheckedChange, enabled = enabled)
+                }
+            },
+            titleSuffix = titleSuffix,
+            onClick = onOpen,
+        )
+        return
+    }
     SettingsRow(
         title = title,
         modifier = modifier,
@@ -45,7 +77,7 @@ fun ToggleRow(
         leading = if (compact) {
             { Checkbox(checked, onCheckedChange = null, enabled = enabled) }
         } else {
-            null
+            leading
         },
         trailing = if (compact) {
             null

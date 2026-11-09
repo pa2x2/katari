@@ -49,7 +49,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-object SettingsAdvancedScreen : SearchableSettings {
+class SettingsAdvancedScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable

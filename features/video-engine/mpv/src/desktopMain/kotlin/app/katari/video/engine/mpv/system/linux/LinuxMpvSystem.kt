@@ -12,11 +12,6 @@ import com.sun.jna.Pointer
  * and with its software renderer where that can't start.
  */
 internal object LinuxMpvSystem : MpvSystem {
-    // The JVM formats its numbers itself, so nothing else in the process depends on the C library's locale
-    override fun prepareProcess() {
-        LinuxCLibrary.INSTANCE.setlocale(LinuxCLibrary.LC_NUMERIC, "C")
-    }
-
     override fun createFrames(mpv: LibMpv, handle: Pointer): MemoryFrames? =
         EglFrames.create(mpv, handle) ?: SoftwareFrames.create(mpv, handle)
 }

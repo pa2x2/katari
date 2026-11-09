@@ -1,9 +1,9 @@
 name: Showcase
 
-# Recaptures every showcase screenshot and clip from a published release, each group of scenes on devices of its own
-# (a freshly wiped emulator, the desktop app on a private display, a browser), the groups side by side, and proposes
-# the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against the
-# `assets` branch, which the website is built from.
+# Recaptures every showcase screenshot and clip from a published release of either app, each group of scenes on devices
+# of its own (a freshly wiped emulator, the desktop app on a private display, a browser), the groups side by side, and
+# proposes the ones that visibly changed, and the removal of any no scene captures any more, as a pull request against
+# the `assets` branch, which the website is built from.
 # It runs apart from the release workflow and never holds a release up.
 on:
   release:
@@ -32,8 +32,11 @@ jobs:
   # the run found.
   content:
     name: Content
-    # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
-    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    # Only app releases, tagged v<version> or desktop-v<version>: the sync server and SDK releases change nothing the
+    # scenes capture, and the onnxruntime, libarchive and libmpv-desktop releases hold build dependencies.
+    if: >-
+      github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v') ||
+      startsWith(github.event.release.tag_name, 'desktop-v')
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
@@ -134,7 +137,9 @@ jobs:
   # The Android app and the scenes that drive it, for the groups with phone scenes, beside the content and the desktop.
   build-android:
     name: Build (Android)
-    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    if: >-
+      github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v') ||
+      startsWith(github.event.release.tag_name, 'desktop-v')
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
@@ -185,7 +190,9 @@ jobs:
   # that sync.
   build-desktop:
     name: Build (desktop)
-    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    if: >-
+      github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v') ||
+      startsWith(github.event.release.tag_name, 'desktop-v')
     runs-on: ubuntu-26.04
     timeout-minutes: 60
     permissions:
