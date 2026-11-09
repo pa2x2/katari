@@ -984,7 +984,7 @@
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
-    <string name="pref_library_summary_unified">Categories, display, and behavior</string>
+    <string name="pref_library_summary_unified">Categories, display, cover badges, chapters</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_player_summary">Picture-in-Picture, seek preview</string>
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
