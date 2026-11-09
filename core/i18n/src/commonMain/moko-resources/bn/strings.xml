@@ -571,8 +571,8 @@
     <string name="onboarding_storage_folder_info">একটি ফোল্ডার নির্বাচন করুন যেখানে %1$s অধ্যায় ডাউনলোড, ব্যাকআপ এবং আরও কিছু সংরক্ষণ করবে।\n\nএকটি নির্দিষ্ট ফোল্ডার ব্যবহার করার পরামর্শ দেওয়া হচ্ছে।</string>
     <string name="onboarding_storage_selected_folder">নির্বাচিত ফোল্ডার: %s</string>
     <string name="onboarding_permission_ignore_battery_opts_description">দীর্ঘস্থায়ী লাইব্রেরি আপডেট, ডাউনলোড এবং ব্যাকআপ পুনরুদ্ধারে বিঘ্ন এড়িয়ে চলুন।</string>
-    <string name="onboarding_permission_crashlytics">ক্র্যাশ লগ পাঠান</string>
-    <string name="onboarding_permission_crashlytics_description">ডেভেলপারদের কাছে অজ্ঞাতনামা ক্র্যাশ লগ পাঠান।</string>
+    <string name="onboarding_permission_crash_reports">ক্র্যাশ লগ পাঠান</string>
+    <string name="onboarding_permission_crash_reports_description">ডেভেলপারদের কাছে অজ্ঞাতনামা ক্র্যাশ লগ পাঠান।</string>
     <string name="onboarding_permission_analytics">অ্যানালিটিক্স অনুমতি দিন</string>
     <string name="onboarding_permission_analytics_description">অ্যাপের ফিচার উন্নত করতে অজ্ঞাতনামা ব্যবহার ডেটা পাঠান।</string>
     <string name="onboarding_permission_action_grant">অনুমতি দিন</string>
@@ -581,8 +581,8 @@
     <string name="pref_relative_format_summary">\"%1$s\" এর পরিবর্তে \"%2$s\"</string>
     <string name="pref_display_images_description">মাঙ্গা বিবরণে ছবি প্রদর্শন</string>
     <string name="pref_security">নিরাপত্তা</string>
-    <string name="pref_firebase">অ্যানালিটিক্স ও ক্র্যাশ লগস</string>
-    <string name="firebase_summary">ক্র্যাশ লগ ও অ্যানালিটিক্স পাঠালে আমরা সমস্যা খুঁজে বের করে ঠিক করতে পারব, কর্মক্ষমতা ভালো হবে, এবং ভবিষ্যৎ আপডেটগুলো আপনার কাজে লাগবে</string>
+    <string name="pref_telemetry">অ্যানালিটিক্স ও ক্র্যাশ লগস</string>
+    <string name="telemetry_summary">ক্র্যাশ লগ ও অ্যানালিটিক্স পাঠালে আমরা সমস্যা খুঁজে বের করে ঠিক করতে পারব, কর্মক্ষমতা ভালো হবে, এবং ভবিষ্যৎ আপডেটগুলো আপনার কাজে লাগবে</string>
     <string name="network_not_metered">শুধু আনলিমিটেড নেটওয়ার্কে</string>
     <string name="pref_library_update_show_tab_badge">আপডেট আইকনে অপঠিত সংখ্যা দেখান</string>
     <string name="pref_behavior">ব্যবহার</string>

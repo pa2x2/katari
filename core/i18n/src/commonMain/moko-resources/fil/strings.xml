@@ -710,12 +710,12 @@
     <string name="invalid_backup_file_unknown">Na-corrupt ang backup file</string>
     <string name="action_copy_link">Kopyahin ang link</string>
     <string name="pref_download_new_unread_chapters_only">Laktawan ang pag-download ng mga duplikadong mga nabasang kabanata</string>
-    <string name="onboarding_permission_crashlytics">Magpadala ang mga crash log</string>
-    <string name="onboarding_permission_crashlytics_description">Magpadala ng hindi nagpapakilalang mga crash log sa mga developer.</string>
+    <string name="onboarding_permission_crash_reports">Magpadala ang mga crash log</string>
+    <string name="onboarding_permission_crash_reports_description">Magpadala ng hindi nagpapakilalang mga crash log sa mga developer.</string>
     <string name="onboarding_permission_analytics">Payagan ang analitiko</string>
     <string name="pref_security">Seguridad</string>
-    <string name="pref_firebase">Mga Analitiko at Mga Crash log</string>
-    <string name="firebase_summary">Ang pagpapadala ng mga crash log at analitiko ay magbibigay-daan sa amin na tukuyin at ayusin ang mga isyu, pahusayin ang performance, at gawing mas nauugnay ang mga update sa hinaharap sa iyong mga pangangailangan</string>
+    <string name="pref_telemetry">Mga Analitiko at Mga Crash log</string>
+    <string name="telemetry_summary">Ang pagpapadala ng mga crash log at analitiko ay magbibigay-daan sa amin na tukuyin at ayusin ang mga isyu, pahusayin ang performance, at gawing mas nauugnay ang mga update sa hinaharap sa iyong mga pangangailangan</string>
     <string name="pref_category_extensions">Mga extension</string>
     <string name="pref_allowed_content_warnings">Pinayagan ang mga babala sa nilalaman</string>
     <string name="pref_apply_content_warnings_to_installed">Ilapat rin ito sa mga na-install na extension</string>

@@ -11,6 +11,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
+import com.posthog.android.PostHogGenerateMapIdTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
 import java.util.Properties
@@ -27,9 +28,23 @@ plugins {
     alias(libs.plugins.metro)
 }
 
+// Uploads the R8 mapping of every minified variant it assembles, which PostHog needs to deobfuscate the crash reports
 if (Config.includeTelemetry) {
-    apply(plugin = libs.plugins.google.services.get().pluginId)
-    apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+    apply(plugin = libs.plugins.posthog.android.get().pluginId)
+
+    // The plugin looks for the mapping among R8's outputs by the name mapping.txt, which R8 no longer writes since AGP 9:
+    // a later task does. The map id it derives, which ties a crash report to its mapping, would hash nothing and be
+    // the same for every release. It is derived from the mapping the variant publishes instead, set as the task starts
+    // because the plugin sets its own source after the project is evaluated.
+    androidComponents.onVariants { variant ->
+        if (!variant.isMinifyEnabled) return@onVariants
+        val mapping = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
+        val taskName = "postHogGenerateMapIdTask${variant.name.replaceFirstChar { it.uppercase() }}"
+        tasks.withType<PostHogGenerateMapIdTask>().matching { it.name == taskName }.configureEach {
+            dependsOn(mapping)
+            doFirst { proguardMappingFiles.setFrom(mapping) }
+        }
+    }
 }
 
 val keystorePropertiesFile = layout.settingsDirectory.file("keystore.properties").asFile
@@ -52,7 +67,6 @@ android {
         versionCode = 94
         versionName = "3.1.2"
 
-        buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
     }
 
@@ -280,7 +294,6 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.features.entryViewerSettingsUi.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.presentationWidget.path)))
-    implementation(dependencies.project(mapOf("path" to projects.core.telemetry.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.language.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.modelArtifacts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.modelArtifacts.ui.path)))
@@ -451,12 +464,6 @@ androidComponents {
                 val versionName = output.versionName.get()
                 output.versionName.set(latestCommitCount.map { "$versionName-$it" })
             }
-        }
-
-        if (Config.includeTelemetry) {
-            variant.sources.manifests.addStaticManifestFile(
-                projectDir.resolve("src/telemetry/AndroidManifest.xml").absolutePath,
-            )
         }
 
         val variantName = variant.name.replaceFirstChar { it.uppercase() }

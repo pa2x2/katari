@@ -5,6 +5,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import app.katari.core.platform.currentPlatformContext
+import app.katari.telemetry.Telemetry
 import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
@@ -29,8 +30,8 @@ class SettingsSecurityScreen : SearchableSettings() {
         val privacyPreferences = graph.privacyPreferences
         return buildList(2) {
             add(getSecurityGroup(securityPreferences))
-            if (!graph.appBuild.telemetryIncluded) return@buildList
-            add(getFirebaseGroup(privacyPreferences))
+            if (!Telemetry.isIncluded) return@buildList
+            add(getTelemetryGroup(privacyPreferences))
         }
     }
 
@@ -113,23 +114,23 @@ class SettingsSecurityScreen : SearchableSettings() {
     }
 
     @Composable
-    private fun getFirebaseGroup(
+    private fun getTelemetryGroup(
         privacyPreferences: PrivacyPreferences,
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_firebase),
+            title = stringResource(MR.strings.pref_telemetry),
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
-                    preference = privacyPreferences.crashlytics,
-                    title = stringResource(MR.strings.onboarding_permission_crashlytics),
-                    subtitle = stringResource(MR.strings.onboarding_permission_crashlytics_description),
+                    preference = privacyPreferences.crashReports,
+                    title = stringResource(MR.strings.onboarding_permission_crash_reports),
+                    subtitle = stringResource(MR.strings.onboarding_permission_crash_reports_description),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = privacyPreferences.analytics,
                     title = stringResource(MR.strings.onboarding_permission_analytics),
                     subtitle = stringResource(MR.strings.onboarding_permission_analytics_description),
                 ),
-                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.firebase_summary)),
+                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.telemetry_summary)),
             ),
         )
     }

@@ -13,7 +13,6 @@ import eu.kanade.presentation.more.settings.screen.about.OpenSourceLibraryDefini
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
-import eu.kanade.tachiyomi.util.system.telemetryIncluded
 
 @BindingContainer
 interface AboutBindings {
@@ -36,7 +35,6 @@ interface AboutBindings {
             commitSha = BuildConfig.COMMIT_SHA,
             commitCount = BuildConfig.COMMIT_COUNT,
             buildTime = BuildConfig.BUILD_TIME,
-            telemetryIncluded = telemetryIncluded,
             releaseNotesUrl = if (BuildConfig.DEBUG) null else AppUpdateBuild.releasePageUrl,
             hidesUnfinishedFeatures = isReleaseBuildType,
         )

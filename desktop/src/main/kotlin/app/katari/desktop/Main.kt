@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.window.application
 import app.katari.core.common.platform.DesktopOperatingSystem
 import app.katari.desktop.application.AppRelaunch
+import app.katari.desktop.application.DesktopBuildInfo
 import app.katari.desktop.application.installation.systemAppInstallation
 import app.katari.desktop.application.instance.InstanceClaim
 import app.katari.desktop.application.instance.InstanceRequest
@@ -30,6 +31,7 @@ import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.storage.systemDesktopDirectories
 import app.katari.desktop.update.DesktopAppUpdatePrompt
 import app.katari.desktop.window.KatariWindow
+import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
 import coil3.SingletonImageLoader
 import kotlinx.coroutines.flow.Flow
@@ -93,6 +95,7 @@ private fun createGraph(directories: DesktopDirectories): DesktopGraph {
 
 private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launch: LaunchArguments) {
     AppProcessStart.installLogging(graph)
+    AppProcessStart.startTelemetry(graph, TelemetryHost(DesktopBuildInfo.VERSION_NAME))
     launch.logIgnored()
     AppProcessStart.runAppUpgradeMigrations(graph)
     AppProcessStart.startSync(graph)

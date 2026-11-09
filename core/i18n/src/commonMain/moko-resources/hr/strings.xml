@@ -692,12 +692,12 @@
     <string name="invalid_backup_file_unknown">Sigurnosna kopija je pokvarena</string>
     <string name="non_library_settings">Svi pročitani unosi</string>
     <string name="action_sort_random">Nasumce</string>
-    <string name="onboarding_permission_crashlytics">Pošalji zapis o prekidu aplikacije</string>
-    <string name="onboarding_permission_crashlytics_description">Šalji anonimne zapise o prekidu aplikacije programerima.</string>
+    <string name="onboarding_permission_crash_reports">Pošalji zapis o prekidu aplikacije</string>
+    <string name="onboarding_permission_crash_reports_description">Šalji anonimne zapise o prekidu aplikacije programerima.</string>
     <string name="onboarding_permission_analytics">Dozvoli analizu</string>
     <string name="onboarding_permission_analytics_description">Šalji anonimne podatke o korištenju aplikacije u svrhu poboljšanja njenih funkcija.</string>
-    <string name="pref_firebase">Analiza i zapisi o prekidima aplikacije</string>
-    <string name="firebase_summary">Slanje zapisa o prekidima rada aplikacije i analitike omogućit će nam identificirati i riješiti probleme, poboljšati performancu i prilagoditi buduća aktualiziranja kako bi što bolje odgovarala tvojim potrebama</string>
+    <string name="pref_telemetry">Analiza i zapisi o prekidima aplikacije</string>
+    <string name="telemetry_summary">Slanje zapisa o prekidima rada aplikacije i analitike omogućit će nam identificirati i riješiti probleme, poboljšati performancu i prilagoditi buduća aktualiziranja kako bi što bolje odgovarala tvojim potrebama</string>
     <string name="pref_security">Sigurnost</string>
     <string name="ext_remove">Ukloni</string>
     <string name="ext_confirm_remove">Ukloniti proširenje?</string>

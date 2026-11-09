@@ -705,10 +705,10 @@
     <string name="action_copy_link">Копировать ссылку</string>
     <string name="pref_download_new_unread_chapters_only">Пропустить скачивание повторяющихся прочитанных глав</string>
     <string name="onboarding_permission_analytics">Разрешить аналитику</string>
-    <string name="pref_firebase">Аналитика и Журнал сбоев</string>
-    <string name="onboarding_permission_crashlytics">Отправить журнал сбоев</string>
-    <string name="onboarding_permission_crashlytics_description">Отправить анонимно журнал сбоев разработчикам.</string>
-    <string name="firebase_summary">Отправляя журнал сбоев и аналитику, вы позволите нам обнаружить и исправить ошибки, улучшить производительность и сделать будущие обновления более актуальными для ваших потребностей</string>
+    <string name="pref_telemetry">Аналитика и Журнал сбоев</string>
+    <string name="onboarding_permission_crash_reports">Отправить журнал сбоев</string>
+    <string name="onboarding_permission_crash_reports_description">Отправить анонимно журнал сбоев разработчикам.</string>
+    <string name="telemetry_summary">Отправляя журнал сбоев и аналитику, вы позволите нам обнаружить и исправить ошибки, улучшить производительность и сделать будущие обновления более актуальными для ваших потребностей</string>
     <string name="pref_category_extensions">Расширения</string>
     <string name="pref_allowed_content_warnings">Разрешенное предупреждение об контенте</string>
     <string name="app_migrating_summary">Подготовка после обновления. Это может занять несколько минут, поэтому не закрывайте приложение.</string>

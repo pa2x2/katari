@@ -40,8 +40,6 @@ import app.katari.sourcemigration.work.AndroidSourceMigrationReviewVisibility
 import app.katari.sourcemigration.work.AndroidSourceMigrationWork
 import app.katari.sourcemigration.work.SourceMigrationReviewVisibility
 import app.katari.sourcemigration.work.SourceMigrationWork
-import app.katari.telemetry.TelemetryConfig
-import app.katari.ui.di.UncaughtErrorReporter
 import app.katari.ui.host.LogDestinations
 import app.katari.video.engine.mpv.addon.MpvAddon
 import app.katari.video.engine.mpv.addon.MpvAddonPackage
@@ -115,10 +113,6 @@ interface AppBindings {
             databaseRepository: DatabaseRepositoryImpl,
             temporarySchema: TemporarySchema,
         ): SqlDriver = createSqlDriver(context, databaseRepository, temporarySchema)
-
-        @Provides
-        @IntoSet
-        fun telemetryErrorReporter(): UncaughtErrorReporter = UncaughtErrorReporter(TelemetryConfig::recordException)
 
         @Provides
         fun appIdentity(): AppIdentity = AppIdentity(

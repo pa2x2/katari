@@ -4,9 +4,6 @@ package eu.kanade.tachiyomi.util.system
 
 import eu.kanade.tachiyomi.BuildConfig
 
-val telemetryIncluded: Boolean
-    inline get() = BuildConfig.TELEMETRY_INCLUDED
-
 val isDebugBuildType: Boolean
     inline get() = BuildConfig.BUILD_TYPE == "debug"
 
