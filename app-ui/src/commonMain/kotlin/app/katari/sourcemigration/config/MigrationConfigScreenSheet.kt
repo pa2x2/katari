@@ -59,7 +59,7 @@ fun MigrationConfigScreenSheet(
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     var carriedOptions by rememberSaveable(stateSaver = CarriedOptionsSaver) { mutableStateOf(CARRIED_OPTIONS) }
-    Sheet(onDismissRequest = onDismissRequest) {
+    Sheet(short = true, onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier

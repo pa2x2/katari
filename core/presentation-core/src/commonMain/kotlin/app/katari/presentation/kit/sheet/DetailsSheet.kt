@@ -45,7 +45,7 @@ fun DetailsSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val spacing = KatariTheme.spacing
-    Sheet(onDismissRequest = onDismissRequest, modifier = modifier) {
+    Sheet(onDismissRequest = onDismissRequest, modifier = modifier, short = true) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

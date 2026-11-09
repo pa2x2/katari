@@ -6,11 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.control.Checkbox
-import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.ToggleRow
+import app.katari.presentation.kit.sheet.SheetSplitList
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
@@ -35,57 +35,63 @@ fun SourcesFilterSheet(
         title = stringResource(MR.strings.source_filter_title),
         onDismissRequest = onDismissRequest,
     ) { contentModifier ->
-        RowList(fastScroll = true, modifier = contentModifier) {
-            item(key = "content-types") {
-                ContentTypeFilterSection(
-                    filter = state.contentTypeFilter,
-                    onShowAll = onShowAllContentTypes,
-                    onToggleContentType = onToggleContentType,
-                    onToggleUnspecified = onToggleUnspecifiedContentType,
-                )
-            }
-            // Each language is a card: its toggle first, then its sources while it is on.
-            state.items.forEach { (language, sources) ->
-                val enabled = language in state.enabledLanguages
-                val rowCount = if (enabled) sources.size + 1 else 1
-                item(key = "source-filter-gap-$language") {
-                    RowGroupGap()
+        SheetSplitList(
+            modifier = contentModifier,
+            fastScroll = true,
+            start = {
+                item(key = "content-types") {
+                    ContentTypeFilterSection(
+                        filter = state.contentTypeFilter,
+                        onShowAll = onShowAllContentTypes,
+                        onToggleContentType = onToggleContentType,
+                        onToggleUnspecified = onToggleUnspecifiedContentType,
+                    )
                 }
-                item(
-                    key = language,
-                    contentType = "source-filter-header",
-                ) {
-                    RowGroupItem(
-                        position = RowGroupPosition.of(0, rowCount),
-                        modifier = Modifier.animateItem(),
-                    ) {
-                        SourcesFilterHeader(
-                            language = language,
-                            enabled = enabled,
-                            onClickItem = onClickLanguage,
-                        )
+            },
+            end = {
+                // Each language is a card: its toggle first, then its sources while it is on.
+                state.items.forEach { (language, sources) ->
+                    val enabled = language in state.enabledLanguages
+                    val rowCount = if (enabled) sources.size + 1 else 1
+                    item(key = "source-filter-gap-$language") {
+                        RowGroupGap()
                     }
-                }
-                if (enabled) {
-                    itemsIndexed(
-                        items = sources,
-                        key = { _, source -> "source-filter-${source.key()}" },
-                        contentType = { _, _ -> "source-filter-item" },
-                    ) { index, source ->
+                    item(
+                        key = language,
+                        contentType = "source-filter-header",
+                    ) {
                         RowGroupItem(
-                            position = RowGroupPosition.of(index + 1, rowCount),
+                            position = RowGroupPosition.of(0, rowCount),
                             modifier = Modifier.animateItem(),
                         ) {
-                            SourcesFilterItem(
-                                source = source,
-                                enabled = "${source.id}" !in state.disabledSources,
-                                onClickItem = onClickSource,
+                            SourcesFilterHeader(
+                                language = language,
+                                enabled = enabled,
+                                onClickItem = onClickLanguage,
                             )
                         }
                     }
+                    if (enabled) {
+                        itemsIndexed(
+                            items = sources,
+                            key = { _, source -> "source-filter-${source.key()}" },
+                            contentType = { _, _ -> "source-filter-item" },
+                        ) { index, source ->
+                            RowGroupItem(
+                                position = RowGroupPosition.of(index + 1, rowCount),
+                                modifier = Modifier.animateItem(),
+                            ) {
+                                SourcesFilterItem(
+                                    source = source,
+                                    enabled = "${source.id}" !in state.disabledSources,
+                                    onClickItem = onClickSource,
+                                )
+                            }
+                        }
+                    }
                 }
-            }
-        }
+            },
+        )
     }
 }
 

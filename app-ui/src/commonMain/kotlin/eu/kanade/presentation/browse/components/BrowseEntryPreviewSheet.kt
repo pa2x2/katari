@@ -98,6 +98,7 @@ fun BrowseEntryPreviewSheet(
     }
 
     Sheet(
+        short = true,
         onDismissRequest = onDismissRequest,
         modifier = Modifier.fillMaxSize(),
     ) {

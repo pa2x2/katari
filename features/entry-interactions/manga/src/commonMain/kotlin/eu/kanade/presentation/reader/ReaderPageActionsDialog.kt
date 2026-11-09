@@ -32,7 +32,7 @@ fun ReaderPageActionsDialog(
 ) {
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
-    Sheet(onDismissRequest = onDismissRequest) {
+    Sheet(short = true, onDismissRequest = onDismissRequest) {
         Row(
             // Inset like the cards of other sheets.
             modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.l),

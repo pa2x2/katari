@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
@@ -69,6 +70,7 @@ import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.window.FoldHalf
 import app.katari.presentation.kit.window.LocalLastPress
+import app.katari.presentation.kit.window.WindowWidth
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.presentation.kit.window.rememberFoldHalf
 import kotlinx.coroutines.flow.collectLatest
@@ -81,7 +83,9 @@ import kotlin.math.roundToInt
  * The app's sheet. In a compact window it slides up from the bottom and is dismissed by dragging it down, its content
  * capped at [SheetMaxWidth]; from a medium window on it is a full-height panel at the side of the window it was opened
  * from (see [sheetEdge]), beside the dock on the dock's side, dismissed by dragging it back. While a vertical fold is
- * half-open it stays within one half (see [rememberFoldHalf]).
+ * half-open it stays within one half (see [rememberFoldHalf]). In a large window the side sheet is wide enough for two
+ * columns of rows: row groups and the lists of [RowList] wrap their rows into both, and a [SheetSplitList] sets its two
+ * parts side by side; [short] content, such as a few choices or a paragraph, stays one column wide, centred.
  * Its content is laid out at compact row density.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
@@ -95,6 +99,7 @@ fun Sheet(
     modifier: Modifier = Modifier,
     enableImplicitDismiss: Boolean = true,
     capHeight: Boolean = false,
+    short: Boolean = false,
     backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
@@ -112,6 +117,7 @@ fun Sheet(
         )
     }
     val dockRoom = dockRoomBeside(edge)
+    val twoColumns = edge != SheetEdge.Bottom && half == null && window.width >= WindowWidth.Large
     val messages = rememberScreenMessagesFor(remember { SnackbarHostState() })
     val messagesHost = claimScreenMessages(messages)
     val dimsBehind = backdrop != SheetBackdrop.Clear
@@ -128,6 +134,7 @@ fun Sheet(
                 edge = edge,
                 half = half,
                 dockRoom = dockRoom,
+                sideWidth = if (twoColumns) TwoColumnSheetWidth else SideSheetWidth,
                 snackbarHostState = snackbarHostState,
                 messagesHost = messagesHost,
                 enableImplicitDismiss = enableImplicitDismiss,
@@ -146,8 +153,13 @@ fun Sheet(
                     LocalScreenMessages provides messages,
                     LocalDockClearance provides DockClearance.None,
                     LocalSheetForm provides if (edge == SheetEdge.Bottom) SheetForm.Bottom else SheetForm.Side,
+                    LocalSheetColumns provides if (twoColumns && !short) 2 else 1,
                 ) {
-                    KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                    KeyboardShortcutLayer {
+                        ProvideRowDensity(RowDensity.Compact) {
+                            if (twoColumns && short) OneColumnCentred(content) else content()
+                        }
+                    }
                 }
             }
         }
@@ -162,6 +174,21 @@ enum class SheetBackdrop {
     /** Left as it is, for a sheet whose changes show behind it as they are made, such as a reader's appearance. */
     Clear,
 }
+
+/** [content] kept to a one-column sheet's width, centred in a sheet wide enough for two. */
+@Composable
+private fun OneColumnCentred(content: @Composable () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        Box(modifier = Modifier.widthIn(max = SideSheetWidth - KatariTheme.spacing.m * 2)) { content() }
+    }
+}
+
+/**
+ * How many columns of rows the sheet around the content holds: 2 in a large window's side sheet, where row groups wrap
+ * their rows into both; 1 elsewhere, and inside anything that keeps its rows to one column, such as a part of a
+ * [SheetSplitList] or a dialog opened from the sheet.
+ */
+internal val LocalSheetColumns = staticCompositionLocalOf { 1 }
 
 /** The form an open sheet's content is shown in, for the parts that differ, such as a side sheet's close button. */
 internal enum class SheetForm { Bottom, Side, Popover }
@@ -202,6 +229,7 @@ private fun SheetLayout(
     edge: SheetEdge,
     half: FoldHalf?,
     dockRoom: Dp,
+    sideWidth: Dp,
     snackbarHostState: SnackbarHostState?,
     messagesHost: SnackbarHostState?,
     enableImplicitDismiss: Boolean,
@@ -252,7 +280,7 @@ private fun SheetLayout(
                             left = if (edge == SheetEdge.Left) dockRoom else 0.dp,
                             right = if (edge == SheetEdge.Right) dockRoom else 0.dp,
                         )
-                        .width(minOf(SideSheetWidth, half?.width ?: SideSheetWidth))
+                        .width(minOf(sideWidth, half?.width ?: sideWidth))
                         .windowInsetsPadding(insets.union(WindowInsets.displayCutout))
                         .padding(KatariTheme.spacing.m)
             }
@@ -386,6 +414,9 @@ private val sheetAnimationSpec = tween<Float>(durationMillis = 350)
 val SheetMaxWidth = 460.dp
 
 private val SideSheetWidth = 400.dp
+
+// Two columns of rows, each nearly as wide as a one-column sheet's
+private val TwoColumnSheetWidth = 760.dp
 
 /** How far a sheet must be dragged down before letting go dismisses it. */
 private val SheetDismissThreshold = 56.dp

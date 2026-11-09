@@ -101,6 +101,7 @@ fun Popover(
                 LocalRowGroupContainer provides SurfaceContainer.Highest,
                 LocalDockClearance provides DockClearance.None,
                 LocalSheetForm provides SheetForm.Popover,
+                LocalSheetColumns provides 1,
             ) {
                 KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
             }

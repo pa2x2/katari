@@ -23,7 +23,7 @@ internal fun BookDocumentReferenceSheet(
     onLink: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLink: (String) -> Unit,
 ) {
-    Sheet(onDismissRequest = onDismiss, capHeight = true) {
+    Sheet(short = true, onDismissRequest = onDismiss, capHeight = true) {
         key(section.key) {
             val listState = rememberLazyListState()
             LaunchedEffect(section.initialPosition, LocalBookDocumentTypography.current) {
