@@ -200,7 +200,7 @@ private fun progressText(
     MangaReaderTextProgress.Recognizing -> stringResource(MR.strings.reader_text_recognizing)
     MangaReaderTextProgress.Translating -> stringResource(MR.strings.reader_text_translating)
     is MangaReaderTextProgress.TranslationUnavailable -> mangaPageTranslationIssueMessage(progress.issue)
-    MangaReaderTextProgress.Ready -> stringResource(readyHint)
+    MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {

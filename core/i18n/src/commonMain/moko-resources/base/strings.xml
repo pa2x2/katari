@@ -608,7 +608,6 @@
     <string name="reader_text_translate">Translate text</string>
     <string name="reader_text_recognizing">Recognizing text…</string>
     <string name="reader_text_ready">Tap a speech bubble to translate it</string>
-    <string name="reader_text_ready_click">Click a speech bubble to translate it</string>
     <string name="reader_text_no_text">No text found on this page</string>
     <string name="reader_text_saved_languages">Saved · %1$s</string>
     <string name="action_delete_translation">Delete translation</string>
