@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.settings.widget
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.presentation.kit.content.TonedSpan
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.theme.ContentTone
 
@@ -12,6 +13,7 @@ fun TextPreferenceWidget(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     subtitleTone: ContentTone = ContentTone.Inherit,
+    subtitleState: TonedSpan? = null,
     icon: ImageVector? = null,
     iconAlert: Boolean = false,
     isProfileSpecific: Boolean = false,
@@ -29,6 +31,7 @@ fun TextPreferenceWidget(
         titleSuffix = settingTitleSuffix(isProfileSpecific),
         subtitleMaxLines = SUBTITLE_MAX_LINES,
         subtitleTone = subtitleTone,
+        subtitleState = subtitleState,
         enabled = enabled,
         onClick = onPreferenceClick,
     )

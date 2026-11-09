@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.offset
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.LogoSize
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.content.TonedSpan
+import app.katari.presentation.kit.content.TonedText
 import app.katari.presentation.kit.pointer.clickCursor
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
@@ -39,7 +41,8 @@ import kotlin.math.roundToInt
  * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
  *
  * [subtitleTone] marks a subtitle that reports a state by its colour role, such as a warning. [iconAlert] marks the
- * icon instead, for a row that tells of a problem while its subtitle explains it calmly.
+ * icon instead, for a row that tells of a problem while its subtitle explains it calmly. [subtitleState] follows the
+ * subtitle with a short state in its own tone, marked by a dot, such as Live after the account on Sync's status.
  *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
@@ -56,6 +59,7 @@ fun SettingsRow(
     titleSuffix: (@Composable () -> Unit)? = null,
     subtitleMaxLines: Int = Int.MAX_VALUE,
     subtitleTone: ContentTone = ContentTone.Inherit,
+    subtitleState: TonedSpan? = null,
     enabled: Boolean = true,
     role: Role? = null,
     onClick: (() -> Unit)? = null,
@@ -85,7 +89,18 @@ fun SettingsRow(
             },
             words = {
                 RowTitle(title, titleSuffix)
-                if (!subtitle.isNullOrBlank()) {
+                if (subtitleState != null) {
+                    TonedText(
+                        spans = listOfNotNull(
+                            subtitle?.takeIf { it.isNotBlank() }?.let { TonedSpan(it, subtitleTone) },
+                            subtitleState.copy(text = "\u25CF\u00A0${subtitleState.text}", keepWhole = true),
+                        ),
+                        role = TextRole.Supporting,
+                        separator = " · ",
+                        maxLines = subtitleMaxLines,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else if (!subtitle.isNullOrBlank()) {
                     Text(
                         subtitle,
                         role = TextRole.Supporting,

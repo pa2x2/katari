@@ -122,9 +122,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         clients, connection, tokens, naming, capture, runs, resync, firstSync, directory, disconnection,
         deviceChanges,
     )
+    private val live = LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences)
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences),
+        live,
         LocalChanges(local.driver),
         work,
         connection,
@@ -145,6 +146,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         fileRule,
         steps,
         preferences,
+        live,
     )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */

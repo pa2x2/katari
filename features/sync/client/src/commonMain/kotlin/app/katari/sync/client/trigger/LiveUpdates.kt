@@ -13,11 +13,16 @@ import app.katari.sync.client.server.LiveChannel
 import app.katari.sync.client.server.SyncServerClients
 import app.katari.sync.protocol.live.ChangesAvailable
 import app.katari.sync.protocol.server.ServerIdentity
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -40,6 +45,7 @@ import kotlin.time.Duration.Companion.seconds
  * again after the app was closed catches up on what came meanwhile without a run of its own.
  */
 @Inject
+@SingleIn(AppScope::class)
 class LiveUpdates(
     private val connection: SyncConnection,
     private val clients: SyncServerClients,
@@ -49,6 +55,11 @@ class LiveUpdates(
     private val handOff: EntryHandOff,
     private val preferences: SyncPreferences,
 ) {
+    private val state = MutableStateFlow(LiveUpdatesState.CLOSED)
+
+    /** How the channel stands now, which the status shows. */
+    val states: StateFlow<LiveUpdatesState> = state.asStateFlow()
+
     /**
      * Whether the channel should be open: the app is open ([appOpen]), the device syncs and isn't paused, and there is a
      * network that changes may use.
@@ -84,6 +95,7 @@ class LiveUpdates(
         } finally {
             following.cancel()
             pulling.cancel()
+            state.value = LiveUpdatesState.CLOSED
         }
     }
 
@@ -93,6 +105,7 @@ class LiveUpdates(
         announced: AtomicReference<ServerIdentity?>,
     ) {
         var backoff = FIRST_BACKOFF
+        var unheard = 0
         while (true) {
             val server = latest.get().server
             val token = connection.token()
@@ -103,6 +116,7 @@ class LiveUpdates(
                 object : LiveChannel.Listener {
                     override fun onAnnouncement(changes: ChangesAvailable) {
                         heard.set(true)
+                        state.value = LiveUpdatesState.OPEN
                         deviceChanges.hear(changes.devices)
                         val state = latest.get()
                         if (state.isBehind(changes.server)) {
@@ -124,7 +138,13 @@ class LiveUpdates(
                 channel.close()
             }
             runs.request(SyncRequest())
-            if (heard.get()) backoff = FIRST_BACKOFF
+            if (heard.get()) {
+                backoff = FIRST_BACKOFF
+                unheard = 0
+                state.value = LiveUpdatesState.CLOSED
+            } else if (++unheard >= UNHEARD_TO_FAIL) {
+                state.value = LiveUpdatesState.NOT_WORKING
+            }
             delay(backoff)
             backoff = (backoff * 2).coerceAtMost(MAX_BACKOFF)
         }
@@ -138,5 +158,22 @@ class LiveUpdates(
     private companion object {
         val FIRST_BACKOFF: Duration = 2.seconds
         val MAX_BACKOFF: Duration = 5.minutes
+
+        // One channel that ends before the server says anything can be a restart; a second in a row is a pattern
+        const val UNHEARD_TO_FAIL = 2
     }
+}
+
+enum class LiveUpdatesState {
+    /** Not open, or opening: the app is closed, the device doesn't sync now, or the channel is being opened again. */
+    CLOSED,
+
+    /** Open, and the server has announced its position on it. */
+    OPEN,
+
+    /**
+     * Each of the last channels ended before the server announced anything, as when a proxy in front of the server
+     * doesn't pass WebSockets on, so changes from other devices come only with runs. Kept until a channel works.
+     */
+    NOT_WORKING,
 }
