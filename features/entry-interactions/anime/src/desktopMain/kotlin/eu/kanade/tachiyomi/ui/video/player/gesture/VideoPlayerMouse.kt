@@ -76,7 +76,7 @@ internal fun Modifier.videoPlayerMouse(
                             if (double) {
                                 lastClickAtMs = null
                                 press = Press(change.position, clicks = false)
-                                target.togglePlayback()
+                                target.togglePlayback(showControls = true)
                                 if (!controlsVisibleBeforeClick) target.hideControls()
                                 if (target.hasFullScreen) target.toggleFullScreen()
                                 continue
@@ -106,7 +106,7 @@ internal fun Modifier.videoPlayerMouse(
                                 lastClickAtMs = change.uptimeMillis
                                 lastClickAt = change.position
                                 controlsVisibleBeforeClick = target.controlsVisible
-                                target.togglePlayback()
+                                target.togglePlayback(showControls = true)
                             }
                         }
                     }

@@ -62,7 +62,8 @@ internal interface VideoPlayerInputTarget {
 
     fun commitPictureFraming(framing: PictureFraming)
 
-    fun togglePlayback()
+    /** Plays or pauses, showing the controls when [showControls], or leaving them as they are. */
+    fun togglePlayback(showControls: Boolean)
 
     /** The seek step setting, which [seekStep] seeks by. */
     val seekStepSeconds: Int
