@@ -48,7 +48,7 @@ internal fun VideoPlayerSkipButton(
     LaunchedEffect(takesFocus) { if (takesFocus) focus.requestFocus() }
     val pill = (if (takesFocus) modifier.focusRequester(focus) else modifier).videoPlayerControl()
     if (countdown == null) {
-        OverlayPill(modifier = pill, style = OverlayStyle.Scrim, onClick = onClick) {
+        OverlayPill(modifier = pill, style = OverlayStyle.Raised, onClick = onClick) {
             SkipLabel(offer, service)
         }
     } else {
