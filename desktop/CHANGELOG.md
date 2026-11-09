@@ -1,5 +1,30 @@
 # Desktop Changelog
 
+## [1.0.0-beta.6] - 2026-11-09
+
+### ✨ Added
+
+- History names the other device a title was last read on.
+
+### 🔄 Changed
+
+- Background sync runs every 30 minutes unless you pick another interval.
+
+### 🧩 Improved
+
+- Changes reach your other devices closely to real-time instead of after a pause of several seconds.
+- Changes from other devices arrive within seconds while the app is open, even when its window is minimized or another window has focus.
+- The sync status icon also shows on Updates, History and Statistics, and at the foot of the side dock on wide windows.
+
+### ⚡️ Performance
+
+- Sync no longer checks for changes every few seconds while the app is open with nothing to send, and each run reads less of the database.
+
+### 🐛 Fixed
+
+- An entry's cover in the merge sheet looks the same on every visit.
+- Grid scrollbars, such as the library's with a Pinned shelf, no longer run past the end of their track.
+
 ## [1.0.0-beta.5] - 2026-11-09
 
 ### ✨ Added
@@ -169,7 +194,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.5...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.6...HEAD
+[1.0.0-beta.6]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.5
 [1.0.0-beta.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.3
