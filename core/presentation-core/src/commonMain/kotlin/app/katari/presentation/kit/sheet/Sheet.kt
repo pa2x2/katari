@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -41,6 +43,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
@@ -64,6 +67,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.window.FoldHalf
+import app.katari.presentation.kit.window.LocalLastPress
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.presentation.kit.window.rememberFoldHalf
 import kotlinx.coroutines.flow.collectLatest
@@ -73,9 +77,10 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * The app's sheet. In a narrow window it slides up from the bottom and is dismissed by dragging it down, its content
- * capped at [SheetMaxWidth]; in a wide one it is a full-height panel at the end edge, beside the content it acts on,
- * dismissed by dragging it back. While a vertical fold is half-open it stays within one half (see [rememberFoldHalf]).
+ * The app's sheet. In a compact window it slides up from the bottom and is dismissed by dragging it down, its content
+ * capped at [SheetMaxWidth]; from a medium window on it is a full-height panel at the side of the window it was opened
+ * from (see [sheetEdge]), beside the dock on the dock's side, dismissed by dragging it back. While a vertical fold is
+ * half-open it stays within one half (see [rememberFoldHalf]).
  * Its content is laid out at compact row density.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
@@ -93,8 +98,19 @@ fun Sheet(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
 ) {
-    val edge = if (currentWindowLayout().usesTwoPanes) SheetEdge.End else SheetEdge.Bottom
+    val window = currentWindowLayout()
     val half = rememberFoldHalf()
+    val lastPress = LocalLastPress.current
+    val density = LocalDensity.current
+    val edge = remember(window.usesSideNavigation, half) {
+        sheetEdge(
+            sideSheets = window.usesSideNavigation,
+            half = half,
+            windowWidth = window.size.width,
+            pressX = lastPress?.openingPositionInWindow?.let { with(density) { it.x.toDp() } },
+        )
+    }
+    val dockRoom = dockRoomBeside(edge)
     val messages = rememberScreenMessagesFor(remember { SnackbarHostState() })
     val messagesHost = claimScreenMessages(messages)
     val dimsBehind = backdrop != SheetBackdrop.Clear
@@ -110,6 +126,7 @@ fun Sheet(
             SheetLayout(
                 edge = edge,
                 half = half,
+                dockRoom = dockRoom,
                 snackbarHostState = snackbarHostState,
                 messagesHost = messagesHost,
                 enableImplicitDismiss = enableImplicitDismiss,
@@ -144,13 +161,39 @@ enum class SheetBackdrop {
     Clear,
 }
 
-/** The window edge a sheet slides in from and is dragged back to. */
-private enum class SheetEdge { Bottom, End }
+/** The window edge a sheet slides in from and is dragged back to, as seen on screen whatever the layout direction. */
+internal enum class SheetEdge { Bottom, Left, Right }
+
+/**
+ * Where a sheet opens: from the bottom without [sideSheets]; otherwise at the side of the window, or of the fold's
+ * [half], that the press opening it landed in ([pressX], null when it was opened from the keyboard or by nothing the
+ * user pressed), so the pointer or hand that opened it doesn't cross the window to reach it. With no press it opens at
+ * the right edge.
+ */
+internal fun sheetEdge(sideSheets: Boolean, half: FoldHalf?, windowWidth: Dp, pressX: Dp?): SheetEdge {
+    if (!sideSheets) return SheetEdge.Bottom
+    val left = half?.left ?: 0.dp
+    val right = half?.right ?: windowWidth
+    return if (pressX != null && pressX < (left + right) / 2) SheetEdge.Left else SheetEdge.Right
+}
+
+/** The room the side dock takes at [edge], so a sheet there opens beside the dock rather than over it. */
+@Composable
+private fun dockRoomBeside(edge: SheetEdge): Dp {
+    val dockStart = LocalDockClearance.current.start
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    return when (edge) {
+        SheetEdge.Left -> if (rtl) 0.dp else dockStart
+        SheetEdge.Right -> if (rtl) dockStart else 0.dp
+        SheetEdge.Bottom -> 0.dp
+    }
+}
 
 @Composable
 private fun SheetLayout(
     edge: SheetEdge,
     half: FoldHalf?,
+    dockRoom: Dp,
     snackbarHostState: SnackbarHostState?,
     messagesHost: SnackbarHostState?,
     enableImplicitDismiss: Boolean,
@@ -160,7 +203,6 @@ private fun SheetLayout(
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val anchoredDraggableState = rememberSaveable(saver = AnchoredDraggableState.Saver()) {
         AnchoredDraggableState(initialValue = 1)
     }
@@ -187,13 +229,21 @@ private fun SheetLayout(
                     }
                     anchoredDraggableState.updateAnchors(anchors)
                 },
-            contentAlignment = if (edge == SheetEdge.Bottom) Alignment.BottomCenter else Alignment.CenterEnd,
+            contentAlignment = when (edge) {
+                SheetEdge.Bottom -> Alignment.BottomCenter
+                SheetEdge.Left -> AbsoluteAlignment.CenterLeft
+                SheetEdge.Right -> AbsoluteAlignment.CenterRight
+            },
         ) {
             val formModifier = when (edge) {
                 SheetEdge.Bottom -> Modifier.widthIn(max = SheetMaxWidth)
-                SheetEdge.End ->
+                SheetEdge.Left, SheetEdge.Right ->
                     Modifier
                         .fillMaxHeight()
+                        .absolutePadding(
+                            left = if (edge == SheetEdge.Left) dockRoom else 0.dp,
+                            right = if (edge == SheetEdge.Right) dockRoom else 0.dp,
+                        )
                         .width(minOf(SideSheetWidth, half?.width ?: SideSheetWidth))
                         .windowInsetsPadding(insets.union(WindowInsets.displayCutout))
                         .padding(KatariTheme.spacing.m)
@@ -218,14 +268,15 @@ private fun SheetLayout(
                         val offset = anchoredDraggableState.offset.takeIf { it.isFinite() }?.roundToInt() ?: 0
                         when (edge) {
                             SheetEdge.Bottom -> IntOffset(0, offset)
-                            SheetEdge.End -> IntOffset(if (isRtl) -offset else offset, 0)
+                            SheetEdge.Left -> IntOffset(-offset, 0)
+                            SheetEdge.Right -> IntOffset(offset, 0)
                         }
                     }
                     .anchoredDraggable(
                         state = anchoredDraggableState,
                         orientation = if (edge == SheetEdge.Bottom) Orientation.Vertical else Orientation.Horizontal,
                         enabled = enableImplicitDismiss,
-                        reverseDirection = edge == SheetEdge.End && isRtl,
+                        reverseDirection = edge == SheetEdge.Left,
                         flingBehavior = flingBehavior,
                     )
                     .then(if (edge == SheetEdge.Bottom) Modifier.windowInsetsPadding(insets) else Modifier),

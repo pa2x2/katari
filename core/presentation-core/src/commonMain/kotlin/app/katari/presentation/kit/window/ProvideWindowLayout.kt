@@ -9,11 +9,12 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 
 /**
- * Gives [LocalWindowLayout] to [content] from its window: its size, and the fold the platform reports crossing it. It
- * also gives the window's last touch, for [rememberFoldHalf]. Nested calls reuse the outer layout, so a theme applied
+ * Gives [LocalWindowLayout] to [content] from its window: its size, and the fold the platform reports crossing it.
+ * Nested calls reuse the outer layout, so a theme applied
  * inside another stays cheap. [content] waits for the window to have a size: Compose on desktop composes a window's
  * content as it attaches it, before it reads the window's size, and screens laid out for no size would open in the
  * compact layout and change to the window's own on its first frames, its dock moving from the bottom to the side.
+ * It also gives the window's last press, for surfaces that open beside what opened them.
  */
 @Composable
 fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> Unit) {
@@ -36,8 +37,10 @@ fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> 
             inMultiWindow = inMultiWindow(),
         )
     }
-    val lastTouch = rememberWindowLastTouch()
-    CompositionLocalProvider(LocalWindowLayout provides layout, LocalLastTouch provides lastTouch, content = content)
+    val lastPress = rememberWindowLastPress()
+    CompositionLocalProvider(LocalWindowLayout provides layout, LocalLastPress provides lastPress) {
+        RecordingPresses(lastPress, content)
+    }
 }
 
 /** The fold crossing the window, or null where there is none or the platform has no folds. */
@@ -49,4 +52,8 @@ internal expect fun rememberWindowFold(): WindowFold?
 internal expect fun rememberMultiWindowCheck(): () -> Boolean
 
 @Composable
-internal expect fun rememberWindowLastTouch(): LastTouch?
+internal expect fun rememberWindowLastPress(): LastPress?
+
+/** Shows [content], noting into [lastPress] the presses and key presses it gets where the window doesn't already. */
+@Composable
+internal expect fun RecordingPresses(lastPress: LastPress?, content: @Composable () -> Unit)

@@ -22,11 +22,11 @@ internal data class FoldHalf(val left: Dp, val right: Dp) {
 @Composable
 internal fun rememberFoldHalf(): FoldHalf? {
     val layout = currentWindowLayout()
-    val lastTouch = LocalLastTouch.current
+    val lastPress = LocalLastPress.current
     val density = LocalDensity.current
     return remember(layout, density) {
         val fold = layout.fold?.takeIf { it.isVertical && it.isHalfOpen } ?: return@remember null
-        val touchX = lastTouch?.positionInWindow?.let { with(density) { it.x.toDp() } }
+        val touchX = lastPress?.positionInWindow?.let { with(density) { it.x.toDp() } }
         if (touchX != null && touchX < fold.start) {
             FoldHalf(left = 0.dp, right = fold.start)
         } else {
