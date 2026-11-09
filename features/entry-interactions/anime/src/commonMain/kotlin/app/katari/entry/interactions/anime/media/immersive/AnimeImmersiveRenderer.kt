@@ -28,6 +28,7 @@ import app.katari.video.engine.spi.player.VideoPlayer
 import app.katari.video.engine.spi.player.VideoPlayerEvent
 import app.katari.video.engine.spi.player.VideoPlayerState
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.playbackSnapshot
 import kotlinx.coroutines.flow.Flow
@@ -43,6 +44,7 @@ internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
     private val savedPositionMs: Flow<Long>,
     private val savedSubtitleKey: String?,
+    private val metadata: VideoMetadata,
     private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
     private val platform: AnimeClipPlatform,
@@ -195,6 +197,7 @@ internal class AnimeImmersiveRenderer(
             playerErrorMessage = playerErrorMessage,
             muted = muted,
             subtitles = subtitles,
+            metadata = metadata,
             onToggleControls = onToggleControls,
             onPlaybackSnapshotChange = { playbackSnapshot = it },
             onPlayIntentChange = { playIntent = it },

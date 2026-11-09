@@ -20,6 +20,7 @@ import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalContext
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekDirectionFromTap
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -49,6 +50,10 @@ internal object TouchAnimeClipPlatform : AnimeClipPlatform {
             Box(modifier = Modifier.fillMaxSize().clipTouchGestures(target))
         }
     }
+
+    // Android's media session belongs to the player, which plays on in the background; a clip stops once it isn't seen
+    @Composable
+    override fun MediaControls(player: VideoPlayer, metadata: VideoMetadata, target: AnimeClipInputTarget) = Unit
 
     @Composable
     override fun KeepAwake(playing: Boolean) {

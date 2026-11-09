@@ -44,6 +44,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
@@ -72,6 +73,7 @@ internal fun AnimeImmersivePlayerSurface(
     playerErrorMessage: String?,
     muted: Boolean,
     subtitles: AnimeClipSubtitles,
+    metadata: VideoMetadata,
     onToggleControls: () -> Unit,
     onPlaybackSnapshotChange: (VideoPlayerPlaybackSnapshot) -> Unit,
     onPlayIntentChange: (Boolean) -> Unit,
@@ -111,18 +113,18 @@ internal fun AnimeImmersivePlayerSurface(
             updatedAtMillis = System.currentTimeMillis(),
         )
     }
-    val togglePlayback = {
+    val setPlaying: (Boolean) -> Unit = { playing ->
         controllerInteractionSequence += 1L
-        if (playbackSnapshot.playbackEnded) player.seekTo(0L)
-        if (player.state.value.isPlaying) {
-            player.pause()
-            onPlayIntentChange(false)
-        } else {
+        if (playing) {
+            if (playbackSnapshot.playbackEnded) player.seekTo(0L)
             player.play()
-            onPlayIntentChange(true)
+        } else {
+            player.pause()
         }
+        onPlayIntentChange(playing)
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
     }
+    val togglePlayback = { setPlaying(!player.state.value.isPlaying) }
     val toggleMute = {
         controllerInteractionSequence += 1L
         onMutedChange(!muted)
@@ -137,6 +139,7 @@ internal fun AnimeImmersivePlayerSurface(
     val latestActive by rememberUpdatedState(active)
     val latestPerformSeek by rememberUpdatedState(performSeek)
     val latestTogglePlayback by rememberUpdatedState(togglePlayback)
+    val latestSetPlaying by rememberUpdatedState(setPlaying)
     val latestToggleMute by rememberUpdatedState(toggleMute)
     val latestSetVolume by rememberUpdatedState(setVolume)
     val latestOnPlaybackSnapshotChange by rememberUpdatedState(onPlaybackSnapshotChange)
@@ -148,6 +151,8 @@ internal fun AnimeImmersivePlayerSurface(
             override fun toggleControls() = latestOnToggleControls()
 
             override fun togglePlayback() = latestTogglePlayback()
+
+            override fun setPlaying(playing: Boolean) = latestSetPlaying(playing)
 
             override fun toggleMute() = latestToggleMute()
 
@@ -204,6 +209,7 @@ internal fun AnimeImmersivePlayerSurface(
     val latestOnMediaWidthChange by rememberUpdatedState(onMediaWidthChange)
     LaunchedEffect(mediaWidth) { latestOnMediaWidthChange(mediaWidth) }
     platform.KeepAwake(playing = keepAwake)
+    if (active) platform.MediaControls(player = player, metadata = metadata, target = inputTarget)
     Box(modifier = modifier.onSizeChanged { size = it }) {
         platform.Picture(
             player = player,

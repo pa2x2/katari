@@ -14,6 +14,9 @@ internal interface AnimeClipInputTarget {
 
     fun togglePlayback()
 
+    /** Plays the clip, from the start once it ended, or pauses it. */
+    fun setPlaying(playing: Boolean)
+
     fun toggleMute()
 
     /** Whether the clip has subtitles for [toggleSubtitles] to show or hide. */

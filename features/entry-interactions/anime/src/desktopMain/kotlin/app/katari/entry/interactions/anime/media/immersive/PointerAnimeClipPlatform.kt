@@ -1,6 +1,7 @@
 package app.katari.entry.interactions.anime.media.immersive
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -39,13 +41,14 @@ import tachiyomi.presentation.core.i18n.stringResource
  * mouse moves and rests. The current clip takes the player's keys for playing, muting, subtitles and seeking by the
  * player's seek step, before a focused control does, and Shift with ↑ or ↓ for the volume, as ↑ and ↓ alone move
  * between clips, which is the feed's. Clips play at the player's own volume. The screen stays awake while a clip plays
- * in a window that is shown.
+ * in a window that is shown, and the shown clip is in the desktop's media controls ([ClipMediaControls]).
  */
 internal class PointerAnimeClipPlatform(
     private val inhibitor: ScreenIdleInhibitor,
     binder: ViewerSettingBinder,
     preferences: AnimePlayerPreferences,
     devicePreferences: AnimePlayerDevicePreferences,
+    private val mediaControls: ClipMediaControls,
 ) : AnimeClipPlatform {
     private val seekStep by lazy { binder.bind(preferences.seekStepSetting) }
 
@@ -80,6 +83,14 @@ internal class PointerAnimeClipPlatform(
             aspectRatio = { aspectRatio },
             modifier = modifier.clipMouse(target, fullScreen),
         )
+    }
+
+    @Composable
+    override fun MediaControls(player: VideoPlayer, metadata: VideoMetadata, target: AnimeClipInputTarget) {
+        DisposableEffect(player, metadata, target) {
+            val shown = mediaControls.show(player, metadata, target)
+            onDispose(shown::close)
+        }
     }
 
     @Composable

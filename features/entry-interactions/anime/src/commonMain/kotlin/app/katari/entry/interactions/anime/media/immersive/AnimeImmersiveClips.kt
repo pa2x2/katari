@@ -11,11 +11,13 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
@@ -59,7 +61,16 @@ internal class AnimeImmersiveClips(
                 entryType = EntryType.ANIME,
                 chapterId = chapter.id,
                 stream = result.stream,
-                delegate = AnimeImmersiveEpisode(chapter, result.preferences.subtitleKey),
+                delegate = AnimeImmersiveEpisode(
+                    child = chapter,
+                    subtitleKey = result.preferences.subtitleKey,
+                    metadata = VideoMetadata(
+                        title = chapter.name,
+                        series = entry.title,
+                        episodePreviewUrl = chapter.previewUrl,
+                        cover = entry.asEntryCover(),
+                    ),
+                ),
             )
             is ResolveVideoStream.Result.Error -> error(result.reason.message())
         }
@@ -74,6 +85,7 @@ internal class AnimeImmersiveClips(
             handle = playback,
             savedPositionMs = savedPositionMs(episode.child),
             savedSubtitleKey = episode.subtitleKey,
+            metadata = episode.metadata,
             videoEngineProvider = videoEngine,
             basePreferencesProvider = basePreferences,
             platform = clipPlatform,
@@ -91,8 +103,12 @@ internal class AnimeImmersiveClips(
             .distinctUntilChanged()
 }
 
-// The title's subtitle pick, which the clip shows as the player would
-private data class AnimeImmersiveEpisode(val child: EntryChapter, val subtitleKey: String?)
+/** The episode a clip shows, the title's subtitle pick it shows as the player would, and how media controls name it. */
+private data class AnimeImmersiveEpisode(
+    val child: EntryChapter,
+    val subtitleKey: String?,
+    val metadata: VideoMetadata,
+)
 
 private fun ResolveVideoStream.Reason.message(): String {
     return when (this) {

@@ -112,7 +112,7 @@ internal class DesktopMediaControls(
 private data class EpisodeNavigation(val canPlayPrevious: Boolean, val canPlayNext: Boolean)
 
 // Buffering counts, as shells would otherwise show a pause at every stall
-private val VideoPlayerState.meansToPlay: Boolean
+internal val VideoPlayerState.meansToPlay: Boolean
     get() = playWhenReady && when (playback) {
         VideoPlayerState.Playback.Ready, VideoPlayerState.Playback.Buffering -> true
         VideoPlayerState.Playback.Idle, VideoPlayerState.Playback.Ended -> false

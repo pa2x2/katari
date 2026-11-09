@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.core.common.platform.PlatformFacility
 import app.katari.video.engine.spi.player.VideoPlayer
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import tachiyomi.core.common.preference.Preference
 
 /**
@@ -28,6 +29,10 @@ internal interface AnimeClipPlatform {
     /** [player]'s picture, fitted, taking the viewer's input for [target]. */
     @Composable
     fun Picture(player: VideoPlayer, aspectRatio: Float?, target: AnimeClipInputTarget, modifier: Modifier)
+
+    /** Shows the clip in the system's own media controls, where they reach clips, while this is composed. */
+    @Composable
+    fun MediaControls(player: VideoPlayer, metadata: VideoMetadata, target: AnimeClipInputTarget)
 
     /** Keeps the screen awake while [playing], where the clip is seen. */
     @Composable
