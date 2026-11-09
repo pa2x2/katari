@@ -20,12 +20,14 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Close
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.LocalContentColor
 
 /**
  * A pill over media for an action that runs by itself once [progress] (0..1) fills it, such as a skip that happens
- * unless stopped. The fill sweeps behind [content] from the start; tapping the pill runs the action at once
- * ([onClick]) and the close button at its end stops the countdown ([onDismiss]). [progress] is read while drawing, so
- * a countdown redraws the pill without recomposing it.
+ * unless stopped. It is raised like [OverlayStyle.Raised], so it reads as a button over any frame, dark credits
+ * included. The fill sweeps behind [content] from the start; tapping the pill runs the action at once ([onClick]) and
+ * the close button at its end stops the countdown ([onDismiss]). [progress] is read while drawing, so a countdown
+ * redraws the pill without recomposing it.
  */
 @Composable
 fun OverlayCountdownPill(
@@ -36,9 +38,9 @@ fun OverlayCountdownPill(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val fill = KatariTheme.colors.onMedia.copy(alpha = COUNTDOWN_FILL_ALPHA)
-    val divider = KatariTheme.colors.onMedia.copy(alpha = DIVIDER_ALPHA)
-    Surface(modifier = modifier, container = SurfaceContainer.MediaScrim, shape = KatariTheme.shapes.full) {
+    Surface(modifier = modifier, container = SurfaceContainer.High, shape = KatariTheme.shapes.full, shadow = true) {
+        val fill = LocalContentColor.current.copy(alpha = COUNTDOWN_FILL_ALPHA)
+        val divider = LocalContentColor.current.copy(alpha = DIVIDER_ALPHA)
         Row(modifier = Modifier.height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier

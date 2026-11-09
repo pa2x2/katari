@@ -28,6 +28,12 @@ internal fun resolveVideoPlayerSafeInsets(
     )
 }
 
+/** The bottom inset, in pixels, that [videoPlayerSafeContentPadding] keeps clear with `includeBottom`. */
+@Composable
+internal fun videoPlayerSafeBottomInset(): Int = WindowInsets.safeDrawing.getBottom(
+    LocalDensity.current,
+).coerceAtLeast(0)
+
 @Composable
 internal fun Modifier.videoPlayerSafeContentPadding(
     includeTop: Boolean = false,
