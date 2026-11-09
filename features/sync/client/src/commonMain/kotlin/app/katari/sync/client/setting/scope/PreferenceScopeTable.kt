@@ -2,7 +2,7 @@ package app.katari.sync.client.setting.scope
 
 /**
  * The preference keys of one part of the app, each marked [PreferenceScope.PERSON], [PreferenceScope.DEVICE_BY_DEFAULT]
- * or [PreferenceScope.DEVICE] with why it only works on the device, and the Settings [area] the synced ones belong to
+ * or [PreferenceScope.DEVICE] with why it only works on the device, and the Settings [area] they belong to
  * ([Builder.area] names another for some of them).
  *
  * Every key a preference store is asked for anywhere in the app is marked in exactly one table, which the build
@@ -53,7 +53,7 @@ class PreferenceScopeTable(area: SettingsArea? = null, declare: Builder.() -> Un
             return PreferenceMark(scope, area, bound = null)
         }
 
-        private fun bound(bound: DeviceBound) = PreferenceMark(PreferenceScope.DEVICE, area = null, bound)
+        private fun bound(bound: DeviceBound) = PreferenceMark(PreferenceScope.DEVICE, area, bound)
 
         private fun mark(into: MutableMap<String, PreferenceMark>, keys: Array<out String>, mark: PreferenceMark) {
             keys.forEach { key -> require(into.put(key, mark) == null) { "$key is marked twice" } }

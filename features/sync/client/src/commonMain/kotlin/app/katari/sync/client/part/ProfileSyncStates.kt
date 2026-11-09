@@ -2,6 +2,7 @@ package app.katari.sync.client.part
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.kind.profile.ProfileKind
+import app.katari.sync.client.kind.profile.ProfilePayload
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.Inject
@@ -17,10 +18,14 @@ enum class ProfileSyncState { SYNCED, OFF, ASKING }
 data class ProfileSync(
     val uuid: String,
     val name: String,
+    val colorSeed: Long,
     val state: ProfileSyncState,
     /** Whether the profile is on this device; an account profile switched off, or one asking, isn't. */
     val isHere: Boolean,
-)
+) {
+    /** Whether it is the profile every device starts with, which every device syncs. */
+    val isDefault: Boolean get() = uuid == ProfileKind.DEFAULT_UUID
+}
 
 /** The profiles What syncs lists: this device's, then the account's that aren't here, from their records. */
 @Inject
@@ -32,17 +37,17 @@ class ProfileSyncStates(private val handler: DatabaseHandler, private val prefer
     ) { local, off, asking ->
         val here = local.map { profile ->
             val state = if (profile.uuid in off) ProfileSyncState.OFF else ProfileSyncState.SYNCED
-            ProfileSync(profile.uuid, profile.name, state, isHere = true)
+            ProfileSync(profile.uuid, profile.name, profile.color_seed, state, isHere = true)
         }
         val away = (off + asking - local.mapTo(HashSet()) { it.uuid }).mapNotNull { uuid ->
             val state = if (uuid in asking) ProfileSyncState.ASKING else ProfileSyncState.OFF
-            accountName(uuid)?.let { ProfileSync(uuid, it, state, isHere = false) }
+            accountProfile(uuid)?.let { ProfileSync(uuid, it.name.value, it.colorSeed.value, state, isHere = false) }
         }
         here + away
     }
 
-    /** The name the account's record of the profile [uuid] has, stored or held; null once the account deleted it. */
-    private suspend fun accountName(uuid: String): String? = handler.await {
+    /** The account's record of the profile [uuid], stored or held; null once the account deleted it. */
+    private suspend fun accountProfile(uuid: String): ProfilePayload? = handler.await {
         val key = ProfileKind.key(uuid)
         val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull()
         val (deleted, payload) = if (stored != null) {
@@ -53,6 +58,6 @@ class ProfileSyncStates(private val handler: DatabaseHandler, private val prefer
             if (!ProfileKind.reads(envelope.kindVersion)) return@await null
             envelope.deleted to envelope.payload
         }
-        if (deleted) null else ProfileKind.decode(payload).name.value
+        if (deleted) null else ProfileKind.decode(payload)
     }
 }

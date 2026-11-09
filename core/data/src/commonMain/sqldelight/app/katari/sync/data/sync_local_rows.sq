@@ -7,7 +7,7 @@ FROM profiles
 WHERE uuid = :uuid;
 
 profiles:
-SELECT _id, uuid, name
+SELECT _id, uuid, name, color_seed
 FROM profiles
 ORDER BY position, _id;
 

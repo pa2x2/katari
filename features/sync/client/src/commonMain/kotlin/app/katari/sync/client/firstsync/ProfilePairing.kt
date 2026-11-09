@@ -13,11 +13,18 @@ data class AccountProfile(val uuid: String, val name: String)
  */
 data class ProfilePairing(
     val profileId: Long,
+    val uuid: String,
     val name: String,
     val pairedWith: AccountProfile?,
     val sameProfile: Boolean,
     val librarySize: Long,
-)
+) {
+    /**
+     * Whether the person may keep it on this device without syncing it: not the default profile, which every device
+     * syncs, nor one the account already has.
+     */
+    val canStayHere: Boolean get() = uuid != ProfileKind.DEFAULT_UUID && !sameProfile
+}
 
 /** Whose person-level settings a paired profile keeps where both have a value. */
 enum class SettingsWinner { ACCOUNT, DEVICE }
@@ -64,6 +71,7 @@ internal fun proposePairings(
         }
         ProfilePairing(
             profileId = profile.id,
+            uuid = profile.uuid,
             name = profile.name,
             pairedWith = pairedWith,
             sameProfile = same != null,

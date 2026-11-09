@@ -1162,6 +1162,10 @@
     <string name="library_update_reason_outside_release">No release expected yet</string>
     <string name="pref_library_update_interval">Automatic updates</string>
     <string name="update_never">Off</string>
+    <string name="update_15min">Every 15 minutes</string>
+    <string name="update_30min">Every 30 minutes</string>
+    <string name="update_1hour">Every hour</string>
+    <string name="update_3hour">Every 3 hours</string>
     <string name="update_6hour">Every 6 hours</string>
     <string name="update_12hour">Every 12 hours</string>
     <string name="update_24hour">Daily</string>
@@ -3347,11 +3351,99 @@
     <string name="sync_rename_device_hint">Your other devices show this name. Leave it empty to use %1$s.</string>
     <string name="sync_options">Options</string>
     <string name="sync_use_mobile_data">Use mobile data for covers, fonts and first download</string>
-    <string name="sync_use_mobile_data_summary">Changes sync on any network</string>
     <string name="sync_use_metered">Use metered networks for covers, fonts and first download</string>
-    <string name="sync_use_metered_summary">Changes sync on any network. The system decides which connections are metered</string>
+    <string name="sync_use_metered_summary">The system decides which connections are metered</string>
     <string name="sync_in_background">Sync in the background</string>
-    <string name="sync_in_background_summary">Every hour while the app is closed</string>
+    <string name="sync_in_background_summary">While the app is closed</string>
+    <string name="sync_background_interval">How often</string>
+    <string name="sync_pause">Pause syncing</string>
+    <string name="sync_pause_summary">Changes wait on this device until you resume</string>
+    <string name="sync_changes_on_mobile_data">Use mobile data for changes</string>
+    <string name="sync_changes_on_mobile_data_summary">When off, changes wait for Wi-Fi. Opening a title still checks its progress</string>
+    <string name="sync_changes_on_metered">Use metered networks for changes</string>
+    <string name="sync_changes_on_metered_summary">When off, changes wait for an unmetered network. Opening a title still checks its progress</string>
+    <string name="sync_choices_title">What syncs</string>
+    <string name="sync_choices_note">These choices are this device's. Your other devices keep their own.</string>
+    <string name="sync_choices_everything">Everything</string>
+    <!-- %1$s lists what this device doesn't sync, such as "Statistics and Readers settings" -->
+    <string name="sync_choices_all_but">All but %1$s</string>
+    <!-- %1$s is a Settings area, such as "Readers" -->
+    <string name="sync_choices_area_settings">%1$s settings</string>
+    <string name="sync_choices_data">Data</string>
+    <string name="sync_choices_settings">Settings</string>
+    <string name="sync_choices_profiles">Profiles</string>
+    <string name="sync_choices_never">Never synced</string>
+    <string name="sync_choice_library">Library and reading progress</string>
+    <string name="sync_choice_library_summary">Titles, chapters, read state, migrations and merges. Always synced</string>
+    <string name="sync_choice_history">Reading history</string>
+    <string name="sync_choice_history_summary">When you last read or watched each chapter</string>
+    <string name="sync_choice_statistics">Statistics</string>
+    <string name="sync_choice_statistics_summary">Reading time, sessions, completions and goals, with their settings</string>
+    <string name="sync_choice_title_choices">Title choices</string>
+    <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title</string>
+    <string name="sync_choice_repositories">Extension repositories</string>
+    <string name="sync_choice_fonts">Imported fonts</string>
+    <string name="sync_choice_fonts_summary">Fonts added for the book reader</string>
+    <string name="sync_choice_covers">Custom covers</string>
+    <string name="sync_choice_categories">Categories</string>
+    <string name="sync_choice_categories_summary">Library tabs and what's in them, with the settings that name them</string>
+    <string name="sync_choice_extension_settings">Extension settings</string>
+    <string name="sync_choice_extension_settings_summary">Each extension's own settings</string>
+    <string name="sync_choice_synced">Synced</string>
+    <string name="sync_choice_off">Off · kept on this device</string>
+    <string name="sync_choice_kept_here">Kept on this device</string>
+    <string name="sync_choice_device_default_off">Off · each device keeps its own</string>
+    <string name="sync_choice_device_default_on">Synced since you turned it on</string>
+    <string name="sync_choice_group_synced">Synced</string>
+    <string name="sync_choice_group_device_default">This device by default</string>
+    <string name="sync_choice_group_device_only">Only on this device</string>
+    <string name="sync_choice_area_off_note">These settings stay on this device while their area isn't synced.</string>
+    <string name="sync_choice_never_downloads">Downloads</string>
+    <string name="sync_choice_never_downloads_summary">Chapters and episodes stay where they were downloaded</string>
+    <string name="sync_choice_never_logins">Logins, cookies and app lock</string>
+    <string name="sync_choice_never_logins_summary">They belong to this device and its sign-in</string>
+    <string name="sync_choice_never_device">Storage, network and screen</string>
+    <string name="sync_choice_never_device_summary">Settings made for this device are marked so in Settings</string>
+    <string name="sync_bound_system">Follows this device's system</string>
+    <string name="sync_bound_installed">Depends on what's installed here</string>
+    <string name="sync_bound_security">Protects this device</string>
+    <string name="sync_bound_storage">Follows this device's storage</string>
+    <string name="sync_bound_network">Follows this device's network</string>
+    <string name="sync_bound_notifications">This device's notifications</string>
+    <string name="sync_bound_hardware">Made for this screen and hardware</string>
+    <string name="sync_bound_diagnostics">For this device's logs and reports</string>
+    <string name="sync_bound_downloads">Follows this device's downloads</string>
+    <string name="sync_bound_sync">How this device syncs</string>
+    <string name="sync_bound_app">This app's own state here</string>
+    <string name="sync_profile_only_here">Only on this device</string>
+    <string name="sync_profile_not_here">Not on this device</string>
+    <string name="sync_profile_asking">Made on another device · waiting for your answer</string>
+    <string name="sync_profile_default">Every device syncs its default profile</string>
+    <string name="sync_profile_only_one">This device's only profile. To stop syncing it, disconnect this device.</string>
+    <string name="sync_ask_new_profiles">Ask before a new profile comes here</string>
+    <string name="sync_ask_new_profiles_summary">A profile made on another device waits until you add it</string>
+    <!-- %1$s is the profile's name -->
+    <string name="sync_profile_remove_title">Remove %1$s from this device?</string>
+    <!-- %1$s is the profile's name -->
+    <string name="sync_profile_remove_text">Its library, history and settings leave this device. %1$s stays in your account and on your other devices.</string>
+    <!-- %1$s is the profile to switch to -->
+    <string name="sync_profile_remove_open">Katari switches to %1$s first.</string>
+    <!-- %1$s is a profile made on another device -->
+    <string name="sync_profile_arriving">%1$s, made on another device, can come to this one</string>
+    <string name="sync_profile_add_here">Add it here</string>
+    <string name="sync_profile_sync">Sync this profile</string>
+    <!-- %1$s is a Settings area, such as "Readers" -->
+    <string name="sync_area_switch">Sync %1$s settings</string>
+    <!-- A setting in a sync area's list, after the Settings screen it is on: "Manga reader · Off · kept on this device" -->
+    <string name="sync_choice_setting_on_screen">%1$s · %2$s</string>
+    <!-- %1$s is a Settings area, such as "Readers" -->
+    <string name="sync_area_again_title">Sync %1$s settings again?</string>
+    <string name="sync_area_again_text">This device changed them while they weren't synced.</string>
+    <string name="sync_area_keep_account">Account's settings</string>
+    <string name="sync_area_keep_device">This device's settings</string>
+    <string name="sync_action_sync">Sync</string>
+    <string name="sync_mark_synced">Synced</string>
+    <string name="sync_mark_this_device">Stays on this device</string>
     <string name="sync_disconnect">Disconnect this device</string>
     <string name="sync_disconnect_title">Disconnect this device?</string>
     <!-- %1$s is the server's address -->

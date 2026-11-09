@@ -468,6 +468,10 @@
         <item quantity="one">%d cover or font is missing on the server</item>
         <item quantity="other">%d covers and fonts are missing on the server</item>
     </plurals>
+    <plurals name="sync_choice_synced_except">
+        <item quantity="one">Synced · %d setting stays on this device</item>
+        <item quantity="other">Synced · %d settings stay on this device</item>
+    </plurals>
     <plurals name="sync_unsent">
         <item quantity="one">%d change not sent yet</item>
         <item quantity="other">%d changes not sent yet</item>

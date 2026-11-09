@@ -29,6 +29,7 @@ import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.presentation.kit.navigation.SearchToolbar
+import app.katari.sync.ui.choice.WhatSyncsScreen
 import app.katari.ui.di.AppUiGraph
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -192,10 +193,7 @@ private fun search(index: List<SettingsData>, searchKey: String, isLtr: Boolean)
 @NonRestartableComposable
 private fun getIndex(graph: AppUiGraph): List<SettingsData> {
     // Remembered: new screens on every pass would make each pass's results differ from the last and restart the search
-    val screens = remember(graph) {
-        (settingScreens() + viewerProviderSettingsScreens(graph.entryViewerSettingsFeature))
-            .filter { it.isOffered(graph) }
-    }
+    val screens = remember(graph) { settingsScreens(graph) + WhatSyncsScreen() }
     return screens.map { screen ->
         SettingsData(
             title = stringResource(screen.getTitleRes()),
@@ -218,23 +216,6 @@ private fun getLocalizedBreadcrumb(path: String, node: String?, isLtr: Boolean):
         }
     }
 }
-
-private fun settingScreens() = listOf(
-    SettingsAppearanceScreen(),
-    SettingsLibraryScreen(),
-    SettingsLibraryUpdatesScreen(),
-    SettingsReaderScreen(),
-    SettingsPlayerScreen(),
-    SettingsDownloadScreen(),
-    SettingsTranslationScreen(),
-    SettingsTtsScreen(),
-    SettingsTextRecognitionScreen(),
-    SettingsBrowseScreen(),
-    SettingsDataScreen(),
-    SettingsSecurityScreen(),
-    SettingsProfilesScreen(),
-    SettingsAdvancedScreen(),
-)
 
 private data class SettingsData(
     val title: String,

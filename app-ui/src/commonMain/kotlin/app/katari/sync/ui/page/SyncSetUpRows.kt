@@ -27,7 +27,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The page before setup (D027): what syncs and what stays, then the ways in. Where the device has nowhere to keep its
+ * The page before setup (D027): what syncs and what stays, each opening What syncs to choose before the first sync,
+ * then the ways in. Where the device has nowhere to keep its
  * sign-in, such as a desktop without a keyring, it says so first (D061), and signing in still says so if tried.
  */
 @Composable
@@ -43,6 +44,7 @@ internal fun setUpPreferences(canKeepSignIn: Boolean, actions: SyncPageActions):
                 title = stringResource(MR.strings.sync_what_syncs_title),
                 subtitle = stringResource(MR.strings.sync_what_syncs),
                 icon = MaterialSymbols.Rounded.CheckCircle,
+                onPreferenceClick = actions.openWhatSyncs,
             )
         },
     )
@@ -52,6 +54,7 @@ internal fun setUpPreferences(canKeepSignIn: Boolean, actions: SyncPageActions):
                 title = stringResource(MR.strings.sync_what_stays_title),
                 subtitle = stringResource(MR.strings.sync_what_stays),
                 icon = MaterialSymbols.Rounded.Smartphone,
+                onPreferenceClick = actions.openWhatSyncs,
             )
         },
     )

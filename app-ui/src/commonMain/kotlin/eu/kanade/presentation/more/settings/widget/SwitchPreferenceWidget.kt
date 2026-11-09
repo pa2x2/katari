@@ -12,10 +12,12 @@ fun SwitchPreferenceWidget(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    leading: (@Composable () -> Unit)? = null,
     isProfileSpecific: Boolean = false,
     checked: Boolean = false,
     enabled: Boolean = true,
     onDisabledClick: (() -> Unit)? = null,
+    onOpen: (() -> Unit)? = null,
 ) {
     ToggleRow(
         title = title,
@@ -24,8 +26,10 @@ fun SwitchPreferenceWidget(
         modifier = modifier.preferenceHighlight(),
         subtitle = subtitle,
         icon = icon,
+        leading = leading,
         enabled = enabled,
         titleSuffix = profileSpecificSuffix(isProfileSpecific),
         onDisabledClick = onDisabledClick,
+        onOpen = onOpen,
     )
 }

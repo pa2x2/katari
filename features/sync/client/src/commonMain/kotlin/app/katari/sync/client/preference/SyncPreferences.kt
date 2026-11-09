@@ -6,6 +6,9 @@ import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.SettingsArea
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import tachiyomi.core.common.preference.Preference
 
 /** Sync's own options (D050), the device's alone like every setting about how this device syncs. */
@@ -58,9 +61,22 @@ class SyncPreferences(profileStore: ProfileStore) {
         store.getBoolean(Preference.appStateKey("sync_ask_before_new_profiles"), false)
 
     companion object {
-        /** The intervals background sync's is picked from, in minutes; Android's periodic work runs 15 apart at most. */
+        /** The intervals background syncs run at, in minutes; Android runs periodic work at least 15 minutes apart. */
         val BACKGROUND_INTERVALS = listOf(15, 30, 60, 180, 360, 720, 1440)
     }
+
+    /** [choices] as they change. */
+    fun choicesChanges(): Flow<ChoiceSet> = combine(
+        listOf(
+            dataOff.changes(),
+            areasOff.changes(),
+            settingsOff.changes(),
+            settingsOn.changes(),
+            profilesOff.changes(),
+            profilesAsking.changes(),
+            askBeforeNewProfiles.changes(),
+        ),
+    ) { choices() }.distinctUntilChanged()
 
     fun choices(): ChoiceSet = ChoiceSet(
         dataOff = dataOff.get().enumsOf(DataGroup.entries),

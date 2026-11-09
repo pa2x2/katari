@@ -7,7 +7,7 @@ enum class PreferenceScope {
 
     /**
      * Fitted to the device, as screen sizes and layouts are, so it stays on the device unless the person chooses to
-     * sync it there ([app.katari.sync.client.choice.SyncChoices]).
+     * sync it there ([app.katari.sync.client.part.ChoiceSet.settingsOn]).
      */
     DEVICE_BY_DEFAULT,
 
@@ -17,7 +17,11 @@ enum class PreferenceScope {
     DEVICE,
 }
 
-/** How a key or key family syncs. [area] is null for keys that only work on the device; [bound] says why they do. */
+/**
+ * How a key or key family syncs. [area] is the Settings area it belongs to: the one it syncs with, or, for a key that
+ * only works on the device, the one whose page lists it as staying there; null for such a key no area lists. [bound]
+ * says why a key only works on the device.
+ */
 class PreferenceMark internal constructor(
     val scope: PreferenceScope,
     val area: SettingsArea?,

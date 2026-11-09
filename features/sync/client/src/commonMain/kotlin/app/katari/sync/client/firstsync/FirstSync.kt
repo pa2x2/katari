@@ -15,6 +15,7 @@ import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
+import tachiyomi.core.common.preference.minusAssign
 import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
@@ -115,10 +116,15 @@ class FirstSync(
                 "Profile ${holder?.id} already is the account profile paired with profile ${choice.profileId}"
             }
         }
-        choices.filter { it.onlyHere }.forEach { choice ->
+        // The answer stands over a profile switched on or off on What syncs before it
+        choices.forEach { choice ->
             val uuid = checkNotNull(local[choice.profileId]) { "No profile ${choice.profileId}" }.uuid
-            require(uuid != ProfileKind.DEFAULT_UUID) { "The default profile always syncs" }
-            preferences.profilesOff += uuid
+            if (choice.onlyHere) {
+                require(uuid != ProfileKind.DEFAULT_UUID) { "The default profile always syncs" }
+                preferences.profilesOff += uuid
+            } else {
+                preferences.profilesOff -= uuid
+            }
         }
         val keeps = keepsRecords()
         // Writing drains the edits not recorded yet first, under the identities they were made under

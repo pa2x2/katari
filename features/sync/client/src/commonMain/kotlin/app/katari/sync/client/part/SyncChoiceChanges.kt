@@ -63,9 +63,10 @@ class SyncChoiceChanges(
     /**
      * Turns syncing the profile [uuid] on or off, which also answers whether a profile made on another device comes
      * here. An account profile switched off leaves this device ([leavesThisDevice]), so it must not be the open one;
-     * switched on again, it comes back as the account has it.
+     * switched on again, it comes back as the account has it. Every device syncs its default profile.
      */
     suspend fun syncProfile(uuid: String, on: Boolean) {
+        require(uuid != ProfileKind.DEFAULT_UUID) { "Every device syncs its default profile" }
         val leaves = !on && leavesThisDevice(uuid)
         change(
             before = { if (leaves) it.removeProfile(uuid) },
