@@ -4,21 +4,22 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import tachiyomi.domain.entry.model.Entry
 
-/** Feature-owned boundary for immersive source entry, loading, rendering, progress, and lifecycle. */
+/**
+ * Feature-owned boundary for immersive source entry, loading, rendering, and lifecycle. The feed is a preview: it starts
+ * media where it was left and records nothing, neither progress nor History.
+ */
 interface EntryImmersiveFeature {
     fun sourceAvailability(source: UnifiedSource?): EntryImmersiveSourceAvailability
 
     fun availability(context: EntryImmersiveContext): EntryImmersiveAvailability
 
-    fun preloadRadius(type: EntryType): EntryImmersivePreloadRadiusResult
+    fun preloadAhead(type: EntryType): EntryImmersivePreloadAheadResult
 
     suspend fun refreshChildren(entry: Entry): EntryImmersiveChildRefreshResult
 
     suspend fun load(request: EntryImmersiveLoadRequest): EntryImmersiveLoadResult
 
     fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRendererResult
-
-    suspend fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress)
 
     fun openTarget(handle: EntryImmersiveHandle): EntryImmersiveOpenTargetResult
 

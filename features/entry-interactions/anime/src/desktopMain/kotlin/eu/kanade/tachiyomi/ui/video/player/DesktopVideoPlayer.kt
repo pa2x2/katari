@@ -81,6 +81,7 @@ internal class DesktopVideoPlayer(
                 chapterId = request.episodeId,
                 ownerEntryId = request.ownerEntryId,
                 bypassMerge = request.bypassMerge,
+                startPositionMs = request.startPositionMs,
                 defaultPlaybackSpeed = settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue / 100f,
             )
         }

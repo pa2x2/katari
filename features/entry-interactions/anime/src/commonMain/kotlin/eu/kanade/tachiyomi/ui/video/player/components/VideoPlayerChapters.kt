@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowDown
 import app.katari.presentation.kit.content.InlineIcon
@@ -36,7 +37,7 @@ internal fun VideoPlayerChapterLabel(
 ) {
     Row(
         modifier = modifier
-            .videoPlayerControl()
+            .mediaControl()
             .clickable(
                 onClickLabel = stringResource(MR.strings.anime_chapters_show),
                 role = Role.Button,

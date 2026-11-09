@@ -38,6 +38,7 @@ import app.katari.entry.interactions.anime.introtimes.IntroTimesService
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
 import app.katari.entry.interactions.source.EntryChildWebViewAction
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.progress.LoadingIndicator
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -371,7 +372,7 @@ private fun BoxScope.VideoPlayerControls(
         }
     }
     CompositionLocalProvider(
-        LocalVideoPlayerControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
+        LocalMediaControlHover provides controlHover.takeIf { onPointerOverControlsChange != null },
     ) {
         Column(
             modifier = Modifier

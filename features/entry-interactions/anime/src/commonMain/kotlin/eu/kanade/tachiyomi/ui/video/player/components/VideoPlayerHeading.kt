@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredrounded.ArrowBack
 import app.katari.presentation.kit.button.IconButton
@@ -50,7 +51,7 @@ internal fun VideoPlayerHeading(
             icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
             contentDescription = stringResource(MR.strings.action_back),
             onClick = onBack,
-            modifier = Modifier.videoPlayerControl(),
+            modifier = Modifier.mediaControl(),
             size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
         )

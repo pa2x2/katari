@@ -14,7 +14,18 @@ internal interface AnimeClipInputTarget {
 
     fun togglePlayback()
 
+    /** Plays the clip, from the start once it ended, or pauses it. */
+    fun setPlaying(playing: Boolean)
+
     fun toggleMute()
+
+    /** Whether the clip has subtitles for [toggleSubtitles] to show or hide. */
+    val hasSubtitles: Boolean
+
+    fun toggleSubtitles()
+
+    /** Changes the player's volume by [percent], unmuting the feed, where it has one (`AnimeClipPlatform.playerVolume`). */
+    fun stepVolume(percent: Int)
 
     /** Seeks [stepSeconds] in [direction], with the seek feedback, and hides the controls. */
     fun seek(direction: VideoPlayerSeekDirection, stepSeconds: Int)

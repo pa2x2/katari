@@ -15,6 +15,9 @@ import tachiyomi.presentation.core.i18n.stringResource
  * taken while a text field is typed in.
  */
 internal object VideoPlayerShortcuts {
+    /** How far [VolumeUp] and [VolumeDown], and the wheel over a volume control, step the volume, in percent. */
+    const val VOLUME_STEP_PERCENT = 5
+
     val PlayPause: KeyboardShortcut
         @Composable get() = shortcut(
             "player.playPause",

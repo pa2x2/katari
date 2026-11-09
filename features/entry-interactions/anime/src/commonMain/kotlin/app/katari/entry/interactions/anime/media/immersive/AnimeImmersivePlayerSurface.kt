@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,16 +18,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.media.fittedMediaWidth
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
+import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.automirroredrounded.VolumeOff
-import app.katari.icons.materialsymbols.automirroredrounded.VolumeUp
 import app.katari.icons.materialsymbols.roundedfilled.Pause
 import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
-import app.katari.presentation.kit.button.ContentButton
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.progress.LoadingIndicator
@@ -42,6 +45,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
@@ -53,6 +57,7 @@ import kotlinx.coroutines.flow.map
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import kotlin.math.abs
 
 @Composable
@@ -68,11 +73,15 @@ internal fun AnimeImmersivePlayerSurface(
     keepAwake: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
+    subtitles: AnimeClipSubtitles,
+    metadata: VideoMetadata,
     onToggleControls: () -> Unit,
     onPlaybackSnapshotChange: (VideoPlayerPlaybackSnapshot) -> Unit,
     onPlayIntentChange: (Boolean) -> Unit,
     onMutedChange: (Boolean) -> Unit,
     onClearError: () -> Unit,
+    onMediaWidthChange: (Dp?) -> Unit,
+    onNextTitle: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     var speedBoostActive by remember(player) { mutableStateOf(false) }
@@ -106,26 +115,35 @@ internal fun AnimeImmersivePlayerSurface(
             updatedAtMillis = System.currentTimeMillis(),
         )
     }
-    val togglePlayback = {
+    val setPlaying: (Boolean) -> Unit = { playing ->
         controllerInteractionSequence += 1L
-        if (playbackSnapshot.playbackEnded) player.seekTo(0L)
-        if (player.state.value.isPlaying) {
-            player.pause()
-            onPlayIntentChange(false)
-        } else {
+        if (playing) {
+            if (playbackSnapshot.playbackEnded) player.seekTo(0L)
             player.play()
-            onPlayIntentChange(true)
+        } else {
+            player.pause()
         }
+        onPlayIntentChange(playing)
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
     }
+    val togglePlayback = { setPlaying(!player.state.value.isPlaying) }
     val toggleMute = {
         controllerInteractionSequence += 1L
         onMutedChange(!muted)
     }
+    val volumePercent = platform.playerVolume?.collectAsState()?.value
+    // Setting the volume is asking to hear it, so it unmutes, as the player's slider does
+    val setVolume: (Int) -> Unit = { percent ->
+        controllerInteractionSequence += 1L
+        platform.playerVolume?.set(percent.coerceIn(0, VideoPlayer.MAX_VOLUME_BOOST_PERCENT))
+        if (muted) onMutedChange(false)
+    }
     val latestActive by rememberUpdatedState(active)
     val latestPerformSeek by rememberUpdatedState(performSeek)
     val latestTogglePlayback by rememberUpdatedState(togglePlayback)
+    val latestSetPlaying by rememberUpdatedState(setPlaying)
     val latestToggleMute by rememberUpdatedState(toggleMute)
+    val latestSetVolume by rememberUpdatedState(setVolume)
     val latestOnPlaybackSnapshotChange by rememberUpdatedState(onPlaybackSnapshotChange)
     val inputTarget = remember(player) {
         object : AnimeClipInputTarget {
@@ -136,7 +154,18 @@ internal fun AnimeImmersivePlayerSurface(
 
             override fun togglePlayback() = latestTogglePlayback()
 
+            override fun setPlaying(playing: Boolean) = latestSetPlaying(playing)
+
             override fun toggleMute() = latestToggleMute()
+
+            override val hasSubtitles get() = subtitles.available
+
+            override fun toggleSubtitles() = subtitles.toggle()
+
+            override fun stepVolume(percent: Int) {
+                val current = platform.playerVolume?.get() ?: return
+                latestSetVolume(current + percent)
+            }
 
             override fun seek(direction: VideoPlayerSeekDirection, stepSeconds: Int) =
                 latestPerformSeek(direction, stepSeconds)
@@ -161,7 +190,9 @@ internal fun AnimeImmersivePlayerSurface(
         playbackSnapshot.isPlaying,
         isBuffering,
     ) {
-        if (!active || !controlsVisible || !playbackSnapshot.isPlaying || isBuffering) {
+        if (!platform.controlsHideWhilePlaying || !active || !controlsVisible || !playbackSnapshot.isPlaying ||
+            isBuffering
+        ) {
             return@LaunchedEffect
         }
 
@@ -173,9 +204,17 @@ internal fun AnimeImmersivePlayerSurface(
         player.state.map { it.videoSize?.displayAspectRatio to it.cues }.distinctUntilChanged()
     }.collectAsState(initial = player.state.value.let { it.videoSize?.displayAspectRatio to it.cues })
     val (aspectRatio, cues) = playerState.value
-    val subtitleGapPx = with(LocalDensity.current) { spacing.s.toPx() }
+    val density = LocalDensity.current
+    val subtitleGapPx = with(density) { spacing.s.toPx() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val mediaWidth = fittedMediaWidth(size, aspectRatio)?.let { with(density) { it.toDp() } }
+    val latestOnMediaWidthChange by rememberUpdatedState(onMediaWidthChange)
+    LaunchedEffect(mediaWidth, hasRenderedFirstFrame) {
+        latestOnMediaWidthChange(mediaWidth?.takeIf { hasRenderedFirstFrame })
+    }
     platform.KeepAwake(playing = keepAwake)
-    Box(modifier = modifier) {
+    if (active) platform.MediaControls(player = player, metadata = metadata, target = inputTarget)
+    Box(modifier = modifier.onSizeChanged { size = it }) {
         platform.Picture(
             player = player,
             aspectRatio = aspectRatio,
@@ -235,11 +274,13 @@ internal fun AnimeImmersivePlayerSurface(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = controlsBottomInset + spacing.xs),
+                    .padding(bottom = controlsBottomInset + spacing.xs)
+                    .widthIn(max = mediaWidth ?: Dp.Unspecified)
+                    .mediaControl(),
             )
             OverlayPill(
                 onClick = togglePlayback,
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier.align(Alignment.Center).mediaControl(),
                 style = OverlayStyle.Scrim,
                 enabled = !isBuffering,
             ) {
@@ -266,31 +307,22 @@ internal fun AnimeImmersivePlayerSurface(
                     }
                 }
             }
-            ContentButton(
-                onClick = toggleMute,
+            AnimeClipSoundButton(
+                muted = muted,
+                volumePercent = volumePercent,
+                onToggleMute = toggleMute,
+                onVolumeChange = setVolume,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
-                    .size(KatariTheme.sizes.touchTarget),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    OverlayPill(style = OverlayStyle.Scrim) {
-                        Icon(
-                            imageVector = if (muted) {
-                                MaterialSymbols.AutoMirroredRounded.VolumeOff
-                            } else {
-                                MaterialSymbols.AutoMirroredRounded.VolumeUp
-                            },
-                            contentDescription = stringResource(
-                                if (muted) MR.strings.action_unmute else MR.strings.action_mute,
-                            ),
-                            modifier = Modifier
-                                .padding(spacing.s)
-                                .size(KatariTheme.sizes.iconSmall),
-                        )
-                    }
-                }
-            }
+                    .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl),
+            )
+        } else if (active && muted && hasRenderedFirstFrame) {
+            AnimeClipMutedBadge(
+                onUnmute = toggleMute,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = spacing.m, bottom = spacing.m),
+            )
         }
 
         ReaderMediaLoadOverlay(
@@ -299,7 +331,8 @@ internal fun AnimeImmersivePlayerSurface(
                 !hasRenderedFirstFrame || (isBuffering && !controlsVisible) -> ReaderMediaLoadState.Loading()
                 else -> ReaderMediaLoadState.Ready
             },
-            showBackground = !hasRenderedFirstFrame,
+            // The feed shows the title behind a clip until its picture shows
+            showBackground = false,
             onBackgroundClick = latestOnToggleControls,
             onRetry = {
                 onClearError()
@@ -307,6 +340,7 @@ internal fun AnimeImmersivePlayerSurface(
                 player.prepare()
                 player.play()
             },
+            skip = nextTitleSkip(onNextTitle),
             modifier = Modifier.fillMaxSize(),
         )
     }

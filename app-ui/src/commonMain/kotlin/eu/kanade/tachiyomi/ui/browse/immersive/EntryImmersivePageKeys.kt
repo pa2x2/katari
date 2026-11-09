@@ -8,6 +8,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ShortcutGroup
 import app.katari.presentation.kit.shortcut.ShortcutKeys
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -20,27 +21,35 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun EntryImmersivePageKeys(pagerState: PagerState, enabled: Boolean) {
     val scope = rememberCoroutineScope()
-    val step: (Int) -> Unit = { by ->
-        val page = (pagerState.targetPage + by).coerceIn(0, (pagerState.pageCount - 1).coerceAtLeast(0))
-        scope.launch { pagerState.animateScrollToPage(page) }
-    }
     KeyboardShortcutHandler(
-        shortcut = pageShortcut(
-            id = "immersive.previous",
-            label = stringResource(MR.strings.browse_immersive_previous),
-            key = ShortcutKeys.Chord(Key.DirectionUp, "↑"),
-        ),
+        shortcut = previousTitleShortcut(),
         enabled = enabled && pagerState.targetPage > 0,
-    ) { step(-1) }
+    ) { pagerState.stepTitle(scope, -1) }
     KeyboardShortcutHandler(
-        shortcut = pageShortcut(
-            id = "immersive.next",
-            label = stringResource(MR.strings.browse_immersive_next),
-            key = ShortcutKeys.Chord(Key.DirectionDown, "↓"),
-        ),
+        shortcut = nextTitleShortcut(),
         enabled = enabled && pagerState.targetPage < pagerState.pageCount - 1,
-    ) { step(1) }
+    ) { pagerState.stepTitle(scope, 1) }
 }
+
+/** Moves [by] titles from the one the pager is showing or moving to. */
+internal fun PagerState.stepTitle(scope: CoroutineScope, by: Int) {
+    val page = (targetPage + by).coerceIn(0, (pageCount - 1).coerceAtLeast(0))
+    scope.launch { animateScrollToPage(page) }
+}
+
+@Composable
+internal fun previousTitleShortcut() = pageShortcut(
+    id = "immersive.previous",
+    label = stringResource(MR.strings.browse_immersive_previous),
+    key = ShortcutKeys.Chord(Key.DirectionUp, "↑"),
+)
+
+@Composable
+internal fun nextTitleShortcut() = pageShortcut(
+    id = "immersive.next",
+    label = stringResource(MR.strings.browse_immersive_next),
+    key = ShortcutKeys.Chord(Key.DirectionDown, "↓"),
+)
 
 private fun pageShortcut(id: String, label: String, key: ShortcutKeys) = KeyboardShortcut(
     id = id,

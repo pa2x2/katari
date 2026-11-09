@@ -4,13 +4,16 @@ import app.katari.core.platform.power.ScreenIdleInhibitor
 import app.katari.entry.interactions.anime.media.immersive.AnimeClipPlatform
 import app.katari.entry.interactions.anime.media.immersive.AnimeImmersiveClips
 import app.katari.entry.interactions.anime.media.immersive.AnimeImmersiveProcessor
+import app.katari.entry.interactions.anime.media.immersive.ClipMediaControls
 import app.katari.entry.interactions.anime.media.immersive.PointerAnimeClipPlatform
 import app.katari.entry.interactions.anime.navigation.AnimeOpenProcessor
 import app.katari.entry.interactions.navigation.EntryOpenProcessor
 import app.katari.entry.interactions.player.AnimePlayer
 import app.katari.entry.interactions.player.AnimePlayerDestination
+import app.katari.entry.interactions.player.AnimePlayerMediaControls
 import app.katari.entry.interactions.runtime.EntryImmersiveProcessor
 import app.katari.entry.interactions.runtime.EntryTypeKey
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.viewer.settings.ViewerSettingBinder
 import app.katari.video.engine.mpv.MpvVideoEngine
@@ -50,7 +53,15 @@ object AnimeDesktopPlayerBindings {
         inhibitor: ScreenIdleInhibitor,
         binder: ViewerSettingBinder,
         preferences: AnimePlayerPreferences,
-    ): AnimeClipPlatform = PointerAnimeClipPlatform(inhibitor, binder, preferences)
+        devicePreferences: AnimePlayerDevicePreferences,
+        mediaControls: AnimePlayerMediaControls,
+    ): AnimeClipPlatform = PointerAnimeClipPlatform(
+        inhibitor,
+        binder,
+        preferences,
+        devicePreferences,
+        ClipMediaControls(mediaControls),
+    )
 
     @Provides
     @IntoMap

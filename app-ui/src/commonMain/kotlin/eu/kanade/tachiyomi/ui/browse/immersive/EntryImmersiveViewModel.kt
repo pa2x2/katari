@@ -11,7 +11,6 @@ import app.katari.entry.interactions.media.EntryImmersiveFeature
 import app.katari.entry.interactions.media.EntryImmersiveHandle
 import app.katari.entry.interactions.media.EntryImmersiveLoadRequest
 import app.katari.entry.interactions.media.EntryImmersiveLoadResult
-import app.katari.entry.interactions.media.EntryImmersiveProgress
 import app.katari.entry.interactions.media.EntryImmersiveUnavailableReason
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
@@ -23,12 +22,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -124,14 +121,6 @@ class EntryImmersiveViewModel(
     }
 
     fun renderer(handle: EntryImmersiveHandle) = immersiveFeature.renderer(handle)
-
-    fun persistProgress(handle: EntryImmersiveHandle, progress: EntryImmersiveProgress) {
-        viewModelScope.launch(Dispatchers.IO) {
-            withContext(NonCancellable) {
-                immersiveFeature.persistProgress(handle, progress)
-            }
-        }
-    }
 
     override fun onCleared() {
         loadJobs.values.forEach(Job::cancel)

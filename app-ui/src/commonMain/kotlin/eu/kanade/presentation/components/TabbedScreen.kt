@@ -49,7 +49,8 @@ fun TabbedScreen(
     val chromeVisible = tab.chromeVisible()
 
     Scaffold(
-        frame = frame,
+        // A tab that hides the screen's bars, such as the immersive feed, lays out the whole window itself
+        frame = if (chromeVisible) frame else ScreenFrame.Window,
         topBar = { scrollBehavior ->
             if (chromeVisible) {
                 val searchEnabled = tab.searchEnabled
@@ -117,6 +118,7 @@ data class TabContent(
     val titleRes: StringResource,
     val badgeNumber: Int? = null,
     val tabLabel: (@Composable () -> Unit)? = null,
+    /** Whether the screen's app bar and tabs show; while they don't, the tab has the whole window. */
     val chromeVisible: @Composable () -> Boolean = { true },
     val searchEnabled: Boolean = false,
     val actions: List<AppBar.AppBarAction> = listOf(),

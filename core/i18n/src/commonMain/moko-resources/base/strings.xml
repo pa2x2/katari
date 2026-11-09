@@ -1952,8 +1952,8 @@
     <string name="anime_playback_member_episode">%1$s · %2$s</string>
     <!-- The window's title while an episode plays: the series, then the episode -->
     <string name="anime_playback_window_title">%1$s · %2$s</string>
-    <string name="anime_playback_enter_full_screen">Full screen</string>
-    <string name="anime_playback_exit_full_screen">Exit full screen</string>
+    <string name="action_enter_full_screen">Full screen</string>
+    <string name="action_exit_full_screen">Exit full screen</string>
     <!-- The player's keyboard shortcuts, as the shortcut list names them -->
     <string name="anime_shortcut_play_pause">Play or pause</string>
     <string name="anime_shortcut_volume_up">Volume up</string>
@@ -2197,6 +2197,8 @@
     <string name="browse_exit_immersive">Exit immersive mode</string>
     <string name="browse_immersive_previous">Previous title</string>
     <string name="browse_immersive_next">Next title</string>
+    <!-- A clip's badge in the immersive feed while it plays without sound and its controls are hidden -->
+    <string name="browse_immersive_muted">Muted</string>
     <string name="browse_feeds">Feeds</string>
     <string name="browse_feeds_empty">No feeds yet</string>
     <string name="browse_feeds_empty_summary">A feed follows one source\'s Popular, Latest or a saved filter, and remembers where you stopped.</string>

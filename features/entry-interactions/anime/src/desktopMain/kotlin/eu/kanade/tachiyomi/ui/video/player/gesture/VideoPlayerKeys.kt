@@ -58,8 +58,8 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
     Key(VideoPlayerShortcuts.seekForward(seekStepSeconds), enabled) {
         target.seekStep(VideoPlayerSeekDirection.Forward)
     }
-    Key(VideoPlayerShortcuts.VolumeUp, enabled) { target.stepVolume(VOLUME_STEP_PERCENT) }
-    Key(VideoPlayerShortcuts.VolumeDown, enabled) { target.stepVolume(-VOLUME_STEP_PERCENT) }
+    Key(VideoPlayerShortcuts.VolumeUp, enabled) { target.stepVolume(VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
+    Key(VideoPlayerShortcuts.VolumeDown, enabled) { target.stepVolume(-VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
     Key(VideoPlayerShortcuts.Mute, enabled) { target.toggleMute() }
     Key(VideoPlayerShortcuts.Slower, enabled) { target.stepSpeed(faster = false) }
     Key(VideoPlayerShortcuts.Faster, enabled) { target.stepSpeed(faster = true) }
@@ -101,7 +101,5 @@ private fun VideoPlayerInputTarget.frame(framing: PictureFraming) {
     previewPictureFraming(framing)
     commitPictureFraming(framing)
 }
-
-private const val VOLUME_STEP_PERCENT = 5
 
 private const val PAN_STEP_SHARE = 0.1f

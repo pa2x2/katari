@@ -3,7 +3,7 @@ package app.katari.entry.interactions.player
 /**
  * The desktop's own media controls for the player, outside its windows: the shell's media widget and the media keys,
  * which MPRIS feeds on Linux. The player [show]s itself there for as long as it is open, paused included, and
- * [AnimePlayerMediaSession.close]s when it closes; feed clips never do.
+ * [AnimePlayerMediaSession.close]s when it closes; the immersive feed shows its clips there while it shows them.
  */
 interface AnimePlayerMediaControls {
     /**
