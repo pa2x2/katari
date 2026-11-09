@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -25,12 +27,15 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
+import app.katari.entry.interactions.media.fittedMediaWidth
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.presentation.kit.pager.WheelTurns
@@ -71,6 +76,7 @@ internal class MangaImmersiveRenderer(
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
         place: EntryImmersivePlaceTracker,
+        onMediaWidthChange: (Dp?) -> Unit,
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }
@@ -82,10 +88,23 @@ internal class MangaImmersiveRenderer(
         var isScrubbing by remember { mutableStateOf(false) }
         val isZoomed by remember { derivedStateOf { zoomedPageIndex == pagerState.currentPage } }
         val keepScreenOnSetting by keepScreenOn.state.collectAsState()
+        val pageSizes = remember { mutableStateMapOf<Int, IntSize>() }
+        var size by remember { mutableStateOf(IntSize.Zero) }
         val currentPage = if (strip) stripState.firstVisibleItemIndex else pagerState.settledPage
         val showPage: suspend (Int) -> Unit = { pageIndex ->
             if (strip) stripState.scrollToItem(pageIndex) else pagerState.scrollToPage(pageIndex)
         }
+        val density = LocalDensity.current
+        val stripWidth = KatariTheme.sizes.readableWidth
+        val mediaWidth = if (strip) {
+            with(density) { size.width.toDp() }.takeIf { size.width > 0 }?.coerceAtMost(stripWidth)
+        } else {
+            pageSizes[currentPage]
+                ?.let { fittedMediaWidth(size, it.width.toFloat() / it.height) }
+                ?.let { with(density) { it.toDp() } }
+        }
+        val latestOnMediaWidthChange by rememberUpdatedState(onMediaWidthChange)
+        LaunchedEffect(mediaWidth) { latestOnMediaWidthChange(mediaWidth) }
         MangaImmersivePagePreloader(
             pages = pages,
             currentPage = currentPage,
@@ -126,6 +145,7 @@ internal class MangaImmersiveRenderer(
         // them, such as the scrubber being dragged or a page being zoomed, which are what stop the turning.
         Box(
             modifier = modifier
+                .onSizeChanged { size = it }
                 .background(SurfaceContainer.Media)
                 .sidewaysScrollTurns(enabled = { latestTurns }, onTurn = turnBy)
                 .pagerMouseDrags(pagerState, vertical = false, scope = scope, enabled = { latestTurns }),
@@ -152,8 +172,9 @@ internal class MangaImmersiveRenderer(
                                 zoomedPageIndex = if (zoomed) pageIndex else zoomedPageIndex.takeIf { it != pageIndex }
                             }
                         },
-                        onDisplayedSize = { size ->
-                            if (!strip && size.isStrip()) {
+                        onDisplayedSize = { pageSize ->
+                            if (pageSize.height > 0) pageSizes[pageIndex] = pageSize
+                            if (!strip && pageSize.isStrip()) {
                                 strip = true
                                 scope.launch { stripState.scrollToItem(pageIndex) }
                             }
@@ -171,6 +192,7 @@ internal class MangaImmersiveRenderer(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = controlsBottomInset + KatariTheme.spacing.xs)
+                        .widthIn(max = mediaWidth ?: Dp.Unspecified)
                         .mediaControl(),
                 )
             }

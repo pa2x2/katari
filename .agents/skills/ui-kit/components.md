@@ -241,6 +241,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Running text in a readable column | `ReadingColumn` | |
 | Two pages side by side | `PageSpread` | |
 | A long strip of page images | `PageStrip` | With `maxWidth` it keeps the pages to a centred column, such as a strip previewed in the immersive feed |
+| Title and actions beside media that leaves room for them, such as a tall page in a wide window | `PanelBesideMedia` | Over the media otherwise; the caller says how wide the media is drawn |
 | A preview of reading colours | `ReadingPageSample`, `ReadingPaletteSwatch` | |
 
 ## Dashboards, charts and calendars

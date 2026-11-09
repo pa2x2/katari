@@ -22,6 +22,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.media.EntryImmersiveOpenTargetResult
 import app.katari.entry.interactions.media.EntryImmersivePlace
@@ -277,6 +278,7 @@ private fun EntryImmersivePage(
 ) {
     var bottomOverlayHeightPx by remember { mutableIntStateOf(0) }
     val place = remember(itemState) { EntryImmersivePlaceTracker() }
+    var mediaWidth by remember(itemState) { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
 
@@ -306,6 +308,7 @@ private fun EntryImmersivePage(
                         onToggleControls = controls::onMediaTap,
                         onPagingBlockedChange = onPagingBlockedChange,
                         place = place,
+                        onMediaWidthChange = { mediaWidth = it },
                     )
                     is EntryImmersiveRendererResult.Failed -> ReaderMediaLoadOverlay(
                         state = ReaderMediaLoadState.Failed(
@@ -345,22 +348,26 @@ private fun EntryImmersivePage(
         if (entry != null) {
             ImmersiveOverlay(
                 visible = controls.visible,
-                entry = entry,
-                chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name,
                 contextLabel = contextLabel,
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,
                 onContextClick = onContextClick,
-                onExitImmersive = onExitImmersive,
-                onEntryClick = { onEntryClick(entry) },
-                onLibraryAction = { onLibraryAction(entry) },
-                showBackToTop = showBackToTop,
-                onBackToTop = onBackToTop,
-                onRefresh = onRefresh,
-                refreshEnabled = refreshEnabled,
-                onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
+                view = ImmersiveViewActions(
+                    onRefresh = onRefresh,
+                    refreshEnabled = refreshEnabled,
+                    onBackToTop = onBackToTop.takeIf { showBackToTop },
+                    fullScreen = fullScreen,
+                    onExit = onExitImmersive,
+                ),
+                entry = ImmersiveEntryActions(
+                    entry = entry,
+                    chapterName = (itemState as? EntryImmersiveViewModel.ItemState.Ready)?.chapter?.name,
+                    onOpenChapter = onOpenChapter?.let { open -> { open(place.current()) } },
+                    onLibraryAction = { onLibraryAction(entry) },
+                    onDetails = { onEntryClick(entry) },
+                ),
+                mediaWidth = mediaWidth,
                 onBottomOverlaySize = { bottomOverlayHeightPx = it },
-                fullScreen = fullScreen,
                 titleSteps = titleSteps,
             )
         }

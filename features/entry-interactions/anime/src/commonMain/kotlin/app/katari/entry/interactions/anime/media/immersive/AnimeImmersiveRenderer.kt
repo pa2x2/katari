@@ -50,6 +50,7 @@ internal class AnimeImmersiveRenderer(
         onToggleControls: () -> Unit,
         onPagingBlockedChange: (Boolean) -> Unit,
         place: EntryImmersivePlaceTracker,
+        onMediaWidthChange: (Dp?) -> Unit,
     ) {
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
@@ -166,6 +167,7 @@ internal class AnimeImmersiveRenderer(
                 preferences.immersiveFeedMuted = it
             },
             onClearError = { playerErrorMessage = null },
+            onMediaWidthChange = onMediaWidthChange,
             modifier = modifier,
         )
     }

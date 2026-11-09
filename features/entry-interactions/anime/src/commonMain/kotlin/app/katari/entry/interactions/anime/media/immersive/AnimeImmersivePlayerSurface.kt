@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,8 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
+import app.katari.entry.interactions.media.fittedMediaWidth
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
@@ -74,6 +78,7 @@ internal fun AnimeImmersivePlayerSurface(
     onPlayIntentChange: (Boolean) -> Unit,
     onMutedChange: (Boolean) -> Unit,
     onClearError: () -> Unit,
+    onMediaWidthChange: (Dp?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var speedBoostActive by remember(player) { mutableStateOf(false) }
@@ -176,9 +181,14 @@ internal fun AnimeImmersivePlayerSurface(
         player.state.map { it.videoSize?.displayAspectRatio to it.cues }.distinctUntilChanged()
     }.collectAsState(initial = player.state.value.let { it.videoSize?.displayAspectRatio to it.cues })
     val (aspectRatio, cues) = playerState.value
-    val subtitleGapPx = with(LocalDensity.current) { spacing.s.toPx() }
+    val density = LocalDensity.current
+    val subtitleGapPx = with(density) { spacing.s.toPx() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    val mediaWidth = fittedMediaWidth(size, aspectRatio)?.let { with(density) { it.toDp() } }
+    val latestOnMediaWidthChange by rememberUpdatedState(onMediaWidthChange)
+    LaunchedEffect(mediaWidth) { latestOnMediaWidthChange(mediaWidth) }
     platform.KeepAwake(playing = keepAwake)
-    Box(modifier = modifier) {
+    Box(modifier = modifier.onSizeChanged { size = it }) {
         platform.Picture(
             player = player,
             aspectRatio = aspectRatio,
@@ -239,6 +249,7 @@ internal fun AnimeImmersivePlayerSurface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = controlsBottomInset + spacing.xs)
+                    .widthIn(max = mediaWidth ?: Dp.Unspecified)
                     .mediaControl(),
             )
             OverlayPill(
