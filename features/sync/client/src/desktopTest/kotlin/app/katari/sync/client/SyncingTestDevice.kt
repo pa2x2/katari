@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import kotlin.time.Duration
 
 /**
  * A [SyncTestDevice] with sync's transport wired as the app wires it, talking to a real server over [http]: a test
@@ -111,7 +112,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     )
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff),
+        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences),
         LocalChanges(local.driver),
         work,
         connection,
@@ -119,6 +120,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.handler,
         local.preferences.profiles,
         handOff,
+        network,
     )
     val status = SyncStatusFlow(
         connection,
@@ -130,6 +132,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         PendingFiles(local.handler, preferences),
         fileRule,
         steps,
+        preferences,
     )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */
@@ -190,7 +193,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         var periodic = false
             private set
 
-        override suspend fun schedulePeriodic(enabled: Boolean) {
+        override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
             periodic = enabled
         }
 

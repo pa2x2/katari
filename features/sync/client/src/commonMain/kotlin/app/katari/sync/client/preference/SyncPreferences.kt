@@ -19,6 +19,18 @@ class SyncPreferences(profileStore: ProfileStore) {
     /** Whether the device syncs on a schedule while the app is closed. */
     val syncInBackground: Preference<Boolean> = store.getBoolean("sync_in_background", true)
 
+    /** Minutes between background syncs; one of [BACKGROUND_INTERVALS]. */
+    val backgroundInterval: Preference<Int> = store.getInt("sync_background_interval", 60)
+
+    /** Whether syncing is paused here: edits are still recorded, and go once it resumes. */
+    val paused: Preference<Boolean> = store.getBoolean("sync_paused", false)
+
+    /**
+     * Whether changes, this device's and the account's, sync on mobile data; when not, they wait for Wi-Fi, and
+     * opening a title still fetches its progress on any network.
+     */
+    val changesOnMobileData: Preference<Boolean> = store.getBoolean("sync_changes_on_mobile_data", true)
+
     /**
      * The name the person gave this device for its account's device list, blank for the platform's name. App state,
      * so no backup carries it to another device.
@@ -44,6 +56,11 @@ class SyncPreferences(profileStore: ProfileStore) {
     /** Whether a profile made on another device asks before it arrives here. */
     val askBeforeNewProfiles: Preference<Boolean> =
         store.getBoolean(Preference.appStateKey("sync_ask_before_new_profiles"), false)
+
+    companion object {
+        /** The intervals background sync's is picked from, in minutes; Android's periodic work runs 15 apart at most. */
+        val BACKGROUND_INTERVALS = listOf(15, 30, 60, 180, 360, 720, 1440)
+    }
 
     fun choices(): ChoiceSet = ChoiceSet(
         dataOff = dataOff.get().enumsOf(DataGroup.entries),

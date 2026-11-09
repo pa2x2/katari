@@ -6,6 +6,7 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.LiveChannel
@@ -43,13 +44,21 @@ class LiveUpdates(
     private val runs: SyncRuns,
     private val deviceChanges: DeviceListChanges,
     private val handOff: EntryHandOff,
+    private val preferences: SyncPreferences,
 ) {
-    /** Whether the channel should be open: the app is in front, the device syncs, and there is a network. */
+    /**
+     * Whether the channel should be open: the app is in front, the device syncs and isn't paused, and there is a
+     * network that changes may use.
+     */
     fun wanted(foreground: Flow<Boolean>): Flow<Boolean> = combine(
         foreground,
         connection.states(),
         network.state(),
-    ) { inFront, state, network -> inFront && state.listens() && network.hasNetwork }
+        preferences.paused.changes(),
+        preferences.changesOnMobileData.changes(),
+    ) { inFront, state, network, paused, onMobileData ->
+        inFront && state.listens() && network.hasNetwork && !paused && (onMobileData || network.countsAsWifi)
+    }
         .distinctUntilChanged()
 
     /** Keeps the channel open until cancelled. */

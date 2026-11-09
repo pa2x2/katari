@@ -34,12 +34,15 @@ import tachiyomi.core.common.util.system.logcat
 /**
  * One sync run ([SyncRuns] keeps them to one at a time).
  *
+ * Nothing runs while the person paused syncing.
+ *
  * A device still joining its account goes on with its first sync ([FirstSyncSteps]), one stored stage after another,
  * and pushes nothing until it has taken the account's records, so what it held before merges with them first. A
  * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else.
  *
  * A device that is ready runs, in this order:
- * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else. Records
+ * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else. On a
+ *    metered network, while the person keeps changes off mobile data, the run ends here. Records
  *    stored before an update that keeps their groups get them first ([UngroupedRecords]), a batch at a time, so the
  *    first migration applied after it doesn't read every record while every other write waits.
  * 2. Every page after its position, then the records held for later, which those pages may have made applicable.
@@ -97,7 +100,7 @@ class SyncPass(
 
     private suspend fun attempt(request: SyncRequest, working: () -> Unit): SyncOutcome {
         val state = connection.state()
-        if (!state.isLinked) return SyncOutcome.IDLE
+        if (!state.isLinked || preferences.paused.get()) return SyncOutcome.IDLE
         if (!resumes(state)) return SyncOutcome.IDLE
         if (request.onlyIfChanged && request.entriesFirst.isEmpty() && state.stage == SyncStage.READY) {
             if (!hasChanges()) return SyncOutcome.IDLE
@@ -200,6 +203,9 @@ class SyncPass(
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
         ungrouped.fill()
         if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
+        if (!preferences.changesOnMobileData.get() && !network.current().countsAsWifi) {
+            return SyncOutcome.WAITING_FOR_WIFI
+        }
         steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
             val from = connection.state().position
             pull.pullAll(client, device, liveOnly = false) { position, sequence ->

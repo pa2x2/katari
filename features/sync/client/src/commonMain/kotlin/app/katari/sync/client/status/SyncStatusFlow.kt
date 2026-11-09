@@ -9,6 +9,7 @@ import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.PendingFiles
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.run.RUNS_SETTLE
@@ -46,16 +47,19 @@ class SyncStatusFlow(
     private val pendingFiles: PendingFiles,
     private val fileRule: FileTransferRule,
     private val steps: SyncSteps,
+    private val preferences: SyncPreferences,
 ) {
     fun status(): Flow<SyncStatus> {
+        val connectionState = combine(connection.states(), preferences.paused.changes(), ::ConnectionInputs)
         val activity = combine(
-            connection.states(),
+            connectionState,
             runs.running.settled(),
             runs.lastOutcome,
             network.state(),
             shownProgress(),
-            ::Inputs,
-        )
+        ) { link, running, outcome, network, progress ->
+            Inputs(link.state, link.paused, running, outcome, network, progress)
+        }
         val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
         return combine(activity, pending.counts(), questions.open(), waiting, files()) {
                 inputs,
@@ -140,8 +144,11 @@ class SyncStatusFlow(
 
     private data class ShownProgress(val download: Int?, val step: SyncStep?)
 
+    private class ConnectionInputs(val state: SyncConnectionState, val paused: Boolean)
+
     private class Inputs(
         val state: SyncConnectionState,
+        val paused: Boolean,
         val running: Boolean,
         val outcome: SyncOutcome,
         val network: NetworkState,
@@ -163,6 +170,7 @@ class SyncStatusFlow(
         val unreachableSince = state.unreachableSince
         return when {
             !state.isLinked || state.stopped != null -> SyncStatus.Activity.Idle
+            inputs.paused -> SyncStatus.Activity.Paused
             state.stage == SyncStage.CHOOSING -> SyncStatus.Activity.WaitingForChoices
             // A run trying again doesn't make a server found unreachable any closer: that shows until one answers
             inputs.running && unreachableSince == null ->
@@ -172,6 +180,7 @@ class SyncStatusFlow(
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)
             inputs.outcome == SyncOutcome.WAITING_FOR_WIFI && state.stage == SyncStage.DOWNLOADING ->
                 SyncStatus.Activity.WaitingForWifi
+            inputs.outcome == SyncOutcome.WAITING_FOR_WIFI -> SyncStatus.Activity.ChangesWaitForWifi
             state.stage != SyncStage.READY ->
                 SyncStatus.Activity.Syncing(inputs.progress.download, catchingUp = state.catchingUp)
             else -> SyncStatus.Activity.UpToDate(state.lastSyncedAt)
@@ -189,6 +198,8 @@ class SyncStatusFlow(
     private fun unsentReason(state: SyncConnectionState, activity: SyncStatus.Activity): SyncStatus.UnsentReason? =
         when {
             state.stopped != null -> SyncStatus.UnsentReason.STOPPED
+            activity == SyncStatus.Activity.Paused -> SyncStatus.UnsentReason.PAUSED
+            activity == SyncStatus.Activity.ChangesWaitForWifi -> SyncStatus.UnsentReason.WAITING_FOR_WIFI
             activity == SyncStatus.Activity.Offline -> SyncStatus.UnsentReason.NO_CONNECTION
             activity is SyncStatus.Activity.Unreachable -> SyncStatus.UnsentReason.SERVER_UNREACHABLE
             else -> null

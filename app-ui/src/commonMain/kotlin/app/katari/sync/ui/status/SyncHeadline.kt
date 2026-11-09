@@ -51,6 +51,12 @@ sealed interface SyncHeadline {
 
     data object FirstDownloadWaitsForWifi : SyncHeadline
 
+    /** The person paused syncing; [unsent] changes made here wait for it to resume. */
+    data class Paused(val unsent: Long) : SyncHeadline
+
+    /** Changes wait for Wi-Fi, as the person chose; [unsent] of them were made here. */
+    data class ChangesWaitForWifi(val unsent: Long) : SyncHeadline
+
     data object Syncing : SyncHeadline
 
     /** [count] changes made here wait, because there is no connection or [server] doesn't answer. */
@@ -117,6 +123,8 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
             else -> activity.step?.let(SyncHeadline::Step) ?: SyncHeadline.Syncing
         }
         SyncStatus.Activity.WaitingForWifi -> SyncHeadline.FirstDownloadWaitsForWifi
+        SyncStatus.Activity.ChangesWaitForWifi -> SyncHeadline.ChangesWaitForWifi(unsent)
+        SyncStatus.Activity.Paused -> SyncHeadline.Paused(unsent)
         SyncStatus.Activity.Offline -> if (unsent > 0) SyncHeadline.Unsent(unsent, null) else SyncHeadline.Offline
         is SyncStatus.Activity.Unreachable -> if (unsent > 0) {
             SyncHeadline.Unsent(unsent, server)

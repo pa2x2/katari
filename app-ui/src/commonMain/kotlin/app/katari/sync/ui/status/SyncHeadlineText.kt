@@ -10,10 +10,12 @@ import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.icons.materialsymbols.rounded.CloudUpload
 import app.katari.icons.materialsymbols.rounded.PhonelinkErase
 import app.katari.icons.materialsymbols.rounded.Sync
+import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.icons.materialsymbols.rounded.Wifi
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.run.SyncStep
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.util.relativeTimeSpanString
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -51,6 +53,10 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
             ?: stringResource(MR.strings.sync_status_catching_up_unknown)
     is SyncHeadline.Step -> stepText(headline.step)
     SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
+    is SyncHeadline.Paused -> unsentText(headline.unsent, MR.strings.sync_unsent_paused)
+        ?: stringResource(MR.strings.sync_status_paused)
+    is SyncHeadline.ChangesWaitForWifi -> unsentText(headline.unsent, MR.strings.sync_unsent_waiting_for_wifi)
+        ?: stringResource(MR.strings.sync_status_changes_wifi)
     SyncHeadline.Syncing -> stringResource(MR.strings.sync_status_syncing)
     is SyncHeadline.Unsent -> stringResource(
         MR.strings.sync_status_with_note,
@@ -85,6 +91,17 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     }
 }
 
+/** [count] changes not sent yet, with why; null when there are none. */
+@Composable
+private fun unsentText(count: Long, because: StringResource): String? {
+    if (count <= 0) return null
+    return stringResource(
+        MR.strings.sync_status_with_note,
+        pluralStringResource(MR.plurals.sync_unsent, count.toInt(), count.toInt()),
+        stringResource(because),
+    )
+}
+
 @Composable
 private fun stepText(step: SyncStep): String {
     val done = step.done.toInt()
@@ -105,7 +122,7 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     -> ContentTone.Error
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
     SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
-    is SyncHeadline.Unsent, SyncHeadline.FirstDownloadWaitsForWifi,
+    is SyncHeadline.Unsent, SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi,
     -> ContentTone.Warning
     is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
         ContentTone.Primary
@@ -136,7 +153,8 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
         SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload
         SyncStep.Kind.DOWNLOADING_FILES, SyncStep.Kind.DOWNLOADING_CHANGES -> MaterialSymbols.Rounded.CloudDownload
     }
-    SyncHeadline.FirstDownloadWaitsForWifi -> MaterialSymbols.Rounded.Wifi
+    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi -> MaterialSymbols.Rounded.Wifi
+    is SyncHeadline.Paused -> MaterialSymbols.Rounded.SyncDisabled
     SyncHeadline.Syncing -> MaterialSymbols.Rounded.Sync
     is SyncHeadline.UpToDate -> if (files is SyncHeadline.FilesNote.WaitingForWifi) {
         MaterialSymbols.Rounded.Wifi
