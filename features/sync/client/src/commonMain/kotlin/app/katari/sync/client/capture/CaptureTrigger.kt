@@ -20,10 +20,16 @@ internal class CaptureTrigger(
      * removes them, went as cache and not by the person's hand, so its record stays as it is everywhere (D017).
      */
     val owners: List<Owner> = emptyList(),
+    /**
+     * Whether the insert is the person's edit of the row's fields. A row a refresh brings is not: it touches no field,
+     * so its values give way to every edit made anywhere, as the rows recorded at the first sync do.
+     */
+    val personsEdit: Boolean = true,
 ) {
     init {
         require((event == Event.UPDATE) == fields.isNotEmpty()) { "Only updates name the fields they capture" }
         require(event == Event.DELETE || owners.isEmpty()) { "Only deletes depend on their owners" }
+        require(event == Event.INSERT || personsEdit) { "Only inserts may be no edit of the person's" }
     }
 
     /** The row of [table] whose `_id` is [id], an SQL expression over the deleted row. */
@@ -55,7 +61,8 @@ internal class CaptureTrigger(
                 val differs = field.columns.joinToString(" OR ") { "OLD.$it IS NOT NEW.$it" }
                 "(CASE WHEN $differs THEN $bit ELSE 0 END)"
             }
-            Event.INSERT, Event.DELETE -> FieldStamps.EVERY_FIELD.toString()
+            Event.INSERT -> if (personsEdit) FieldStamps.EVERY_FIELD.toString() else "0"
+            Event.DELETE -> FieldStamps.EVERY_FIELD.toString()
         }
         val columns = when (event) {
             Event.UPDATE -> " OF " + fields.flatMap { it.columns.toList() }.distinct().joinToString()

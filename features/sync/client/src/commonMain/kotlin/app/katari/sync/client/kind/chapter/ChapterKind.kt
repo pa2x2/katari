@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.chapter
 
+import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
@@ -20,13 +21,23 @@ import app.katari.sync.client.record.SyncedKind
 /**
  * Chapters, keyed by their entry's key and URL. Local ref: `[chapters._id]`.
  *
- * Rows come from source refreshes, which are no change: only read and bookmark are captured, and a new row only when
- * it arrives already marked (a restore, a migration). A chapter the source dropped keeps its record, since a refresh
- * never deletes anything on other devices.
+ * Rows come from source refreshes, which are no change but for what they find: read and bookmark are captured, and a
+ * new row when it arrives already marked (a restore, a migration) or when a refresh found it as a new release of an
+ * entry in the Library, which Updates shows, so every device shows it there without refreshing the entry first. A
+ * chapter the source dropped keeps its record, since a refresh never deletes anything on other devices.
  */
 object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPayload.serializer(), Absence.KEEP) {
     override val capture = listOf(
         CaptureTrigger("chapters", Event.INSERT, listOf("NEW._id"), condition = "NEW.read = 1 OR NEW.bookmark = 1"),
+        // Unmarked, as a refresh brings it: whether it is read stays whatever any device made it
+        CaptureTrigger(
+            "chapters",
+            Event.INSERT,
+            listOf("NEW._id"),
+            condition = "NEW.read = 0 AND NEW.bookmark = 0 AND " +
+                "NEW.date_fetch > (SELECT date_added FROM main.entries WHERE _id = NEW.entry_id AND favorite = 1)",
+            personsEdit = false,
+        ),
         CaptureTrigger(
             "chapters",
             Event.UPDATE,
@@ -55,40 +66,60 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                     number = row.chapter_number,
                     scanlator = row.scanlator,
                     dateUpload = row.date_upload,
+                    dateFetch = row.date_fetch,
+                    sourceOrder = row.source_order,
                 ),
             )
         }
     }
+
+    /**
+     * A chapter two devices found at different times was found at the later one: a release either device shows in
+     * Updates is shown by both, while back catalogue listed by both stays before its entry joined the Library.
+     */
     override fun merge(local: ChapterPayload, incoming: ChapterPayload) = local.copy(
         read = latest(local.read, incoming.read),
         bookmark = latest(local.bookmark, incoming.bookmark),
-        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata }
+            .copy(dateFetch = maxOf(local.metadata.dateFetch, incoming.metadata.dateFetch)),
     )
 
-    /** Creates the row from the record's metadata when the entry wasn't refreshed here; a refresh overrides it. */
+    /**
+     * Creates the row from the record's metadata when the entry wasn't refreshed here, where the record's device has it
+     * in the list; a refresh overrides all but when it was found, which every device takes from the record.
+     */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
         val queries = writes.database.sync_applyQueries
+        val metadata = payload.metadata
         val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
         val chapterId = if (existing == null) {
+            val place = metadata.sourceOrder
+            if (place != null && queries.chapterHoldsPlace(entryId, place).awaitAsOne()) {
+                queries.freeChapterPlace(entryId, place).await()
+            }
             queries.insertChapter(
                 entryId = entryId,
                 url = payload.url,
-                name = payload.metadata.name,
+                name = metadata.name,
                 read = payload.read.value,
                 bookmark = payload.bookmark.value,
-                chapterNumber = payload.metadata.number,
-                scanlator = payload.metadata.scanlator,
-                dateUpload = payload.metadata.dateUpload,
+                chapterNumber = metadata.number,
+                scanlator = metadata.scanlator,
+                dateUpload = metadata.dateUpload,
+                dateFetch = metadata.dateFetch,
+                sourceOrder = place ?: queries.placeAfterChapters(entryId).awaitAsOne(),
             ).awaitAsOne()
         } else {
             queries.updateChapterMarks(
                 read = payload.read.value,
                 bookmark = payload.bookmark.value,
+                dateFetch = metadata.dateFetch,
                 chapterId = existing,
             )
             existing
         }
+        queries.noteNewChapter(dateFetch = metadata.dateFetch, entryId = entryId)
         return ApplyOutcome.Applied(ref(chapterId))
     }
 

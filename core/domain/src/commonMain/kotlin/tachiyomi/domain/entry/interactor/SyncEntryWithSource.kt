@@ -163,7 +163,6 @@ class SyncEntryWithSource(
             entryRepository.updateForSync(
                 entry = updatedEntry,
                 explicitProfileId = explicitProfileId,
-                updateDateAdded = false,
                 updateTitle = updatedEntry.title != entry.title,
             ) ?: error("Failed to update entry ${entry.id}")
         } else {
@@ -198,13 +197,15 @@ class SyncEntryWithSource(
         }
 
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
-        // The first chapters of an entry added to the Library are its back catalogue, kept out of Updates by moving its
-        // date added past them; those of a season its source added to a merge in the Library are new
-        val isInitialLibraryChapterSync = firstFetchIsBackCatalogue &&
+        // The first time this device lists an entry in the Library (one it refreshed has a fetch interval), what it
+        // lists is the back catalogue, no news: dated no later than the entry joined the Library, it stays out of
+        // Updates. Chapters stored here before, such as those another device read or found, are known already, so only
+        // chapters listed before all of them are new releases. The chapters of a season its source added to a merge in
+        // the Library are new as well
+        val listsBackCatalogue = firstFetchIsBackCatalogue &&
             entryAfterMetadataSync.favorite &&
             entryAfterMetadataSync.dateAdded > 0L &&
-            entryAfterMetadataSync.fetchInterval == 0 &&
-            existingChapters.isEmpty()
+            entryAfterMetadataSync.fetchInterval == 0
         val chapterRefresh = if (refresh != null && chaptersWithDetails) {
             refresh
         } else {
@@ -245,6 +246,7 @@ class SyncEntryWithSource(
                 },
                 removal = if (rest == ChapterListRest.Complete) ChapterRemoval.Unmatched else ChapterRemoval.None,
                 now = now,
+                backCatalogueDateFetch = if (listsBackCatalogue) minOf(now, entryAfterMetadataSync.dateAdded) else null,
                 commitAlways = rest is ChapterListRest.More || walk != null,
                 afterSave = { listedChapterIds, nextSourceOrder ->
                     when (rest) {
@@ -289,15 +291,15 @@ class SyncEntryWithSource(
             entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = true)
                 .mapTo(mutableSetOf(), EntryChapter::id)
         }
-        val reportableInsertedChapters = insertedChapters.filter { it.id in visibleChapterIds }
+        // Back catalogue listed for the first time is no new release to report
+        val reportableInsertedChapters = insertedChapters.filter {
+            it.id in visibleChapterIds && it.url !in saved.backCatalogueUrls
+        }
 
         val hasChapterChanges =
             insertedChapters.isNotEmpty() || saved.updatedCount > 0 || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
-            entryAfterMetadataSync.copy(
-                lastUpdate = now,
-                dateAdded = if (isInitialLibraryChapterSync) now else entryAfterMetadataSync.dateAdded,
-            )
+            entryAfterMetadataSync.copy(lastUpdate = now)
         } else {
             entryAfterMetadataSync
         }
@@ -329,7 +331,6 @@ class SyncEntryWithSource(
             entryRepository.updateForSync(
                 entry = entryAfterChapterSync,
                 explicitProfileId = explicitProfileId,
-                updateDateAdded = isInitialLibraryChapterSync,
                 updateTitle = false,
             ) ?: error("Failed to update entry ${entry.id}")
         }
@@ -353,7 +354,6 @@ class SyncEntryWithSource(
     private suspend fun EntryRepository.updateForSync(
         entry: Entry,
         explicitProfileId: Long?,
-        updateDateAdded: Boolean,
         updateTitle: Boolean,
     ): Entry? {
         val sourceSyncRepository = this as? EntrySourceSyncRepository
@@ -361,7 +361,6 @@ class SyncEntryWithSource(
             return sourceSyncRepository.updateFromSourceSync(
                 entry = entry,
                 profileId = explicitProfileId ?: entry.profileId,
-                updateDateAdded = updateDateAdded,
                 updateTitle = updateTitle,
             )
         }
