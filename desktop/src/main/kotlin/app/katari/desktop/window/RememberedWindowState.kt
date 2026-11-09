@@ -16,7 +16,10 @@ import kotlin.math.roundToInt
 /**
  * The window's state, opened where [preferences] last saw it and saved there as it changes. A window saved on no
  * screen there is now opens where the window manager puts it, and the first start opens a window sized to the main
- * screen. Compose places desktop windows in AWT's units, one dp each.
+ * screen. A window saved maximized opens at the bounds it takes maximized: Compose sizes a window before it shows it
+ * and maximizes it after, so at its floating size its first frames would be laid out for that size, and laid out again
+ * once the window manager has maximized it ([RestoresFloatingBounds] puts it back where it floated). Compose places
+ * desktop windows in AWT's units, one dp each.
  */
 @Composable
 fun rememberSavedWindowState(preferences: WindowPreferences): WindowState {
@@ -24,11 +27,18 @@ fun rememberSavedWindowState(preferences: WindowPreferences): WindowState {
     // would put the window back as it was saved, out of full screen
     val state = remember {
         val saved = preferences.floatingBounds.get()
+        if (preferences.maximized.get()) {
+            val maximized = maximizedBounds(saved)
+            return@remember WindowState(
+                placement = WindowPlacement.Maximized,
+                position = WindowPosition(maximized.x.dp, maximized.y.dp),
+                size = DpSize(maximized.width.dp, maximized.height.dp),
+            )
+        }
         val screens = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
             .map { it.defaultConfiguration.bounds }
         val size = saved ?: firstStartSize()
         WindowState(
-            placement = if (preferences.maximized.get()) WindowPlacement.Maximized else WindowPlacement.Floating,
             position = if (saved != null && isReachable(saved, screens)) {
                 WindowPosition(saved.x.dp, saved.y.dp)
             } else {
