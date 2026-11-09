@@ -48,7 +48,7 @@ class ClassDataArchive(@AppCoroutineScope private val scope: CoroutineScope) {
         }
     }
 
-    /** Stops a build under way: its JVM reads the app's jars from the AppImage, whose mount ends with the app. */
+    /** Ends the upkeep as the app quits, and with it a build under way. */
     fun stop() {
         upkeep?.cancel()
         build?.stop()

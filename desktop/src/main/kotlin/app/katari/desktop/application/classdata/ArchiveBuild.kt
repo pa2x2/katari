@@ -8,15 +8,27 @@ import java.nio.file.Path
  * A class data archive building in a process of its own: the JVM the app runs on, with the options the app was started
  * with, so the archive matches the runs that map it, reading [classList] and writing [archive]. The JVM builds an
  * archive only as a process of its own, and one that adds this process's classes would stop all of its threads while
- * it writes, the window's too.
+ * it writes, the window's too. The build ends with the app, at the latest as the app's JVM exits: it runs from the
+ * AppImage, whose mount ends with the app, and would crash once it read from it. It is killed rather than asked to
+ * end, as the JVM leaves a request to end until it has written the archive.
  */
 internal class ArchiveBuild private constructor(private val process: Process) {
+    private val stopOnExit = Thread({ process.destroyForcibly() }, "Class data archive build stop")
+
+    init {
+        Runtime.getRuntime().addShutdownHook(stopOnExit)
+    }
 
     /** Whether the archive was built whole. */
     suspend fun await(): Boolean = runInterruptible { process.waitFor() } == 0
 
     fun stop() {
-        process.destroy()
+        try {
+            Runtime.getRuntime().removeShutdownHook(stopOnExit)
+        } catch (_: IllegalStateException) {
+            // The app is exiting, and the hook stops the build
+        }
+        process.destroyForcibly()
     }
 
     companion object {
@@ -41,7 +53,13 @@ internal class ArchiveBuild private constructor(private val process: Process) {
                     environment().remove("JDK_JAVA_OPTIONS")
                 }
                 .start()
-            return ArchiveBuild(process)
+            return try {
+                ArchiveBuild(process)
+            } catch (_: IllegalStateException) {
+                // The app began exiting as the build started
+                process.destroyForcibly()
+                null
+            }
         }
 
         private val RUN_ONLY_OPTIONS = listOf("-XX:DumpLoadedClassList=", "-XX:SharedArchiveFile=")
