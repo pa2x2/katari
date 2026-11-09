@@ -1361,6 +1361,7 @@
     <string name="browse_filter_not_specified">Not specified</string>
     <string name="extension_filter_stores_summary">Show extensions from selected stores.</string>
     <string name="extension_filter_languages">Languages</string>
+    <string name="extension_filter_find_language">Find a language</string>
     <string name="extension_filter_languages_summary">Limits available extensions. Installed extensions remain visible.</string>
     <string name="source_filter_title">Filter sources</string>
     <string name="ext_installer_shizuku_stopped">Shizuku is not running</string>
@@ -3137,8 +3138,6 @@
     <string name="filter_change_included">Includes %1$s</string>
     <string name="filter_change_excluded">Excludes %1$s</string>
     <string name="filter_sort_unset">Source order</string>
-    <string name="filter_sort_desc">Desc</string>
-    <string name="filter_sort_asc">Asc</string>
     <string name="filter_sort_descending">Descending</string>
     <string name="filter_sort_ascending">Ascending</string>
     <string name="filter_change_ascending">%1$s, ascending</string>

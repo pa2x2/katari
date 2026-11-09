@@ -1,11 +1,20 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import app.katari.core.platform.currentPlatformContext
+import app.katari.presentation.kit.field.SearchField
 import app.katari.presentation.kit.list.ToggleRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.sheet.SheetSplitList
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
 import eu.kanade.presentation.browse.components.FilterSectionHeading
@@ -26,6 +35,21 @@ fun ExtensionFilterSheet(
     onToggleStore: (String) -> Unit,
     onToggleLanguage: (String) -> Unit,
 ) {
+    val context = currentPlatformContext()
+    var languageQuery by rememberSaveable { mutableStateOf("") }
+    val languageNames = remember(state.languages, context) {
+        state.languages.associateWith { LocaleHelper.getSourceDisplayName(it, context) }
+    }
+    val shownLanguages = remember(state.languages, languageNames, languageQuery) {
+        val query = languageQuery.trim()
+        if (query.isEmpty()) {
+            state.languages
+        } else {
+            state.languages.filter {
+                languageNames.getValue(it).contains(query, ignoreCase = true) || it.contains(query, ignoreCase = true)
+            }
+        }
+    }
     BrowseFilterSheet(
         title = stringResource(MR.strings.extension_filter_title),
         onDismissRequest = onDismissRequest,
@@ -73,12 +97,23 @@ fun ExtensionFilterSheet(
                     )
                 }
 
+                item(key = "languages-search") {
+                    SearchField(
+                        query = languageQuery,
+                        onQueryChange = { languageQuery = it },
+                        placeholder = stringResource(MR.strings.extension_filter_find_language),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+                    )
+                }
+
                 rowGroupItems(
-                    items = state.languages,
+                    items = shownLanguages,
                     key = { it },
                 ) { language ->
                     ToggleRow(
-                        title = LocaleHelper.getSourceDisplayName(language, currentPlatformContext()),
+                        title = languageNames.getValue(language),
                         checked = language in state.enabledLanguages,
                         onCheckedChange = { onToggleLanguage(language) },
                     )

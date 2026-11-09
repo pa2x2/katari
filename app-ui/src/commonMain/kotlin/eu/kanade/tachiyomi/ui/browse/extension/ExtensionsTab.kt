@@ -129,6 +129,7 @@ fun extensionsTab(
                 },
                 onShowCompatibility = { showCompatibility = true },
                 onReviewMissingExtensions = { showMissingExtensions = true },
+                onOpenFilter = { showFilters = true },
                 onRefresh = extensionsViewModel::findAvailableExtensions,
             )
 

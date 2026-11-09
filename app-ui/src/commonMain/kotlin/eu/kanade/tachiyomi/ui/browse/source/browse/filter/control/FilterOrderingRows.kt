@@ -24,7 +24,7 @@ import app.katari.icons.materialsymbols.rounded.ArrowUpward
 import app.katari.icons.materialsymbols.rounded.Tune
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
-import app.katari.presentation.kit.control.SegmentedButtons
+import app.katari.presentation.kit.control.SegmentedIconButtons
 import app.katari.presentation.kit.list.currentRowInset
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.RadioMenuItem
@@ -37,7 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A sort filter: the current option as a row value that opens the option menu, and an always visible direction
- * control, so neither the choice nor its direction is hidden or changed silently.
+ * control of two arrows, so neither the choice nor its direction is hidden or changed silently.
  */
 @Composable
 internal fun FilterSortRow(filter: EntryFilter.Sort, onUpdate: () -> Unit) {
@@ -137,12 +137,12 @@ private fun FilterMenuRow(
 
 @Composable
 private fun FilterSortDirection(ascending: Boolean?, enabled: Boolean, onChange: (Boolean) -> Unit) {
-    // Null while the filter has no sort, so neither direction shows as selected.
-    SegmentedButtons<Boolean?>(
+    // Null while the filter has no sort, so neither direction shows as selected. Arrows alone leave a 400 dp sheet room
+    // for the sort's name beside them.
+    SegmentedIconButtons<Boolean?>(
         options = listOf(false, true),
         selected = ascending,
         onSelect = { it?.let(onChange) },
-        label = { stringResource(if (it == true) MR.strings.filter_sort_asc else MR.strings.filter_sort_desc) },
         enabled = enabled,
         icon = { if (it == true) MaterialSymbols.Rounded.ArrowUpward else MaterialSymbols.Rounded.ArrowDownward },
         description = {

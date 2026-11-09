@@ -53,6 +53,7 @@ fun SourcesScreen(
     onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
     onClickDisable: (Source) -> Unit,
+    onOpenFilter: () -> Unit,
     itemClicksEnabled: Boolean = true,
 ) {
     Column {
@@ -75,6 +76,7 @@ fun SourcesScreen(
             onClickItem = onClickItem,
             onClickPin = onClickPin,
             onClickDisable = onClickDisable,
+            onOpenFilter = onOpenFilter,
             itemClicksEnabled = itemClicksEnabled,
         )
     }
@@ -88,6 +90,7 @@ private fun SourceList(
     onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
     onClickDisable: (Source) -> Unit,
+    onOpenFilter: () -> Unit,
     itemClicksEnabled: Boolean,
 ) {
     when {
@@ -107,7 +110,7 @@ private fun SourceList(
             ) {
                 if (contentTypeFilter.isActive) {
                     item(key = "source-content-type-filter-summary") {
-                        ContentTypeFilterSummary(filter = contentTypeFilter)
+                        ContentTypeFilterSummary(filter = contentTypeFilter, onClick = onOpenFilter)
                     }
                 }
 

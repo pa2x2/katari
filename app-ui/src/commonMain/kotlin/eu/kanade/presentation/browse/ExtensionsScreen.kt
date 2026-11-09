@@ -61,6 +61,7 @@ fun ExtensionScreen(
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
     onReviewMissingExtensions: () -> Unit,
+    onOpenFilter: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -106,6 +107,7 @@ fun ExtensionScreen(
                     onClickUpdateAll = onClickUpdateAll,
                     onShowCompatibility = onShowCompatibility,
                     onReviewMissingExtensions = onReviewMissingExtensions,
+                    onOpenFilter = onOpenFilter,
                 )
             }
         }
@@ -128,6 +130,7 @@ private fun ExtensionContent(
     onClickUpdateAll: () -> Unit,
     onShowCompatibility: () -> Unit,
     onReviewMissingExtensions: () -> Unit,
+    onOpenFilter: () -> Unit,
 ) {
     val context = currentPlatformContext()
     val graph = LocalAppUiGraph.current
@@ -153,7 +156,7 @@ private fun ExtensionContent(
     ) {
         if (state.filter.activeFilterCount > 0) {
             item(key = "extension-filter-summary") {
-                ExtensionFilterSummary(state)
+                ExtensionFilterSummary(state, onClick = onOpenFilter)
             }
         }
 
@@ -321,8 +324,8 @@ private fun ExtensionContent(
 }
 
 @Composable
-private fun ExtensionFilterSummary(state: ExtensionListState) {
-    ContentTypeFilterSummary(filter = state.filter.contentTypes) {
+private fun ExtensionFilterSummary(state: ExtensionListState, onClick: () -> Unit) {
+    ContentTypeFilterSummary(filter = state.filter.contentTypes, onClick = onClick) {
         if (state.filter.stores.isActive) {
             FilterSummaryPill(
                 pluralStringResource(
@@ -330,6 +333,7 @@ private fun ExtensionFilterSummary(state: ExtensionListState) {
                     count = state.filter.stores.enabledStoreCount,
                     state.filter.stores.enabledStoreCount,
                 ),
+                onClick,
             )
         }
         FilterSummaryPill(
@@ -338,6 +342,7 @@ private fun ExtensionFilterSummary(state: ExtensionListState) {
                 count = state.visibleLanguageCount,
                 state.visibleLanguageCount,
             ),
+            onClick,
         )
     }
 }

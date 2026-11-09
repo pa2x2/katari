@@ -92,7 +92,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Figures laid out in columns inside a card | `FigureGrid` | |
 | A figure, such as a QR code, with the words that go with it, centred | `FigureWithText` | The words go under the figure, or beside it in a short window |
 | Facts on tiles of their own, such as an extension's version and language | `InfoTileRow`, `InfoTile` | |
-| A small rounded label for a value | `Pill` | |
+| A small rounded label for a value | `Pill` | With `onClick` it opens what sets the value, such as a list's filter summary opening the filter |
 | A status as a toned label, such as an engine's readiness | `StatusPill` | |
 | A plain fill with no shape, such as a full-screen background | `Surface`, `Modifier.background` | Not for cards, banners or pills: those are named components |
 | Content in a container's colours without its fill | `ContentOn` | |
@@ -121,6 +121,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | Mutually exclusive options as one connected row of equal buttons | `SegmentedButtons` | |
+| The same, shown by icons alone beside the value they qualify in a narrow row, such as a sort's direction arrows | `SegmentedIconButtons` | |
 | Options that can each be on or off, drawn as segments | `MultiSegmentedButtons` | |
 | A scrolling row of connected toggle buttons, such as content types | `ConnectedToggleRow` | |
 | A few connected options inline with other controls | `ConnectedToggleGroup` | |

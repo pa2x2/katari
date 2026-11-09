@@ -67,6 +67,7 @@ fun Screen.sourcesTab(): TabContent {
                 },
                 onClickPin = viewModel::togglePin,
                 onClickDisable = viewModel::toggleSource,
+                onOpenFilter = { showFilters = true },
             )
 
             if (showFilters) {
