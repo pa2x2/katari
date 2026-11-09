@@ -21,6 +21,7 @@ import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
@@ -104,6 +105,15 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             UngroupedRecords(local.handler),
         ),
         steps,
+    )
+    val choiceChanges = SyncChoiceChanges(
+        local.handler,
+        preferences,
+        local.writing,
+        local.preferences.reads,
+        connection,
+        runs,
+        local.fileCapture,
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(

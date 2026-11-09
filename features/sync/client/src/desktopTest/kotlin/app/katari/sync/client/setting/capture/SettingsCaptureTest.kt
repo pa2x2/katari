@@ -17,7 +17,7 @@ class SettingsCaptureTest {
     lateinit var directory: File
 
     @Test
-    fun `with sync on, only edits of person-level preferences and source settings reach the outbox`(): Unit =
+    fun `with sync on, only edits of settings that can sync and of source settings reach the outbox`(): Unit =
         runBlocking {
             SyncTestDevice(directory.resolve("device.db")).use { device ->
                 val profiles = device.preferences.profiles
@@ -29,8 +29,9 @@ class SettingsCaptureTest {
                 device.outboxEdits().shouldBeEmpty()
 
                 device.startSync(deviceId = 1)
-                // Device-level, in a profile and in the shared store
+                // Stays on each device unless the person syncs it, recorded anyway so it keeps the time it was made
                 profiles.profileStore(1).getString("pref_library_cover_size").set("Large")
+                // Only works on this device
                 profiles.basePreferenceStore().getString("verbose_logging").set("true")
                 // Restore's copy of the default profile's preferences into the shared store
                 profiles.basePreferenceStore().getString("pref_display_mode_library").set("list")
@@ -42,6 +43,7 @@ class SettingsCaptureTest {
                 sourceFiles.open(1, 777).edit().putString("quality", "high").commit()
 
                 val expected = listOf(
+                    "setting.profile.chosen" to """[1,"pref_library_cover_size"]""",
                     "setting.profile" to """[1,"pref_display_mode_library"]""",
                     "setting.shared" to """["mark_duplicate_read_chapter_read"]""",
                     "setting.source" to """[1,777,"quality"]""",
