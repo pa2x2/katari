@@ -1186,22 +1186,24 @@
 
     <string name="default_category">Default category</string>
     <string name="default_category_summary">Always ask</string>
-    <string name="categorized_display_settings">Per-category settings for sort</string>
+    <string name="categorized_display_settings">Sort each category separately</string>
     <string name="all">All</string>
     <string name="none">None</string>
     <string name="include">Include: %s</string>
     <string name="exclude">Exclude: %s</string>
 
     <string name="pref_behavior">Behavior</string>
+    <!-- Settings › Library heading for how a title's chapter or episode list behaves -->
+    <string name="pref_chapter_lists">Chapters and episodes</string>
     <!-- This should be to the left for RTL locales -->
-    <string name="pref_chapter_swipe_end">Item on swipe to right</string>
+    <string name="pref_chapter_swipe_end">Swipe right</string>
     <!-- This should be to the right for RTL locales -->
-    <string name="pref_chapter_swipe_start">Item on swipe to left</string>
-    <string name="pref_mark_duplicate_read_chapter_read">Mark duplicate seen item as seen</string>
-    <string name="pref_mark_duplicate_read_chapter_read_existing">After seeing an item</string>
-    <string name="pref_mark_duplicate_read_chapter_read_new">After fetching a new item</string>
+    <string name="pref_chapter_swipe_start">Swipe left</string>
+    <string name="pref_mark_duplicate_read_chapter_read">Mark duplicates as seen</string>
+    <string name="pref_mark_duplicate_read_chapter_read_existing">After you finish one</string>
+    <string name="pref_mark_duplicate_read_chapter_read_new">When a seen one is fetched again</string>
 
-    <string name="pref_hide_missing_chapter_indicators">Hide missing item indicators</string>
+    <string name="pref_hide_missing_chapter_indicators">Hide gaps in numbering</string>
     <string name="pref_disallow_non_ascii_filenames">Disallow non-ASCII filenames</string>
     <string name="pref_disallow_non_ascii_filenames_details">Ensures compatibility with certain storage media that don't support Unicode. When this is enabled, you'll need to manually rename source and entry folders by replacing non-ASCII characters with their lowercase UTF-8 hexadecimal representations. Downloaded files don't need to be renamed.</string>
     <string name="pref_download_name_hash">Add a unique code to download names</string>
