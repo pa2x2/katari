@@ -32,6 +32,7 @@ import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.ToggleRow
 import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
@@ -61,6 +62,7 @@ fun MigrationConfigScreenSheet(
     var carriedOptions by rememberSaveable(stateSaver = CarriedOptionsSaver) { mutableStateOf(CARRIED_OPTIONS) }
     Sheet(short = true, onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
+            SheetHeader(title = stringResource(MR.strings.migrationConfigScreen_optionsTitle))
             Column(
                 modifier = Modifier
                     .weight(1f, fill = false)

@@ -913,6 +913,7 @@
     <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
     <string name="book_document_image_description_unavailable">Image description unavailable</string>
     <string name="book_document_anchor_missing">The linked section could not be found.</string>
+    <string name="book_document_reference_title">Note</string>
     <string name="book_document_external_link_unavailable">The link could not be opened.</string>
     <string name="book_document_external_link_title">Open external link?</string>
     <string name="book_document_external_link_message">This leaves Katari and opens %1$s in another app.</string>
@@ -2456,6 +2457,7 @@
     <!-- Reader activity -->
     <string name="custom_filter">Custom filter</string>
     <string name="set_as_cover">Set as cover</string>
+    <string name="reader_page_actions_title">Page</string>
     <string name="cover_updated">Cover updated</string>
     <string name="share_page_info">%1$s: %2$s, page %3$d</string>
     <string name="chapter_progress">Page: %1$d</string>
@@ -2813,6 +2815,7 @@
     <string name="notes_placeholder">Enjoyed the part where…</string>
 
     <string name="migrationConfigScreen.title">Sources to search</string>
+    <string name="migrationConfigScreen.optionsTitle">Migration options</string>
     <string name="migrationConfigScreen.selectedHeader">Selected</string>
     <string name="migrationConfigScreen.availableHeader">Available</string>
     <string name="migrationConfigScreen.selectAllLabel">Select all</string>

@@ -1,6 +1,7 @@
 package eu.kanade.presentation.reader
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -17,6 +18,7 @@ import app.katari.icons.materialsymbols.rounded.Share
 import app.katari.presentation.kit.button.StackedActionButton
 import app.katari.presentation.kit.dialog.ConfirmDialog
 import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -33,49 +35,56 @@ fun ReaderPageActionsDialog(
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
     Sheet(short = true, onDismissRequest = onDismissRequest) {
-        Row(
-            // Inset like the cards of other sheets.
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.l),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            StackedActionButton(
-                modifier = Modifier.weight(1f),
-                label = stringResource(MR.strings.set_as_cover),
-                icon = MaterialSymbols.Rounded.Photo,
-                onClick = { showSetCoverDialog = true },
-            )
-            if (onCopy != null) {
+        Column {
+            SheetHeader(title = stringResource(MR.strings.reader_page_actions_title))
+            Row(
+                // Inset like the cards of other sheets.
+                modifier = Modifier.padding(
+                    start = KatariTheme.spacing.m,
+                    end = KatariTheme.spacing.m,
+                    bottom = KatariTheme.spacing.l,
+                ),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
                 StackedActionButton(
                     modifier = Modifier.weight(1f),
-                    label = stringResource(MR.strings.action_copy_to_clipboard),
-                    icon = MaterialSymbols.Rounded.ContentCopy,
-                    onClick = {
-                        onCopy()
-                        onDismissRequest()
-                    },
+                    label = stringResource(MR.strings.set_as_cover),
+                    icon = MaterialSymbols.Rounded.Photo,
+                    onClick = { showSetCoverDialog = true },
                 )
-            }
-            if (onShare != null) {
-                StackedActionButton(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(MR.strings.action_share),
-                    icon = MaterialSymbols.Rounded.Share,
-                    onClick = {
-                        onShare()
-                        onDismissRequest()
-                    },
-                )
-            }
-            if (onSave != null) {
-                StackedActionButton(
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(MR.strings.action_save),
-                    icon = MaterialSymbols.Rounded.Save,
-                    onClick = {
-                        onSave()
-                        onDismissRequest()
-                    },
-                )
+                if (onCopy != null) {
+                    StackedActionButton(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(MR.strings.action_copy_to_clipboard),
+                        icon = MaterialSymbols.Rounded.ContentCopy,
+                        onClick = {
+                            onCopy()
+                            onDismissRequest()
+                        },
+                    )
+                }
+                if (onShare != null) {
+                    StackedActionButton(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(MR.strings.action_share),
+                        icon = MaterialSymbols.Rounded.Share,
+                        onClick = {
+                            onShare()
+                            onDismissRequest()
+                        },
+                    )
+                }
+                if (onSave != null) {
+                    StackedActionButton(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(MR.strings.action_save),
+                        icon = MaterialSymbols.Rounded.Save,
+                        onClick = {
+                            onSave()
+                            onDismissRequest()
+                        },
+                    )
+                }
             }
         }
     }

@@ -88,7 +88,9 @@ import kotlin.math.roundToInt
  * columns of rows: row groups and the lists of [RowList] wrap their rows into both, and a [SheetSplitList] sets its two
  * parts side by side; [short] content, such as a few choices or a paragraph, stays one column wide, centred.
  * Its content is laid out at compact row density.
- * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
+ * A side sheet's title row ([SheetHeader], a [TabbedSheet]'s tabs) ends with a close button.
+ * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, and leaves out the close button, such as
+ * while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
  * [backdrop] says whether the screen behind is dimmed.
  * The sheet is its own window, so messages about changes made in it show over it: the snackbars the caller makes in
@@ -259,7 +261,7 @@ private fun SheetLayout(
         positionalThreshold = { _: Float -> with(density) { SheetDismissThreshold.toPx() } },
         animationSpec = sheetAnimationSpec,
     )
-    val internalOnDismissRequest = {
+    val internalOnDismissRequest: () -> Unit = {
         if (anchoredDraggableState.settledValue == 0) {
             scope.launch { anchoredDraggableState.animateTo(1) }
         }
@@ -335,7 +337,12 @@ private fun SheetLayout(
                         enabled = enableImplicitDismiss && anchoredDraggableState.targetValue == 0,
                         onBack = internalOnDismissRequest,
                     )
-                    content()
+                    CompositionLocalProvider(
+                        LocalSheetClose provides internalOnDismissRequest.takeIf {
+                            enableImplicitDismiss && edge != SheetEdge.Bottom
+                        },
+                        content = content,
+                    )
                 },
             )
             ScreenSnackbarHost(

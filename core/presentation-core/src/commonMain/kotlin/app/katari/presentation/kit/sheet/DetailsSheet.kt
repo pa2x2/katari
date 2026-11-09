@@ -30,8 +30,8 @@ class DetailsLink(
 
 /**
  * Explains one item, such as an engine or a library: optional [artwork], a title and [subtitle], an optional [status]
- * line, then its sections ([DetailsSection]) together in one card and its [links] as rows in a second. It closes like
- * every other sheet, so it has no close button.
+ * line, then its sections ([DetailsSection]) together in one card and its [links] as rows in a second. As a side sheet
+ * its title row ends with a close button.
  */
 @Composable
 fun DetailsSheet(
@@ -66,6 +66,7 @@ fun DetailsSheet(
                         Text(title, role = TextRole.SheetTitle)
                         if (subtitle != null) Text(subtitle, role = TextRole.Body, tone = ContentTone.Secondary)
                     }
+                    SheetCloseButton()
                 }
                 status?.invoke()
             }

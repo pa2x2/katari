@@ -1,5 +1,6 @@
 package app.katari.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
@@ -12,8 +13,11 @@ import androidx.compose.ui.platform.LocalDensity
 import app.katari.book.api.document.BookDocumentLinkTarget
 import app.katari.presentation.kit.layout.ReadingColumn
 import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** A separate viewport/selection lifetime using the same semantic blocks and position restoration as the reader. */
 @Composable
@@ -24,26 +28,29 @@ internal fun BookDocumentReferenceSheet(
     onExternalLink: (String) -> Unit,
 ) {
     Sheet(short = true, onDismissRequest = onDismiss, capHeight = true) {
-        key(section.key) {
-            val listState = rememberLazyListState()
-            LaunchedEffect(section.initialPosition, LocalBookDocumentTypography.current) {
-                listState.scrollToBookDocumentPosition(
-                    section.document,
-                    section.initialPosition,
-                    section.viewerBlockIndex(section.initialPosition.blockId),
-                )
-            }
-            BookDocumentChapterSelectionContainer(
-                chapterId = section.owner.id,
-                ownerIdentity = "book-document-reference:${section.key}",
-            ) {
-                ReadingColumn(
-                    state = listState,
-                    maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
-                    modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
+        Column {
+            SheetHeader(title = stringResource(MR.strings.book_document_reference_title))
+            key(section.key) {
+                val listState = rememberLazyListState()
+                LaunchedEffect(section.initialPosition, LocalBookDocumentTypography.current) {
+                    listState.scrollToBookDocumentPosition(
+                        section.document,
+                        section.initialPosition,
+                        section.viewerBlockIndex(section.initialPosition.blockId),
+                    )
+                }
+                BookDocumentChapterSelectionContainer(
+                    chapterId = section.owner.id,
+                    ownerIdentity = "book-document-reference:${section.key}",
                 ) {
-                    items(section.viewerBlocks, key = { it.key }) { item ->
-                        BookDocumentViewerBlock(item, onLink, onExternalLink)
+                    ReadingColumn(
+                        state = listState,
+                        maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
+                        modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
+                    ) {
+                        items(section.viewerBlocks, key = { it.key }) { item ->
+                            BookDocumentViewerBlock(item, onLink, onExternalLink)
+                        }
                     }
                 }
             }

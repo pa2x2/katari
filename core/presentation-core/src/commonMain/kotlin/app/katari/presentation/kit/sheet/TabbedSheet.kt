@@ -80,6 +80,7 @@ fun TabbedSheet(
                     }
                 }
                 menu?.let { OverflowMenu(content = it) }
+                SheetCloseButton()
             }
             CompositionLocalProvider(
                 LocalTabbedSheetPagerScrollLock provides pagerScrollLock,
