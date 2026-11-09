@@ -15,8 +15,8 @@ import kotlin.concurrent.Volatile
 
 /**
  * Posts [SyncNotifications] while the app is closed or in the background (D028): when a question arrives, and when
- * this device is signed out, removed from the account or the account is disabled. While the app shows, its screens say
- * so instead. What was there when the process started was told by an earlier one, so only changes after it notify; a
+ * this device is signed out, removed from the account or the account is disabled. While the app is in front, its
+ * screens say so instead. What was there when the process started was told by an earlier one, so only changes after it notify; a
  * notification goes once what it told is over, wherever the app is.
  */
 @Inject

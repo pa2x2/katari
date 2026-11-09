@@ -192,12 +192,14 @@ class App :
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart(graph.securityPreferences)
+        AppVisibility.becameShown(graph)
         AppVisibility.cameToFront(graph)
     }
 
     override fun onStop(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStopped(graph.securityPreferences)
         AppVisibility.wentToBack(graph)
+        AppVisibility.becameHidden(graph)
     }
 
     override fun getPackageName(): String {

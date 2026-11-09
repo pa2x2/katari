@@ -28,13 +28,15 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The live channel while the app is open (D021): announcements of a position past this device's start a run once they
+ * The live channel while the app is shown (D021): announcements of a position past this device's start a run once they
  * pause ([PullBatching], D064), so another device's change shows within seconds, and its count of the account's
  * devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
  * [MAX_BACKOFF] and starts over once the channel works; each end also starts a run, which finds out why when the
  * server refused it, as for a removed device. A channel heard from after the server or the network was found missing
  * starts a run too, even with nothing new to pull: only a run that gets through tells the status, and an open entry's
- * note that its progress is this device's own, that the server answers again.
+ * note that its progress is this device's own, that the server answers again. The server's first announcement on a
+ * new channel carries its current position, so a channel opened again after the app was hidden catches up on what came
+ * meanwhile without a run of its own.
  */
 @Inject
 class LiveUpdates(
@@ -47,17 +49,17 @@ class LiveUpdates(
     private val preferences: SyncPreferences,
 ) {
     /**
-     * Whether the channel should be open: the app is in front, the device syncs and isn't paused, and there is a
-     * network that changes may use.
+     * Whether the channel should be open: the app is [shown], the device syncs and isn't paused, and there is a network
+     * that changes may use.
      */
-    fun wanted(foreground: Flow<Boolean>): Flow<Boolean> = combine(
-        foreground,
+    fun wanted(shown: Flow<Boolean>): Flow<Boolean> = combine(
+        shown,
         connection.states(),
         network.state(),
         preferences.paused.changes(),
         preferences.changesOnMobileData.changes(),
-    ) { inFront, state, network, paused, onMobileData ->
-        inFront && state.listens() && network.hasNetwork && !paused && (onMobileData || network.countsAsWifi)
+    ) { isShown, state, network, paused, onMobileData ->
+        isShown && state.listens() && network.hasNetwork && !paused && (onMobileData || network.countsAsWifi)
     }
         .distinctUntilChanged()
 
