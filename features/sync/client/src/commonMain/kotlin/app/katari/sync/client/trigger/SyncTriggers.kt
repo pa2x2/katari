@@ -14,7 +14,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -23,20 +23,15 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import tachiyomi.data.DatabaseHandler
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 
 /**
  * When sync runs (D021), on every platform; the platforms call in when the app opens or closes and when it comes to the
  * front or leaves it, and the readers and the player when a period of reading or watching was recorded. A desktop app
  * stays open while its window is minimized or behind others; on Android the two go together.
  *
- * - A local edit: a run [QUIET] after the last edit of a burst, or [MAX_WAIT] after its first, whichever comes first,
- *   so marking 200 chapters read is one push. Reading position counts as an edit, so it goes 5 seconds after the last
- *   page turn.
+ * - A local edit: a run at once, and while edits keep coming, as a library update's do, at most every couple of
+ *   seconds ([RunPacing]). Marking 200 chapters read is one write, so one push. Reading position counts as an edit.
  * - Leaving or pausing a reader or the player, and the app leaving the front (screen off, another app): the
  *   platform's hand-off work ([SyncBackgroundWork.handOff]), which finishes in the background and retries until the
  *   server has it.
@@ -153,22 +148,13 @@ class SyncTriggers(
         scope.launch { if (connection.state().isLinked) work.handOff() }
     }
 
-    private suspend fun sendLocalEdits() {
-        var firstUnsent: TimeMark? = null
-        localChanges.writes().collectLatest {
-            val first = firstUnsent ?: TimeSource.Monotonic.markNow().also { firstUnsent = it }
-            delay(minOf(QUIET, MAX_WAIT - first.elapsedNow()))
-            firstUnsent = null
-            runs.request(SyncRequest(onlyIfChanged = true))
-        }
+    private suspend fun sendLocalEdits(): Nothing = coroutineScope {
+        val pacing = RunPacing()
+        launch { localChanges.writes().collect { pacing.hear() } }
+        pacing.follow { runs.request(SyncRequest(onlyIfChanged = true)) }
     }
 
     private suspend fun entryResumeContinues(): Long? = handler.await {
         sync_hand_offQueries.lastReadEntry(profileStore.currentProfileId).awaitAsOneOrNull()
-    }
-
-    private companion object {
-        val QUIET: Duration = 5.seconds
-        val MAX_WAIT: Duration = 60.seconds
     }
 }

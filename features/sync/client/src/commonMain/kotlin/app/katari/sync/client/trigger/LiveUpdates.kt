@@ -20,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -28,15 +29,15 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * The live channel while the app is open (D021): announcements of a position past this device's start a run once they
- * pause ([PullBatching], D064), so another device's change shows within seconds, and its count of the account's
- * devices goes to [DeviceListChanges]. A channel that ends is opened again after a backoff that grows to
- * [MAX_BACKOFF] and starts over once the channel works; each end also starts a run, which finds out why when the
- * server refused it, as for a removed device. A channel heard from after the server or the network was found missing
- * starts a run too, even with nothing new to pull: only a run that gets through tells the status, and an open entry's
- * note that its progress is this device's own, that the server answers again. The server's first announcement on a
- * new channel carries its current position, so a channel opened again after the app was closed catches up on what came
- * meanwhile without a run of its own.
+ * The live channel while the app is open (D021): an announcement of a position past this device's starts a run at once,
+ * and announcements that keep coming at most every couple of seconds ([RunPacing]), so another device's change shows
+ * here in about the time a run takes; its count of the account's devices goes to [DeviceListChanges]. A channel that
+ * ends is opened again after a backoff that grows to [MAX_BACKOFF] and starts over once the channel works; each end
+ * also starts a run, which finds out why when the server refused it, as for a removed device. A channel heard from
+ * after the server or the network was found missing starts a run too, even with nothing new to pull: only a run that
+ * gets through tells the status, and an open entry's note that its progress is this device's own, that the server
+ * answers again. The server's first announcement on a new channel carries its current position, so a channel opened
+ * again after the app was closed catches up on what came meanwhile without a run of its own.
  */
 @Inject
 class LiveUpdates(
@@ -68,15 +69,18 @@ class LiveUpdates(
         // Announcements arrive on OkHttp's thread; the position they are compared with is the newest one.
         val latest = AtomicReference(connection.state())
         val following = launch { connection.states().collect(latest::set) }
-        val batching = PullBatching()
-        // The announcement of this device's own push can come before the push's answer moves the device past it; by
-        // the time the batch closes the answer has, and a pull would find nothing
+        val pacing = RunPacing()
         val announced = AtomicReference<ServerIdentity?>(null)
         val pulling = launch {
-            batching.pulls { if (latest.get().isBehind(announced.get())) runs.request(SyncRequest()) }
+            pacing.follow {
+                // The announcement of this device's own push comes while that push's run is going, before its answer
+                // moves the device past it; once the run is over it has, and a pull would find nothing
+                runs.running.first { !it }
+                if (latest.get().isBehind(announced.get())) runs.request(SyncRequest())
+            }
         }
         try {
-            keepOpen(latest, batching, announced)
+            keepOpen(latest, pacing, announced)
         } finally {
             following.cancel()
             pulling.cancel()
@@ -85,7 +89,7 @@ class LiveUpdates(
 
     private suspend fun keepOpen(
         latest: AtomicReference<SyncConnectionState>,
-        batching: PullBatching,
+        pacing: RunPacing,
         announced: AtomicReference<ServerIdentity?>,
     ) {
         var backoff = FIRST_BACKOFF
@@ -103,7 +107,7 @@ class LiveUpdates(
                         val state = latest.get()
                         if (state.isBehind(changes.server)) {
                             announced.set(changes.server)
-                            batching.hear()
+                            pacing.hear()
                         } else if (state.unreachableSince != null || handOff.toldUnreachable) {
                             runs.request(SyncRequest())
                         }
