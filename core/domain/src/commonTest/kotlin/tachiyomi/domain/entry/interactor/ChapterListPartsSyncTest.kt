@@ -80,11 +80,10 @@ class ChapterListPartsSyncTest {
         val libraryEntry = entry().copy(favorite = true, dateAdded = 500L)
 
         store.sync(source, now = 1_000L)(libraryEntry, fetchDetails = false)
-        val joinedLibrary = store.entryUpdates.last().dateAdded
-        store.syncOlder(source)(libraryEntry.copy(dateAdded = joinedLibrary))
+        store.syncOlder(source)(libraryEntry)
 
-        joinedLibrary shouldBe 1_000L
-        store.chapters.filter { it.chapterNumber <= 20 }.all { it.dateFetch <= joinedLibrary } shouldBe true
+        store.entryUpdates.last().dateAdded shouldBe 500L
+        store.chapters.all { it.dateFetch <= 500L } shouldBe true
         store.chapterNumbersInOrder() shouldBe (30 downTo 1).toList()
     }
 

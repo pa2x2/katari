@@ -36,9 +36,9 @@ class ChangeCaptureTest {
                 "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
                 "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'second', 'Second', 0, 1)",
                 """
-                INSERT INTO entries(_id, profile_id, source, url, title, favorite, type)
-                VALUES (1, 1, -2, '/show', 'Show', 1, 'anime'), (2, 1, -2, '/other', 'Other', 1, 'anime'),
-                    (3, 1, 0, 'folder', 'Local', 1, 'manga')
+                INSERT INTO entries(_id, profile_id, source, url, title, favorite, date_added, type)
+                VALUES (1, 1, -2, '/show', 'Show', 1, 1000, 'anime'), (2, 1, -2, '/other', 'Other', 1, 0, 'anime'),
+                    (3, 1, 0, 'folder', 'Local', 1, 0, 'manga')
                 """,
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (10, 1, '/show/1', 'Episode 1')",
                 "INSERT INTO chapters(_id, entry_id, url, name) VALUES (12, 1, '/show/0', 'Recap')",
@@ -182,7 +182,6 @@ class ChangeCaptureTest {
                 entries.updateFromSourceSync(
                     entries.getEntryById(1, 1)!!.copy(title = "Show (TV)", description = "Refreshed"),
                     profileId = 1,
-                    updateDateAdded = false,
                     updateTitle = true,
                 )
                 val episode = chapters.getChapterById(10)!!
@@ -190,7 +189,20 @@ class ChangeCaptureTest {
                 chapters.applySourceSync(
                     removedIds = listOf(12),
                     updated = listOf(episode.copy(name = "Episode 1: Pilot")),
-                    inserted = listOf(EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2")),
+                    inserted = listOf(
+                        EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2", dateFetch = 1000),
+                    ),
+                    afterUpdates = {},
+                    afterInserts = {},
+                )
+            }
+            expect("source refresh finding a new release", "chapter") {
+                chapters.applySourceSync(
+                    removedIds = emptyList(),
+                    updated = emptyList(),
+                    inserted = listOf(
+                        EntryChapter.create().copy(entryId = 1, url = "/show/3", name = "Episode 3", dateFetch = 2000),
+                    ),
                     afterUpdates = {},
                     afterInserts = {},
                 )
@@ -204,7 +216,9 @@ class ChangeCaptureTest {
             }
             // Preferences aren't in the database; their kinds have no triggers
             stored.toSet() shouldBe SyncKinds.all.filter { it.capture.isNotEmpty() }.map { it.name }.toSet()
-            withClue("both episodes, not the local chapter") { stored.count { it == "chapter" } shouldBe 2 }
+            withClue("both episodes and the new release, not the local chapter") {
+                stored.count { it == "chapter" } shouldBe 3
+            }
         }
     }
 }

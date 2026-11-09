@@ -83,9 +83,9 @@ internal class DefaultEntryDeepLinkFeature(
                     ),
                 )
             ) {
-                is EntrySourceRefreshResult.Refreshed -> {
-                    refresh.insertedChildren.find { it.url == sourceChild.url }
-                }
+                // What the refresh stored, which is more than the new releases it reports, as the back catalogue
+                is EntrySourceRefreshResult.Refreshed ->
+                    entryChapterRepository.getChapterByUrlAndEntryId(sourceChild.url, entry.id)
                 is EntrySourceRefreshResult.SourceUnavailable -> throw SourceNotInstalledException()
                 is EntrySourceRefreshResult.Failed -> when (val reason = refresh.reason) {
                     EntrySourceRefreshFailure.NoChildren -> throw NoChaptersException()

@@ -366,10 +366,6 @@ updateFromSourceSync {
         next_update = :nextUpdate,
         initialized = :initialized,
         cover_last_modified = :coverLastModified,
-        date_added = CASE
-            WHEN :updateDateAdded AND favorite = 1 THEN :dateAdded
-            ELSE date_added
-        END,
         update_strategy = :updateStrategy,
         calculate_interval = :calculateInterval,
         memo = :memo,
