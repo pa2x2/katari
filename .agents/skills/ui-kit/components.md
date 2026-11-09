@@ -240,7 +240,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Marks for recognised text on a page | `PageTextMarks` | |
 | Running text in a readable column | `ReadingColumn` | |
 | Two pages side by side | `PageSpread` | |
-| A long strip of page images | `PageStrip` | |
+| A long strip of page images | `PageStrip` | With `maxWidth` it keeps the pages to a centred column, such as a strip previewed in the immersive feed |
 | A preview of reading colours | `ReadingPageSample`, `ReadingPaletteSwatch` | |
 
 ## Dashboards, charts and calendars

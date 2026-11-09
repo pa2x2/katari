@@ -34,7 +34,6 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
-import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
 import eu.kanade.tachiyomi.ui.reader.viewer.page.rememberReaderPageContent
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PageScaleType
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PageStartPosition
@@ -53,18 +52,20 @@ import tachiyomi.presentation.core.i18n.stringResource
  * and its progressive preview, then fitted to the screen and zoomable by pinch, double tap or click, quick zoom and
  * Ctrl with the wheel, or why it failed with a retry. A tap or click shows or hides the feed's controls. While the page
  * is zoomed, [onZoomedChange] is told, so the feed holds its paging and the wheel and drags move the page instead.
+ * [onDisplayedSize] is told the page's size once it is known, so a chapter of long strips can be shown as one.
  */
 @Composable
 internal fun MangaImmersivePage(
     page: ReaderPage,
     onToggleControls: () -> Unit,
     onZoomedChange: (Boolean) -> Unit,
+    onDisplayedSize: (IntSize) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(page) { page.chapter.pageLoader?.selectPage(page) }
     // The feed preloads the pages after the one shown itself
     val contentState =
-        rememberReaderPageContent(page, settingsKey = null, request = { IMMERSIVE_PAGE }, preloadCount = 0)
+        rememberReaderPageContent(page, settingsKey = null, request = { ImmersivePageRequest }, preloadCount = 0)
     val content = contentState.content
 
     val progressive by page.progressiveImageState.collectAsState(null)
@@ -79,6 +80,9 @@ internal fun MangaImmersivePage(
         shown != null -> shown.layout.displayedSize(shown.image.size)
         else -> null
     }
+
+    val latestOnDisplayedSize by rememberUpdatedState(onDisplayedSize)
+    LaunchedEffect(displayedSize) { displayedSize?.let { latestOnDisplayedSize(it) } }
 
     val zoom = remember(page) { PagerPageZoom() }
     var slotSize by remember { mutableStateOf(IntSize.Zero) }
@@ -147,13 +151,5 @@ internal fun MangaImmersivePage(
         )
     }
 }
-
-// A page alone, whole and as it is: the feed has no spreads, crop or background settings
-private val IMMERSIVE_PAGE = PageRequest(
-    cropBorders = false,
-    automaticBackground = false,
-    landscape = false,
-    layout = { _, _ -> PageImageLayout.Whole },
-)
 
 private const val DOUBLE_TAP_ZOOM_MILLIS = 500
