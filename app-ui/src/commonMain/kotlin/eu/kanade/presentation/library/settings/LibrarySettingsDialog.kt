@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.settings
 
 import androidx.compose.runtime.Composable
 import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import tachiyomi.domain.category.model.Category
@@ -17,6 +18,7 @@ fun LibrarySettingsDialog(
 ) {
     TabbedSheet(
         onDismissRequest = onDismissRequest,
+        backdrop = SheetBackdrop.Light,
         tabTitles = listOf(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),

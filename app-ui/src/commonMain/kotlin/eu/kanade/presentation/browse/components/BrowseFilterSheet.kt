@@ -10,6 +10,7 @@ import app.katari.presentation.kit.dialog.DialogAction
 import app.katari.presentation.kit.menu.DropdownMenuItem
 import app.katari.presentation.kit.sheet.Sheet
 import app.katari.presentation.kit.sheet.SheetActions
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.SheetHeader
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -23,7 +24,7 @@ fun BrowseFilterSheet(
     resetEnabled: Boolean = true,
     content: @Composable (Modifier) -> Unit,
 ) {
-    Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
+    Sheet(onDismissRequest = onDismissRequest, capHeight = true, backdrop = SheetBackdrop.Light) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(
                 title = title,

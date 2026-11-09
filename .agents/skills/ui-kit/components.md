@@ -92,7 +92,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Figures laid out in columns inside a card | `FigureGrid` | |
 | A figure, such as a QR code, with the words that go with it, centred | `FigureWithText` | The words go under the figure, or beside it in a short window |
 | Facts on tiles of their own, such as an extension's version and language | `InfoTileRow`, `InfoTile` | |
-| A small rounded label for a value | `Pill` | |
+| A small rounded label for a value | `Pill` | With `onClick` it opens what sets the value, such as a list's filter summary opening the filter |
 | A status as a toned label, such as an engine's readiness | `StatusPill` | |
 | A plain fill with no shape, such as a full-screen background | `Surface`, `Modifier.background` | Not for cards, banners or pills: those are named components |
 | Content in a container's colours without its fill | `ContentOn` | |
@@ -121,6 +121,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | Mutually exclusive options as one connected row of equal buttons | `SegmentedButtons` | |
+| The same, shown by icons alone beside the value they qualify in a narrow row, such as a sort's direction arrows | `SegmentedIconButtons` | |
 | Options that can each be on or off, drawn as segments | `MultiSegmentedButtons` | |
 | A scrolling row of connected toggle buttons, such as content types | `ConnectedToggleRow` | |
 | A few connected options inline with other controls | `ConnectedToggleGroup` | |
@@ -151,8 +152,10 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
-| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet in wide windows; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
+| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet from medium windows on, at the side the press that opened it landed on, with two columns of rows in large windows (`short` keeps a few choices or a paragraph to one centred column); a side sheet's header ends with a close button, so give every sheet a `SheetHeader`; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
 | A sheet of settings split into tabs | `TabbedSheet` | |
+| A sheet's list in two parts, such as a filter's options beside its long list of languages | `SheetSplitList` | Side by side in a large window's two-column sheet, one list otherwise |
+| A short choice opened from a button, such as the profile switcher or an entry's update choices | `Popover`, `rememberPopoverAnchor` | Beside its button from medium windows on, nothing dimmed; the button marks itself with `Modifier.popoverAnchor`. A sheet in compact windows or when the button isn't on screen |
 | A sheet that explains one item, such as an engine or a library | `DetailsSheet`, `DetailsSection` | |
 | What a source says about one chapter or episode | `ChapterSheet` | |
 | A dialog | `Dialog`, `DialogActions` | |

@@ -24,6 +24,8 @@ import androidx.compose.ui.unit.Dp
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.PanelBesideMedia
+import app.katari.presentation.kit.sheet.PopoverAnchor
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.surface.MediaScrim
 import app.katari.presentation.kit.surface.MediaScrimEdge
 import app.katari.presentation.kit.surface.OverlayPill
@@ -47,6 +49,7 @@ internal fun ImmersiveOverlay(
     contextSupportingLabel: String?,
     contextLeadingContent: (@Composable () -> Unit)?,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor?,
     view: ImmersiveViewActions,
     entry: ImmersiveEntryActions,
     mediaWidth: Dp?,
@@ -84,7 +87,9 @@ internal fun ImmersiveOverlay(
                             supportingLabel = contextSupportingLabel,
                             leadingContent = contextLeadingContent,
                             onClick = onContextClick,
-                            modifier = Modifier.weight(1f, fill = false),
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .then(contextAnchor?.let { Modifier.popoverAnchor(it) } ?: Modifier),
                         )
                     }
                 }

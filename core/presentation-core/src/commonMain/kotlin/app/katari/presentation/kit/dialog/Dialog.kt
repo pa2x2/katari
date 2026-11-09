@@ -33,6 +33,7 @@ import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.list.LocalInDialog
 import app.katari.presentation.kit.list.LocalRowGroupFramed
 import app.katari.presentation.kit.list.LocalRowInset
+import app.katari.presentation.kit.sheet.LocalSheetColumns
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.Surface
 import app.katari.presentation.kit.surface.SurfaceContainer
@@ -173,6 +174,7 @@ private fun DialogPanel(
                         LocalRowGroupFramed provides false,
                         LocalInDialog provides true,
                         LocalDialogConfirm provides confirm,
+                        LocalSheetColumns provides 1,
                     ) {
                         ProvideTextRole(TextRole.Body, content)
                     }

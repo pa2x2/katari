@@ -26,6 +26,7 @@ import app.katari.presentation.kit.list.SortRow
 import app.katari.presentation.kit.list.ToggleRow
 import app.katari.presentation.kit.list.TriStateRow
 import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -71,6 +72,7 @@ fun EntryChapterSettingsDialog(
 
     TabbedSheet(
         onDismissRequest = onDismissRequest,
+        backdrop = SheetBackdrop.Light,
         tabTitles = listOf(
             stringResource(MR.strings.action_filter),
             stringResource(MR.strings.action_sort),

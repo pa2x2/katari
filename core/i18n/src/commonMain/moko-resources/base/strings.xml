@@ -913,6 +913,7 @@
     <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
     <string name="book_document_image_description_unavailable">Image description unavailable</string>
     <string name="book_document_anchor_missing">The linked section could not be found.</string>
+    <string name="book_document_reference_title">Note</string>
     <string name="book_document_external_link_unavailable">The link could not be opened.</string>
     <string name="book_document_external_link_title">Open external link?</string>
     <string name="book_document_external_link_message">This leaves Katari and opens %1$s in another app.</string>
@@ -1369,6 +1370,7 @@
     <string name="browse_filter_not_specified">Not specified</string>
     <string name="extension_filter_stores_summary">Show extensions from selected stores.</string>
     <string name="extension_filter_languages">Languages</string>
+    <string name="extension_filter_find_language">Find a language</string>
     <string name="extension_filter_languages_summary">Limits available extensions. Installed extensions remain visible.</string>
     <string name="source_filter_title">Filter sources</string>
     <string name="ext_installer_shizuku_stopped">Shizuku is not running</string>
@@ -2467,6 +2469,7 @@
     <!-- Reader activity -->
     <string name="custom_filter">Custom filter</string>
     <string name="set_as_cover">Set as cover</string>
+    <string name="reader_page_actions_title">Page</string>
     <string name="cover_updated">Cover updated</string>
     <string name="share_page_info">%1$s: %2$s, page %3$d</string>
     <string name="chapter_progress">Page: %1$d</string>
@@ -2824,6 +2827,7 @@
     <string name="notes_placeholder">Enjoyed the part where…</string>
 
     <string name="migrationConfigScreen.title">Sources to search</string>
+    <string name="migrationConfigScreen.optionsTitle">Migration options</string>
     <string name="migrationConfigScreen.selectedHeader">Selected</string>
     <string name="migrationConfigScreen.availableHeader">Available</string>
     <string name="migrationConfigScreen.selectAllLabel">Select all</string>
@@ -3145,8 +3149,6 @@
     <string name="filter_change_included">Includes %1$s</string>
     <string name="filter_change_excluded">Excludes %1$s</string>
     <string name="filter_sort_unset">Source order</string>
-    <string name="filter_sort_desc">Desc</string>
-    <string name="filter_sort_asc">Asc</string>
     <string name="filter_sort_descending">Descending</string>
     <string name="filter_sort_ascending">Ascending</string>
     <string name="filter_change_ascending">%1$s, ascending</string>

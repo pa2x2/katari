@@ -38,6 +38,7 @@ import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
 import app.katari.entry.viewer.chrome.ui.pointer.LocalMediaControlHover
 import app.katari.presentation.kit.pager.VerticalPager
 import app.katari.presentation.kit.refresh.PullRefresh
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.surface.SurfaceContainer
@@ -70,6 +71,7 @@ internal fun EntryImmersiveContent(
     contextSupportingLabel: String? = null,
     contextLeadingContent: (@Composable () -> Unit)? = null,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor? = null,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
@@ -216,6 +218,7 @@ internal fun EntryImmersiveContent(
                                 null
                             },
                             onContextClick = onContextClick,
+                            contextAnchor = contextAnchor,
                             onExitImmersive = onExitImmersive,
                             onEntryClick = onEntryClick,
                             onLibraryAction = onLibraryAction,
@@ -278,6 +281,7 @@ private fun EntryImmersivePage(
     onNextTitle: (() -> Unit)?,
     titleSteps: ImmersiveTitleSteps?,
     onContextClick: (() -> Unit)?,
+    contextAnchor: PopoverAnchor?,
     onExitImmersive: () -> Unit,
     onEntryClick: (Entry) -> Unit,
     onLibraryAction: (Entry) -> Unit,
@@ -390,6 +394,8 @@ private fun EntryImmersivePage(
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,
                 onContextClick = onContextClick,
+                // Every composed page has its own pill; only the shown one is where the switcher opens
+                contextAnchor = contextAnchor?.takeIf { isActive },
                 view = ImmersiveViewActions(
                     onRefresh = onRefresh,
                     refreshEnabled = refreshEnabled,

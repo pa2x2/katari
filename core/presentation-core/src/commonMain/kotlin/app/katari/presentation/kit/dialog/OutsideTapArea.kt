@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 
 /**
  * The window of a dialog or sheet that places its own panel, behind that panel: a tap on it lands outside the panel and
@@ -13,12 +14,17 @@ import androidx.compose.ui.Modifier
  * It sits behind the panel rather than around it. Around it, the panel would need a clickable of its own to keep its
  * taps, and a clickable merges what it holds into one node, so assistive tools would read the panel's whole content as
  * a single item.
+ *
+ * The keyboard never focuses it: Tab moves between the panel's controls, and Escape closes the window.
  */
 @Composable
 internal fun BoxScope.OutsideTapArea(enabled: Boolean, onTap: () -> Unit) {
     Box(
         modifier = Modifier
             .matchParentSize()
+            // Only a pointer lands outside the panel; as a focus stop it would be an invisible first Tab stop, and
+            // Enter there would close the window
+            .focusProperties { canFocus = false }
             .clickable(interactionSource = null, indication = null, enabled = enabled, onClick = onTap),
     )
 }

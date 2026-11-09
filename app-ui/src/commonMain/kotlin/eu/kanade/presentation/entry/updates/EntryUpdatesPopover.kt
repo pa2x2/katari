@@ -14,7 +14,8 @@ import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
-import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.Popover
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.surface.NoticeCard
 import app.katari.presentation.kit.surface.NoticeTone
@@ -37,11 +38,12 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * How library updates treat one entry: its mode, why the latest update did what it did, which of its sources are paused,
- * and its release estimate.
+ * and its release estimate; beside the entry's updates button at [anchor].
  * Refreshing from the entry's own screen always checks it, so none of this affects that.
  */
 @Composable
-fun EntryUpdatesSheet(
+fun EntryUpdatesPopover(
+    anchor: PopoverAnchor?,
     entry: Entry,
     mode: EntryUpdateMode,
     status: EntryUpdateStatus?,
@@ -53,7 +55,7 @@ fun EntryUpdatesSheet(
     onReleaseEstimateClicked: (() -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
-    Sheet(onDismissRequest = onDismissRequest) {
+    Popover(anchor = anchor, onDismissRequest = onDismissRequest) {
         Column {
             SheetHeader(title = stringResource(MR.strings.entry_updates_title))
             Column(

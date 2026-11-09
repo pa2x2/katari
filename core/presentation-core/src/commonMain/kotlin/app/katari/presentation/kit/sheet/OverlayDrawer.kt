@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.graphicsLayer
+import app.katari.presentation.kit.dialog.LIGHT_DIM_FRACTION
 import app.katari.presentation.kit.surface.SidePanel
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.surface.background
@@ -52,9 +55,15 @@ fun OverlayDrawer(
                     .then(
                         when (backdrop) {
                             SheetBackdrop.Dimmed -> Modifier.background(SurfaceContainer.Scrim)
+                            SheetBackdrop.Light ->
+                                Modifier
+                                    .graphicsLayer { alpha = LIGHT_DIM_FRACTION }
+                                    .background(SurfaceContainer.Scrim)
                             SheetBackdrop.Clear -> Modifier
                         },
                     )
+                    // Only a pointer lands beside the drawer; Tab moves between the drawer's controls
+                    .focusProperties { canFocus = false }
                     .clickable(interactionSource = null, indication = null, onClick = onDismissRequest),
             )
         }

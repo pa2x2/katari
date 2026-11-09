@@ -60,7 +60,7 @@ fun EntryActivitySheet(
         Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault()).toLocalDate().format(dateFormatter)
     }
 
-    Sheet(onDismissRequest = onDismissRequest) {
+    Sheet(short = true, onDismissRequest = onDismissRequest) {
         Column {
             SheetHeader(title = stringResource(MR.strings.entry_activity_title))
             EntryActivityDetails(

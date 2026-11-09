@@ -20,7 +20,8 @@ import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.SettingsRow
-import app.katari.presentation.kit.sheet.Sheet
+import app.katari.presentation.kit.sheet.Popover
+import app.katari.presentation.kit.sheet.PopoverAnchor
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -32,9 +33,13 @@ import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The feed switcher shown from the context chip in immersive mode, with the actions the feed bar would offer. */
+/**
+ * The feed switcher shown from the context chip at [anchor] in immersive mode, with the actions the feed bar would
+ * offer.
+ */
 @Composable
-internal fun FeedPickerSheet(
+internal fun FeedPickerPopover(
+    anchor: PopoverAnchor?,
     feeds: List<SourceFeed>,
     selectedFeedId: String,
     sourceFor: (Long) -> Source?,
@@ -47,7 +52,7 @@ internal fun FeedPickerSheet(
     onManageFeeds: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
+    Popover(anchor = anchor, onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.browse_feeds))
             RowGroup {

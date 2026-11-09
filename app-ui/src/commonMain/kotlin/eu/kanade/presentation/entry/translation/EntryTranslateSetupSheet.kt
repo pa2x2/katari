@@ -50,7 +50,7 @@ fun EntryTranslateSetupSheet(
     RefreshOnResume(actions::refreshSetup)
     val context = currentPlatformContext()
     var pending by remember { mutableStateOf<PendingFix?>(null) }
-    Sheet(onDismissRequest = actions::dismissSetup) {
+    Sheet(short = true, onDismissRequest = actions::dismissSetup) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.chapter_translation_setup_title))
             Column(

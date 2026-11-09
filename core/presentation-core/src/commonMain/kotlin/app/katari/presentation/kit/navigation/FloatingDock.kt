@@ -62,14 +62,19 @@ fun FloatingDockHost(
 ) {
     // Docks nest, a bottom one in the home tabs inside the side one of the whole app, so each adds to what's outside it
     val outer = LocalDockClearance.current
-    val docked = when (placement) {
-        DockPlacement.Bottom -> outer.copy(bottom = BottomDockClearance)
-        DockPlacement.Side -> outer.copy(start = SideDockClearance)
-    }
+    val docked = outer.withDock(placement)
+    val outerOnScreen = LocalDockOnScreen.current
+    val dockedOnScreen = outerOnScreen.withDock(placement)
     Box(modifier = modifier) {
         CompositionLocalProvider(
             LocalDockClearance provides if (dockVisible) docked else outer,
-            LocalDockHostRoom provides DockHostRoom(outer = outer, docked = docked),
+            LocalDockOnScreen provides if (dockVisible) dockedOnScreen else outerOnScreen,
+            LocalDockHostRoom provides DockHostRoom(
+                outer = outer,
+                docked = docked,
+                outerOnScreen = outerOnScreen,
+                dockedOnScreen = dockedOnScreen,
+            ),
             content = content,
         )
         when (placement) {
@@ -171,6 +176,18 @@ internal data class DockClearance(val bottom: Dp = 0.dp, val start: Dp = 0.dp) {
 internal val LocalDockClearance = compositionLocalOf { DockClearance.None }
 
 /**
+ * The room the docks take in the window, which [LocalDockClearance] stops reporting inside a [Scaffold]'s content once
+ * the Scaffold's padding has made room: for a window opened over the content, such as a side sheet, that opens beside
+ * the dock rather than over it. None inside a window that covers the docks, such as a full-screen dialog.
+ */
+internal val LocalDockOnScreen = compositionLocalOf { DockClearance.None }
+
+private fun DockClearance.withDock(placement: DockPlacement): DockClearance = when (placement) {
+    DockPlacement.Bottom -> copy(bottom = BottomDockClearance)
+    DockPlacement.Side -> copy(start = SideDockClearance)
+}
+
+/**
  * Gives [content], one screen of a navigator shown inside a [FloatingDockHost], the room of the host's dock when
  * [besideDock] holds and none otherwise, whatever the host shows at the moment. While a transition swaps screens, the one
  * leaving keeps its own layout as the dock comes or goes for the one replacing it, so its lists don't reflow and lose
@@ -186,13 +203,22 @@ fun DockedScreen(besideDock: Boolean, content: @Composable () -> Unit) {
     }
     CompositionLocalProvider(
         LocalDockClearance provides if (besideDock) room.docked else room.outer,
+        LocalDockOnScreen provides if (besideDock) room.dockedOnScreen else room.outerOnScreen,
         content = content,
     )
 }
 
-/** The room a [FloatingDockHost] leaves its content without its dock ([outer]) and beside it ([docked]). */
+/**
+ * The room a [FloatingDockHost] leaves its content without its dock ([outer]) and beside it ([docked]), and the same as
+ * [LocalDockOnScreen] reports it.
+ */
 @Immutable
-private data class DockHostRoom(val outer: DockClearance, val docked: DockClearance)
+private data class DockHostRoom(
+    val outer: DockClearance,
+    val docked: DockClearance,
+    val outerOnScreen: DockClearance,
+    val dockedOnScreen: DockClearance,
+)
 
 private val LocalDockHostRoom = compositionLocalOf<DockHostRoom?> { null }
 
