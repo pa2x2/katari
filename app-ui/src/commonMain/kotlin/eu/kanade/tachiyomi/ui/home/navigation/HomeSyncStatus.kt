@@ -34,8 +34,12 @@ fun rememberBarSyncAction(destination: HomeScreenTabs, navigator: Navigator): Ap
 internal fun rememberDockSyncAction(navigator: Navigator): AppBar.Action? =
     rememberSyncStatusAction { openSyncFromRoot(navigator) }
 
-/** Opens the Sync page from the home's root, as the dock's destinations open, for what shows beside every screen. */
+/**
+ * Opens the Sync page from the home's root, as the dock's destinations open, for what shows beside every screen; like
+ * the dock's open destination, the Sync page already open stays as it is.
+ */
 internal fun openSyncFromRoot(navigator: Navigator) {
+    if ((navigator.lastItem as? SettingsScreen)?.opensAt(SettingsScreen.Destination.Sync) == true) return
     navigator.popUntilRoot()
     navigator.push(SettingsScreen(SettingsScreen.Destination.Sync))
 }
