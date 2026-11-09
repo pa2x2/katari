@@ -10,6 +10,7 @@ import app.katari.sync.client.file.local.wanted
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -31,6 +32,10 @@ object ImportedFontKind : SyncedKind<ImportedFontPayload>(
     ImportedFontPayload.serializer(),
     Absence.TOMBSTONE,
 ) {
+    override val dataGroup = DataGroup.FONTS
+
+    override fun profileOf(payload: ImportedFontPayload) = payload.profileUuid
+
     override val capture = emptyList<CaptureTrigger>()
 
     fun ref(profileId: Long, fileName: String): LocalRef = FileOwner.Font(profileId, fileName).ref

@@ -4,8 +4,10 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.kind.SyncKinds
+import app.katari.sync.client.part.OffParts
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.payload.Tombstone
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -29,10 +31,17 @@ import tachiyomi.data.DatabaseHandler
  * (an edit undone, or a value merged from another device being written locally) changes nothing. Records the payload
  * refers to that were never synced, such as the entry of a chapter marked read, are stored along with it.
  *
+ * A record of a part of the account this device chose not to sync ([OffParts]) is stored like any other, so its edits
+ * keep the times they were made, and held back from pushing until the part is synced again.
+ *
  * It only reads the local database and preferences, so it runs whether or not the server is reachable.
  */
 @Inject
-class OutboxDrain(private val handler: DatabaseHandler, private val settings: SettingReads) {
+class OutboxDrain(
+    private val handler: DatabaseHandler,
+    private val settings: SettingReads,
+    private val preferences: SyncPreferences,
+) {
     /**
      * Drains up to [limit] outbox rows in one transaction and returns how many it drained; 0 once it is empty.
      *
@@ -57,7 +66,8 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
         val clock = sync_clockQueries.get().awaitAsOne()
         val device = DeviceId(deviceId)
         val stamper = EditStamper(device, clock.issued_physical, clock.issued_counter.toInt())
-        val drain = Drain(this, LocalReads(this, device, settings), replacing)
+        val parts = OffParts(preferences.choices(), this)
+        val drain = Drain(this, LocalReads(this, device, settings), parts, replacing)
         rows.forEach { row ->
             val stamp = stamper.stamp(row.changed_at, row.seen_physical, row.seen_counter.toInt())
             val kind = SyncKinds.named(row.kind) ?: return@forEach
@@ -74,6 +84,7 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
     private class Drain(
         private val database: Database,
         private val reads: LocalReads,
+        private val parts: OffParts,
         private val replacing: Boolean,
     ) {
         private val records = LinkedHashMap<String, Touched>()
@@ -138,9 +149,9 @@ class OutboxDrain(private val handler: DatabaseHandler, private val settings: Se
             records.forEach { (key, record) ->
                 val present = record.present
                 if (present != null) {
-                    database.storePresent(key, present, record.stamps, replacing)
+                    database.storePresent(key, present, record.stamps, parts, replacing)
                 } else {
-                    database.storeAbsent(key, record.kind, record.stamps)
+                    database.storeAbsent(key, record.kind, record.stamps, parts)
                 }
             }
         }
@@ -168,6 +179,7 @@ private suspend fun <P : Any> Database.storePresent(
     key: String,
     present: Present<P>,
     stamps: FieldStamps,
+    parts: OffParts,
     replacing: Boolean,
 ) {
     val kind = present.kind
@@ -199,9 +211,15 @@ private suspend fun <P : Any> Database.storePresent(
         changeId = changeId,
         recordGroup = RecordGroups.of(kind, key, payload),
     )
+    if (parts.isOff(kind, payload)) sync_recordsQueries.holdBack(key)
 }
 
-private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind<P>, stamps: FieldStamps) {
+private suspend fun <P : Any> Database.storeAbsent(
+    key: String,
+    kind: SyncedKind<P>,
+    stamps: FieldStamps,
+    parts: OffParts,
+) {
     val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return
     if (stored.deleted) return
     when (kind.absence) {
@@ -220,6 +238,7 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
                 changeId = newChangeId(),
                 recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
             )
+            if (parts.isOff(kind, kind.decode(stored.payload))) sync_recordsQueries.holdBack(key)
         }
         SyncedKind.Absence.REMOVED_FLAG -> {
             val previous = kind.decode(stored.payload)
@@ -235,6 +254,7 @@ private suspend fun <P : Any> Database.storeAbsent(key: String, kind: SyncedKind
                 changeId = if (removed == previous) stored.change_id else newChangeId(),
                 recordGroup = RecordGroups.of(kind, key, removed),
             )
+            if (parts.isOff(kind, removed)) sync_recordsQueries.holdBack(key)
         }
         SyncedKind.Absence.KEEP -> Unit
     }

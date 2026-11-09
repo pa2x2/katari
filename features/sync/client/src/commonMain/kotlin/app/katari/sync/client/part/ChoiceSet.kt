@@ -3,6 +3,7 @@ package app.katari.sync.client.part
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
+import app.katari.sync.client.setting.value.LocalIdPreferences
 
 /**
  * What this device chose to sync, as one snapshot: the data groups, Settings areas and profiles it keeps to itself, the
@@ -20,11 +21,15 @@ data class ChoiceSet(
 
     fun syncs(area: SettingsArea): Boolean = area.followsData?.let(::syncs) ?: (area !in areasOff)
 
-    /** Whether the preference [key] syncs on this device: in an area that does, and chosen to or synced by default. */
+    /**
+     * Whether the preference [key] syncs on this device: in an area that does, chosen to or synced by default, and, if
+     * it names categories, with the categories.
+     */
     fun syncsSetting(key: String): Boolean {
         val mark = PreferenceScopes.markOf(key) ?: return false
         val area = mark.area ?: return false
         if (!syncs(area)) return false
+        if (LocalIdPreferences.namesCategories(key) && !syncs(DataGroup.CATEGORIES)) return false
         return when (mark.scope) {
             PreferenceScope.PERSON -> key !in settingsOff
             PreferenceScope.DEVICE_BY_DEFAULT -> key in settingsOn

@@ -27,6 +27,9 @@ internal object LocalIdPreferences {
         else -> value
     }
 
+    fun namesCategories(key: String): Boolean =
+        key == LibraryPreferences.DEFAULT_CATEGORY_PREF_KEY || key in CATEGORY_LISTS
+
     // UpdatesPreferences and UpcomingPreferences, as comma-separated IDs
     private val CATEGORY_LISTS = setOf(
         "pref_filter_updates_included_categories",

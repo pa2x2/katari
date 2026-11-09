@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.setting.read.SettingReads
+import app.katari.sync.client.setting.read.personLevelSettings
 import dev.zacsweers.metro.Inject
 import tachiyomi.data.DatabaseHandler
 

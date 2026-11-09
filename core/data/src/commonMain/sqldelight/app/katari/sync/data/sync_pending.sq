@@ -43,11 +43,19 @@ ORDER BY received_at, record_key;
 
 -- Everything held for a reason that may have gone away since: a newer app, a clock caught up, a reference arrived.
 -- What waits for an update, a record this app can't read or one that failed to apply, is tried again only by another
--- app version than the one that held it.
+-- app version than the one that held it. What belongs to a part this device doesn't sync waits for the person.
 retryable:
 SELECT record_key, record, reason, waits_for, received_at, kind, held_on
 FROM sync_pending
-WHERE waits_for IS NULL AND (reason NOT IN ('unreadable', 'failed') OR held_on IS NOT :appVersion)
+WHERE waits_for IS NULL
+AND reason != 'turned-off'
+AND (reason NOT IN ('unreadable', 'failed') OR held_on IS NOT :appVersion)
+ORDER BY received_at, record_key;
+
+turnedOff:
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+FROM sync_pending
+WHERE reason = 'turned-off'
 ORDER BY received_at, record_key;
 
 release:

@@ -7,11 +7,13 @@ import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.client.setting.value.SettingValue
 
 /**
@@ -26,6 +28,12 @@ object SourceSettingKind : SyncedKind<SourceSettingPayload>(
     SourceSettingPayload.serializer(),
     Absence.KEEP,
 ) {
+    override fun syncsOn(choices: ChoiceSet, payload: SourceSettingPayload) = choices.syncs(settingsArea(payload))
+
+    override fun profileOf(payload: SourceSettingPayload) = payload.profileUuid
+
+    override fun settingsArea(payload: SourceSettingPayload) = SettingsArea.EXTENSION_SETTINGS
+
     override val capture: List<CaptureTrigger> = emptyList()
 
     fun ref(profileId: Long, sourceId: Long, key: String): LocalRef = LocalRef.of(profileId, sourceId, key)

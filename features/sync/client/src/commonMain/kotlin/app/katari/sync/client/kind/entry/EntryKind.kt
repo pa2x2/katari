@@ -37,6 +37,8 @@ import tachiyomi.domain.source.model.StubSource
  * entries outside the library are removed as cache, and a move to another profile is an entry replacement record.
  */
 object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.serializer(), Absence.KEEP) {
+    override fun profileOf(payload: EntryPayload) = payload.profileUuid
+
     override val capture = listOf(
         CaptureTrigger("entries", Event.INSERT, listOf("NEW._id"), condition = "NEW.favorite = 1"),
         CaptureTrigger(

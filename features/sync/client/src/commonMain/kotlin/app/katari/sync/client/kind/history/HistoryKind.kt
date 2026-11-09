@@ -12,6 +12,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -28,6 +29,8 @@ import java.util.Date
  * device's share is that total minus the others, which the stored payload holds.
  */
 object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.serializer(), Absence.TOMBSTONE) {
+    override val dataGroup = DataGroup.HISTORY
+
     override val capture = listOf(
         CaptureTrigger("history", Event.INSERT, listOf("NEW.chapter_id")),
         CaptureTrigger(

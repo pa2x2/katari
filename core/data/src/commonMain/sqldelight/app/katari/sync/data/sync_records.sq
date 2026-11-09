@@ -23,7 +23,10 @@ CREATE TABLE sync_records(
     base_payload BLOB,
     -- The group the record travels in ([app.katari.sync.client.record.RecordGroups]), such as the entry it belongs to;
     -- empty for none, NULL for a record stored before groups were kept here.
-    record_group TEXT
+    record_group TEXT,
+    -- Set while the record belongs to a part of the account this device chose not to sync: its change waits here,
+    -- unpushed, until the part is synced again.
+    held_back INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 CREATE UNIQUE INDEX idx_sync_records_local ON sync_records(kind, local_ref) WHERE local_ref IS NOT NULL;
@@ -36,13 +39,13 @@ CREATE INDEX idx_sync_records_based_on ON sync_records(based_on);
 
 getByKey:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE record_key = :recordKey;
 
 getByLocalRef:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE kind = :kind AND local_ref = :localRef;
 
@@ -80,9 +83,10 @@ ON CONFLICT(record_key) DO UPDATE SET
 -- key order, so a push reaches every one even when the first are refused.
 pendingAfter:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE change_id IS NOT NULL
+AND held_back = 0
 AND record_key > :afterKey
 AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'))
 ORDER BY record_key
@@ -92,6 +96,7 @@ pendingCount:
 SELECT count(*)
 FROM sync_records
 WHERE change_id IS NOT NULL
+AND held_back = 0
 AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE reason IN ('unreadable', 'failed'));
 
 -- The server took the change as :sequence. A change made since keeps its own id and stays pending.
@@ -123,6 +128,43 @@ ON CONFLICT(record_key) DO UPDATE SET
     base_payload = excluded.base_payload,
     record_group = excluded.record_group;
 
+holdBack:
+UPDATE sync_records
+SET held_back = 1
+WHERE record_key = :recordKey;
+
+-- The changes waiting to be pushed, for holding back those of a part this device stopped syncing.
+pushable:
+SELECT record_key, kind, deleted, payload
+FROM sync_records
+WHERE change_id IS NOT NULL AND held_back = 0;
+
+-- The records held back, for letting go of those whose part this device syncs again.
+heldBack:
+SELECT record_key, kind, deleted, payload, change_id, base_payload, local_ref
+FROM sync_records
+WHERE held_back = 1;
+
+letGo:
+UPDATE sync_records
+SET held_back = 0
+WHERE record_key = :recordKey;
+
+-- Drops this device's change of a held-back record for the server copy it was based on, which the person chose to
+-- keep instead.
+takeBase:
+UPDATE sync_records
+SET payload = base_payload,
+    change_id = NULL,
+    held_back = 0
+WHERE record_key = :recordKey AND base_payload IS NOT NULL;
+
+-- Drops this device's copy of a record it never had from the server, for the copy held for it, which the person chose
+-- to keep instead.
+forget:
+DELETE FROM sync_records
+WHERE record_key = :recordKey;
+
 setLocalRef:
 UPDATE sync_records
 SET local_ref = :localRef
@@ -130,7 +172,7 @@ WHERE record_key = :recordKey;
 
 byKind:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE kind = :kind
 ORDER BY record_key;
@@ -156,7 +198,7 @@ WHERE record_key = :recordKey;
 
 byKinds:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE kind IN :kinds
 ORDER BY kind, record_key;
@@ -193,7 +235,7 @@ WHERE based_on = 0 AND change_id IS NULL AND synced = 1;
 -- and hasn't changed since: the server dropped their deletion markers, so they were deleted elsewhere.
 deletedElsewhere:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
-    record_group
+    record_group, held_back
 FROM sync_records
 WHERE based_on = 0 AND change_id IS NULL AND synced = 1 AND deleted = 0
 ORDER BY record_key;

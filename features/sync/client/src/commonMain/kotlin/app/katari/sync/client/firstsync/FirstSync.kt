@@ -6,15 +6,16 @@ import app.katari.domain.profile.ProfileSeedPreferences
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.profile.ProfileKind
-import app.katari.sync.client.record.LocalRef
+import app.katari.sync.client.outbox.recordEditsMadeNow
 import app.katari.sync.client.setting.read.SettingReads
+import app.katari.sync.client.setting.read.isPersonLevel
+import app.katari.sync.client.setting.read.personLevelSettings
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
-import kotlin.time.Clock
 
 /**
  * The merge side of a device's first sync (D018, D027, D047). Data is always merged; what the person decides is which
@@ -125,18 +126,7 @@ class FirstSync(
             val profile = local.getValue(choice.profileId)
             settings.personLevelSettings(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
         }
-        recordEdits(edits)
-    }
-
-    /** Records [edits] as the settings capture records a person's, outside sync's writes, which would drop them. */
-    private suspend fun recordEdits(edits: List<Pair<String, LocalRef>>) {
-        if (edits.isEmpty()) return
-        val now = Clock.System.now().toEpochMilliseconds()
-        handler.await(inTransaction = true) {
-            edits.forEach { (kind, ref) ->
-                sync_outboxQueries.recordEdit(kind = kind, localRef = ref.json, changedAt = now)
-            }
-        }
+        handler.recordEditsMadeNow(edits)
     }
 
     private suspend fun localProfiles(): List<LocalProfile> = handler.await {

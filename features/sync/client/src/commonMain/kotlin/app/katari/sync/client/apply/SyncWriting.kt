@@ -7,6 +7,8 @@ import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.part.OffParts
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.setting.apply.SettingWrites
 import app.katari.sync.data.Sync_outbox
 import app.katari.sync.protocol.device.DeviceId
@@ -35,6 +37,7 @@ class SyncWriting(
     private val migrationRules: MigrationCarryRules,
     private val profileStore: ProfileStore,
     private val thisDevice: ThisDevice,
+    private val preferences: SyncPreferences,
 ) {
     internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T =
         write(takeAfter = null) { session, _ -> block(session) }
@@ -87,6 +90,7 @@ class SyncWriting(
             profileDeletion = profileDeletion,
             migrationRules = migrationRules,
             activeProfileId = profileStore.currentProfileId,
+            parts = OffParts(preferences.choices(), this),
             device = DeviceId(device),
             appVersion = thisDevice.appVersion,
             failing = failing,

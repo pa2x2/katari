@@ -21,6 +21,12 @@ internal enum class HoldReason(val stored: String, val waitsForUpdate: Boolean =
     PROFILE_OPEN("profile-open"),
 
     /**
+     * Of a part of the account this device chose not to sync ([app.katari.sync.client.part.ChoiceSet]); held as
+     * received, not merged, so the device's own edits keep their edit times, and applied once it syncs the part again.
+     */
+    TURNED_OFF("turned-off"),
+
+    /**
      * Applying it threw, as a bug in this app version or data it can't take does (D067); tried again once the app is
      * updated, and meanwhile neither pushed nor stopping the records around it.
      */

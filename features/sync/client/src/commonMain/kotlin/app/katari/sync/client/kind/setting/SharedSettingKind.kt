@@ -5,6 +5,7 @@ import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -26,6 +27,10 @@ object SharedSettingKind : SyncedKind<SharedSettingPayload>(
     SharedSettingPayload.serializer(),
     Absence.KEEP,
 ) {
+    override fun syncsOn(choices: ChoiceSet, payload: SharedSettingPayload) = choices.syncsSetting(payload.key)
+
+    override fun settingKey(payload: SharedSettingPayload) = payload.key
+
     override val capture: List<CaptureTrigger> = emptyList()
 
     fun ref(key: String): LocalRef = LocalRef.of(key)
