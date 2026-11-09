@@ -7,11 +7,12 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.outbox.recordEditsMadeNow
+import app.katari.sync.client.outbox.recordUnstamped
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.setting.read.SettingReads
-import app.katari.sync.client.setting.read.personLevelSettings
+import app.katari.sync.client.setting.read.settingRecords
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
@@ -50,29 +51,46 @@ class SyncChoiceChanges(
      * and on every other device.
      */
     suspend fun syncArea(area: SettingsArea, on: Boolean, keep: SettingsWinner = SettingsWinner.ACCOUNT) {
-        if (on && keep == SettingsWinner.DEVICE) handler.recordEditsMadeNow(settingsOf(area))
+        if (on && keep == SettingsWinner.DEVICE) {
+            handler.recordEditsMadeNow(
+                settingRecords(withSources = area == SettingsArea.EXTENSION_SETTINGS) {
+                    PreferenceScopes.markOf(it)?.area == area
+                },
+            )
+        }
         change(before = { if (on && keep == SettingsWinner.ACCOUNT) it.keepAccountSettings(area) }) {
             preferences.areasOff.include(area.name, !on)
         }
     }
 
     /**
-     * Keeps one setting of an area that syncs out of it, or brings it back, taking the account's value; a setting
-     * that stays on each device by default is instead chosen to sync.
+     * Keeps one setting of an area that syncs out of it, or brings it back; a setting that stays on each device by
+     * default is instead chosen to sync. Brought in, it takes the account's value, and the value here fills in only
+     * where the account has none.
      */
-    suspend fun syncSetting(key: String, on: Boolean) = change(before = { if (on) it.keepAccountSetting(key) }) {
-        when (PreferenceScopes.markOf(key)?.scope) {
-            PreferenceScope.PERSON -> preferences.settingsOff.include(key, !on)
-            PreferenceScope.DEVICE_BY_DEFAULT -> preferences.settingsOn.include(key, on)
-            PreferenceScope.DEVICE, null -> error("$key never syncs")
+    suspend fun syncSetting(key: String, on: Boolean) {
+        val scope = PreferenceScopes.markOf(key)?.scope
+        require(scope == PreferenceScope.PERSON || scope == PreferenceScope.DEVICE_BY_DEFAULT) { "$key never syncs" }
+        if (on) handler.recordUnstamped(settingRecords(withSources = false) { it == key })
+        change(before = { if (on) it.keepAccountSetting(key) }) {
+            if (scope == PreferenceScope.PERSON) {
+                preferences.settingsOff.include(key, !on)
+            } else {
+                preferences.settingsOn.include(key, on)
+            }
         }
     }
 
-    private suspend fun settingsOf(area: SettingsArea): List<Pair<String, LocalRef>> {
+    /** The settings of every profile this device syncs that [including] picks, as [settingRecords] are. */
+    private suspend fun settingRecords(
+        withSources: Boolean,
+        including: (key: String) -> Boolean,
+    ): List<Pair<String, LocalRef>> {
         val choices = preferences.choices()
         val profiles = handler.await { sync_local_rowsQueries.profiles().awaitAsList() }
-        return profiles.filter { choices.syncsProfile(it.uuid) }
-            .flatMap { settings.personLevelSettings(it._id, it.uuid == ProfileKind.DEFAULT_UUID, area) }
+        return profiles.filter { choices.syncsProfile(it.uuid) }.flatMap { profile ->
+            settings.settingRecords(profile._id, profile.uuid == ProfileKind.DEFAULT_UUID, including, withSources)
+        }
     }
 
     private suspend fun change(before: suspend (ApplySession) -> Unit = {}, save: () -> Unit) {

@@ -20,17 +20,13 @@ import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.value.encodeSetting
 
 /**
- * A profile's person-level preferences, one record per key, so edits of different keys on two devices both stay and
+ * A profile's preferences of one [scope], one record per key, so edits of different keys on two devices both stay and
  * edits of one key take the latest. Keyed by profile uuid and the encoded key. Local ref: `[profile ID, key]`.
  * Preferences aren't in the database: their edits come from [app.katari.sync.client.setting.capture.SettingsCapture].
  * A preference that is no longer set travels as an empty value, never as a deletion.
  */
-object ProfileSettingKind : SyncedKind<ProfileSettingPayload>(
-    "setting.profile",
-    1,
-    ProfileSettingPayload.serializer(),
-    Absence.KEEP,
-) {
+sealed class ProfileSettings(name: String, private val scope: PreferenceScope) :
+    SyncedKind<ProfileSettingPayload>(name, 1, ProfileSettingPayload.serializer(), Absence.KEEP) {
     override fun syncsOn(choices: ChoiceSet, payload: ProfileSettingPayload) = choices.syncsSetting(payload.key)
 
     override fun settingKey(payload: ProfileSettingPayload) = payload.key
@@ -44,7 +40,7 @@ object ProfileSettingKind : SyncedKind<ProfileSettingPayload>(
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<ProfileSettingPayload> {
         val profileId = ref.long(0)
         val key = ref.text(1)
-        if (PreferenceScopes.of(key) != PreferenceScope.PERSON) return LocalRead.NotSynced
+        if (PreferenceScopes.of(key) != scope) return LocalRead.NotSynced
         val profileUuid = reads.profileUuid(profileId) ?: return LocalRead.Missing
         val setting = reads.encodeSetting(key, reads.settings.profileValue(profileId, key), profileId)
         return LocalRead.Found(
@@ -59,6 +55,7 @@ object ProfileSettingKind : SyncedKind<ProfileSettingPayload>(
             )
         }
     }
+
     override fun merge(local: ProfileSettingPayload, incoming: ProfileSettingPayload) =
         local.copy(value = latest(local.value, incoming.value))
 
@@ -69,4 +66,22 @@ object ProfileSettingKind : SyncedKind<ProfileSettingPayload>(
         writes.settings.writeProfileValue(profileId, setting.key, setting.value)
         return ApplyOutcome.Applied(ref(profileId, setting.key))
     }
+
+    companion object {
+        /** The kind a profile's preference [key] syncs as, or null for one that never syncs. */
+        fun of(key: String): ProfileSettings? = when (PreferenceScopes.of(key)) {
+            PreferenceScope.PERSON -> ProfileSettingKind
+            PreferenceScope.DEVICE_BY_DEFAULT -> ChosenProfileSettingKind
+            PreferenceScope.DEVICE -> null
+        }
+    }
 }
+
+/** A profile's person-level preferences. */
+object ProfileSettingKind : ProfileSettings("setting.profile", PreferenceScope.PERSON)
+
+/**
+ * A profile's preferences that stay on each device by default, from the devices that chose to sync them. A kind of its
+ * own, so an app that doesn't know such a choice holds them as unreadable rather than writing over its own value.
+ */
+object ChosenProfileSettingKind : ProfileSettings("setting.profile.chosen", PreferenceScope.DEVICE_BY_DEFAULT)

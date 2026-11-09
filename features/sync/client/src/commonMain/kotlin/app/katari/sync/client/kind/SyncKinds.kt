@@ -26,6 +26,8 @@ import app.katari.sync.client.kind.question.MigrationQuestionKind
 import app.katari.sync.client.kind.question.NotesQuestionKind
 import app.katari.sync.client.kind.question.ProfileDeletionQuestionKind
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.setting.ChosenProfileSettingKind
+import app.katari.sync.client.kind.setting.ChosenSharedSettingKind
 import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
 import app.katari.sync.client.kind.setting.SourceSettingKind
@@ -61,6 +63,8 @@ object SyncKinds {
         ImportedFontKind,
         ProfileSettingKind,
         SharedSettingKind,
+        ChosenProfileSettingKind,
+        ChosenSharedSettingKind,
         SourceSettingKind,
         MigrationQuestionKind,
         NotesQuestionKind,

@@ -9,7 +9,7 @@ import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.outbox.recordEditsMadeNow
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.client.setting.read.isPersonLevel
-import app.katari.sync.client.setting.read.personLevelSettings
+import app.katari.sync.client.setting.read.settingRecords
 import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
@@ -124,7 +124,7 @@ class FirstSync(
         }
         val edits = paired.filter { it.settings == SettingsWinner.DEVICE }.flatMap { choice ->
             val profile = local.getValue(choice.profileId)
-            settings.personLevelSettings(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
+            settings.settingRecords(profile.id, isDefaultProfile = profile.uuid == ProfileKind.DEFAULT_UUID)
         }
         handler.recordEditsMadeNow(edits)
     }

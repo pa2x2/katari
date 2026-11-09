@@ -4,12 +4,10 @@ import app.katari.profiles.core.PreferenceWrite
 import app.katari.profiles.core.ProfileStore
 import app.katari.profiles.sourcepreferences.SourcePreferenceFiles
 import app.katari.profiles.sourcepreferences.SourceSettingWrite
-import app.katari.sync.client.kind.setting.ProfileSettingKind
-import app.katari.sync.client.kind.setting.SharedSettingKind
+import app.katari.sync.client.kind.setting.ProfileSettings
+import app.katari.sync.client.kind.setting.SharedSettings
 import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.setting.read.SettingReads
-import app.katari.sync.client.setting.scope.PreferenceScope
-import app.katari.sync.client.setting.scope.PreferenceScopes
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -24,7 +22,8 @@ import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
 /**
- * Records edits of person-level preferences and of source settings into the outbox while sync is on, as the capture
+ * Records edits of the preferences that can sync and of source settings into the outbox while sync is on, whether or
+ * not this device syncs them now, so each keeps the time it was made ([app.katari.sync.client.part.OffParts]), as the capture
  * triggers do for the database, which never sees preferences. It listens to the stores themselves, so every writer is
  * heard; with sync off nothing listens. Each edit carries the time it was made.
  *
@@ -84,12 +83,11 @@ class SettingsCapture(
     }
 
     private fun edit(write: PreferenceWrite): Edit? {
-        if (PreferenceScopes.of(write.key) != PreferenceScope.PERSON) return null
         val profileId = write.profileId
         return when {
-            profileId != null -> Edit(ProfileSettingKind.name, ProfileSettingKind.ref(profileId, write.key).json)
+            profileId != null -> ProfileSettings.of(write.key)?.let { Edit(it.name, it.ref(profileId, write.key).json) }
             settings.isProfileKey(write.key) -> null
-            else -> Edit(SharedSettingKind.name, SharedSettingKind.ref(write.key).json)
+            else -> SharedSettings.of(write.key)?.let { Edit(it.name, it.ref(write.key).json) }
         }
     }
 

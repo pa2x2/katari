@@ -17,3 +17,14 @@ internal suspend fun DatabaseHandler.recordEditsMadeNow(edits: List<Pair<String,
         }
     }
 }
+
+/**
+ * Records [values] (kind name and local ref) with no edit time, so each fills in what the account lacks and gives way
+ * to every edit made anywhere. Called outside sync's own writes, as [recordEditsMadeNow] is.
+ */
+internal suspend fun DatabaseHandler.recordUnstamped(values: List<Pair<String, LocalRef>>) {
+    if (values.isEmpty()) return
+    await(inTransaction = true) {
+        values.forEach { (kind, ref) -> sync_outboxQueries.recordUnstamped(kind = kind, localRef = ref.json) }
+    }
+}
