@@ -24,18 +24,26 @@ internal actual fun kitDialogProperties(
 
 @Composable
 internal actual fun DialogWindowDim(dim: DialogDim) {
-    val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
-    // The theme's amount, read before this changes it, so a sheet whose edge changes with the window can go back to it
-    val themeAmount = remember(window) { window.attributes.dimAmount }
+    val view = LocalView.current
+    val themeAmount = remember { ThemeDimAmount() }
+    // The view joins the dialog's window only once composed, so the window is looked up after composition
     SideEffect {
+        val window = (view.parent as? DialogWindowProvider)?.window ?: return@SideEffect
+        // The theme's amount, read before this changes it, so a sheet whose edge changes with the window can go back
+        val base = themeAmount.value ?: window.attributes.dimAmount.also { themeAmount.value = it }
         window.setDimAmount(
             when (dim) {
-                DialogDim.Full -> themeAmount
-                DialogDim.Light -> themeAmount * LIGHT_DIM_FRACTION
+                DialogDim.Full -> base
+                DialogDim.Light -> base * LIGHT_DIM_FRACTION
                 DialogDim.None -> 0f
             },
         )
     }
+}
+
+/** The dim amount a dialog window had from its theme, before [DialogWindowDim] first changed it. */
+private class ThemeDimAmount {
+    var value: Float? = null
 }
 
 @Composable
