@@ -39,8 +39,12 @@ import app.katari.presentation.kit.window.currentWindowLayout
 class PopoverAnchor internal constructor() {
     internal var coordinates: LayoutCoordinates? = null
 
-    /** The button's bounds in the window, or null while it isn't on screen. */
-    internal fun boundsInWindow(): Rect? = coordinates?.takeIf { it.isAttached }?.boundsInWindow()
+    /**
+     * The button's bounds in the window, or null while it isn't on screen: detached, or clipped away by a parent, such
+     * as a pager page beside the shown one.
+     */
+    internal fun boundsInWindow(): Rect? =
+        coordinates?.takeIf { it.isAttached }?.boundsInWindow()?.takeUnless { it.isEmpty }
 }
 
 @Composable

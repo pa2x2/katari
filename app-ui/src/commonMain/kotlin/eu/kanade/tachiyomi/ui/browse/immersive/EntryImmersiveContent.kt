@@ -326,7 +326,8 @@ private fun EntryImmersivePage(
                 contextSupportingLabel = contextSupportingLabel,
                 contextLeadingContent = contextLeadingContent,
                 onContextClick = onContextClick,
-                contextAnchor = contextAnchor,
+                // Every composed page has its own pill; only the shown one is where the switcher opens
+                contextAnchor = contextAnchor?.takeIf { isActive },
                 onExitImmersive = onExitImmersive,
                 onEntryClick = { onEntryClick(entry) },
                 onLibraryAction = { onLibraryAction(entry) },
