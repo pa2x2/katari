@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,6 +20,8 @@ jobs:
   get_tag:
     name: Decide what to release
     runs-on: 'ubuntu-26.04'
+    # Every other job needs this one, so a manual run on another branch releases nothing.
+    if: github.ref == 'refs/heads/main'
     outputs:
       # Each app's tag is empty when it has nothing to release, which skips its jobs.
       tag: ${{ steps.decide.outputs.android_tag }}
