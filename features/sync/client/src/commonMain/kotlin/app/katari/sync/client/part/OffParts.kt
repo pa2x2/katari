@@ -16,7 +16,7 @@ import tachiyomi.data.Database
  * entry as any record does.
  *
  * With [ChoiceSet.askBeforeNewProfiles], a profile this device never had is off from its first record on, and [ask]
- * hears of it once, to keep it waiting for the person's answer.
+ * hears of it once, to keep it waiting for the person's answer. A profile [admit]ted is never asked about.
  */
 internal class OffParts(
     val choices: ChoiceSet,
@@ -26,6 +26,14 @@ internal class OffParts(
     private val entryProfiles = HashMap<String, String?>()
     private val asked = HashSet<String>()
     private val known = HashSet<String>()
+
+    /**
+     * Takes [profile] as one this device has, as the person said it comes here: its records, which waited for that
+     * answer while the device never had it, are taken in rather than asked about again.
+     */
+    fun admit(profile: String) {
+        known += profile
+    }
 
     suspend fun <P : Any> isOff(kind: SyncedKind<P>, payload: P): Boolean {
         if (!kind.syncsOn(choices, payload)) return true

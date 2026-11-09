@@ -498,6 +498,9 @@ internal class ApplySession(
         profileDeletion.delete(profileId)
     }
 
+    /** Takes in the records of the profile [uuid] the person said comes here ([OffParts.admit]). */
+    fun admitProfile(uuid: String) = parts.admit(uuid)
+
     /** Writes every record of the profile [uuid] here again, once this device syncs the profile. */
     suspend fun restoreProfile(uuid: String) {
         reapply(ProfileKind.key(uuid))

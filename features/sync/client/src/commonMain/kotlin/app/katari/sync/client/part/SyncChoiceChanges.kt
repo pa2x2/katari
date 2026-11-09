@@ -53,6 +53,15 @@ class SyncChoiceChanges(
     }
 
     /**
+     * Whether the profile [uuid] left this device with its records stored, which switching it on writes here again. A
+     * profile only this device had is here already, and the records of one it never had wait to be taken in.
+     */
+    private suspend fun leftThisDevice(uuid: String): Boolean = handler.await {
+        sync_applyQueries.profileId(uuid).awaitAsOneOrNull() == null &&
+            sync_recordsQueries.getByKey(ProfileKind.key(uuid)).awaitAsOneOrNull() != null
+    }
+
+    /**
      * Whether switching the profile [uuid] off takes it off this device: it is the account's, where it stays, rather
      * than one only this device has, which stays here unsynced.
      */
@@ -68,9 +77,14 @@ class SyncChoiceChanges(
     suspend fun syncProfile(uuid: String, on: Boolean) {
         require(uuid != ProfileKind.DEFAULT_UUID) { "Every device syncs its default profile" }
         val leaves = !on && leavesThisDevice(uuid)
+        // Asked before the choice is followed, which may bring the profile's own record in first
+        val comesBack = on && leftThisDevice(uuid)
         change(
-            before = { if (leaves) it.removeProfile(uuid) },
-            after = { if (on) it.restoreProfile(uuid) },
+            before = { session ->
+                if (leaves) session.removeProfile(uuid)
+                if (on) session.admitProfile(uuid)
+            },
+            after = { if (comesBack) it.restoreProfile(uuid) },
         ) {
             preferences.profilesAsking -= uuid
             preferences.profilesOff.include(uuid, !on)

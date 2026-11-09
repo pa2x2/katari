@@ -48,4 +48,35 @@ class ProfileChoiceTest {
                 }
             }
         }
+
+    @Test
+    fun `a profile made on another device waits for the person's answer, and comes here whole once added`(): Unit =
+        runBlocking {
+            TestSyncServer(directory).use { server ->
+                val account = server.account("reader")
+                SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.preferences.askBeforeNewProfiles.set(true)
+
+                        a.sql(
+                            "INSERT INTO profiles(_id, uuid, name, color_seed, position) " +
+                                "VALUES (2, 'work', 'Work', 1, 1)",
+                            *showRows("/work", read = 1, profileId = 2),
+                        )
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.preferences.profilesAsking.get() shouldBe setOf("work")
+                        b.local.rows("SELECT uuid FROM profiles") shouldBe listOf("default")
+
+                        b.choiceChanges.syncProfile("work", on = true)
+                        b.preferences.profilesAsking.get() shouldBe emptySet()
+                        b.library() shouldBe a.library()
+                    }
+                }
+            }
+        }
 }
