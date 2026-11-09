@@ -23,7 +23,7 @@ class SyncPreferences(profileStore: ProfileStore) {
     val syncInBackground: Preference<Boolean> = store.getBoolean("sync_in_background", true)
 
     /** Minutes between background syncs; one of [BACKGROUND_INTERVALS]. */
-    val backgroundInterval: Preference<Int> = store.getInt("sync_background_interval", 60)
+    val backgroundInterval: Preference<Int> = store.getInt("sync_background_interval", 30)
 
     /** Whether syncing is paused here: edits are still recorded, and go once it resumes. */
     val paused: Preference<Boolean> = store.getBoolean("sync_paused", false)

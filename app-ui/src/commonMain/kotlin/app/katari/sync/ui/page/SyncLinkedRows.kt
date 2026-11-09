@@ -9,14 +9,17 @@ import app.katari.icons.materialsymbols.rounded.Dns
 import app.katari.icons.materialsymbols.rounded.Extension
 import app.katari.icons.materialsymbols.rounded.Logout
 import app.katari.icons.materialsymbols.rounded.Person
+import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.ui.noticeText
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.TonedSpan
 import app.katari.presentation.kit.list.RowAction
 import app.katari.presentation.kit.list.RowActions
+import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.ProfileSync
@@ -24,8 +27,10 @@ import app.katari.sync.client.part.ProfileSyncState
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.server.shownAddress
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.client.trigger.LiveUpdatesState
 import app.katari.sync.ui.choice.whatSyncsSummary
 import app.katari.sync.ui.guide.ServerFix
+import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.guide.rememberOpenSyncGuide
 import app.katari.sync.ui.guide.serverFixLabel
 import app.katari.sync.ui.status.SyncHeadline
@@ -60,6 +65,7 @@ internal fun linkedPreferences(
     add(statusCard(link, status, headline, actions))
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
+    if (status.live == LiveUpdatesState.NOT_WORKING) add(liveUpdatesNotWorkingRow())
     profilesNotSynced.filter { it.state == ProfileSyncState.ASKING }.forEach { add(arrivingProfileRow(it, actions)) }
     if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
@@ -111,6 +117,11 @@ private fun statusCard(
             } else {
                 account
             },
+            subtitleState = if (status.live == LiveUpdatesState.OPEN) {
+                TonedSpan(stringResource(MR.strings.sync_live), ContentTone.Success)
+            } else {
+                null
+            },
             icon = headline?.icon(),
             iconAlert = headline?.stopsSync() == true,
             widget = {
@@ -135,6 +146,24 @@ private fun SyncHeadline.namesServer(): Boolean = when (this) {
     is SyncHeadline.AccountDisabled -> server != null
     is SyncHeadline.Unsent -> unreachableServer != null
     else -> false
+}
+
+/**
+ * Changes from other devices come only with runs because the live channel keeps failing while the server answers,
+ * opening the guide's section on what a proxy in front of the server has to pass on.
+ */
+@Composable
+private fun liveUpdatesNotWorkingRow(): Preference.PreferenceItem<*, *> {
+    val title = stringResource(MR.strings.sync_live_not_working)
+    val openGuide = rememberOpenSyncGuide()
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = stringResource(MR.strings.sync_live_not_working_text),
+            icon = MaterialSymbols.Rounded.SyncDisabled,
+            onPreferenceClick = { openGuide(PROXY_GUIDE) },
+        )
+    }
 }
 
 /** Library titles whose extensions this device lacks, opening the sheet that installs them. */
@@ -327,3 +356,6 @@ private fun intervalName(minutes: Int): StringResource = when (minutes) {
     1440 -> MR.strings.update_24hour
     else -> error("No name for syncing every $minutes minutes")
 }
+
+/** The server guide's section on running it behind a proxy, which says what a proxy must pass on for live updates. */
+private const val PROXY_GUIDE = "${SyncGuide.SERVER}#https"

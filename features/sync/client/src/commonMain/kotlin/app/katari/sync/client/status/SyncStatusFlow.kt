@@ -17,6 +17,8 @@ import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.run.SyncStep
 import app.katari.sync.client.run.SyncSteps
+import app.katari.sync.client.trigger.LiveUpdates
+import app.katari.sync.client.trigger.LiveUpdatesState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -33,8 +35,8 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * [SyncStatus] as it changes, from the connection, the runs, the network, the outbox, questions, held records and the
- * files waiting to move.
+ * [SyncStatus] as it changes, from the connection, the runs, the network, the live channel, the outbox, questions, held
+ * records and the files waiting to move.
  */
 @Inject
 class SyncStatusFlow(
@@ -48,6 +50,7 @@ class SyncStatusFlow(
     private val fileRule: FileTransferRule,
     private val steps: SyncSteps,
     private val preferences: SyncPreferences,
+    private val live: LiveUpdates,
 ) {
     fun status(): Flow<SyncStatus> {
         val connectionState = combine(connection.states(), preferences.paused.changes(), ::ConnectionInputs)
@@ -61,12 +64,13 @@ class SyncStatusFlow(
             Inputs(link.state, link.paused, running, outcome, network, progress)
         }
         val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
-        return combine(activity, pending.counts(), questions.open(), waiting, files()) {
+        val filesAndLive = combine(files(), live.states, ::Pair)
+        return combine(activity, pending.counts(), questions.open(), waiting, filesAndLive) {
                 inputs,
                 unsent,
                 open,
                 waiting,
-                files,
+                (files, liveState),
             ->
             val state = inputs.state
             val activityNow = activityOf(inputs)
@@ -79,6 +83,10 @@ class SyncStatusFlow(
                 heldKinds = if (state.isLinked) waiting.kinds else emptyList(),
                 heldAside = if (state.isLinked) waiting.failed else 0,
                 files = if (state.isLinked) files else SyncStatus.Files.NONE,
+                live = liveState.takeUnless {
+                    it == LiveUpdatesState.NOT_WORKING &&
+                        (activityNow is SyncStatus.Activity.Unreachable || activityNow == SyncStatus.Activity.Offline)
+                } ?: LiveUpdatesState.CLOSED,
             )
         }.distinctUntilChanged()
     }

@@ -3294,6 +3294,9 @@
     <string name="sync_guide_no_server">No server yet? Running a sync server</string>
     <string name="sync_guide_update_server">How to update the server</string>
     <string name="sync_guide_admin_account">Setting up the admin account</string>
+    <string name="sync_live">Live</string>
+    <string name="sync_live_not_working">Live updates aren\'t working</string>
+    <string name="sync_live_not_working_text">Changes from other devices come when you open the app and every few minutes. The server may need to let WebSockets through.</string>
     <string name="sync_invite_code">Invite code</string>
     <string name="sync_choose_username">Choose a username</string>
     <string name="sync_choose_password">Choose a password</string>
