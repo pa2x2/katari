@@ -27,8 +27,8 @@ import kotlinx.coroutines.flow.first
 class AppMessages {
     private val waiting = Channel<AppMessage>(WAITING_CAPACITY, BufferOverflow.DROP_OLDEST)
 
-    fun show(message: String, long: Boolean = false) {
-        waiting.trySend(AppMessage(message, long))
+    fun show(message: String, long: Boolean = false, action: MessageAction? = null) {
+        waiting.trySend(AppMessage(message, long, action))
     }
 
     internal suspend fun next(): AppMessage = waiting.receive()
@@ -38,7 +38,7 @@ class AppMessages {
     }
 }
 
-internal class AppMessage(val text: String, val long: Boolean)
+internal class AppMessage(val text: String, val long: Boolean, val action: MessageAction?)
 
 /**
  * The app's [AppMessages], provided by the app's composition root. Desktop sends a screen message shown with no screen
@@ -55,7 +55,7 @@ fun AppMessagesHost(messages: AppMessages, content: @Composable () -> Unit) {
     LaunchedEffect(messages, targets) {
         while (true) {
             val message = messages.next()
-            snapshotFlow { targets.current() }.filterNotNull().first().show(message.text, message.long)
+            snapshotFlow { targets.current() }.filterNotNull().first().show(message.text, message.long, message.action)
         }
     }
     CompositionLocalProvider(LocalAppMessageTargets provides targets, content = content)

@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.navigation.EntryContinueResult
 import app.katari.presentation.kit.feedback.SnackbarHostState
@@ -23,6 +24,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -83,6 +85,8 @@ data object HistoryTab : Tab {
             },
             onClickDelete = { history -> viewModel.setDialog(HistoryViewModel.Dialog.Delete(history)) },
             onDialogChange = viewModel::setDialog,
+            syncAction = rememberBarSyncAction(HomeScreenTabs.History, navigator),
+            otherReadingDevice = viewModel::otherReadingDevice,
         )
 
         val onDismissRequest = { viewModel.setDialog(null) }

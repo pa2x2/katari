@@ -78,7 +78,7 @@ sealed interface SyncHeadline {
         data class MissingOnServer(val count: Long) : FilesNote
     }
 
-    /** Whether this is trouble the person should notice, which the Library toolbar shows as a warning. */
+    /** Whether this is trouble the person should notice, which sync's status icon shows as a warning. */
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,

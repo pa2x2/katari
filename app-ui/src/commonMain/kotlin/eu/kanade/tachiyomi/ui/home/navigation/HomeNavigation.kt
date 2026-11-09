@@ -36,6 +36,7 @@ import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.NotificationBadge
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.DockPlacement
 import app.katari.presentation.kit.navigation.DockScope
 import app.katari.presentation.kit.navigation.FloatingDock
@@ -59,11 +60,12 @@ fun HomeNavigationBar(
     onOverflowClick: (() -> Unit)? = null,
     startupTab: HomeScreenTabs? = null,
     placement: DockPlacement = DockPlacement.Bottom,
+    actions: List<AppBar.Action> = emptyList(),
 ) {
     var overflowExpanded by rememberSaveable { mutableStateOf(false) }
     val selectedOverflowTab = selectedTab.takeIf { it in overflowTabs }
 
-    FloatingDock(modifier = modifier, placement = placement) {
+    FloatingDock(modifier = modifier, placement = placement, actions = actions) {
         primaryTabs.fastForEach { tab ->
             key(tab) {
                 HomeNavigationBarItem(

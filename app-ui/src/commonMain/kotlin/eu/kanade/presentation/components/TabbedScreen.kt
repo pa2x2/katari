@@ -43,6 +43,8 @@ fun TabbedScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     // One frame for every tab, so the title and tabs keep their place when the tab changes
     frame: ScreenFrame = ScreenFrame.Rows,
+    /** Actions of the whole screen, before the open tab's own. */
+    screenActions: List<AppBar.AppBarAction> = emptyList(),
 ) {
     val scope = rememberCoroutineScope()
     val tab = tabs[state.currentPage]
@@ -61,7 +63,7 @@ fun TabbedScreen(
                     searchQuery = if (searchEnabled) searchQuery else null,
                     onChangeSearchQuery = onChangeSearchQuery,
                     actions = {
-                        AppBarActions(tab.actions)
+                        AppBarActions(screenActions + tab.actions)
                         ActiveProfileButton()
                     },
                     scrollBehavior = scrollBehavior,

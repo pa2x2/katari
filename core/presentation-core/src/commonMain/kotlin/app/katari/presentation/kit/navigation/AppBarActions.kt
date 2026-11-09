@@ -44,18 +44,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
     // whole actions row.
     actions.filterIsInstance<AppBar.Action>().forEach { action ->
         Box {
-            Tooltip(action.title, shortcut = action.shortcut) {
-                IconButton(
-                    icon = action.icon,
-                    contentDescription = action.title,
-                    onClick = action.onClick,
-                    tone = action.tone,
-                    enabled = action.enabled,
-                    badgeCount = action.badgeCount,
-                    spin = action.spin,
-                    arrows = action.arrows,
-                )
-            }
+            ActionButton(action)
             action.menu?.invoke()
         }
     }
@@ -80,6 +69,23 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                 }
             }
         }
+    }
+}
+
+/** [action] as an icon button with a tooltip naming it and its shortcut, wherever it shows: an app bar or the dock. */
+@Composable
+internal fun ActionButton(action: AppBar.Action) {
+    Tooltip(action.title, shortcut = action.shortcut) {
+        IconButton(
+            icon = action.icon,
+            contentDescription = action.title,
+            onClick = action.onClick,
+            tone = action.tone,
+            enabled = action.enabled,
+            badgeCount = action.badgeCount,
+            spin = action.spin,
+            arrows = action.arrows,
+        )
     }
 }
 

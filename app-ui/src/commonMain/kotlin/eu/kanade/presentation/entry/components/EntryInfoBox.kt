@@ -72,6 +72,10 @@ fun EntryInfoBox(
             AsyncImage(
                 model = ImageRequest.Builder(LocalPlatformContext.current)
                     .data(entry.backgroundUrl?.let { SourceImage(entry.source, it) } ?: entry)
+                    // The cover above decodes this image at its own size at the same moment. In a shared memory cache
+                    // entry, whichever decode finished last would be what later covers of this entry are drawn from,
+                    // such as the merge sheet's, so they would differ from one visit to the next.
+                    .memoryCacheKeyExtra(MEMORY_CACHE_PRESENTATION, BACKDROP_PRESENTATION)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
@@ -353,3 +357,5 @@ private fun EntryPersonLine(
 
 private const val TABLET_COVER_WIDTH_FRACTION = 0.65f
 private const val DOT_SEPARATOR = " • "
+private const val MEMORY_CACHE_PRESENTATION = "presentation"
+private const val BACKDROP_PRESENTATION = "backdrop"

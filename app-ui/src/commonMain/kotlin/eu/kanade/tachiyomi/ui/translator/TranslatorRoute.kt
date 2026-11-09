@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.feedback.SnackbarHostState
+import app.katari.presentation.kit.navigation.AppBar
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.tachiyomi.ui.translator.presentation.TranslatorScreenContent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorEvent
@@ -19,6 +20,7 @@ internal fun TranslatorRoute(
     viewModel: TranslatorViewModel,
     onNavigateUp: (() -> Unit)?,
     onOpenSettings: () -> Unit,
+    syncAction: AppBar.Action?,
 ) {
     val state by viewModel.state.collectAsState()
     val context = currentPlatformContext()
@@ -43,6 +45,7 @@ internal fun TranslatorRoute(
         snackbarHostState = snackbarHostState,
         onNavigateUp = onNavigateUp,
         onOpenSettings = onOpenSettings,
+        syncAction = syncAction,
         onTextChange = viewModel::setText,
         onClearText = viewModel::clearText,
         onShowPicker = viewModel::showPicker,

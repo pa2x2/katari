@@ -23,6 +23,7 @@ class TranslatorScreen(
             onOpenSettings = {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
             },
+            syncAction = null,
         )
     }
 }

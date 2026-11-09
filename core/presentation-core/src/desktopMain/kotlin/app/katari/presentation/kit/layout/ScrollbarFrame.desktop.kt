@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.katari.presentation.kit.theme.KatariTheme
@@ -25,7 +26,7 @@ internal actual fun ListScrollbar(state: LazyListState, modifier: Modifier) {
 @Composable
 internal actual fun GridScrollbar(state: LazyGridState, modifier: Modifier) {
     VerticalScrollbar(
-        adapter = rememberScrollbarAdapter(state),
+        adapter = remember(state) { GridScrollbarAdapter(state) },
         modifier = modifier.padding(KatariTheme.spacing.xxs),
         style = scrollbarStyle(),
     )

@@ -8,6 +8,15 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.JFrame
 
+/** Tells [AppVisibility] the app is open while the window is, minimized or not: closing the window quits the app. */
+@Composable
+internal fun ReportsOpen(graph: AppProcessGraph) {
+    DisposableEffect(graph) {
+        AppVisibility.opened(graph)
+        onDispose { AppVisibility.closed(graph) }
+    }
+}
+
 /**
  * Tells [AppVisibility] the app came to the front when [window] gains focus, and went to the back when it loses focus
  * or closes: on a desktop, where the window stays open behind others, focus is what Android's foreground is.

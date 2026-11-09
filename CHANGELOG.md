@@ -1,5 +1,28 @@
 # Changelog
 
+## [3.1.1] - 2026-11-09
+
+### ✨ Added
+
+- History names the other device a title was last read on.
+
+### 🔄 Changed
+
+- Background sync runs every 30 minutes unless you pick another interval.
+
+### 🧩 Improved
+
+- Changes reach your other devices closely to real-time instead of after a pause of several seconds.
+- The sync status icon also shows on Updates, History and Statistics, and at the foot of the side dock on wide windows.
+
+### ⚡️ Performance
+
+- Sync no longer checks for changes every few seconds while the app is open with nothing to send, and each run reads less of the database.
+
+### 🐛 Fixed
+
+- An entry's cover in the merge sheet looks the same on every visit.
+
 ## [3.1.0] - 2026-11-09
 
 ### ✨ Added
@@ -1131,7 +1154,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/pa2x2/katari/releases/tag/v3.1.1
 [3.1.0]: https://github.com/pa2x2/katari/releases/tag/v3.1.0
 [3.0.1]: https://github.com/pa2x2/katari/releases/tag/v3.0.1
 [3.0.0]: https://github.com/pa2x2/katari/releases/tag/v3.0.0

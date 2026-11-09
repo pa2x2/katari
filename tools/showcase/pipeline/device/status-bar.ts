@@ -7,6 +7,10 @@ import { SHOWCASE_NOW } from "../../seed/showcase-clock.ts";
 import type { Device } from "./adb.ts";
 
 const ROTATION_TIMEOUT_MS = 10_000;
+// Locally the bar takes up to a second after the screen is upright again to be laid out for the cutout.
+const LAYOUT_TIMEOUT_MS = 10_000;
+const LAYOUT_POLL_MS = 250;
+const LAYOUT_ATTEMPTS = 3;
 const WIFI_TIMEOUT_MS = 60_000;
 const WIFI_RETRY_MS = 1_000;
 const WIFI_COMMAND = "network -e wifi show -e level 4 -e fully true";
@@ -62,21 +66,78 @@ function windowTrees(device: Device): string {
 }
 
 /**
- * A wiped emulator's System UI sometimes lays the status bar out before the display's cutout is in place, 5 pixels
- * shorter than it does from then on, and keeps it so until the screen next turns. Every still of such a run would differ
- * from another run's. Turning the screen and back has System UI lay the bar out again, and leaves it locked upright.
+ * The status bar's height and the top inset of the display's cutout, in pixels, as the window manager has them. A bar
+ * laid out for the cutout is at least as tall as its inset.
+ */
+interface StatusBarLayout {
+  bar: number;
+  cutout: number;
+}
+
+function statusBarLayout(device: Device): StatusBarLayout {
+  const windows = device.shell("dumpsys window");
+  const bar = windows.match(/type=statusBars frame=\[\d+,(\d+)\]\[\d+,(\d+)\]/);
+  const cutout = windows.match(/mDisplayCutout=DisplayCutout\{insets=Rect\(\d+, (\d+) - /);
+  if (bar === null || cutout === null) throw new Error("The window manager listed no status bar or display cutout");
+  return { bar: Number(bar[2]) - Number(bar[1]), cutout: Number(cutout[1]) };
+}
+
+function describe(layout: StatusBarLayout): string {
+  return `a ${layout.bar} px status bar for a ${layout.cutout} px cutout`;
+}
+
+/**
+ * Throws when the status bar is shorter than the cutout, as a scene's stills would then show it. [moment] says when, such
+ * as after which scene.
+ */
+export function checkStatusBar(device: Device, moment: string): void {
+  const layout = statusBarLayout(device);
+  if (layout.bar < layout.cutout) throw new Error(`The phone had ${describe(layout)} ${moment}`);
+}
+
+/**
+ * Lays the status bar out again when it is shorter than the cutout, saying so; a scene's stills then show the same bar
+ * whatever happened to it before.
+ */
+export async function restoreStatusBar(device: Device, moment: string): Promise<void> {
+  const layout = statusBarLayout(device);
+  if (layout.bar >= layout.cutout) return;
+  console.log(`  the phone had ${describe(layout)} ${moment}; laying it out again`);
+  await relayOutStatusBar(device);
+}
+
+/**
+ * A few seconds after a wiped emulator boots, the device's overlay gives the display its cutout, and System UI then most
+ * often lays the status bar out shorter than the cutout (137 pixels for the showcase AVD's 142) and keeps it so until
+ * the screen next turns. A run whose bar stayed short would differ from every other in all its stills. Turning the
+ * screen and back has System UI lay the bar out for the cutout, and leaves it locked upright. The bar is laid out anew
+ * only a moment after the screen is upright, so a turn counts once the bar is as tall as the cutout.
  *
  * The screen turns whatever is in front: the launcher, there after a restore, keeps its home screen upright. Apps choose
  * their orientation again afterwards, which the player needs to turn to landscape.
  */
 async function relayOutStatusBar(device: Device): Promise<void> {
-  device.shell("cmd window fixed-to-user-rotation enabled");
-  try {
-    await turnTo(device, 1);
-    await turnTo(device, 0);
-  } finally {
-    device.shell("cmd window fixed-to-user-rotation default");
+  let layout = statusBarLayout(device);
+  for (let attempt = 1; attempt <= LAYOUT_ATTEMPTS; attempt++) {
+    device.shell("cmd window fixed-to-user-rotation enabled");
+    try {
+      await turnTo(device, 1);
+      await turnTo(device, 0);
+    } finally {
+      device.shell("cmd window fixed-to-user-rotation default");
+    }
+    const deadline = Date.now() + LAYOUT_TIMEOUT_MS;
+    while (true) {
+      layout = statusBarLayout(device);
+      if (layout.bar >= layout.cutout) {
+        console.log(`  the phone has ${describe(layout)}`);
+        return;
+      }
+      if (Date.now() > deadline) break;
+      await sleep(LAYOUT_POLL_MS);
+    }
   }
+  throw new Error(`Turning the screen ${LAYOUT_ATTEMPTS} times left ${describe(layout)}`);
 }
 
 async function turnTo(device: Device, rotation: number): Promise<void> {

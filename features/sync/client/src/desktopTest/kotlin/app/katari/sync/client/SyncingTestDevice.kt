@@ -21,6 +21,7 @@ import app.katari.sync.client.firstsync.ExistingRows
 import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.handoff.LastReadDevices
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
@@ -59,9 +60,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
     private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
-    private val directory = DeviceDirectory()
+    private val directory = DeviceDirectory(local.handler)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
-    private val disconnection = Disconnection(capture, connection, handOff)
+    private val disconnection = Disconnection(capture, connection, handOff, directory)
+    val lastReadDevices = LastReadDevices(local.handler, connection, directory)
     private val resync = FullResync(local.handler, local.writing)
     private val firstSync = FirstSyncSteps(
         local.firstSync,
@@ -120,9 +122,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         clients, connection, tokens, naming, capture, runs, resync, firstSync, directory, disconnection,
         deviceChanges,
     )
+    private val live = LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences)
     val triggers = SyncTriggers(
         runs,
-        LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences),
+        live,
         LocalChanges(local.driver),
         work,
         connection,
@@ -143,6 +146,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         fileRule,
         steps,
         preferences,
+        live,
     )
 
     /** Joins [accountId] with a link code; joining starts a run of its own, which [sync] waits for or follows. */

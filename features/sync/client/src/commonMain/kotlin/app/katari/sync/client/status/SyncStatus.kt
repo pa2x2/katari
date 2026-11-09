@@ -4,13 +4,14 @@ import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.question.Question
 import app.katari.sync.client.run.SyncStep
 import app.katari.sync.client.run.SyncSteps
+import app.katari.sync.client.trigger.LiveUpdatesState
 import okhttp3.HttpUrl
 import kotlin.time.Duration.Companion.days
 
 /**
- * Everything the Sync page, the More row and the Library toolbar show about sync (D028, D050, D054, D055), in one
- * value: whether the device is linked and to what, what it is doing, what waits to be sent and why, and what waits
- * for the person.
+ * Everything the Sync page, the More row and sync's status icon show about sync (D028, D050, D054, D055), in one
+ * value: whether the device is linked and to what, what it is doing, whether changes come as they happen, what waits to
+ * be sent and why, and what waits for the person.
  */
 data class SyncStatus(
     val link: Link,
@@ -27,6 +28,11 @@ data class SyncStatus(
     val heldAside: Long,
     /** Custom covers and fonts still to move; 0 everywhere while the device isn't linked. */
     val files: Files,
+    /**
+     * Whether other devices' changes come here as they happen. [LiveUpdatesState.NOT_WORKING] only while the server
+     * answers runs: one that can't be reached is the problem the status tells instead.
+     */
+    val live: LiveUpdatesState,
 ) {
     sealed interface Link {
         /** Standalone, never set up or after disconnecting. */

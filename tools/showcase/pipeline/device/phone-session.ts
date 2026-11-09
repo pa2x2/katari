@@ -22,7 +22,7 @@ import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./emulator.ts";
 import { CAPTURE_DIRECTORY, FAILURE_DIRECTORY, READY_SIGNAL, runInstrumentation } from "./instrumentation.ts";
 import { installOfflineTranslator, startOfflineTranslator } from "./offline-translator.ts";
 import { writePreferences } from "./shared-preferences.ts";
-import { freezeStatusBar } from "./status-bar.ts";
+import { checkStatusBar, freezeStatusBar, restoreStatusBar } from "./status-bar.ts";
 
 const APP_ID = "app.katari.benchmark";
 const APP_PREFERENCES = `${APP_ID}_preferences.xml`;
@@ -101,7 +101,9 @@ export class PhoneSession {
       [`__APP_STATE_profile_${PERSONAL_PROFILE_ID}:statistics_last_opened_year_recap`]:
         this.scenes.yearRecapOpened.includes(scene) ? YEAR_RECAP_EDITION : "",
     });
+    await restoreStatusBar(this.device, `before ${scene}`);
     await runInstrumentation(this.device, APP_ID, scene, args);
+    checkStatusBar(this.device, `after ${scene}, so its stills show it`);
     this.ran.push(scene);
   }
 

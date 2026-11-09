@@ -57,8 +57,12 @@ class OutboxDrain(
         val deviceId = state.device_id
         if (!state.enabled || deviceId == null) return@await 0
         SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
-            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = kind.version.toLong())
-            sync_recordsQueries.raiseVersion(kind = kind.name, version = kind.version.toLong())
+            val version = kind.version.toLong()
+            // Inserting no rows still tells the outbox's listeners it changed, and that starts another drain: a drain
+            // that queued nothing would start the next one, for as long as the app is open
+            if (!sync_recordsQueries.hasOutdated(kind = kind.name, version = version).awaitAsOne()) return@forEach
+            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = version)
+            sync_recordsQueries.raiseVersion(kind = kind.name, version = version)
         }
         val rows = sync_outboxQueries.batch(limit).awaitAsList()
         if (rows.isEmpty()) return@await 0

@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
@@ -31,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.katari.presentation.kit.surface.HorizontalDivider
+import app.katari.presentation.kit.surface.VerticalDivider
 import app.katari.presentation.kit.theme.KatariSizes
 import app.katari.presentation.kit.theme.KatariSpacing
 import app.katari.presentation.kit.theme.KatariTheme
@@ -87,12 +91,14 @@ fun FloatingDockHost(
 
 /**
  * The home destinations on a pill floating at the [placement] edge, centred and only as long as its items. Fill it with
- * [FloatingDockItem]s.
+ * [FloatingDockItem]s. [actions] follow the destinations after a line, as icon buttons like an app bar's: status that
+ * belongs beside every screen rather than to one, such as sync's beside the side dock.
  */
 @Composable
 fun FloatingDock(
     modifier: Modifier = Modifier,
     placement: DockPlacement = DockPlacement.Bottom,
+    actions: List<AppBar.Action> = emptyList(),
     content: @Composable DockScope.() -> Unit,
 ) {
     val edgeModifier = when (placement) {
@@ -129,14 +135,26 @@ fun FloatingDock(
                         .selectableGroup(),
                     horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
                     verticalAlignment = Alignment.CenterVertically,
-                ) { BottomDockScope(this).content() }
+                ) {
+                    BottomDockScope(this).content()
+                    if (actions.isNotEmpty()) {
+                        VerticalDivider(Modifier.height(DockActionsDividerLength))
+                        actions.forEach { ActionButton(it) }
+                    }
+                }
                 DockPlacement.Side -> Column(
                     modifier = Modifier
                         .padding(DockPadding)
                         .selectableGroup(),
                     verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                ) { SideDockScope(this).content() }
+                ) {
+                    SideDockScope(this).content()
+                    if (actions.isNotEmpty()) {
+                        HorizontalDivider(Modifier.width(DockActionsDividerLength))
+                        actions.forEach { ActionButton(it) }
+                    }
+                }
             }
         }
     }
@@ -184,6 +202,7 @@ private const val FLOATING_DOCK_TEST_TAG = "floating_dock"
 internal val DockPadding = KatariSpacing.s
 private val DockMargin = KatariSpacing.m
 private val DockElevation = 6.dp
+private val DockActionsDividerLength = KatariSpacing.xl
 
 // The dock's footprint from its edge, plus a gap so content doesn't end flush against it.
 private val BottomDockClearance: Dp = DockMargin + DockPadding * 2 + KatariSizes.touchTarget + KatariSpacing.s

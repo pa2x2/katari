@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.presentation.kit.feedback.EmptyScreen
@@ -41,6 +42,7 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -146,6 +148,7 @@ data object UpdatesTab : Tab {
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
             onFilterClicked = viewModel::showFilterDialog,
             hasActiveFilters = feed.filter.isActive,
+            syncAction = rememberBarSyncAction(HomeScreenTabs.Updates, navigator),
             filterSummary = if (feed.filter.isActive && state.items.isNotEmpty()) {
                 {
                     UpdatesFilterSummaryBar(

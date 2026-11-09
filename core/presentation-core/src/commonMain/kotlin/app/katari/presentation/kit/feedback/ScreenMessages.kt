@@ -44,13 +44,19 @@ class ScreenMessages internal constructor(
 
     internal fun isShownBy(owner: Any): Boolean = shownBy === owner
 
-    fun show(message: String, long: Boolean = false) {
+    /** Shows [message], with [action] beside it; a message shown outside any screen, as a toast, goes without it. */
+    fun show(message: String, long: Boolean = false, action: MessageAction? = null) {
         when {
             host != null && scope != null && shown -> scope.launch {
                 host.currentSnackbarData?.dismiss()
-                host.showSnackbar(message, duration = if (long) SnackbarDuration.Long else SnackbarDuration.Short)
+                val result = host.showSnackbar(
+                    message,
+                    actionLabel = action?.label,
+                    duration = if (long) SnackbarDuration.Long else SnackbarDuration.Short,
+                )
+                if (result == SnackbarResult.ActionPerformed) action?.onClick()
             }
-            outer != null -> outer.show(message, long)
+            outer != null -> outer.show(message, long, action)
             else -> platform.showOutsideScreen(message, long)
         }
     }

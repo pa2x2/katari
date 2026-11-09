@@ -1,0 +1,4 @@
+-- The changes waiting to be pushed are paged through in key order (app/katari/sync/data/sync_records.sq). Indexed by
+-- change_id, the index couldn't give that order, so every run walked every record to find the few waiting.
+DROP INDEX idx_sync_records_pending;
+CREATE INDEX idx_sync_records_pending ON sync_records(record_key) WHERE change_id IS NOT NULL;

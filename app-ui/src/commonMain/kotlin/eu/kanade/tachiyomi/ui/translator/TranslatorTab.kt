@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.translator
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import app.katari.core.common.HomeScreenTabs
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Translate
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -9,6 +10,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
 import tachiyomi.i18n.*
@@ -34,6 +36,7 @@ data object TranslatorTab : Tab {
             onOpenSettings = {
                 navigator.push(SettingsScreen(SettingsScreen.Destination.Translation))
             },
+            syncAction = rememberBarSyncAction(HomeScreenTabs.Translator, navigator),
         )
     }
 }

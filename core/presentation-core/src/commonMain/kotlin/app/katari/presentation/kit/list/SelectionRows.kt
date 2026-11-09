@@ -11,6 +11,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import app.katari.icons.materialsymbols.rounded.CheckBoxOutlineBlank
 import app.katari.icons.materialsymbols.roundedfilled.CheckBox
 import app.katari.icons.materialsymbols.roundedfilled.DisabledByDefault
@@ -30,7 +31,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * The checkbox takes the place of [icon], or of [leading], a picture such as a profile's avatar, so a compact row shows
  * neither. [onDisabledClick] runs when the row is tapped
  * while disabled, such as to explain or fix why. With [onOpen], the setting also has a page of its own, such as a sync
- * area's list of settings: the row's text opens it, and only the switch, set apart by a line, turns it on and off.
+ * area's list of settings: an arrow says the row opens it, and only the switch, set apart by a line, turns it on and
+ * off.
  */
 @Composable
 fun ToggleRow(
@@ -56,6 +58,12 @@ fun ToggleRow(
             leading = leading,
             trailing = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = KatariTheme.spacing.s),
+                        tone = ContentTone.Secondary,
+                    )
                     VerticalDivider(
                         Modifier
                             .padding(end = KatariTheme.spacing.l)
