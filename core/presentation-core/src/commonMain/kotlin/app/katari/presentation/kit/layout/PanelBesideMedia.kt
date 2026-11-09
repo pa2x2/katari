@@ -30,9 +30,10 @@ fun PanelBesideMedia(
     panel: @Composable () -> Unit,
     content: @Composable (panelRoom: Dp?) -> Unit,
 ) {
-    BoxWithConstraints(modifier = modifier, propagateMinConstraints = true) {
+    // The panel takes only its room, so the space's minimum size reaches the content alone
+    BoxWithConstraints(modifier = modifier) {
         val room = mediaWidth?.let { (maxWidth - it) / 2 }?.takeIf { it >= MinPanelRoom }
-        content(room)
+        Box(modifier = Modifier.matchParentSize()) { content(room) }
         if (room != null) {
             Box(
                 modifier = Modifier
