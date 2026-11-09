@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.1.2-1] - 2026-11-09
+- Oops, forgot to bump version code for Android
+
 ## [3.1.2] - 2026-11-09
 
 ### 🔄 Changed
