@@ -2,6 +2,8 @@ package app.katari.translation.provider.server.setup
 
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
+import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 
@@ -10,6 +12,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
  * the user is done, or alone in Android's setup activity, which closes instead (see [Alone]).
  */
 abstract class ProviderSetupScreen : Screen {
+    override val key: ScreenKey = uniqueScreenKey
+
     @Composable
     protected abstract fun Setup(onClose: () -> Unit)
 

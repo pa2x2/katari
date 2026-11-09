@@ -190,19 +190,20 @@ private fun search(index: List<SettingsData>, searchKey: String, isLtr: Boolean)
 
 @Composable
 @NonRestartableComposable
-private fun getIndex(graph: AppUiGraph) = settingScreens
-    .plus(
-        viewerProviderSettingsScreens(graph.entryViewerSettingsFeature),
-    )
-    .distinct()
-    .filter { it.isOffered(graph) }
-    .map { screen ->
+private fun getIndex(graph: AppUiGraph): List<SettingsData> {
+    // Remembered: new screens on every pass would make each pass's results differ from the last and restart the search
+    val screens = remember(graph) {
+        (settingScreens() + viewerProviderSettingsScreens(graph.entryViewerSettingsFeature))
+            .filter { it.isOffered(graph) }
+    }
+    return screens.map { screen ->
         SettingsData(
             title = stringResource(screen.getTitleRes()),
             route = screen,
             contents = screen.getPreferences(),
         )
     }
+}
 
 private fun getLocalizedBreadcrumb(path: String, node: String?, isLtr: Boolean): String {
     return if (node == null) {
@@ -218,21 +219,21 @@ private fun getLocalizedBreadcrumb(path: String, node: String?, isLtr: Boolean):
     }
 }
 
-private val settingScreens = listOf(
-    SettingsAppearanceScreen,
-    SettingsLibraryScreen,
-    SettingsLibraryUpdatesScreen,
-    SettingsReaderScreen,
-    SettingsPlayerScreen,
-    SettingsDownloadScreen,
-    SettingsTranslationScreen,
-    SettingsTtsScreen,
-    SettingsTextRecognitionScreen,
-    SettingsBrowseScreen,
-    SettingsDataScreen,
-    SettingsSecurityScreen,
-    SettingsProfilesScreen,
-    SettingsAdvancedScreen,
+private fun settingScreens() = listOf(
+    SettingsAppearanceScreen(),
+    SettingsLibraryScreen(),
+    SettingsLibraryUpdatesScreen(),
+    SettingsReaderScreen(),
+    SettingsPlayerScreen(),
+    SettingsDownloadScreen(),
+    SettingsTranslationScreen(),
+    SettingsTtsScreen(),
+    SettingsTextRecognitionScreen(),
+    SettingsBrowseScreen(),
+    SettingsDataScreen(),
+    SettingsSecurityScreen(),
+    SettingsProfilesScreen(),
+    SettingsAdvancedScreen(),
 )
 
 private data class SettingsData(

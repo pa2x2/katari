@@ -18,6 +18,7 @@ import app.katari.translation.ui.picker.language.displayName
 import app.katari.translation.ui.presentation.TranslationSessionExternalAction
 import app.katari.ui.di.AppUiGraph
 import app.katari.ui.di.LocalAppUiGraph
+import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -30,13 +31,13 @@ import eu.kanade.presentation.more.settings.screen.translation.presentation.Tran
 import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTranslationLanguagesScreen
 import eu.kanade.presentation.more.settings.screen.translation.series.rememberSeriesTranslationLanguagesViewModel
 import eu.kanade.presentation.util.LocalBackPress
-import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberPageViewModel
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
-object SettingsTranslationScreen : SearchableSettings {
+class SettingsTranslationScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -218,8 +219,8 @@ object SettingsTranslationScreen : SearchableSettings {
 }
 
 @Composable
-internal fun rememberTranslationSettingsViewModel(): TranslationSettingsViewModel =
-    SettingsTranslationScreen.rememberScreenViewModel<TranslationSettingsViewModel>()
+internal fun Screen.rememberTranslationSettingsViewModel(): TranslationSettingsViewModel =
+    rememberPageViewModel<SettingsTranslationScreen, TranslationSettingsViewModel>()
 
 @Composable
 internal fun RefreshTranslationSettingsOnResume(model: TranslationSettingsViewModel) {

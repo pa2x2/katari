@@ -37,7 +37,7 @@ object LibreTranslateServerBindings {
                     settings = configuration,
                     engine = LibreTranslateServerEngine.ENGINE_ID,
                     disclosure = LibreTranslateServerEngine.DISCLOSURE,
-                    setupScreen = LibreTranslateServerSetupScreen,
+                    setupScreen = ::LibreTranslateServerSetupScreen,
                     destination = setupDestination,
                 ),
                 order = LIBRETRANSLATE_SERVER_ORDER,

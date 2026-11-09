@@ -40,7 +40,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * setup it explains what syncs and offers the ways in; once linked it shows the status, the account's devices, the
  * options and leaving; after the device was removed or its account disabled, it says so and offers to sign in again.
  */
-object SyncScreen : SearchableSettings, SyncJoinOrigin {
+class SyncScreen : SearchableSettings(), SyncJoinOrigin {
 
     @ReadOnlyComposable
     @Composable
@@ -74,8 +74,8 @@ object SyncScreen : SearchableSettings, SyncJoinOrigin {
             signIn = { server, account -> navigator.push(SyncSignInScreen(server, account)) },
             enterCode = { navigator.push(linkCodeEntryScreen()) },
             syncNow = model::syncNow,
-            openChoices = { navigator.push(FirstSyncScreen) },
-            openQuestions = { navigator.push(SyncQuestionsScreen) },
+            openChoices = { navigator.push(FirstSyncScreen()) },
+            openQuestions = { navigator.push(SyncQuestionsScreen()) },
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
             renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },

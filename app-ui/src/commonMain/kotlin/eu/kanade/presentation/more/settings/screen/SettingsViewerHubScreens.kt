@@ -31,8 +31,14 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 abstract class AppEntryViewerSettingsScreenProjection :
-    EntryViewerSettingsScreenProjection,
-    SearchableSettings {
+    SearchableSettings(),
+    EntryViewerSettingsScreenProjection {
+
+    /**
+     * A screen of this surface for one opening. Every settings host gets the instance the resolver registers, so two
+     * hosts opening that instance would share one saved state and one set of view models.
+     */
+    abstract fun newScreen(): AppEntryViewerSettingsScreenProjection
 
     @Composable
     protected abstract fun getSurfacePreferences(): List<Preference>
@@ -66,7 +72,7 @@ abstract class AppEntryViewerSettingsScreenProjection :
     }
 }
 
-object SettingsReaderScreen : SearchableSettings {
+class SettingsReaderScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -80,7 +86,7 @@ object SettingsReaderScreen : SearchableSettings {
             graph.readerSharedSettingsRegistry.rootSettings().isNotEmpty()
 }
 
-object SettingsPlayerScreen : SearchableSettings {
+class SettingsPlayerScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -110,7 +116,7 @@ private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Pr
                 title = stringResource(screen.getTitleRes()),
                 subtitle = destination.description ?: destination.origin,
                 isProfileSpecific = true,
-                onClick = { navigator.push(screen) },
+                onClick = { navigator.push(screen.newScreen()) },
             )
         }
     if (category != ViewerSettingsCategory.READER) return destinations
@@ -201,6 +207,7 @@ fun viewerProviderSettingsScreens(
 ): List<SearchableSettings> = feature.destinations
     .map { it.appScreen }
     .distinct()
+    .map { it.newScreen() }
 
 private val EntryViewerSettingsDestination.appScreen: AppEntryViewerSettingsScreenProjection
     get() = projection as AppEntryViewerSettingsScreenProjection

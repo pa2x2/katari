@@ -60,10 +60,7 @@ import tachiyomi.presentation.core.i18n.fileSize
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-object SettingsDataScreen : SearchableSettings {
-
-    val restorePreferenceKeyString = MR.strings.label_backup
-    const val HELP_URL = "${Constants.URL_DOCS}backups-and-storage/"
+class SettingsDataScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -93,31 +90,6 @@ object SettingsDataScreen : SearchableSettings {
             getDataGroup(),
             getExportGroup(),
         )
-    }
-
-    @Composable
-    fun storageLocationPicker(
-        storageDirPref: tachiyomi.core.common.preference.Preference<String>,
-    ): DocumentPicker {
-        val paths = LocalAppUiGraph.current.storageLocationPaths
-        val messages = rememberScreenMessages()
-
-        return rememberDocumentPicker(
-            DocumentPickerRequest.OpenFolder(keepAccess = DocumentAccess.ReadWrite),
-        ) { pick ->
-            if (pick != null) {
-                // For some reason InkBook devices do not implement the SAF properly. Persistable URI grants do not
-                // work. However, simply retrieving the URI and using it works fine for these devices. Access is not
-                // revoked after the app is closed or the device is restarted.
-                // This also holds for some Samsung devices. Thus, a grant that can't be kept is only reported, and the
-                // folder is used anyway.
-                if (!pick.accessKept) {
-                    messages.show(MR.strings.file_picker_uri_permission_unsupported)
-                }
-
-                paths.locationOf(pick.uri)?.let(storageDirPref::set)
-            }
-        }
     }
 
     @Composable
@@ -159,7 +131,7 @@ object SettingsDataScreen : SearchableSettings {
             preferenceItems = listOf(
                 // Manual actions
                 Preference.PreferenceItem.CustomPreference(
-                    title = stringResource(restorePreferenceKeyString),
+                    title = stringResource(MR.strings.label_backup),
                 ) {
                     ControlRow {
                         Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
@@ -344,5 +316,34 @@ object SettingsDataScreen : SearchableSettings {
                 ),
             ),
         )
+    }
+
+    companion object {
+        const val HELP_URL = "${Constants.URL_DOCS}backups-and-storage/"
+
+        @Composable
+        fun storageLocationPicker(
+            storageDirPref: tachiyomi.core.common.preference.Preference<String>,
+        ): DocumentPicker {
+            val paths = LocalAppUiGraph.current.storageLocationPaths
+            val messages = rememberScreenMessages()
+
+            return rememberDocumentPicker(
+                DocumentPickerRequest.OpenFolder(keepAccess = DocumentAccess.ReadWrite),
+            ) { pick ->
+                if (pick != null) {
+                    // For some reason InkBook devices do not implement the SAF properly. Persistable URI grants do
+                    // not work. However, simply retrieving the URI and using it works fine for these devices. Access
+                    // is not revoked after the app is closed or the device is restarted.
+                    // This also holds for some Samsung devices. Thus, a grant that can't be kept is only reported,
+                    // and the folder is used anyway.
+                    if (!pick.accessKept) {
+                        messages.show(MR.strings.file_picker_uri_permission_unsupported)
+                    }
+
+                    paths.locationOf(pick.uri)?.let(storageDirPref::set)
+                }
+            }
+        }
     }
 }

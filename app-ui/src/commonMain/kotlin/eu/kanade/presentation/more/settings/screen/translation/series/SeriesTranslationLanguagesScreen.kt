@@ -7,7 +7,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.SettingsTranslationScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import eu.kanade.tachiyomi.ui.base.viewmodel.rememberPageViewModel
 
 internal class SeriesTranslationLanguagesScreen : Screen() {
 
@@ -28,5 +28,5 @@ internal class SeriesTranslationLanguagesScreen : Screen() {
 
 /** Shared by Translation settings and the list it opens, so both show the same series. */
 @Composable
-internal fun rememberSeriesTranslationLanguagesViewModel(): SeriesTranslationLanguagesViewModel =
-    SettingsTranslationScreen.rememberScreenViewModel<SeriesTranslationLanguagesViewModel>()
+internal fun Screen.rememberSeriesTranslationLanguagesViewModel(): SeriesTranslationLanguagesViewModel =
+    rememberPageViewModel<SettingsTranslationScreen, SeriesTranslationLanguagesViewModel>()

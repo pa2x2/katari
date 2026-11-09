@@ -11,8 +11,7 @@ import eu.kanade.tachiyomi.ui.download.translation.translationQueueTab
 import tachiyomi.i18n.*
 
 /** The download queue, and the translation queue beside it when chapters can be translated in the background. */
-object DownloadQueueScreen : Screen() {
-    private fun readResolve(): Any = DownloadQueueScreen
+class DownloadQueueScreen : Screen() {
 
     @Composable
     override fun Content() {

@@ -6,9 +6,9 @@ import app.katari.entry.interactions.media.EntryViewerSettingsScreenProjectionRe
 fun productionEntryViewerSettingsScreenProjectionResolver(): EntryViewerSettingsScreenProjectionResolver {
     return EntryViewerSettingsScreenProjectionResolver { surfaceIds ->
         listOf(
-            SettingsMangaReaderScreen,
-            SettingsBookDocumentReaderScreen,
-            SettingsAnimePlayerScreen,
+            SettingsMangaReaderScreen(),
+            SettingsBookDocumentReaderScreen(),
+            SettingsAnimePlayerScreen(),
         ).filter { screen -> screen.surfaceId in surfaceIds }
     }
 }

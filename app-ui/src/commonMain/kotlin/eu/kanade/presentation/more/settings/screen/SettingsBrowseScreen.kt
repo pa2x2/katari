@@ -27,7 +27,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
-object SettingsBrowseScreen : SearchableSettings {
+class SettingsBrowseScreen : SearchableSettings() {
 
     @ReadOnlyComposable
     @Composable
@@ -78,7 +78,7 @@ object SettingsBrowseScreen : SearchableSettings {
                         subtitle = stringResource(MR.strings.pref_duplicate_detection_summary),
                         isProfileSpecific = true,
                         onClick = {
-                            navigator.push(DuplicateDetectionSettingsScreen)
+                            navigator.push(DuplicateDetectionSettingsScreen())
                         },
                     ),
                 ),

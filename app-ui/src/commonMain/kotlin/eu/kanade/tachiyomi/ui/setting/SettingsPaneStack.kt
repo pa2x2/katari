@@ -10,6 +10,6 @@ import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
  * only pages, starting from the first page when none was open.
  */
 internal fun settingsStackFor(twoPane: Boolean, stack: List<Screen>): List<Screen> {
-    val pages = stack.filterNot { it === SettingsMainScreen }
-    return if (twoPane) pages.ifEmpty { listOf(SettingsAppearanceScreen) } else listOf(SettingsMainScreen) + pages
+    val pages = stack.filterNot { it is SettingsMainScreen }
+    return if (twoPane) pages.ifEmpty { listOf(SettingsAppearanceScreen()) } else listOf(SettingsMainScreen()) + pages
 }

@@ -16,7 +16,7 @@ import tachiyomi.i18n.libretranslate_server_setup_title
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Where the user connects Katari to a LibreTranslate-compatible server. */
-data object LibreTranslateServerSetupScreen : ProviderSetupScreen() {
+class LibreTranslateServerSetupScreen : ProviderSetupScreen() {
     @Composable
     override fun Setup(onClose: () -> Unit) {
         val model = metroViewModel<LibreTranslateServerSetupViewModel>()
