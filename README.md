@@ -49,6 +49,10 @@ Extensions built with any other version aren't loaded. [Extension compatibility]
 
 Katari can keep your library, reading progress, history and settings the same on all your devices, through a sync server you run yourself. [Sync](https://pa2x2.github.io/katari/docs/sync/) explains how to use it, and [Running a sync server](https://pa2x2.github.io/katari/docs/sync-server/) how to set one up with Docker.
 
+## Privacy
+
+Katari keeps your library on your device. The [privacy policy](https://pa2x2.github.io/katari/privacy/) lists what it sends, where it goes, and how to turn it off.
+
 ## Disclaimer
 
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
