@@ -8,8 +8,14 @@ import com.posthog.android.PostHogAndroidConfig
 import kotlinx.coroutines.CoroutineScope
 
 internal actual object PostHogClient {
-    actual fun setUp(host: TelemetryHost, consent: TelemetryConsent, scope: CoroutineScope) {
+    actual fun setUp(
+        host: TelemetryHost,
+        addedProperties: (event: String) -> Map<String, Any>?,
+        scope: CoroutineScope,
+    ) {
         val application = host.application
+        val resumedActivity = ResumedActivity()
+        application.registerActivityLifecycleCallbacks(resumedActivity)
 
         val config = PostHogAndroidConfig(PostHogProject.TOKEN, PostHogProject.HOST).apply {
             // Screen views name activities, which say nothing in an app of one activity, and a deep link can carry
@@ -22,7 +28,12 @@ internal actual object PostHogClient {
 
             errorTrackingConfig.autoCapture = true
             errorTrackingConfig.captureNativeCrashes = true
-            addBeforeSend { event -> event.takeIf { consent.allows(it.event) } }
+            addBeforeSend { event ->
+                addedProperties(event.event)?.let { added ->
+                    val properties = event.properties.orEmpty() + added + resumedActivity.properties
+                    event.copy(properties = properties.toMutableMap())
+                }
+            }
         }
         PostHogAndroid.setup(application, config)
         // PostHog keeps an opt-out from an earlier run, while the user's switches are what decide

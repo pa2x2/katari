@@ -2,6 +2,7 @@ package app.katari.telemetry
 
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import kotlinx.coroutines.CoroutineScope
+import kotlin.concurrent.Volatile
 
 /**
  * Crash reports and usage statistics, sent to PostHog. Builds made without -Pinclude-telemetry have a Telemetry of the
@@ -16,6 +17,11 @@ object Telemetry {
 
     private val consent = TelemetryConsent()
 
+    // Kept here rather than registered with PostHog, which stores what is registered and would carry the screen of an
+    // earlier run into the next one's first events
+    @Volatile
+    private var shownScreen: ShownScreen? = null
+
     // Written on the thread that calls start, then only by the consent's collector, which start launches after it
     private var sending = false
     private var postHogSetUp = false
@@ -24,6 +30,11 @@ object Telemetry {
     fun start(host: TelemetryHost, preferences: PrivacyPreferences, scope: CoroutineScope) {
         if (!host.isKatariRelease) return
         consent.follow(preferences, scope) { allowsAnything -> send(allowsAnything, host, scope) }
+    }
+
+    /** Names what the app shows from now on; see [ShownScreen]. */
+    fun setShownScreen(screen: String, entryType: String?, density: Float) {
+        shownScreen = ShownScreen(screen, entryType, density)
     }
 
     /** Reports a failure the app caught and survived, under the same switch as crashes. */
@@ -40,17 +51,26 @@ object Telemetry {
             postHogSetUp -> PostHogClient.optIn()
 
             else -> {
-                PostHogClient.setUp(host, consent, scope)
+                PostHogClient.setUp(host, ::addedProperties, scope)
                 postHogSetUp = true
             }
         }
+    }
+
+    /** What [event] carries besides PostHog's own properties; null where the user's switches keep it in. */
+    private fun addedProperties(event: String): Map<String, Any>? {
+        if (!consent.allows(event)) return null
+        return shownScreen?.properties.orEmpty()
     }
 }
 
 /** PostHog's library on each platform: Android has its own, the desktop app the multiplatform one. */
 internal expect object PostHogClient {
-    /** Sets PostHog up opted in, letting out only the events [consent] allows. */
-    fun setUp(host: TelemetryHost, consent: TelemetryConsent, scope: CoroutineScope)
+    /**
+     * Sets PostHog up opted in. Each event goes out with the properties [addedProperties] gives it added to its own, and
+     * not at all where it gives none.
+     */
+    fun setUp(host: TelemetryHost, addedProperties: (event: String) -> Map<String, Any>?, scope: CoroutineScope)
 
     fun optIn()
 
