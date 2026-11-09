@@ -18,7 +18,6 @@ import app.katari.presentation.kit.refresh.refreshAppBarAction
 import app.katari.presentation.kit.surface.Pill
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.profiles.ui.switcher.ActiveProfileButton
-import app.katari.sync.ui.status.rememberSyncToolbarAction
 import kotlinx.collections.immutable.toPersistentList
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
@@ -38,7 +37,7 @@ fun LibraryToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
-    onClickSync: () -> Unit,
+    syncAction: AppBar.Action?,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
@@ -59,7 +58,7 @@ fun LibraryToolbar(
         onClickRefresh = onClickRefresh,
         onClickGlobalUpdate = onClickGlobalUpdate,
         onClickOpenRandomEntry = onClickOpenRandomEntry,
-        onClickSync = onClickSync,
+        syncAction = syncAction,
         scrollBehavior = scrollBehavior,
     )
 }
@@ -75,10 +74,9 @@ private fun LibraryRegularToolbar(
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
     onClickOpenRandomEntry: () -> Unit,
-    onClickSync: () -> Unit,
+    syncAction: AppBar.Action?,
     scrollBehavior: AppBarScrollBehavior?,
 ) {
-    val syncAction = rememberSyncToolbarAction(onClickSync)
     val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
         LibraryGroupingDimension.Category -> stringResource(MR.strings.action_update_category)
         LibraryGroupingDimension.EntryType -> stringResource(MR.strings.action_update_type)

@@ -52,6 +52,7 @@ fun HistoryScreen(
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
     onDialogChange: (HistoryViewModel.Dialog?) -> Unit,
+    syncAction: AppBar.Action?,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -61,7 +62,8 @@ fun HistoryScreen(
                 onChangeSearchQuery = onSearchQueryChange,
                 actions = {
                     AppBarActions(
-                        listOf(
+                        listOfNotNull(
+                            syncAction,
                             AppBar.Action(
                                 title = stringResource(MR.strings.pref_clear_history),
                                 icon = MaterialSymbols.Rounded.DeleteSweep,
@@ -194,6 +196,7 @@ internal fun HistoryScreenPreviews(
             onClickResume = {},
             onClickDelete = {},
             onDialogChange = {},
+            syncAction = null,
         )
     }
 }

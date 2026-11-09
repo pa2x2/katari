@@ -52,6 +52,7 @@ internal fun TranslatorScreenContent(
     snackbarHostState: SnackbarHostState,
     onNavigateUp: (() -> Unit)?,
     onOpenSettings: () -> Unit,
+    syncAction: AppBar.Action?,
     onTextChange: (String) -> Unit,
     onClearText: () -> Unit,
     onShowPicker: (TranslatorPicker) -> Unit,
@@ -92,7 +93,8 @@ internal fun TranslatorScreenContent(
                 navigateUp = onNavigateUp,
                 actions = {
                     AppBarActions(
-                        listOf(
+                        listOfNotNull(
+                            syncAction,
                             AppBar.Action(
                                 title = stringResource(MR.strings.translator_open_settings),
                                 icon = MaterialSymbols.Rounded.Settings,

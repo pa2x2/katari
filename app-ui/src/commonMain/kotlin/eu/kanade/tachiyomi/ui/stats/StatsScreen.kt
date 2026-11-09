@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import app.katari.core.common.HomeScreenTabs
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.AutoStories
 import app.katari.icons.materialsymbols.rounded.Share
@@ -30,6 +31,7 @@ import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
@@ -70,6 +72,7 @@ class StatsScreen : Screen() {
                     title = stringResource(MR.strings.label_stats),
                     navigateUp = navigator::pop,
                     actions = {
+                        val syncAction = rememberBarSyncAction(HomeScreenTabs.Statistics, navigator)
                         val success = state as? StatsScreenState.Success
                         if (success != null) {
                             // Share recap opens the window's summary card to share, so it's hidden where sharing isn't.
@@ -77,6 +80,7 @@ class StatsScreen : Screen() {
                                 ?.takeIf { graph.imageSharing.isAvailable }
                             AppBarActions(
                                 listOfNotNull(
+                                    syncAction,
                                     shownWindow?.let { window ->
                                         AppBar.Action(
                                             title = stringResource(MR.strings.statistics_share_recap),
@@ -111,6 +115,8 @@ class StatsScreen : Screen() {
                                     ),
                                 ),
                             )
+                        } else {
+                            AppBarActions(listOfNotNull(syncAction))
                         }
                     },
                     scrollBehavior = scrollBehavior,

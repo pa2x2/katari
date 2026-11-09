@@ -44,6 +44,7 @@ fun HomeSideNavigationHost(
                     selectedTab = selectedTab,
                     onClick = { tab -> state.open(tab, navigator) },
                     placement = DockPlacement.Side,
+                    actions = listOfNotNull(rememberDockSyncAction(navigator)),
                 )
             },
             modifier = modifier,

@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.missingextensions.ui.MissingExtensionsLibraryNotice
 import app.katari.missingextensions.ui.MissingExtensionsSheet
@@ -64,7 +65,7 @@ import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
+import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -213,7 +214,7 @@ data object LibraryTab : Tab {
                             }
                         }
                     },
-                    onClickSync = { navigator.push(SettingsScreen(SettingsScreen.Destination.Sync)) },
+                    syncAction = rememberBarSyncAction(HomeScreenTabs.Library, navigator),
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
                     scrollBehavior = scrollBehavior,

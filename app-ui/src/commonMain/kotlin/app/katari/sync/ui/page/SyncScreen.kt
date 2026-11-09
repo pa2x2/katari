@@ -38,7 +38,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The Sync page in Settings (D027, D028, D050), also opened from the Sync row in More and the Library toolbar. Before
+ * The Sync page in Settings (D027, D028, D050), also opened from the Sync row in More and sync's status icon. Before
  * setup it explains what syncs and offers the ways in; once linked it shows the status, the account's devices, the
  * options and leaving; after the device was removed or its account disabled, it says so and offers to sign in again.
  */
