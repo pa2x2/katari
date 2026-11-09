@@ -33,9 +33,6 @@ class ClassDataArchive(@AppCoroutineScope private val scope: CoroutineScope) {
     private val folder = System.getProperty(FOLDER_PROPERTY)?.let { ClassDataFolder(Path(it)) }
     private var upkeep: Job? = null
 
-    @Volatile
-    private var build: ArchiveBuild? = null
-
     fun start() {
         val folder = folder ?: return
         upkeep = scope.launch(Dispatchers.IO) {
@@ -51,7 +48,6 @@ class ClassDataArchive(@AppCoroutineScope private val scope: CoroutineScope) {
     /** Ends the upkeep as the app quits, and with it a build under way. */
     fun stop() {
         upkeep?.cancel()
-        build?.stop()
     }
 
     private suspend fun keepUp(folder: ClassDataFolder) {
@@ -67,14 +63,7 @@ class ClassDataArchive(@AppCoroutineScope private val scope: CoroutineScope) {
         }
         if (!folder.needsBuild(collection)) return
         val started = TimeSource.Monotonic.markNow()
-        val build = ArchiveBuild.start(folder.collected, folder.building) ?: return
-        this.build = build
-        val built = try {
-            build.await()
-        } finally {
-            build.stop()
-            this.build = null
-        }
+        val built = ArchiveBuild.run(folder.collected, folder.building) ?: return
         if (built) {
             folder.keepBuilt(collection)
             logcat { "Built the class data archive of ${collection.classCount} classes in ${started.elapsedNow()}" }
