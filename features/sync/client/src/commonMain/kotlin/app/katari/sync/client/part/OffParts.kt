@@ -2,6 +2,7 @@ package app.katari.sync.client.part
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.protocol.record.SequencedRecord
@@ -13,15 +14,24 @@ import tachiyomi.data.Database
  * ([SyncedKind.syncsOn]), or one in a profile the device doesn't sync. A record of an entry is in the entry's profile,
  * found from the entry's record, stored or held; one whose entry isn't here at all counts as synced, and waits for its
  * entry as any record does.
+ *
+ * With [ChoiceSet.askBeforeNewProfiles], a profile this device never had is off from its first record on, and [ask]
+ * hears of it once, to keep it waiting for the person's answer.
  */
-internal class OffParts(val choices: ChoiceSet, private val database: Database) {
+internal class OffParts(
+    val choices: ChoiceSet,
+    private val database: Database,
+    private val ask: (profileUuid: String) -> Unit = {},
+) {
     private val entryProfiles = HashMap<String, String?>()
+    private val asked = HashSet<String>()
+    private val known = HashSet<String>()
 
     suspend fun <P : Any> isOff(kind: SyncedKind<P>, payload: P): Boolean {
         if (!kind.syncsOn(choices, payload)) return true
-        if (choices.profilesOff.isEmpty()) return false
-        val profile = kind.profileOf(payload) ?: kind.entryKeyOf(payload)?.let { entryProfile(it) } ?: return false
-        return !choices.syncsProfile(profile)
+        if (choices.profilesOff.isEmpty() && !choices.askBeforeNewProfiles) return false
+        val profile = profileOf(kind, payload) ?: return false
+        return !choices.syncsProfile(profile) || profile in asked || asksAbout(profile)
     }
 
     /** [isOff] for a record as stored or received; a deletion by the payload it last had, which tells its parts. */
@@ -30,7 +40,32 @@ internal class OffParts(val choices: ChoiceSet, private val database: Database) 
         return decodedIsOff(kind, payload)
     }
 
+    /** The profile a record as stored is in, when it is in one. */
+    suspend fun profileOf(kind: SyncedKind<*>, deleted: Boolean, bytes: ByteArray): String? {
+        val payload = lastPayload(RecordState.of(deleted, bytes)) ?: return null
+        return decodedProfileOf(kind, payload)
+    }
+
     private suspend fun <P : Any> decodedIsOff(kind: SyncedKind<P>, bytes: ByteArray) = isOff(kind, kind.decode(bytes))
+
+    private suspend fun <P : Any> decodedProfileOf(kind: SyncedKind<P>, bytes: ByteArray) =
+        profileOf(kind, kind.decode(bytes))
+
+    private suspend fun <P : Any> profileOf(kind: SyncedKind<P>, payload: P): String? =
+        kind.profileOf(payload) ?: kind.entryKeyOf(payload)?.let { entryProfile(it) }
+
+    private suspend fun asksAbout(profile: String): Boolean {
+        if (!choices.askBeforeNewProfiles || profile == ProfileKind.DEFAULT_UUID || profile in known) return false
+        val isNew = database.sync_applyQueries.profileId(profile).awaitAsOneOrNull() == null &&
+            database.sync_recordsQueries.getByKey(ProfileKind.key(profile)).awaitAsOneOrNull() == null
+        if (isNew) {
+            asked += profile
+            ask(profile)
+        } else {
+            known += profile
+        }
+        return isNew
+    }
 
     private suspend fun entryProfile(entryKey: String): String? {
         if (entryKey in entryProfiles) return entryProfiles[entryKey]

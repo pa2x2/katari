@@ -7,6 +7,7 @@ import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.kind.profile.ProfileKind
 import app.katari.sync.client.outbox.recordEditsMadeNow
+import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.client.setting.read.isPersonLevel
 import app.katari.sync.client.setting.read.settingRecords
@@ -14,6 +15,7 @@ import app.katari.sync.protocol.record.RecordEnvelope
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.base.OnboardingPreferences
 import logcat.LogPriority
+import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
 
@@ -42,6 +44,7 @@ class FirstSync(
     private val writing: SyncWriting,
     private val settings: SettingReads,
     private val profileStore: ProfileStore,
+    private val preferences: SyncPreferences,
 ) {
     /**
      * Whether this device holds the person's data: anything in its database beyond the untouched default profile, or
@@ -94,7 +97,7 @@ class FirstSync(
     /**
      * Makes each profile in [choices] the account profile it was paired with, and records the settings of those that
      * keep the device's as edits made now. The default profile's choice covers the settings shared by all profiles.
-     * A profile added as new keeps its own identity.
+     * A profile added as new keeps its own identity; one kept only here is one this device doesn't sync.
      */
     suspend fun pair(choices: List<ProfileChoice>) {
         val local = localProfiles().associateBy { it.id }
@@ -111,6 +114,11 @@ class FirstSync(
             require(holder == null || holder.id == choice.profileId) {
                 "Profile ${holder?.id} already is the account profile paired with profile ${choice.profileId}"
             }
+        }
+        choices.filter { it.onlyHere }.forEach { choice ->
+            val uuid = checkNotNull(local[choice.profileId]) { "No profile ${choice.profileId}" }.uuid
+            require(uuid != ProfileKind.DEFAULT_UUID) { "The default profile always syncs" }
+            preferences.profilesOff += uuid
         }
         val keeps = keepsRecords()
         // Writing drains the edits not recorded yet first, under the identities they were made under

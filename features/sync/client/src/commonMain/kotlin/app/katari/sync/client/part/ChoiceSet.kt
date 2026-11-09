@@ -8,7 +8,8 @@ import app.katari.sync.client.setting.value.LocalIdPreferences
 /**
  * What this device chose to sync, as one snapshot: the data groups, Settings areas and profiles it keeps to itself, the
  * settings it keeps out of a synced area, and the settings it syncs that stay on each device by default.
- * [profilesOff] includes the profiles waiting for the person to say whether they come to this device.
+ * [profilesOff] includes the profiles waiting for the person to say whether they come to this device, and
+ * [askBeforeNewProfiles] makes every profile this device never had wait so.
  */
 data class ChoiceSet(
     val dataOff: Set<DataGroup> = emptySet(),
@@ -16,6 +17,7 @@ data class ChoiceSet(
     val settingsOff: Set<String> = emptySet(),
     val settingsOn: Set<String> = emptySet(),
     val profilesOff: Set<String> = emptySet(),
+    val askBeforeNewProfiles: Boolean = false,
 ) {
     fun syncs(group: DataGroup): Boolean = group !in dataOff
 

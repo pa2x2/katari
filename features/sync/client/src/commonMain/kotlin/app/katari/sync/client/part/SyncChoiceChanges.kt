@@ -1,6 +1,7 @@
 package app.katari.sync.client.part
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplySession
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.connection.SyncConnection
@@ -18,6 +19,8 @@ import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
 import dev.zacsweers.metro.Inject
 import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.minusAssign
+import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.data.DatabaseHandler
 
 /**
@@ -36,6 +39,30 @@ class SyncChoiceChanges(
 ) {
     suspend fun syncData(group: DataGroup, on: Boolean) = change {
         preferences.dataOff.include(group.name, !on)
+    }
+
+    /**
+     * Whether switching the profile [uuid] off takes it off this device: it is the account's, where it stays, rather
+     * than one only this device has, which stays here unsynced.
+     */
+    suspend fun leavesThisDevice(uuid: String): Boolean = handler.await {
+        sync_recordsQueries.getByKey(ProfileKind.key(uuid)).awaitAsOneOrNull()?.synced == true
+    }
+
+    /**
+     * Turns syncing the profile [uuid] on or off, which also answers whether a profile made on another device comes
+     * here. An account profile switched off leaves this device ([leavesThisDevice]), so it must not be the open one;
+     * switched on again, it comes back as the account has it.
+     */
+    suspend fun syncProfile(uuid: String, on: Boolean) {
+        val leaves = !on && leavesThisDevice(uuid)
+        change(
+            before = { if (leaves) it.removeProfile(uuid) },
+            after = { if (on) it.restoreProfile(uuid) },
+        ) {
+            preferences.profilesAsking -= uuid
+            preferences.profilesOff.include(uuid, !on)
+        }
     }
 
     /**
@@ -93,17 +120,22 @@ class SyncChoiceChanges(
         }
     }
 
-    private suspend fun change(before: suspend (ApplySession) -> Unit = {}, save: () -> Unit) {
+    private suspend fun change(
+        before: suspend (ApplySession) -> Unit = {},
+        after: suspend (ApplySession) -> Unit = {},
+        save: () -> Unit,
+    ) {
         save()
         if (!connection.state().isLinked) return
         writing.write { session ->
             before(session)
             session.followChoices()
+            after(session)
         }
         runs.request()
     }
 }
 
 private fun Preference<Set<String>>.include(value: String, included: Boolean) {
-    set(if (included) get() + value else get() - value)
+    if (included) this += value else this -= value
 }

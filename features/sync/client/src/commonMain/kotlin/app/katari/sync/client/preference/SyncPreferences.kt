@@ -51,6 +51,7 @@ class SyncPreferences(profileStore: ProfileStore) {
         settingsOff = settingsOff.get(),
         settingsOn = settingsOn.get(),
         profilesOff = profilesOff.get() + profilesAsking.get(),
+        askBeforeNewProfiles = askBeforeNewProfiles.get(),
     )
 }
 

@@ -14,6 +14,7 @@ import app.katari.sync.data.Sync_outbox
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
 import logcat.LogPriority
+import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
@@ -90,7 +91,7 @@ class SyncWriting(
             profileDeletion = profileDeletion,
             migrationRules = migrationRules,
             activeProfileId = profileStore.currentProfileId,
-            parts = OffParts(preferences.choices(), this),
+            parts = OffParts(preferences.choices(), this) { preferences.profilesAsking += it },
             device = DeviceId(device),
             appVersion = thisDevice.appVersion,
             failing = failing,

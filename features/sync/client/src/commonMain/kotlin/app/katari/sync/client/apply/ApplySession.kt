@@ -486,6 +486,39 @@ internal class ApplySession(
     }
 
     /**
+     * Removes the account profile [uuid], which this device stopped syncing, from this device as deleting it here
+     * does, but with no deletion to push: the rows go inside this write, whose capture is dropped, and the profile's
+     * records stay, let go of their rows, so [restoreProfile] can write them again.
+     */
+    suspend fun removeProfile(uuid: String) {
+        val profileId = database.sync_applyQueries.profileId(uuid).awaitAsOneOrNull() ?: return
+        check(profileId != activeProfileId) { "The open profile can't leave this device" }
+        forEachRecordOf(uuid) { key, _ -> database.sync_recordsQueries.setLocalRef(localRef = null, recordKey = key) }
+        database.sync_filesQueries.releaseProfile(fontOwnerPrefix = "[$profileId,%", profileId = profileId)
+        profileDeletion.delete(profileId)
+    }
+
+    /** Writes every record of the profile [uuid] here again, once this device syncs the profile. */
+    suspend fun restoreProfile(uuid: String) {
+        reapply(ProfileKind.key(uuid))
+        forEachRecordOf(uuid) { key, deleted -> if (!deleted) reapply(key) }
+    }
+
+    private suspend fun forEachRecordOf(uuid: String, action: suspend (key: String, deleted: Boolean) -> Unit) {
+        var after = ""
+        while (true) {
+            val page = database.sync_recordsQueries.pageAfter(after, PAGE).awaitAsList()
+            page.forEach { record ->
+                val kind = SyncKinds.named(record.kind) ?: return@forEach
+                if (parts.profileOf(kind, record.deleted, record.payload) == uuid) {
+                    action(record.record_key, record.deleted)
+                }
+            }
+            after = page.lastOrNull()?.record_key ?: return
+        }
+    }
+
+    /**
      * Drops the changes this device made to [area]'s settings while it didn't sync them, for the account's settings,
      * which the records held for the area bring when [followChoices] takes them in.
      */
@@ -553,6 +586,8 @@ internal class ApplySession(
     private companion object {
         /** Categories merged into ones merged again; a chain this long can only be a loop. */
         const val MAX_REPLACEMENTS = 16
+
+        const val PAGE = 500L
     }
 }
 

@@ -24,13 +24,19 @@ enum class SettingsWinner { ACCOUNT, DEVICE }
 
 /**
  * The person's answer for one of this device's profiles: the account profile it is ([accountUuid]), or null to add
- * it to the account as a new one, and, for a paired profile, whose settings win.
+ * it to the account as a new one or, when [onlyHere], to keep it on this device without syncing it; and, for a
+ * paired profile, whose settings win.
  */
 data class ProfileChoice(
     val profileId: Long,
     val accountUuid: String?,
     val settings: SettingsWinner = SettingsWinner.ACCOUNT,
-)
+    val onlyHere: Boolean = false,
+) {
+    init {
+        require(!onlyHere || accountUuid == null) { "A profile paired with the account's syncs" }
+    }
+}
 
 /**
  * Pairs [local] profiles with [account] ones, each account profile with one device profile at most. A profile that
