@@ -1,5 +1,30 @@
 # Desktop Changelog
 
+## [1.0.0-beta.5] - 2026-11-09
+
+### ✨ Added
+
+- The manga reader recognises text on pages to select, copy, translate and read aloud, with keyboard shortcuts.
+- Downloaded manga chapters can be translated in the background.
+- Each device chooses what it syncs: history, statistics, covers, fonts and other data, settings by area, and which profiles.
+- Syncing can be paused, run as often as you choose, and keep changes off metered networks.
+- Settings rows show whether each setting syncs, and each Settings screen opens its sync choices.
+
+### 🧩 Improved
+
+- The sync status warns when synced changes wait for a Katari update.
+
+### ⚡️ Performance
+
+- The app starts faster.
+
+### 🐛 Fixed
+
+- Windows open at their final size and layout instead of resizing after they appear.
+- Chapters a library update finds on one device now reach your other devices.
+- A device's first library update no longer fills Updates with a title's old chapters.
+- Opening the Sync page from a notification while it is already open no longer crashes the app.
+
 ## [1.0.0-beta.4] - 2026-11-08
 
 ### 🧩 Improved
@@ -144,7 +169,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.5...HEAD
+[1.0.0-beta.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.5
 [1.0.0-beta.4]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.2
