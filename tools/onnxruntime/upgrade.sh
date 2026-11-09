@@ -4,11 +4,11 @@
 #
 #   upgrade.sh [version]
 #
-# Points gradle/libs.versions.toml at the new AAR version (and workspace.sh at the version's tag), then runs
-# required-operators.sh, build-aar.sh and verify-aar.sh, stopping at the first failure. Needs an arm64 device that runs
-# 32-bit code and an x86_64 emulator connected. After a failure, fix its cause and run the remaining scripts directly,
-# as running this again would move to yet another version. Afterwards, try the app with -PlocalOnnxRuntime, run
-# publish-release.sh, commit, and push.
+# Points gradle/libs.versions.toml at the new version of both libraries (and workspace.sh at the version's tag), then
+# runs required-operators.sh, build.sh and verify.sh, stopping at the first failure. Needs an arm64 device that runs
+# 32-bit code and an x86_64 emulator connected, and Docker. After a failure, fix its cause and run the remaining
+# scripts directly, as running this again would move to yet another version. Afterwards, try the Android and the
+# desktop app with -PlocalOnnxRuntime, run publish-release.sh, commit, and push.
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -35,5 +35,5 @@ sed -i "s/^onnxruntime = \"$current\"/onnxruntime = \"$version\"/" "$catalog"
 echo "onnxruntime $current -> $version"
 
 "$here/required-operators.sh"
-"$here/build-aar.sh"
-"$here/verify-aar.sh"
+"$here/build.sh"
+"$here/verify.sh"

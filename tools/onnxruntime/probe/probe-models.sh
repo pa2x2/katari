@@ -5,8 +5,8 @@
 #
 # For each model it prints whether it loaded and checksums of its outputs on deterministic inputs, and pulls the graph
 # as ORT_ENABLE_ALL optimized it for that device into <output-dir>. probe-abis.sh runs it on every ABI for
-# ../verify-aar.sh, which compares the checksums of the reduced and the stock AAR, and ../required-operators.sh, which
-# finds the kernels a reduced build needs in the optimized graphs.
+# ../verify.sh, which compares the checksums of the reduced and the stock libraries, and ../required-operators.sh,
+# which finds the kernels a reduced build needs in the optimized graphs. probe-linux.sh does the same on this machine.
 #
 # <models-dir> holds the provider's models as fetch-models.py names them: detector-v4-s_int8.onnx,
 # encoder_model_int8.onnx, decoder_model_int8.onnx, the PaddleOCR det.onnx, and one rec_<folder>.onnx per PaddleOCR
@@ -18,6 +18,7 @@ root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 sdk=${ANDROID_HOME:-$(sed -n 's/^sdk.dir=//p' "$root/local.properties")}
 ndk_version=$(sed -n 's/^android-ndk = "\(.*\)"/\1/p' "$root/gradle/katari.versions.toml")
 toolchain=$sdk/ndk/$ndk_version/toolchains/llvm/prebuilt/linux-x86_64/bin
+. "$(dirname "$0")/model-inputs.sh"
 case $abi in
     arm64-v8a) target=aarch64-linux-android29 ;;
     armeabi-v7a) target=armv7a-linux-androideabi29 ;;
@@ -37,14 +38,7 @@ adb -s "$serial" push -q "$work/probe" "$work/jni/$abi/libonnxruntime.so" "$devi
 mkdir -p "$output"
 for model in "$models"/*.onnx; do
     name=$(basename "$model")
-    case $name in
-        *decoder*) inputs="i=2:1,8 f:1,197,768" ;;
-        *detector*) inputs="f:1,3,640,640 i=640:1,2" ;;
-        *encoder*) inputs="f:1,3,224,224" ;;
-        det*) inputs="f:1,3,640,640" ;;
-        rec*) inputs="f:1,3,48,320" ;;
-        *) echo "no inputs known for $name" >&2; exit 2 ;;
-    esac
+    inputs=$(model_inputs "$name")
     adb -s "$serial" shell "[ -f $device/models/$name ]" || adb -s "$serial" push -q "$model" "$device/models/" >/dev/null
     echo "== $name"
     adb -s "$serial" shell "cd $device/runtime && LD_LIBRARY_PATH=. ./probe $device/models/$name \
