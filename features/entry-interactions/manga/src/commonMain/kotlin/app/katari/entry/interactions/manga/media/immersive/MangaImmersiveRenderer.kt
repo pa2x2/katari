@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
@@ -77,6 +78,7 @@ internal class MangaImmersiveRenderer(
         onPagingBlockedChange: (Boolean) -> Unit,
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
+        switches: EntryImmersiveMediaSwitches,
     ) {
         val pages = media.pages
         val pagerState = rememberPagerState(initialPage = media.initialPageIndex) { pages.size }

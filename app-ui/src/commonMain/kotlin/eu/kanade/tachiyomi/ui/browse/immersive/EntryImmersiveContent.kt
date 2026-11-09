@@ -24,6 +24,7 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import app.katari.core.platform.currentPlatformContext
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
 import app.katari.entry.interactions.media.EntryImmersiveOpenTargetResult
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
@@ -278,6 +279,7 @@ private fun EntryImmersivePage(
 ) {
     var bottomOverlayHeightPx by remember { mutableIntStateOf(0) }
     val place = remember(itemState) { EntryImmersivePlaceTracker() }
+    val switches = remember(itemState) { EntryImmersiveMediaSwitches() }
     var mediaWidth by remember(itemState) { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
     val controlsBottomInset = with(density) { bottomOverlayHeightPx.toDp() }
@@ -309,6 +311,7 @@ private fun EntryImmersivePage(
                         onPagingBlockedChange = onPagingBlockedChange,
                         place = place,
                         onMediaWidthChange = { mediaWidth = it },
+                        switches = switches,
                     )
                     is EntryImmersiveRendererResult.Failed -> ReaderMediaLoadOverlay(
                         state = ReaderMediaLoadState.Failed(
@@ -358,6 +361,7 @@ private fun EntryImmersivePage(
                     onBackToTop = onBackToTop.takeIf { showBackToTop },
                     fullScreen = fullScreen,
                     onExit = onExitImmersive,
+                    mediaSwitches = switches.offered,
                 ),
                 entry = ImmersiveEntryActions(
                     entry = entry,

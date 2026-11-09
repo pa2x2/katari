@@ -14,9 +14,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import app.katari.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import app.katari.entry.interactions.media.EntryImmersiveHandle
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitch
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitches
 import app.katari.entry.interactions.media.EntryImmersivePlace
 import app.katari.entry.interactions.media.EntryImmersivePlaceTracker
 import app.katari.entry.interactions.media.EntryImmersiveRenderer
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Subtitles
 import app.katari.video.engine.spi.VideoEngine
 import app.katari.video.engine.spi.VideoPlayerRole
 import app.katari.video.engine.spi.loading.resolvedRequest
@@ -38,6 +42,7 @@ import tachiyomi.presentation.core.util.collectAsState
 internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
     private val savedPositionMs: Flow<Long>,
+    private val savedSubtitleKey: String?,
     private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
     private val platform: AnimeClipPlatform,
@@ -53,6 +58,7 @@ internal class AnimeImmersiveRenderer(
         onPagingBlockedChange: (Boolean) -> Unit,
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
+        switches: EntryImmersiveMediaSwitches,
     ) {
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
@@ -145,6 +151,31 @@ internal class AnimeImmersiveRenderer(
                 player.release()
             }
         }
+        val subtitles = rememberAnimeClipSubtitles(
+            player = player,
+            external = handle.stream.subtitles,
+            savedKey = savedSubtitleKey,
+            preferences = preferences,
+            active = active,
+        )
+        val subtitlesLabel = stringResource(MR.strings.anime_playback_subtitles)
+        DisposableEffect(switches, subtitles.available, subtitles.shown, subtitlesLabel) {
+            switches.offer(
+                if (subtitles.available) {
+                    listOf(
+                        EntryImmersiveMediaSwitch(
+                            label = subtitlesLabel,
+                            icon = MaterialSymbols.Rounded.Subtitles,
+                            on = subtitles.shown,
+                            onToggle = subtitles::toggle,
+                        ),
+                    )
+                } else {
+                    emptyList()
+                },
+            )
+            onDispose { switches.offer(emptyList()) }
+        }
         // Declared after the release above so it is disposed first, before the player it reads is gone.
         DisposableEffect(player, place) {
             place.track { EntryImmersivePlace.Playback(player.currentPositionMs.coerceAtLeast(0L)) }
@@ -163,6 +194,7 @@ internal class AnimeImmersiveRenderer(
             keepAwake = keepAwake,
             playerErrorMessage = playerErrorMessage,
             muted = muted,
+            subtitles = subtitles,
             onToggleControls = onToggleControls,
             onPlaybackSnapshotChange = { playbackSnapshot = it },
             onPlayIntentChange = { playIntent = it },

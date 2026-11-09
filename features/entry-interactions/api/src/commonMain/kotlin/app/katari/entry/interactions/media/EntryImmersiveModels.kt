@@ -12,7 +12,8 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /**
  * Draws one page's media in the immersive feed, centred in the page. [onMediaWidthChange] is told how wide the media is
- * drawn, or null while that isn't known, so the feed can put its title and actions beside media that leaves room.
+ * drawn, or null while that isn't known, so the feed can put its title and actions beside media that leaves room; the
+ * media's own [switches], such as a clip's subtitles, join the feed's controls.
  */
 fun interface EntryImmersiveRenderer {
     @Composable
@@ -25,6 +26,7 @@ fun interface EntryImmersiveRenderer {
         onPagingBlockedChange: (Boolean) -> Unit,
         place: EntryImmersivePlaceTracker,
         onMediaWidthChange: (Dp?) -> Unit,
+        switches: EntryImmersiveMediaSwitches,
     )
 }
 

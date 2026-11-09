@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.immersive
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.entry.interactions.media.EntryImmersiveMediaSwitch
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Close
@@ -11,6 +12,7 @@ import app.katari.icons.materialsymbols.rounded.FullscreenExit
 import app.katari.icons.materialsymbols.rounded.Info
 import app.katari.icons.materialsymbols.rounded.KeyboardArrowUp
 import app.katari.presentation.kit.button.IconButton
+import app.katari.presentation.kit.button.IconToggleButton
 import app.katari.presentation.kit.refresh.RefreshButton
 import app.katari.presentation.kit.window.WindowFullScreen
 import eu.kanade.presentation.entry.components.EntryActionIcons
@@ -19,7 +21,10 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** What the immersive view itself offers, whichever title it shows: refreshing, the top, full screen and leaving. */
+/**
+ * What the immersive view itself offers, whichever title it shows: refreshing, the top, full screen and leaving, and
+ * the switches the shown media adds, such as a clip's subtitles.
+ */
 internal class ImmersiveViewActions(
     val onRefresh: () -> Unit,
     val refreshEnabled: Boolean,
@@ -27,6 +32,7 @@ internal class ImmersiveViewActions(
     val onBackToTop: (() -> Unit)?,
     val fullScreen: WindowFullScreen?,
     val onExit: () -> Unit,
+    val mediaSwitches: List<EntryImmersiveMediaSwitch>,
 )
 
 /**
@@ -74,6 +80,15 @@ internal fun ImmersiveViewActionButtons(actions: ImmersiveViewActions) {
         icon = MaterialSymbols.Rounded.Close,
         onClick = actions.onExit,
     )
+    actions.mediaSwitches.forEach { switch ->
+        IconToggleButton(
+            icon = switch.icon,
+            contentDescription = switch.label,
+            checked = switch.on,
+            onCheckedChange = { switch.onToggle() },
+            modifier = Modifier.mediaControl(),
+        )
+    }
 }
 
 /** The title's actions as icon buttons, for the bar over the media. */

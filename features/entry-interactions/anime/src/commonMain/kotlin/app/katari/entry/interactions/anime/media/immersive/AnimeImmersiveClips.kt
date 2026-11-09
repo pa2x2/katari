@@ -59,7 +59,7 @@ internal class AnimeImmersiveClips(
                 entryType = EntryType.ANIME,
                 chapterId = chapter.id,
                 stream = result.stream,
-                delegate = AnimeImmersiveEpisode(chapter),
+                delegate = AnimeImmersiveEpisode(chapter, result.preferences.subtitleKey),
             )
             is ResolveVideoStream.Result.Error -> error(result.reason.message())
         }
@@ -73,6 +73,7 @@ internal class AnimeImmersiveClips(
         return AnimeImmersiveRenderer(
             handle = playback,
             savedPositionMs = savedPositionMs(episode.child),
+            savedSubtitleKey = episode.subtitleKey,
             videoEngineProvider = videoEngine,
             basePreferencesProvider = basePreferences,
             platform = clipPlatform,
@@ -90,7 +91,8 @@ internal class AnimeImmersiveClips(
             .distinctUntilChanged()
 }
 
-private data class AnimeImmersiveEpisode(val child: EntryChapter)
+// The title's subtitle pick, which the clip shows as the player would
+private data class AnimeImmersiveEpisode(val child: EntryChapter, val subtitleKey: String?)
 
 private fun ResolveVideoStream.Reason.message(): String {
     return when (this) {

@@ -71,6 +71,7 @@ internal fun AnimeImmersivePlayerSurface(
     keepAwake: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
+    subtitles: AnimeClipSubtitles,
     onToggleControls: () -> Unit,
     onPlaybackSnapshotChange: (VideoPlayerPlaybackSnapshot) -> Unit,
     onPlayIntentChange: (Boolean) -> Unit,
@@ -149,6 +150,10 @@ internal fun AnimeImmersivePlayerSurface(
             override fun togglePlayback() = latestTogglePlayback()
 
             override fun toggleMute() = latestToggleMute()
+
+            override val hasSubtitles get() = subtitles.available
+
+            override fun toggleSubtitles() = subtitles.toggle()
 
             override fun stepVolume(percent: Int) {
                 val current = platform.playerVolume?.get() ?: return

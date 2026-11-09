@@ -36,10 +36,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The desktop's feed clips, worked with the mouse as the player is: a click plays or pauses, a double-click switches
  * full screen, and holding the left button plays at 2× until it is let go. The feed shows and hides the controls as the
- * mouse moves and rests. The current clip takes the player's keys for playing, muting and seeking by the player's seek
- * step, before a focused control does, and Shift with ↑ or ↓ for the volume, as ↑ and ↓ alone move between clips, which
- * is the feed's. Clips play at the player's own volume. The screen stays awake while a clip plays in a window that is
- * shown.
+ * mouse moves and rests. The current clip takes the player's keys for playing, muting, subtitles and seeking by the
+ * player's seek step, before a focused control does, and Shift with ↑ or ↓ for the volume, as ↑ and ↓ alone move
+ * between clips, which is the feed's. Clips play at the player's own volume. The screen stays awake while a clip plays
+ * in a window that is shown.
  */
 internal class PointerAnimeClipPlatform(
     private val inhibitor: ScreenIdleInhibitor,
@@ -59,6 +59,9 @@ internal class PointerAnimeClipPlatform(
         val fullScreen = LocalWindowFullScreen.current
         KeyboardShortcutHandler(VideoPlayerShortcuts.PlayPause, enabled = target.active) { target.togglePlayback() }
         KeyboardShortcutHandler(VideoPlayerShortcuts.Mute, enabled = target.active) { target.toggleMute() }
+        KeyboardShortcutHandler(VideoPlayerShortcuts.Subtitles, enabled = target.active && target.hasSubtitles) {
+            target.toggleSubtitles()
+        }
         KeyboardShortcutHandler(VideoPlayerShortcuts.seekBackward(seekStepSeconds), enabled = target.active) {
             target.seek(VideoPlayerSeekDirection.Backward, seekStepSeconds)
         }

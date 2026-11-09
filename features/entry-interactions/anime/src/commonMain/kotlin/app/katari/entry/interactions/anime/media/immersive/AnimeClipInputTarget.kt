@@ -16,6 +16,11 @@ internal interface AnimeClipInputTarget {
 
     fun toggleMute()
 
+    /** Whether the clip has subtitles for [toggleSubtitles] to show or hide. */
+    val hasSubtitles: Boolean
+
+    fun toggleSubtitles()
+
     /** Changes the player's volume by [percent], unmuting the feed, where it has one (`AnimeClipPlatform.playerVolume`). */
     fun stepVolume(percent: Int)
 
