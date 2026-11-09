@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.EntryUpdateStatus
 import tachiyomi.domain.library.update.model.LibraryUpdateRun
@@ -26,23 +25,23 @@ class LibraryUpdateReportRepositoryImpl(
 
     override fun subscribeLatestRun(): Flow<LibraryUpdateRun?> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::mapRun) }
+            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
         }
     }
 
     override suspend fun getLatestRun(profileId: Long): LibraryUpdateRun? {
-        return handler.awaitOneOrNull { library_update_runsQueries.getByProfile(profileId, ::mapRun) }
+        return handler.awaitOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
     }
 
     override fun subscribeLatestRunStatuses(): Flow<List<EntryUpdateStatus>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::mapRun) }
+            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
                 .flatMapLatest { run ->
                     if (run == null) {
                         flowOf(emptyList())
                     } else {
                         handler.subscribeToList {
-                            entry_update_statusQueries.getDecidedSince(profileId, run.startedAt, ::mapStatus)
+                            entry_update_statusQueries.getDecidedSince(profileId, run.startedAt, ::entryUpdateStatus)
                         }
                     }
                 }
@@ -50,7 +49,7 @@ class LibraryUpdateReportRepositoryImpl(
     }
 
     override fun subscribeStatus(entryId: Long): Flow<EntryUpdateStatus?> {
-        return handler.subscribeToOneOrNull { entry_update_statusQueries.getByEntryId(entryId, ::mapStatus) }
+        return handler.subscribeToOneOrNull { entry_update_statusQueries.getByEntryId(entryId, ::entryUpdateStatus) }
     }
 
     override suspend fun getStatuses(): Map<Long, EntryUpdateStatus> {
@@ -58,7 +57,7 @@ class LibraryUpdateReportRepositoryImpl(
     }
 
     override suspend fun getStatuses(profileId: Long): Map<Long, EntryUpdateStatus> {
-        return handler.awaitList { entry_update_statusQueries.getByProfile(profileId, ::mapStatus) }
+        return handler.awaitList { entry_update_statusQueries.getByProfile(profileId, ::entryUpdateStatus) }
             .associateBy(EntryUpdateStatus::entryId)
     }
 
@@ -143,38 +142,4 @@ class LibraryUpdateReportRepositoryImpl(
     private fun checkedOutcome(newChapters: Int): EntryUpdateOutcome {
         return if (newChapters > 0) EntryUpdateOutcome.NEW_CHAPTERS else EntryUpdateOutcome.NO_CHANGES
     }
-
-    private fun mapRun(
-        startedAt: Long,
-        finishedAt: Long?,
-        trigger: String,
-        librarySize: Long,
-    ): LibraryUpdateRun = LibraryUpdateRun(
-        startedAt = startedAt,
-        finishedAt = finishedAt,
-        trigger = LibraryUpdateTrigger.valueOf(trigger.uppercase()),
-        librarySize = librarySize.toInt(),
-    )
-
-    private fun mapStatus(
-        entryId: Long,
-        decidedAt: Long,
-        outcome: String,
-        reason: String?,
-        reasonCategoryId: Long?,
-        error: String?,
-        newChapters: Long,
-        lastCheckedAt: Long?,
-        consecutiveFailures: Long,
-    ): EntryUpdateStatus = EntryUpdateStatus(
-        entryId = entryId,
-        decidedAt = decidedAt,
-        outcome = EntryUpdateOutcome.valueOf(outcome.uppercase()),
-        reason = reason?.let { EntryUpdateDecisionReason.valueOf(it.uppercase()) },
-        reasonCategoryId = reasonCategoryId,
-        error = error,
-        newChapters = newChapters.toInt(),
-        lastCheckedAt = lastCheckedAt,
-        consecutiveFailures = consecutiveFailures.toInt(),
-    )
 }

@@ -1,14 +1,9 @@
-package app.katari.library.update.report
+package tachiyomi.domain.library.update.model
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
-import tachiyomi.domain.library.update.model.EntryUpdateOutcome
-import tachiyomi.domain.library.update.model.EntryUpdateStatus
-import tachiyomi.domain.library.update.model.LibraryUpdateRun
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 
 /** The latest library update in numbers, for the places that link to its report. */
@@ -50,7 +45,6 @@ data class LibraryUpdateRunSummary(
     }
 }
 
-@OptIn(ExperimentalCoroutinesApi::class)
 fun LibraryUpdateReportRepository.subscribeLatestSummary(): Flow<LibraryUpdateRunSummary?> {
     return subscribeLatestRun().flatMapLatest { run ->
         if (run == null) {

@@ -10,6 +10,7 @@ import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.source.EntryWebViewResolution
 import app.katari.library.update.pause.LibrarySourcePauses
 import app.katari.library.update.report.LibraryUpdateReport
+import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdate
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -32,9 +33,11 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
 import tachiyomi.domain.library.update.model.LibraryUpdateStart
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.domain.library.update.model.SourceUpdatePause
+import tachiyomi.domain.library.update.model.subscribeLatestSummary
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -53,6 +56,7 @@ class LibraryUpdateReportViewModel(
     private val migrationFeature: EntryMigrationFeature,
     private val webViewFeature: EntryWebViewFeature,
     private val activeProfileProvider: ActiveProfileProvider,
+    newerOtherDeviceUpdate: NewerOtherDeviceUpdate,
 ) : ViewModel() {
 
     val state: StateFlow<LibraryUpdateReportViewModel.State>
@@ -80,10 +84,27 @@ class LibraryUpdateReportViewModel(
         val isUpdating = activeProfileProvider.activeProfileIdFlow
             .flatMapLatest { libraryUpdateQueue.stateFlow(it) }
             .map { it is LibraryUpdateState.Running }
+        val otherDevice = combine(newerOtherDeviceUpdate.subscribe(), reportRepository.subscribeLatestSummary()) {
+                update,
+                here,
+            ->
+            update?.let { OtherDeviceReport(it, here) }
+        }
         viewModelScope.launch {
-            combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
-                latest?.copy(sourcePauses = sourcePausesNow, pausedEntryIds = entryIds, isUpdating = updating)
-                    ?: State.Empty
+            combine(reports, pauses, pausedEntryIds, isUpdating, otherDevice) {
+                    latest,
+                    sourcePausesNow,
+                    entryIds,
+                    updating,
+                    elsewhere,
+                ->
+                latest?.copy(
+                    sourcePauses = sourcePausesNow,
+                    pausedEntryIds = entryIds,
+                    isUpdating = updating,
+                    otherDevice = elsewhere,
+                )
+                    ?: State.Empty(elsewhere)
             }
                 .collectLatest { newState -> state.value = newState }
         }
@@ -118,6 +139,7 @@ class LibraryUpdateReportViewModel(
             sourcePauses = emptyMap(),
             pausedEntryIds = emptySet(),
             isUpdating = false,
+            otherDevice = null,
         )
     }
 
@@ -142,10 +164,22 @@ class LibraryUpdateReportViewModel(
 
     suspend fun checkSkipped(): LibraryUpdateStart = libraryUpdateQueue.startSkippedOfLatest()
 
-    sealed interface State {
-        data object Loading : State
+    /** Another device's update of the whole library, newer than any here, with this device's own latest one. */
+    @Immutable
+    data class OtherDeviceReport(
+        val update: OtherDeviceLibraryUpdate,
+        val here: LibraryUpdateRunSummary?,
+    )
 
-        data object Empty : State
+    sealed interface State {
+        /** Shown in place of this device's report unless that is asked for. */
+        val otherDevice: OtherDeviceReport?
+
+        data object Loading : State {
+            override val otherDevice: OtherDeviceReport? = null
+        }
+
+        data class Empty(override val otherDevice: OtherDeviceReport?) : State
 
         @Immutable
         data class Ready(
@@ -160,6 +194,7 @@ class LibraryUpdateReportViewModel(
             val sourcePauses: Map<Long, SourceUpdatePause>,
             val pausedEntryIds: Set<Long>,
             val isUpdating: Boolean,
+            override val otherDevice: OtherDeviceReport?,
         ) : State
     }
 }

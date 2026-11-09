@@ -11,8 +11,18 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.settingsScreens
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A setting a Settings screen shows: its key, its row's title, the screen's title, and how it syncs. */
-internal class AreaSetting(val key: String, val title: String, val screen: String, val mark: PreferenceMark)
+/**
+ * A setting a Settings screen shows: its key, its row's title, where it is, and how it syncs. [screen] names its Settings
+ * screen where the area's settings are on several and this one isn't named after the area, such as "Manga reader"
+ * among the Readers; [group] is the heading it is under there, such as "Cover badges".
+ */
+internal class AreaSetting(
+    val key: String,
+    val title: String,
+    val screen: String?,
+    val group: String?,
+    val mark: PreferenceMark,
+)
 
 /**
  * The settings of [area] as the Settings screens show them, each once, in the screens' order and their rows'. The
@@ -22,13 +32,20 @@ internal class AreaSetting(val key: String, val title: String, val screen: Strin
 internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
     val graph = LocalAppUiGraph.current
     val screens = remember(graph) { settingsScreens(graph) }
-    return screens.flatMap { screen ->
-        val screenTitle = stringResource(screen.getTitleRes())
-        screen.getPreferences().storedSettings(graph.profileStore).mapNotNull { (key, title) ->
-            val mark = PreferenceScopes.markOf(key)?.takeIf { it.area == area } ?: return@mapNotNull null
-            AreaSetting(key, title, screenTitle, mark)
+    val found = screens.flatMap { screen ->
+        val screenTitle = screen.getTitleRes()
+        screen.getPreferences().storedSettings(graph.profileStore).mapNotNull { setting ->
+            // A menu's settings have one row for all of them
+            val mark = PreferenceScopes.markOf(setting.key)?.takeIf { it.area == area && it.menu == null }
+                ?: return@mapNotNull null
+            Triple(screenTitle, setting, mark)
         }
-    }.distinctBy { it.key }
+    }.distinctBy { (_, setting) -> setting.key }
+    val onSeveralScreens = found.distinctBy { (screenTitle) -> screenTitle }.size > 1
+    return found.map { (screenTitle, setting, mark) ->
+        val screen = stringResource(screenTitle).takeIf { onSeveralScreens && screenTitle != area.titleRes }
+        AreaSetting(setting.key, setting.title, screen, setting.group, mark)
+    }
 }
 
 /**
@@ -43,17 +60,23 @@ internal val SettingsArea.hasPage: Boolean
  * whose settings stay on the device.
  */
 internal fun List<Preference>.syncArea(profileStore: ProfileStore): SettingsArea? = storedSettings(profileStore)
-    .mapNotNull { (key, _) -> PreferenceScopes.markOf(key)?.area }
+    .mapNotNull { PreferenceScopes.markOf(it.key)?.area }
     .groupingBy { it }
     .eachCount()
     .maxByOrNull { it.value }
     ?.key
 
-/** The key and title of every row that stores its value in a preference. */
-private fun List<Preference>.storedSettings(profileStore: ProfileStore): List<Pair<String, String>> =
+private class StoredSetting(val key: String, val title: String, val group: String?)
+
+/** Every row that stores its value in a preference, with the heading of the group it is in. */
+private fun List<Preference>.storedSettings(profileStore: ProfileStore): List<StoredSetting> =
     flatMap { preference ->
         when (preference) {
-            is Preference.PreferenceGroup -> preference.preferenceItems
-            is Preference.PreferenceItem<*, *> -> listOf(preference)
+            is Preference.PreferenceGroup -> preference.preferenceItems.map { it to preference.title }
+            is Preference.PreferenceItem<*, *> -> listOf(preference to null)
         }
-    }.mapNotNull { item -> item.storedPreference?.let { profileStore.preferenceKey(it) to item.title } }
+    }.mapNotNull { (item, group) ->
+        item.storedPreference?.let {
+            StoredSetting(profileStore.preferenceKey(it), item.title, group?.takeIf(String::isNotBlank))
+        }
+    }

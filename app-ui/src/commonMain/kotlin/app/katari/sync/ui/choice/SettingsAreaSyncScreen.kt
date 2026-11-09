@@ -30,6 +30,7 @@ class SettingsAreaSyncScreen(private val area: SettingsArea) : Screen() {
                     settings = areaSettings(area),
                     onSyncArea = { model.syncArea(area, it) },
                     onSyncSetting = model::syncSetting,
+                    onSyncMenu = model::syncMenu,
                 )
             },
         )

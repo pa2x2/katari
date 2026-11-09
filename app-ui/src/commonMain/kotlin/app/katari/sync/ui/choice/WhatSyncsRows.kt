@@ -89,7 +89,8 @@ private fun settingsGroup(choices: ChoiceSet, actions: WhatSyncsActions) = Prefe
     preferenceItems = SettingsArea.switchable.map { area ->
         val title = area.title()
         val synced = choices.syncs(area)
-        val keptHere = choices.settingsOff.count { PreferenceScopes.markOf(it)?.area == area }
+        val keptHere = choices.settingsOff.count { PreferenceScopes.markOf(it)?.area == area } +
+            choices.menusOff.count { PreferenceScopes.areaOf(it) == area }
         val subtitle = when {
             !synced -> stringResource(MR.strings.sync_choice_off)
             keptHere > 0 -> pluralStringResource(MR.plurals.sync_choice_synced_except, keptHere, keptHere)

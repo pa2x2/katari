@@ -84,11 +84,13 @@ data object UpdatesTab : Tab {
         val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
 
         val latestUpdateSummary by viewModel.latestUpdateSummary.collectAsStateWithLifecycle()
+        val otherDeviceUpdate by viewModel.otherDeviceUpdate.collectAsStateWithLifecycle()
         val pausedSourceNames by viewModel.pausedSourceNames.collectAsStateWithLifecycle()
         // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
         val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
 
-        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
+        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }
+            .takeIf { latestUpdateSummary != null || otherDeviceUpdate != null }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -169,6 +171,7 @@ data object UpdatesTab : Tab {
                         UpdatesLastUpdatedHeader(
                             lastUpdated = viewModel.lastUpdated,
                             failed = latestUpdateSummary?.failed ?: 0,
+                            otherDevice = otherDeviceUpdate,
                             pausedSources = pausedSourceNames,
                             onClick = openUpdateReport,
                         )
@@ -188,6 +191,7 @@ data object UpdatesTab : Tab {
             updatesLastUpdatedItem(
                 lastUpdated = viewModel.lastUpdated,
                 failed = latestUpdateSummary?.failed ?: 0,
+                otherDevice = otherDeviceUpdate,
                 pausedSources = pausedSourceNames,
                 onClick = openUpdateReport,
             )

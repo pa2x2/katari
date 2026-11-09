@@ -10,8 +10,7 @@ import app.katari.library.update.planning.LibraryUpdatePlanningContext
 import app.katari.library.update.planning.LibraryUpdatePreview
 import app.katari.library.update.planning.LibraryUpdateSettings
 import app.katari.library.update.planning.LibraryUpdateSkipRule
-import app.katari.library.update.report.LibraryUpdateRunSummary
-import app.katari.library.update.report.subscribeLatestSummary
+import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdate
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -19,6 +18,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
+import eu.kanade.tachiyomi.ui.library.update.report.NewerOtherDeviceUpdate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +39,8 @@ import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
+import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
+import tachiyomi.domain.library.update.model.subscribeLatestSummary
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -56,6 +58,7 @@ class LibraryUpdatesSettingsViewModel(
     private val getCategories: GetCategories,
     private val rulesRepository: LibraryUpdateRulesRepository,
     reportRepository: LibraryUpdateReportRepository,
+    newerOtherDeviceUpdate: NewerOtherDeviceUpdate,
     private val sourceManager: SourceManager,
     fetchInterval: FetchInterval,
     eligibility: EntryUpdateEligibilityFeature,
@@ -73,6 +76,11 @@ class LibraryUpdatesSettingsViewModel(
         viewModelScope.launch {
             reportRepository.subscribeLatestSummary().collectLatest { summary ->
                 state.update { it.copy(lastRun = summary) }
+            }
+        }
+        viewModelScope.launch {
+            newerOtherDeviceUpdate.subscribe().collectLatest { update ->
+                state.update { it.copy(otherDeviceRun = update) }
             }
         }
         viewModelScope.launch {
@@ -209,6 +217,8 @@ class LibraryUpdatesSettingsViewModel(
     @Immutable
     data class State(
         val lastRun: LibraryUpdateRunSummary? = null,
+        /** Another device's update of the whole library that started after this device last updated it. */
+        val otherDeviceRun: OtherDeviceLibraryUpdate? = null,
         val nextRunAt: Long? = null,
         /** Null until the library has loaded. */
         val preview: LibraryUpdatePreview? = null,

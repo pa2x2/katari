@@ -51,7 +51,7 @@ internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () ->
 
 @Composable
 private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, enabled: Boolean) {
-    Key(VideoPlayerShortcuts.PlayPause, enabled) { target.togglePlayback() }
+    Key(VideoPlayerShortcuts.PlayPause, enabled) { target.togglePlayback(showControls = false) }
     Key(VideoPlayerShortcuts.seekBackward(seekStepSeconds), enabled) {
         target.seekStep(VideoPlayerSeekDirection.Backward)
     }
