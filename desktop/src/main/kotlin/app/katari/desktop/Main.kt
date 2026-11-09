@@ -14,6 +14,7 @@ import app.katari.desktop.application.instance.SingleInstance
 import app.katari.desktop.application.instance.systemSingleInstance
 import app.katari.desktop.application.launch.LaunchArguments
 import app.katari.desktop.application.launch.LaunchLinks
+import app.katari.desktop.application.useCNumberFormat
 import app.katari.desktop.crash.CrashReportArgument
 import app.katari.desktop.crash.CrashReportWindowContent
 import app.katari.desktop.crash.RelaunchCrashPresenter
@@ -40,6 +41,7 @@ import kotlin.system.exitProcess
 
 fun main(arguments: Array<String>) {
     val operatingSystem = DesktopOperatingSystem.current()
+    useCNumberFormat(operatingSystem)
     // Before anything of the app's: the check only talks to the system and to the app that started it
     SignInCheckProcess.configurationIn(arguments)?.let { configuration ->
         SignInCheckProcess.run(systemSignInCheck(operatingSystem), configuration)
