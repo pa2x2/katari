@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEachIndexed
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupGap
+import app.katari.sync.ui.choice.rememberSettingSyncMarks
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
@@ -43,6 +44,7 @@ fun PreferenceScreen(
     }
 
     val topLevelPositions = rowGroupPositions(items)
+    val syncMarks = rememberSettingSyncMarks()
 
     RowList(
         modifier = modifier,
@@ -73,6 +75,7 @@ fun PreferenceScreen(
                             showProfileChip = !allItemsProfileSpecific && !showGroupChip &&
                                 item.belongsToProfile(profileStore),
                             groupPosition = positions[index],
+                            syncMarks = syncMarks,
                         )
                     }
                     item {
@@ -89,6 +92,7 @@ fun PreferenceScreen(
                         highlightKey = highlightKey,
                         showProfileChip = !allItemsProfileSpecific && preference.belongsToProfile(profileStore),
                         groupPosition = topLevelPositions[i],
+                        syncMarks = syncMarks,
                     )
                 }
             }

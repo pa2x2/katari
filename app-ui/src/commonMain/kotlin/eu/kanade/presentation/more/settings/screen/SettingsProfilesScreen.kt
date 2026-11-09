@@ -19,8 +19,11 @@ import app.katari.profiles.ui.management.ProfileManagementDialog
 import app.katari.profiles.ui.management.ProfileManagementDialogs
 import app.katari.profiles.ui.management.profileListPreferences
 import app.katari.sync.client.status.SyncStatus
+import app.katari.sync.ui.choice.ProfileRemovalQuestion
+import app.katari.sync.ui.choice.WhatSyncsViewModel
 import app.katari.sync.ui.status.rememberSyncStatus
 import app.katari.ui.di.LocalAppUiGraph
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.components.GuideButton
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
@@ -78,6 +81,9 @@ class SettingsProfilesScreen : SearchableSettings() {
         val activeProfile by profileManager.activeProfile.collectAsState()
         var dialog by remember { mutableStateOf<ProfileManagementDialog?>(null) }
         val backPress = LocalBackPress.current
+        val syncLinked = rememberSyncStatus()?.link is SyncStatus.Link.Linked
+        val syncModel = metroViewModel<WhatSyncsViewModel>()
+        val syncProfiles by syncModel.profiles.collectAsState()
 
         PreferenceScaffold(
             titleRes = getTitleRes(),
@@ -96,8 +102,10 @@ class SettingsProfilesScreen : SearchableSettings() {
                     activeProfileId = activeProfile?.id,
                     isLocked = { profileManager.profileRequiresUnlock(it.id) },
                     canDelete = canDelete,
+                    syncStates = if (syncLinked) syncProfiles.associateBy { it.uuid } else emptyMap(),
                     onDialog = { dialog = it },
                     onRestore = { scope.launch { profileManager.setProfileArchived(it.id, archived = false) } },
+                    onSyncChange = syncModel::syncProfile,
                 ) + getPreferences()
             },
         )
@@ -105,8 +113,9 @@ class SettingsProfilesScreen : SearchableSettings() {
             dialog = dialog,
             profiles = profiles,
             profileManager = profileManager,
-            syncLinked = rememberSyncStatus()?.link is SyncStatus.Link.Linked,
+            syncLinked = syncLinked,
             onDismissRequest = { dialog = null },
         )
+        ProfileRemovalQuestion(syncModel)
     }
 }

@@ -28,7 +28,7 @@ fun SwitchPreferenceWidget(
         icon = icon,
         leading = leading,
         enabled = enabled,
-        titleSuffix = profileSpecificSuffix(isProfileSpecific),
+        titleSuffix = settingTitleSuffix(isProfileSpecific),
         onDisabledClick = onDisabledClick,
         onOpen = onOpen,
     )

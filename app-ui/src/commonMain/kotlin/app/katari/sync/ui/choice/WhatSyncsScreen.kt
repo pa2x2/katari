@@ -4,10 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import app.katari.core.platform.currentPlatformContext
-import app.katari.profiles.core.ProfileConstants
-import app.katari.profiles.ui.switcher.switchToProfile
-import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -51,50 +47,4 @@ class WhatSyncsScreen : SearchableSettings() {
         AreaAgainQuestion(model)
         ProfileRemovalQuestion(model)
     }
-}
-
-/** Asks whose settings an area turned back on keeps, while the model waits for the answer. */
-@Composable
-internal fun AreaAgainQuestion(model: WhatSyncsViewModel) {
-    val area by model.askingArea.collectAsState()
-    area?.let {
-        AreaAgainDialog(area = it, onAnswer = model::answerArea, onDismissRequest = model::dismissAreaQuestion)
-    }
-}
-
-/**
- * Confirms that a profile switched off leaves this device. Where it is the open profile, Katari switches to the default
- * profile, which every device syncs, before it goes.
- */
-@Composable
-private fun ProfileRemovalQuestion(model: WhatSyncsViewModel) {
-    val profile by model.removingProfile.collectAsState()
-    val removing = profile ?: return
-    val context = currentPlatformContext()
-    val graph = LocalAppUiGraph.current
-    val profileManager = graph.profileManager
-    val active by profileManager.activeProfile.collectAsState()
-    val profiles by profileManager.profiles.collectAsState()
-    val switchTo = profiles.firstOrNull { it.id == ProfileConstants.DEFAULT_PROFILE_ID }
-        ?.takeIf { active?.uuid == removing.uuid }
-    RemoveProfileDialog(
-        profile = removing,
-        switchTo = switchTo,
-        onConfirm = {
-            model.removeProfile(
-                switchAway = switchTo?.let { target ->
-                    {
-                        switchToProfile(
-                            context = context,
-                            profileManager = profileManager,
-                            profileUnlock = graph.profileUnlock,
-                            switchEffects = graph.profileSwitchEffects,
-                            profile = target,
-                        )
-                    }
-                },
-            )
-        },
-        onDismissRequest = model::dismissProfileRemoval,
-    )
 }

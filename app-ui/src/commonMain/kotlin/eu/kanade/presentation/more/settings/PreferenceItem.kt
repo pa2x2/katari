@@ -17,6 +17,8 @@ import app.katari.presentation.kit.control.Stepper
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.SliderRow
+import app.katari.sync.ui.choice.SettingSyncMark
+import app.katari.sync.ui.choice.SettingSyncMarks
 import eu.kanade.presentation.more.settings.widget.EditTextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.InfoWidget
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
@@ -30,11 +32,15 @@ import tachiyomi.presentation.core.util.collectAsState
 /** Whether the preference being composed is the one settings search opened its screen for. */
 val LocalPreferenceHighlighted = compositionLocalOf(structuralEqualityPolicy()) { false }
 
+/** The sync mark of the setting being composed, which its widget shows after its title. */
+internal val LocalSettingSyncMark = compositionLocalOf<SettingSyncMark?> { null }
+
 @Composable
 fun StatusWrapper(
     item: Preference.PreferenceItem<*, *>,
     highlightKey: String?,
     groupPosition: RowGroupPosition?,
+    syncMark: SettingSyncMark?,
     content: @Composable () -> Unit,
 ) {
     val visible = item.visible
@@ -44,7 +50,10 @@ fun StatusWrapper(
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut(),
         content = {
-            CompositionLocalProvider(LocalPreferenceHighlighted provides highlighted) {
+            CompositionLocalProvider(
+                LocalPreferenceHighlighted provides highlighted,
+                LocalSettingSyncMark provides syncMark,
+            ) {
                 // Inside the visibility animation, so a hidden row takes its card slice and divider with it.
                 if (groupPosition != null) RowGroupItem(groupPosition, content = content) else content()
             }
@@ -58,12 +67,14 @@ internal fun PreferenceItem(
     highlightKey: String?,
     showProfileChip: Boolean,
     groupPosition: RowGroupPosition?,
+    syncMarks: SettingSyncMarks?,
 ) {
     val scope = rememberCoroutineScope()
     StatusWrapper(
         item = item,
         highlightKey = highlightKey,
         groupPosition = groupPosition,
+        syncMark = item.storedPreference?.key()?.let { syncMarks?.of(it) },
     ) {
         when (item) {
             is Preference.PreferenceItem.SwitchPreference -> {

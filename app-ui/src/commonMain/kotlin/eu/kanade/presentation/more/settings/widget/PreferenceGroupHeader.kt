@@ -14,6 +14,6 @@ fun PreferenceGroupHeader(
     RowGroupHeader(
         text = title,
         modifier = Modifier.pulsingHighlight(Unit.takeIf { highlighted }),
-        trailing = profileSpecificSuffix(isProfileSpecific),
+        trailing = settingTitleSuffix(isProfileSpecific),
     )
 }

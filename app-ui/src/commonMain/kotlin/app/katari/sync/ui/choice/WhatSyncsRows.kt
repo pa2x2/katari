@@ -112,10 +112,6 @@ private fun settingsGroup(choices: ChoiceSet, actions: WhatSyncsActions) = Prefe
     },
 )
 
-/** Extension settings are each source's own, which no Settings screen lists, so they sync or stay as a whole. */
-private val SettingsArea.hasPage: Boolean
-    get() = this != SettingsArea.EXTENSION_SETTINGS
-
 /**
  * This device's profiles and the account's that aren't here. The default profile always syncs; an account profile
  * switched off leaves this device, and one made on another device may wait to be added.

@@ -31,6 +31,13 @@ internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
 }
 
 /**
+ * Whether the area has a page listing its settings. Extension settings are each source's own, which no Settings screen
+ * lists, so they sync or stay as a whole; an area that follows a data group goes with it.
+ */
+internal val SettingsArea.hasPage: Boolean
+    get() = this in SettingsArea.switchable && this != SettingsArea.EXTENSION_SETTINGS
+
+/**
  * The Settings area most of these rows' settings sync with, such as Readers for a reader's settings; null for a screen
  * whose settings stay on the device.
  */
