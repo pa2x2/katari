@@ -5,14 +5,19 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import app.katari.core.platform.power.ScreenIdleInhibitor
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.viewer.chrome.ui.window.KeepScreenAwake
 import app.katari.entry.viewer.settings.ViewerSettingBinder
+import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
+import app.katari.presentation.kit.shortcut.ShortcutGroup
+import app.katari.presentation.kit.shortcut.ShortcutKeys
 import app.katari.presentation.kit.window.LocalWindowFullScreen
 import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.video.engine.spi.player.VideoPlayer
@@ -23,6 +28,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -31,17 +37,21 @@ import tachiyomi.presentation.core.i18n.stringResource
  * The desktop's feed clips, worked with the mouse as the player is: a click plays or pauses, a double-click switches
  * full screen, and holding the left button plays at 2× until it is let go. The feed shows and hides the controls as the
  * mouse moves and rests. The current clip takes the player's keys for playing, muting and seeking by the player's seek
- * step, before a focused control does. Moving between clips is the feed's. The screen stays awake while a clip plays
- * in a window that is shown; the sound has no device volume to follow, so the feed stays muted until unmuted.
+ * step, before a focused control does, and Shift with ↑ or ↓ for the volume, as ↑ and ↓ alone move between clips, which
+ * is the feed's. Clips play at the player's own volume. The screen stays awake while a clip plays in a window that is
+ * shown.
  */
 internal class PointerAnimeClipPlatform(
     private val inhibitor: ScreenIdleInhibitor,
     binder: ViewerSettingBinder,
     preferences: AnimePlayerPreferences,
+    devicePreferences: AnimePlayerDevicePreferences,
 ) : AnimeClipPlatform {
     private val seekStep by lazy { binder.bind(preferences.seekStepSetting) }
 
     override val controlsHideWhilePlaying = false
+
+    override val playerVolume: Preference<Int> = devicePreferences.volumePercent
 
     @Composable
     override fun Picture(player: VideoPlayer, aspectRatio: Float?, target: AnimeClipInputTarget, modifier: Modifier) {
@@ -54,6 +64,12 @@ internal class PointerAnimeClipPlatform(
         }
         KeyboardShortcutHandler(VideoPlayerShortcuts.seekForward(seekStepSeconds), enabled = target.active) {
             target.seek(VideoPlayerSeekDirection.Forward, seekStepSeconds)
+        }
+        KeyboardShortcutHandler(volumeShortcut(up = true), enabled = target.active) {
+            target.stepVolume(VideoPlayerShortcuts.VOLUME_STEP_PERCENT)
+        }
+        KeyboardShortcutHandler(volumeShortcut(up = false), enabled = target.active) {
+            target.stepVolume(-VideoPlayerShortcuts.VOLUME_STEP_PERCENT)
         }
         VideoSurface(
             player = player,
@@ -142,6 +158,20 @@ private fun Modifier.clipMouse(target: AnimeClipInputTarget, fullScreen: WindowF
             }
         }
     }
+
+@Composable
+private fun volumeShortcut(up: Boolean) = KeyboardShortcut(
+    id = if (up) "immersive.volumeUp" else "immersive.volumeDown",
+    label = stringResource(if (up) MR.strings.anime_shortcut_volume_up else MR.strings.anime_shortcut_volume_down),
+    keys = listOf(
+        ShortcutKeys.Chord(if (up) Key.DirectionUp else Key.DirectionDown, if (up) "↑" else "↓", shift = true),
+    ),
+    group = ShortcutGroup.CurrentScreen,
+    whileTyping = false,
+    beforeFocus = true,
+)
+
+// As the player's ↑ and ↓ step it
 
 /** A left button press on a clip, until it is let go. */
 private class ClipPress(val at: Offset, var clicks: Boolean) {

@@ -27,11 +27,8 @@ import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.automirroredrounded.VolumeOff
-import app.katari.icons.materialsymbols.automirroredrounded.VolumeUp
 import app.katari.icons.materialsymbols.roundedfilled.Pause
 import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
-import app.katari.presentation.kit.button.ContentButton
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.progress.LoadingIndicator
@@ -58,6 +55,7 @@ import kotlinx.coroutines.flow.map
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import kotlin.math.abs
 
 @Composable
@@ -128,10 +126,18 @@ internal fun AnimeImmersivePlayerSurface(
         controllerInteractionSequence += 1L
         onMutedChange(!muted)
     }
+    val volumePercent = platform.playerVolume?.collectAsState()?.value
+    // Setting the volume is asking to hear it, so it unmutes, as the player's slider does
+    val setVolume: (Int) -> Unit = { percent ->
+        controllerInteractionSequence += 1L
+        platform.playerVolume?.set(percent.coerceIn(0, VideoPlayer.MAX_VOLUME_BOOST_PERCENT))
+        if (muted) onMutedChange(false)
+    }
     val latestActive by rememberUpdatedState(active)
     val latestPerformSeek by rememberUpdatedState(performSeek)
     val latestTogglePlayback by rememberUpdatedState(togglePlayback)
     val latestToggleMute by rememberUpdatedState(toggleMute)
+    val latestSetVolume by rememberUpdatedState(setVolume)
     val latestOnPlaybackSnapshotChange by rememberUpdatedState(onPlaybackSnapshotChange)
     val inputTarget = remember(player) {
         object : AnimeClipInputTarget {
@@ -143,6 +149,11 @@ internal fun AnimeImmersivePlayerSurface(
             override fun togglePlayback() = latestTogglePlayback()
 
             override fun toggleMute() = latestToggleMute()
+
+            override fun stepVolume(percent: Int) {
+                val current = platform.playerVolume?.get() ?: return
+                latestSetVolume(current + percent)
+            }
 
             override fun seek(direction: VideoPlayerSeekDirection, stepSeconds: Int) =
                 latestPerformSeek(direction, stepSeconds)
@@ -281,32 +292,22 @@ internal fun AnimeImmersivePlayerSurface(
                     }
                 }
             }
-            ContentButton(
-                onClick = toggleMute,
+            AnimeClipSoundButton(
+                muted = muted,
+                volumePercent = volumePercent,
+                onToggleMute = toggleMute,
+                onVolumeChange = setVolume,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
-                    .size(KatariTheme.sizes.touchTarget)
-                    .mediaControl(),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    OverlayPill(style = OverlayStyle.Scrim) {
-                        Icon(
-                            imageVector = if (muted) {
-                                MaterialSymbols.AutoMirroredRounded.VolumeOff
-                            } else {
-                                MaterialSymbols.AutoMirroredRounded.VolumeUp
-                            },
-                            contentDescription = stringResource(
-                                if (muted) MR.strings.action_unmute else MR.strings.action_mute,
-                            ),
-                            modifier = Modifier
-                                .padding(spacing.s)
-                                .size(KatariTheme.sizes.iconSmall),
-                        )
-                    }
-                }
-            }
+                    .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl),
+            )
+        } else if (active && muted && hasRenderedFirstFrame) {
+            AnimeClipMutedBadge(
+                onUnmute = toggleMute,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = spacing.m, bottom = spacing.m),
+            )
         }
 
         ReaderMediaLoadOverlay(

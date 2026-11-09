@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
@@ -32,6 +33,9 @@ import tachiyomi.domain.entry.model.PictureFraming
  */
 internal object TouchAnimeClipPlatform : AnimeClipPlatform {
     override val controlsHideWhilePlaying = true
+
+    // The device's media volume rules clips, as it does the player
+    override val playerVolume: Preference<Int>? = null
 
     @Composable
     override fun Picture(player: VideoPlayer, aspectRatio: Float?, target: AnimeClipInputTarget, modifier: Modifier) {

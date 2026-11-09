@@ -11,6 +11,7 @@ import app.katari.entry.interactions.player.AnimePlayer
 import app.katari.entry.interactions.player.AnimePlayerDestination
 import app.katari.entry.interactions.runtime.EntryImmersiveProcessor
 import app.katari.entry.interactions.runtime.EntryTypeKey
+import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.viewer.settings.ViewerSettingBinder
 import app.katari.video.engine.mpv.MpvVideoEngine
@@ -50,7 +51,8 @@ object AnimeDesktopPlayerBindings {
         inhibitor: ScreenIdleInhibitor,
         binder: ViewerSettingBinder,
         preferences: AnimePlayerPreferences,
-    ): AnimeClipPlatform = PointerAnimeClipPlatform(inhibitor, binder, preferences)
+        devicePreferences: AnimePlayerDevicePreferences,
+    ): AnimeClipPlatform = PointerAnimeClipPlatform(inhibitor, binder, preferences, devicePreferences)
 
     @Provides
     @IntoMap

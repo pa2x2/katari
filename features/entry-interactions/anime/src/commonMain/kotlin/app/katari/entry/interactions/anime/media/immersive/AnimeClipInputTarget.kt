@@ -16,6 +16,9 @@ internal interface AnimeClipInputTarget {
 
     fun toggleMute()
 
+    /** Changes the player's volume by [percent], unmuting the feed, where it has one (`AnimeClipPlatform.playerVolume`). */
+    fun stepVolume(percent: Int)
+
     /** Seeks [stepSeconds] in [direction], with the seek feedback, and hides the controls. */
     fun seek(direction: VideoPlayerSeekDirection, stepSeconds: Int)
 

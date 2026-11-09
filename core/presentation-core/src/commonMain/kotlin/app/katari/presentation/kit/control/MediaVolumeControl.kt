@@ -1,18 +1,28 @@
 package app.katari.presentation.kit.control
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -34,12 +44,24 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
 
+/** When a [MediaVolumeControl] shows its slider. */
+enum class MediaVolumeSlider {
+    /** Beside the button, except in a compact window, which leaves room for the other controls with the button alone. */
+    Always,
+
+    /**
+     * Only while the mouse points at the control, opening toward the start edge, for a lone button at the end edge of
+     * media, such as a clip in the immersive feed.
+     */
+    WhilePointed,
+}
+
 /**
- * A player's volume among controls laid over video: a button that mutes and unmutes, and a slider beside it setting
- * [level] from 0 to [maxLevel]. Above [fullLevel] the volume is louder than recorded, and a mark on the track shows where
- * that starts; null leaves the mark out. While [muted] the slider shows the level that unmuting returns to, and moving
- * it unmutes, as [onLevelChange] decides. A compact window leaves room for the other controls by showing the button
- * alone.
+ * A player's volume among controls laid over video: a button that mutes and unmutes, and a slider setting [level] from
+ * 0 to [maxLevel], shown as [slider] says. Above [fullLevel] the volume is louder than recorded, and a mark on the track
+ * shows where that starts; null leaves the mark out. While [muted] the slider shows the level that unmuting returns to,
+ * and moving it unmutes, as [onLevelChange] decides. With a [wheelStep], the wheel over the control changes the level
+ * by that much a notch, and the wheel is the control's alone there.
  */
 @Composable
 fun MediaVolumeControl(
@@ -51,13 +73,52 @@ fun MediaVolumeControl(
     onToggleMute: () -> Unit,
     modifier: Modifier = Modifier,
     muteShortcut: KeyboardShortcut? = null,
+    slider: MediaVolumeSlider = MediaVolumeSlider.Always,
+    wheelStep: Int? = null,
 ) {
     val icon = if (muted || level == 0) {
         MaterialSymbols.AutoMirroredRounded.VolumeOff
     } else {
         MaterialSymbols.AutoMirroredRounded.VolumeUp
     }
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    val hover = remember { MutableInteractionSource() }
+    val pointed by hover.collectIsHoveredAsState()
+    val latestLevel by rememberUpdatedState(level)
+    val latestMaxLevel by rememberUpdatedState(maxLevel)
+    val latestOnLevelChange by rememberUpdatedState(onLevelChange)
+    val track: @Composable () -> Unit = {
+        VolumeTrack(
+            level = level,
+            maxLevel = maxLevel.coerceAtLeast(1),
+            fullLevel = fullLevel,
+            dimmed = muted,
+            onLevelChange = onLevelChange,
+        )
+    }
+    Row(
+        modifier = modifier
+            .hoverable(hover)
+            .then(
+                if (wheelStep == null) {
+                    Modifier
+                } else {
+                    Modifier.volumeWheel { notches ->
+                        val changed = (latestLevel + notches * wheelStep).coerceIn(0, latestMaxLevel)
+                        latestOnLevelChange(changed)
+                    }
+                },
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (slider == MediaVolumeSlider.WhilePointed) {
+            AnimatedVisibility(
+                visible = pointed,
+                enter = fadeIn() + expandHorizontally(),
+                exit = fadeOut() + shrinkHorizontally(),
+            ) {
+                track()
+            }
+        }
         IconButton(
             icon = icon,
             contentDescription = stringResource(if (muted) MR.strings.action_unmute else MR.strings.action_mute),
@@ -66,14 +127,27 @@ fun MediaVolumeControl(
             tone = ContentTone.OnMedia,
             shortcut = muteShortcut,
         )
-        if (currentWindowLayout().width != WindowWidth.Compact) {
-            VolumeTrack(
-                level = level,
-                maxLevel = maxLevel.coerceAtLeast(1),
-                fullLevel = fullLevel,
-                dimmed = muted,
-                onLevelChange = onLevelChange,
-            )
+        if (slider == MediaVolumeSlider.Always && currentWindowLayout().width != WindowWidth.Compact) {
+            track()
+        }
+    }
+}
+
+/** The wheel over the control, as whole notches up (positive) or down, which it takes from whatever lies under it. */
+private fun Modifier.volumeWheel(onNotches: (Int) -> Unit): Modifier = pointerInput(Unit) {
+    var pending = 0f
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent()
+            if (event.type != PointerEventType.Scroll) continue
+            val change = event.changes.firstOrNull() ?: continue
+            change.consume()
+            // Up is negative, as the wheel scrolls toward the start
+            pending -= change.scrollDelta.y
+            val notches = pending.toInt()
+            if (notches == 0) continue
+            pending -= notches
+            onNotches(notches)
         }
     }
 }

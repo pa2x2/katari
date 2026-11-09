@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.core.common.platform.PlatformFacility
 import app.katari.video.engine.spi.player.VideoPlayer
+import tachiyomi.core.common.preference.Preference
 
 /**
  * What a clip in the immersive feed takes from the platform it plays on. Android's are touch gestures, the screen kept
@@ -17,6 +18,12 @@ internal interface AnimeClipPlatform {
      * the feed hides them once the mouse rests, so the clip leaves them be.
      */
     val controlsHideWhilePlaying: Boolean
+
+    /**
+     * The player's own volume in percent, up to [VideoPlayer.MAX_VOLUME_BOOST_PERCENT], which clips play at while not
+     * muted and which the feed lets the viewer change; null where the device's volume rules instead, as on Android.
+     */
+    val playerVolume: Preference<Int>?
 
     /** [player]'s picture, fitted, taking the viewer's input for [target]. */
     @Composable

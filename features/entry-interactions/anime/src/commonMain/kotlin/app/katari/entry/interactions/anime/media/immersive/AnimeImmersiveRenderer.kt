@@ -20,6 +20,7 @@ import app.katari.entry.interactions.media.EntryImmersiveRenderer
 import app.katari.video.engine.spi.VideoEngine
 import app.katari.video.engine.spi.VideoPlayerRole
 import app.katari.video.engine.spi.loading.resolvedRequest
+import app.katari.video.engine.spi.player.VideoPlayer
 import app.katari.video.engine.spi.player.VideoPlayerEvent
 import app.katari.video.engine.spi.player.VideoPlayerState
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
@@ -28,6 +29,7 @@ import eu.kanade.tachiyomi.ui.video.player.playback.playbackSnapshot
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 /**
  * A clip in the immersive feed. It starts where the episode was left and follows that place when the player or another
@@ -104,7 +106,8 @@ internal class AnimeImmersiveRenderer(
                 followed = saved
             }
         }
-        LaunchedEffect(player, active, muted) {
+        val volumePercent = platform.playerVolume?.collectAsState()?.value
+        LaunchedEffect(player, active, muted, volumePercent) {
             if (active) {
                 val storedMuted = preferences.immersiveFeedMuted
                 if (storedMuted != muted) {
@@ -112,7 +115,8 @@ internal class AnimeImmersiveRenderer(
                     return@LaunchedEffect
                 }
             }
-            player.setVolume(if (active && !muted) 1f else 0f)
+            player.setVolume(if (active && !muted) clipVolume(volumePercent) else 0f)
+            volumePercent?.let { player.setVolumeBoost(it.coerceAtLeast(VideoPlayer.NO_VOLUME_BOOST_PERCENT)) }
             if (active && playIntent) {
                 player.play()
             } else if (!active) {
@@ -171,4 +175,13 @@ internal class AnimeImmersiveRenderer(
             modifier = modifier,
         )
     }
+}
+
+/**
+ * A clip's volume for the player's own [percent] where it has one, up to as recorded; the rest of a level above that is
+ * the boost. Without one, the device's volume rules, and the clip plays as recorded under it.
+ */
+private fun clipVolume(percent: Int?): Float {
+    percent ?: return 1f
+    return percent.coerceIn(0, VideoPlayer.NO_VOLUME_BOOST_PERCENT) / VideoPlayer.NO_VOLUME_BOOST_PERCENT.toFloat()
 }

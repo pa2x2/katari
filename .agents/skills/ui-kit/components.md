@@ -232,7 +232,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
 | A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
 | The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
-| A player's volume among its controls | `MediaVolumeControl` | |
+| A player's volume among its controls | `MediaVolumeControl` | `MediaVolumeSlider.WhilePointed` opens the slider only while the mouse points at a lone button, such as a feed clip's; `wheelStep` lets the wheel over it change the level |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |
 | Where a reader's tap zones are | `TapZoneOverlay` | |
