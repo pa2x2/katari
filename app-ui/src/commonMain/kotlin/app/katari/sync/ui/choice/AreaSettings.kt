@@ -35,7 +35,9 @@ internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
     val found = screens.flatMap { screen ->
         val screenTitle = screen.getTitleRes()
         screen.getPreferences().storedSettings(graph.profileStore).mapNotNull { setting ->
-            val mark = PreferenceScopes.markOf(setting.key)?.takeIf { it.area == area } ?: return@mapNotNull null
+            // A menu's settings have one row for all of them
+            val mark = PreferenceScopes.markOf(setting.key)?.takeIf { it.area == area && it.menu == null }
+                ?: return@mapNotNull null
             Triple(screenTitle, setting, mark)
         }
     }.distinctBy { (_, setting) -> setting.key }

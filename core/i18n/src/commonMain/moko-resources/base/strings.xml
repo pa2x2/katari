@@ -3406,6 +3406,12 @@
     <string name="sync_choice_group_synced">Synced</string>
     <string name="sync_choice_group_device_default">This device by default</string>
     <string name="sync_choice_group_device_only">Only on this device</string>
+    <!-- Settings changed together from a menu rather than Settings, synced or kept on the device as one -->
+    <string name="sync_menu_library_sort">Library sort</string>
+    <string name="sync_menu_library_filters">Library filters</string>
+    <string name="sync_menu_chapter_list_defaults">Chapter list defaults</string>
+    <string name="sync_menu_place_library">Set in the library menu</string>
+    <string name="sync_menu_place_chapter_list">Saved with Set as default on a title\'s page</string>
     <string name="sync_choice_area_off_note">These settings stay on this device while their area isn't synced.</string>
     <string name="sync_choice_never_downloads">Downloads</string>
     <string name="sync_choice_never_downloads_summary">Chapters and episodes stay where they were downloaded</string>

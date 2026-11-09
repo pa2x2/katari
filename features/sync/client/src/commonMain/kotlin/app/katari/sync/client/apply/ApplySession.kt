@@ -545,8 +545,8 @@ internal class ApplySession(
      */
     suspend fun keepAccountSettings(area: SettingsArea) = keepAccountSettings { it.settingsArea == area }
 
-    /** [keepAccountSettings] for the preference [key] alone, in every profile. */
-    suspend fun keepAccountSetting(key: String) = keepAccountSettings { it.key == key }
+    /** [keepAccountSettings] for the preferences [keys], in every profile. */
+    suspend fun keepAccountSettings(keys: Set<String>) = keepAccountSettings { it.key in keys }
 
     /**
      * Drops the changes held back of the settings [matching] picks that this device syncs now. A setting the account
