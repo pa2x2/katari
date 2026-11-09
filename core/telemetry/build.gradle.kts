@@ -9,6 +9,8 @@ plugins {
 kotlin {
     android {
         namespace = "app.katari.telemetry"
+
+        withHostTest { }
     }
     desktop()
 
@@ -16,6 +18,12 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(projects.core.common)
+            }
+        }
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.bundles.test)
+                runtimeOnly(libs.junit.platform.launcher)
             }
         }
 

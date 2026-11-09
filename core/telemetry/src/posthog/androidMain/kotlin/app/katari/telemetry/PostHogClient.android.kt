@@ -1,6 +1,7 @@
 package app.katari.telemetry
 
 import android.os.Build
+import app.katari.telemetry.freeze.ApplicationNotRespondingReports
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
@@ -27,6 +28,7 @@ internal actual object PostHogClient {
         }
         PostHogAndroid.setup(application, config)
         PostHog.register("preferred_abi", Build.SUPPORTED_ABIS[0])
+        ApplicationNotRespondingReports(application).reportNew(scope)
     }
 
     actual fun captureException(throwable: Throwable) {
