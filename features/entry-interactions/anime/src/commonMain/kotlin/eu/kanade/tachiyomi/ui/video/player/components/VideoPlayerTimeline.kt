@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.control.MediaMarkedSpan
 import app.katari.presentation.kit.control.MediaTimeline
 import app.katari.presentation.kit.surface.MediaScrim
@@ -118,7 +119,7 @@ internal fun VideoPlayerTimeline(
                             )
                         }
                     },
-                    modifier = Modifier.videoPlayerControl(),
+                    modifier = Modifier.mediaControl(),
                 )
 
                 if (footerContent != null) {

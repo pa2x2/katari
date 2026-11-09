@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.source.EntryChildWebViewAction
 import app.katari.entry.interactions.source.EntryChildWebViewActionsMenu
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Lock
 import app.katari.icons.materialsymbols.rounded.LockOpen
@@ -97,7 +98,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.LockOpen,
                 contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
                 onClick = onToggleLock,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -105,7 +106,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Lock,
                 contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
                 onClick = onToggleLock,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -118,7 +119,7 @@ internal fun VideoPlayerTopBarActions(
                     icon = MaterialSymbols.Rounded.PictureInPictureAlt,
                     contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
                     onClick = onEnterPictureInPicture,
-                    modifier = Modifier.videoPlayerControl(),
+                    modifier = Modifier.mediaControl(),
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
                     shortcut = VideoPlayerShortcuts.PictureInPicture,
@@ -132,7 +133,7 @@ internal fun VideoPlayerTopBarActions(
                 icon = MaterialSymbols.Rounded.Settings,
                 contentDescription = stringResource(MR.strings.label_settings),
                 onClick = onOpenSettings,
-                modifier = Modifier.videoPlayerControl(),
+                modifier = Modifier.mediaControl(),
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
             )
@@ -141,7 +142,7 @@ internal fun VideoPlayerTopBarActions(
             if (locked) {
                 EmptyActionSlot()
             } else {
-                Box(modifier = Modifier.videoPlayerControl()) {
+                Box(modifier = Modifier.mediaControl()) {
                     EntryChildWebViewActionsMenu(
                         resolution = childWebView,
                         actions = childWebViewActions,
