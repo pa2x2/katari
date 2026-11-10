@@ -5,6 +5,7 @@ import app.katari.desktop.extension.NoExtensionSystemPackages
 import app.katari.desktop.storage.DesktopDirectories
 import app.katari.extension.runtime.jvm.DesktopHostedExtensionFamilies
 import app.katari.extension.runtime.jvm.apk.DesktopExtensionPackages
+import app.katari.extension.runtime.jvm.application.DesktopExtensionHostStart
 import app.katari.extension.runtime.jvm.conversion.ConvertedJarCache
 import app.katari.extension.runtime.jvm.files.DesktopExtensionFiles
 import app.katari.extension.runtime.jvm.install.DesktopExtensionInstallEvents
@@ -19,6 +20,7 @@ import eu.kanade.tachiyomi.extension.ExtensionSystemPackages
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.platform.ExtensionClassLoaders
 import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
+import eu.kanade.tachiyomi.extension.platform.ExtensionHostStart
 import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
 import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
@@ -35,6 +37,9 @@ interface ExtensionBindings {
     @Binds
     val DesktopExtensionNotices.extensionNotices: ExtensionNotices
 
+    @Binds
+    val DesktopExtensionHostStart.extensionHostStart: ExtensionHostStart
+
     companion object {
         @Provides
         fun hostedExtensionFamilies(): HostedExtensionFamilies = DesktopHostedExtensionFamilies()
@@ -46,6 +51,10 @@ interface ExtensionBindings {
             privateApkDir = directories.data.resolve("extension-apks").toFile(),
             downloadDir = directories.cache.resolve("extension-downloads").toFile(),
         )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun extensionHostStart(): DesktopExtensionHostStart = DesktopExtensionHostStart()
 
         @Provides
         @SingleIn(AppScope::class)

@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
+import eu.kanade.tachiyomi.extension.platform.ExtensionHostStart
 import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
 import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
@@ -78,6 +79,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class ExtensionManager(
     private val loader: ExtensionLoader,
+    private val hostStart: ExtensionHostStart,
     private val kinds: ExtensionKinds,
     private val packageInstaller: ExtensionPackageInstaller,
     private val installEvents: ExtensionInstallEvents,
@@ -166,6 +168,7 @@ class ExtensionManager(
 
     init {
         scope.launch {
+            hostStart.awaitStarted()
             loadExtensions()
             installEvents.register(ExtensionInstallEventHandling(loader, InstallationListener(), scope)::onEvent)
 
