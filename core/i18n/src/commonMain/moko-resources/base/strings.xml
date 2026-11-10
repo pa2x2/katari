@@ -1504,7 +1504,7 @@
     <string name="reader_guide_right_click">Right-click for page actions</string>
     <string name="reader_guide_scroll">Scroll to move through pages</string>
     <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
-    <string name="reader_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="reader_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
     <string name="reader_guide_keys_turn">← and → turn pages</string>
     <string name="reader_guide_keys_chapter">N and P change chapter</string>
     <string name="reader_guide_keys_list">? lists every key</string>

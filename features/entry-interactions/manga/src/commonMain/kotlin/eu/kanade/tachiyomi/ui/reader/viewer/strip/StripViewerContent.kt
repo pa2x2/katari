@@ -55,7 +55,7 @@ import kotlin.math.roundToInt
  * The long strip on screen: its slots in a lazy column at the strip's width, magnified as [StripViewer.zoom] says. A
  * tap or click goes to the tap zones of the whole strip, a double tap zooms, a long press or right click opens the
  * actions of the page under it, and the wheel and drags scroll, a mouse's as a finger's ([stripWheel] adds Ctrl to
- * zoom).
+ * zoom, and [stripTouchpadPinch] zooms with a touchpad pinch).
  */
 @Composable
 internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Boolean = false) {
@@ -110,6 +110,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
             )
             .stripZoomGestures(zoom, scope, ::scrollBy, onZoomStart = ::onDirectManipulation)
             .stripWheel(zoom, ::scrollBy)
+            .stripTouchpadPinch(zoom, ::scrollBy, onZoomStart = ::onDirectManipulation)
             .mouseDrags(
                 key = viewer,
                 onStart = ::onDirectManipulation,
