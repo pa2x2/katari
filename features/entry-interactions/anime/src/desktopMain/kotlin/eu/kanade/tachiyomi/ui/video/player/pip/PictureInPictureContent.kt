@@ -176,7 +176,7 @@ private fun ControlButton(
         contentDescription = label,
         onClick = onClick,
         size = size,
-        tone = if (enabled) ContentTone.OnMedia else ContentTone.OnMediaVariant,
+        tone = ContentTone.OnMedia,
         enabled = enabled,
         shortcut = shortcut,
     )
