@@ -260,13 +260,13 @@ internal class DrivenWebPage private constructor(
             })()
         """.trimIndent()
 
-        // A finger put down a fifth in from one edge of what shows of the element and moved to a fifth from the other
+        // A finger put down a tenth in from one edge of what shows of the element and moved to a tenth from the other
         private fun swipeAcross(selector: String, direction: WebPageDirection): String {
             val (fromX, fromY, toX, toY) = when (direction) {
-                WebPageDirection.LEFT -> listOf(0.8, 0.5, 0.2, 0.5)
-                WebPageDirection.RIGHT -> listOf(0.2, 0.5, 0.8, 0.5)
-                WebPageDirection.UP -> listOf(0.5, 0.8, 0.5, 0.2)
-                WebPageDirection.DOWN -> listOf(0.5, 0.2, 0.5, 0.8)
+                WebPageDirection.LEFT -> listOf(0.9, 0.5, 0.1, 0.5)
+                WebPageDirection.RIGHT -> listOf(0.1, 0.5, 0.9, 0.5)
+                WebPageDirection.UP -> listOf(0.5, 0.9, 0.5, 0.1)
+                WebPageDirection.DOWN -> listOf(0.5, 0.1, 0.5, 0.9)
             }
             return """
                 (() => {
