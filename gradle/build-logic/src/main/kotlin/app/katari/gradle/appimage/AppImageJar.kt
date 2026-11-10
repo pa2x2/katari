@@ -7,14 +7,16 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 /**
- * Copies [jar] to [target] as the AppImage ships it: with every entry stored uncompressed, in the same order, and
- * with its classes' local variable tables left out ([withoutLocalVariableTables]). The AppImage compresses the jars
- * together, much better than each compressed on its own, and the JVM reads their classes without inflating them a
- * second time. A signed jar keeps its classes as they are, so its signatures stay valid.
+ * Copies [jar] to [target] as the AppImage ships it: with every entry stored uncompressed, in the same order, without
+ * the files [unused] names, and with its classes' local variable tables left out ([withoutLocalVariableTables]). The
+ * AppImage compresses the jars together, much better than each compressed on its own, and the JVM reads their classes
+ * without inflating them a second time. A signed jar keeps its classes as they are, so its signatures stay valid.
  */
-internal fun copyJarForAppImage(jar: File, target: File) {
+internal fun copyJarForAppImage(jar: File, target: File, unused: UnusedLibraryFiles?) {
     ZipFile(jar).use { zip ->
-        val entries = zip.entries().asSequence().toList()
+        val all = zip.entries().asSequence().toList()
+        val leftOut = unused?.leftOutOf(jar.name, all.map { it.name }).orEmpty()
+        val entries = all.filterNot { it.name in leftOut }
         val signed = entries.any { it.isSignature() }
         ZipOutputStream(target.outputStream().buffered()).use { out ->
             out.setMethod(ZipOutputStream.STORED)

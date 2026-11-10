@@ -89,6 +89,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
                 (listOf(appJar) + artifacts.map { it.libName() }).also(::checkDistinct)
             },
         )
+        unusedFiles.set(libraries.map(::unusedFilesByJar))
         runtimeHome.set(linkRuntime.flatMap { it.runtime })
         mainClass.set(provider { application.mainClass })
         jvmArguments.set(provider { (application.jvmArgs + JCEF_NATIVE_ACCESS).distinct() })
@@ -159,6 +160,23 @@ private fun ResolvedArtifactResult.libName(): String = when (val component = id.
     is ProjectComponentIdentifier -> "${component.projectPath.removePrefix(":").replace(':', '-')}-${file.name}"
     is ModuleComponentIdentifier -> "${component.group}-${file.name}"
     else -> file.name
+}
+
+/** What the AppImage leaves out of [artifacts]' jars, by each jar's name in the AppDir's `lib/`. */
+private fun unusedFilesByJar(artifacts: List<ResolvedArtifactResult>): Map<String, UnusedLibraryFiles> {
+    val byJar = artifacts.mapNotNull { artifact ->
+        val library = artifact.id.componentIdentifier as? ModuleComponentIdentifier ?: return@mapNotNull null
+        UnusedLibraryFiles.ALL.find { it.group == library.group && it.name == library.module }
+            ?.let { artifact.libName() to it }
+    }.toMap()
+    val gone = UnusedLibraryFiles.ALL - byJar.values.toSet()
+    if (gone.isNotEmpty()) {
+        throw GradleException(
+            "The desktop app no longer has ${gone.map { "${it.group}:${it.name}" }}; " +
+                "remove them from what its AppImage leaves out of its libraries, in UnusedLibraryFiles.kt",
+        )
+    }
+    return byJar
 }
 
 private fun checkDistinct(names: List<String>) {
