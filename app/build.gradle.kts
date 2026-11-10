@@ -284,6 +284,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.sources.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.sources.scriptRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sources.sourceLocal.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.webPages.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.sync.client.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.data.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.domain.path)))

@@ -13,6 +13,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.network.tls.LinuxCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.SystemCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.systemTrustManager
@@ -46,15 +47,18 @@ object NetworkBindings {
         directories: DesktopDirectories,
         preferences: NetworkPreferences,
         certificateAuthorities: SystemCertificateAuthorities,
-        webViewSetup: Lazy<WebViewSetup>,
+        webViewMessages: WebViewInterceptorMessages,
     ): NetworkHelper = NetworkHelper(
         context = application,
         cacheDirectory = directories.cache.toFile(),
         preferences = preferences,
-        // Asked as a message is worded: the set-up downloads with this client, so it is built after it
-        webViewMessages = DesktopWebViewInterceptorMessages {
-            webViewSetup.value.state.value != WebViewSetupState.Ready
-        },
+        webViewMessages = webViewMessages,
         trustManager = systemTrustManager(certificateAuthorities),
     )
+
+    // The set-up is asked as a message is worded: it downloads with the client, so it is built after it
+    @Provides
+    @SingleIn(AppScope::class)
+    fun webViewInterceptorMessages(webViewSetup: Lazy<WebViewSetup>): WebViewInterceptorMessages =
+        DesktopWebViewInterceptorMessages { webViewSetup.value.state.value != WebViewSetupState.Ready }
 }

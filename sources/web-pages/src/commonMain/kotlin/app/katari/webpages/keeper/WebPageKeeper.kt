@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -32,13 +33,13 @@ import kotlin.time.Duration.Companion.seconds
  * longest ago, or waits for a page to be given back; a source's own page too many fails the call where none of its
  * pages is idle, as waiting for a page the source itself holds would never end.
  *
- * @param profileId the profile the calling coroutine's source call works for.
+ * @param activeProfileId the profile a call works for unless its coroutine names another, as source settings resolve it.
  * @param scope where pages left alone are timed.
  */
 class WebPageKeeper(
     private val hostPages: HostPages,
     private val limits: WebPageLimits,
-    private val profileId: () -> Long,
+    private val activeProfileId: () -> Long,
     private val scope: CoroutineScope,
 ) : WebPages {
     private val registry = Mutex()
@@ -111,7 +112,7 @@ class WebPageKeeper(
 
     /** The slot's page where it still serves [source] in the caller's profile, else a new one in its place. */
     private suspend fun Slot.pageFor(source: WebPageSource, name: String): Kept {
-        val profile = profileId()
+        val profile = SourcePreferenceProfile.current ?: activeProfileId()
         kept?.let { held ->
             if (held.source === source && held.profileId == profile && !held.page.isLost) {
                 if (held.isIdle) {

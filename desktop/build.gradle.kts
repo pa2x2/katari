@@ -106,6 +106,7 @@ dependencies {
     implementation(projects.sources.scriptRuntime)
     implementation(projects.sources.sourceCompat)
     implementation(projects.sources.sourceLocal)
+    implementation(projects.sources.webPages)
     implementation(projects.features.language.runtime)
     implementation(projects.features.modelArtifacts.runtime)
     implementation(projects.features.textRecognition.runtime)

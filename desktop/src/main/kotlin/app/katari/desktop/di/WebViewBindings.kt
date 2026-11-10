@@ -3,6 +3,7 @@ package app.katari.desktop.di
 import app.katari.core.common.network.cookie.AppCookieStore
 import app.katari.core.common.web.ChallengePage
 import app.katari.core.common.web.ExtensionPages
+import app.katari.core.metro.AppCoroutineScope
 import app.katari.core.platform.clipboard.TextClipboard
 import app.katari.core.platform.link.LinkOpener
 import app.katari.core.platform.network.NetworkConnectivity
@@ -14,6 +15,10 @@ import app.katari.desktop.webview.setup.DesktopWebViewSetup
 import app.katari.desktop.webview.setup.NoticedChallengePage
 import app.katari.desktop.webview.setup.NoticedExtensionPages
 import app.katari.model.artifacts.runtime.store.modelArtifactStore
+import app.katari.profiles.core.ProfileStore
+import app.katari.webpages.host.DesktopHostPages
+import app.katari.webpages.keeper.WebPageKeeper
+import app.katari.webpages.keeper.WebPageLimits
 import app.katari.webview.chromium.ChromiumInstallation
 import app.katari.webview.chromium.ChromiumRelease
 import app.katari.webview.engine.cookie.ChromiumCookieMirror
@@ -31,6 +36,8 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.advanced.WebViewData
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
+import eu.kanade.tachiyomi.source.entry.webpage.WebPages
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserView
 import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
@@ -118,6 +125,21 @@ interface WebViewBindings {
         ): ExtensionPages = NoticedExtensionPages(
             ChromiumExtensionPages(runtime, cookies) { network.value.defaultUserAgentProvider() },
             setup::neededWithoutScreen,
+        )
+
+        // A heavy page's renderer peaks near a gigabyte here, so fewer are kept than on a phone
+        @Provides
+        @SingleIn(AppScope::class)
+        fun webPages(
+            pages: ExtensionPages,
+            messages: WebViewInterceptorMessages,
+            profiles: ProfileStore,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): WebPages = WebPageKeeper(
+            hostPages = DesktopHostPages(pages, messages),
+            limits = WebPageLimits(perSource = 1, total = 2),
+            activeProfileId = { profiles.currentProfileId },
+            scope = scope,
         )
 
         @Provides

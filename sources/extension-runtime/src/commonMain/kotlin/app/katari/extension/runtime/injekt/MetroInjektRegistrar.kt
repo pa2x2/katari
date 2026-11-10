@@ -5,6 +5,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.source.entry.webpage.WebPages
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import nl.adaptivity.xmlutil.serialization.XML
@@ -35,6 +36,9 @@ class MetroInjektRegistrar(
 
         // Katari's entry source API reads source preferences through it, so they follow the active profile
         EntryPreferenceProvider::class.java to { graph().entryPreferenceProvider },
+
+        // The SDK's webPage helper asks it for a WebPageSource's pages
+        WebPages::class.java to { graph().webPages },
     )
 
     override fun <R : Any> getInstance(forType: Type): R = getInstanceOrNull(forType)
