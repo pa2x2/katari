@@ -13,6 +13,12 @@ interface JcefHost {
      */
     val userAgent: String
 
+    /**
+     * The folder the app installs Chromium to, for a Java runtime that carries JCEF without one. It may not exist; a
+     * Chromium is there whole or not at all.
+     */
+    val chromiumDirectory: Path
+
     /** The folder Chromium keeps its profile and caches in, which the app may clear. */
     val dataDirectory: Path
 }

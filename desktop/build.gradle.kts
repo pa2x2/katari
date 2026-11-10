@@ -32,6 +32,7 @@ val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("gen
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
     buildTime.set(getLatestCommitTime())
     release.set(Config.desktopRelease)
+    chromiumVersion.set(katari.versions.chromium.asProvider())
     outputDir.set(layout.buildDirectory.dir("generated/desktopBuildInfo"))
 }
 

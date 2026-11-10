@@ -28,11 +28,13 @@ import kotlin.time.TimeSource
  */
 internal object Chromium {
     /**
-     * Starts Chromium with [switches] of the runtime's own and completes [started] once it runs. [lost] is called if
+     * Starts Chromium, the one in the folder [chromium] or else the runtime's own, with [switches] of the runtime's
+     * own, and completes [started] once it runs. [lost] is called if
      * the server ends before the app shuts it down.
      */
     fun start(
         switches: (List<String>) -> List<String>,
+        chromium: Path?,
         dataDirectory: Path,
         userAgent: String,
         started: CompletableFuture<CefApp>,
@@ -45,6 +47,13 @@ internal object Chromium {
         val config = JCefAppConfig.getInstance()
         val arguments = switches(config.appArgsAsList).toTypedArray()
         val settings = config.cefSettings.apply {
+            // The runtime's settings point into the runtime, where a Chromium installed for the app isn't. The server
+            // itself is found through the system property JCEF read as its classes loaded
+            if (chromium != null) {
+                resources_dir_path = chromium.toString()
+                locales_dir_path = chromium.resolve(LOCALES_DIRECTORY).toString()
+                browser_subprocess_path = chromium.resolve(HELPER_EXECUTABLE).toString()
+            }
             // Its profile, caches and the installation data Chromium keeps beside them, which would otherwise go to
             // ~/.config/cef_user_data
             cache_path = dataDirectory.toString()
@@ -64,6 +73,9 @@ internal object Chromium {
             },
         )
         val app = CefApp.getInstance(arguments, settings, null)
+        // JCEF keeps the first Chromium of a process as the one its own calls mean, such as the cookie manager's, and
+        // this may be a later one
+        CefApp.setDefaultInstance(app)
         app.setDisconnectionCallback(lost)
         app.onInitialization {
             watchServer(app)
@@ -104,8 +116,7 @@ internal object Chromium {
         val processes = ProcessHandle.current().descendants().filter { it.isServerProcess() }.toList()
         app.dispose()
         // The state changes on JCEF's threads but is reported on AWT's event thread, which may be the one ending the
-        // app, so the state is read instead. It is one for the process, and stays ended through a later Chromium,
-        // whose end only its processes tell
+        // app, so the state is read instead
         while (CefApp.getState() != CefApp.CefAppState.TERMINATED && deadline.hasNotPassedNow()) {
             Thread.sleep(POLL_INTERVAL.inWholeMilliseconds)
         }
@@ -128,6 +139,9 @@ internal object Chromium {
 
     /** The runtime's Chromium server, which every process of Chromium's runs. */
     const val SERVER_EXECUTABLE = "cef_server"
+
+    private const val HELPER_EXECUTABLE = "jcef_helper"
+    private const val LOCALES_DIRECTORY = "locales"
 
     private const val LOG_FILE = "chromium.log"
 

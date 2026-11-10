@@ -45,5 +45,5 @@ class ChromiumWebViewData(
     }
 
     override suspend fun version(context: PlatformContext): String =
-        (runtime.presence as? JcefPresence.Present)?.version ?: error("This Java runtime has no JCEF")
+        (runtime.presence as? JcefPresence.Present)?.version ?: error("No Chromium to tell the version of")
 }

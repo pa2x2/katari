@@ -1,5 +1,9 @@
 package app.katari.gradle.appimage
 
+import app.katari.gradle.chromium.AssembleChromiumArchiveTask
+import app.katari.gradle.chromium.CheckChromiumVersionTask
+import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import app.katari.gradle.extensions.katari
 import app.katari.gradle.jetbrainsruntime.JCEF_NATIVE_ACCESS
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntime
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntimeSdk
@@ -68,6 +72,24 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         excludedModules.set(LinkAppImageRuntimeTask.DEVELOPMENT_MODULES)
         this.runtime.set(layout.buildDirectory.dir("appimage/runtime"))
     }
+    val chromiumVersion = katari.versions.chromium.asProvider().get()
+    tasks.register<AssembleChromiumArchiveTask>("assembleChromiumArchive") {
+        group = "distribution"
+        description = "Packs the JetBrains Runtime's Chromium into the archive the desktop app downloads it from."
+        dependsOn(provisionSdk)
+        sdkName.set(sdk.archiveName)
+        sdkHome.set(sdk.home)
+        licenses.set(layout.settingsDirectory.dir("tools/chromium/licenses"))
+        archive.set(layout.buildDirectory.file("chromium/chromium-$chromiumVersion-linux-$ARCHITECTURE.tar.zst"))
+    }
+    val checkChromium = tasks.register<CheckChromiumVersionTask>("checkChromiumVersion") {
+        group = "verification"
+        description = "Checks that the Chromium pinned for download is the JetBrains Runtime's."
+        dependsOn(provisionRuntime)
+        runtimeRelease.set(runtime.release)
+        pinned.set(chromiumVersion)
+    }
+    tasks.named(VERIFY_TESTS_TASK_NAME) { dependsOn(checkChromium) }
     val checkModules = tasks.register<CheckAppImageModulesTask>("checkAppImageModules") {
         description = "Checks that the AppImage's runtime has every module the desktop app's jars need."
         dependsOn(provisionSdk)
