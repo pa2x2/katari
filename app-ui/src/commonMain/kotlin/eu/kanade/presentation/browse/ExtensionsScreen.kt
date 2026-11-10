@@ -12,6 +12,7 @@ import app.katari.core.platform.currentPlatformContext
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Settings
 import app.katari.missingextensions.ui.MissingExtensionsNotice
+import app.katari.missingextensions.ui.OtherDeviceExtensionsNotice
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.EmptyScreenAction
@@ -173,6 +174,13 @@ private fun ExtensionContent(
 
         item(key = "missing-extensions") {
             MissingExtensionsNotice(
+                onReview = onReviewMissingExtensions,
+                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+            )
+        }
+
+        item(key = "other-device-extensions") {
+            OtherDeviceExtensionsNotice(
                 onReview = onReviewMissingExtensions,
                 modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
             )

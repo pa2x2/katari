@@ -21,6 +21,7 @@ import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.missingextensions.ui.MissingExtensionsLibraryNotice
 import app.katari.missingextensions.ui.MissingExtensionsSheet
+import app.katari.missingextensions.ui.OtherDeviceExtensionsLibraryNotice
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
@@ -290,6 +291,10 @@ data object LibraryTab : Tab {
                         notice = {
                             WebViewSetupLibraryNotice(Modifier.padding(vertical = KatariTheme.spacing.s))
                             MissingExtensionsLibraryNotice(
+                                onReview = { showMissingExtensions = true },
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
+                            OtherDeviceExtensionsLibraryNotice(
                                 onReview = { showMissingExtensions = true },
                                 modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                             )
