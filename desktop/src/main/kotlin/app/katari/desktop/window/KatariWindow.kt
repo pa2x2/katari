@@ -53,7 +53,8 @@ import javax.swing.JFrame
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
  * as the player enter, whether the mouse is over the app, which the player's controls leave with, the touchpad pinches
- * over the window, which the player zooms its picture with, the desktop's file
+ * over the window, which the player zooms its picture with, scrolling that follows a touchpad's fingers
+ * ([ScrollsPrecisely]), the desktop's file
  * chooser, which the screens' document pickers open, the app's messages, which show on the screen the user is on, the
  * profile picker included, and the density of the session's scale and the interface size. While it is open,
  * extensions find the activity that stands for it in the foreground
@@ -135,6 +136,7 @@ private fun WindowContent(
         graph.windowActivity.onWindowOpened()
         onDispose { graph.windowActivity.onWindowClosed() }
     }
+    ScrollsPrecisely(window, graph.displayBackend)
     ReportsOpen(graph)
     ReportsForeground(window, graph)
     ReportsPresence(window, graph.windowAnimePlayer, graph.appPresence)

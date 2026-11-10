@@ -6,6 +6,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import app.katari.presentation.kit.pager.WheelTurns
+import app.katari.presentation.kit.pointer.touchpadScroll
 import kotlin.math.abs
 
 /**
@@ -24,7 +25,9 @@ internal fun Modifier.pageWheel(key: Any?, rtl: Boolean, move: (pages: Int) -> U
                 // Taken already as Ctrl and the wheel change the text size
                 val change = event.changes.firstOrNull()?.takeUnless { it.isConsumed } ?: continue
                 change.consume()
-                turns.onScroll(change.scrollDelta, change.uptimeMillis) { notches -> turnBy(notches, rtl, move) }
+                turns.onScroll(change.scrollDelta, change.uptimeMillis, event.touchpadScroll) { notches ->
+                    turnBy(notches, rtl, move)
+                }
             }
         }
     }
