@@ -201,14 +201,6 @@ internal object VideoPlayerShortcuts {
             ShortcutKeys.Chord(Key.DirectionDown, "↓", ctrl = true),
         )
 
-    /** ? beside the window's Ctrl+/. */
-    val ShowList: KeyboardShortcut
-        @Composable get() = shortcut(
-            "player.shortcuts",
-            stringResource(MR.strings.keyboard_shortcut_list),
-            ShortcutKeys.Chord(Key.Slash, "?", shift = true),
-        )
-
     private fun shortcut(id: String, label: String, vararg keys: ShortcutKeys, beforeFocus: Boolean = true) =
         KeyboardShortcut(
             id = id,

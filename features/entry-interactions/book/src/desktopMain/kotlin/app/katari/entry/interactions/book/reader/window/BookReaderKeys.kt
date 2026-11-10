@@ -10,6 +10,7 @@ import app.katari.presentation.kit.shortcut.ContextMenuKey
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
+import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import app.katari.presentation.kit.shortcut.ShortcutGroup
 import app.katari.presentation.kit.shortcut.ShortcutKeys
 import app.katari.presentation.kit.window.WindowFullScreen
@@ -58,15 +59,7 @@ internal fun BookReaderKeys(controller: BookDocumentReaderController, fullScreen
         }
     }
     val registry = LocalKeyboardShortcuts.current
-    KeyboardShortcutHandler(
-        shortcut(
-            "reader.shortcuts",
-            stringResource(MR.strings.keyboard_shortcut_list),
-            ShortcutKeys.Chord(Key.Slash, "?", shift = true),
-        ),
-    ) {
-        registry?.showList()
-    }
+    KeyboardShortcutHandler(ScreenShortcuts.ShortcutList) { registry?.toggleList() }
 }
 
 @Composable

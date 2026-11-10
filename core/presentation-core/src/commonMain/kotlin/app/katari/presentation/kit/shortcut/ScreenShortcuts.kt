@@ -10,6 +10,21 @@ import tachiyomi.presentation.core.i18n.stringResource
  * and an app bar action that is the screen's search names [Search] as its shortcut.
  */
 object ScreenShortcuts {
+    /**
+     * ? beside the window's Ctrl+/, on a screen whose keys are single letters, such as the player's and the readers':
+     * it opens the list of shortcuts ([KeyboardShortcutRegistry.toggleList]), and reaches the list to close it again.
+     */
+    val ShortcutList: KeyboardShortcut
+        @Composable get() = KeyboardShortcut(
+            id = "screen.shortcuts",
+            label = stringResource(MR.strings.keyboard_shortcut_list),
+            keys = listOf(ShortcutKeys.Chord(Key.Slash, "?", shift = true)),
+            group = ShortcutGroup.CurrentScreen,
+            reach = ShortcutReach.Window,
+            whileTyping = false,
+            beforeFocus = true,
+        )
+
     val Search: KeyboardShortcut
         @Composable get() = KeyboardShortcut(
             id = "screen.search",

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
+import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import tachiyomi.domain.entry.model.PictureFraming
 
@@ -37,7 +38,7 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.PanUp, pans) { target.panBy(geometry(), 0, -1) }
     Key(VideoPlayerShortcuts.PanDown, pans) { target.panBy(geometry(), 0, 1) }
     val registry = LocalKeyboardShortcuts.current
-    Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
+    Key(ScreenShortcuts.ShortcutList, enabled = true) { registry?.toggleList() }
 }
 
 /**
