@@ -11,6 +11,7 @@ internal actual object PostHogClient {
     actual fun setUp(
         host: TelemetryHost,
         addedProperties: (event: String) -> Map<String, Any>?,
+        onActivityResumed: (name: String) -> Unit,
         scope: CoroutineScope,
     ) {
         val session = LinuxSession.read().properties
@@ -28,8 +29,6 @@ internal actual object PostHogClient {
         // PostHog keeps an opt-out from an earlier run, while the user's switches are what decide
         if (PostHog.isOptedOut()) PostHog.optIn()
         PostHog.register(APP_VERSION, host.appVersion)
-        // The JVM library reports no app lifecycle, so the desktop app reports its start under Android's name for it
-        PostHog.capture(APPLICATION_OPENED)
     }
 
     actual fun optIn() {
@@ -40,10 +39,13 @@ internal actual object PostHogClient {
         PostHog.optOut()
     }
 
+    actual fun capture(event: String, properties: Map<String, Any>) {
+        PostHog.capture(event, properties)
+    }
+
     actual fun captureException(throwable: Throwable) {
         PostHog.captureException(throwable)
     }
 }
 
 private const val APP_VERSION = "\$app_version"
-private const val APPLICATION_OPENED = "Application Opened"

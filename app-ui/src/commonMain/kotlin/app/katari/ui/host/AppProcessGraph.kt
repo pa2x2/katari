@@ -7,6 +7,7 @@ import app.katari.sync.client.extension.InstalledExtensionLog
 import app.katari.sync.client.trigger.SyncTriggers
 import app.katari.sync.ui.notice.SyncNotices
 import app.katari.ui.buildinfo.AppBuild
+import app.katari.ui.telemetry.AppStateReader
 import app.katari.upgrade.MigrationGraph
 import dev.zacsweers.metro.Multibinds
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
@@ -27,7 +28,7 @@ interface AppProcessGraph : MigrationGraph {
     val networkPreferences: NetworkPreferences
     val privacyPreferences: PrivacyPreferences
 
-    /** The store the version the app-upgrade migrations last ran for is kept in. */
+    /** The store of the app's own state, such as the version the app-upgrade migrations last ran for. */
     val preferenceStore: PreferenceStore
     val logDestinations: LogDestinations
     val networkHelper: NetworkHelper
@@ -38,6 +39,7 @@ interface AppProcessGraph : MigrationGraph {
     val syncTriggers: SyncTriggers
     val syncNotices: SyncNotices
     val installedExtensionLog: InstalledExtensionLog
+    val appStateReader: AppStateReader
 
     /**
      * Profile copy and backup derive preference ownership from every registered owner, so owners register at startup

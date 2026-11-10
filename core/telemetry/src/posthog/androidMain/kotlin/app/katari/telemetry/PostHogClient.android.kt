@@ -11,16 +11,19 @@ internal actual object PostHogClient {
     actual fun setUp(
         host: TelemetryHost,
         addedProperties: (event: String) -> Map<String, Any>?,
+        onActivityResumed: (name: String) -> Unit,
         scope: CoroutineScope,
     ) {
         val application = host.application
-        val resumedActivity = ResumedActivity()
+        val resumedActivity = ResumedActivity(onActivityResumed)
         application.registerActivityLifecycleCallbacks(resumedActivity)
 
         val config = PostHogAndroidConfig(PostHogProject.TOKEN, PostHogProject.HOST).apply {
             // Screen views name activities, which say nothing in an app of one activity, and a deep link can carry
-            // the address of what someone reads. Push notifications and feature flags aren't used.
+            // the address of what someone reads. The day's report counts the days the app is used, in place of an
+            // event each time it opens or goes to the background. Push notifications and feature flags aren't used.
             captureScreenViews = false
+            captureApplicationLifecycleEvents = false
             captureDeepLinks = false
             capturePushNotificationSubscriptions = false
             capturePushNotificationOpened = false
@@ -48,6 +51,10 @@ internal actual object PostHogClient {
 
     actual fun optOut() {
         PostHog.optOut()
+    }
+
+    actual fun capture(event: String, properties: Map<String, Any>) {
+        PostHog.capture(event, properties = properties)
     }
 
     actual fun captureException(throwable: Throwable) {

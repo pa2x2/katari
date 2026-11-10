@@ -1,7 +1,12 @@
 package app.katari.telemetry
 
+import app.katari.telemetry.usage.AppStateSource
+import app.katari.telemetry.usage.DailyStateReport
+import app.katari.telemetry.usage.ReadingSession
+import app.katari.telemetry.usage.ReadingSessionEvent
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import kotlinx.coroutines.CoroutineScope
+import tachiyomi.core.common.preference.PreferenceStore
 import kotlin.concurrent.Volatile
 
 /**
@@ -22,24 +27,66 @@ object Telemetry {
     @Volatile
     private var shownScreen: ShownScreen? = null
 
+    // Set while the user allows usage statistics, the only time what the app shows is kept for it
+    @Volatile
+    private var dailyState: DailyStateReport? = null
+
     // Written on the thread that calls start, then only by the consent's collector, which start launches after it
     private var sending = false
+
+    @Volatile
     private var postHogSetUp = false
 
-    /** Starts sending what the user's choices in [preferences] allow, following them for as long as [scope] lives. */
-    fun start(host: TelemetryHost, preferences: PrivacyPreferences, scope: CoroutineScope) {
+    /**
+     * Starts sending what the user's choices in [preferences] allow, following them for as long as [scope] lives.
+     * [store] keeps what the day's report gathers, and [appState] reads the rest of it.
+     */
+    fun start(
+        host: TelemetryHost,
+        preferences: PrivacyPreferences,
+        store: PreferenceStore,
+        appState: AppStateSource,
+        scope: CoroutineScope,
+    ) {
         if (!host.isKatariRelease) return
-        consent.follow(preferences, scope) { allowsAnything -> send(allowsAnything, host, scope) }
+        val report =
+            DailyStateReport(store, appState, scope, send = { PostHogClient.capture(DailyStateReport.EVENT, it) })
+        consent.follow(preferences, scope) {
+            send(consent.allowsAnything, host, scope)
+            if (consent.usageStatistics) {
+                dailyState = report
+                report.reportIfDue()
+            } else {
+                dailyState = null
+                report.forget()
+            }
+        }
     }
 
-    /** Names what the app shows from now on; see [ShownScreen]. */
-    fun setShownScreen(screen: String, entryType: String?, density: Float) {
+    /**
+     * Names what the app shows from now on; see [ShownScreen]. [windowWidth] is the window's size class, which only the
+     * day's report carries.
+     */
+    fun setShownScreen(screen: String, entryType: String?, density: Float, windowWidth: String) {
         shownScreen = ShownScreen(screen, entryType, density)
+        noteShown(screen, windowWidth)
+    }
+
+    fun reportReadingSession(session: ReadingSession) {
+        if (!postHogSetUp) return
+        PostHogClient.capture(ReadingSessionEvent.NAME, ReadingSessionEvent.properties(session))
     }
 
     /** Reports a failure the app caught and survived, under the same switch as crashes. */
     fun recordException(throwable: Throwable) {
         PostHogClient.captureException(throwable)
+    }
+
+    private fun noteShown(screen: String, windowWidth: String?) {
+        dailyState?.run {
+            noteShown(screen, windowWidth)
+            reportIfDue()
+        }
     }
 
     private fun send(allowsAnything: Boolean, host: TelemetryHost, scope: CoroutineScope) {
@@ -51,7 +98,7 @@ object Telemetry {
             postHogSetUp -> PostHogClient.optIn()
 
             else -> {
-                PostHogClient.setUp(host, ::addedProperties, scope)
+                PostHogClient.setUp(host, ::addedProperties, onActivityResumed = { noteShown(it, null) }, scope)
                 postHogSetUp = true
             }
         }
@@ -68,13 +115,21 @@ object Telemetry {
 internal expect object PostHogClient {
     /**
      * Sets PostHog up opted in. Each event goes out with the properties [addedProperties] gives it added to its own, and
-     * not at all where it gives none.
+     * not at all where it gives none. [onActivityResumed] hears the name of each activity that comes to the front, on a
+     * platform that has activities.
      */
-    fun setUp(host: TelemetryHost, addedProperties: (event: String) -> Map<String, Any>?, scope: CoroutineScope)
+    fun setUp(
+        host: TelemetryHost,
+        addedProperties: (event: String) -> Map<String, Any>?,
+        onActivityResumed: (name: String) -> Unit,
+        scope: CoroutineScope,
+    )
 
     fun optIn()
 
     fun optOut()
+
+    fun capture(event: String, properties: Map<String, Any>)
 
     fun captureException(throwable: Throwable)
 }

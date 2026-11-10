@@ -52,7 +52,7 @@ object AppProcessStart {
      */
     @HostEntryPoint
     fun startTelemetry(graph: AppProcessGraph, host: TelemetryHost) {
-        Telemetry.start(host, graph.privacyPreferences, graph.appScope)
+        Telemetry.start(host, graph.privacyPreferences, graph.preferenceStore, graph.appStateReader, graph.appScope)
     }
 
     /** Run as the graph is built, before anything else reads from it, since anything may copy or back up a profile. */

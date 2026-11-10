@@ -7,9 +7,10 @@ import kotlin.concurrent.Volatile
 
 /**
  * The activity in front, which every event carries beside the screen the app's navigation shows: the readers, the
- * player and the settings run in activities of their own, outside that navigation.
+ * player and the settings run in activities of their own, outside that navigation. [onResumed] hears each one's name
+ * as it comes to the front.
  */
-internal class ResumedActivity : Application.ActivityLifecycleCallbacks {
+internal class ResumedActivity(private val onResumed: (name: String) -> Unit) : Application.ActivityLifecycleCallbacks {
     @Volatile
     private var name: String? = null
 
@@ -17,7 +18,9 @@ internal class ResumedActivity : Application.ActivityLifecycleCallbacks {
         get() = name?.let { mapOf("activity" to it) }.orEmpty()
 
     override fun onActivityResumed(activity: Activity) {
-        name = activity.javaClass.simpleName
+        val resumed = activity.javaClass.simpleName
+        name = resumed
+        onResumed(resumed)
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
