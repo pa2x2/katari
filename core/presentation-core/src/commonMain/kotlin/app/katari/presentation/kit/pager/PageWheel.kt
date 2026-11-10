@@ -17,13 +17,15 @@ import kotlinx.coroutines.launch
  * Each page takes only the scrolling its own content left over, so a row or a list inside a page scrolls first. [turns]
  * belongs to the pager, not the page, so the rest of a swipe still counts as the same swipe once the next page has
  * slid under the pointer. [reverse] is set where the next page lies at the start of the axis, as in a right-to-left
- * layout.
+ * layout. [onTurned] is told the page a turn reached once it has slid all the way in; a turn cut short by another
+ * turn or a drag is not, as that one reports its own page.
  */
 internal fun Modifier.pageWheel(
     state: PagerState,
     turns: WheelTurns,
     orientation: Orientation,
     reverse: Boolean,
+    onTurned: (page: Int) -> Unit,
 ): Modifier = pointerInput(state, turns, orientation, reverse) {
     coroutineScope {
         awaitPointerEventScope {
@@ -41,7 +43,10 @@ internal fun Modifier.pageWheel(
                     val from = if (state.isScrollInProgress) state.targetPage else state.currentPage
                     val target = from + if (reverse) -step else step
                     if (step == 0 || target !in 0 until state.pageCount) return@onScroll Offset.Zero
-                    launch { state.animateScrollToPage(target) }
+                    launch {
+                        state.animateScrollToPage(target)
+                        onTurned(target)
+                    }
                     Offset(step.toFloat(), 0f)
                 }
             }
