@@ -3,12 +3,14 @@ package eu.kanade.tachiyomi.ui.home.navigation
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import app.katari.core.common.HomeScreenTabs
 import app.katari.core.common.navigation.HomeNavigationConfiguration
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
@@ -28,8 +30,8 @@ class HomeNavigationState internal constructor(tabSettings: State<HomeTabSetting
     /** Null until home is first shown. */
     var selectedTab by mutableStateOf<HomeScreenTabs?>(null)
 
-    /** Set by a home tab that takes the window for itself, such as while items are selected. */
-    var hiddenByTab by mutableStateOf(false)
+    // How many holders of HideHomeNavigation each screen has, by screen key; a screen with none isn't listed
+    private val hidingScreens = mutableStateMapOf<ScreenKey, Int>()
 
     var requestedTab by mutableStateOf<HomeScreenTabs?>(null)
 
@@ -54,6 +56,18 @@ class HomeNavigationState internal constructor(tabSettings: State<HomeTabSetting
             navigator.popUntilRoot()
             if (tab != tabUnder) requestedTab = tab
         }
+    }
+
+    /** Whether [screen] has the whole window, without the home destinations beside or below it. */
+    fun hidesNavigation(screen: Screen): Boolean = screen is FullWindowScreen || screen.key in hidingScreens
+
+    internal fun hideFor(screen: ScreenKey) {
+        hidingScreens[screen] = (hidingScreens[screen] ?: 0) + 1
+    }
+
+    internal fun releaseFor(screen: ScreenKey) {
+        val holders = (hidingScreens[screen] ?: return) - 1
+        if (holders > 0) hidingScreens[screen] = holders else hidingScreens.remove(screen)
     }
 
     // Statistics is a screen of its own rather than a home tab, so the dock marks it while it's open

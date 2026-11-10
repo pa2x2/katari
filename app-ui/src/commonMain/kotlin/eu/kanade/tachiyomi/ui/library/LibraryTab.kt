@@ -66,7 +66,7 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
-import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -433,10 +433,7 @@ data object LibraryTab : Tab {
             },
         )
 
-        val homeNavigation = LocalHomeNavigation.current
-        LaunchedEffect(state.selectionMode) {
-            homeNavigation.hiddenByTab = state.selectionMode
-        }
+        HideHomeNavigation(hidden = state.selectionMode)
 
         val contentReadiness = LocalHomeContentReadiness.current
         LaunchedEffect(state.isLoading) {

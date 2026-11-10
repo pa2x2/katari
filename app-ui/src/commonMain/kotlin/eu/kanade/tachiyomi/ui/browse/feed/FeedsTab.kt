@@ -75,7 +75,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerPopover
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.withIOContext
@@ -229,20 +229,13 @@ private fun Screen.FeedsTabContent(
         }
     }
 
-    val homeNavigation = LocalHomeNavigation.current
-    LaunchedEffect(feedViewMode) {
-        homeNavigation.hiddenByTab = feedViewMode != FeedViewMode.Regular
-    }
+    HideHomeNavigation(hidden = feedViewMode != FeedViewMode.Regular)
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         isBackEnabled = feedViewMode == FeedViewMode.Immersive,
         onBackCompleted = { onFeedViewModeChange(FeedViewMode.Regular) },
     )
-
-    DisposableEffect(Unit) {
-        onDispose { homeNavigation.hiddenByTab = false }
-    }
 
     val openItem: (CatalogListItem) -> Unit = { item ->
         when (item) {
