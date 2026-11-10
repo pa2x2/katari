@@ -13,15 +13,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * What continues each piece of [image] shown in [layout] beside it, in the order of its pieces, or null for a piece
- * that can't be decoded, as once the image is closed. The rules compare whole rows, so each piece is decoded whole, at
+ * What continues each piece of [image] shown in [layout] beside it ([chooseSideBackdrop]), in the order of its pieces,
+ * or null for a piece that can't be decoded, as once the image is closed. The rules compare whole rows, so each piece is decoded whole, at
  * no fewer than [SIDE_BACKDROP_WIDTH] pixels across: enough to tell gaps from artwork, while a tall page decodes to a
  * few megabytes rather than tens.
  */
-internal suspend fun PageImage.Still.chooseSideBackdrops(layout: PageImageLayout): List<SideBackdrop?> =
+internal suspend fun PageImage.Still.chooseSideBackdrops(layout: PageImageLayout): List<List<BackdropSpan>?> =
     withContext(Dispatchers.Default) { layout.pieces(size).map { chooseSideBackdrop(it) } }
 
-private suspend fun PageImage.Still.chooseSideBackdrop(piece: PageImagePiece): SideBackdrop? {
+private suspend fun PageImage.Still.chooseSideBackdrop(piece: PageImagePiece): List<BackdropSpan>? {
     var sampleSize = 1
     while (piece.displayedSize.width / (sampleSize * 2) >= SIDE_BACKDROP_WIDTH) sampleSize *= 2
     val bitmap = decode(piece.source, sampleSize) ?: return null

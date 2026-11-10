@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.manga.reader.image.background.BackdropSpan
-import app.katari.entry.interactions.manga.reader.image.background.SideBackdrop
 import app.katari.entry.interactions.manga.reader.image.background.brush
 import app.katari.entry.interactions.manga.reader.image.background.chooseSideBackdrops
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
@@ -51,8 +50,8 @@ internal class StripBackdrops {
     }
 }
 
-/** A row of a page, from [top] to [bottom] in strip pixels below the page's top, that [backdrop] continues. */
-internal class StripBackdropRow(val top: Float, val bottom: Float, val backdrop: SideBackdrop)
+/** A row of a page, from [top] to [bottom] in strip pixels below the page's top, that [spans] continue at its sides. */
+internal class StripBackdropRow(val top: Float, val bottom: Float, val spans: List<BackdropSpan>)
 
 /**
  * Registers the rows of [page] while it shows [shown], laid out [height] strip pixels tall, once what continues its
@@ -61,7 +60,7 @@ internal class StripBackdropRow(val top: Float, val bottom: Float, val backdrop:
 @Composable
 internal fun StripViewer.FollowPageBackdrop(page: ReaderPage, shown: PageContent.Shown?, height: Int) {
     val automatic = settings.bindings.automaticBackgroundState()
-    var sideBackdrops by remember(shown, automatic) { mutableStateOf(emptyList<SideBackdrop?>()) }
+    var sideBackdrops by remember(shown, automatic) { mutableStateOf(emptyList<List<BackdropSpan>?>()) }
     LaunchedEffect(shown, automatic) {
         val image = shown?.image as? PageImage.Still ?: return@LaunchedEffect
         if (automatic) sideBackdrops = image.chooseSideBackdrops(shown.layout)
@@ -83,18 +82,18 @@ internal fun StripViewer.FollowPageBackdrop(page: ReaderPage, shown: PageContent
 internal fun stripBackdropRows(
     layout: PageImageLayout,
     imageSize: IntSize,
-    backdrops: List<SideBackdrop?>,
+    backdrops: List<List<BackdropSpan>?>,
     height: Int,
 ): List<StripBackdropRow> {
     val displayedHeight = layout.displayedSize(imageSize).height
     if (displayedHeight <= 0 || height <= 0) return emptyList()
-    return layout.pieces(imageSize).zip(backdrops) { piece, backdrop ->
-        if (backdrop == null) return@zip null
+    return layout.pieces(imageSize).zip(backdrops) { piece, spans ->
+        if (spans == null) return@zip null
         val bounds = piece.displayedBounds
         StripBackdropRow(
             top = bounds.top.toFloat() * height / displayedHeight,
             bottom = bounds.bottom.toFloat() * height / displayedHeight,
-            backdrop = backdrop,
+            spans = spans,
         )
     }.filterNotNull()
 }
@@ -114,8 +113,8 @@ internal fun Modifier.paintedBehind(viewer: StripViewer): Modifier = drawBehind 
         for (row in viewer.backdrops[page]) {
             val rowTop = (slot.offset + row.top) * scale
             val rowHeight = (row.bottom - row.top) * scale
-            paintSide(row.backdrop.left, rowTop, rowHeight, left = 0f, right = pagesLeft)
-            paintSide(row.backdrop.right, rowTop, rowHeight, left = pagesRight, right = size.width)
+            paintSide(row.spans, rowTop, rowHeight, left = 0f, right = pagesLeft)
+            paintSide(row.spans, rowTop, rowHeight, left = pagesRight, right = size.width)
         }
     }
 }
