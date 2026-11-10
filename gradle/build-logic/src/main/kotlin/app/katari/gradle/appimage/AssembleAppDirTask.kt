@@ -24,7 +24,8 @@ import javax.inject.Inject
  * Lays out the desktop app as an AppDir, the folder appimagetool packs into an AppImage:
  *
  * - `runtime/`, the runtime [LinkAppImageRuntimeTask] links, which carries Chromium for the app's web view;
- * - `lib/`, the app's jars, stored uncompressed under names that tell apart jars which share a file name;
+ * - `lib/`, the app's jars as [copyJarForAppImage] writes them, under names that tell apart jars which share a file
+ *   name;
  * - `AppRun`, which the AppImage starts, running [mainClass] with the jars on the class path in their order, with the
  *   class data the app keeps for this build in its cache folder, and showing [splash] meanwhile (see [appRun]);
  * - `splash.png`, that image;
@@ -94,7 +95,7 @@ abstract class AssembleAppDirTask : DefaultTask() {
         val names = jarNames.get()
         check(jarFiles.size == names.size) { "${jarFiles.size} jars but ${names.size} names for them" }
         val lib = appDir.resolve(LIB).also { it.mkdirs() }
-        jarFiles.zip(names).forEach { (jar, name) -> copyJarStored(jar, lib.resolve(name)) }
+        jarFiles.zip(names).forEach { (jar, name) -> copyJarForAppImage(jar, lib.resolve(name)) }
 
         splash.get().asFile.copyTo(appDir.resolve(SPLASH))
         appDir.resolve("AppRun").apply {
