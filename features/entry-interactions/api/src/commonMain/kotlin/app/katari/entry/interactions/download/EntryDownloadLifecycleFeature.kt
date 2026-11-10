@@ -30,6 +30,12 @@ sealed interface EntryDownloadLifecycleEvent {
         val children: List<EntryChapter>,
     ) : EntryDownloadLifecycleEvent
 
+    /** The children [childIds] were read on another device, which this device learned through sync. */
+    data class ConsumedElsewhere(
+        override val visibleEntry: Entry,
+        val childIds: Set<Long>,
+    ) : EntryDownloadLifecycleEvent
+
     data class Progressed(
         override val visibleEntry: Entry,
         val child: EntryChapter,

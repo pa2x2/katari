@@ -115,12 +115,14 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 sourceOrder = place ?: queries.placeAfterChapters(entryId).awaitAsOne(),
             ).awaitAsOne()
         } else {
+            val wasRead = queries.chapterRead(existing).awaitAsOne()
             queries.updateChapterMarks(
                 read = payload.read.value,
                 bookmark = payload.bookmark.value,
                 dateFetch = payload.dateFetch,
                 chapterId = existing,
             )
+            if (payload.read.value && !wasRead) writes.chapterRead(entryId, existing)
             existing
         }
         queries.noteNewChapter(dateFetch = payload.dateFetch, entryId = entryId)
