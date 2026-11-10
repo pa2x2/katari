@@ -27,9 +27,11 @@ interface DisplayBindings {
     companion object {
         @Provides
         @SingleIn(AppScope::class)
-        fun displayBackend(operatingSystem: DesktopOperatingSystem): DisplayBackend = when (operatingSystem) {
-            DesktopOperatingSystem.LINUX -> LinuxDisplayBackend(DesktopAppVariant.current.applicationId)
-        }
+        fun displayBackend(operatingSystem: DesktopOperatingSystem, sessionScale: SessionScale): DisplayBackend =
+            when (operatingSystem) {
+                DesktopOperatingSystem.LINUX ->
+                    LinuxDisplayBackend(DesktopAppVariant.current.applicationId, sessionScale)
+            }
 
         @Provides
         @SingleIn(AppScope::class)

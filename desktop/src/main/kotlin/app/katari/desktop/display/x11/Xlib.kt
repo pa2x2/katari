@@ -10,8 +10,9 @@ import com.sun.jna.ptr.IntByReference
 
 /**
  * The part of the system's Xlib (`Xlib.h`) that the app calls itself, for what AWT has no call for: telling the window
- * manager about the app's windows, and reading the touchpad pinches over them ([X11TouchpadPinches]). Each function is the C one without its `X` prefix: [openDisplay] is
- * `XOpenDisplay`. An X window or atom is a C `unsigned long`.
+ * manager about the app's windows, and reading the touchpad pinches ([X11TouchpadPinches]) and the scrolling
+ * ([X11ScrollMotions]) over them. Each function is the C one without its `X` prefix: [openDisplay] is `XOpenDisplay`.
+ * An X window or atom is a C `unsigned long`.
  */
 internal interface Xlib : Library {
     /** A connection of its own to the display [name] names, or to `DISPLAY`'s for null; null when there is none. */
@@ -74,6 +75,9 @@ internal interface Xlib : Library {
     fun getEventData(display: Pointer, cookie: XGenericEventCookie): Boolean
 
     fun freeEventData(display: Pointer, cookie: XGenericEventCookie)
+
+    /** Lets go of [data], memory that a call of Xlib or of an extension's library handed out. */
+    fun free(data: Pointer): Int
 }
 
 internal const val PROP_MODE_REPLACE = 0

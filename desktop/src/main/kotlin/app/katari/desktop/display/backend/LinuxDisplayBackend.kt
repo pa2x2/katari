@@ -1,11 +1,15 @@
 package app.katari.desktop.display.backend
 
+import app.katari.desktop.display.scroll.PreciseScrolling
+import app.katari.desktop.display.size.SessionScale
 import app.katari.desktop.display.x11.X11LaunchHandover
 import app.katari.desktop.display.x11.X11PointerButtons
+import app.katari.desktop.display.x11.X11ScrollMotions
 import app.katari.desktop.display.x11.X11TouchpadPinches
 import app.katari.desktop.display.x11.X11WindowClass
 import app.katari.presentation.kit.pointer.TouchpadPinch
 import kotlinx.coroutines.flow.Flow
+import java.awt.EventQueue
 import java.awt.Frame
 import java.awt.Window
 
@@ -14,7 +18,7 @@ import java.awt.Window
  * named after [applicationId] as their `WM_CLASS`, as the app's desktop entry is, so the desktop shows them as the
  * app's.
  */
-class LinuxDisplayBackend(private val applicationId: String) : DisplayBackend {
+class LinuxDisplayBackend(private val applicationId: String, private val sessionScale: SessionScale) : DisplayBackend {
     override fun start() {
         X11WindowClass.set(applicationId)
         X11PointerButtons.install()
@@ -33,4 +37,15 @@ class LinuxDisplayBackend(private val applicationId: String) : DisplayBackend {
     }
 
     override fun touchpadPinches(window: Window): Flow<TouchpadPinch>? = X11TouchpadPinches.over(window)
+
+    override fun preciseScrolling(window: Window): AutoCloseable? {
+        val scrolling = PreciseScrolling(window, sessionScale.pixelsPerDp)
+        val motions = X11ScrollMotions.over(window, pointerOver = window.mousePosition != null) { motion ->
+            EventQueue.invokeLater { scrolling.on(motion) }
+        } ?: return null
+        return AutoCloseable {
+            motions.close()
+            scrolling.close()
+        }
+    }
 }

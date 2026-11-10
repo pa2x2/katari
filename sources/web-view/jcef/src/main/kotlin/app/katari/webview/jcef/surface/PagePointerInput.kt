@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.areAnyPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import app.katari.presentation.kit.pointer.TouchpadWheelEvent
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
 import kotlin.math.floor
@@ -70,8 +71,8 @@ internal fun Modifier.pagePointerInput(
 
 /**
  * The wheel in the pixels Chromium scrolls by, as JCEF passes a wheel event's steps on to it as pixels, scrolling up
- * for positive ones. A wheel step scrolls as far as Chromium scrolls for one on X11, and a touchpad's small, fractional
- * scrolls add up until they make a pixel. Scrolling sideways, which the window system sends with Shift held, adds up
+ * for positive ones. A wheel step scrolls as far as Chromium scrolls for one on X11, and a touchpad's fingers by as
+ * far as they travel, their small scrolls adding up until they make a pixel. Scrolling sideways, which the window system sends with Shift held, adds up
  * apart.
  */
 private class WheelPixels {
@@ -83,7 +84,9 @@ private class WheelPixels {
             sideways = event.isShiftDown
             pixels = 0.0
         }
-        pixels -= event.preciseWheelRotation * PIXELS_PER_STEP
+        // The fingers' travel is in the window's pixels, [PagePointerTarget.scale] of them to one of the page's
+        pixels -= (event as? TouchpadWheelEvent)?.let { it.pixels / page.scale }
+            ?: (event.preciseWheelRotation * PIXELS_PER_STEP)
         val whole = pixels.toInt()
         if (whole == 0) return
         pixels -= whole

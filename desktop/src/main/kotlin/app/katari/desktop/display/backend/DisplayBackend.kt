@@ -22,4 +22,11 @@ interface DisplayBackend {
      * read them. One collection at a time per window: share it.
      */
     fun touchpadPinches(window: Window): Flow<TouchpadPinch>?
+
+    /**
+     * Scrolls [window], a shown window that Compose draws, by the display's own account of scrolling until closed:
+     * content follows a touchpad's fingers and glides on after a flick, where the window toolkit knows only whole
+     * wheel notches. Null where the display's scrolling can't be read, and the toolkit's stays.
+     */
+    fun preciseScrolling(window: Window): AutoCloseable?
 }
