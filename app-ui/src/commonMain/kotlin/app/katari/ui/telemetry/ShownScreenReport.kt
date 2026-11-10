@@ -11,17 +11,17 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 
 /**
  * Tells telemetry what [navigator] shows as it changes, so that crash reports say where they happened: the screen on
- * top, or for the home screen its [homeTab], the type of the entry an [EntryTypeScreen] is about, and the window's
+ * top, or for the home screen its [homeTab], the type of the entry it is about from [entryTypes], and the window's
  * density.
  */
 @Composable
-fun ShownScreenReport(navigator: Navigator, homeTab: () -> HomeScreenTabs?) {
+fun ShownScreenReport(navigator: Navigator, entryTypes: ShownEntryTypes, homeTab: () -> HomeScreenTabs?) {
     val density = LocalDensity.current.density
-    LaunchedEffect(navigator, density) {
+    LaunchedEffect(navigator, entryTypes, density) {
         snapshotFlow {
             val screen = navigator.lastItem
             val name = (if (screen is HomeScreen) homeTab()?.name else null) ?: screen::class.simpleName.orEmpty()
-            name to (screen as? EntryTypeScreen)?.entryType
+            name to entryTypes[screen]
         }.collect { (name, entryType) -> Telemetry.setShownScreen(name, entryType?.name?.lowercase(), density) }
     }
 }
