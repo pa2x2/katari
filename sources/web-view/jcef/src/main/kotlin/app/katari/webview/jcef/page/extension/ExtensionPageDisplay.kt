@@ -9,6 +9,7 @@ import org.cef.handler.CefNativeRenderHandler
 import org.cef.handler.CefRenderHandlerAdapter
 import org.cef.handler.CefScreenInfo
 import org.cef.misc.CefRange
+import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
@@ -17,7 +18,7 @@ import java.awt.event.MouseWheelEvent
 
 /**
  * Where an extension page's browser paints and what it asks of the screen: while the page is hidden, nowhere, at a
- * desktop window's size ([UnpaintedView]); while a dialog of the app's shows it, the dialog's [frame], at the dialog's
+ * desktop window's size or the one it was [given][resizeHidden] ([UnpaintedView]); while a dialog of the app's shows it, the dialog's [frame], at the dialog's
  * size, with the dialog's mouse and keys going to the browser. The page keeps its document, scripts and bridges
  * either way, only being laid out again at its new size. Shown, hidden and given input on the main thread; Chromium
  * calls in on threads of its own.
@@ -44,6 +45,12 @@ internal class ExtensionPageDisplay :
         get() = frame?.size?.scale ?: 1.0
 
     fun show(): PageFrame = PageFrame().also { frame = it }
+
+    /** The hidden page's window is [width] by [height] CSS pixels from now on. */
+    fun resizeHidden(width: Int, height: Int) {
+        hidden.size = Dimension(width, height)
+        if (frame == null) browser?.wasResized(width, height)
+    }
 
     fun hide() {
         val shown = frame ?: return
