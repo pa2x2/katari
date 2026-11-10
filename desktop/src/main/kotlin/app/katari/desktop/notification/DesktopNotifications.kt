@@ -26,9 +26,10 @@ import java.util.concurrent.ConcurrentHashMap
  * Answering a notification by opening something brings the window forward with the activation token the desktop sent,
  * as a later launch of the app does.
  *
- * Desktops keep no settings for an app's kinds of notification, as Android does for its channels, so the app keeps
- * them in [preferences]: a notification of a kind turned off isn't shown, and turning a kind off takes away what shows
- * of it. The work it tells of goes on, as where the desktop has no notification service.
+ * Desktops keep no settings for an app's kinds of notification, as Android does for the app and its channels, so the
+ * app keeps them in [preferences]: with notifications turned off, or of a kind turned off, a notification isn't shown,
+ * and turning either off takes away what shows. The work it tells of goes on, as where the desktop has no notification
+ * service.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -51,9 +52,15 @@ class DesktopNotifications(
     private val shownKinds = ConcurrentHashMap<String, NotificationKind>()
     private val watchedKinds = ConcurrentHashMap.newKeySet<NotificationKind>()
 
+    init {
+        scope.launch {
+            preferences.enabled.changes().filter { !it }.collect { shownKinds.keys.forEach(::withdraw) }
+        }
+    }
+
     /**
-     * Shows [notification] under [key], in place of the one shown under it. A notification of a kind turned off takes
-     * away the one shown under [key] instead.
+     * Shows [notification] under [key], in place of the one shown under it. With notifications or the notification's
+     * kind turned off, it takes away the one shown under [key] instead.
      */
     fun show(key: String, notification: DesktopNotification) {
         val shows = preferences.shows(notification.kind)
@@ -62,7 +69,7 @@ class DesktopNotifications(
                 shows.changes().filter { !it }.collect { withdrawAll(notification.kind) }
             }
         }
-        if (!shows.get()) {
+        if (!preferences.enabled.get() || !shows.get()) {
             withdraw(key)
             return
         }

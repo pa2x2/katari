@@ -14,10 +14,12 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.notifications.NotificationChoices
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
 /**
- * A switch for each kind of notification, where the app rather than the system keeps them (the desktop), grouped as
- * Android groups its channels. Each profile's library updates are a kind of their own, as on Android.
+ * Where the app rather than the system keeps the notification settings (the desktop): one switch for all of them, and
+ * while that is on, a switch for each kind, grouped as Android groups its channels. Each profile's library updates are
+ * a kind of their own, as on Android.
  */
 class SettingsNotificationsScreen : SearchableSettings() {
 
@@ -33,7 +35,13 @@ class SettingsNotificationsScreen : SearchableSettings() {
         val graph = LocalAppUiGraph.current
         val choices = graph.appNotifications.choices as? NotificationChoices.InApp ?: return emptyList()
         val preferences = graph.notificationPreferences
+        val enabled by preferences.enabled.collectPreferenceAsState()
         val profiles by graph.profileManager.visibleProfiles.collectAsState()
+        val enabledSwitch = Preference.PreferenceItem.SwitchPreference(
+            preference = preferences.enabled,
+            title = stringResource(MR.strings.pref_notifications_enabled),
+        )
+        if (!enabled) return listOf(enabledSwitch)
         val libraryUpdates = profiles.map { profile ->
             val title = if (profiles.size > 1) {
                 stringResource(MR.strings.channel_library_updates_profile, profile.name)
@@ -50,7 +58,7 @@ class SettingsNotificationsScreen : SearchableSettings() {
         }
         val other = stringResource(MR.strings.notification_kinds_other) to
             choices.kinds.filter { it.group == null }.map { preferences.switch(it, stringResource(it.title)) }
-        return (grouped + other)
+        return listOf(enabledSwitch) + (grouped + other)
             .filter { (_, rows) -> rows.isNotEmpty() }
             .map { (title, rows) -> Preference.PreferenceGroup(title = title, preferenceItems = rows) }
     }

@@ -13,6 +13,7 @@ internal val SystemScopes = PreferenceScopeTable {
     device(DeviceBound.HARDWARE, "pref_hardware_bitmap_threshold")
     device(DeviceBound.INSTALLED, "extension_installer")
 
-    // Which kinds of notification this desktop shows, as Android keeps per device for each channel
+    // Whether this desktop shows notifications, and which kinds, as Android keeps per device for the app and each channel
+    device(DeviceBound.NOTIFICATIONS, "notifications_enabled")
     devicePrefix(DeviceBound.NOTIFICATIONS, "notification_shown_")
 }
