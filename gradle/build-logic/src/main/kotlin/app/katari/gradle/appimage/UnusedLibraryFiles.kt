@@ -63,6 +63,15 @@ data class UnusedLibraryFiles(
                 unused = """com/sun/jna/(?!linux-x86-64/)[^/]+/(lib)?jnidispatch\..+""",
                 needed = listOf("com/sun/jna/linux-x86-64/libjnidispatch.so"),
             ),
+            // ICU's data for sorting text, for transliteration, and the dictionaries that find the words of languages
+            // written without spaces. The app and extensions use ICU to format and parse dates, numbers and lists,
+            // which reads none of it.
+            UnusedLibraryFiles(
+                group = "com.ibm.icu",
+                name = "icu4j",
+                unused = """com/ibm/icu/impl/data/icudata/((coll|translit)/.+|brkitr/.+\.dict)""",
+                needed = emptyList(),
+            ),
         )
     }
 }
