@@ -160,7 +160,7 @@ private fun WindowContent(
                             content()
                         }
                         ExtensionDialogsHost(graph.windowExtensionDialogs)
-                        SignInPromptHost(graph.signInPrompts, graph.systemSignIn)
+                        SignInPromptHost(graph.signInPrompts, graph.systemSignIn, graph.appPresence)
                         WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
                     }
                 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.DialogProperties
+import app.katari.desktop.presence.AppPresence
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Visibility
 import app.katari.icons.materialsymbols.rounded.VisibilityOff
@@ -36,17 +37,18 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /** Shows the sign-in check [prompts] waits on, if any, as a dialog in the window. */
 @Composable
-internal fun SignInPromptHost(prompts: SignInPrompts, signIn: SystemSignIn) {
+internal fun SignInPromptHost(prompts: SignInPrompts, signIn: SystemSignIn, presence: AppPresence) {
     val request by prompts.current.collectAsState()
-    request?.let { key(it) { SignInDialog(it, signIn) } }
+    request?.let { key(it) { SignInDialog(it, signIn, presence) } }
 }
 
 /**
  * Checks the sign-in for [request]: it shows what the system says and asks, sends the password once the system asks
  * for it, and tries again after a wrong one. Closing the dialog stops the check, which the system then doesn't count.
+ * Where there's a fingerprint reader the check doesn't read itself, a recognized finger signs in as well.
  */
 @Composable
-private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn) {
+private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn, presence: AppPresence) {
     val state = remember { SignInCheckState() }
     val password = rememberTextFieldState()
     val focus = remember { FocusRequester() }
@@ -69,6 +71,8 @@ private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn) {
             }
         }
     }
+    val fingerprint = remember { FingerprintPromptState() }
+    ReadsFingerprint(signIn.fingerprintReader, fingerprint, presence, onRecognized = { request.answer.complete(true) })
     val question = state.question
     LaunchedEffect(question) {
         if (question != null) focus.requestFocus()
@@ -99,6 +103,7 @@ private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn) {
             request.detail?.let { Text(it) }
             Text(stringResource(MR.strings.sign_in_check_line, signIn.account))
             state.messages.forEach { InfoRow(it.text) }
+            fingerprintLine(fingerprint)?.let { InfoRow(it) }
             SecureTextField(
                 state = password,
                 modifier = Modifier.focusRequester(focus),

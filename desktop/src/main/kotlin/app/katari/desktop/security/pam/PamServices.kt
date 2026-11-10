@@ -10,9 +10,13 @@ import kotlin.io.path.isRegularFile
  * resort. Null where none is configured.
  */
 internal fun findPamService(configDirectories: List<Path> = PAM_CONFIG_DIRECTORIES): String? =
-    SERVICES.firstOrNull { service -> configDirectories.any { it.resolve(service).isRegularFile() } }
+    SERVICES.firstOrNull { pamServiceFile(it, configDirectories) != null }
+
+/** The file Linux-PAM reads [service] from, the first of [configDirectories] that has it; null where none does. */
+internal fun pamServiceFile(service: String, configDirectories: List<Path>): Path? =
+    configDirectories.map { it.resolve(service) }.firstOrNull { it.isRegularFile() }
 
 private val SERVICES = listOf("system-auth", "common-auth", "login")
 
 // Where Linux-PAM reads services: the administrator's, then the distribution's (openSUSE keeps its in /usr/etc)
-private val PAM_CONFIG_DIRECTORIES = listOf("/etc/pam.d", "/usr/lib/pam.d", "/usr/etc/pam.d").map(Path::of)
+internal val PAM_CONFIG_DIRECTORIES = listOf("/etc/pam.d", "/usr/lib/pam.d", "/usr/etc/pam.d").map(Path::of)
