@@ -4,7 +4,7 @@
 #   docker buildx build --platform linux/amd64,linux/arm64 -f features/sync/server/Dockerfile features/sync/server/build/install/katari-sync-server
 
 # eclipse-temurin:21-jre (Ubuntu 26.04), pinned to the multi-platform index so both architectures get the same build.
-FROM eclipse-temurin:21-jre@sha256:0b99b3376fbb50dbf9c0af8535fdd5b8eb0d3fdfc8b1e4967f383b6919f6901a
+FROM eclipse-temurin:25-jre@sha256:ecdc0adb37bde1a281c4d245a3cd535004b1fc8322d560f5b09463b248c81df0
 
 COPY . /opt/katari-sync-server
 
