@@ -6,6 +6,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredrounded.ChromeReaderMode
 import app.katari.icons.materialsymbols.automirroredrounded.Label
 import app.katari.icons.materialsymbols.rounded.CollectionsBookmark
+import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.Explore
 import app.katari.icons.materialsymbols.rounded.Extension
 import app.katari.icons.materialsymbols.rounded.History
@@ -35,6 +36,7 @@ internal fun DataGroup.title(): String = stringResource(
         DataGroup.STATISTICS -> MR.strings.sync_choice_statistics
         DataGroup.TITLE_CHOICES -> MR.strings.sync_choice_title_choices
         DataGroup.EXTENSION_REPOSITORIES -> MR.strings.sync_choice_repositories
+        DataGroup.INSTALLED_EXTENSIONS -> MR.strings.sync_choice_installed_extensions
         DataGroup.FONTS -> MR.strings.sync_choice_fonts
         DataGroup.COVERS -> MR.strings.sync_choice_covers
         DataGroup.CATEGORIES -> MR.strings.sync_choice_categories
@@ -46,6 +48,7 @@ internal fun DataGroup.summary(): String? = when (this) {
     DataGroup.HISTORY -> MR.strings.sync_choice_history_summary
     DataGroup.STATISTICS -> MR.strings.sync_choice_statistics_summary
     DataGroup.TITLE_CHOICES -> MR.strings.sync_choice_title_choices_summary
+    DataGroup.INSTALLED_EXTENSIONS -> MR.strings.sync_choice_installed_extensions_summary
     DataGroup.FONTS -> MR.strings.sync_choice_fonts_summary
     DataGroup.CATEGORIES -> MR.strings.sync_choice_categories_summary
     DataGroup.EXTENSION_REPOSITORIES, DataGroup.COVERS -> null
@@ -57,6 +60,7 @@ internal val DataGroup.icon: ImageVector
         DataGroup.STATISTICS -> MaterialSymbols.Rounded.QueryStats
         DataGroup.TITLE_CHOICES -> MaterialSymbols.Rounded.Tune
         DataGroup.EXTENSION_REPOSITORIES -> MaterialSymbols.Rounded.Extension
+        DataGroup.INSTALLED_EXTENSIONS -> MaterialSymbols.Rounded.Devices
         DataGroup.FONTS -> MaterialSymbols.Rounded.TextFields
         DataGroup.COVERS -> MaterialSymbols.Rounded.Image
         DataGroup.CATEGORIES -> MaterialSymbols.AutoMirroredRounded.Label

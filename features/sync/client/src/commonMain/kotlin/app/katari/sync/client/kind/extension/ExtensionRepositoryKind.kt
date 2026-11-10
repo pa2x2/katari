@@ -15,7 +15,7 @@ import app.katari.sync.client.record.SyncedKind
 
 /**
  * Extension repositories, keyed by index URL. Local ref: `[index_url]`. Adding and removing one is captured;
- * refreshing its index is not. Installed extensions never sync.
+ * refreshing its index is not. Which extensions each device installed is [InstalledExtensionKind].
  */
 object ExtensionRepositoryKind : SyncedKind<ExtensionRepositoryPayload>(
     "extension.repository",

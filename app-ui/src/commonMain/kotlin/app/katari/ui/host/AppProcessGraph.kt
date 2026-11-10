@@ -3,6 +3,7 @@ package app.katari.ui.host
 import app.katari.core.metro.AppCoroutineScope
 import app.katari.core.metro.StartupWarmup
 import app.katari.sync.client.capture.SyncCapture
+import app.katari.sync.client.extension.InstalledExtensionLog
 import app.katari.sync.client.trigger.SyncTriggers
 import app.katari.sync.ui.notice.SyncNotices
 import app.katari.ui.buildinfo.AppBuild
@@ -36,6 +37,7 @@ interface AppProcessGraph : MigrationGraph {
     val syncCapture: SyncCapture
     val syncTriggers: SyncTriggers
     val syncNotices: SyncNotices
+    val installedExtensionLog: InstalledExtensionLog
 
     /**
      * Profile copy and backup derive preference ownership from every registered owner, so owners register at startup

@@ -3450,6 +3450,8 @@
     <string name="sync_choice_title_choices">Title choices</string>
     <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title</string>
     <string name="sync_choice_repositories">Extension repositories</string>
+    <string name="sync_choice_installed_extensions">Installed extensions</string>
+    <string name="sync_choice_installed_extensions_summary">Offers to install or uninstall what you did on your other devices</string>
     <string name="sync_choice_fonts">Imported fonts</string>
     <string name="sync_choice_fonts_summary">Fonts added for the book reader</string>
     <string name="sync_choice_covers">Custom covers</string>

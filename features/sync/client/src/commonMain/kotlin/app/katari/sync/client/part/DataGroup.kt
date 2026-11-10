@@ -11,6 +11,9 @@ enum class DataGroup {
     /** The choices made for one title: its reader, player, download, translation, scanlator and intro choices. */
     TITLE_CHOICES,
     EXTENSION_REPOSITORIES,
+
+    /** Which extensions each device installed and uninstalled, which the others are offered to do too. */
+    INSTALLED_EXTENSIONS,
     FONTS,
     COVERS,
 
