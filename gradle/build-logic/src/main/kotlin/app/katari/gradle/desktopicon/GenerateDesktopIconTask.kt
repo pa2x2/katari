@@ -67,9 +67,7 @@ abstract class GenerateDesktopIconTask : DefaultTask() {
             appendLine("<g transform=\"scale(${svgNumber(scaleX)} ${svgNumber(scaleY)})\">${layer.content}</g>")
         }
     }
-
-    private companion object {
-        // The logo's corner radius as a share of its side: 30 of 128
-        const val LOGO_CORNER = 30.0 / 128.0
-    }
 }
+
+/** The corner radius of the rounded square the app's logo is drawn in, as a share of its side: 30 of 128. */
+internal const val LOGO_CORNER = 30.0 / 128.0

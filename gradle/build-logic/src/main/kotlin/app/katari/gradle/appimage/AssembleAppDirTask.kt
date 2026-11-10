@@ -25,8 +25,9 @@ import javax.inject.Inject
  *
  * - `runtime/`, the runtime [LinkAppImageRuntimeTask] links, which carries Chromium for the app's web view;
  * - `lib/`, the app's jars, stored uncompressed under names that tell apart jars which share a file name;
- * - `AppRun`, which the AppImage starts, running [mainClass] with the jars on the class path in their order, and with
- *   the class data the app keeps for this build in its cache folder (see [appRun]);
+ * - `AppRun`, which the AppImage starts, running [mainClass] with the jars on the class path in their order, with the
+ *   class data the app keeps for this build in its cache folder, and showing [splash] meanwhile (see [appRun]);
+ * - `splash.png`, that image;
  * - the desktop entry and icon, named after [applicationId], which the desktop shows for an integrated AppImage.
  */
 abstract class AssembleAppDirTask : DefaultTask() {
@@ -68,6 +69,11 @@ abstract class AssembleAppDirTask : DefaultTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val icon: RegularFileProperty
 
+    /** A PNG, shown at its size in pixels in the middle of the screen from the launch until the app's window opens. */
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val splash: RegularFileProperty
+
     @get:OutputDirectory
     abstract val appDir: DirectoryProperty
 
@@ -90,6 +96,7 @@ abstract class AssembleAppDirTask : DefaultTask() {
         val lib = appDir.resolve(LIB).also { it.mkdirs() }
         jarFiles.zip(names).forEach { (jar, name) -> copyJarStored(jar, lib.resolve(name)) }
 
+        splash.get().asFile.copyTo(appDir.resolve(SPLASH))
         appDir.resolve("AppRun").apply {
             writeText(appRun(names, classDataFingerprint(appDir, names)))
             setExecutable(true, false)
@@ -104,10 +111,17 @@ abstract class AssembleAppDirTask : DefaultTask() {
      * build in its cache folder, laid out as the app's `ClassDataArchive` reads it: the JVM records the classes of each
      * run in `sessions/`, named after its process, and maps `archive.jsa`, once the app has built it from them, instead
      * of loading those classes from the jars again. Without a cache folder it can write in, the app runs without.
+     *
+     * The splash is the Java launcher's own, which shows it before it starts the JVM and takes it down when the app's
+     * first window opens or the process ends. The launcher keeps the option to itself, so the Java commands the app
+     * rebuilds from its own JVM's options, such as the class data archive's build, show none. Nor does a launch the
+     * running app will answer, which ends before any window opens: the app keeps its `LinuxSingleInstance` socket in
+     * its runtime folder while it answers launches. A killed app leaves the socket behind, which costs the next launch
+     * its splash and nothing else.
      */
     private fun appRun(names: List<String>, fingerprint: String): String {
         val classPath = names.joinToString(":") { "\$dir/$LIB/$it" }
-        val command = listOf("\"\$dir/$RUNTIME/bin/java\"") +
+        val command = listOf("\"\$dir/$RUNTIME/bin/java\"", "\${splash:+\"-splash:\$splash\"}") +
             jvmArguments.get().map(::shellQuoted) +
             listOf(
                 // Each of these three is left out where the variable it reads is empty
@@ -130,6 +144,11 @@ abstract class AssembleAppDirTask : DefaultTask() {
             |mkdir -p "${'$'}classData/sessions" 2>/dev/null || classData=
             |archive="${'$'}{classData:+${'$'}classData/archive.jsa}"
             |[ -f "${'$'}archive" ] || archive=
+            |# No splash on a launch the running app answers, which opens no window: its socket is there while it runs
+            |splash="${'$'}dir/$SPLASH"
+            |case "${'$'}XDG_RUNTIME_DIR" in
+            |    /*) [ -S "${'$'}XDG_RUNTIME_DIR/${directoryName.get()}/$INSTANCE_SOCKET" ] && splash= ;;
+            |esac
             |exec ${command.joinToString(" \\\n|    ")}
             |
         """.trimMargin()
@@ -167,6 +186,10 @@ abstract class AssembleAppDirTask : DefaultTask() {
     private companion object {
         const val RUNTIME = "runtime"
         const val LIB = "lib"
+        const val SPLASH = "splash.png"
+
+        // The file name of the socket the app's LinuxSingleInstance answers later launches on
+        const val INSTANCE_SOCKET = "instance.socket"
         const val FINGERPRINT_BYTES = 8
 
         // The system property the app's ClassDataArchive reads the build's class data folder from
