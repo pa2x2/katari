@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
+import androidx.compose.ui.geometry.Rect
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.SubtitlePosition
@@ -37,6 +38,32 @@ internal data class VideoSubtitleLayout(
     val marginPx: Float,
 ) {
     val areaCentreX: Float get() = areaLeft + areaWidth / 2f
+
+    /** Where a stack [height] tall resting in [row] has its top, before the shift. */
+    fun restingTop(row: SubtitlePosition.Row, height: Float): Float = when (row) {
+        SubtitlePosition.Row.TOP -> restTop
+        SubtitlePosition.Row.MIDDLE -> restMiddle - height / 2f
+        SubtitlePosition.Row.BOTTOM -> restBottom - height
+    }
+
+    /** Where a cue, or a stack, [width] wide resting in [column] has its left edge, before the shift. */
+    fun restingLeft(column: SubtitlePosition.Column, width: Float): Float = when (column) {
+        SubtitlePosition.Column.LEFT -> restLeft
+        SubtitlePosition.Column.CENTER -> areaCentreX - width / 2f
+        SubtitlePosition.Column.RIGHT -> restRight - width
+    }
+
+    /** [bounds] moved the least that lays it [marginPx] inside the player, or to that inset's top left if larger. */
+    fun held(bounds: Rect): Rect = bounds.translate(
+        translateX = heldBy(bounds.left, bounds.width, marginPx, playerWidth - marginPx),
+        translateY = heldBy(bounds.top, bounds.height, marginPx, playerHeight - marginPx),
+    )
+}
+
+private fun heldBy(start: Float, size: Float, min: Float, max: Float): Float = when {
+    start < min || size > max - min -> min - start
+    start + size > max -> max - (start + size)
+    else -> 0f
 }
 
 /** [gapPx] keeps band subtitles off the picture's edge and every subtitle off the player's. */

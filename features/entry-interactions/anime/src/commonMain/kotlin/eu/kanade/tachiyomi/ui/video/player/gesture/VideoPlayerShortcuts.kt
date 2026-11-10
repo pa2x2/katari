@@ -201,6 +201,37 @@ internal object VideoPlayerShortcuts {
             ShortcutKeys.Chord(Key.DirectionDown, "↓", ctrl = true),
         )
 
+    /**
+     * The arrows move the subtitles by a step [dx] across and [dy] down, with Shift by a bigger one when [far], while
+     * the subtitle editor is open, where they neither seek nor set the volume. A focused control of its panel, such as
+     * a slider, keeps them.
+     */
+    @Composable
+    fun moveSubtitles(dx: Int, dy: Int, far: Boolean): KeyboardShortcut {
+        val (key, glyph) = when {
+            dx < 0 -> Key.DirectionLeft to "←"
+            dx > 0 -> Key.DirectionRight to "→"
+            dy < 0 -> Key.DirectionUp to "↑"
+            else -> Key.DirectionDown to "↓"
+        }
+        val label = when (key) {
+            Key.DirectionLeft ->
+                MR.strings.anime_shortcut_subtitles_left to MR.strings.anime_shortcut_subtitles_far_left
+            Key.DirectionRight ->
+                MR.strings.anime_shortcut_subtitles_right to MR.strings.anime_shortcut_subtitles_far_right
+            Key.DirectionUp ->
+                MR.strings.anime_shortcut_subtitles_up to MR.strings.anime_shortcut_subtitles_far_up
+            else ->
+                MR.strings.anime_shortcut_subtitles_down to MR.strings.anime_shortcut_subtitles_far_down
+        }.let { (near, further) -> if (far) further else near }
+        return shortcut(
+            "player.moveSubtitles.$dx.$dy.$far",
+            stringResource(label),
+            ShortcutKeys.Chord(key, glyph, shift = far),
+            beforeFocus = false,
+        )
+    }
+
     private fun shortcut(id: String, label: String, vararg keys: ShortcutKeys, beforeFocus: Boolean = true) =
         KeyboardShortcut(
             id = id,

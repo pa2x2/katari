@@ -46,14 +46,17 @@ internal sealed interface PlacedSubtitle<out T : MeasuredSubtitleText> {
  * [cues] where they are drawn, in their order, and [resting], the bounds of the ones the app places, null when the file
  * places every cue.
  */
-internal class PlacedSubtitles<out T : MeasuredSubtitleText>(val cues: List<PlacedSubtitle<T>>, val resting: Rect?)
+internal class PlacedSubtitles<out T : MeasuredSubtitleText>(val cues: List<PlacedSubtitle<T>>, val resting: Rect?) {
+    /** The bounds of every cue, null when none is drawn. */
+    val bounds: Rect? get() = cues.bounds()
+}
 
 /**
- * Places [cues] as [layout] says, in a drawing [boundsWidth] pixels wide. Cues their file places go in the layout's area
- * as Media3's subtitle view placed them, kept inside it. The rest stack up, each above the one before it, and the stack
- * rests in the layout's cell; their lines lean to the cell's side. A text cue keeps a padding of an eighth of the text
- * size on either side, and wraps to the area, or to its own width when the file gives one. [measure] lays a cue's text
- * out [width] pixels wide, only as wide as its widest line unless [fixedWidth].
+ * Places [cues] as [layout] says, in a drawing [boundsWidth] pixels wide. Cues their file places go in the layout's
+ * area as Media3's subtitle view placed them, kept inside it. The rest stack up, each above the one before it, and the
+ * stack rests in the layout's cell; their lines lean to the cell's side. A text cue keeps a padding of an eighth of the
+ * text size on either side, and wraps to the area, or to its own width when the file gives one. [measure] lays a cue's
+ * text out [width] pixels wide, only as wide as its widest line unless [fixedWidth].
  *
  * Every cue is then moved by the layout's shift and held inside the player: the stack as one block, so its lines
  * neither part nor cover each other, and each placed cue alone.
@@ -71,13 +74,6 @@ internal fun <T : MeasuredSubtitleText> placeSubtitles(
         bottom = layout.areaTop + layout.areaHeight,
     )
     if (area.width <= 0f || area.height <= 0f) return PlacedSubtitles(emptyList(), null)
-    val player = SubtitleArea(
-        left = layout.marginPx,
-        top = layout.marginPx,
-        right = boundsWidth - layout.marginPx,
-        bottom = layout.playerHeight - layout.marginPx,
-    )
-
     // The stack is built upward from 0 and moved to its cell once its height is known
     var stackTop = 0f
     val placed = cues.mapNotNull { cue ->
@@ -97,12 +93,8 @@ internal fun <T : MeasuredSubtitleText> placeSubtitles(
 
     val stack = placed.filter { it.resting }.map { it.subtitle }.bounds()
     val stackShift = stack?.let { bounds ->
-        val restingTop = when (layout.position.row) {
-            SubtitlePosition.Row.TOP -> layout.restTop
-            SubtitlePosition.Row.MIDDLE -> layout.restMiddle - bounds.height / 2f
-            SubtitlePosition.Row.BOTTOM -> layout.restBottom - bounds.height
-        }
-        player.held(bounds.translate(layout.shiftX, layout.shiftY + restingTop - bounds.top)) - bounds.topLeft
+        val restingTop = layout.restingTop(layout.position.row, bounds.height)
+        layout.held(bounds.translate(layout.shiftX, layout.shiftY + restingTop - bounds.top)).topLeft - bounds.topLeft
     } ?: Offset.Zero
     return PlacedSubtitles(
         cues = placed.map { cue ->
@@ -111,7 +103,7 @@ internal fun <T : MeasuredSubtitleText> placeSubtitles(
             } else {
                 val shifted = cue.subtitle.movedBy(Offset(layout.shiftX, layout.shiftY))
                 val bounds = shifted.bounds()
-                shifted.movedBy(player.held(bounds) - bounds.topLeft)
+                shifted.movedBy(layout.held(bounds).topLeft - bounds.topLeft)
             }
         },
         resting = stack?.translate(stackShift),
@@ -123,18 +115,6 @@ private class Placed<T : MeasuredSubtitleText>(val subtitle: PlacedSubtitle<T>, 
 private class SubtitleArea(val left: Float, val top: Float, val right: Float, val bottom: Float) {
     val width: Float get() = right - left
     val height: Float get() = bottom - top
-
-    /** Where [rect]'s top left goes to move it the least that lays it inside, or its top left when it is too large. */
-    fun held(rect: Rect): Offset = Offset(
-        x = rect.left + heldBy(rect.left, rect.width, left, right),
-        y = rect.top + heldBy(rect.top, rect.height, top, bottom),
-    )
-}
-
-private fun heldBy(start: Float, size: Float, min: Float, max: Float): Float = when {
-    start < min || size > max - min -> min - start
-    start + size > max -> max - (start + size)
-    else -> 0f
 }
 
 /** The text of a cue laid out where it goes across, and its left edge. */
@@ -162,12 +142,9 @@ private fun <T : MeasuredSubtitleText> placeText(
     textWidth += padding * 2
     val position = cue.position
     val left = when {
-        position != null -> maxOf(
-            position.anchor.start((area.width * position.share).roundToInt() + area.left, textWidth.toFloat()),
-            area.left,
-        )
-        column == SubtitlePosition.Column.LEFT -> layout.restLeft
-        column == SubtitlePosition.Column.RIGHT -> layout.restRight - textWidth
+        position != null ->
+            position.anchor.start((area.width * position.share).roundToInt() + area.left, textWidth.toFloat())
+        column != null -> layout.restingLeft(column, textWidth.toFloat())
         else -> (area.width - textWidth) / 2f + area.left
     }.coerceAtLeast(area.left)
     val right = minOf(left + textWidth, area.right)

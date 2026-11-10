@@ -28,7 +28,8 @@ import kotlin.math.roundToInt
  * platform; subtitles an engine draws itself never reach it.
  *
  * [layout] is read while drawing, so what it reads, such as a framing a pinch is changing, redraws the subtitles
- * without composing them again.
+ * without composing them again. [onPlaced] hears where each drawing put them, such as for the subtitle editor to drag
+ * them.
  */
 @Composable
 internal fun VideoSubtitles(
@@ -36,6 +37,7 @@ internal fun VideoSubtitles(
     appearance: VideoSubtitleAppearance,
     layout: (width: Float, height: Float) -> VideoSubtitleLayout,
     modifier: Modifier = Modifier,
+    onPlaced: ((PlacedSubtitles<*>) -> Unit)? = null,
 ) {
     val measurer = rememberTextMeasurer(cacheSize = TEXT_LAYOUT_CACHE_SIZE)
     val images = remember(cues) {
@@ -66,6 +68,7 @@ internal fun VideoSubtitles(
                         ),
                     )
                 }
+                onPlaced?.invoke(placed)
                 placed.cues.forEach { subtitle ->
                     when (subtitle) {
                         is PlacedSubtitle.Text -> drawSubtitleText(

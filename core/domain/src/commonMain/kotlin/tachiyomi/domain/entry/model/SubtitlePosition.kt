@@ -24,6 +24,8 @@ enum class SubtitlePosition(val row: Row, val column: Column, val key: String) {
     enum class Column { LEFT, CENTER, RIGHT }
 
     companion object {
+        fun of(row: Row, column: Column): SubtitlePosition = entries.first { it.row == row && it.column == column }
+
         /** Null for a key this version doesn't know, which rests the subtitles at the bottom centre. */
         fun fromKey(key: String): SubtitlePosition? = entries.firstOrNull { it.key == key }
     }

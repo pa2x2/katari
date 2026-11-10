@@ -23,6 +23,13 @@ internal data class VideoSubtitleAppearance(
     val isCustomized: Boolean
         get() = normalized() != VideoSubtitleAppearance()
 
+    /** The subtitles sit where [position] rests them, not dragged off it. */
+    val restsInPlace: Boolean
+        get() = offsetX == 0f && offsetY == 0f
+
+    fun restingIn(position: SubtitlePosition): VideoSubtitleAppearance =
+        copy(position = position, offsetX = 0f, offsetY = 0f)
+
     /** The background colour with its opacity as the alpha. */
     val backgroundArgb: Int
         get() {

@@ -1880,7 +1880,6 @@
     <string name="anime_download_automatic">Automatic</string>
     <string name="anime_playback_subtitle_settings">Subtitle settings</string>
     <string name="anime_playback_subtitle_position">Position</string>
-    <string name="anime_playback_subtitle_style">Style</string>
     <string name="anime_playback_subtitle_size">Size</string>
     <string name="anime_playback_subtitle_text_color">Text color</string>
     <string name="anime_playback_subtitle_background_color">Background color</string>
@@ -1894,6 +1893,21 @@
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
     <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
     <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
+    <string name="anime_playback_subtitle_drag_hint">Drag to move</string>
+    <string name="anime_playback_subtitle_drag_keys_hint">Drag or use the arrow keys to move, Shift for bigger steps</string>
+    <string name="anime_playback_subtitle_guide_center">Center</string>
+    <string name="anime_playback_subtitle_guide_top">Top</string>
+    <string name="anime_playback_subtitle_guide_middle">Middle</string>
+    <string name="anime_playback_subtitle_guide_usual">Usual height</string>
+    <string name="anime_playback_subtitle_position_top_left">Top left</string>
+    <string name="anime_playback_subtitle_position_top_center">Top center</string>
+    <string name="anime_playback_subtitle_position_top_right">Top right</string>
+    <string name="anime_playback_subtitle_position_middle_left">Middle left</string>
+    <string name="anime_playback_subtitle_position_middle_center">Middle center</string>
+    <string name="anime_playback_subtitle_position_middle_right">Middle right</string>
+    <string name="anime_playback_subtitle_position_bottom_left">Bottom left</string>
+    <string name="anime_playback_subtitle_position_bottom_center">Bottom center</string>
+    <string name="anime_playback_subtitle_position_bottom_right">Bottom right</string>
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
@@ -1975,6 +1989,14 @@
     <string name="anime_shortcut_pan_right">Pan right</string>
     <string name="anime_shortcut_pan_up">Pan up</string>
     <string name="anime_shortcut_pan_down">Pan down</string>
+    <string name="anime_shortcut_subtitles_left">Move subtitles left</string>
+    <string name="anime_shortcut_subtitles_right">Move subtitles right</string>
+    <string name="anime_shortcut_subtitles_up">Move subtitles up</string>
+    <string name="anime_shortcut_subtitles_down">Move subtitles down</string>
+    <string name="anime_shortcut_subtitles_far_left">Move subtitles further left</string>
+    <string name="anime_shortcut_subtitles_far_right">Move subtitles further right</string>
+    <string name="anime_shortcut_subtitles_far_up">Move subtitles further up</string>
+    <string name="anime_shortcut_subtitles_far_down">Move subtitles further down</string>
     <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
     <string name="anime_playback_keeps_screen_awake">Playing a video</string>
     <string name="anime_skip_intro">Skip intro</string>
