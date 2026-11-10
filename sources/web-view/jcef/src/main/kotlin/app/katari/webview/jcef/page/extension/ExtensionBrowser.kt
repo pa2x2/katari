@@ -12,19 +12,18 @@ import app.katari.webview.jcef.devtools.evaluate
 import app.katari.webview.jcef.page.HiddenBrowser
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
+import app.katari.webview.jcef.runtime.RunningChromium
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import logcat.LogPriority
-import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import tachiyomi.core.common.util.system.logcat
 import java.util.Base64
@@ -64,9 +63,9 @@ internal class ExtensionBrowser(
     @Volatile
     private var settings = settings
 
-    // Once Chromium has a browser for the page, which may have set cookies
+    // The Chromium the page opened a browser on, which may have set cookies
     @Volatile
-    private var opened = false
+    private var chromium: RunningChromium? = null
 
     private val job = scope.launch { run() }
 
@@ -152,7 +151,7 @@ internal class ExtensionBrowser(
         job.cancel()
         // An extension may take its view's end for its page's cookies being in the app's store, as on Android, where
         // the web view keeps them in the app's own. Lost Chromium has none to read.
-        if (opened && !runtime.isLost.value) {
+        if (chromium?.isLost == false) {
             runBlocking { withTimeoutOrNull(COOKIES_TIMEOUT) { cookies.awaitReadBack() } }
                 ?: logcat(LogPriority.WARN) { "A closed extension page's cookies weren't read in $COOKIES_TIMEOUT" }
         }
@@ -168,26 +167,26 @@ internal class ExtensionBrowser(
         do {
             first = calls.receiveCatching().getOrNull() ?: return
         } while (!first.opens)
-        val app = try {
+        val chromium = try {
             runtime.start()
         } catch (e: JcefStartException) {
             logcat(LogPriority.ERROR, e) { "An extension page couldn't open" }
             if (isOpen) events.onPageGone(crashed = true)
             return
         }
-        opened = true
+        this.chromium = chromium
         logcat(LogPriority.INFO) { "Opening an extension page" }
         val clock = TimeSource.Monotonic.markNow()
         try {
-            coroutineScope { show(app, first, pageScope = this) }
+            coroutineScope { show(chromium, first, pageScope = this) }
         } finally {
             logcat(LogPriority.INFO) { "Closed an extension page after ${clock.elapsedNow().inWholeMilliseconds} ms" }
         }
     }
 
-    private suspend fun show(app: CefApp, first: Call, pageScope: CoroutineScope) {
+    private suspend fun show(chromium: RunningChromium, first: Call, pageScope: CoroutineScope) {
         val created = CompletableDeferred<CefBrowser>()
-        val client = app.createClient()
+        val client = chromium.app.createClient()
         ExtensionClient(
             page = this,
             events = events,
@@ -213,7 +212,7 @@ internal class ExtensionBrowser(
             } ?: logcat(LogPriority.WARN) { "An extension page wasn't set up in time" }
             pageScope.launch {
                 // The browser goes with Chromium's server, which then tells JCEF nothing of it
-                runtime.isLost.first { it }
+                chromium.awaitLost()
                 logcat(LogPriority.ERROR) { "An extension page ended with Chromium" }
                 if (isOpen) events.onPageGone(crashed = true)
                 close()

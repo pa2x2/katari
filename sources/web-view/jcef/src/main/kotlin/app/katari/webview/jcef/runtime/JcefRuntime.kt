@@ -1,32 +1,23 @@
 package app.katari.webview.jcef.runtime
 
-import kotlinx.coroutines.flow.StateFlow
-import org.cef.CefApp
-
 /**
- * Chromium for the desktop web views, through the JCEF of the JetBrains Runtime. Chromium is one per run: the first
- * web view, challenge or extension page that needs it starts it, every caller while it starts waits for the same
- * start, and nothing starts it at app start. It ends with the app, and its helper processes with it.
+ * Chromium for the desktop web views, through the JCEF of the JetBrains Runtime. One Chromium runs at a time: the
+ * first web view, challenge or extension page that needs it starts it, every caller while it starts waits for the same
+ * start, and nothing starts it at app start. It ends with the app, and its helper processes with it. A start that
+ * failed, or a Chromium that was lost, is over, and the next page that needs Chromium starts it anew.
  */
 interface JcefRuntime {
-    /** Whether this run's Java runtime carries JCEF, known without loading Chromium. */
+    /** Whether the Java runtime carries JCEF right now, known without loading Chromium. */
     val presence: JcefPresence
 
-    /** Whether something has started Chromium in this process, whether or not it is still starting. */
-    val hasStarted: Boolean
+    /** Whether Chromium is starting or running in this process. */
+    val isRunning: Boolean
 
     /**
-     * Whether Chromium's server ended while the app ran, as when it crashed or the system ended it. Every page went
-     * with it, and nothing tells them but this.
+     * Chromium, started by this call unless it is starting or running. Throws [JcefStartException] where [presence]
+     * isn't [JcefPresence.Present], when Chromium doesn't start, and after [shutdown].
      */
-    val isLost: StateFlow<Boolean>
-
-    /**
-     * Chromium, started by the first call. Throws [JcefStartException] where [presence] isn't
-     * [JcefPresence.Present], when Chromium doesn't start, once it [is lost][isLost], and after [shutdown]; Chromium
-     * starts once per run, so a failed start fails every later call too.
-     */
-    suspend fun start(): CefApp
+    suspend fun start(): RunningChromium
 
     /**
      * Ends Chromium and its helper processes if it started, waiting a bounded time for them. The app calls it before

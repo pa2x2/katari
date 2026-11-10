@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
- * Chromium's start and shutdown through the JetBrains Runtime's own path, with Chromium's browser process in a process
+ * Chromium's starts and shutdowns through the JetBrains Runtime's own path, with Chromium's browser process in a process
  * of its own: the runtime's `cef_server`, which JCEF starts and talks to over a Unix socket. `JCefAppConfig` gives the
  * runtime's switches and settings, and `CefApp.getInstance` starts the server on a thread of its own, whose end
  * [CefApp.onInitialization] reports. Only a runtime with JCEF can load this object.
@@ -101,7 +101,8 @@ internal object Chromium {
         val processes = ProcessHandle.current().descendants().filter { it.isServerProcess() }.toList()
         app.dispose()
         // The state changes on JCEF's threads but is reported on AWT's event thread, which may be the one ending the
-        // app, so the state is read instead
+        // app, so the state is read instead. It is one for the process, and stays ended through a later Chromium,
+        // whose end only its processes tell
         while (CefApp.getState() != CefApp.CefAppState.TERMINATED && deadline.hasNotPassedNow()) {
             Thread.sleep(POLL_INTERVAL.inWholeMilliseconds)
         }

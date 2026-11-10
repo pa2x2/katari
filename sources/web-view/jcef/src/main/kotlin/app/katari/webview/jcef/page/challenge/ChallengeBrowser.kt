@@ -7,14 +7,13 @@ import app.katari.webview.jcef.devtools.PageUserAgent
 import app.katari.webview.jcef.page.HiddenBrowser
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
+import app.katari.webview.jcef.runtime.RunningChromium
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import okhttp3.HttpUrl
-import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.Executor
@@ -39,7 +38,7 @@ internal class ChallengeBrowser(
 ) {
     /** Runs the page until cancelled, or until Chromium is lost; Chromium starts first if it hasn't. */
     suspend fun run() {
-        val app = try {
+        val chromium = try {
             runtime.start()
         } catch (e: JcefStartException) {
             logcat(LogPriority.ERROR, e) { "A challenge page couldn't open" }
@@ -49,7 +48,7 @@ internal class ChallengeBrowser(
         logcat(LogPriority.INFO) { "Opening a challenge page for ${url.host}" }
         val clock = TimeSource.Monotonic.markNow()
         try {
-            coroutineScope { show(app, scope = this) }
+            coroutineScope { show(chromium, scope = this) }
         } finally {
             logcat(LogPriority.INFO) {
                 "Closed the challenge page for ${url.host} after ${clock.elapsedNow().inWholeMilliseconds} ms"
@@ -57,9 +56,9 @@ internal class ChallengeBrowser(
         }
     }
 
-    private suspend fun show(app: CefApp, scope: CoroutineScope) {
+    private suspend fun show(chromium: RunningChromium, scope: CoroutineScope) {
         val created = CompletableDeferred<CefBrowser>()
-        val client = app.createClient()
+        val client = chromium.app.createClient()
         ChallengeClient(
             headers = headers,
             events = events,
@@ -80,7 +79,7 @@ internal class ChallengeBrowser(
             } ?: logcat(LogPriority.WARN) { "The challenge page wasn't set up in time" }
             browser.loadURL(url.toString())
             // The browser goes with Chromium's server, which then tells JCEF nothing of it
-            runtime.isLost.first { it }
+            chromium.awaitLost()
             logcat(LogPriority.ERROR) { "A challenge page ended with Chromium" }
             events.onPageGone()
         } finally {
