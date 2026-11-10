@@ -84,10 +84,14 @@ fun MediaPlacementMarks(
         }
         guides.filter(PlacementGuide::reached).forEach { guide ->
             MarkLabel(guide.label, SurfaceContainer.Primary) { width, height ->
+                // At the end of the line away from the frame, so the name never covers what is moved
+                val middle = (guide.from + guide.to) / 2f
                 if (guide.vertical) {
-                    Offset(guide.at + gap, guide.from + gap)
+                    val nearStart = (outline?.center?.y ?: middle) < middle
+                    Offset(guide.at + gap, if (nearStart) guide.to - height - gap else guide.from + gap)
                 } else {
-                    Offset(guide.from + gap, guide.at - height - gap)
+                    val nearStart = (outline?.center?.x ?: middle) < middle
+                    Offset(if (nearStart) guide.to - width - gap else guide.from + gap, guide.at - height - gap)
                 }
             }
         }

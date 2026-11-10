@@ -25,7 +25,7 @@ import app.katari.presentation.kit.theme.KatariTheme
 /**
  * A titled three by three grid of places over a picture where one can be chosen, such as where subtitles rest. The
  * places go by rows from the top left; [placeLabels] names each for screen readers, and [selected] is null while what
- * is placed sits elsewhere, such as subtitles dragged off their place. [actionLabel] beside the title runs [onAction],
+ * is placed sits elsewhere, such as subtitles dragged off their place. [actionLabel] at the end of the title's line runs [onAction],
  * such as a button putting them back.
  */
 @Composable
@@ -42,7 +42,7 @@ fun PositionChoiceRow(
     Column(modifier) {
         SectionHeader(
             text = title,
-            trailing = actionLabel?.let {
+            actions = actionLabel?.let {
                 { Button(label = it, onClick = onAction, style = ButtonStyle.Text) }
             },
         )
