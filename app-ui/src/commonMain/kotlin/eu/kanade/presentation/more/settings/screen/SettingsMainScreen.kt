@@ -17,6 +17,7 @@ import app.katari.icons.materialsymbols.rounded.DocumentScanner
 import app.katari.icons.materialsymbols.rounded.Download
 import app.katari.icons.materialsymbols.rounded.Explore
 import app.katari.icons.materialsymbols.rounded.Info
+import app.katari.icons.materialsymbols.rounded.Notifications
 import app.katari.icons.materialsymbols.rounded.Palette
 import app.katari.icons.materialsymbols.rounded.PlayCircle
 import app.katari.icons.materialsymbols.rounded.RecordVoiceOver
@@ -245,6 +246,12 @@ private fun itemGroups() = listOf(
             formatSubtitle = { rememberSyncHeadline()?.let { syncHeadlineText(it) } },
             icon = MaterialSymbols.Rounded.CloudSync,
             screen = SyncScreen(),
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_notifications,
+            subtitleRes = MR.strings.pref_notifications_summary,
+            icon = MaterialSymbols.Rounded.Notifications,
+            screen = SettingsNotificationsScreen(),
         ),
         Item(
             titleRes = MR.strings.pref_category_security,

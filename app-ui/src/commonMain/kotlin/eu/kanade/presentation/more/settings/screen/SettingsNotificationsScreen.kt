@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import app.katari.core.platform.currentPlatformContext
 import app.katari.notification.LibraryUpdatesNotificationKind
 import app.katari.notification.NotificationGroup
 import app.katari.notification.NotificationKind
@@ -17,9 +18,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 
 /**
- * Where the app rather than the system keeps the notification settings (the desktop): one switch for all of them, and
- * while that is on, a switch for each kind, grouped as Android groups its channels. Each profile's library updates are
- * a kind of their own, as on Android.
+ * Which notifications show, and whether they hide their content. Where the system keeps the choices (Android), a row
+ * opens its settings; where the app keeps them (the desktop), one switch turns them all off, and while it is on, a
+ * switch for each kind, grouped as Android groups its channels. Each profile's library updates are a kind of their own,
+ * as on Android.
  */
 class SettingsNotificationsScreen : SearchableSettings() {
 
@@ -27,13 +29,37 @@ class SettingsNotificationsScreen : SearchableSettings() {
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_notifications
 
-    override fun isOffered(graph: AppUiGraph): Boolean =
-        graph.appNotifications.isOffered && graph.appNotifications.choices is NotificationChoices.InApp
+    override fun isOffered(graph: AppUiGraph): Boolean = graph.appNotifications.isOffered
 
     @Composable
     override fun getPreferences(): List<Preference> {
         val graph = LocalAppUiGraph.current
-        val choices = graph.appNotifications.choices as? NotificationChoices.InApp ?: return emptyList()
+        val hideContent = Preference.PreferenceItem.SwitchPreference(
+            preference = graph.securityPreferences.hideNotificationContent,
+            title = stringResource(MR.strings.hide_notification_content),
+        )
+        return when (val choices = graph.appNotifications.choices) {
+            is NotificationChoices.InSystemSettings -> {
+                val context = currentPlatformContext()
+                listOf(
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.pref_manage_notifications),
+                        subtitle = stringResource(MR.strings.pref_manage_notifications_in_system_summary),
+                        onClick = { choices.open(context) },
+                    ),
+                    hideContent,
+                )
+            }
+            is NotificationChoices.InApp -> inAppPreferences(choices, hideContent)
+        }
+    }
+
+    @Composable
+    private fun inAppPreferences(
+        choices: NotificationChoices.InApp,
+        hideContent: Preference.PreferenceItem.SwitchPreference,
+    ): List<Preference> {
+        val graph = LocalAppUiGraph.current
         val preferences = graph.notificationPreferences
         val enabled by preferences.enabled.collectPreferenceAsState()
         val profiles by graph.profileManager.visibleProfiles.collectAsState()
@@ -58,7 +84,7 @@ class SettingsNotificationsScreen : SearchableSettings() {
         }
         val other = stringResource(MR.strings.notification_kinds_other) to
             choices.kinds.filter { it.group == null }.map { preferences.switch(it, stringResource(it.title)) }
-        return listOf(enabledSwitch) + (grouped + other)
+        return listOf(enabledSwitch, hideContent) + (grouped + other)
             .filter { (_, rows) -> rows.isNotEmpty() }
             .map { (title, rows) -> Preference.PreferenceGroup(title = title, preferenceItems = rows) }
     }

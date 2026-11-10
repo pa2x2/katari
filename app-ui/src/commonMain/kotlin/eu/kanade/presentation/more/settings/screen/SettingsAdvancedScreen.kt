@@ -26,7 +26,6 @@ import eu.kanade.presentation.more.settings.screen.advanced.rememberClearWebView
 import eu.kanade.presentation.more.settings.screen.advanced.webViewEngineStatus
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
-import eu.kanade.presentation.more.settings.screen.notifications.NotificationChoices
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -71,7 +70,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
         val globalLibraryPreferences = graph.globalLibraryPreferences
         val globalCustomPreferences = graph.globalCustomPreferences
         val dumpLogs = rememberLogDump()
-        val appNotifications = graph.appNotifications
 
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
@@ -104,16 +102,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_onboarding_guide),
                 onClick = { navigator.push(OnboardingScreen()) },
-            ),
-            Preference.PreferenceItem.TextPreference(
-                title = stringResource(MR.strings.pref_manage_notifications),
-                visible = appNotifications.isOffered,
-                onClick = {
-                    when (val choices = appNotifications.choices) {
-                        is NotificationChoices.InSystemSettings -> choices.open(context)
-                        is NotificationChoices.InApp -> navigator.push(SettingsNotificationsScreen())
-                    }
-                },
             ),
             getBackgroundActivityGroup(),
             getDataGroup(),
