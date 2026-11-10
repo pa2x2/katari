@@ -60,6 +60,10 @@ class DesktopNotifications(
                     openWindow.context?.window?.let { displayBackend.bringForward(it, activationToken) }
                     destinations.value.open(response.destination)
                 }
+                is NotificationResponse.Show -> scope.launch(Dispatchers.Main) {
+                    openWindow.context?.window?.let { displayBackend.bringForward(it, activationToken) }
+                    response.action()
+                }
                 is NotificationResponse.Run -> scope.launch { response.action() }
             }
         }

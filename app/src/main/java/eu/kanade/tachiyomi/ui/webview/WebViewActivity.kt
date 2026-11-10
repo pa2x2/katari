@@ -50,6 +50,7 @@ class WebViewActivity : BaseActivity() {
         setComposeContent {
             WebViewScreenContent(
                 browserView = appGraph.browserView,
+                setup = appGraph.webViewSetup,
                 url = url,
                 initialTitle = intent.extras?.getString(TITLE_KEY),
                 // A missing source reads as 0, the local source, which has no site

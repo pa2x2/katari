@@ -36,6 +36,7 @@ import app.katari.desktop.window.WindowThreadFreezes
 import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
 import coil3.SingletonImageLoader
+import eu.kanade.presentation.webview.setup.WebViewSetupRequests
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
@@ -124,6 +125,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
             DesktopAppUpdatePrompt(graph.appInstallation, graph.appUpdateController, graph.onboardingPreferences)
+            WebViewSetupRequests(graph.webViewSetup)
         }
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }

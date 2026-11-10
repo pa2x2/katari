@@ -39,6 +39,9 @@ sealed interface NotificationResponse {
     /** Brings the app's window forward and opens [destination] in it. */
     data class Open(val destination: HomeDestination) : NotificationResponse
 
+    /** Brings the app's window forward and runs [action] in it, such as asking a question over what it shows. */
+    class Show(val action: () -> Unit) : NotificationResponse
+
     /** Runs [action] and leaves the window as it is, such as for stopping the work a notification shows. */
     class Run(val action: suspend () -> Unit) : NotificationResponse
 }

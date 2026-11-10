@@ -14,7 +14,7 @@ actual fun shortFileSize(bytes: Long): String = remember(bytes) { formatSize(byt
  * Rounds as Android's `Formatter` does, so a size reads the same on both platforms: SI units, a unit step once the
  * value passes 900, and fewer decimals the larger the value, fewer still when [shorter].
  */
-private fun formatSize(bytes: Long, shorter: Boolean): String {
+fun formatSize(bytes: Long, shorter: Boolean): String {
     var value = bytes.toDouble()
     var unit = 0
     while (value > UNIT_STEP_THRESHOLD && unit < UNITS.lastIndex) {
