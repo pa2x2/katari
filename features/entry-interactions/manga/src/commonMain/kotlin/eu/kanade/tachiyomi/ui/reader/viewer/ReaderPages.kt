@@ -70,6 +70,11 @@ internal fun ReaderPages(
 internal val MangaReaderSettingsBindings.automaticBackground: Boolean
     get() = readerTheme.current == AUTOMATIC_THEME
 
+/** [automaticBackground] as composition reads it, following changes to the setting. */
+@Composable
+internal fun MangaReaderSettingsBindings.automaticBackgroundState(): Boolean =
+    readerTheme.state.collectAsState().value.effectiveValue == AUTOMATIC_THEME
+
 // As the reader theme setting numbers them
 private fun pageBackground(readerTheme: Int): PageBackground = when (readerTheme) {
     0 -> PageBackground.White

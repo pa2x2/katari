@@ -6,7 +6,6 @@ import app.katari.entry.interactions.manga.reader.image.layout.isSpread
 import app.katari.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
-import eu.kanade.tachiyomi.ui.reader.viewer.automaticBackground
 import eu.kanade.tachiyomi.ui.reader.viewer.current
 import tachiyomi.core.common.util.system.SpreadSide
 
@@ -16,7 +15,6 @@ import tachiyomi.core.common.util.system.SpreadSide
  */
 internal class StripSettings(val bindings: MangaReaderSettingsBindings) {
     val cropBorders: Boolean get() = bindings.cropBordersWebtoon.current
-    val automaticBackground: Boolean get() = bindings.automaticBackground
     val sidePaddingPercent: Int get() = bindings.webtoonSidePadding.current
     val tapZones: Int get() = bindings.webtoonNavigationMode.current
     val tapInversion: MangaReaderSettings.TappingInvertMode get() = bindings.webtoonNavigationInverted.current

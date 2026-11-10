@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -66,13 +65,7 @@ internal fun StripPage(
     }
     // The height the page is laid out at, which its backdrop rows span; the aspect ratio rounds it to a whole pixel
     var laidOutHeight by remember { mutableIntStateOf(0) }
-    val backdropRows = remember(shown, laidOutHeight) {
-        shown?.let { stripBackdropRows(it.layout, it.image.size, it.backgrounds, laidOutHeight) }.orEmpty()
-    }
-    DisposableEffect(page, backdropRows) {
-        viewer.backdrops.show(page, backdropRows)
-        onDispose { viewer.backdrops.hide(page, backdropRows) }
-    }
+    viewer.FollowPageBackdrop(page, shown, laidOutHeight)
 
     val sized = if (displayedSize != null && displayedSize.width > 0 && displayedSize.height > 0) {
         Modifier.aspectRatio(displayedSize.width.toFloat() / displayedSize.height)

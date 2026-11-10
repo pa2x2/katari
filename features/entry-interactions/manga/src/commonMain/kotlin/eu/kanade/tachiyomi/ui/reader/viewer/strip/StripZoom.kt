@@ -49,6 +49,12 @@ internal class StripZoom {
 
     val isZoomedIn: Boolean get() = scale > 1f + SCALE_TOLERANCE
 
+    /** Where the pages' left edge is on screen, in screen pixels. */
+    val pagesLeft: Float get() = sideInset * scale - panX
+
+    /** Where the pages' right edge is on screen, in screen pixels. */
+    val pagesRight: Float get() = (viewportWidth - sideInset) * scale - panX
+
     /** The screen [width] in pixels and the empty space [inset] at each side of the pages, in strip pixels. */
     fun setViewport(width: Float, inset: Float) {
         viewportWidth = width
