@@ -66,10 +66,16 @@ internal fun ReaderPages(
     }
 }
 
+/** Whether the reader theme follows each page's own margins, which the viewers then read from the page. */
+internal val MangaReaderSettingsBindings.automaticBackground: Boolean
+    get() = readerTheme.current == AUTOMATIC_THEME
+
 // As the reader theme setting numbers them
 private fun pageBackground(readerTheme: Int): PageBackground = when (readerTheme) {
     0 -> PageBackground.White
     2 -> PageBackground.Gray
-    3 -> PageBackground.Automatic
+    AUTOMATIC_THEME -> PageBackground.Automatic
     else -> PageBackground.Black
 }
+
+private const val AUTOMATIC_THEME = 3

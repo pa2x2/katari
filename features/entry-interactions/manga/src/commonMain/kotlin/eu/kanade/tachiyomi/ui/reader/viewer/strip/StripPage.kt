@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -59,6 +61,14 @@ internal fun StripPage(
         shown != null -> shown.layout.displayedSize(shown.image.size)
         else -> null
     }
+    val backdropRows = remember(shown, width) {
+        shown?.let { stripBackdropRows(it.layout, it.image.size, it.backgrounds, width) }.orEmpty()
+    }
+    DisposableEffect(page, backdropRows) {
+        viewer.backdrops.show(page, backdropRows)
+        onDispose { viewer.backdrops.hide(page, backdropRows) }
+    }
+
     val sized = if (displayedSize != null && displayedSize.width > 0 && displayedSize.height > 0) {
         Modifier.aspectRatio(displayedSize.width.toFloat() / displayedSize.height)
     } else {

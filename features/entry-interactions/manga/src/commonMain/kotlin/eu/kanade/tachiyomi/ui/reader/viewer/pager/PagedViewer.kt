@@ -346,7 +346,7 @@ internal class PagedViewer(
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
         automaticBackground = settings.automaticBackground,
-        landscape = landscape,
+        backgroundBesidePage = landscape,
         layout = ::layoutAndReport,
     )
 

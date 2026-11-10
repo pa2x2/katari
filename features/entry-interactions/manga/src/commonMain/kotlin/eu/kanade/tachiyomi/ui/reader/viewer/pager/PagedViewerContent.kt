@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -173,8 +174,9 @@ private fun PagedViewer.Slot(item: ReaderViewerItem, onPagePlaced: (ReaderPage, 
                 PagerPage(
                     page = item.page,
                     viewer = this,
-                    narrowToImage = false,
-                    modifier = Modifier.fillMaxSize().onGloballyPositioned { onPagePlaced(item.page, it) },
+                    narrowedAgainst = null,
+                    onPlaced = { onPagePlaced(item.page, it) },
+                    modifier = Modifier.fillMaxSize(),
                 )
             } else {
                 FacingPages(item, facing, onPagePlaced)
@@ -196,7 +198,8 @@ private fun PagedViewer.Slot(item: ReaderViewerItem, onPagePlaced: (ReaderPage, 
 
 /**
  * Two facing pages, the earlier one on the reading direction's side. While the scale type fits whole pages, each is
- * as wide as its image at the slot's height and meets the other at the split, as a printed spread does.
+ * as wide as its image at the slot's height and meets the other at the split, as a printed spread does. Each page's
+ * background fills its whole side of the split.
  */
 @Composable
 private fun PagedViewer.FacingPages(
@@ -221,22 +224,24 @@ private fun PagedViewer.FacingPages(
                 PagerPage(
                     page = leftPage,
                     viewer = this@FacingPages,
-                    narrowToImage = narrow,
-                    modifier = Modifier.onGloballyPositioned {
+                    narrowedAgainst = if (narrow) AbsoluteAlignment.CenterRight else null,
+                    onPlaced = {
                         onPagePlaced(leftPage, it)
                         spread.left = it
                     },
+                    modifier = Modifier.fillMaxSize(),
                 )
             },
             right = {
                 PagerPage(
                     page = rightPage,
                     viewer = this@FacingPages,
-                    narrowToImage = narrow,
-                    modifier = Modifier.onGloballyPositioned {
+                    narrowedAgainst = if (narrow) AbsoluteAlignment.CenterLeft else null,
+                    onPlaced = {
                         onPagePlaced(rightPage, it)
                         spread.right = it
                     },
+                    modifier = Modifier.fillMaxSize(),
                 )
             },
             modifier = Modifier.fillMaxSize(),
