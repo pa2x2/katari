@@ -41,8 +41,8 @@ interface WebPage {
     suspend fun click(selector: String)
 
     /**
-     * Puts [text] into the field as a keyboard does, in place of what it held. The page sees the input as a person's,
-     * but the whole text at once and no key for each letter.
+     * Puts [text] into the field as a keyboard does, in place of what it held, and returns once the page has it. The
+     * page sees the input as a person's, but the whole text at once and no key for each letter.
      */
     suspend fun type(selector: String, text: String)
 

@@ -92,6 +92,10 @@ internal class DrivenWebPage private constructor(
             "false" -> throw WebPageException("$selector doesn't take the focus, so nothing can be typed into it")
             else -> throw unmatched(selector)
         }
+        // The text reaches the page apart from the scripts asked of it, so one run next could find the field as it was
+        if (!shows(TEXT_TIMEOUT) { run(tookText(text)) == "true" }) {
+            throw WebPageException("$selector took no text")
+        }
     }
 
     override suspend fun press(key: WebPageKey) = whileOpen { host.press(key) }
@@ -131,13 +135,17 @@ internal class DrivenWebPage private constructor(
     private suspend fun run(script: String): String = whileOpen { host.evaluate(script) }
 
     private suspend fun await(timeout: Duration, what: String, isThere: suspend () -> Boolean) {
-        // The page's loss ends the pauses between two askings too
-        whileOpen {
-            withTimeoutOrNull(timeout) {
-                while (!isThere()) delay(ASK_AGAIN)
-            }
-        } ?: throw WebPageException("The page didn't get there in $timeout: the source waited $what")
+        if (!shows(timeout, isThere)) {
+            throw WebPageException("The page didn't get there in $timeout: the source waited $what")
+        }
     }
+
+    // The page's loss ends the pauses between two askings too
+    private suspend fun shows(timeout: Duration, isThere: suspend () -> Boolean): Boolean = whileOpen {
+        withTimeoutOrNull(timeout) {
+            while (!isThere()) delay(ASK_AGAIN)
+        }
+    } != null
 
     private suspend fun <T> whileOpen(block: suspend CoroutineScope.() -> T): T = coroutineScope {
         val work = async(block = block)
@@ -157,6 +165,7 @@ internal class DrivenWebPage private constructor(
 
     companion object {
         private val LOAD_TIMEOUT = 30.seconds
+        private val TEXT_TIMEOUT = 5.seconds
         private val ASK_AGAIN = 100.milliseconds
         private const val UNREADABLE = "The page couldn't be read"
         private const val RESPONSES_HELD = 64
@@ -195,13 +204,17 @@ internal class DrivenWebPage private constructor(
             })()
         """.trimIndent()
 
-        // What the field holds is selected, so the text typed next takes its place
+        // What the field holds is selected, so the text typed next takes its place, and the input that text makes is
+        // watched for
         private fun focus(selector: String) = """
             (() => {
                 const element = document.querySelector(${quoted(selector)});
                 if (!element) return null;
                 element.focus();
                 if (document.activeElement !== element) return false;
+                document[$TOOK_TEXT] = false;
+                const arrived = () => { document[$TOOK_TEXT] = true; };
+                document.addEventListener('input', arrived, { capture: true, once: true });
                 if (typeof element.select === 'function') {
                     element.select();
                 } else {
@@ -210,6 +223,20 @@ internal class DrivenWebPage private constructor(
                 return true;
             })()
         """.trimIndent()
+
+        // No text typed into a field that holds none makes no input
+        private fun tookText(text: String) = if (text.isEmpty()) {
+            """
+            (() => {
+                const field = document.activeElement;
+                return document[$TOOK_TEXT] === true || (field.value ?? field.textContent) === '';
+            })()
+            """.trimIndent()
+        } else {
+            "document[$TOOK_TEXT] === true"
+        }
+
+        private const val TOOK_TEXT = "Symbol.for('typed text arrived')"
 
         private fun quoted(text: String) = JsonPrimitive(text).toString()
 
