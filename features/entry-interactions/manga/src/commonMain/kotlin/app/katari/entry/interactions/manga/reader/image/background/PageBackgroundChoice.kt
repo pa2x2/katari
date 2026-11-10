@@ -1,8 +1,9 @@
 package app.katari.entry.interactions.manga.reader.image.background
 
+import androidx.compose.ui.unit.IntRect
 import kotlin.math.abs
 
-/** What the paged viewer paints around a page that doesn't fill the screen, when the background follows the page. */
+/** What a viewer paints around a page that doesn't fill the screen, when the background follows the page. */
 internal sealed interface PageBackground {
     /** [argb] without premultiplied alpha. */
     data class Solid(val argb: Int) : PageBackground
@@ -11,30 +12,62 @@ internal sealed interface PageBackground {
     data class Gradient(val argb: List<Int>) : PageBackground
 }
 
-/** A page's pixels as ARGB without premultiplied alpha, read one at a time. */
+/**
+ * A page's pixels as ARGB without premultiplied alpha, read one at a time. Only the pixels in
+ * [PageBackgroundProbes.areas] are read; a point beyond an edge reads the nearest pixel on the page, as the rules'
+ * offset columns reach past the edges of some narrow pages.
+ */
 internal class PagePixels(val width: Int, val height: Int, private val read: (x: Int, y: Int) -> Int) {
-    operator fun get(x: Int, y: Int): Int = read(x, y)
+    operator fun get(x: Int, y: Int): Int = read(x.coerceIn(0, width - 1), y.coerceIn(0, height - 1))
+}
+
+/**
+ * Where [choosePageBackground] reads a page [width] by [height]: columns a little inside each side edge and the
+ * middle of the top and bottom rows.
+ */
+internal class PageBackgroundProbes(width: Int, height: Int) {
+    val top = 5
+    val bot = height - 5
+    val left = (width * 0.0275).toInt()
+    val right = width - left
+    val midX = width / 2
+    val midY = height / 2
+    val offsetX = (width * 0.01).toInt()
+    val leftOffsetX = left - offsetX
+    val rightOffsetX = right + offsetX
+
+    /**
+     * The areas holding every pixel the choice reads, within the page, so a page decodes only these rather than
+     * whole: each side's band reaches one offset beyond its offset column, which the column scan compares against.
+     */
+    val areas: List<IntRect> = listOf(
+        IntRect(leftOffsetX - offsetX, 0, left + 1, height),
+        IntRect(right, 0, rightOffsetX + offsetX + 1, height),
+        IntRect(midX, top, midX + 1, top + 1),
+        IntRect(midX, bot, midX + 1, bot + 1),
+    ).map { it.intersect(IntRect(0, 0, width, height)) }.filterNot { it.isEmpty }
 }
 
 /**
  * Picks the background that continues the page's own margins: the colour of a dark or coloured frame, white for a
- * white one, or a gradient when only the top or the bottom is dark. A [landscape] screen shows the page beside its
- * background rather than above and below it, so it never gets a gradient.
+ * white one, or a gradient when only the top or the bottom is dark. A background [besidePage] rather than above and
+ * below it never gets a gradient.
  */
-internal fun choosePageBackground(image: PagePixels, landscape: Boolean): PageBackground {
-    if (image.width < 50 || image.height < 50) {
+internal fun choosePageBackground(image: PagePixels, besidePage: Boolean): PageBackground {
+    if (image.width < MIN_PAGE_SIZE || image.height < MIN_PAGE_SIZE) {
         return PageBackground.Solid(WHITE)
     }
 
-    val top = 5
-    val bot = image.height - 5
-    val left = (image.width * 0.0275).toInt()
-    val right = image.width - left
-    val midX = image.width / 2
-    val midY = image.height / 2
-    val offsetX = (image.width * 0.01).toInt()
-    val leftOffsetX = left - offsetX
-    val rightOffsetX = right + offsetX
+    val probes = PageBackgroundProbes(image.width, image.height)
+    val top = probes.top
+    val bot = probes.bot
+    val left = probes.left
+    val right = probes.right
+    val midX = probes.midX
+    val midY = probes.midY
+    val offsetX = probes.offsetX
+    val leftOffsetX = probes.leftOffsetX
+    val rightOffsetX = probes.rightOffsetX
 
     val topLeftPixel = image[left, top]
     val topRightPixel = image[right, top]
@@ -173,7 +206,7 @@ internal fun choosePageBackground(image: PagePixels, landscape: Boolean): PageBa
         darkBG = true
     }
 
-    if (landscape) {
+    if (besidePage) {
         return PageBackground.Solid(if (darkBG) blackColor else WHITE)
     }
 
@@ -203,6 +236,9 @@ internal fun choosePageBackground(image: PagePixels, landscape: Boolean): PageBa
 }
 
 internal const val WHITE = -0x1
+
+// A page smaller than this either way gets white: its margins are too few pixels to read
+internal const val MIN_PAGE_SIZE = 50
 
 private val Int.alpha: Int get() = (this ushr 24) and 0xFF
 private val Int.red: Int get() = (this shr 16) and 0xFF

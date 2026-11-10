@@ -76,6 +76,8 @@ internal class StripViewer(
     private var autoScroll: Job? = null
     private var autoScrollLevel = MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT
 
+    internal val backdrops = StripBackdrops()
+
     internal val textSurfaces = ViewerTextSurfaces(decorations = { viewModel.textSession.decoration(it) })
 
     override fun visibleTextSurfaces(): List<MangaPageTextSurface> = textSurfaces.visible()
@@ -269,8 +271,9 @@ internal class StripViewer(
 
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
-        automaticBackground = false,
-        landscape = false,
+        automaticBackground = settings.automaticBackground,
+        // The strip fills the window's height, so the background only ever shows at its sides
+        backgroundBesidePage = true,
         layout = { _, imageSize -> stripPageLayout(imageSize, settings.bindings) },
     )
 
@@ -285,6 +288,7 @@ internal class StripViewer(
         val bindings = settings.bindings
         return listOf(
             bindings.cropBordersWebtoon.state.collectAsState().value.effectiveValue,
+            bindings.readerTheme.state.collectAsState().value.effectiveValue,
             bindings.dualPageSplitWebtoon.state.collectAsState().value.effectiveValue,
             bindings.dualPageInvertWebtoon.state.collectAsState().value.effectiveValue,
             bindings.dualPageRotateToFitWebtoon.state.collectAsState().value.effectiveValue,

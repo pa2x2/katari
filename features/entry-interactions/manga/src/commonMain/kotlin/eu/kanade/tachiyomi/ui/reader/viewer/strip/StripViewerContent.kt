@@ -153,7 +153,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
         PageStrip(
             state = state,
             sideInset = insetDp,
-            modifier = Modifier.zoomedBy(zoom).nestedScroll(menuHider),
+            modifier = Modifier.paintedBehind(viewer).zoomedBy(zoom).nestedScroll(menuHider),
         ) {
             items(items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
