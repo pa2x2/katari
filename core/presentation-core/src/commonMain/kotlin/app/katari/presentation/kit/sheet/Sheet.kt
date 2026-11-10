@@ -85,8 +85,8 @@ import kotlin.math.roundToInt
  * capped at [SheetMaxWidth]; from a medium window on it is a full-height panel at the side of the window it was opened
  * from (see [sheetEdge]), beside the dock on the dock's side, dismissed by dragging it back. While a vertical fold is
  * half-open it stays within one half (see [rememberFoldHalf]). In a large window the side sheet is wide enough for two
- * columns of rows: row groups and the lists of [RowList] wrap their rows into both, and a [SheetSplitList] sets its two
- * parts side by side; [short] content, such as a few choices or a paragraph, stays one column wide, centred.
+ * columns of rows, and its content fills it: row groups and the lists of [RowList] wrap their rows into both, a
+ * [SheetSplitList] sets its two parts side by side, and text, cards and tiles take the whole width.
  * Its content is laid out at compact row density.
  * A side sheet's title row ([SheetHeader], a [TabbedSheet]'s tabs) ends with a close button.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, and leaves out the close button, such as
@@ -102,7 +102,6 @@ fun Sheet(
     modifier: Modifier = Modifier,
     enableImplicitDismiss: Boolean = true,
     capHeight: Boolean = false,
-    short: Boolean = false,
     backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
@@ -162,12 +161,10 @@ fun Sheet(
                         LocalRowGroupContainer provides SurfaceContainer.Highest,
                         LocalScreenMessages provides messages,
                         LocalSheetForm provides if (edge == SheetEdge.Bottom) SheetForm.Bottom else SheetForm.Side,
-                        LocalSheetColumns provides if (twoColumns && !short) 2 else 1,
+                        LocalSheetColumns provides if (twoColumns) 2 else 1,
                     ) {
                         KeyboardShortcutLayer {
-                            ProvideRowDensity(RowDensity.Compact) {
-                                if (twoColumns && short) OneColumnCentred(content) else content()
-                            }
+                            ProvideRowDensity(RowDensity.Compact, content)
                         }
                     }
                 }
@@ -189,14 +186,6 @@ enum class SheetBackdrop {
 
     /** Left as it is, for a sheet whose changes show behind it as they are made, such as a reader's appearance. */
     Clear,
-}
-
-/** [content] kept to a one-column sheet's width, centred in a sheet wide enough for two. */
-@Composable
-private fun OneColumnCentred(content: @Composable () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        Box(modifier = Modifier.widthIn(max = SideSheetWidth - KatariTheme.spacing.m * 2)) { content() }
-    }
 }
 
 /**

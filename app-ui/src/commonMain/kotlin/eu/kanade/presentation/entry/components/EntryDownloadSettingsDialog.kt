@@ -34,7 +34,7 @@ fun EntryDownloadSettingsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.action_download))
             Column(

@@ -153,7 +153,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 
 | Job | Component | Notes |
 |---|---|---|
-| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet from medium windows on, at the side the press that opened it landed on, with two columns of rows in large windows (`short` keeps a few choices or a paragraph to one centred column); a side sheet's header ends with a close button, so give every sheet a `SheetHeader`; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
+| A sheet | `Sheet`, `SheetHeader`, `SheetActions` | Side sheet from medium windows on, at the side the press that opened it landed on, with two columns of rows in large windows, where its content fills it: rows wrap two to a line and text, cards and tiles take the whole width; a side sheet's header ends with a close button, so give every sheet a `SheetHeader`; actions look like a dialog's. A page opened inside a sheet passes `onBack` and an optional `subtitle` to its header |
 | A sheet of settings split into tabs | `TabbedSheet` | |
 | A sheet's list in two parts, such as a filter's options beside its long list of languages | `SheetSplitList` | Side by side in a large window's two-column sheet, one list otherwise |
 | A short choice opened from a button, such as the profile switcher or an entry's update choices | `Popover`, `rememberPopoverAnchor` | Beside its button from medium windows on, nothing dimmed; the button marks itself with `Modifier.popoverAnchor`. A sheet in compact windows or when the button isn't on screen |
