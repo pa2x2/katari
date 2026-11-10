@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import app.katari.presentation.kit.pointer.PointerMoves
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -12,14 +13,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * The mouse's buttons and moves on the picture. Moving shows the controls, which hide again on their own, but not
- * while the left button is held, as it drags the picture or plays at 2× then, nor away from the bars over a picture
- * zoomed past the player, where it shows only the [pointer]. A click plays or pauses once it can no longer become a
- * double-click ([PictureClicks]), and a double-click only switches full screen, leaving playback and the controls as
- * they were. Holding the left button plays at 2× until it is let go. While the picture is zoomed past the player,
- * dragging with the left button moves it, and a hold that doesn't move still plays at 2×. The right button opens the
- * settings panel; the middle one does nothing, and the back button is the window's, which goes back as Esc does.
- * [geometry] is the picture's shape in the player, null until the video has one.
+ * The mouse's buttons and moves on the picture. Moving ([PointerMoves]) shows the controls, which hide again on their
+ * own, but not while the left button is held, as it drags the picture or plays at 2× then, nor away from the bars over
+ * a picture zoomed past the player, where it shows only the [pointer]. A click plays or pauses once it can no longer
+ * become a double-click ([PictureClicks]), and a double-click only switches full screen, leaving playback and the
+ * controls as they were. Holding the left button plays at 2× until it is let go. While the picture is zoomed past the
+ * player, dragging with the left button moves it, and a hold that doesn't move still plays at 2×. The right button
+ * opens the settings panel; the middle one does nothing, and the back button is the window's, which goes back as Esc
+ * does. [geometry] is the picture's shape in the player, null until the video has one.
  */
 internal fun Modifier.videoPlayerMouse(
     target: VideoPlayerInputTarget,
@@ -28,7 +29,7 @@ internal fun Modifier.videoPlayerMouse(
 ): Modifier = pointerInput(target, pointer) {
     coroutineScope {
         val clicks = PictureClicks(this, viewConfiguration.doubleTapTimeoutMillis, viewConfiguration.touchSlop)
-        var lastAt = Offset.Unspecified
+        val moves = PointerMoves()
         var press: Press? = null
         var hold: Job? = null
         awaitPointerEventScope {
@@ -38,9 +39,9 @@ internal fun Modifier.videoPlayerMouse(
                 val current = press
                 when (event.type) {
                     PointerEventType.Move -> {
-                        // The window repeats the last move whenever what is under a still pointer is laid out anew
-                        if (change.position == lastAt) continue
-                        lastAt = change.position
+                        // A held button takes every move, as a drag starts with the first
+                        val resting = pointer.resting && current == null
+                        if (!moves.isMove(change.position, resting, density = this)) continue
                         pointer.moved()
                         if (current == null) {
                             if (pointer.showsControlsAt(change.position.y, target, geometry())) {

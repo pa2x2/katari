@@ -25,7 +25,8 @@ import kotlinx.coroutines.flow.drop
 @Stable
 internal class VideoPlayerPointer {
     private var moves by mutableLongStateOf(0L)
-    private var resting by mutableStateOf(true)
+    var resting by mutableStateOf(true)
+        private set
 
     fun moved() {
         moves += 1
