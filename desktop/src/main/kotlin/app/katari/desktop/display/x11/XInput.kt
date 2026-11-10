@@ -7,12 +7,15 @@ import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
+import com.sun.jna.ptr.DoubleByReference
 import com.sun.jna.ptr.IntByReference
+import com.sun.jna.ptr.NativeLongByReference
 
 /**
  * The part of the system's XInput 2 library (`libXi`, `XInput2.h`) that the app calls itself, for the input AWT never
- * asks for: the touchpad gestures of XInput 2.4, and the scroll axes of XInput 2.1, which carry scrolling finer than
- * a wheel's notch. Each function is the C one without its `XI` prefix: [queryVersion] is `XIQueryVersion`.
+ * asks for: the touchpad gestures of XInput 2.4, and the scroll axes and raw button presses of XInput 2.1, which carry
+ * scrolling finer than a wheel's notch and tell a wheel's own clicks from the ones the display makes up for it. Each
+ * function is the C one without its `XI` prefix: [queryVersion] is `XIQueryVersion`.
  */
 internal interface XInput : Library {
     /**
@@ -36,6 +39,25 @@ internal interface XInput : Library {
      * null when it has none.
      */
     fun listProperties(display: Pointer, deviceid: Int, count: IntByReference): Pointer?
+
+    /**
+     * Where the pointer [deviceid] is and what is held, with [rootX] and [rootY] in the screen of [root]; false when
+     * it is on another screen than [window]'s. The mask [buttons] comes back with is the caller's to [Xlib.free].
+     */
+    fun queryPointer(
+        display: Pointer,
+        deviceid: Int,
+        window: NativeLong,
+        root: NativeLongByReference,
+        child: NativeLongByReference,
+        rootX: DoubleByReference,
+        rootY: DoubleByReference,
+        windowX: DoubleByReference,
+        windowY: DoubleByReference,
+        buttons: XIButtonState,
+        mods: XIModifierState,
+        group: XIModifierState,
+    ): Boolean
 }
 
 /** The extension's name, by which a display says whether it has it. */
@@ -49,6 +71,7 @@ internal const val XI_DEVICE_CHANGED = 1
 internal const val XI_MOTION = 6
 internal const val XI_ENTER = 7
 internal const val XI_LEAVE = 8
+internal const val XI_RAW_BUTTON_PRESS = 15
 internal const val XI_GESTURE_PINCH_BEGIN = 27
 internal const val XI_GESTURE_PINCH_UPDATE = 28
 internal const val XI_GESTURE_PINCH_END = 29
@@ -135,12 +158,60 @@ internal class XIGesturePinchEvent(memory: Pointer) : Structure(memory) {
     }
 }
 
-/** `XIButtonState`: the pressed buttons as a mask of [maskLen] bytes. */
+/**
+ * The flag of an event the display made up from another (`XIPointerEmulated`): a wheel button's press for a step of
+ * a scroll axis, which it sends beside the axis's own motion for clients that only know buttons.
+ */
+internal const val XI_POINTER_EMULATED = 1 shl 16
+
+/**
+ * `XIRawEvent` up to [flags], the fields read. A raw event is a device's own, before any window is picked for it, and
+ * comes to every client that asked for it on the root window, wherever the pointer is: [detail] is the button of a
+ * press.
+ */
+@Structure.FieldOrder(
+    "type", "serial", "sendEvent", "display", "extension", "evtype", "time", "deviceid", "sourceid", "detail", "flags",
+)
+internal class XIRawEvent(memory: Pointer) : Structure(memory) {
+    @JvmField var type: Int = 0
+
+    @JvmField var serial: NativeLong = NativeLong(0)
+
+    @JvmField var sendEvent: Int = 0
+
+    @JvmField var display: Pointer? = null
+
+    @JvmField var extension: Int = 0
+
+    @JvmField var evtype: Int = 0
+
+    @JvmField var time: NativeLong = NativeLong(0)
+
+    @JvmField var deviceid: Int = 0
+
+    @JvmField var sourceid: Int = 0
+
+    @JvmField var detail: Int = 0
+
+    @JvmField var flags: Int = 0
+
+    init {
+        read()
+    }
+}
+
+/** `XIButtonState`: the pressed buttons as a mask of [maskLen] bytes, a bit for each button's number. */
 @Structure.FieldOrder("maskLen", "mask")
 internal class XIButtonState : Structure() {
     @JvmField var maskLen: Int = 0
 
     @JvmField var mask: Pointer? = null
+
+    fun isPressed(button: Int): Boolean {
+        val mask = mask ?: return false
+        if (button >= maskLen * Byte.SIZE_BITS) return false
+        return mask.getByte((button / Byte.SIZE_BITS).toLong()).toInt() and (1 shl (button % Byte.SIZE_BITS)) != 0
+    }
 }
 
 /**

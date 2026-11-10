@@ -5,7 +5,9 @@ import app.katari.desktop.display.scroll.ScrollPoint
 import com.sun.jna.Memory
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
+import com.sun.jna.ptr.DoubleByReference
 import com.sun.jna.ptr.IntByReference
+import com.sun.jna.ptr.NativeLongByReference
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Window
@@ -19,6 +21,11 @@ import kotlin.concurrent.thread
  * asks for them: it takes the wheel button press the server makes up for each whole notch the axes pass, which is all
  * it knows of a touchpad's scroll. They come on a connection of the app's own, read on a thread of its own, as Xlib
  * connections are used by one thread at a time.
+ *
+ * Not every wheel has scroll axes: what clicks a wheel button through XTest has none, as remote desktop servers and
+ * automation do. Those clicks reach the toolkit as the made-up presses do, with nothing to tell the two apart there,
+ * so none of the toolkit's wheel events can be let through for them. The display's raw button presses do say which is
+ * which, so the wheel buttons pressed for real are read here too, as notches.
  */
 internal object X11ScrollMotions {
     private val read: MutableSet<Window> = ConcurrentHashMap.newKeySet()
@@ -59,6 +66,8 @@ internal object X11ScrollMotions {
         private val display: Pointer,
         private val opcode: Int,
         private val window: Window,
+        private val xInput: XInput,
+        private val root: NativeLong,
         private val devices: X11ScrollDevices,
         private val wakeWindow: X11WakeWindow,
     ) {
@@ -79,6 +88,7 @@ internal object X11ScrollMotions {
                                 val data = cookie.data ?: continue
                                 when (cookie.evtype) {
                                     XI_MOTION -> motion(XIDeviceEvent(data))?.let(send)
+                                    XI_RAW_BUTTON_PRESS -> wheelClick(XIRawEvent(data))?.let(send)
                                     XI_ENTER -> {
                                         devices.refresh()
                                         read += window
@@ -113,6 +123,36 @@ internal object X11ScrollMotions {
             return steps.read(scrolled.kind, scrolled.horizontal, scrolled.vertical, at)
         }
 
+        /**
+         * The notch of a wheel button pressed for real over the window; null for any other press, for the ones the
+         * display makes up from a scroll axis, whose motion says the same, and while a mouse button is held, when
+         * the toolkit's wheel events scroll (see [reads]). A raw press comes wherever the pointer is and says
+         * nothing of it, so the display is asked.
+         */
+        private fun wheelClick(event: XIRawEvent): ScrollMotion? {
+            val (horizontal, vertical) = when (event.detail) {
+                WHEEL_UP -> 0.0 to -1.0
+                WHEEL_DOWN -> 0.0 to 1.0
+                WHEEL_LEFT -> -1.0 to 0.0
+                WHEEL_RIGHT -> 1.0 to 0.0
+                else -> return null
+            }
+            if (event.flags and XI_POINTER_EMULATED != 0 || window !in read) return null
+            val rootX = DoubleByReference()
+            val rootY = DoubleByReference()
+            val buttons = XIButtonState()
+            val mods = XIModifierState()
+            val onScreen = xInput.queryPointer(
+                display, event.deviceid, root, NativeLongByReference(), NativeLongByReference(), rootX, rootY,
+                DoubleByReference(), DoubleByReference(), buttons, mods, XIModifierState(),
+            )
+            val held = MOUSE_BUTTONS.any(buttons::isPressed)
+            buttons.mask?.let(xlib::free)
+            if (!onScreen || held) return null
+            val at = ScrollPoint(event.time.toLong(), rootX.value, rootY.value, awtModifiers(mods.effective))
+            return ScrollMotion.Wheel(at, horizontal, vertical)
+        }
+
         companion object {
             /**
              * Asks for the pointer's motions over [window] on a new connection; null when the window has no X11 id or
@@ -137,10 +177,13 @@ internal object X11ScrollMotions {
                 val motions =
                     xiEventMask(XI_ALL_MASTER_DEVICES, listOf(XI_MOTION, XI_ENTER, XI_LEAVE, XI_DEVICE_CHANGED))
                 xInput.selectEvents(display, windowId, motions, 1)
+                // Raw events are the root window's to ask for
+                val root = xlib.defaultRootWindow(display)
+                xInput.selectEvents(display, root, xiEventMask(XI_ALL_MASTER_DEVICES, listOf(XI_RAW_BUTTON_PRESS)), 1)
                 val devices = X11ScrollDevices(xlib, xInput, display).apply { refresh() }
                 val wakeWindow = X11WakeWindow(xlib, display)
                 xlib.flush(display)
-                return ScrollListener(xlib, display, opcode.value, window, devices, wakeWindow)
+                return ScrollListener(xlib, display, opcode.value, window, xInput, root, devices, wakeWindow)
             }
         }
     }
@@ -159,6 +202,13 @@ internal object X11ScrollMotions {
 
     /** The detail of a leave onto a window inside the one left (`XINotifyInferior`). */
     private const val NOTIFY_INFERIOR = 2
+
+    // X11's buttons for a wheel's notches, and a mouse's own three
+    private const val WHEEL_UP = 4
+    private const val WHEEL_DOWN = 5
+    private const val WHEEL_LEFT = 6
+    private const val WHEEL_RIGHT = 7
+    private val MOUSE_BUTTONS = 1..3
 
     // X11's ShiftMask, ControlMask, Mod1Mask and Mod4Mask
     private const val SHIFT_MASK = 1 shl 0
