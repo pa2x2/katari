@@ -1051,6 +1051,10 @@
     <string name="sign_in_check_refused">Wrong password. Too many wrong tries can lock your account on this computer for a while.</string>
     <string name="sign_in_check_failed">Katari couldn\'t check your sign-in on this computer.</string>
     <string name="sign_in_check_checking">Checking…</string>
+    <string name="sign_in_check_fingerprint_waiting">You can also touch the fingerprint reader.</string>
+    <string name="sign_in_check_fingerprint_not_recognized">Fingerprint not recognized. Touch the reader again.</string>
+    <string name="sign_in_check_fingerprint_read_again">The reader couldn\'t read your finger. Touch it again.</string>
+    <string name="sign_in_check_fingerprint_too_many_tries">Too many tries with your fingerprint. Enter your password instead.</string>
     <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
     <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
     <string name="profile_lock_unavailable">Profile lock isn\'t available</string>

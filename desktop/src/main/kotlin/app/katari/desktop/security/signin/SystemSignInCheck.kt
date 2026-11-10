@@ -16,6 +16,12 @@ interface SystemSignInCheck {
      * [conversation]. Blocks until the system answers.
      */
     fun check(configuration: String, account: String, conversation: SignInConversation): SignInOutcome
+
+    /**
+     * The reader the app reads the user's finger on beside [check] with [configuration]; null where there's none, or
+     * where [check] reads the finger itself.
+     */
+    fun fingerprintReader(configuration: String): FingerprintReader?
 }
 
 /** Where the system's messages go and its questions get their answers, one at a time, as the check runs. */
