@@ -6,13 +6,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import app.katari.presentation.kit.pointer.touchpadScrollStage
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 /**
  * Scrolling along the pages, by a wheel or a touchpad's two fingers, turns them one at a time as [turns] counts them.
- * Compose's pager would scroll a distance for each notch instead, and as on X11 a touchpad swipe arrives as many notches,
- * one swipe skipped several pages.
+ * Compose's pager would scroll a distance for each notch instead, and a swipe is worth several notches, so one swipe
+ * skipped several pages.
  *
  * Each page takes only the scrolling its own content left over, so a row or a list inside a page scrolls first. [turns]
  * belongs to the pager, not the page, so the rest of a swipe still counts as the same swipe once the next page has
@@ -37,7 +38,7 @@ internal fun Modifier.pageWheel(
                 val along = if (orientation == Orientation.Vertical) delta.y else delta.x
                 if (along == 0f) continue
                 change.consume()
-                turns.onScroll(Offset(along, 0f), change.uptimeMillis) { notches ->
+                turns.onScroll(Offset(along, 0f), change.uptimeMillis, event.touchpadScrollStage) { notches ->
                     val step = notches.x.toInt()
                     // A turn under way already counts, so a quick next swipe goes on from the page it is turning to
                     val from = if (state.isScrollInProgress) state.targetPage else state.currentPage

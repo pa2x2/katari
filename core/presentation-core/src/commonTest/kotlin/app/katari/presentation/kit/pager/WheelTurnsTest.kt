@@ -1,6 +1,7 @@
 package app.katari.presentation.kit.pager
 
 import androidx.compose.ui.geometry.Offset
+import app.katari.presentation.kit.pointer.TouchpadScrollStage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -9,10 +10,10 @@ class WheelTurnsTest {
     private var pages = 0
     private var now = 0L
 
-    private fun scroll(gapMillis: Long) {
+    private fun scroll(gapMillis: Long, notches: Float = 1f, stage: TouchpadScrollStage? = null) {
         now += gapMillis
-        turns.onScroll(Offset(0f, 1f), now) { notches ->
-            val whole = notches.y.toInt()
+        turns.onScroll(Offset(0f, notches), now, stage) { counted ->
+            val whole = counted.y.toInt()
             pages += whole
             Offset(0f, whole.toFloat())
         }
@@ -39,5 +40,21 @@ class WheelTurnsTest {
 
         scroll(400)
         pages shouldBe 4
+    }
+
+    @Test
+    fun `a swipe that cuts the last one's glide short turns the next page, where the touchpad's stages are known`() {
+        fun fingers() {
+            scroll(8, notches = 0.6f, stage = TouchpadScrollStage.Start)
+            repeat(4) { scroll(8, notches = 0.6f, stage = TouchpadScrollStage.Move) }
+        }
+
+        fingers()
+        repeat(10) { scroll(8, notches = 0.3f, stage = TouchpadScrollStage.Glide) }
+        pages shouldBe 1
+
+        // No gap tells this swipe from the glide it follows
+        fingers()
+        pages shouldBe 2
     }
 }

@@ -1,15 +1,19 @@
 package app.katari.presentation.kit.pager
 
 import androidx.compose.ui.geometry.Offset
+import app.katari.presentation.kit.pointer.TouchpadScrollStage
 
 /**
  * Scrolling counted into page turns: a swipe turns one page, as does a turned wheel's notch after a pause.
  *
- * On X11, Xwayland included, the runtime reports a touchpad's scrolling as whole wheel notches, many to a swipe, so
- * neither the size nor the count of the steps tells a swipe from a turned wheel, and nothing says when fingers lift.
- * The gaps between steps tell swipes apart. Within a swipe steps come a few tens of milliseconds apart, and further
- * apart as the fingers slow down at its end; the next swipe starts after a gap and comes quickly again at once. So a
- * run of steps turns one page; after a gap of [LIFT_MIN_MS] the first quick step starts the next run, and a step after
+ * Where the platform says which stage of a touchpad's scroll an event is, a swipe is what follows a
+ * [TouchpadScrollStage.Start], its glide included, so the next swipe counts even when it cuts that glide short.
+ *
+ * Where it doesn't, as for a wheel, and for a touchpad that X11 hands over as whole notches, many to a swipe, neither
+ * the size nor the count of the steps tells a swipe from a turned wheel, and nothing says when fingers lift. The gaps
+ * between steps tell swipes apart. Within a swipe steps come a few tens of milliseconds apart, and further apart as
+ * the fingers slow down at its end; the next swipe starts after a gap and comes quickly again at once. So a run of
+ * steps turns one page; after a gap of [LIFT_MIN_MS] the first quick step starts the next run, and a step after
  * [RUN_BREAK_MS], which no swipe pauses for, starts one by itself.
  */
 class WheelTurns {
@@ -26,13 +30,20 @@ class WheelTurns {
     }
 
     /**
-     * Counts [delta], a scroll in notches made at [uptimeMillis], and hands what has been counted to [turn], which
-     * turns pages for whole notches and returns the notches it used.
+     * Counts [delta], a scroll in notches made at [uptimeMillis] at [stage] of a touchpad's scroll, null when that
+     * isn't known, and hands what has been counted to [turn], which turns pages for whole notches and returns the
+     * notches it used.
      */
-    fun onScroll(delta: Offset, uptimeMillis: Long, turn: (notches: Offset) -> Offset) {
+    fun onScroll(
+        delta: Offset,
+        uptimeMillis: Long,
+        stage: TouchpadScrollStage?,
+        turn: (notches: Offset) -> Offset,
+    ) {
         val gap = lastStepAt?.let { uptimeMillis - it }
         lastStepAt = uptimeMillis
         when {
+            stage != null -> if (stage == TouchpadScrollStage.Start) startRun()
             gap == null || gap > RUN_BREAK_MS -> startRun()
             gap >= LIFT_MIN_MS -> liftSeen = true
             liftSeen && gap <= QUICK_STEP_MS -> startRun()

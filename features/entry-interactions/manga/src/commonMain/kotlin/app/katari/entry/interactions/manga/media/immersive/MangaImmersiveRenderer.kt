@@ -39,6 +39,7 @@ import app.katari.entry.interactions.media.fittedMediaWidth
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.presentation.kit.pager.WheelTurns
+import app.katari.presentation.kit.pointer.touchpadScrollStage
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.ShortcutGroup
@@ -252,7 +253,7 @@ private fun Modifier.sidewaysScrollTurns(enabled: () -> Boolean, onTurn: (Int) -
                 continue
             }
             change.consume()
-            turns.onScroll(Offset(delta.x, 0f), change.uptimeMillis) { notches ->
+            turns.onScroll(Offset(delta.x, 0f), change.uptimeMillis, event.touchpadScrollStage) { notches ->
                 val whole = notches.x.toInt()
                 if (whole != 0) onTurn(whole)
                 Offset(whole.toFloat(), 0f)
