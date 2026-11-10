@@ -17,7 +17,10 @@ import java.util.concurrent.atomic.AtomicInteger
  * such as a challenge's, and their workers. JCEF sets a user agent only for the whole of Chromium, and DevTools sets one
  * per target, which leaves a frame of another site with Chromium's own; a challenge solved there earns a clearance that
  * the app's requests, sent as the page, never get through with, and a site that sees two user agents may ask a person
- * to prove they are one.
+ * to prove they are one. The user agent goes with the platform and client hints that fit it ([userAgentOverride]).
+ *
+ * A service worker is no target of the page's and keeps the user agent Chromium started with, the app's own
+ * ([JcefHost.userAgent][app.katari.webview.jcef.runtime.JcefHost.userAgent]).
  *
  * Each new target is held at its start ([waitForDebuggerOnStart][AUTO_ATTACH]) until it has the user agent, and is
  * watched for targets of its own in turn. JCEF's DevTools calls name no session, so the calls to a target go wrapped in
@@ -32,7 +35,7 @@ internal class PageUserAgent(private val session: DevToolsSession, userAgent: St
     /** Sets the user agent on the page and on every target it starts from now on. */
     suspend fun apply() {
         session.onEvent { method, parameters -> onEvent(path = emptyList(), method, parameters) }
-        session.call("Emulation.setUserAgentOverride", userAgentParameters())
+        session.call("Emulation.setUserAgentOverride", userAgentOverride(userAgent))
             ?: logcat(LogPriority.WARN) { "The page's user agent wasn't set" }
         session.call("Target.setAutoAttach", AUTO_ATTACH)
             ?: logcat(LogPriority.WARN) { "The page's frames won't get its user agent" }
@@ -42,7 +45,7 @@ internal class PageUserAgent(private val session: DevToolsSession, userAgent: St
     fun update(userAgent: String) {
         if (userAgent == this.userAgent) return
         this.userAgent = userAgent
-        session.send("Emulation.setUserAgentOverride", userAgentParameters())
+        session.send("Emulation.setUserAgentOverride", userAgentOverride(userAgent))
     }
 
     // A target's path is the sessions on the way to it from the page
@@ -54,7 +57,7 @@ internal class PageUserAgent(private val session: DevToolsSession, userAgent: St
                 val target = path + sessionId
                 // Workers have no Emulation domain
                 val override = if (type == "page" || type == "iframe") "Emulation" else "Network"
-                sendTo(target, "$override.setUserAgentOverride", userAgentParameters())
+                sendTo(target, "$override.setUserAgentOverride", userAgentOverride(userAgent))
                 sendTo(target, "Target.setAutoAttach", AUTO_ATTACH)
                 if (parameters["waitingForDebugger"]?.jsonPrimitive?.boolean == true) {
                     sendTo(target, "Runtime.runIfWaitingForDebugger", JsonObject(emptyMap()))
@@ -93,8 +96,6 @@ internal class PageUserAgent(private val session: DevToolsSession, userAgent: St
         put("sessionId", sessionId)
         put("message", message.toString())
     }
-
-    private fun userAgentParameters() = buildJsonObject { put("userAgent", userAgent) }
 
     private fun JsonObject.string(name: String) = get(name)?.jsonPrimitive?.contentOrNull
 

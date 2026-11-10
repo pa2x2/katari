@@ -85,6 +85,7 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
             Chromium.start(
                 switches = { runtimeSwitches -> chromiumSwitches(runtimeSwitches, host.deviceScaleFactor) },
                 dataDirectory = host.dataDirectory,
+                userAgent = host.userAgent,
                 started = initialized,
                 lost = { onLost(startup) },
             )

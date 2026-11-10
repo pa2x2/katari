@@ -34,6 +34,7 @@ internal object Chromium {
     fun start(
         switches: (List<String>) -> List<String>,
         dataDirectory: Path,
+        userAgent: String,
         started: CompletableFuture<CefApp>,
         lost: () -> Unit,
     ) {
@@ -50,6 +51,8 @@ internal object Chromium {
             // The log would otherwise go to the working directory, at INFO, which takes in every page's console
             log_file = dataDirectory.resolve(LOG_FILE).toString()
             log_severity = CefSettings.LogSeverity.LOGSEVERITY_WARNING
+            // For what no page sets a user agent on, such as service workers
+            user_agent = userAgent
         }
         logcat(LogPriority.INFO) { "Starting Chromium with ${arguments.joinToString(" ")}" }
         // The server takes its switches from the handler
