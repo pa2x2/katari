@@ -31,7 +31,7 @@ import app.katari.sourcemigration.config.MigrationConfigScreen
 import app.katari.sync.ui.entry.rememberEntrySync
 import app.katari.sync.ui.question.SyncQuestionsScreen
 import app.katari.ui.di.LocalAppUiGraph
-import app.katari.ui.telemetry.EntryTypeScreen
+import app.katari.ui.telemetry.ReportEntryType
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -54,7 +54,6 @@ import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.presentation.entry.updates.entryUpdatesLabel
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverViewer
@@ -83,12 +82,9 @@ class EntryScreen(
     private val entryId: Long,
     val fromSource: Boolean = false,
     private val bypassMerge: Boolean? = null,
-) : Screen(), AssistContentScreen, EntryTypeScreen {
+) : Screen(), AssistContentScreen {
 
     private var assistUrl: String? = null
-
-    override var entryType: EntryType? by mutableStateOf(null)
-        private set
 
     override fun onProvideAssistUrl() = assistUrl
 
@@ -144,7 +140,7 @@ class EntryScreen(
         }
 
         val successState = state as EntryViewModel.State.Success
-        LaunchedEffect(successState.entry.type) { entryType = successState.entry.type }
+        ReportEntryType(this, successState.entry.type)
         val downloadRequest = remember(successState.entry.type, successState.downloadSourceIds) {
             EntryDownloadActionRequest(
                 type = successState.entry.type,
