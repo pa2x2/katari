@@ -48,7 +48,8 @@ LEFT JOIN sources Name ON Name._id = Entry.source
 WHERE Entry._id = :entryId;
 
 chapterRow:
-SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order
+SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order,
+    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = chapters._id) AS marked_read
 FROM chapters
 WHERE _id = :chapterId;
 

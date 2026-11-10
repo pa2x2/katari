@@ -20,6 +20,7 @@ import app.katari.sync.client.merge.newestEdit
 import app.katari.sync.client.outbox.EditStamper
 import app.katari.sync.client.part.OffParts
 import app.katari.sync.client.payload.SourceReference
+import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordGroups
@@ -75,6 +76,8 @@ internal class ApplySession(
     private val resolving = HashSet<String>()
     private val questions = QuestionDetection(this)
     private val afterRecords = LinkedHashMap<String, AfterRecords>()
+    private val readHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
+    private val markedHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
 
     /** The newest edit taken in, which this device's later edits must be stamped after. */
     var newestSeen: HybridTimestamp? = null
@@ -191,6 +194,20 @@ internal class ApplySession(
     override fun afterRecords(id: String, cause: String, action: suspend () -> Unit) {
         afterRecords.putIfAbsent(id, AfterRecords(cause, action))
     }
+
+    override fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean) {
+        (if (marked) markedHere else readHere).getOrPut(entryId, ::LinkedHashSet) += chapterId
+    }
+
+    /** What [chapterRead] noted, by entry. */
+    val chaptersRead: List<ChaptersReadElsewhere>
+        get() = (readHere.keys + markedHere.keys).map { entryId ->
+            ChaptersReadElsewhere(
+                entryId = entryId,
+                readIds = readHere[entryId].orEmpty(),
+                markedIds = markedHere[entryId].orEmpty(),
+            )
+        }
 
     /** Runs the work records asked for [afterRecords], including what that work asks for in turn. */
     suspend fun finish() {

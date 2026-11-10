@@ -20,6 +20,8 @@ import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.question.Questions
+import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
+import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
@@ -43,6 +45,7 @@ import tachiyomi.data.StringListColumnAdapter
 import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.migration.MigrationChildStateTransfer
 import java.io.File
+import java.util.Collections
 
 /**
  * One device's database file, opened with the driver, adapters and capture wiring the app uses, and its preferences
@@ -108,6 +111,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         override val appVersion get() = this@SyncTestDevice.appVersion
     }
 
+    /** What sync told the app's listeners of chapters it made read here. */
+    val readElsewhere: MutableList<ChaptersReadElsewhere> = Collections.synchronizedList(ArrayList())
+
     val writing = SyncWriting(
         handler,
         drain,
@@ -117,7 +123,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         preferences.profiles,
         thisDevice,
         syncPreferences,
-    )
+    ) { setOf(ChaptersReadElsewhereListener { readElsewhere += it }) }
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
     val questions = Questions(handler, writing)
