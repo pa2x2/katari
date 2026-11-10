@@ -50,8 +50,11 @@ interface HostPage {
     /** The value of [script] in the main frame as JSON, `null` where it has none or threw. */
     suspend fun evaluate(script: String): String
 
-    /** A finger's tap at the page's CSS pixel [x], [y], which the page takes for a person's. */
-    suspend fun tap(x: Float, y: Float)
+    /**
+     * One step of a finger at the page's CSS pixel [x], [y], which the page takes for a person's. The caller lifts
+     * every finger it put down, and paces the steps.
+     */
+    suspend fun touch(step: HostTouch, x: Float, y: Float)
 
     /**
      * Enters [text] into the focused field as a keyboard does.
@@ -67,3 +70,5 @@ interface HostPage {
 
     suspend fun close()
 }
+
+enum class HostTouch { DOWN, MOVE, UP }

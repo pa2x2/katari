@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -149,8 +150,8 @@ class WebPageKeeperTest {
         val source = FakeWebPageSource(1)
 
         val call = launch { keeper.use(source, "main") { page -> page.click("#open") } }
-        advanceTimeBy(FakeHostPage.TAP_HELD / 2)
-        pages.opened[0].isFingerDown shouldBe true
+        runCurrent()
+        while (!pages.opened[0].isFingerDown) advanceTimeBy(10.milliseconds)
         call.cancelAndJoin()
 
         pages.opened[0].isFingerDown shouldBe false

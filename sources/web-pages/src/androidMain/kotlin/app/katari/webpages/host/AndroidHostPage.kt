@@ -1,6 +1,10 @@
 package app.katari.webpages.host
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -35,6 +39,10 @@ import kotlin.time.Duration.Companion.seconds
  * nothing, so it is laid out by hand at the page's size. It takes touches, text and keys as an attached one does, and
  * the page takes them for a person's.
  *
+ * Nothing draws such a view either, and a page that is never drawn never starts a transition or an animation: what a
+ * site slides or fades in stays where it began, and `transitionend` never comes. So while the page isn't idle the
+ * view is drawn here, shrunk into a bitmap nobody looks at, which is all its animations need to run.
+ *
  * Made and called on the main thread; every call here moves there.
  */
 internal class AndroidHostPage(
@@ -50,6 +58,18 @@ internal class AndroidHostPage(
 
     // After the renderer ended or the view was destroyed, nothing but destroying it may be called on it
     private var isOver = false
+    private var fingerDownAt = 0L
+
+    // A view no window holds runs nothing posted to it, so the main thread's own queue paces the frames
+    private val frames = Handler(Looper.getMainLooper())
+    private val frame = Canvas()
+    private val drawFrame = object : Runnable {
+        override fun run() {
+            if (isOver) return
+            view.draw(frame)
+            frames.postDelayed(this, FRAME_EVERY.inWholeMilliseconds)
+        }
+    }
 
     init {
         view.setDefaultSettings()
@@ -61,11 +81,15 @@ internal class AndroidHostPage(
             View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY),
         )
         view.layout(0, 0, width, height)
+        // The whole view, so that all of the page counts as drawn, at a size that costs next to nothing to paint
+        frame.setBitmap(Bitmap.createBitmap(width / FRAME_SHRUNK, height / FRAME_SHRUNK, Bitmap.Config.ARGB_8888))
+        frame.scale(1f / FRAME_SHRUNK, 1f / FRAME_SHRUNK)
         WebViewCompat.addWebMessageListener(view, settings.channel, EVERY_SITE) { _, message, _, isMainFrame, _ ->
             if (isMainFrame) message.data?.let(events::onMessage)
         }
         WebViewCompat.addDocumentStartJavaScript(view, settings.startScript, EVERY_SITE)
         view.webViewClient = Client()
+        frames.post(drawFrame)
     }
 
     override suspend fun load(url: String, headers: Map<String, String>) = onMain {
@@ -81,11 +105,17 @@ internal class AndroidHostPage(
         }
     }
 
-    override suspend fun tap(x: Float, y: Float) = onMain {
-        val pressed = SystemClock.uptimeMillis()
-        touch(MotionEvent.ACTION_DOWN, pressed, pressed, x, y)
-        delay(TAP_HELD)
-        if (!isOver) touch(MotionEvent.ACTION_UP, pressed, SystemClock.uptimeMillis(), x, y)
+    override suspend fun touch(step: HostTouch, x: Float, y: Float) = onMain {
+        val now = SystemClock.uptimeMillis()
+        if (step == HostTouch.DOWN) fingerDownAt = now
+        val action = when (step) {
+            HostTouch.DOWN -> MotionEvent.ACTION_DOWN
+            HostTouch.MOVE -> MotionEvent.ACTION_MOVE
+            HostTouch.UP -> MotionEvent.ACTION_UP
+        }
+        val event = MotionEvent.obtain(fingerDownAt, now, action, x * density, y * density, 0)
+        view.dispatchTouchEvent(event)
+        event.recycle()
     }
 
     override suspend fun insertText(text: String) = onMain {
@@ -110,9 +140,16 @@ internal class AndroidHostPage(
         Unit
     }
 
-    // A paused view's page counts as hidden: it draws no frames and its timers slow to one a second
+    // A paused view's page counts as hidden: its timers slow to one a second, and it is drawn no more
     override suspend fun setIdle(idle: Boolean) = onMain {
-        if (idle) view.onPause() else view.onResume()
+        frames.removeCallbacks(drawFrame)
+        if (idle) {
+            view.onPause()
+        } else {
+            view.onResume()
+            frames.post(drawFrame)
+        }
+        Unit
     }
 
     override suspend fun close() = withContext(Dispatchers.Main.immediate) {
@@ -125,15 +162,10 @@ internal class AndroidHostPage(
         block()
     }
 
-    private fun touch(action: Int, pressed: Long, now: Long, x: Float, y: Float) {
-        val event = MotionEvent.obtain(pressed, now, action, x * density, y * density, 0)
-        view.dispatchTouchEvent(event)
-        event.recycle()
-    }
-
     private fun end() {
         if (isOver) return
         isOver = true
+        frames.removeCallbacks(drawFrame)
         load?.completeExceptionally(WebPageException(PAGE_OVER))
         view.destroy()
     }
@@ -170,8 +202,9 @@ internal class AndroidHostPage(
 
     private companion object {
         val EVERY_SITE = setOf("*")
-        val TAP_HELD = 60.milliseconds
         val FIELD_TIMEOUT = 2.seconds
+        val FRAME_EVERY = 33.milliseconds
+        const val FRAME_SHRUNK = 8
         val FIELD_ASKED_AGAIN = 50.milliseconds
         const val CURSOR_AFTER_TEXT = 1
         const val NO_VALUE = "null"

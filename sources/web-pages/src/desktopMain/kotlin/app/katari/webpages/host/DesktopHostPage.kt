@@ -11,7 +11,6 @@ import eu.kanade.tachiyomi.source.entry.webpage.WebPageException
 import eu.kanade.tachiyomi.source.entry.webpage.WebPageKey
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -19,7 +18,6 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.coroutines.resume
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * One page on a hidden Chromium page. The page's posts come through a bridge named after the channel, whose
@@ -60,11 +58,23 @@ internal class DesktopHostPage(
         page.evaluate(script) { value -> continuation.resume(value) }
     }
 
-    override suspend fun tap(x: Float, y: Float) {
-        page.touch(finger(ExtensionPageTouch.Phase.PRESSED, x, y))
-        delay(TAP_HELD)
-        page.touch(finger(ExtensionPageTouch.Phase.RELEASED, x, y))
-    }
+    override suspend fun touch(step: HostTouch, x: Float, y: Float) = page.touch(
+        ExtensionPageTouch(
+            pointerId = 0,
+            phase = when (step) {
+                HostTouch.DOWN -> ExtensionPageTouch.Phase.PRESSED
+                HostTouch.MOVE -> ExtensionPageTouch.Phase.MOVED
+                HostTouch.UP -> ExtensionPageTouch.Phase.RELEASED
+            },
+            tool = ExtensionPageTouch.Tool.FINGER,
+            x = x,
+            y = y,
+            radiusX = 0f,
+            radiusY = 0f,
+            rotation = 0f,
+            pressure = 0f,
+        ),
+    )
 
     override suspend fun insertText(text: String) = page.insertText(text)
 
@@ -86,18 +96,6 @@ internal class DesktopHostPage(
 
     // Closing waits for the page's cookies to reach the app's store
     override suspend fun close() = withContext(Dispatchers.IO) { page.close() }
-
-    private fun finger(phase: ExtensionPageTouch.Phase, x: Float, y: Float) = ExtensionPageTouch(
-        pointerId = 0,
-        phase = phase,
-        tool = ExtensionPageTouch.Tool.FINGER,
-        x = x,
-        y = y,
-        radiusX = 0f,
-        radiusY = 0f,
-        rotation = 0f,
-        pressure = 0f,
-    )
 
     private inner class Events(private val channel: String) : ExtensionPageEvents {
         override fun onPageStarted(url: String) = Unit
@@ -136,6 +134,5 @@ internal class DesktopHostPage(
 
     private companion object {
         const val POST = "postMessage"
-        val TAP_HELD = 60.milliseconds
     }
 }

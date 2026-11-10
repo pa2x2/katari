@@ -4,12 +4,11 @@ import app.katari.webpages.host.HostPage
 import app.katari.webpages.host.HostPageEvents
 import app.katari.webpages.host.HostPageSettings
 import app.katari.webpages.host.HostPages
+import app.katari.webpages.host.HostTouch
 import eu.kanade.tachiyomi.source.entry.webpage.WebPageKey
-import kotlinx.coroutines.delay
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.time.Duration.Companion.milliseconds
 
 /** Pages that load nothing and remember what was done to them. */
 internal class FakeHostPages : HostPages {
@@ -55,11 +54,9 @@ internal class FakeHostPage(private val settings: HostPageSettings, private val 
     // Where an element's middle is asked for, it is there
     override suspend fun evaluate(script: String): String = "[10,20]"
 
-    override suspend fun tap(x: Float, y: Float) {
-        isFingerDown = true
-        delay(TAP_HELD)
-        isFingerDown = false
-        onTap()
+    override suspend fun touch(step: HostTouch, x: Float, y: Float) {
+        isFingerDown = step != HostTouch.UP
+        if (step == HostTouch.UP) onTap()
     }
 
     override suspend fun insertText(text: String) = Unit
@@ -72,9 +69,5 @@ internal class FakeHostPage(private val settings: HostPageSettings, private val 
 
     override suspend fun close() {
         isClosed = true
-    }
-
-    companion object {
-        val TAP_HELD = 60.milliseconds
     }
 }

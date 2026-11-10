@@ -22,8 +22,12 @@ interface WebPage {
     suspend fun load(url: String)
 
     /**
-     * Runs [script] in the page as its own scripts run and returns its value as JSON: a string in quotes, `null`
-     * where the script has no value JSON can hold or threw. A promise isn't waited for.
+     * Runs [script] in the page as its own scripts run and returns the value of its last statement as JSON: a string
+     * in quotes, `null` where there is no value JSON can hold. A promise isn't waited for, and what the script
+     * declares with `let` or `const` is gone when it returns.
+     *
+     * Fails with what the script threw. A script the page can't read as JavaScript fails with the reason too, except
+     * on a site whose content security policy keeps the page from finding it, where it gives `null`.
      */
     suspend fun evaluate(script: String): String
 
@@ -32,13 +36,26 @@ interface WebPage {
 
     /**
      * Scrolls the element into view and taps its middle as a finger would, which the page can't tell from a person's
-     * tap; a click made by script, it can. Returns once the tap is made, before the page answered it: wait for what
-     * the tap brings with [awaitSelector], [awaitUrl] or [responseTo].
+     * tap; a click made by script, it can. Returns once the page has seen the tap, before it answered it: wait for
+     * what the tap brings with [awaitSelector], [awaitUrl] or [responseTo].
      *
      * Fails where the tap couldn't land on the element: scrolling doesn't bring it into view, as with a carousel's
      * other slides, or something else lies over its middle, such as a banner.
      */
     suspend fun click(selector: String)
+
+    /**
+     * Puts a finger on the element and moves it across toward [direction], as a person swipes: toward
+     * [WebPageDirection.LEFT] a carousel shows what lay to the right. The page can't tell it from a person's swipe.
+     * Returns once the page has seen the finger lift, while what the swipe set moving may still move; [click] taps an
+     * element where it comes to rest.
+     *
+     * It is for what a site's scripts move. An area the browser scrolls itself doesn't follow the finger on Android;
+     * [scrollTo] and [click] bring what it holds into view on both apps.
+     *
+     * Fails where a finger couldn't land on the element, as [click] does.
+     */
+    suspend fun swipe(selector: String, direction: WebPageDirection)
 
     /**
      * Puts [text] into the field as a keyboard does, in place of what it held, and returns once the page has it. The
@@ -74,3 +91,5 @@ interface WebPage {
 }
 
 enum class WebPageKey { ENTER, TAB, ESCAPE, BACKSPACE, ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT }
+
+enum class WebPageDirection { LEFT, RIGHT, UP, DOWN }
