@@ -13,6 +13,8 @@ import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationFeatu
 import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationGroup
 import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationInput
 import app.katari.entry.interactions.library.EntryLibraryUpdateQueueWarning
+import app.katari.notification.AppNotificationKind
+import app.katari.notification.LibraryUpdatesNotificationKind
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.library.label
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
@@ -100,6 +102,7 @@ class DesktopLibraryUpdateNotifications(
         notifications.show(
             PROGRESS,
             DesktopNotification(
+                kind = AppNotificationKind.LIBRARY_PROGRESS,
                 title = progress.label(context),
                 body = lines(profile.label, entries.titles(profile), next),
                 progress = NotificationProgress(progress.completed, progress.total),
@@ -144,6 +147,7 @@ class DesktopLibraryUpdateNotifications(
         notifications.show(
             PROGRESS,
             DesktopNotification(
+                kind = AppNotificationKind.LIBRARY_PROGRESS,
                 title = stringResource(MR.strings.notification_updating_progress, percent),
                 body = lines(profile.label, entries.titles(profile)),
                 progress = NotificationProgress(completed, total),
@@ -178,6 +182,7 @@ class DesktopLibraryUpdateNotifications(
         notifications.show(
             WARNING,
             DesktopNotification(
+                kind = AppNotificationKind.LIBRARY_PROGRESS,
                 title = stringResource(MR.strings.label_warning),
                 body = lines(profile.label, stringResource(text)),
                 urgency = NotificationUrgency.Low,
@@ -198,6 +203,7 @@ class DesktopLibraryUpdateNotifications(
         notifications.show(
             errorsKey(profile.id),
             DesktopNotification(
+                kind = AppNotificationKind.LIBRARY_ERRORS,
                 title = pluralStringResource(MR.plurals.notification_update_error, failed, failed),
                 body = lines(profile.label, stringResource(MR.strings.action_show_errors)),
                 urgency = NotificationUrgency.Low,
@@ -235,6 +241,7 @@ class DesktopLibraryUpdateNotifications(
         notifications.show(
             updatesKey(profile.id),
             DesktopNotification(
+                kind = LibraryUpdatesNotificationKind(profile.id),
                 title = stringResource(group.summary.title),
                 body = lines(profile.label, text),
                 onClick = NotificationResponse.Open(HomeDestination.Updates(profile.id)),

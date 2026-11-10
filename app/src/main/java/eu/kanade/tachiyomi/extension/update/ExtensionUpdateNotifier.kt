@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.update
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import app.katari.notification.AppNotificationKind
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -23,7 +24,7 @@ class ExtensionUpdateNotifier(
 
         context.notify(
             Notifications.ID_EXTENSIONS_AUTO_UPDATED,
-            Notifications.CHANNEL_EXTENSIONS_UPDATE,
+            AppNotificationKind.EXTENSION_UPDATES.id,
         ) {
             setContentTitle(
                 context.pluralStringResource(
@@ -51,7 +52,7 @@ class ExtensionUpdateNotifier(
 
         context.notify(
             Notifications.ID_EXTENSION_UPDATES,
-            Notifications.CHANNEL_EXTENSIONS_UPDATE,
+            AppNotificationKind.EXTENSION_UPDATES.id,
         ) {
             setContentTitle(
                 context.pluralStringResource(

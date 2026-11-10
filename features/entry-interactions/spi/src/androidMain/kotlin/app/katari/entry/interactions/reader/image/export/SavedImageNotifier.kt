@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.PermissionChecker
 import androidx.core.graphics.drawable.toBitmap
 import app.katari.entry.interactions.reader.image.toReaderShareIntent
+import app.katari.notification.AppNotificationKind
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.CachePolicy
@@ -26,7 +27,7 @@ import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 /** The notification for a saved image: the picture, opening it on a tap, with an action to share it. */
 internal class SavedImageNotifier(private val context: Context) {
 
-    private val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_COMMON)
+    private val notificationBuilder = NotificationCompat.Builder(context, AppNotificationKind.COMMON.id)
     private val notificationId: Int = ID_DOWNLOAD_IMAGE
 
     /**
@@ -107,7 +108,6 @@ internal class SavedImageNotifier(private val context: Context) {
     }
 }
 
-private const val CHANNEL_COMMON = "common_channel"
 private const val ID_DOWNLOAD_IMAGE = 2
 
 private fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {

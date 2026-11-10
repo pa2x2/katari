@@ -20,6 +20,7 @@ import app.katari.android.localnetwork.LocalNetworkPermissionPrompter
 import app.katari.android.work.RetiredWorkerFactory
 import app.katari.core.metro.GraphProvider
 import app.katari.extension.runtime.injekt.MetroInjektRegistrar
+import app.katari.notification.AppNotificationKind
 import app.katari.profiles.sourcepreferences.extensionPreferenceSourceId
 import app.katari.telemetry.TelemetryHost
 import app.katari.ui.host.AppProcessStart
@@ -126,7 +127,7 @@ class App :
                     disableIncognitoReceiver.register()
                     notify(
                         Notifications.ID_INCOGNITO_MODE,
-                        Notifications.CHANNEL_INCOGNITO_MODE,
+                        AppNotificationKind.INCOGNITO_MODE.id,
                     ) {
                         setContentTitle(stringResource(MR.strings.pref_incognito_mode))
                         setContentText(stringResource(MR.strings.notification_incognito_text))

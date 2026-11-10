@@ -1,6 +1,7 @@
 package app.katari.desktop.notification
 
 import app.katari.core.common.platform.DesktopOperatingSystem
+import app.katari.desktop.application.DesktopAppVariant
 import app.katari.desktop.notification.freedesktop.DbusNotificationServer
 import app.katari.desktop.notification.freedesktop.FreedesktopNotifications
 import app.katari.desktop.notification.freedesktop.NotificationIconFile
@@ -44,17 +45,18 @@ interface SystemNotifications {
 }
 
 /**
- * The [SystemNotifications] of [operatingSystem], showing notifications as [appName] with the app's icon and keeping
+ * The [SystemNotifications] of [operatingSystem], showing notifications as [app] with the app's icon and keeping
  * what a later run needs to know of them, and the icon where the service reads it, in [runtimeDirectory].
  */
 fun systemNotifications(
     operatingSystem: DesktopOperatingSystem,
-    appName: String,
+    app: DesktopAppVariant,
     runtimeDirectory: Path,
     listener: SystemNotifications.Listener,
 ): SystemNotifications = when (operatingSystem) {
     DesktopOperatingSystem.LINUX -> FreedesktopNotifications(
-        appName,
+        app.displayName,
+        app.applicationId,
         NotificationIconFile(runtimeDirectory.resolve("app-icon.png"))::uri,
         DbusNotificationServer::connect,
         ShownNotificationsRecord(runtimeDirectory.resolve("notifications.json")),

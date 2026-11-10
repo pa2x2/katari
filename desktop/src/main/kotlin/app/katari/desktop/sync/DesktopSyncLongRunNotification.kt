@@ -6,6 +6,7 @@ import app.katari.desktop.notification.DesktopNotifications
 import app.katari.desktop.notification.NotificationProgress
 import app.katari.desktop.notification.NotificationResponse
 import app.katari.desktop.notification.NotificationUrgency
+import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.notice.SyncLongRunNotice
 import dev.zacsweers.metro.Inject
@@ -21,6 +22,7 @@ class DesktopSyncLongRunNotification(private val notifications: DesktopNotificat
         notifications.show(
             KEY,
             DesktopNotification(
+                kind = AppNotificationKind.SYNC_PROGRESS,
                 title = stringResource(title),
                 body = when {
                     server != null && percent != null -> stringResource(

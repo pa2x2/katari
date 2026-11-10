@@ -4,6 +4,8 @@ import app.katari.desktop.home.HomeDestination
 import app.katari.desktop.notification.DesktopNotification
 import app.katari.desktop.notification.DesktopNotifications
 import app.katari.desktop.notification.NotificationResponse
+import app.katari.notification.AppNotificationKind
+import app.katari.notification.NotificationKind
 import app.katari.presentation.kit.feedback.AppMessages
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
@@ -41,6 +43,7 @@ class DesktopExtensionNotices(
         notifications.show(
             AUTO_UPDATED,
             extensionsNotification(
+                AppNotificationKind.EXTENSION_UPDATES,
                 pluralStringResource(MR.plurals.extension_auto_update_notification_updated, names.size, names.size),
                 names.joinToString(", ").takeUnless { securityPreferences.hideNotificationContent.get() },
             ),
@@ -55,6 +58,7 @@ class DesktopExtensionNotices(
         notifications.show(
             UPDATES,
             extensionsNotification(
+                AppNotificationKind.EXTENSION_UPDATES,
                 pluralStringResource(MR.plurals.update_check_notification_ext_updates, names.size, names.size),
                 names.joinToString(", ").takeUnless { securityPreferences.hideNotificationContent.get() },
             ),
@@ -70,6 +74,7 @@ class DesktopExtensionNotices(
         notifications.show(
             BACKUP_EXTENSIONS,
             extensionsNotification(
+                AppNotificationKind.BACKUP_RESTORE_COMPLETE,
                 pluralStringResource(MR.plurals.restore_extensions_installed, installed.size, installed.size),
                 missed.takeIf { it.isNotEmpty() && !securityPreferences.hideNotificationContent.get() }
                     ?.let { stringResource(MR.strings.restore_extensions_missed, it.joinToString(", ")) },
@@ -77,7 +82,8 @@ class DesktopExtensionNotices(
         )
     }
 
-    private fun extensionsNotification(title: String, body: String?) = DesktopNotification(
+    private fun extensionsNotification(kind: NotificationKind, title: String, body: String?) = DesktopNotification(
+        kind = kind,
         title = title,
         body = body,
         onClick = NotificationResponse.Open(HomeDestination.Extensions),

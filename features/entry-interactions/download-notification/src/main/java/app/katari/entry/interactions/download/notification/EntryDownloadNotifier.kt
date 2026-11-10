@@ -13,6 +13,7 @@ import app.katari.entry.interactions.download.EntryDownloadNotificationActions
 import app.katari.entry.interactions.download.EntryDownloadNotificationPresenter
 import app.katari.entry.interactions.download.EntryDownloadNotifications
 import app.katari.entry.interactions.download.EntryDownloadProgressNotification
+import app.katari.notification.AppNotificationKind
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -50,7 +51,7 @@ class AndroidEntryDownloadNotifier(
             showingProgress = true
         }
         val hideContent = hideNotificationContent()
-        notificationBuilder(EntryDownloadNotifications.CHANNEL_PROGRESS) {
+        notificationBuilder(AppNotificationKind.DOWNLOAD_PROGRESS.id) {
             setSmallIcon(android.R.drawable.stat_sys_download)
             setAutoCancel(false)
             setOnlyAlertOnce(true)
@@ -75,7 +76,7 @@ class AndroidEntryDownloadNotifier(
 
     override fun showPaused() {
         showingProgress = false
-        notificationBuilder(EntryDownloadNotifications.CHANNEL_PROGRESS) {
+        notificationBuilder(AppNotificationKind.DOWNLOAD_PROGRESS.id) {
             setContentTitle(labels.paused)
             setContentText(labels.downloadsPaused)
             setSmallIcon(android.R.drawable.ic_media_pause)
@@ -105,7 +106,7 @@ class AndroidEntryDownloadNotifier(
 
     override fun showError(content: EntryDownloadErrorNotification) {
         val hideContent = hideNotificationContent()
-        notificationBuilder(EntryDownloadNotifications.CHANNEL_ERROR) {
+        notificationBuilder(AppNotificationKind.DOWNLOAD_ERRORS.id) {
             setContentTitle(content.title.takeUnless { hideContent } ?: labels.downloader)
             setContentText(content.message.takeUnless { hideContent } ?: labels.unknownError)
             setSmallIcon(android.R.drawable.stat_sys_warning)
@@ -116,7 +117,7 @@ class AndroidEntryDownloadNotifier(
     }
 
     override fun showWarning(reason: String, timeoutMillis: Long?, helpUrl: String?) {
-        notificationBuilder(EntryDownloadNotifications.CHANNEL_ERROR) {
+        notificationBuilder(AppNotificationKind.DOWNLOAD_ERRORS.id) {
             setContentTitle(labels.downloader)
             setStyle(NotificationCompat.BigTextStyle().bigText(reason))
             setSmallIcon(android.R.drawable.stat_sys_warning)
@@ -163,7 +164,7 @@ class AndroidEntryDownloadNotifier(
 }
 
 fun Context.entryDownloadForegroundNotification(): Notification {
-    return NotificationCompat.Builder(this, EntryDownloadNotifications.CHANNEL_PROGRESS)
+    return NotificationCompat.Builder(this, AppNotificationKind.DOWNLOAD_PROGRESS.id)
         .setContentTitle(stringResource(MR.strings.download_notifier_downloader_title))
         .setSmallIcon(android.R.drawable.stat_sys_download)
         .setOngoing(true)

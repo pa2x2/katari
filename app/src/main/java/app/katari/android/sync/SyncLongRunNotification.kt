@@ -2,6 +2,7 @@ package app.katari.android.sync
 
 import android.app.Application
 import android.app.Notification
+import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.notice.SyncLongRunNotice
 import dev.zacsweers.metro.Inject
@@ -21,7 +22,7 @@ class SyncLongRunNotification(private val application: Application) {
     /** The notification for [status], or for a long run that hasn't reported yet when it is null. */
     fun build(status: SyncStatus?): Notification {
         val (title, server, percent) = SyncLongRunNotice.of(status)
-        return application.notificationBuilder(Notifications.CHANNEL_SYNC_PROGRESS) {
+        return application.notificationBuilder(AppNotificationKind.SYNC_PROGRESS.id) {
             setSmallIcon(R.drawable.ic_katari)
             setContentTitle(application.stringResource(title))
             setContentText(
