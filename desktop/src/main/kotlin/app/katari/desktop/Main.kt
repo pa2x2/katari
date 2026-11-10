@@ -119,6 +119,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // thread would hold back the window and every frame after it until they are done
     AppProcessStart.scheduleWarmups({ warmups -> thread(name = "Startup warmups") { warmups.run() } }) { graph }
     graph.classDataArchive.start()
+    graph.chromiumUpkeep.start()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)

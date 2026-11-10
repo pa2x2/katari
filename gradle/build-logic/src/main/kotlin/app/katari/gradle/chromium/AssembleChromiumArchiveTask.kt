@@ -79,7 +79,10 @@ abstract class AssembleChromiumArchiveTask : DefaultTask() {
                 ".",
             )
         }
-        logger.lifecycle("${archive.name}: ${archive.length()} bytes, SHA-256 ${sha256(archive)}")
+        val installed = chromium.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+        logger.lifecycle(
+            "${archive.name}: ${archive.length()} bytes, SHA-256 ${sha256(archive)}, $installed bytes installed",
+        )
     }
 
     private fun sha256(file: File): String {

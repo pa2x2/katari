@@ -11,10 +11,11 @@ import java.io.File
 
 /**
  * Writes `DesktopBuildInfo`, the desktop app's counterpart of the Android app's generated `BuildConfig`: the desktop
- * app's own version, the commit the build was made from, how many commits lead up to it, when it was committed, and
- * whether it is the release or a development build, and the Chromium its web view runs on. Also writes `eu.kanade.tachiyomi.BuildConfig` with the Android
- * app's version name and code, which extensions read reflectively through `AppInfo`, as they do on Android: extensions
- * are written against the Android app's versions, whatever the desktop app's own is.
+ * app's own version, the commit the build was made from, how many commits lead up to it, when it was committed,
+ * whether it is the release or a development build, and the Chromium its web view runs on with where that is
+ * downloaded from. Also writes `eu.kanade.tachiyomi.BuildConfig` with the Android app's version name and code, which
+ * extensions read reflectively through `AppInfo`, as they do on Android: extensions are written against the Android
+ * app's versions, whatever the desktop app's own is.
  */
 @CacheableTask
 abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
@@ -48,6 +49,20 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
     @get:Input
     abstract val chromiumVersion: Property<String>
 
+    /** The archive the app downloads that Chromium from. */
+    @get:Input
+    abstract val chromiumArchiveUrl: Property<String>
+
+    @get:Input
+    abstract val chromiumArchiveSha256: Property<String>
+
+    @get:Input
+    abstract val chromiumArchiveBytes: Property<Long>
+
+    /** The size of the files the archive unpacks to. */
+    @get:Input
+    abstract val chromiumInstalledBytes: Property<Long>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -64,6 +79,10 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
             |    const val BUILD_TIME: String = ${buildTime.get().toKotlinStringLiteral()}
             |    const val IS_RELEASE: Boolean = ${release.get()}
             |    const val CHROMIUM_VERSION: String = ${chromiumVersion.get().toKotlinStringLiteral()}
+            |    const val CHROMIUM_ARCHIVE_URL: String = ${chromiumArchiveUrl.get().toKotlinStringLiteral()}
+            |    const val CHROMIUM_ARCHIVE_SHA256: String = ${chromiumArchiveSha256.get().toKotlinStringLiteral()}
+            |    const val CHROMIUM_ARCHIVE_BYTES: Long = ${chromiumArchiveBytes.get()}
+            |    const val CHROMIUM_INSTALLED_BYTES: Long = ${chromiumInstalledBytes.get()}
             |}
             |
         """.trimMargin()

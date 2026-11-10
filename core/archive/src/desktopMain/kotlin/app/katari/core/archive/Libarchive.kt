@@ -37,6 +37,9 @@ internal interface Libarchive : Library {
 
     /** The `AE_IF*` bits of the entry's mode. */
     fun entryFiletype(entry: Pointer): Int
+
+    /** The permission bits of the entry's mode. */
+    fun entryPerm(entry: Pointer): Int
 }
 
 internal const val ARCHIVE_EOF = 1
@@ -45,6 +48,8 @@ internal const val ARCHIVE_EOF = 1
 internal const val ARCHIVE_WARN = -20
 
 internal const val AE_IFREG = 0x8000
+
+internal const val AE_IFDIR = 0x4000
 
 /**
  * libarchive, loaded on first use: the copy the app carries for its platform, or else the system's. The app carries one

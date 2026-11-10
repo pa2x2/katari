@@ -33,6 +33,14 @@ val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("gen
     buildTime.set(getLatestCommitTime())
     release.set(Config.desktopRelease)
     chromiumVersion.set(katari.versions.chromium.asProvider())
+    chromiumArchiveUrl.set(
+        katari.versions.chromium.asProvider().map { chromium ->
+            "https://github.com/pa2x2/katari/releases/download/chromium-$chromium/chromium-$chromium-linux-x86_64.tar.zst"
+        },
+    )
+    chromiumArchiveSha256.set(katari.versions.chromium.linux.x64.sha256)
+    chromiumArchiveBytes.set(katari.versions.chromium.linux.x64.size.map { it.toLong() })
+    chromiumInstalledBytes.set(katari.versions.chromium.linux.x64.installed.size.map { it.toLong() })
     outputDir.set(layout.buildDirectory.dir("generated/desktopBuildInfo"))
 }
 
@@ -110,6 +118,7 @@ dependencies {
     implementation(projects.features.translation.providers.serverConnection)
     implementation(projects.features.tts.runtime)
     implementation(projects.features.tts.providers.speechDispatcher)
+    implementation(projects.sources.webView.chromium)
     implementation(projects.sources.webView.jcef)
 
     implementation(libs.metrox.viewmodel.compose)
