@@ -28,13 +28,13 @@ import kotlin.time.TimeSource
  */
 internal object Chromium {
     /**
-     * Starts Chromium, the one in the folder [chromium] or else the runtime's own, with [switches] of the runtime's
-     * own, and completes [started] once it runs. [lost] is called if
-     * the server ends before the app shuts it down.
+     * Starts Chromium with [switches] of the runtime's own and completes [started] once it runs. [lost] is called if
+     * the server ends before the app shuts it down. Which Chromium it is, the runtime's or one installed for the app,
+     * was settled as JCEF's classes loaded: its server is where the system property JCEF read then names it, and
+     * Chromium finds its other files beside its server. JCEF passes on no setting that would name them.
      */
     fun start(
         switches: (List<String>) -> List<String>,
-        chromium: Path?,
         dataDirectory: Path,
         userAgent: String,
         started: CompletableFuture<CefApp>,
@@ -47,13 +47,6 @@ internal object Chromium {
         val config = JCefAppConfig.getInstance()
         val arguments = switches(config.appArgsAsList).toTypedArray()
         val settings = config.cefSettings.apply {
-            // The runtime's settings point into the runtime, where a Chromium installed for the app isn't. The server
-            // itself is found through the system property JCEF read as its classes loaded
-            if (chromium != null) {
-                resources_dir_path = chromium.toString()
-                locales_dir_path = chromium.resolve(LOCALES_DIRECTORY).toString()
-                browser_subprocess_path = chromium.resolve(HELPER_EXECUTABLE).toString()
-            }
             // Its profile, caches and the installation data Chromium keeps beside them, which would otherwise go to
             // ~/.config/cef_user_data
             cache_path = dataDirectory.toString()
@@ -139,9 +132,6 @@ internal object Chromium {
 
     /** The runtime's Chromium server, which every process of Chromium's runs. */
     const val SERVER_EXECUTABLE = "cef_server"
-
-    private const val HELPER_EXECUTABLE = "jcef_helper"
-    private const val LOCALES_DIRECTORY = "locales"
 
     private const val LOG_FILE = "chromium.log"
 

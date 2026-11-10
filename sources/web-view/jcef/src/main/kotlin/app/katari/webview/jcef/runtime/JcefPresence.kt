@@ -35,11 +35,15 @@ internal class JcefPresenceCheck(private val installed: Path) {
     /** The Java runtime's own Chromium, which a runtime either has for the whole run or doesn't. */
     val hasRuntimeChromium: Boolean = libraryPath.any(::holdsChromium)
 
+    /** The runtime's library for the memory Chromium's server hands the pages' pictures over in, if it has one. */
+    val sharedMemoryLibrary: Path? =
+        libraryPath.map { it.resolve(SHARED_MEMORY_LIBRARY) }.firstOrNull { it.exists() }
+
     private val version by lazy { JcefModuleVersion.read() }
 
     fun check(): JcefPresence {
         if (ModuleLayer.boot().findModule(JCEF_MODULE).isEmpty) return JcefPresence.Absent
-        if (libraryPath.none { it.resolve(SHARED_MEMORY_LIBRARY).exists() }) {
+        if (sharedMemoryLibrary == null) {
             logcat(LogPriority.WARN) { "The Java runtime has JCEF but not its $SHARED_MEMORY_LIBRARY" }
             return JcefPresence.Absent
         }

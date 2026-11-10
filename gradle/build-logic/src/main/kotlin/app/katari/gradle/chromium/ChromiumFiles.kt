@@ -11,7 +11,11 @@ import java.io.File
 internal object ChromiumFiles {
     const val MODULE = "jcef"
 
-    /** What JCEF's Java side loads itself, to read the pictures of pages from the memory it shares with Chromium. */
+    /**
+     * What JCEF's Java side loads itself, to read the pictures of pages from the memory it shares with Chromium. It is
+     * the native half of the runtime's JCEF classes, so it stays with them; JCEF looks for it beside Chromium's server,
+     * where the app puts a copy before it starts a Chromium it downloaded.
+     */
     val KEPT_IN_RUNTIME = setOf("libshared_mem_helper.so")
 
     /**

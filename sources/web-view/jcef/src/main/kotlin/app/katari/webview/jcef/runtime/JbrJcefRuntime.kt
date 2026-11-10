@@ -7,6 +7,7 @@ import kotlinx.coroutines.future.await
 import logcat.LogPriority
 import org.cef.CefApp
 import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -83,6 +84,7 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
                 logcat(LogPriority.WARN) { "The Chromium before didn't shut down in $SHUTDOWN_TIMEOUT" }
             }
             ChromiumProfileData(host.dataDirectory).deleteIfAsked()
+            if (chromium != null) placeSharedMemoryLibrary(chromium)
             val initialized = CompletableFuture<CefApp>()
             initialized
                 .thenCompose { app -> cookies.attach(Chromium.cookieManager()).thenApply { app } }
@@ -95,7 +97,6 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
                 }
             Chromium.start(
                 switches = { runtimeSwitches -> chromiumSwitches(runtimeSwitches, host.deviceScaleFactor) },
-                chromium = chromium,
                 dataDirectory = host.dataDirectory,
                 userAgent = host.userAgent,
                 started = initialized,
@@ -105,6 +106,15 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
             startup.fail(e)
         } catch (e: RuntimeException) {
             startup.fail(JcefStartException("Chromium didn't start", e))
+        }
+    }
+
+    private fun placeSharedMemoryLibrary(chromium: Path) {
+        val library = presenceCheck.sharedMemoryLibrary ?: return
+        try {
+            placeBesideChromium(library, chromium)
+        } catch (e: IOException) {
+            throw JcefStartException("Chromium's folder didn't take the runtime's ${library.fileName}", e)
         }
     }
 
