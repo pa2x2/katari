@@ -123,10 +123,11 @@ class FreedesktopNotificationsTest {
     }
 
     private fun notifications(server: FakeServer, listener: Listener) =
-        FreedesktopNotifications("Katari", { "" }, { server }, record, listener)
+        FreedesktopNotifications("Katari", "app.katari.desktop", { "" }, { server }, record, listener)
 
     private fun serverNotification(summary: String) = ServerNotification(
         appName = "",
+        desktopEntry = "",
         appIcon = "",
         summary = summary,
         body = "",

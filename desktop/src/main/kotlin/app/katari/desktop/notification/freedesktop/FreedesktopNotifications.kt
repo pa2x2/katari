@@ -33,6 +33,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class FreedesktopNotifications(
     private val appName: String,
+    private val desktopEntry: String,
     /** Called on the notifications' thread. */
     private val appIcon: () -> String,
     private val connect: () -> NotificationServer?,
@@ -277,6 +278,7 @@ internal class FreedesktopNotifications(
         }
         return ServerNotification(
             appName = appName,
+            desktopEntry = desktopEntry,
             appIcon = appIcon(),
             summary = summary,
             body = shownBody,

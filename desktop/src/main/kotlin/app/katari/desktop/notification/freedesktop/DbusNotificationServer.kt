@@ -21,6 +21,7 @@ internal class DbusNotificationServer private constructor(private val bus: DbusC
     override fun notify(notification: ServerNotification, replacesId: Int): Int {
         val hints = buildMap {
             put("urgency", Variant("y", notification.urgency))
+            put("desktop-entry", Variant("s", notification.desktopEntry))
             notification.progressPercent?.let { put("value", Variant("i", it)) }
             if (notification.resident) put("resident", Variant("b", true))
         }

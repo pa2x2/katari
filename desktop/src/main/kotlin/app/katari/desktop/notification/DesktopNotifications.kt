@@ -44,7 +44,7 @@ class DesktopNotifications(
     @AppCoroutineScope private val scope: CoroutineScope,
 ) {
     private val system = lazy {
-        systemNotifications(operatingSystem, DesktopAppVariant.current.displayName, directories.runtime, Answers())
+        systemNotifications(operatingSystem, DesktopAppVariant.current, directories.runtime, Answers())
     }
 
     // What shows this run under each key, and the kinds whose switch is watched, to take away a kind turned off
