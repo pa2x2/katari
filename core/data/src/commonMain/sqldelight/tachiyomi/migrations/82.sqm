@@ -1,0 +1,14 @@
+-- Chapters read because the person marked them read, rather than by reading them to the end
+CREATE TABLE chapters_marked_read(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER chapters_marked_read_unread
+AFTER UPDATE OF read ON chapters
+FOR EACH ROW
+WHEN new.read = 0
+BEGIN
+    DELETE FROM chapters_marked_read
+    WHERE chapter_id = new._id;
+END;

@@ -161,6 +161,14 @@ SET read = :read,
     date_fetch = CASE WHEN :dateFetch > 0 THEN :dateFetch ELSE date_fetch END
 WHERE _id = :chapterId;
 
+markChapterRead:
+INSERT OR IGNORE INTO chapters_marked_read(chapter_id)
+VALUES (:chapterId);
+
+unmarkChapterRead:
+DELETE FROM chapters_marked_read
+WHERE chapter_id = :chapterId;
+
 -- A new release another device found is the entry's last update here too, as finding it here would have made it.
 noteNewChapter:
 UPDATE entries

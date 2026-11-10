@@ -1,6 +1,7 @@
 package app.katari.sync.client.kind.chapter
 
 import app.katari.sync.client.payload.Stamped
+import app.katari.sync.protocol.clock.HybridTimestamp
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -9,8 +10,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
  * device create the row in its place and show it as read, or in Updates, before it refreshes the entry; its next
  * refresh overrides them, but not [dateFetch].
  *
- * [dateFetch] and [sourceOrder] came after the first release with sync, so they are top-level fields, which a device
- * on that release keeps as they are when it rewrites the record ([app.katari.sync.client.payload.UnknownFields]).
+ * [dateFetch], [sourceOrder] and [markedReadAt] came after the first release with sync, so they are top-level fields,
+ * which an older device keeps as they are when it rewrites the record ([app.katari.sync.client.payload.UnknownFields]).
  */
 @Serializable
 data class ChapterPayload(
@@ -26,7 +27,15 @@ data class ChapterPayload(
     @ProtoNumber(6) val dateFetch: Long = 0,
     /** Its place in the source's list on the device that last wrote it, newest first; null when unknown. */
     @ProtoNumber(7) val sourceOrder: Long? = null,
-)
+    /**
+     * When [read] holds the person marking the chapter read rather than reading it, its edit time. It counts only
+     * while it is [read]'s: an older device that read the chapter again keeps this as it was, next to a newer [read].
+     */
+    @ProtoNumber(8) val markedReadAt: HybridTimestamp? = null,
+) {
+    val isMarkedRead: Boolean
+        get() = read.value && markedReadAt == read.at
+}
 
 @Serializable
 data class ChapterMetadata(

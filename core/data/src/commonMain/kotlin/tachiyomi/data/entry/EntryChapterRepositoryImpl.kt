@@ -150,6 +150,12 @@ class EntryChapterRepositoryImpl(
         }
     }
 
+    override suspend fun noteMarkedRead(chapterIds: Collection<Long>) {
+        handler.await(inTransaction = true) {
+            chapterIds.distinct().chunkedForSqlQuery().forEach { chunk -> chapters_marked_readQueries.insert(chunk) }
+        }
+    }
+
     override suspend fun delete(id: Long): Boolean {
         return try {
             handler.await { chaptersQueries.removeChaptersWithIds(listOf(id)) }

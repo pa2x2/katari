@@ -68,6 +68,9 @@ internal interface LocalWrites {
      */
     fun afterRecords(id: String, cause: String, action: suspend () -> Unit)
 
-    /** Notes that the chapter [chapterId] of [entryId], unread here before, is read now. */
-    fun chapterRead(entryId: Long, chapterId: Long)
+    /**
+     * Notes that the chapter [chapterId] of [entryId], unread here before, is read now: [marked] when the person marked
+     * it read, rather than reading it.
+     */
+    fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean)
 }

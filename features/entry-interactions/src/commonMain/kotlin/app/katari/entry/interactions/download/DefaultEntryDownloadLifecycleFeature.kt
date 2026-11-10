@@ -55,18 +55,22 @@ internal class DefaultEntryDownloadLifecycleFeature(
     }
 
     /**
-     * Reading on another device moves where the person is as reading here does, so the chapters the same number of
-     * places behind go. Downloading ahead stays with reading here, where the next chapters are about to be read.
+     * Each setting acts on what happened on the other device as it acts on the same here. Reading there moves where
+     * the person is as reading here does, so the chapters the same number of places behind go; downloading ahead
+     * stays with reading here, where the next chapters are about to be read.
      */
     private suspend fun afterConsumedElsewhere(event: EntryDownloadLifecycleEvent.ConsumedElsewhere) {
+        val removeAfterMarked = downloadPreferences.removeAfterMarkedAsRead.get()
         val removeAfterReadSlots = downloadPreferences.removeAfterReadSlots.get()
-        if (removeAfterReadSlots < 0) return
+        val marked = event.markedIds.takeIf { removeAfterMarked }.orEmpty()
+        val consumed = event.consumedIds.takeIf { removeAfterReadSlots >= 0 }.orEmpty()
+        if (marked.isEmpty() && consumed.isEmpty()) return
         val readingOrder = getEntryWithChapters.awaitChapters(event.visibleEntry).sortedForReading(event.visibleEntry)
-        // One marked unread here since sync read it is no longer where the person is
-        val behind = readingOrder.filter { it.id in event.childIds && it.read }
-            .mapNotNull { readingOrder.behind(it, removeAfterReadSlots) }
-            .distinctBy(EntryChapter::id)
-        deleteEligible(event.visibleEntry, behind, deferUntilViewerCloses = false)
+        // One made unread here since sync took it in is no longer consumed
+        val stillRead = readingOrder.filter(EntryChapter::read)
+        val behind = stillRead.filter { it.id in consumed }.mapNotNull { readingOrder.behind(it, removeAfterReadSlots) }
+        val delete = (stillRead.filter { it.id in marked } + behind).distinctBy(EntryChapter::id)
+        deleteEligible(event.visibleEntry, delete, deferUntilViewerCloses = false)
     }
 
     private suspend fun afterProgressed(event: EntryDownloadLifecycleEvent.Progressed) {

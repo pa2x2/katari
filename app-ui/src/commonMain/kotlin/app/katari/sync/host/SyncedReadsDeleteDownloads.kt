@@ -9,7 +9,7 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import tachiyomi.domain.entry.repository.EntryRepository
 
-/** Chapters other devices read reach the download settings that act after reading, as reads here do. */
+/** Chapters other devices read or marked read reach the download settings that act on those, as here. */
 @Inject
 @ContributesIntoSet(AppScope::class)
 class SyncedReadsDeleteDownloads(
@@ -19,7 +19,7 @@ class SyncedReadsDeleteDownloads(
     override suspend fun onReadElsewhere(reads: List<ChaptersReadElsewhere>) {
         reads.forEach { read ->
             val entry = entries.getEntryById(read.entryId) ?: return@forEach
-            downloads.onEvent(EntryDownloadLifecycleEvent.ConsumedElsewhere(entry, read.chapterIds))
+            downloads.onEvent(EntryDownloadLifecycleEvent.ConsumedElsewhere(entry, read.readIds, read.markedIds))
         }
     }
 }

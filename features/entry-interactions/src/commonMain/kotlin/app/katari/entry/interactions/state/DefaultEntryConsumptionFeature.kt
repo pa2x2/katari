@@ -6,12 +6,14 @@ import app.katari.entry.interactions.history.EntryHistoryFeature
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 internal class DefaultEntryConsumptionFeature(
     private val applicableTypes: Set<EntryType>,
     private val interaction: EntryConsumptionInteraction,
     private val downloadLifecycle: EntryDownloadLifecycleEventSink,
     private val history: EntryHistoryFeature,
+    private val chapters: EntryChapterRepository,
 ) : EntryConsumptionFeature {
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
@@ -36,6 +38,7 @@ internal class DefaultEntryConsumptionFeature(
         if (changed.isEmpty()) return EntryConsumptionResult.NoChange
 
         if (consumed) {
+            chapters.noteMarkedRead(changed.map(EntryChapter::id))
             history.recordManualCompletions(entry, changed)
             downloadLifecycle.onEvent(EntryDownloadLifecycleEvent.MarkedConsumed(entry, changed))
         }

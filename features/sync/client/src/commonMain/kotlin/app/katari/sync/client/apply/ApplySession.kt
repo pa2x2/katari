@@ -77,6 +77,7 @@ internal class ApplySession(
     private val questions = QuestionDetection(this)
     private val afterRecords = LinkedHashMap<String, AfterRecords>()
     private val readHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
+    private val markedHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
 
     /** The newest edit taken in, which this device's later edits must be stamped after. */
     var newestSeen: HybridTimestamp? = null
@@ -194,13 +195,19 @@ internal class ApplySession(
         afterRecords.putIfAbsent(id, AfterRecords(cause, action))
     }
 
-    override fun chapterRead(entryId: Long, chapterId: Long) {
-        readHere.getOrPut(entryId, ::LinkedHashSet) += chapterId
+    override fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean) {
+        (if (marked) markedHere else readHere).getOrPut(entryId, ::LinkedHashSet) += chapterId
     }
 
     /** What [chapterRead] noted, by entry. */
     val chaptersRead: List<ChaptersReadElsewhere>
-        get() = readHere.map { (entryId, chapterIds) -> ChaptersReadElsewhere(entryId, chapterIds.toSet()) }
+        get() = (readHere.keys + markedHere.keys).map { entryId ->
+            ChaptersReadElsewhere(
+                entryId = entryId,
+                readIds = readHere[entryId].orEmpty(),
+                markedIds = markedHere[entryId].orEmpty(),
+            )
+        }
 
     /** Runs the work records asked for [afterRecords], including what that work asks for in turn. */
     suspend fun finish() {

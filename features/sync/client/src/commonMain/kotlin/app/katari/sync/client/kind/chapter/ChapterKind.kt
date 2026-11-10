@@ -44,6 +44,8 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             listOf("NEW._id"),
             fields = listOf(Field(3, "read"), Field(4, "bookmark")),
         ),
+        // Marking a chapter read notes it right after writing the read, which a drain may already have taken
+        CaptureTrigger("chapters_marked_read", Event.INSERT, listOf("NEW.chapter_id"), personsEdit = false),
     )
 
     fun ref(chapterId: Long): LocalRef = LocalRef.of(chapterId)
@@ -56,10 +58,11 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             key = reads.chapterKey(entryKey, row.url),
             parents = listOf(RecordRef(EntryKind, EntryKind.ref(row.entry_id))),
         ) { previous, stamps ->
+            val read = stamps.field(3, row.read, previous?.read)
             ChapterPayload(
                 entryKey = entryKey,
                 url = row.url,
-                read = stamps.field(3, row.read, previous?.read),
+                read = read,
                 bookmark = stamps.field(4, row.bookmark, previous?.bookmark),
                 metadata = ChapterMetadata(
                     name = row.name,
@@ -69,6 +72,7 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 ),
                 dateFetch = row.date_fetch,
                 sourceOrder = row.source_order,
+                markedReadAt = read.at.takeIf { row.read && row.marked_read },
             )
         }
     }
@@ -77,16 +81,20 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
      * A chapter two devices found at different times was found at the later one: a release either device shows in
      * Updates is shown by both, while back catalogue listed by both stays before its entry joined the Library.
      */
-    override fun merge(local: ChapterPayload, incoming: ChapterPayload) = local.copy(
-        read = latest(local.read, incoming.read),
-        bookmark = latest(local.bookmark, incoming.bookmark),
-        metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
-        dateFetch = maxOf(local.dateFetch, incoming.dateFetch),
-        // A copy from a device that doesn't know the place never takes it away
-        sourceOrder = fieldOfNewer(serializer, local, incoming) { it.sourceOrder }
-            ?: local.sourceOrder
-            ?: incoming.sourceOrder,
-    )
+    override fun merge(local: ChapterPayload, incoming: ChapterPayload): ChapterPayload {
+        val read = latest(local.read, incoming.read)
+        return local.copy(
+            read = read,
+            markedReadAt = read.at.takeIf { it == local.markedReadAt || it == incoming.markedReadAt },
+            bookmark = latest(local.bookmark, incoming.bookmark),
+            metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
+            dateFetch = maxOf(local.dateFetch, incoming.dateFetch),
+            // A copy from a device that doesn't know the place never takes it away
+            sourceOrder = fieldOfNewer(serializer, local, incoming) { it.sourceOrder }
+                ?: local.sourceOrder
+                ?: incoming.sourceOrder,
+        )
+    }
 
     /**
      * Creates the row from the record's metadata when the entry wasn't refreshed here, where the record's device has it
@@ -122,9 +130,10 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 dateFetch = payload.dateFetch,
                 chapterId = existing,
             )
-            if (payload.read.value && !wasRead) writes.chapterRead(entryId, existing)
+            if (payload.read.value && !wasRead) writes.chapterRead(entryId, existing, payload.isMarkedRead)
             existing
         }
+        if (payload.isMarkedRead) queries.markChapterRead(chapterId) else queries.unmarkChapterRead(chapterId)
         queries.noteNewChapter(dateFetch = payload.dateFetch, entryId = entryId)
         return ApplyOutcome.Applied(ref(chapterId))
     }

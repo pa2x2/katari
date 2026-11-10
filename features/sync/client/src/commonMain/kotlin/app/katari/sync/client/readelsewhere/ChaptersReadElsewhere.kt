@@ -5,10 +5,11 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Multibinds
 
 /**
- * Chapters of one entry that were unread here until sync took in another device's read. A chapter sync adds to the
- * list already read is not one: nothing on this device can belong to a chapter it never listed.
+ * Chapters of one entry that were unread here until sync took in another device's read: [readIds] the person read
+ * there, [markedIds] they marked read there. A chapter sync adds to the list already read is neither: nothing on this
+ * device can belong to a chapter it never listed.
  */
-data class ChaptersReadElsewhere(val entryId: Long, val chapterIds: Set<Long>)
+data class ChaptersReadElsewhere(val entryId: Long, val readIds: Set<Long>, val markedIds: Set<Long>)
 
 /**
  * Told once the records that made chapters read here are committed, so what this device does after reading, such as
