@@ -119,8 +119,9 @@ object Telemetry {
 internal expect object PostHogClient {
     /**
      * Sets PostHog up opted in, sending to the project [token] lets events into. Each event goes out with the
-     * properties [addedProperties] gives it added to its own, and not at all where it gives none. [onActivityResumed]
-     * hears the name of each activity that comes to the front, on a platform that has activities.
+     * properties [addedProperties] gives it added to its own, and not at all where it gives none. Its own stand where
+     * both name one, as a reading session's entry type does beside the shown screen's. [onActivityResumed] hears the
+     * name of each activity that comes to the front, on a platform that has activities.
      */
     fun setUp(
         token: String,

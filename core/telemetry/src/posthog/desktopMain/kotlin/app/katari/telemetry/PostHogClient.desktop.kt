@@ -17,7 +17,7 @@ internal actual object PostHogClient {
     ) {
         val session = LinuxSession.read().properties
         val beforeSend = PostHogBeforeSend { event ->
-            addedProperties(event.event)?.let { added -> event.copy(properties = event.properties + added + session) }
+            addedProperties(event.event)?.let { added -> event.copy(properties = added + session + event.properties) }
         }
         val config = PostHogConfig(
             projectToken = token,

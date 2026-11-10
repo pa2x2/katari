@@ -34,7 +34,7 @@ internal actual object PostHogClient {
             errorTrackingConfig.captureNativeCrashes = true
             addBeforeSend { event ->
                 addedProperties(event.event)?.let { added ->
-                    val properties = event.properties.orEmpty() + added + resumedActivity.properties
+                    val properties = added + resumedActivity.properties + event.properties.orEmpty()
                     event.copy(properties = properties.toMutableMap())
                 }
             }
