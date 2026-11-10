@@ -24,7 +24,7 @@ import javax.inject.Inject
 /**
  * Lays out the desktop app as an AppDir, the folder appimagetool packs into an AppImage:
  *
- * - `runtime/`, the runtime [LinkAppImageRuntimeTask] links, which carries Chromium for the app's web view;
+ * - `runtime/`, the runtime [LinkAppImageRuntimeTask] links;
  * - `lib/`, the app's jars as [copyJarForAppImage] writes them, under names that tell apart jars which share a file
  *   name;
  * - `AppRun`, which the AppImage starts, running [mainClass] with the jars on the class path in their order, with the

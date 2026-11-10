@@ -117,7 +117,7 @@ internal fun WebViewTopBar(
 
             if (showCloudflareHelp) {
                 NoticeCard(
-                    text = stringResource(MR.strings.information_cloudflare_help),
+                    text = stringResource(cloudflareHelpText),
                     tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },

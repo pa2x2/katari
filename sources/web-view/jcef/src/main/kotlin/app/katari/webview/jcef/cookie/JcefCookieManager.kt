@@ -1,5 +1,7 @@
 package app.katari.webview.jcef.cookie
 
+import app.katari.webview.engine.cookie.ChromiumCookie
+import app.katari.webview.engine.cookie.ChromiumCookieManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull

@@ -68,6 +68,14 @@ internal class LibarchiveInputStream(private val library: Libarchive, path: Path
         return ArchiveEntry(name, isFile)
     }
 
+    /** The kind of the entry [getNextEntry] moved to last, as the `AE_IF*` bits of its mode. */
+    val entryFiletype: Int
+        get() = library.entryFiletype(entry.value)
+
+    /** Whether the entry [getNextEntry] moved to last is one its owner may run. */
+    val entryIsExecutable: Boolean
+        get() = library.entryPerm(entry.value) and OWNER_EXECUTE != 0
+
     private fun requireSuccess(result: Int) {
         if (result < ARCHIVE_WARN) throw IOException(errorMessage(result))
     }
@@ -78,3 +86,5 @@ internal class LibarchiveInputStream(private val library: Libarchive, path: Path
 private const val BUFFER_SIZE = 64 * 1024L
 
 private const val BLOCK_SIZE = 64 * 1024L
+
+private const val OWNER_EXECUTE = 0b001_000_000

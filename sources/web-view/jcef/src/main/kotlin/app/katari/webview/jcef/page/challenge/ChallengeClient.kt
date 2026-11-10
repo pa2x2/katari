@@ -1,7 +1,7 @@
 package app.katari.webview.jcef.page.challenge
 
 import app.katari.core.common.web.ChallengePageEvents
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
 import app.katari.webview.jcef.page.HiddenBrowser
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope

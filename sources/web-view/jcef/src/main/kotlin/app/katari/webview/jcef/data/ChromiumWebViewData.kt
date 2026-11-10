@@ -1,6 +1,8 @@
 package app.katari.webview.jcef.data
 
 import app.katari.core.platform.PlatformContext
+import app.katari.webview.engine.data.ChromiumProfileData
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.runtime.JcefHost
 import app.katari.webview.jcef.runtime.JcefPresence
 import app.katari.webview.jcef.runtime.JcefRuntime
@@ -22,18 +24,19 @@ class ChromiumWebViewData(
 ) : WebViewData {
     private val profile by lazy { ChromiumProfileData(host.dataDirectory) }
 
-    override val isOffered: Boolean = true
+    override val isOffered: Boolean
+        get() = runtime.presence is JcefPresence.Present
 
     // Chromium's caches go with the rest of its profile, which deleting needs Chromium's answer for, so it is done with
     // the storage
     override fun clearCaches(context: PlatformContext) = Unit
 
     override suspend fun deleteStorage(context: PlatformContext) = withContext(Dispatchers.IO) {
-        if (runtime.hasStarted) {
+        if (runtime.isRunning) {
             // What it holds in memory goes now, and its files once it starts again. One that didn't start or was lost
             // holds nothing in memory, and its files wait too, as its helper processes may still be ending
             try {
-                LoadedSiteData.clear(runtime.start(), origins.all())
+                LoadedSiteData.clear(runtime.start().app, origins.all())
             } catch (e: JcefStartException) {
                 logcat(LogPriority.WARN, e) { "Chromium isn't running to clear what it holds" }
             }
@@ -44,5 +47,5 @@ class ChromiumWebViewData(
     }
 
     override suspend fun version(context: PlatformContext): String =
-        (runtime.presence as? JcefPresence.Present)?.version ?: error("This Java runtime has no JCEF")
+        (runtime.presence as? JcefPresence.Present)?.version ?: error("No Chromium to tell the version of")
 }

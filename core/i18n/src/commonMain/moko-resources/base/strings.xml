@@ -2775,6 +2775,29 @@
     <string name="information_webview_outdated">Please update the WebView app for better compatibility</string>
     <!-- Do not translate "WebView" -->
     <string name="information_webview_crashed">WebView stopped working and the page was closed</string>
+    <string name="webview_setup_title">Set up WebView</string>
+    <string name="webview_setup_message">Some sources need WebView to load pages or pass site checks. Katari runs it on Chromium, which it downloads once.</string>
+    <string name="webview_setup_size">Downloads %1$s once and uses %2$s on disk</string>
+    <string name="webview_setup_wait">WebView works once the download finishes</string>
+    <string name="webview_setup_updates">A Katari update can need a new download</string>
+    <string name="webview_setup_downloading">Downloading Chromium · %1$s of %2$s</string>
+    <string name="webview_setup_unpacking">Unpacking Chromium</string>
+    <string name="webview_setup_failed">WebView couldn\'t be set up. %1$s</string>
+    <string name="webview_setup_failure_storage">Chromium couldn\'t be saved: %s</string>
+    <string name="webview_setup_failure_no_programs">Katari\'s data folder is on a disk that doesn\'t allow running programs.</string>
+    <string name="webview_setup_notice">A source needed WebView, which isn\'t set up yet.</string>
+    <string name="webview_setup_ready">WebView is ready</string>
+    <string name="webview_setup_needed_by_source">This source needs WebView. Set it up to continue.</string>
+    <string name="webview_engine_title">WebView engine</string>
+    <string name="webview_engine_installed">Installed · %1$s</string>
+    <string name="webview_engine_not_set_up">Not set up</string>
+    <string name="webview_engine_cancel_download">Cancel download</string>
+    <string name="webview_engine_remove">Remove Chromium</string>
+    <string name="webview_engine_remove_summary">Frees %1$s. WebView asks to download it again when it is next needed.</string>
+    <string name="webview_engine_remove_confirm">Open WebView pages close, and sources that need WebView stop working until Chromium is downloaded again.</string>
+    <string name="webview_engine_info">Katari runs WebView on Chromium, which it downloads once. A Katari update can need a new download.</string>
+    <string name="information_cloudflare_help_click">Click here for help with Cloudflare</string>
+    <string name="webview_setup_updating">Updating Chromium for WebView (%1$s)</string>
     <!-- The title of a dialog a web page opens; %1$s is the page's origin, such as https://example.com -->
     <string name="webview_js_dialog_title">%1$s says</string>
     <string name="chapter_settings_updated">Updated default chapter settings</string>

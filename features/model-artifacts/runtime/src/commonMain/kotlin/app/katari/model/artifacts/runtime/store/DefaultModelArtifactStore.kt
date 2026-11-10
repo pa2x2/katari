@@ -56,15 +56,22 @@ internal class DefaultModelArtifactStore(
     override fun download(approval: ModelArtifactDownloadApproval) {
         val key = RevisionKey(approval.artifact)
         jobs.compute(key) { _, running ->
-            running?.takeIf(Job::isActive) ?: scope.launch(ioDispatcher) {
-                try {
-                    install(key, approval)
-                } finally {
-                    jobs.remove(key, coroutineContext[Job])
-                }
+            running?.takeIf(Job::isActive) ?: run {
+                // Before the call returns, so an observer never takes the failure of the attempt before for this one's
+                publish(key, ModelArtifactState.Downloading(0, approval.artifact.sizeBytes))
+                launchInstall(key, approval)
             }
         }
     }
+
+    private fun launchInstall(key: RevisionKey, approval: ModelArtifactDownloadApproval): Job =
+        scope.launch(ioDispatcher) {
+            try {
+                install(key, approval)
+            } finally {
+                jobs.remove(key, coroutineContext[Job])
+            }
+        }
 
     override fun cancel(artifact: ModelArtifactDescriptor) {
         jobs[RevisionKey(artifact)]?.cancel()
@@ -90,7 +97,6 @@ internal class DefaultModelArtifactStore(
             fail(key, ModelArtifactFailure.MeteredNetwork)
             return
         }
-        publish(key, ModelArtifactState.Downloading(0, descriptor.sizeBytes))
         try {
             storage.begin(descriptor)
             val requiredBytes = descriptor.sizeBytes - storage.storedBytes(descriptor)

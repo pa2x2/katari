@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.chromium:cef",
+  "artifactVersion": "150.0.14",
+  "name": "Chromium Embedded Framework",
+  "description": "Embeds Chromium for the desktop web view; part of the Chromium download.",
+  "website": "https://github.com/chromiumembedded/cef",
+  "licenses": [
+    "chromium-desktop-cef"
+  ]
+}
