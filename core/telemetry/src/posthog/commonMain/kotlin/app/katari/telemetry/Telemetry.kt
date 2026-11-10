@@ -17,8 +17,12 @@ import kotlin.concurrent.Volatile
  * once the user allows something to be sent. After that, opting out stops what it sends and the handlers it installs.
  */
 object Telemetry {
-    /** Whether the build sends anything, and so whether the app offers the switches for it. */
-    val isIncluded: Boolean = true
+    /**
+     * Whether the build sends anything, and so whether the app offers the switches for it: only a build given the
+     * project's token does, which the release workflow alone passes. Any other, even of the release variant, would mix
+     * its testing into the releases' data.
+     */
+    val isIncluded: Boolean = PostHogProjectToken.value != null
 
     private val consent = TelemetryConsent()
 
@@ -48,11 +52,11 @@ object Telemetry {
         appState: AppStateSource,
         scope: CoroutineScope,
     ) {
-        if (!host.isKatariRelease) return
+        val token = PostHogProjectToken.value ?: return
         val report =
             DailyStateReport(store, appState, scope, send = { PostHogClient.capture(DailyStateReport.EVENT, it) })
         consent.follow(preferences, scope) {
-            send(consent.allowsAnything, host, scope)
+            send(consent.allowsAnything, token, host, scope)
             if (consent.usageStatistics) {
                 dailyState = report
                 report.reportIfDue()
@@ -89,7 +93,7 @@ object Telemetry {
         }
     }
 
-    private fun send(allowsAnything: Boolean, host: TelemetryHost, scope: CoroutineScope) {
+    private fun send(allowsAnything: Boolean, token: String, host: TelemetryHost, scope: CoroutineScope) {
         if (allowsAnything == sending) return
         sending = allowsAnything
         when {
@@ -98,7 +102,7 @@ object Telemetry {
             postHogSetUp -> PostHogClient.optIn()
 
             else -> {
-                PostHogClient.setUp(host, ::addedProperties, onActivityResumed = { noteShown(it, null) }, scope)
+                PostHogClient.setUp(token, host, ::addedProperties, onActivityResumed = { noteShown(it, null) }, scope)
                 postHogSetUp = true
             }
         }
@@ -114,11 +118,12 @@ object Telemetry {
 /** PostHog's library on each platform: Android has its own, the desktop app the multiplatform one. */
 internal expect object PostHogClient {
     /**
-     * Sets PostHog up opted in. Each event goes out with the properties [addedProperties] gives it added to its own, and
-     * not at all where it gives none. [onActivityResumed] hears the name of each activity that comes to the front, on a
-     * platform that has activities.
+     * Sets PostHog up opted in, sending to the project [token] lets events into. Each event goes out with the
+     * properties [addedProperties] gives it added to its own, and not at all where it gives none. [onActivityResumed]
+     * hears the name of each activity that comes to the front, on a platform that has activities.
      */
     fun setUp(
+        token: String,
         host: TelemetryHost,
         addedProperties: (event: String) -> Map<String, Any>?,
         onActivityResumed: (name: String) -> Unit,

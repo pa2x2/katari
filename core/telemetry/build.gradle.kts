@@ -1,9 +1,16 @@
 import app.katari.gradle.Config
 import app.katari.gradle.extensions.desktop
+import app.katari.gradle.telemetry.GeneratePostHogProjectTokenTask
 
 plugins {
     alias(katari.plugins.kotlin.multiplatform)
     alias(katari.plugins.spotless)
+}
+
+val generatePostHogProjectToken = tasks.register<GeneratePostHogProjectTokenTask>("generatePostHogProjectToken") {
+    packageName.set("app.katari.telemetry")
+    token.set(Config.postHogProjectToken)
+    outputDir.set(layout.buildDirectory.dir("generated/postHogProjectToken"))
 }
 
 kotlin {
@@ -28,9 +35,13 @@ kotlin {
         }
 
         // Only builds made with -Pinclude-telemetry carry PostHog. The rest, the FOSS build among them, get a Telemetry
-        // that sends nothing and keep PostHog's libraries out of the app.
+        // that sends nothing and keep PostHog's libraries out of the app. Of those that carry it, only the ones given
+        // the project's token, which the release workflow alone passes, send anything.
         if (Config.includeTelemetry) {
-            commonMain { kotlin.srcDir("src/posthog/commonMain/kotlin") }
+            commonMain {
+                kotlin.srcDir("src/posthog/commonMain/kotlin")
+                kotlin.srcDir(generatePostHogProjectToken.flatMap { it.outputDir })
+            }
             androidMain {
                 kotlin.srcDir("src/posthog/androidMain/kotlin")
                 dependencies {
