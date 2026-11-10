@@ -73,6 +73,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
     val tapMode = bindings.webtoonNavigationMode.state.collectAsState().value.effectiveValue
     val tapInversion = bindings.webtoonNavigationInverted.state.collectAsState().value.effectiveValue.ordinal
     FollowTapZoneSettings(tapZones, tapMode, tapInversion)
+    ReadNeighbourBackdrops()
 
     val state = listState
     LaunchedEffect(state) { snapshotFlow { state.layoutInfo }.collect(::onLayout) }

@@ -11,5 +11,9 @@ import androidx.compose.ui.graphics.Color
 /** A colour of the page image, given as ARGB. */
 fun pageBackdropColor(argb: Int): Color = Color(argb)
 
-/** Colours of the page image, given as ARGB, spread evenly from top to bottom. */
-fun pageBackdropBrush(argb: List<Int>): Brush = Brush.verticalGradient(argb.map(::Color))
+/**
+ * Colours of the page image, given as ARGB, spread evenly from top to bottom: over the whole area drawn in, or over
+ * [height] pixels from its top, such as a stretch of a side painted at its own place in a taller area.
+ */
+fun pageBackdropBrush(argb: List<Int>, height: Float = Float.POSITIVE_INFINITY): Brush =
+    Brush.verticalGradient(argb.map(::Color), startY = 0f, endY = height)

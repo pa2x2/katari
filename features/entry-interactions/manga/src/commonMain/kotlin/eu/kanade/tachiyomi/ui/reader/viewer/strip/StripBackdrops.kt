@@ -3,21 +3,19 @@ package eu.kanade.tachiyomi.ui.reader.viewer.strip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.manga.reader.image.background.BackdropSpan
+import app.katari.entry.interactions.manga.reader.image.background.RowProfile
 import app.katari.entry.interactions.manga.reader.image.background.brush
-import app.katari.entry.interactions.manga.reader.image.background.chooseSideBackdrops
+import app.katari.entry.interactions.manga.reader.image.background.rowProfiles
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
 import app.katari.entry.interactions.manga.reader.image.layout.displayedSize
 import app.katari.entry.interactions.manga.reader.image.layout.pieces
@@ -31,71 +29,83 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
- * The space beside the strip's pages when the reader theme is automatic: each page shown registers the rows its pieces
- * cover, and [paintedBehind] paints what continues each row beside the pages, so the space beside a strip narrower
- * than the window follows the page next to it down its height as the strip scrolls and zooms.
+ * The space beside the strip's pages when the reader theme is automatic. The [RowProfile]s of each page's pieces are
+ * read once, from the page as it shows ([FollowPageBackdrop]) or, for the pages just past either end of the screen,
+ * from its image alone ([ReadNeighbourBackdrops]), and kept while the page is in the strip; the rows each run of
+ * consecutive read pages covers are worked out over the run as one picture ([stripBackdropRows]), as a long strip is
+ * one picture cut into pages, so the top of a page follows the page above it even while that page is off screen; and
+ * [paintedBehind] paints what continues each row beside the pages, so the space beside a strip narrower than the
+ * window follows the pages as they scroll and zoom. [items] are the strip's slots in order.
  */
-internal class StripBackdrops {
-    private val rows = mutableStateMapOf<ReaderPage, List<StripBackdropRow>>()
+internal class StripBackdrops(items: () -> List<ReaderViewerItem>) {
+    private val profiles = mutableStateMapOf<ReaderPage, List<PieceProfile>>()
+    private val heights = mutableStateMapOf<ReaderPage, Int>()
+    private val rows by derivedStateOf { stripBackdropRows(items(), profiles) }
 
     operator fun get(page: ReaderPage): List<StripBackdropRow> = rows[page].orEmpty()
 
-    fun show(page: ReaderPage, pageRows: List<StripBackdropRow>) {
-        rows[page] = pageRows
+    /** How many strip pixels tall [page] is laid out while it is in the strip's layout, else 0. */
+    fun height(page: ReaderPage): Int = heights[page] ?: 0
+
+    fun has(page: ReaderPage): Boolean = page in profiles
+
+    fun keep(page: ReaderPage, pieces: List<PieceProfile>) {
+        if (pieces.isNotEmpty()) profiles[page] = pieces
     }
 
-    /** Stops painting [pageRows] for [page], unless the page has registered others since. */
-    fun hide(page: ReaderPage, pageRows: List<StripBackdropRow>) {
-        if (rows[page] === pageRows) rows.remove(page)
+    /** Forgets the profiles of pages other than [pages], as once their chapter leaves the strip. */
+    fun keepOnly(pages: Set<ReaderPage>) {
+        profiles.keys.retainAll(pages)
+    }
+
+    /** Forgets every profile, as once the settings that open pages change and the pages are read again. */
+    fun forget() {
+        profiles.clear()
+    }
+
+    fun laidOut(page: ReaderPage, height: Int) {
+        heights[page] = height
+    }
+
+    fun gone(page: ReaderPage, height: Int) {
+        if (heights[page] == height) heights.remove(page)
     }
 }
 
-/** A row of a page, from [top] to [bottom] in strip pixels below the page's top, that [spans] continue at its sides. */
-internal class StripBackdropRow(val top: Float, val bottom: Float, val spans: List<BackdropSpan>)
-
 /**
- * Registers the rows of [page] while it shows [shown], laid out [height] strip pixels tall, once what continues its
- * pieces is read, which happens after the page shows so it never waits for it.
+ * Keeps the profiles of [page]'s pieces while it shows [shown], read after the page shows so it never waits for them,
+ * and tells the strip that [page] is laid out [height] strip pixels tall.
  */
 @Composable
 internal fun StripViewer.FollowPageBackdrop(page: ReaderPage, shown: PageContent.Shown?, height: Int) {
     val automatic = settings.bindings.automaticBackgroundState()
-    var sideBackdrops by remember(shown, automatic) { mutableStateOf(emptyList<List<BackdropSpan>?>()) }
     LaunchedEffect(shown, automatic) {
         val image = shown?.image as? PageImage.Still ?: return@LaunchedEffect
-        if (automatic) sideBackdrops = image.chooseSideBackdrops(shown.layout)
+        if (automatic) backdrops.keep(page, image.pieceProfiles(shown.layout))
     }
-    val rows = remember(shown, sideBackdrops, height) {
-        shown?.let { stripBackdropRows(it.layout, it.image.size, sideBackdrops, height) }.orEmpty()
-    }
-    DisposableEffect(page, rows) {
-        backdrops.show(page, rows)
-        onDispose { backdrops.hide(page, rows) }
+    DisposableEffect(page, height) {
+        backdrops.laidOut(page, height)
+        onDispose { backdrops.gone(page, height) }
     }
 }
 
 /**
- * The rows each piece of a page covers for [backdrops] in the order of [layout]'s pieces, with the page's image
- * [imageSize] stretched over [height] strip pixels, the height the page is laid out at, so its last row ends where the
- * next page begins.
+ * Where each piece of [layout] sits in the page, as fractions of its height, with the piece's profile. None when a
+ * piece can't be read, so a page not wholly read ends a run of pages.
  */
-internal fun stripBackdropRows(
-    layout: PageImageLayout,
-    imageSize: IntSize,
-    backdrops: List<List<BackdropSpan>?>,
-    height: Int,
-): List<StripBackdropRow> {
-    val displayedHeight = layout.displayedSize(imageSize).height
-    if (displayedHeight <= 0 || height <= 0) return emptyList()
-    return layout.pieces(imageSize).zip(backdrops) { piece, spans ->
-        if (spans == null) return@zip null
+internal suspend fun PageImage.Still.pieceProfiles(layout: PageImageLayout): List<PieceProfile> {
+    val profiles = rowProfiles(layout)
+    val displayedHeight = layout.displayedSize(size).height
+    val pieces = layout.pieces(size)
+    if (displayedHeight <= 0 || profiles.size != pieces.size || null in profiles) return emptyList()
+    return pieces.zip(profiles.filterNotNull()) { piece, profile ->
         val bounds = piece.displayedBounds
-        StripBackdropRow(
-            top = bounds.top.toFloat() * height / displayedHeight,
-            bottom = bounds.bottom.toFloat() * height / displayedHeight,
-            spans = spans,
+        PieceProfile(
+            top = bounds.top.toFloat() / displayedHeight,
+            bottom = bounds.bottom.toFloat() / displayedHeight,
+            profile = profile,
         )
-    }.filterNotNull()
+    }
 }
 
 /**
@@ -110,9 +120,10 @@ internal fun Modifier.paintedBehind(viewer: StripViewer): Modifier = drawBehind 
     val pagesRight = floor(viewer.zoom.pagesRight)
     for (slot in viewer.listState.layoutInfo.visibleItemsInfo) {
         val page = (viewer.items.getOrNull(slot.index) as? ReaderViewerItem.Page)?.page ?: continue
+        val height = viewer.backdrops.height(page)
         for (row in viewer.backdrops[page]) {
-            val rowTop = (slot.offset + row.top) * scale
-            val rowHeight = (row.bottom - row.top) * scale
+            val rowTop = (slot.offset + row.top * height) * scale
+            val rowHeight = (row.bottom - row.top) * height * scale
             paintSide(row.spans, rowTop, rowHeight, left = 0f, right = pagesLeft)
             paintSide(row.spans, rowTop, rowHeight, left = pagesRight, right = size.width)
         }
@@ -128,9 +139,11 @@ private fun DrawScope.paintSide(spans: List<BackdropSpan>, rowTop: Float, rowHei
         val top = (rowTop + span.top * rowHeight).roundToInt()
         val bottom = (rowTop + span.bottom * rowHeight).roundToInt()
         if (bottom <= top) continue
-        // A gradient spans the area it is drawn in from the origin, so the span is drawn from its own top
+        // A gradient runs from the origin of the area it is drawn in, which is the whole reader, so the span is drawn
+        // from its own top with a fade as tall as the span
+        val height = (bottom - top).toFloat()
         translate(top = top.toFloat()) {
-            drawRect(span.brush(), Offset(left, 0f), Size(right - left, (bottom - top).toFloat()))
+            drawRect(span.brush(height), Offset(left, 0f), Size(right - left, height))
         }
     }
 }

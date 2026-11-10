@@ -76,7 +76,7 @@ internal class StripViewer(
     private var autoScroll: Job? = null
     private var autoScrollLevel = MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT
 
-    internal val backdrops = StripBackdrops()
+    internal val backdrops = StripBackdrops(items = { items })
 
     internal val textSurfaces = ViewerTextSurfaces(decorations = { viewModel.textSession.decoration(it) })
 
@@ -271,7 +271,7 @@ internal class StripViewer(
 
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
-        // The strip reads what continues each page beside it once the page shows (FollowPageBackdrop)
+        // The strip reads what continues each page beside it itself, over the pages around it too (StripBackdrops)
         automaticBackground = false,
         backgroundBesidePage = false,
         layout = { _, imageSize -> stripPageLayout(imageSize, settings.bindings) },

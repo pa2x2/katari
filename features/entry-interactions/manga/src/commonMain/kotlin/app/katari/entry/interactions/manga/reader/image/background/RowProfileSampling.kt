@@ -13,17 +13,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * What continues each piece of [image] shown in [layout] beside it ([chooseSideBackdrop]), in the order of its pieces,
- * or null for a piece that can't be decoded, as once the image is closed. The rules compare whole rows, so each piece is decoded whole, at
- * no fewer than [SIDE_BACKDROP_WIDTH] pixels across: enough to tell gaps from artwork, while a tall page decodes to a
- * few megabytes rather than tens.
+ * The [RowProfile] of each piece of [image] shown in [layout], in the order of its pieces, or null for a piece that
+ * can't be decoded, as once the image is closed. A profile compares whole rows, so each piece is decoded whole, at no
+ * fewer than [PROFILE_WIDTH] pixels across: enough to tell gaps from artwork, while a tall page decodes to a few
+ * megabytes rather than tens.
  */
-internal suspend fun PageImage.Still.chooseSideBackdrops(layout: PageImageLayout): List<List<BackdropSpan>?> =
-    withContext(Dispatchers.Default) { layout.pieces(size).map { chooseSideBackdrop(it) } }
+internal suspend fun PageImage.Still.rowProfiles(layout: PageImageLayout): List<RowProfile?> =
+    withContext(Dispatchers.Default) { layout.pieces(size).map { rowProfile(it) } }
 
-private suspend fun PageImage.Still.chooseSideBackdrop(piece: PageImagePiece): List<BackdropSpan>? {
+private suspend fun PageImage.Still.rowProfile(piece: PageImagePiece): RowProfile? {
     var sampleSize = 1
-    while (piece.displayedSize.width / (sampleSize * 2) >= SIDE_BACKDROP_WIDTH) sampleSize *= 2
+    while (piece.displayedSize.width / (sampleSize * 2) >= PROFILE_WIDTH) sampleSize *= 2
     val bitmap = decode(piece.source, sampleSize) ?: return null
     val width = bitmap.pixelWidth
     val height = bitmap.pixelHeight
@@ -32,7 +32,7 @@ private suspend fun PageImage.Still.chooseSideBackdrop(piece: PageImagePiece): L
     } finally {
         bitmap.release()
     }
-    return chooseSideBackdrop(pixels.asPagePixels(width, height, piece.turn))
+    return pixels.asPagePixels(width, height, piece.turn).rowProfile()
 }
 
 /** The [width] by [height] pixels, row by row, as the page shows them, [turn]ed. */
@@ -42,4 +42,4 @@ private fun IntArray.asPagePixels(width: Int, height: Int, turn: QuarterTurn): P
     QuarterTurn.Anticlockwise -> PagePixels(height, width) { x, y -> this[x * width + (width - 1 - y)] }
 }
 
-private const val SIDE_BACKDROP_WIDTH = 200
+private const val PROFILE_WIDTH = 200
