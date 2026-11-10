@@ -27,6 +27,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.surface.OverlayPanel
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
@@ -35,7 +36,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Captures one drag and reports the outlined rectangle in window coordinates. While shown it takes every touch, so
- * the page underneath does not scroll during the outline; a tap, the back gesture, or the cancel action leaves it.
+ * the page underneath does not scroll during the outline; a tap, the back gesture, the cancel action or S leaves it.
  */
 @Composable
 internal fun MangaReaderAreaSelectionLayer(
@@ -115,6 +116,7 @@ internal fun MangaReaderAreaSelectionLayer(
         }
     }
     NavigationBackHandler(state = rememberNavigationEventState(NavigationEventInfo.None), onBackCompleted = onCancel)
+    KeyboardShortcutHandler(MangaReaderTextShortcuts.SelectArea(selecting = true), onTrigger = onCancel)
 }
 
 private fun outline(start: Offset?, end: Offset?): Rect? {

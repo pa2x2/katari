@@ -130,7 +130,7 @@ internal fun MangaReaderTextToolbar(
                         style = ButtonStyle.Text,
                     )
                     else -> {
-                        val shortcut = MangaReaderTextShortcuts.SelectArea
+                        val shortcut = MangaReaderTextShortcuts.SelectArea(selecting = false)
                         KeyboardShortcutHandler(shortcut, onTrigger = onSelectArea)
                         IconButton(
                             icon = MaterialSymbols.Rounded.InkSelection,

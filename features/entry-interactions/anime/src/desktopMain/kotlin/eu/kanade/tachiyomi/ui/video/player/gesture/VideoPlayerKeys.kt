@@ -4,13 +4,15 @@ import androidx.compose.runtime.Composable
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.shortcut.LocalKeyboardShortcuts
+import app.katari.presentation.kit.shortcut.ScreenShortcuts
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * The player's keys ([VideoPlayerShortcuts]) while the watch screen shows. They leave the keys to the settings panel,
- * the episode list and the subtitle editor while one is open. The zoom keys zoom about the picture's centre, and the
- * pan keys, there while the picture is zoomed past the player, bring a tenth of the player's size more into view.
+ * the episode list and the subtitle editor while one is open, all but E, which closes the episode list it opened. The
+ * zoom keys zoom about the picture's centre, and the pan keys, there while the picture is zoomed past the player,
+ * bring a tenth of the player's size more into view.
  * [geometry] is the picture's shape in the player, null until the video has one.
  */
 @Composable
@@ -26,7 +28,7 @@ internal fun VideoPlayerKeys(
         target.enterPictureInPicture()
     }
     Key(VideoPlayerShortcuts.Skip, enabled && target.skipOffered) { target.skip() }
-    Key(VideoPlayerShortcuts.Episodes, enabled) { target.openEpisodes() }
+    Key(VideoPlayerShortcuts.Episodes, enabled || target.episodesVisible) { target.toggleEpisodes() }
     Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
     Key(VideoPlayerShortcuts.ZoomOut, enabled) { target.zoomBy(geometry(), 1f / PICTURE_ZOOM_STEP) }
     Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.frame(PictureFraming.Fit) }
@@ -36,7 +38,7 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.PanUp, pans) { target.panBy(geometry(), 0, -1) }
     Key(VideoPlayerShortcuts.PanDown, pans) { target.panBy(geometry(), 0, 1) }
     val registry = LocalKeyboardShortcuts.current
-    Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
+    Key(ScreenShortcuts.ShortcutList, enabled = true) { registry?.toggleList() }
 }
 
 /**

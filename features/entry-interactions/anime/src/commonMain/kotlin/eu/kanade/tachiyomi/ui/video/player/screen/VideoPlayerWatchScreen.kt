@@ -370,13 +370,14 @@ internal fun VideoPlayerWatchScreen(
     LaunchedEffect(ui, current.playback.pictureFraming) {
         ui.picturePreview = null
     }
+    val dismissEpisodes = {
+        ui.episodesDrawerVisible = false
+        registerControllerInteraction(true)
+    }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
         isBackEnabled = ui.episodesDrawerVisible,
-        onBackCompleted = {
-            ui.episodesDrawerVisible = false
-            registerControllerInteraction(true)
-        },
+        onBackCompleted = dismissEpisodes,
     )
     val dismissSettings = {
         temporarySpeedBoostActive = false
@@ -414,6 +415,7 @@ internal fun VideoPlayerWatchScreen(
             ui.episodesDrawerVisible = true
             registerControllerInteraction(true)
         },
+        dismissEpisodes = dismissEpisodes,
         skip = skip,
         endSpeedBoost = { temporarySpeedBoostActive = false },
         leaveEpisodeEnd = { nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded) },
