@@ -18,7 +18,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "astro": "^7.4.7",
     "pagefind": "^1.6.0",
-    "satori": "^0.47.1",
+    "satori": "^0.63.2",
     "shiki": "^4.6.0"
   }
 }
