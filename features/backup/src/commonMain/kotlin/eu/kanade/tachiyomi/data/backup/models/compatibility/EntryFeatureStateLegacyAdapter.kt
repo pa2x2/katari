@@ -43,6 +43,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.serializer
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressLocator
+import tachiyomi.domain.entry.model.SubtitlePosition
 
 private const val LEGACY_MANGA_VIEWER_MASK = 0x3FL
 private const val MAX_VIEWER_SETTING_VALUE_LENGTH = 16_384
@@ -259,6 +260,7 @@ private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapsh
         "shadow" -> EntryPlaybackSubtitleTextEdge.SHADOW
         else -> null
     },
+    subtitlePosition = subtitlePosition?.let(SubtitlePosition::fromKey),
     playerEngine = when (playerEngine) {
         "built_in" -> EntryPlaybackEngine.BUILT_IN
         "mpv" -> EntryPlaybackEngine.MPV
@@ -293,6 +295,7 @@ private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreference
         EntryPlaybackSubtitleTextEdge.SHADOW -> "shadow"
         null -> null
     },
+    subtitlePosition = subtitlePosition?.key,
     playerEngine = when (playerEngine) {
         EntryPlaybackEngine.BUILT_IN -> "built_in"
         EntryPlaybackEngine.MPV -> "mpv"

@@ -66,6 +66,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | An explanation or note in a sheet or dialog | `InfoRow` | |
 | Options as icon-and-label tiles, such as reading modes | `IconChoiceGrid` | |
 | A choice of colour swatches | `ColorChoiceRow`, `ColorSwatches` | Swatches alone where tabs already name the colour |
+| A choice of one of nine places over a picture, three by three | `PositionChoiceRow` | Such as where subtitles rest; an action beside the title, such as putting them back |
 | A choice of fonts, each title drawn in its font | `FontChoiceRow` | |
 | A choice of app themes, each drawn as a small screen | `ThemeChoiceRow` | |
 | Sets a sheet's content to compact rows | `ProvideRowDensity` | Sheets set it; rows never pick density themselves |
@@ -232,6 +233,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | The background where media is loading or failed | `MediaBackdrop` | |
 | A shade behind controls along an edge of media | `MediaScrim` | |
 | Text straight over pages or video | `OutlinedMediaText` | |
+| Marks for something the person moves over media: its frame, the guides it lines up with and how to move it | `MediaPlacementMarks` | Such as subtitles in the subtitle editor; it takes no input |
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
 | A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
 | The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
@@ -275,6 +277,7 @@ See the `adaptive-layout` skill for which to use at which window size.
 | Job | Component | Notes |
 |---|---|---|
 | The hand cursor over something a click acts on | `Modifier.clickCursor` | |
+| The move cursor over something a drag moves | `Modifier.moveCursor` | |
 | Zooming with a touchpad pinch | `Modifier.touchpadPinch` | Pinches that start over the element, with the pointer to zoom about; desktop only |
 | A keyboard shortcut while something is shown | `KeyboardShortcutHandler`, `KeyboardShortcutScope` | |
 | The window's layout facts | `currentWindowLayout` | |

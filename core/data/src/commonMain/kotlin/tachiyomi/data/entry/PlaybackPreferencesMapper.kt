@@ -4,6 +4,7 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.SubtitlePosition
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 object PlaybackPreferencesMapper {
@@ -32,6 +33,7 @@ object PlaybackPreferencesMapper {
         picturePanX: Double?,
         picturePanY: Double?,
         subtitleTextEdge: String?,
+        subtitlePosition: String?,
     ): PlaybackPreferences {
         return PlaybackPreferences(
             entryId = entryId,
@@ -49,6 +51,7 @@ object PlaybackPreferencesMapper {
             subtitleBackgroundColor = subtitleBackgroundColor?.toInt(),
             subtitleBackgroundOpacity = subtitleBackgroundOpacity,
             subtitleTextEdge = subtitleTextEdge?.toSubtitleTextEdge(),
+            subtitlePosition = subtitlePosition?.let(SubtitlePosition::fromKey),
             playerEngine = playerEngine?.toPlayerEngine(),
             mpvHintShown = mpvHintShown,
             pictureFraming = decodePictureFraming(pictureFraming, pictureZoom, picturePanX, picturePanY),

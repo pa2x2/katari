@@ -156,7 +156,7 @@ class ChangeCaptureTest {
             expect("playback preferences", "entry.playback-preferences") {
                 db.playback_preferencesQueries.upsertInsert(
                     1, "dub", null, null, null, null, "auto", null, null, null, null, null, null, null, null, null,
-                    false, null, null, null, null, 0,
+                    null, false, null, null, null, null, 0,
                 )
             }
             expect("user merge", "merge.member", "merge.member") {

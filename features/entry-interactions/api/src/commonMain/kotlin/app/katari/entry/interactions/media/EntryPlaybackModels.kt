@@ -1,6 +1,7 @@
 package app.katari.entry.interactions.media
 
 import kotlinx.serialization.Serializable
+import tachiyomi.domain.entry.model.SubtitlePosition
 
 @Serializable
 data class EntryPlaybackPreferencesSnapshot(
@@ -19,6 +20,8 @@ data class EntryPlaybackPreferencesSnapshot(
     val subtitleBackgroundOpacity: Double? = null,
     /** Null keeps the outline. */
     val subtitleTextEdge: EntryPlaybackSubtitleTextEdge? = null,
+    /** Null rests them at the bottom centre. */
+    val subtitlePosition: SubtitlePosition? = null,
     /** Null while the player chooses by itself. */
     val playerEngine: EntryPlaybackEngine? = null,
     val updatedAt: Long = 0L,

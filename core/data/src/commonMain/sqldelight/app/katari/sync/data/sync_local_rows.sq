@@ -189,7 +189,8 @@ SELECT
     subtitle_background_opacity,
     subtitle_text_edge,
     player_engine,
-    server_key
+    server_key,
+    subtitle_position
 FROM playback_preferences
 WHERE entry_id = :entryId;
 

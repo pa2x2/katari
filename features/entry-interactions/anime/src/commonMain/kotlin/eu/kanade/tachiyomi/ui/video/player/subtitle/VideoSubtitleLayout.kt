@@ -1,35 +1,72 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
+import androidx.compose.ui.geometry.Rect
 import eu.kanade.tachiyomi.ui.video.player.picture.VideoPictureGeometry
 import tachiyomi.domain.entry.model.PictureFraming
+import tachiyomi.domain.entry.model.SubtitlePosition
 
 /**
  * Where the app draws text subtitles, in pixels of a player [playerWidth] by [playerHeight].
  *
  * Their size and drag offsets stay a share of the picture's size, as when they were always drawn over it. A fitted
- * picture leaves bands above and below it; when the band under it holds two lines, the subtitles move into it unless
- * the viewer keeps them in the picture. They keep that place whatever the player's controls do: the controls and their
- * shade are laid over them rather than moving them.
+ * picture leaves bands above and below it; when the band under it holds two lines, subtitles resting at the bottom move
+ * into it unless the viewer keeps them in the picture. They keep that place whatever the player's controls do: the
+ * controls and their shade are laid over them rather than moving them.
  *
  * Cues their file places go in the area [areaLeft], [areaTop], [areaWidth] by [areaHeight]: the fitted picture, or the
- * whole player once the picture fills or is zoomed past it. Every cue is moved by [shiftX] and [shiftY], the
- * appearance's offsets as shares of that area.
+ * whole player once the picture fills or is zoomed past it. The rest stack up and rest in the cell of [position]: the
+ * stack's top on [restTop], its middle on [restMiddle] or its bottom on [restBottom], and each cue's left edge on
+ * [restLeft], its middle on the area's or its right edge on [restRight]. Every cue is then moved by [shiftX] and
+ * [shiftY], the appearance's offsets as shares of the area, and held [marginPx] inside the player.
  */
 internal data class VideoSubtitleLayout(
     val playerWidth: Float,
     val playerHeight: Float,
     val textSizePx: Float,
-    /** From the player's bottom edge to the bottom of the lowest line of the cues the app places. */
-    val bottomPx: Float,
+    val position: SubtitlePosition,
+    val restTop: Float,
+    val restMiddle: Float,
+    val restBottom: Float,
+    val restLeft: Float,
+    val restRight: Float,
     val areaLeft: Float,
     val areaTop: Float,
     val areaWidth: Float,
     val areaHeight: Float,
     val shiftX: Float,
     val shiftY: Float,
-)
+    val marginPx: Float,
+) {
+    val areaCentreX: Float get() = areaLeft + areaWidth / 2f
 
-/** [gapPx] keeps band subtitles off the picture's edge. */
+    /** Where a stack [height] tall resting in [row] has its top, before the shift. */
+    fun restingTop(row: SubtitlePosition.Row, height: Float): Float = when (row) {
+        SubtitlePosition.Row.TOP -> restTop
+        SubtitlePosition.Row.MIDDLE -> restMiddle - height / 2f
+        SubtitlePosition.Row.BOTTOM -> restBottom - height
+    }
+
+    /** Where a cue, or a stack, [width] wide resting in [column] has its left edge, before the shift. */
+    fun restingLeft(column: SubtitlePosition.Column, width: Float): Float = when (column) {
+        SubtitlePosition.Column.LEFT -> restLeft
+        SubtitlePosition.Column.CENTER -> areaCentreX - width / 2f
+        SubtitlePosition.Column.RIGHT -> restRight - width
+    }
+
+    /** [bounds] moved the least that lays it [marginPx] inside the player, or to that inset's top left if larger. */
+    fun held(bounds: Rect): Rect = bounds.translate(
+        translateX = heldBy(bounds.left, bounds.width, marginPx, playerWidth - marginPx),
+        translateY = heldBy(bounds.top, bounds.height, marginPx, playerHeight - marginPx),
+    )
+}
+
+private fun heldBy(start: Float, size: Float, min: Float, max: Float): Float = when {
+    start < min || size > max - min -> min - start
+    start + size > max -> max - (start + size)
+    else -> 0f
+}
+
+/** [gapPx] keeps band subtitles off the picture's edge and every subtitle off the player's. */
 internal fun videoSubtitleLayout(
     playerWidth: Float,
     playerHeight: Float,
@@ -48,24 +85,28 @@ internal fun videoSubtitleLayout(
     val baseHeight = if (fitted) geometry.fitHeight else playerHeight
     val textSizePx = normalizedAppearance.textSize * baseHeight
     val band = (playerHeight - baseHeight) / 2f
+    val areaLeft = (playerWidth - baseWidth) / 2f
     val twoLinesPx = textSizePx * TWO_LINES_HEIGHT
     val inBand = fitted && !keepInPicture && band >= twoLinesPx + gapPx * 2f
-    val bottomPx = if (inBand) {
-        band - gapPx - twoLinesPx
-    } else {
-        band + baseHeight * DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION
-    }
+    // The same distance from every edge of the picture
+    val edgePx = baseHeight * SUBTITLE_EDGE_FRACTION
     return VideoSubtitleLayout(
         playerWidth = playerWidth,
         playerHeight = playerHeight,
         textSizePx = textSizePx,
-        bottomPx = bottomPx,
-        areaLeft = (playerWidth - baseWidth) / 2f,
+        position = normalizedAppearance.position,
+        restTop = band + edgePx,
+        restMiddle = band + baseHeight / 2f,
+        restBottom = if (inBand) band + baseHeight + gapPx + twoLinesPx else band + baseHeight - edgePx,
+        restLeft = areaLeft + edgePx,
+        restRight = areaLeft + baseWidth - edgePx,
+        areaLeft = areaLeft,
         areaTop = band,
         areaWidth = baseWidth,
         areaHeight = baseHeight,
         shiftX = baseWidth * normalizedAppearance.offsetX,
         shiftY = baseHeight * normalizedAppearance.offsetY,
+        marginPx = gapPx,
     )
 }
 
