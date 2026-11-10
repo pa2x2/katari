@@ -46,8 +46,8 @@ import kotlinx.coroutines.launch
 /**
  * The paged viewer on screen: the slots in a pager turning [PagedViewer.direction], each a page, two facing pages or a
  * chapter transition. A tap or click anywhere goes to the tap zones of the whole pager, a double tap zooms the page
- * under it, a long press or right click opens its actions, the wheel scrolls and turns pages ([pagerWheel]), and a
- * mouse drags pages as a finger does.
+ * under it, a long press or right click opens its actions, the wheel scrolls and turns pages ([pagerWheel]), a
+ * touchpad pinch zooms the page under the pointer ([pagerTouchpadPinch]), and a mouse drags pages as a finger does.
  */
 @Composable
 internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Boolean = false) {
@@ -96,6 +96,7 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
             }
             .hidesTapZones(tapZones)
             .pagerWheel(viewer) { pageAt(it) }
+            .pagerTouchpadPinch(viewer) { pageAt(it) }
             .pagerMouseDrags(pagerState, vertical, scope)
             .pointerInput(viewer) {
                 detectReaderTaps(
