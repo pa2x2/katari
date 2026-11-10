@@ -33,7 +33,7 @@ internal fun MissingSourceSheet(
     onMigrate: (() -> Unit)?,
     onDismissRequest: () -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth().padding(bottom = KatariTheme.spacing.l)) {
             SheetHeader(title = stringResource(MR.strings.missing_source_title, sourceName))
             RowGroupNote(

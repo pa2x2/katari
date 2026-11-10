@@ -34,7 +34,7 @@ fun ReaderPageActionsDialog(
 ) {
     var showSetCoverDialog by remember { mutableStateOf(false) }
 
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column {
             SheetHeader(title = stringResource(MR.strings.reader_page_actions_title))
             Row(
