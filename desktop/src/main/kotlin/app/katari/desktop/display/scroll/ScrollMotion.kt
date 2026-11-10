@@ -11,9 +11,9 @@ internal sealed interface ScrollMotion {
     data class Wheel(override val at: ScrollPoint, val horizontal: Double, val vertical: Double) : ScrollMotion
 
     /**
-     * A touchpad's two fingers moved the content by [horizontal] and [vertical] pixels of the session, which is what
-     * the desktop's own windows scroll by, before the session's scale; down and right positive. [starts] is set for
-     * the first step after the fingers came down.
+     * A touchpad's two fingers travelled [horizontal] and [vertical], down and right positive, in the pixels libinput
+     * reports a touchpad's scrolling in, which the session's own windows scroll by several times over. [starts] is
+     * set for the first step after the fingers came down.
      */
     data class Fingers(
         override val at: ScrollPoint,

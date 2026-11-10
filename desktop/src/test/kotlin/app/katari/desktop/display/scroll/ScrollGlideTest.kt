@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 
 class ScrollGlideTest {
-    // Fingers moving down at 1500 pixels a second, reported every 8 ms
+    // Fingers moving the content down at 1500 pixels a second, reported every 8 ms
     private fun flick(velocity: FingerVelocity): Long {
         velocity.start(0)
         for (time in 8L..160L step 8) velocity.add(time, 0.0, 12.0)

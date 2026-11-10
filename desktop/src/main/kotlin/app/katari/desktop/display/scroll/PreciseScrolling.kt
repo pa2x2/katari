@@ -21,13 +21,14 @@ import kotlin.math.sqrt
 
 /**
  * Scrolls [window] by the display's own [ScrollMotion]s, as wheel events it hands the window in place of the
- * toolkit's. A wheel's notches scroll as the toolkit's do. A touchpad's fingers move the content by as far as they
- * travel, [sessionScale] screen pixels for each of the session's, or the toolkit's own scale where that is null, and
- * a flick leaves it gliding once they lift, until the next scroll, a click, a key or the pointer moving off.
+ * toolkit's. A wheel's notches scroll as the toolkit's do. A touchpad's fingers move the content by [FINGER_GAIN]
+ * times the travel the display reports for them, [sessionScale] screen pixels for each of the session's, or the
+ * toolkit's own scale where that is null, and a flick leaves it gliding once they lift, until the next scroll, a
+ * click, a key or the pointer moving off.
  *
  * Compose scrolls a wheel's turn by a distance that grows with the root of the scrolling content's size, which the
- * window can't know for the content under the pointer, so the fingers' travel is exact for content that takes most of
- * the window, as a screen's list does, and falls short in smaller content. Used by the event dispatch thread.
+ * window can't know for the content under the pointer, so that distance is exact for content that takes most of the
+ * window, as a screen's list does, and falls short in smaller content. Used by the event dispatch thread.
  */
 internal class PreciseScrolling(private val window: Window, private val sessionScale: Float?) : AutoCloseable {
     private val velocity = FingerVelocity()
@@ -79,8 +80,10 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
                     horizontal.reset()
                     velocity.start(motion.at.timeMillis)
                 }
-                velocity.add(motion.at.timeMillis, motion.horizontal, motion.vertical)
-                moveBy(motion.at, motion.horizontal, motion.vertical, gliding = false)
+                val x = motion.horizontal * FINGER_GAIN
+                val y = motion.vertical * FINGER_GAIN
+                velocity.add(motion.at.timeMillis, x, y)
+                moveBy(motion.at, x, y, gliding = false)
             }
             is ScrollMotion.FingersLifted -> {
                 val (velocityX, velocityY) = velocity.atLift(motion.at.timeMillis)
@@ -252,6 +255,13 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
     }
 
     private companion object {
+        /**
+         * How far content moves for the travel libinput reports for a touchpad's fingers, which is a fraction of the
+         * distance they cover, so no toolkit scrolls by it as it is: GTK 4 scrolls 2.5 times as far, Firefox 4 times,
+         * Qt's lists about 6. Firefox's, as the app scrolls what a browser does: pages and long lists.
+         */
+        const val FINGER_GAIN = 4.0
+
         // The share of the window a screen's list takes beside its bars, for which the fingers' travel is exact
         const val CONTENT_SHARE = 0.85
 

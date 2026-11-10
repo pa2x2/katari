@@ -14,8 +14,8 @@ actual val PointerEvent.touchpadScrollStage: TouchpadScrollStage?
  * which Compose scrolls by at once rather than sliding to as it does for a wheel's notch.
  *
  * Compose turns a rotation into a distance that grows with the size of what scrolls, so [rotation] can only stand for
- * the fingers' travel in content of one size; [pixels] is the travel itself along the event's axis, for what scrolls
- * by pixels of its own accord, as a web page does.
+ * the distance the fingers ask for in content of one size; [pixels] is that distance itself along the event's axis,
+ * for what scrolls by pixels of its own accord, as a web page does.
  */
 class TouchpadWheelEvent(
     source: Component,

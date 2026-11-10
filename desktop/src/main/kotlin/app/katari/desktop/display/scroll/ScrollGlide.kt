@@ -5,9 +5,9 @@ import kotlin.math.hypot
 import kotlin.math.ln
 
 /**
- * How content goes on moving after a touchpad's fingers flicked it and lifted: from the fingers' speed it slows by the
- * same share each moment, as the desktop's own scrolling views do, until it is too slow to see. Speeds are in pixels a
- * second.
+ * How content goes on moving after a touchpad's fingers flicked it and lifted: from the speed they moved it at it
+ * slows by the same share each moment, as the desktop's own scrolling views do, until it is too slow to see. Speeds
+ * are the content's, in pixels a second.
  */
 internal class ScrollGlide private constructor(private val velocityX: Double, private val velocityY: Double) {
     private val lastsMillis: Double = SLOWING_MS * ln(hypot(velocityX, velocityY) / END_SPEED)
@@ -29,10 +29,10 @@ internal class ScrollGlide private constructor(private val velocityX: Double, pr
             return ScrollGlide(velocityX * capped, velocityY * capped)
         }
 
-        // Fingers that lift slower than this were placing the content, not flicking it
-        private const val START_SPEED = 150.0
+        // Fingers that lift while moving the content slower than this were placing it, not flicking it
+        private const val START_SPEED = 600.0
         private const val END_SPEED = 30.0
-        private const val TOP_SPEED = 6_000.0
+        private const val TOP_SPEED = 12_000.0
 
         // The glide loses 63% of its speed in this long, which makes it travel 0.3 s of the fingers' speed in all
         private const val SLOWING_MS = 300.0
@@ -41,8 +41,8 @@ internal class ScrollGlide private constructor(private val velocityX: Double, pr
 }
 
 /**
- * The speed of a touchpad's fingers as they lift, from the steps they made just before: the distance of the last
- * [WINDOW_MS] over that time, so fingers that rested before lifting have none.
+ * The speed content moves at as a touchpad's fingers lift, from the steps they moved it by just before: the distance
+ * of the last [WINDOW_MS] over that time, so fingers that rested before lifting leave none.
  */
 internal class FingerVelocity {
     private class Step(val timeMillis: Long, val x: Double, val y: Double)

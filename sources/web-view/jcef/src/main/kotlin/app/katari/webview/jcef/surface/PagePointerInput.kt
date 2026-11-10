@@ -71,8 +71,8 @@ internal fun Modifier.pagePointerInput(
 
 /**
  * The wheel in the pixels Chromium scrolls by, as JCEF passes a wheel event's steps on to it as pixels, scrolling up
- * for positive ones. A wheel step scrolls as far as Chromium scrolls for one on X11, and a touchpad's fingers by as
- * far as they travel, their small scrolls adding up until they make a pixel. Scrolling sideways, which the window system sends with Shift held, adds up
+ * for positive ones. A wheel step scrolls as far as Chromium scrolls for one on X11, and a touchpad's fingers by the
+ * distance their event carries, their small scrolls adding up until they make a pixel. Scrolling sideways, which the window system sends with Shift held, adds up
  * apart.
  */
 private class WheelPixels {
@@ -84,7 +84,7 @@ private class WheelPixels {
             sideways = event.isShiftDown
             pixels = 0.0
         }
-        // The fingers' travel is in the window's pixels, [PagePointerTarget.scale] of them to one of the page's
+        // The fingers' distance is in the window's pixels, [PagePointerTarget.scale] of them to one of the page's
         pixels -= (event as? TouchpadWheelEvent)?.let { it.pixels / page.scale }
             ?: (event.preciseWheelRotation * PIXELS_PER_STEP)
         val whole = pixels.toInt()
