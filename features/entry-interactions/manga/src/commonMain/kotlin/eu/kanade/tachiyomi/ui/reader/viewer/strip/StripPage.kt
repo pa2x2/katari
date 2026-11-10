@@ -40,7 +40,8 @@ internal fun StripPage(
     placeholderHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
+    val contentState =
+        rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest, viewer::onPageShown)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
 

@@ -313,6 +313,10 @@ internal class MangaReaderController(
         showNotice(if (viewModel.toggleCropBorders()) MR.strings.on else MR.strings.off)
     }
 
+    fun onPageShown(page: ReaderPage) {
+        viewModel.onPageShown(page)
+    }
+
     fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {
         viewModel.onPageSelected(page, facing)
         textInteraction.refreshSurfaces()

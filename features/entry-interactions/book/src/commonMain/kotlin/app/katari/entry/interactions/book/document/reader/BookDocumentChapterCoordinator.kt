@@ -268,6 +268,8 @@ internal class BookDocumentChapterCoordinator(
     fun onLocation(location: BookDocumentViewerLocation<EntryChapter>) {
         val state = currentState() ?: return
         val chapterId = location.section.owner.id
+        // Before the navigation check, which can turn away the first location: the text is on screen all the same
+        retainedSessions.shown(chapterId)
         val navigationRequest = state.navigationRequest
         if (!navigationRequest.acceptsLocation(
                 chapterId,
@@ -491,6 +493,7 @@ internal class BookDocumentChapterCoordinator(
 
     private fun completeChapter(chapterId: Long) {
         val session = retainedSessions.session(chapterId) ?: return
+        retainedSessions.finished(chapterId)
         val state = currentState() ?: return
         val section = state.loadedSections[chapterId]?.sections?.lastOrNull() ?: return
         val total = 1.0

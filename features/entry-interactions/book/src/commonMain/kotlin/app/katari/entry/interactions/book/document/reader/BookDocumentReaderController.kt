@@ -39,6 +39,7 @@ import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.tts.ui.playback.ShortFormSpeechFailure
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -384,6 +385,9 @@ internal class BookDocumentReaderController(
         )
         settingBindings = bindings
         scope.launch {
+            bindings.readingMode.state.collect { retainedSessions.readingMode = it.effectiveValue }
+        }
+        scope.launch {
             bindings.keepScreenAlive.state
                 .map { setting -> setting.effectiveValue }
                 .distinctUntilChanged()
@@ -432,7 +436,14 @@ internal class BookDocumentReaderController(
         } else {
             null
         }
-        val result = when (val existing = retained ?: handedOff) {
+        // Null where the session goes on in a rebuilt reader. A reader that opens its chapter itself, as after its
+        // process died, starts its session's report here.
+        val report = if (retained == null) {
+            handedOff?.report ?: dependencies.readingSessionReports.start(EntryType.BOOK)
+        } else {
+            null
+        }
+        val result = when (val existing = retained ?: handedOff?.session) {
             null -> dependencies.sessionFactory.open(
                 startupRequest,
                 BookDocumentReaderProcessor.PROCESSOR_ID,
@@ -447,7 +458,7 @@ internal class BookDocumentReaderController(
                 sourceChapter = result.sourceChapter,
             )
             is BookReaderOpenResult.Success -> {
-                if (retained == null) retainedSessions.attachInitial(result.session)
+                report?.let { retainedSessions.attachInitial(result.session, it) }
                 showInitialSession(result.session)
             }
         }

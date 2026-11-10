@@ -28,6 +28,7 @@ class MpvVideoEngine(
     addon: MpvAddon,
     private val networkHelper: NetworkHelper,
 ) : VideoEngine {
+    override val name: String = "mpv"
 
     private val platform = AndroidMpvPlatform(context, addon)
     private val bandwidthMeter = MpvBandwidthMeter()

@@ -27,6 +27,7 @@ kotlin {
                 implementation(projects.core.i18n)
                 implementation(projects.core.icons.materialSymbols)
                 implementation(projects.core.presentationCore)
+                implementation(projects.core.telemetry)
             }
         }
         getByName("desktopMain") {

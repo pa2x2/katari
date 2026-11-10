@@ -24,6 +24,7 @@ internal class ExoPlayerVideoEngine(
     private val networkHelper: NetworkHelper,
     private val mediaCache: ExoPlayerMediaCache,
 ) : VideoEngine {
+    override val name: String = "exoplayer"
 
     @OptIn(markerClass = [UnstableApi::class])
     override fun createPlayer(stream: VideoStream, role: VideoPlayerRole): VideoPlayer {

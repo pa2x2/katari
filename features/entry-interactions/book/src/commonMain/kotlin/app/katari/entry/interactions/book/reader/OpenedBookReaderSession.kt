@@ -28,6 +28,8 @@ internal class OpenedBookReaderSession(
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
     /** The name of the source the chapter comes from; null when that source isn't installed. */
     val sourceName: String? = null,
+    /** Whether the chapter opened from its download rather than from the source. */
+    val downloaded: Boolean = false,
 ) : AutoCloseable {
     private val defaultActivitySession = EntryMediaSessionActivitySession()
     private val closeStack = BookSessionCloseStack().apply {

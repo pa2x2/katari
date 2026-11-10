@@ -46,7 +46,8 @@ import kotlin.math.ceil
  */
 @Composable
 internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boolean, modifier: Modifier = Modifier) {
-    val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
+    val contentState =
+        rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest, viewer::onPageShown)
     val content = contentState.content
 
     val progressive by page.progressiveImageState.collectAsState(null)

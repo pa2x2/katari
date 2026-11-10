@@ -265,6 +265,8 @@ internal class StripViewer(
     /** Whether the text features take a tap at ([x], [y]) in the window, as translate mode does. */
     internal fun onTextTap(x: Float, y: Float): Boolean = controller.textInteraction.onTap(x, y)
 
+    internal fun onPageShown(page: ReaderPage) = controller.onPageShown(page)
+
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
         automaticBackground = false,

@@ -68,6 +68,7 @@ internal fun rememberWatchedPlayer(
             latestPlayback = latestPlayback,
             publishSnapshot = publishSnapshot,
             engine = engine,
+            engineName = videoEngine.name,
         ).also { events ->
             player.addListener(events)
             if (current.resumePositionMs > 0L) {
@@ -96,6 +97,7 @@ private class WatchedPlayerEvents(
     private val latestPlayback: State<VideoPlaybackUiState>,
     private val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
     private val engine: WatchedPlayerEngine,
+    private val engineName: String,
 ) : VideoPlayerListener {
     private var renderedFirstFrame = false
 
@@ -112,7 +114,7 @@ private class WatchedPlayerEvents(
                 renderedFirstFrame = true
                 ui.startupOverlayVisible = false
                 ui.frameShown = true
-                viewModel.confirmPlayback(current)
+                viewModel.firstFrameShown(current, engineName)
             }
             is VideoPlayerEvent.Failed -> onError(event.error)
         }

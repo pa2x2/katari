@@ -12,6 +12,7 @@ import app.katari.entry.interactions.book.processor.BookReaderProcessor
 import app.katari.entry.interactions.book.processor.BookReaderRequest
 import app.katari.entry.interactions.book.reader.failure.BookReaderChapterHeading
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -44,6 +45,9 @@ internal class BookReaderHostController(
 
     private var launchJob: Job? = null
     private var retrySelection: BookReaderHostState.ReaderSelected? = null
+
+    // Started here so the time to the first text counts the chapter's preparation, which happens before the reader
+    private val sessionReport = dependencies.readingSessionReports.start(EntryType.BOOK)
 
     fun start() = resolve()
 
@@ -105,7 +109,7 @@ internal class BookReaderHostController(
             }
             is BookReaderOpenResult.Success -> {
                 val registry = dependencies.sessionRegistry
-                val token = registry.register(result.session)
+                val token = registry.register(BookReaderHandoff(result.session, sessionReport))
                 try {
                     onOpened(selected.processor, selected.prepared.request, token)
                 } catch (error: Exception) {

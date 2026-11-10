@@ -7,7 +7,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
 <Page title="Privacy policy · Katari" description="What Katari sends, where it goes, and how to turn it off.">
   <main data-pagefind-body data-pagefind-filter="section:Privacy">
     <h1>Privacy policy</h1>
-    <p class="updated">Last updated 9 November 2026</p>
+    <p class="updated">Last updated 10 November 2026</p>
     <p>
       Katari keeps your library, reading and watching progress, history, downloads, backups and settings on your device.
       It has no accounts, and no server of its own that receives them. This page lists everything that leaves your
@@ -35,7 +35,18 @@ import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
         <strong>Crash logs</strong>: the error and where in Katari's code it happened, including when Katari stops
         responding. An error's message can include what Katari was working on, such as a web address from a source.
       </li>
-      <li><strong>Usage data</strong>: when Katari is installed, updated, opened and put in the background.</li>
+      <li>
+        <strong>Usage data</strong>, sent on each day you use Katari: how many entries your library holds of each
+        kind, how many extensions of each type are installed and loaded, how many profiles you have, whether sync is
+        on, which translation, read-aloud and text recognition services you chose, the screens you opened and how wide
+        Katari's window was.
+      </li>
+      <li>
+        <strong>Usage data</strong>, sent each time you close a reader or the video player: the kind of entry, the
+        reading mode or the video player engine, the type of extension it came from, whether it was downloaded, how
+        long it was open, how many chapters or episodes you finished and how long it took to show. Never a title, or the
+        name of a source or an extension.
+      </li>
       <li>
         <strong>Both</strong>: the screen that was showing and the kind of entry it was about, such as a comic or a
         video, but never its title. Katari's version. Your device's maker and model, system version, language and screen
@@ -52,8 +63,9 @@ import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
     <h3>Where they go</h3>
     <p>
       Reports go to <a href="https://posthog.com" {...leavesSite()}>PostHog</a>, a product analytics service, and are
-      stored in its EU cloud. PostHog works out an approximate location, the country and city, from the IP address a
-      report comes from, then discards the address without storing it. <a href="https://posthog.com/privacy" {...leavesSite()}>PostHog's privacy policy</a>
+      stored in its EU cloud. PostHog works out an approximate location from the IP address a report comes from (the
+      country, region, city and postal code, and approximate coordinates), then discards the address without storing
+      it. <a href="https://posthog.com/privacy" {...leavesSite()}>PostHog's privacy policy</a>
       covers how it handles them.
     </p>
     <p>

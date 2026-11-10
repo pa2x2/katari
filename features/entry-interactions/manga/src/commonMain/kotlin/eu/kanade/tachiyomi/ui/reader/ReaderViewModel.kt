@@ -38,6 +38,7 @@ import app.katari.entry.interactions.reader.preparation.ReaderChapterPreparation
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.reader.settings.ReaderOrientation
 import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.state.EntryBookmarkFeature
@@ -189,6 +190,7 @@ internal class ReaderViewModel(
     powerSource: PowerSource,
     private val pageImageExport: ReaderImageExport,
     private val progressOffers: EntryProgressOffers,
+    private val sessionReport: ReadingSessionReport,
 ) : ViewModel() {
 
     private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
@@ -498,6 +500,7 @@ internal class ReaderViewModel(
 
     // Cleared once the reader is left for good, when its activity finishes or its desktop screen leaves the navigation
     override fun onCleared() {
+        sessionReport.endReading(effectiveReadingMode.value)
         saveChapterProgress()
         deletePendingChapters()
         textTranslationSpeech.close()
@@ -536,6 +539,7 @@ internal class ReaderViewModel(
                             message = "Requested entry of id $mangaId not found",
                             canRetry = false,
                         )
+                    sessionReport.sourceKnown(entry.source)
                     if (!sourceManager.isInitialized.value) showStartupStep(ReaderStartupStep.LoadingExtensions)
                     sourceManager.isInitialized.first { it }
                     installViewerSettingBindings(entry)
@@ -731,6 +735,11 @@ internal class ReaderViewModel(
         mutableState.update { it.copy(showsTwoPages = showsTwoPages) }
     }
 
+    /** A page's image is on screen; a downloaded or local chapter's pages are on the device. */
+    fun onPageShown(page: ReaderPage) {
+        sessionReport.shown(downloaded = page.chapter.pageLoader?.isLocal == true)
+    }
+
     /**
      * Called every time a page changes on the reader. Used to mark the flag of chapters being
      * read, update tracking services, enqueue downloaded chapter deletion, and updating the active chapter if this
@@ -835,6 +844,7 @@ internal class ReaderViewModel(
         pendingProgressSave?.cancel()
 
         if (readerChapter.pages?.lastIndex == page.index) {
+            readerChapter.chapter.id?.let(sessionReport::finished)
             pendingProgress = null
             writeChapterProgress(progress)
         } else {

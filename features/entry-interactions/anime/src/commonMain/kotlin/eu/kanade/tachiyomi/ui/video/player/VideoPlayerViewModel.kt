@@ -18,6 +18,7 @@ import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivity
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
 import app.katari.entry.interactions.media.session.EntryMediaSessionEvent
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.EntrySourceSettingsFeature
 import app.katari.entry.interactions.source.EntrySourceSettingsResolution
@@ -132,6 +133,7 @@ internal class VideoPlayerViewModel(
     aniSkipLookup: AniSkipLookup,
     theIntroDbLookup: TheIntroDbLookup,
     progressOffers: EntryProgressOffers,
+    private val sessionReport: ReadingSessionReport,
     private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -227,6 +229,9 @@ internal class VideoPlayerViewModel(
     // Auto's move to mpv, carried into the streams and episodes opened after it so each doesn't fail first again.
     private var sessionEngineRun: VideoPlayerEngineRun? = null
 
+    // The engines that showed a frame this session, the last one last, for its usage report
+    private val enginesPlayed = linkedSetOf<String>()
+
     fun init(
         entryId: Long,
         chapterId: Long,
@@ -256,6 +261,7 @@ internal class VideoPlayerViewModel(
             val chapter = runCatching { entryChapterRepository.getChapterById(chapterId) }.getOrNull()
             // The episode's own entry: a merged entry's member, whose source is the one asked.
             val member = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId) }.getOrNull()
+            member?.let { sessionReport.sourceKnown(it.source) }
             val visible = runCatching { entryRepository.getEntryById(entryId) }.getOrNull()
             loadingSourceName = member?.let { sourceNames.of(it.source) }
             val heading = headingTitles(visible = visible, member = member)
@@ -687,6 +693,7 @@ internal class VideoPlayerViewModel(
             resumePositionMs = safePositionMs,
             playbackStateByChapterId = current.playbackStateByChapterId + (current.chapterId to snapshot.progressState),
         )
+        if (snapshot.completedNow) sessionReport.finished(current.chapterId)
 
         // On the app's scope, so leaving the player, which ends the view model's, never cuts short the last save
         playbackPersistence = persistenceScope.launch(persistenceDispatcher) {
@@ -753,11 +760,23 @@ internal class VideoPlayerViewModel(
         return true
     }
 
+    /** [playing] showed its first frame in [engine], the name of the engine playing it. */
+    fun firstFrameShown(playing: State.Ready, engine: String) {
+        sessionReport.shown(downloaded = playing.playback.downloaded)
+        enginesPlayed.remove(engine)
+        enginesPlayed.add(engine)
+        confirmPlayback(playing)
+    }
+
+    override fun onCleared() {
+        sessionReport.endPlayback(engine = enginesPlayed.lastOrNull(), engineSwitched = enginesPlayed.size > 1)
+    }
+
     /**
      * Saves the dub, server and stream [playing] plays as the title's, now that its first frame showed they work. A
      * choice that never plays, picked or reached by fallback, leaves the saved one in place.
      */
-    fun confirmPlayback(playing: State.Ready) {
+    private fun confirmPlayback(playing: State.Ready) {
         if (playing.playback.downloaded) return
         val selection = playing.playback.persistedSourceSelection
         viewModelScope.launch {
