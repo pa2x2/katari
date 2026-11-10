@@ -38,6 +38,9 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
         unlisted = emptySet()
     }
 
+    /** The account's devices and their names, as the account last listed them. */
+    suspend fun listed(): Map<DeviceId, String> = names()
+
     /** The name of [device] as the account last listed it; null when it wasn't listed. */
     suspend fun listedName(device: DeviceId): String? = names()[device]
 
