@@ -4,7 +4,7 @@ import app.katari.core.common.web.ExtensionPage
 import app.katari.core.common.web.ExtensionPageEvents
 import app.katari.core.common.web.ExtensionPageSettings
 import app.katari.core.common.web.ExtensionPages
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
 import app.katari.webview.jcef.runtime.JcefPresence
 import app.katari.webview.jcef.runtime.JcefRuntime
 import kotlinx.coroutines.CoroutineScope

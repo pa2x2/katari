@@ -255,6 +255,8 @@ data class BackupPlaybackPreferences(
     @ProtoNumber(15) var serverKey: String? = null,
     /** "none", "outline" or "shadow"; null keeps the outline. */
     @ProtoNumber(16) var subtitleTextEdge: String? = null,
+    /** A grid cell such as "top_center"; null keeps the bottom centre. */
+    @ProtoNumber(17) var subtitlePosition: String? = null,
 )
 
 @Serializable

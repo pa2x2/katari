@@ -114,6 +114,12 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Content of a disabled control. Kit components apply it themselves through their enabled state. */
     val disabledContent: Color = scheme.onSurface.copy(alpha = DISABLED_CONTENT_ALPHA)
 
+    /**
+     * [content] as a disabled control shows it, for a control whose content has its own tone rather than the surface's,
+     * such as a button over media.
+     */
+    internal fun disabled(content: Color): Color = content.copy(alpha = DISABLED_CONTENT_ALPHA)
+
     /** Container of a disabled control. */
     val disabledContainer: Color = scheme.onSurface.copy(alpha = DISABLED_CONTAINER_ALPHA)
 

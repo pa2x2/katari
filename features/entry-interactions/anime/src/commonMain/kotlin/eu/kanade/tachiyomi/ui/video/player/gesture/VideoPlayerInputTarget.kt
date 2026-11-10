@@ -84,7 +84,10 @@ internal interface VideoPlayerInputTarget {
     /** Opens the settings panel at its start. */
     fun openSettings()
 
-    fun openEpisodes()
+    val episodesVisible: Boolean
+
+    /** Opens the episode list, or closes it while it shows. */
+    fun toggleEpisodes()
 
     /** Mutes or unmutes the player's own volume, where the controls set it. */
     fun toggleMute()

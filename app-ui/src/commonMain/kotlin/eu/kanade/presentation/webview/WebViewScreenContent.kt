@@ -22,25 +22,28 @@ import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.ScreenFrame
 import app.katari.presentation.kit.navigation.Scaffold
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.webview.setup.WebViewSetupGate
 import eu.kanade.tachiyomi.ui.webview.WebViewViewModel
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserJsDialog
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserRequest
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserView
+import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 
 /**
- * A site in [browserView]: [url], loaded with [headers] and [sourceId]'s web view headers, and the popups it opens over
+ * A site in [browserView], once the web view is [set up][setup]: [url], loaded with [headers] and [sourceId]'s web view headers, and the popups it opens over
  * it as tabs. [sourceId]'s source gets the last site storage read on the way, if it asks for it, as the screen closes.
  * [onUrlChange] follows the shown tab's address.
  */
 @Composable
 fun WebViewScreenContent(
     browserView: BrowserView,
+    setup: WebViewSetup,
     url: String,
     initialTitle: String?,
     sourceId: Long?,
@@ -148,7 +151,9 @@ fun WebViewScreenContent(
         FramedContent(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
             // Keyed to the page, so switching tabs shows the other page's browser rather than loading it into this one
             key(page) {
-                browserView.Page(page = page, modifier = Modifier.fillMaxSize())
+                WebViewSetupGate(setup, onDeclined = onNavigateUp, modifier = Modifier.fillMaxSize()) {
+                    browserView.Page(page = page, modifier = Modifier.fillMaxSize())
+                }
             }
         }
     }

@@ -1,6 +1,6 @@
 package app.katari.webview.jcef.runtime
 
-import app.katari.webview.jcef.cookie.ChromiumCookieManager
+import app.katari.webview.engine.cookie.ChromiumCookieManager
 import app.katari.webview.jcef.cookie.JcefCookieManager
 import com.jetbrains.cef.JCefAppConfig
 import logcat.LogPriority
@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
- * Chromium's start and shutdown through the JetBrains Runtime's own path, with Chromium's browser process in a process
+ * Chromium's starts and shutdowns through the JetBrains Runtime's own path, with Chromium's browser process in a process
  * of its own: the runtime's `cef_server`, which JCEF starts and talks to over a Unix socket. `JCefAppConfig` gives the
  * runtime's switches and settings, and `CefApp.getInstance` starts the server on a thread of its own, whose end
  * [CefApp.onInitialization] reports. Only a runtime with JCEF can load this object.
@@ -29,11 +29,14 @@ import kotlin.time.TimeSource
 internal object Chromium {
     /**
      * Starts Chromium with [switches] of the runtime's own and completes [started] once it runs. [lost] is called if
-     * the server ends before the app shuts it down.
+     * the server ends before the app shuts it down. Which Chromium it is, the runtime's or one installed for the app,
+     * was settled as JCEF's classes loaded: its server is where the system property JCEF read then names it, and
+     * Chromium finds its other files beside its server. JCEF passes on no setting that would name them.
      */
     fun start(
         switches: (List<String>) -> List<String>,
         dataDirectory: Path,
+        userAgent: String,
         started: CompletableFuture<CefApp>,
         lost: () -> Unit,
     ) {
@@ -50,6 +53,8 @@ internal object Chromium {
             // The log would otherwise go to the working directory, at INFO, which takes in every page's console
             log_file = dataDirectory.resolve(LOG_FILE).toString()
             log_severity = CefSettings.LogSeverity.LOGSEVERITY_WARNING
+            // For what no page sets a user agent on, such as service workers
+            user_agent = userAgent
         }
         logcat(LogPriority.INFO) { "Starting Chromium with ${arguments.joinToString(" ")}" }
         // The server takes its switches from the handler
@@ -61,6 +66,9 @@ internal object Chromium {
             },
         )
         val app = CefApp.getInstance(arguments, settings, null)
+        // JCEF keeps the first Chromium of a process as the one its own calls mean, such as the cookie manager's, and
+        // this may be a later one
+        CefApp.setDefaultInstance(app)
         app.setDisconnectionCallback(lost)
         app.onInitialization {
             watchServer(app)

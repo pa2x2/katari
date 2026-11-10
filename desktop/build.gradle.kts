@@ -1,6 +1,7 @@
 import app.katari.gradle.Config
 import app.katari.gradle.appimage.registerDesktopAppImage
 import app.katari.gradle.desktopicon.GenerateDesktopIconTask
+import app.katari.gradle.desktopicon.GenerateDesktopSplashTask
 import app.katari.gradle.extensions.extensionHostJvmArguments
 import app.katari.gradle.getAppVersionCode
 import app.katari.gradle.getAppVersionName
@@ -31,6 +32,15 @@ val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("gen
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
     buildTime.set(getLatestCommitTime())
     release.set(Config.desktopRelease)
+    chromiumVersion.set(katari.versions.chromium.asProvider())
+    chromiumArchiveUrl.set(
+        katari.versions.chromium.asProvider().map { chromium ->
+            "https://github.com/pa2x2/katari/releases/download/chromium-$chromium/chromium-$chromium-linux-x86_64.tar.zst"
+        },
+    )
+    chromiumArchiveSha256.set(katari.versions.chromium.linux.x64.sha256)
+    chromiumArchiveBytes.set(katari.versions.chromium.linux.x64.size.map { it.toLong() })
+    chromiumInstalledBytes.set(katari.versions.chromium.linux.x64.installed.size.map { it.toLong() })
     outputDir.set(layout.buildDirectory.dir("generated/desktopBuildInfo"))
 }
 
@@ -41,12 +51,20 @@ kotlin {
 }
 
 // The Android app's launcher icon of the same build: the development one for every build but the release
+val (iconSourceSet, iconName) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
+val iconDrawables = layout.settingsDirectory.dir("app/src/$iconSourceSet/res/drawable")
 val generateDesktopIcon = tasks.register<GenerateDesktopIconTask>("generateDesktopIcon") {
-    val (sourceSet, name) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
-    val drawables = layout.settingsDirectory.dir("app/src/$sourceSet/res/drawable")
-    background.set(drawables.file("${name}_background.xml"))
-    foreground.set(drawables.file("${name}_foreground.xml"))
+    background.set(iconDrawables.file("${iconName}_background.xml"))
+    foreground.set(iconDrawables.file("${iconName}_foreground.xml"))
     icon.set(layout.buildDirectory.file("generated/desktopIcon/app-icon.svg"))
+}
+
+// The same icon as the image the AppImage shows from the moment it is started until the app's window opens
+val generateDesktopSplash = tasks.register<GenerateDesktopSplashTask>("generateDesktopSplash") {
+    background.set(iconDrawables.file("${iconName}_background.xml"))
+    foreground.set(iconDrawables.file("${iconName}_foreground.xml"))
+    size.set(256)
+    splash.set(layout.buildDirectory.file("generated/desktopSplash/splash.png"))
 }
 
 // The licences screen reads the definitions AboutLibraries exports from the app's dependencies, as the Android plugin
@@ -100,6 +118,7 @@ dependencies {
     implementation(projects.features.translation.providers.serverConnection)
     implementation(projects.features.tts.runtime)
     implementation(projects.features.tts.providers.speechDispatcher)
+    implementation(projects.sources.webView.chromium)
     implementation(projects.sources.webView.jcef)
 
     implementation(libs.metrox.viewmodel.compose)
@@ -129,9 +148,21 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+// Libraries that come with parts of the app's libraries it never reaches
+configurations.implementation {
+    // Batik, with which moko-resources draws image resources kept as SVG; the app keeps only its strings there
+    exclude(group = "org.apache.xmlgraphics")
+    // Material 2, for the rich text editor's Material 2 fields; the app shows its Material 3 ones
+    exclude(group = "org.jetbrains.compose.material", module = "material")
+}
+
 compose.desktop.application {
     mainClass = "app.katari.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
 
-registerDesktopAppImage(release = Config.desktopRelease, icon = generateDesktopIcon.flatMap { it.icon })
+registerDesktopAppImage(
+    release = Config.desktopRelease,
+    icon = generateDesktopIcon.flatMap { it.icon },
+    splash = generateDesktopSplash.flatMap { it.splash },
+)

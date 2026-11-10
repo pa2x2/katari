@@ -50,6 +50,7 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundColor
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundOpacity
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetX
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetY
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedPosition
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextColor
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextEdge
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextSize
@@ -1477,6 +1478,7 @@ internal class VideoPlayerViewModel(
                 subtitleBackgroundColor = resolvedSubtitleAppearance.toPersistedBackgroundColor(),
                 subtitleBackgroundOpacity = resolvedSubtitleAppearance.toPersistedBackgroundOpacity(),
                 subtitleTextEdge = resolvedSubtitleAppearance.toPersistedTextEdge(),
+                subtitlePosition = resolvedSubtitleAppearance.toPersistedPosition(),
             )
         }
     }

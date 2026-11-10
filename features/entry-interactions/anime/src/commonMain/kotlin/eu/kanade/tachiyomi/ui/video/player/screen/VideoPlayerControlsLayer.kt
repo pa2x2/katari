@@ -142,10 +142,7 @@ internal fun VideoPlayerControlsLayer(
             },
             fullScreen = host.fullScreen?.isFullScreen,
             onToggleFullScreen = actions.toggleFullScreen,
-            onDismissEpisodes = {
-                ui.episodesDrawerVisible = false
-                ui.registerControllerInteraction(true)
-            },
+            onDismissEpisodes = actions.dismissEpisodes,
             onMemberToggled = viewModel::toggleMemberExpanded,
             onGroupToggled = viewModel::toggleGroupExpanded,
             onEpisodeSelected = { episode: EntryChapter ->

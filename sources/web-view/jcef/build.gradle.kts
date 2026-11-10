@@ -1,6 +1,6 @@
 // The desktop web view: Chromium through the JCEF of the JetBrains Runtime the desktop app runs on. The runtime carries
 // JCEF's classes and Chromium, so the module compiles against JCEF's published API and ships none of it; on another
-// runtime it reports JCEF missing and the app keeps its web view hidden.
+// runtime it reports JCEF missing and a page that needs Chromium fails to open.
 import app.katari.gradle.jetbrainsruntime.checkJcefApiMatchesJetBrainsRuntime
 
 plugins {
@@ -15,6 +15,7 @@ dependencies {
     compileOnly(libs.jcef)
 
     api(projects.core.common)
+    api(projects.sources.webView.engine)
 
     // The browser view the shared web view screen shows, drawn with the kit's menus and tooltips over it
     implementation(projects.appUi)

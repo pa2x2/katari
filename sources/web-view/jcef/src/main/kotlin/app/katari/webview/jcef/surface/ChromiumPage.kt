@@ -3,8 +3,8 @@ package app.katari.webview.jcef.surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.data.SiteOrigins
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents
@@ -12,7 +12,6 @@ import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
@@ -154,7 +153,7 @@ internal class ChromiumPage(
     }
 
     private suspend fun open() {
-        val app = try {
+        val chromium = try {
             runtime.start()
         } catch (e: JcefStartException) {
             logcat(LogPriority.ERROR, e) { "The web view's page couldn't open" }
@@ -162,7 +161,7 @@ internal class ChromiumPage(
             events.onRenderProcessGone(crashed = true)
             return
         }
-        val client = app.createClient().also { PageClient(this).attachTo(it) }
+        val client = chromium.app.createClient().also { PageClient(this).attachTo(it) }
         // A blank page first, which gives the browser a page for the user agent to be set on before the first load
         val browser = client.createBrowser(
             BLANK_PAGE,
@@ -177,7 +176,7 @@ internal class ChromiumPage(
         this.browser = browser
         browser.createImmediately()
         // The browser goes with Chromium's server, which then tells JCEF nothing of it
-        runtime.isLost.first { it }
+        chromium.awaitLost()
         logcat(LogPriority.ERROR) { "The web view's page ended with Chromium" }
         events.onRenderProcessGone(crashed = true)
     }

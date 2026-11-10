@@ -87,6 +87,11 @@ class KeyboardShortcutRegistry {
         return true
     }
 
+    /** Opens the list of shortcuts, or closes it while it is open. */
+    fun toggleList() {
+        if (listed == null) showList() else hideList()
+    }
+
     /** Lists what can run, leaving out a shortcut whose every key a newer declaration has taken, such as a screen's. */
     fun showList() {
         val runnable = registrations.filter { it.canRun() }

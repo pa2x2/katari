@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.chromium:chromium",
+  "artifactVersion": "150.0.7871.129",
+  "name": "Chromium",
+  "description": "The browser the desktop web view runs on, downloaded when the web view is set up. It includes software of many other projects, whose licences its page chrome://credits shows, and FFmpeg under the GNU Lesser General Public License 2.1 or later.",
+  "website": "https://www.chromium.org",
+  "licenses": [
+    "chromium-desktop-chromium"
+  ]
+}

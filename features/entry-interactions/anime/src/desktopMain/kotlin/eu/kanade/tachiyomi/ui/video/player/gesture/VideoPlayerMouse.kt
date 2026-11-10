@@ -14,13 +14,12 @@ import kotlinx.coroutines.launch
 /**
  * The mouse's buttons and moves on the picture. Moving shows the controls, which hide again on their own, but not
  * while the left button is held, as it drags the picture or plays at 2× then, nor away from the bars over a picture
- * zoomed past the player, where it shows only the [pointer]. A click plays or pauses as soon as the
- * button is let go; the second click of a double-click plays or pauses back and switches full screen, so a double-click
- * leaves playback and the controls as they were, as browsers' players do. Holding the left button plays at 2× until it
- * is let go. While the picture is zoomed past the player, dragging with the left button moves it, and a hold that
- * doesn't move still plays at 2×. The right button opens the settings panel; the
- * middle one does nothing, and the back button is the window's, which goes back as Esc does. [geometry] is the
- * picture's shape in the player, null until the video has one.
+ * zoomed past the player, where it shows only the [pointer]. A click plays or pauses once it can no longer become a
+ * double-click ([PictureClicks]), and a double-click only switches full screen, leaving playback and the controls as
+ * they were. Holding the left button plays at 2× until it is let go. While the picture is zoomed past the player,
+ * dragging with the left button moves it, and a hold that doesn't move still plays at 2×. The right button opens the
+ * settings panel; the middle one does nothing, and the back button is the window's, which goes back as Esc does.
+ * [geometry] is the picture's shape in the player, null until the video has one.
  */
 internal fun Modifier.videoPlayerMouse(
     target: VideoPlayerInputTarget,
@@ -28,9 +27,7 @@ internal fun Modifier.videoPlayerMouse(
     pointer: VideoPlayerPointer,
 ): Modifier = pointerInput(target, pointer) {
     coroutineScope {
-        var lastClickAtMs: Long? = null
-        var lastClickAt = Offset.Zero
-        var controlsVisibleBeforeClick = false
+        val clicks = PictureClicks(this, viewConfiguration.doubleTapTimeoutMillis, viewConfiguration.touchSlop)
         var lastAt = Offset.Unspecified
         var press: Press? = null
         var hold: Job? = null
@@ -69,15 +66,8 @@ internal fun Modifier.videoPlayerMouse(
                         PointerButton.Secondary -> if (!target.subtitleEditorVisible) target.openSettings()
                         PointerButton.Primary -> {
                             if (target.subtitleEditorVisible) continue
-                            val sinceClickMs = lastClickAtMs?.let { change.uptimeMillis - it }
-                            val double = sinceClickMs != null &&
-                                sinceClickMs <= viewConfiguration.doubleTapTimeoutMillis &&
-                                (change.position - lastClickAt).getDistance() <= viewConfiguration.touchSlop
-                            if (double) {
-                                lastClickAtMs = null
+                            if (clicks.completesDoubleClick(change.position)) {
                                 press = Press(change.position, clicks = false)
-                                target.togglePlayback(showControls = true)
-                                if (!controlsVisibleBeforeClick) target.hideControls()
                                 if (target.hasFullScreen) target.toggleFullScreen()
                                 continue
                             }
@@ -102,10 +92,7 @@ internal fun Modifier.videoPlayerMouse(
                         when {
                             current.boosted -> target.setSpeedBoostActive(false)
                             current.dragging -> target.commitPictureFraming(target.pictureFraming)
-                            current.clicks -> {
-                                lastClickAtMs = change.uptimeMillis
-                                lastClickAt = change.position
-                                controlsVisibleBeforeClick = target.controlsVisible
+                            current.clicks -> clicks.clicked(change.position) {
                                 target.togglePlayback(showControls = true)
                             }
                         }

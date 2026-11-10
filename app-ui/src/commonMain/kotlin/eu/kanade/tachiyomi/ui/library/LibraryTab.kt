@@ -56,6 +56,7 @@ import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
+import eu.kanade.presentation.webview.setup.WebViewSetupLibraryNotice
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -287,6 +288,7 @@ data object LibraryTab : Tab {
                         updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
                         notice = {
+                            WebViewSetupLibraryNotice(Modifier.padding(vertical = KatariTheme.spacing.s))
                             MissingExtensionsLibraryNotice(
                                 onReview = { showMissingExtensions = true },
                                 modifier = Modifier.padding(vertical = KatariTheme.spacing.s),

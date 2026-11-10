@@ -87,6 +87,9 @@ internal class LinuxSingleInstance(
 
     private companion object {
         const val LOCK_FILE_NAME = "instance.lock"
+
+        // The AppImage's launcher looks for this file too, to show no splash on a launch the running instance answers
+        // (AssembleAppDirTask in the build logic)
         const val SOCKET_FILE_NAME = "instance.socket"
 
         // Long enough for an instance to end, flushing its preferences, after it stopped answering for a restart

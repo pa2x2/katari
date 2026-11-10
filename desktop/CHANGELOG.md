@@ -1,5 +1,29 @@
 # Desktop Changelog
 
+## [1.0.0-beta.8] - 2026-11-10
+
+### ✨ Added
+
+- Settings › Advanced has a WebView engine page that shows, downloads and removes Chromium.
+
+### 🔄 Changed
+
+- The AppImage no longer carries Chromium. The first source that needs WebView asks to download Chromium once, and a source that needed it before then says so in the Library and in a notification.
+- A double-click switches full screen without pausing the video, in the player and in feed clips.
+
+### 🧩 Improved
+
+- In the subtitle editor, you drag subtitles by their lines or move them with the arrow keys, they snap to guides, and a position grid has a Recenter button.
+- Pressing E, ? or S again closes the episode list, the shortcut list or the manga reader's area selection.
+- The app's icon shows from launch until the window opens.
+- WebView pages send the platform and browser hints that match their user agent, so sites ask less often to prove you're human.
+
+### 🐛 Fixed
+
+- Previous and Next over a video now dim while another episode opens.
+- A stream with separate audio shows loading until its audio is in, instead of a still picture, and its subtitles no longer delay the start.
+- WebView starts again after Chromium fails to start or stops, instead of staying unavailable until the app restarts.
+
 ## [1.0.0-beta.7] - 2026-11-09
 
 ### ✨ Added
@@ -227,7 +251,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.7...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.8...HEAD
+[1.0.0-beta.8]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.6
 [1.0.0-beta.5]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.5

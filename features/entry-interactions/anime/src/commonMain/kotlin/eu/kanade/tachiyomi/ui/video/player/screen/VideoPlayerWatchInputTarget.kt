@@ -169,7 +169,10 @@ internal class VideoPlayerWatchInputTarget(
 
     override fun openSettings() = actions.openSettings(null)
 
-    override fun openEpisodes() = actions.openEpisodes()
+    override val episodesVisible get() = ui.episodesDrawerVisible
+
+    override fun toggleEpisodes() =
+        if (ui.episodesDrawerVisible) actions.dismissEpisodes() else actions.openEpisodes()
 
     override fun toggleMute() {
         val control = host.volumeControl ?: return

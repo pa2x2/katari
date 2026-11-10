@@ -9,6 +9,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.presentation.kit.content.Icon
@@ -19,6 +20,8 @@ import app.katari.presentation.kit.feedback.HoverTooltip
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.presentation.kit.theme.LocalContentColor
+import app.katari.presentation.kit.theme.color
 
 /** Emphasis of an icon button; [Standard] is a bare icon, as in app bars and rows. */
 enum class IconButtonStyle { Standard, Filled, Tonal, Outlined }
@@ -29,6 +32,8 @@ enum class IconButtonSize { Standard, Large }
 /**
  * [spin] turns the icon for as long as the work it stands for runs, the way the icon's arrows point. With [arrows],
  * drawn over [icon], only they turn, such as sync's arrows inside its still cloud.
+ *
+ * Disabled, the icon dims whatever its [tone], such as Previous and Next over a video while another episode opens.
  *
  * In a window worked with a mouse, hovering the button shows [contentDescription] as its tooltip, with the keys of
  * [shortcut], the shortcut that does what the button does, unless the button already sits in a tooltip, such as an app
@@ -55,13 +60,23 @@ fun IconButton(
     }
     // Squares off while pressed
     val shapes = IconButtonDefaults.shapes()
+    val toneDimmed = !enabled && tone != ContentTone.Inherit && tone != ContentTone.Original
     val content: @Composable () -> Unit = {
-        if (badgeCount != null && badgeCount > 0) {
-            BadgedBox(badge = { Badge { Text(badgeCount.toString()) } }) {
-                SpinningIcon(icon, contentDescription, spin, arrows, tone)
+        // A tone replaces the content colour the button dims when disabled, so a disabled toned icon dims its tone.
+        val iconTone = if (toneDimmed) ContentTone.Inherit else tone
+        val toned: @Composable () -> Unit = {
+            if (badgeCount != null && badgeCount > 0) {
+                BadgedBox(badge = { Badge { Text(badgeCount.toString()) } }) {
+                    SpinningIcon(icon, contentDescription, spin, arrows, iconTone)
+                }
+            } else {
+                SpinningIcon(icon, contentDescription, spin, arrows, iconTone)
             }
+        }
+        if (toneDimmed) {
+            CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.disabled(tone.color()), toned)
         } else {
-            SpinningIcon(icon, contentDescription, spin, arrows, tone)
+            toned()
         }
     }
     HoverTooltip(contentDescription, shortcut = shortcut) {

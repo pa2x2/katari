@@ -53,6 +53,7 @@ private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
         subtitleTextEdge = subtitleTextEdge?.toSnapshotEdge(),
+        subtitlePosition = subtitlePosition,
         playerEngine = playerEngine?.toSnapshotEngine(),
         updatedAt = updatedAt,
     )
@@ -75,6 +76,7 @@ private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
         subtitleTextEdge = subtitleTextEdge?.toDomainEdge(),
+        subtitlePosition = subtitlePosition,
         playerEngine = playerEngine?.toDomainEngine(),
         updatedAt = updatedAt,
     )

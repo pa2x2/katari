@@ -2,7 +2,7 @@ package app.katari.webview.jcef.page.challenge
 
 import app.katari.core.common.web.ChallengePage
 import app.katari.core.common.web.ChallengePageEvents
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
 import app.katari.webview.jcef.runtime.JcefPresence
 import app.katari.webview.jcef.runtime.JcefRuntime
 import kotlinx.coroutines.CoroutineScope

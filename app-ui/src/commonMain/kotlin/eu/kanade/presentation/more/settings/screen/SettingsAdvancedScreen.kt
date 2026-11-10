@@ -21,6 +21,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.advanced.UnrestrictedBackgroundWorkRequest
+import eu.kanade.presentation.more.settings.screen.advanced.WebViewEngineScreen
+import eu.kanade.presentation.more.settings.screen.advanced.rememberClearWebViewData
+import eu.kanade.presentation.more.settings.screen.advanced.webViewEngineStatus
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
 import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
 import eu.kanade.tachiyomi.network.NetworkPreferences
@@ -212,12 +215,13 @@ class SettingsAdvancedScreen : SearchableSettings() {
     private fun getNetworkGroup(
         networkPreferences: NetworkPreferences,
     ): Preference.PreferenceGroup {
-        val context = currentPlatformContext()
         val graph = LocalAppUiGraph.current
         val messages = rememberScreenMessages()
-        val scope = rememberCoroutineScope()
         val networkHelper = graph.networkHelper
         val webViewData = graph.webViewData
+        val webViewSetup = graph.webViewSetup
+        val clearWebViewData = rememberClearWebViewData()
+        val navigator = LocalNavigator.currentOrThrow
 
         val userAgentPref = networkPreferences.defaultUserAgent
         val userAgent by userAgentPref.collectAsState()
@@ -233,20 +237,16 @@ class SettingsAdvancedScreen : SearchableSettings() {
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.webview_engine_title),
+                    subtitle = webViewEngineStatus(webViewSetup),
+                    visible = webViewSetup.isManaged,
+                    onClick = { navigator.push(WebViewEngineScreen()) },
+                ),
+                // Where the app manages the engine, its page has the row
+                Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_clear_webview_data),
-                    visible = webViewData.isOffered,
-                    onClick = {
-                        try {
-                            webViewData.clearCaches(context)
-                            scope.launchNonCancellable {
-                                webViewData.deleteStorage(context)
-                                withUIContext { messages.show(MR.strings.webview_data_deleted) }
-                            }
-                        } catch (e: Throwable) {
-                            logcat(LogPriority.ERROR, e)
-                            messages.show(MR.strings.cache_delete_error)
-                        }
-                    },
+                    visible = webViewData.isOffered && !webViewSetup.isManaged,
+                    onClick = clearWebViewData,
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = networkPreferences.dohProvider,

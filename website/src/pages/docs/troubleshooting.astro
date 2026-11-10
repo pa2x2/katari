@@ -22,7 +22,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
       </li>
       <li>
         Still failing? Under <Path>Settings › Advanced</Path>, select <strong>Clear cookies</strong>, or <strong>Clear WebView data</strong>, and
-        try again.
+        try again. On Linux, <strong>Clear WebView data</strong> is on the <strong>WebView engine</strong> page there.
       </li>
       <li>
         Some sites block Katari's browser signature. Changing <strong>Default user agent string</strong> on the same screen, then restarting
@@ -31,7 +31,10 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     </ol>
     <PlatformAnswers>
       <p slot="android">Keep Android System WebView up to date. An old one fails these checks more often.</p>
-      <p slot="linux">The web view comes with Katari, so updating Katari keeps it up to date.</p>
+      <p slot="linux">
+        WebView runs on Chromium, which Katari downloads the first time a source needs it and again when an update needs a newer one.
+        <Path>Settings › Advanced › WebView engine</Path> shows it and can remove it.
+      </p>
     </PlatformAnswers>
   </Task>
 

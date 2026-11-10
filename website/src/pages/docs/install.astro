@@ -17,7 +17,7 @@ import { sitePath } from "../../site/links.ts";
       </p>
       <p slot="linux">
         The AppImage, for computers with a 64-bit Intel or AMD processor (x86_64). It is the whole app in one file, with
-        nothing to install.
+        nothing to install. The first time a source needs WebView, Katari asks to download Chromium for it.
       </p>
     </PlatformAnswers>
   </Question>
@@ -51,7 +51,7 @@ import { sitePath } from "../../site/links.ts";
   <Question id="data-folders" question="Where does Katari keep its data?" platform="Linux">
     <p>In a <code>katari</code> folder in each of these:</p>
     <ul>
-      <li><code>~/.local/share</code>: the library, extensions and custom covers.</li>
+      <li><code>~/.local/share</code>: the library, extensions, custom covers and the Chromium WebView runs on.</li>
       <li><code>~/.config</code>: settings and profiles.</li>
       <li><code>~/.cache</code>: covers, images, the web view's data and downloaded updates.</li>
       <li><code>~/.local/state</code>: logs and crash reports.</li>

@@ -11,7 +11,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The reader's text keys, where the window has keyboard shortcuts: T turns text translation on and off, and while the
  * text toolbar offers them, S selects an area and O switches between the original text and its translations. Each is
- * declared beside the button that does the same, whose tooltip names it.
+ * declared beside the button that does the same, whose tooltip names it. S pressed again while an area is being
+ * selected cancels it, as the selection's Cancel does.
  */
 internal object MangaReaderTextShortcuts {
     val Translate: KeyboardShortcut
@@ -21,12 +22,15 @@ internal object MangaReaderTextShortcuts {
             key = ShortcutKeys.Chord(Key.T, "T"),
         )
 
-    val SelectArea: KeyboardShortcut
-        @Composable get() = shortcut(
-            id = "reader.text.selectArea",
-            label = stringResource(MR.strings.reader_text_select_area),
-            key = ShortcutKeys.Chord(Key.S, "S"),
-        )
+    /** Labelled by what pressing it now does: selects an area, or cancels the one being selected. */
+    @Composable
+    fun SelectArea(selecting: Boolean): KeyboardShortcut = shortcut(
+        id = "reader.text.selectArea",
+        label = stringResource(
+            if (selecting) MR.strings.reader_text_cancel_select_area else MR.strings.reader_text_select_area,
+        ),
+        key = ShortcutKeys.Chord(Key.S, "S"),
+    )
 
     /** Labelled as the button is: by what pressing it now shows. */
     @Composable

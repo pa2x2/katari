@@ -125,6 +125,16 @@ internal class MpvPlayer(
     /** Where the current load started. */
     private var loadStartMs = 0L
 
+    /** Counts loads, so the end of work an earlier load started is told apart from the current one's. */
+    private var loadCount = 0
+
+    /**
+     * The load's external audio isn't added yet. mpv takes tracks only once the file has loaded, and unpaused it would
+     * start the video meanwhile and the audio only once it is opened, its start skipped: until then mpv is held paused
+     * and the load is still loading, so the picture it has shown by then doesn't stand still as if playing.
+     */
+    private var addingExternalAudio = false
+
     /** The position asked for that mpv hasn't reached yet: a seek, or the start of the next load. */
     private var pendingPositionMs: Long? = null
 
@@ -200,6 +210,8 @@ internal class MpvPlayer(
         error = null
         prepared = true
         loaded = false
+        loadCount++
+        addingExternalAudio = !preview && stream.audioTracks.isNotEmpty()
         restarted = false
         endReached = false
         loadStartMs = start
@@ -342,7 +354,7 @@ internal class MpvPlayer(
     private fun playback(): VideoPlayerState.Playback = when {
         error != null || !prepared -> VideoPlayerState.Playback.Idle
         endReached -> VideoPlayerState.Playback.Ended
-        !loaded || !restarted || pausedForCache || seeking || pendingPositionMs != null ->
+        !loaded || addingExternalAudio || !restarted || pausedForCache || seeking || pendingPositionMs != null ->
             VideoPlayerState.Playback.Buffering
         else -> VideoPlayerState.Playback.Ready
     }
@@ -377,12 +389,7 @@ internal class MpvPlayer(
 
     private fun playsNow(): Boolean = playWhenReady && holds.allowsPlaying
 
-    /**
-     * A load with external audio stays paused until [startLoadedFile] has added it. mpv takes tracks only once the file
-     * has loaded, and unpaused it would start the video meanwhile and the audio only once it is opened, its start
-     * skipped. The unpause is posted after the tracks are, so mpv runs it once they are in.
-     */
-    private fun holdsMpvPaused(): Boolean = !playsNow() || (!loaded && stream.audioTracks.isNotEmpty())
+    private fun holdsMpvPaused(): Boolean = !playsNow() || addingExternalAudio
 
     /** Brings the holds and mpv's pause in line with the state. */
     private fun refresh() {
@@ -450,26 +457,46 @@ internal class MpvPlayer(
         everLoaded = true
         restarted = false
         firstFrameReported = false
-        // A file's external tracks go with it, so every load adds them again. mpv opens each before it returns, and
-        // the load stays paused until then (holdsMpvPaused).
-        val subtitles = externalSubtitles
-        val audio = externalAudio
-        session.post { client ->
-            // mpv chose the file's tracks before these were added, and adds them unselected. ExoPlayer chooses among
-            // the stream's tracks and the merged external ones, so a stream with no audio of its own plays one of them.
-            val selectAudio = !client.fileHasOwnAudio()
-            subtitles.forEach { (_, url, subtitle) ->
-                client.command("sub-add", url, "auto", subtitle.label, subtitle.language.orEmpty())
-            }
-            audio.forEachIndexed { position, (_, url, track) ->
-                val flag = if (selectAudio && position == 0) "select" else "auto"
-                client.command("audio-add", url, flag, track.label, track.language.orEmpty())
+        // A file's external tracks go with it, so every load adds them again. mpv opens each before it returns. The
+        // seek preview shows no sound or subtitles, so it opens none.
+        val load = loadCount
+        val audio = if (preview) emptyList() else externalAudio
+        if (audio.isEmpty()) {
+            externalAudioAdded(load)
+        } else {
+            session.post { client ->
+                // mpv chose the file's tracks before these were added, and adds them unselected. ExoPlayer chooses
+                // among the stream's tracks and the merged external ones, so a stream with no audio of its own plays
+                // one of them.
+                val selectAudio = !client.fileHasOwnAudio()
+                audio.forEachIndexed { position, (_, url, track) ->
+                    val flag = if (selectAudio && position == 0) "select" else "auto"
+                    client.command("audio-add", url, flag, track.label, track.language.orEmpty())
+                }
+                onMain { externalAudioAdded(load) }
             }
         }
         applyTrackChoices()
         val target = pendingPositionMs
         if (target != null && target != loadStartMs) {
             session.post { it.command("seek", seconds(target), "absolute") }
+        }
+    }
+
+    /**
+     * Lets the [load] play once its external audio is in. Its subtitles are added only then: mpv runs one command at a
+     * time, and the unpause would otherwise wait for them to download too.
+     */
+    private fun externalAudioAdded(load: Int) {
+        if (load != loadCount || !prepared) return
+        addingExternalAudio = false
+        applyPause()
+        if (preview) return
+        val subtitles = externalSubtitles
+        session.post { client ->
+            subtitles.forEach { (_, url, subtitle) ->
+                client.command("sub-add", url, "auto", subtitle.label, subtitle.language.orEmpty())
+            }
         }
     }
 

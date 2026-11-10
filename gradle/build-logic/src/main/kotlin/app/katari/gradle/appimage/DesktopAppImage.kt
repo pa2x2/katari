@@ -1,5 +1,9 @@
 package app.katari.gradle.appimage
 
+import app.katari.gradle.chromium.AssembleChromiumArchiveTask
+import app.katari.gradle.chromium.CheckChromiumVersionTask
+import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import app.katari.gradle.extensions.katari
 import app.katari.gradle.jetbrainsruntime.JCEF_NATIVE_ACCESS
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntime
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntimeSdk
@@ -26,9 +30,9 @@ import org.jetbrains.compose.desktop.DesktopExtension
  * Registers `packageAppImage`, which packs the desktop app with the JetBrains Runtime into
  * `build/appimage/<name>-<version>-x86_64.AppImage`, as [release] or as the development build. The two install side by
  * side under their own names, as `DesktopAppVariant` keeps their data apart; only the release opens the app's links.
- * [icon] is the SVG of that build's icon.
+ * [icon] is the SVG of that build's icon, and [splash] the PNG the AppImage shows while the app starts.
  */
-fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile>) {
+fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile>, splash: Provider<RegularFile>) {
     if (!isAppImageArchitecture()) {
         tasks.register("packageAppImage") {
             group = "distribution"
@@ -68,6 +72,26 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         excludedModules.set(LinkAppImageRuntimeTask.DEVELOPMENT_MODULES)
         this.runtime.set(layout.buildDirectory.dir("appimage/runtime"))
     }
+    val chromiumVersion = katari.versions.chromium.asProvider().get()
+    tasks.register<AssembleChromiumArchiveTask>("assembleChromiumArchive") {
+        group = "distribution"
+        description = "Packs the JetBrains Runtime's Chromium into the archive the desktop app downloads it from."
+        dependsOn(provisionSdk)
+        sdkName.set(sdk.archiveName)
+        sdkHome.set(sdk.home)
+        licenses.set(layout.settingsDirectory.dir("tools/chromium/licenses"))
+        archive.set(layout.buildDirectory.file("chromium/chromium-$chromiumVersion-linux-$ARCHITECTURE.tar.zst"))
+        licenceLibraries.set(layout.projectDirectory.dir(LICENCE_LIBRARIES))
+    }
+    val checkChromium = tasks.register<CheckChromiumVersionTask>("checkChromiumVersion") {
+        group = "verification"
+        description = "Checks that the Chromium pinned for download is the JetBrains Runtime's."
+        dependsOn(provisionRuntime)
+        runtimeRelease.set(runtime.release)
+        pinned.set(chromiumVersion)
+        licenceLibraries.set(layout.projectDirectory.dir(LICENCE_LIBRARIES))
+    }
+    tasks.named(VERIFY_TESTS_TASK_NAME) { dependsOn(checkChromium) }
     val checkModules = tasks.register<CheckAppImageModulesTask>("checkAppImageModules") {
         description = "Checks that the AppImage's runtime has every module the desktop app's jars need."
         dependsOn(provisionSdk)
@@ -89,6 +113,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
                 (listOf(appJar) + artifacts.map { it.libName() }).also(::checkDistinct)
             },
         )
+        unusedFiles.set(libraries.map(::unusedFilesByJar))
         runtimeHome.set(linkRuntime.flatMap { it.runtime })
         mainClass.set(provider { application.mainClass })
         jvmArguments.set(provider { (application.jvmArgs + JCEF_NATIVE_ACCESS).distinct() })
@@ -97,6 +122,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         directoryName.set(identity.directoryName)
         linkSchemes.set(identity.linkSchemes)
         this.icon.set(icon)
+        this.splash.set(splash)
         appDir.set(layout.buildDirectory.dir("appimage/${identity.fileName}.AppDir"))
     }
     tasks.register<PackAppImageTask>("packageAppImage") {
@@ -160,7 +186,25 @@ private fun ResolvedArtifactResult.libName(): String = when (val component = id.
     else -> file.name
 }
 
+/** What the AppImage leaves out of [artifacts]' jars, by each jar's name in the AppDir's `lib/`. */
+private fun unusedFilesByJar(artifacts: List<ResolvedArtifactResult>): Map<String, UnusedLibraryFiles> {
+    val byJar = artifacts.mapNotNull { artifact ->
+        val library = artifact.id.componentIdentifier as? ModuleComponentIdentifier ?: return@mapNotNull null
+        UnusedLibraryFiles.ALL.find { it.group == library.group && it.name == library.module }
+            ?.let { artifact.libName() to it }
+    }.toMap()
+    val gone = UnusedLibraryFiles.ALL - byJar.values.toSet()
+    if (gone.isNotEmpty()) {
+        throw GradleException(
+            "The desktop app no longer has ${gone.map { "${it.group}:${it.name}" }}; " +
+                "remove them from what its AppImage leaves out of its libraries, in UnusedLibraryFiles.kt",
+        )
+    }
+    return byJar
+}
+
 private fun checkDistinct(names: List<String>) {
     val repeated = names.groupBy { it }.filterValues { it.size > 1 }.keys
     if (repeated.isNotEmpty()) throw GradleException("Jars of the desktop app share names in its AppImage: $repeated")
 }
+private const val LICENCE_LIBRARIES = "licences/libraries"

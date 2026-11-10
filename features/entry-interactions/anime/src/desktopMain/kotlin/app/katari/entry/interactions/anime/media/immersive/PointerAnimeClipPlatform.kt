@@ -22,6 +22,7 @@ import app.katari.presentation.kit.shortcut.ShortcutKeys
 import app.katari.presentation.kit.window.LocalWindowFullScreen
 import app.katari.presentation.kit.window.WindowFullScreen
 import app.katari.video.engine.spi.player.VideoPlayer
+import eu.kanade.tachiyomi.ui.video.player.gesture.PictureClicks
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
@@ -105,15 +106,14 @@ internal class PointerAnimeClipPlatform(
 }
 
 /**
- * The left button on a clip, as on the player's picture: a click plays or pauses as soon as the button is let go, and
- * the second click of a double-click plays or pauses back and switches [fullScreen], so a double-click leaves playback
- * as it was. Holding the button plays at 2× until it is let go; a press that moves is neither.
+ * The left button on a clip, as on the player's picture: a click plays or pauses once it can no longer become a
+ * double-click ([PictureClicks]), and a double-click only switches [fullScreen]. Holding the button plays at 2× until it
+ * is let go; a press that moves is neither.
  */
 private fun Modifier.clipMouse(target: AnimeClipInputTarget, fullScreen: WindowFullScreen?): Modifier =
     pointerInput(target, fullScreen) {
         coroutineScope {
-            var lastClickAtMs: Long? = null
-            var lastClickAt = Offset.Zero
+            val clicks = PictureClicks(this, viewConfiguration.doubleTapTimeoutMillis, viewConfiguration.touchSlop)
             var press: ClipPress? = null
             var hold: Job? = null
             awaitPointerEventScope {
@@ -131,14 +131,8 @@ private fun Modifier.clipMouse(target: AnimeClipInputTarget, fullScreen: WindowF
                         }
                         PointerEventType.Press -> {
                             if (event.button != PointerButton.Primary) continue
-                            val sinceClickMs = lastClickAtMs?.let { change.uptimeMillis - it }
-                            val double = sinceClickMs != null &&
-                                sinceClickMs <= viewConfiguration.doubleTapTimeoutMillis &&
-                                (change.position - lastClickAt).getDistance() <= viewConfiguration.touchSlop
-                            if (double) {
-                                lastClickAtMs = null
+                            if (clicks.completesDoubleClick(change.position)) {
                                 press = ClipPress(change.position, clicks = false)
-                                target.togglePlayback()
                                 if (fullScreen != null) {
                                     if (fullScreen.isFullScreen) fullScreen.leave() else fullScreen.enter()
                                 }
@@ -159,11 +153,7 @@ private fun Modifier.clipMouse(target: AnimeClipInputTarget, fullScreen: WindowF
                             hold?.cancel()
                             when {
                                 current.boosted -> target.setSpeedBoost(false)
-                                current.clicks -> {
-                                    lastClickAtMs = change.uptimeMillis
-                                    lastClickAt = change.position
-                                    target.togglePlayback()
-                                }
+                                current.clicks -> clicks.clicked(change.position) { target.togglePlayback() }
                             }
                         }
                         else -> Unit

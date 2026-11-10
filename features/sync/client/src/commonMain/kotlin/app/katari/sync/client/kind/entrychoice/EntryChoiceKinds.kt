@@ -497,6 +497,7 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
             Field(14, "subtitle_text_edge"),
             Field(15, "player_engine"),
             Field(16, "server_key"),
+            Field(17, "subtitle_position"),
         ),
     )
 
@@ -528,6 +529,7 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
                 subtitleTextEdge = stamps.field(14, row.subtitle_text_edge, previous?.subtitleTextEdge),
                 playerEngine = stamps.field(15, row.player_engine, previous?.playerEngine),
                 serverKey = stamps.field(16, row.server_key, previous?.serverKey),
+                subtitlePosition = stamps.field(17, row.subtitle_position, previous?.subtitlePosition),
             )
         }
     }
@@ -548,6 +550,7 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
         subtitleTextEdge = latest(local.subtitleTextEdge, incoming.subtitleTextEdge),
         playerEngine = latest(local.playerEngine, incoming.playerEngine),
         serverKey = latest(local.serverKey, incoming.serverKey),
+        subtitlePosition = latest(local.subtitlePosition, incoming.subtitlePosition),
     )
 
     override suspend fun apply(writes: LocalWrites, key: String, payload: PlaybackPreferencesPayload): ApplyOutcome {
@@ -569,6 +572,7 @@ object PlaybackPreferencesKind : SyncedKind<PlaybackPreferencesPayload>(
             subtitleTextEdge = payload.subtitleTextEdge.value,
             playerEngine = payload.playerEngine.value,
             serverKey = payload.serverKey.value,
+            subtitlePosition = payload.subtitlePosition.value,
         )
         return ApplyOutcome.Applied(LocalRef.of(entryId))
     }
