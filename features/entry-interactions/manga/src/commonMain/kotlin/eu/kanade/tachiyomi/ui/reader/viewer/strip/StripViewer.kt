@@ -271,9 +271,9 @@ internal class StripViewer(
 
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
-        automaticBackground = settings.automaticBackground,
-        // The strip fills the window's height, so the background only ever shows at its sides
-        backgroundBesidePage = true,
+        // The strip reads what continues each page beside it once the page shows (FollowPageBackdrop)
+        automaticBackground = false,
+        backgroundBesidePage = false,
         layout = { _, imageSize -> stripPageLayout(imageSize, settings.bindings) },
     )
 
@@ -288,7 +288,6 @@ internal class StripViewer(
         val bindings = settings.bindings
         return listOf(
             bindings.cropBordersWebtoon.state.collectAsState().value.effectiveValue,
-            bindings.readerTheme.state.collectAsState().value.effectiveValue,
             bindings.dualPageSplitWebtoon.state.collectAsState().value.effectiveValue,
             bindings.dualPageInvertWebtoon.state.collectAsState().value.effectiveValue,
             bindings.dualPageRotateToFitWebtoon.state.collectAsState().value.effectiveValue,

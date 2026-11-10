@@ -6,23 +6,19 @@ import app.katari.core.image.PlatformBitmap
 import app.katari.core.image.argbPixel
 import app.katari.core.image.release
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
-import app.katari.entry.interactions.manga.reader.image.layout.PageImagePiece
 import app.katari.entry.interactions.manga.reader.image.layout.pieces
 import app.katari.entry.interactions.manga.reader.image.layout.sourcePoint
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import kotlin.math.floor
 
 /**
- * The background for each piece of [image] shown in [layout], in the order of its pieces, read at full resolution, as
- * the background rules count margins in pixels. Only the areas the rules read are decoded, so a tall page costs a few
- * narrow bands rather than its whole image. A piece that can't be decoded gets white.
+ * The background for [image] shown in a paged viewer's [layout], read at full resolution, as the background rules
+ * count margins in pixels. Only the areas the rules read are decoded rather than the whole image. A page that can't be
+ * decoded gets white.
  */
-internal suspend fun PageImage.Still.chooseBackgrounds(
-    layout: PageImageLayout,
-    besidePage: Boolean,
-): List<PageBackground> = layout.pieces(size).map { chooseBackground(it, besidePage) }
-
-private suspend fun PageImage.Still.chooseBackground(piece: PageImagePiece, besidePage: Boolean): PageBackground {
+internal suspend fun PageImage.Still.chooseBackground(layout: PageImageLayout, besidePage: Boolean): PageBackground {
+    // Paged layouts show one piece
+    val piece = layout.pieces(size).first()
     val size = piece.displayedSize
     if (size.width < MIN_PAGE_SIZE || size.height < MIN_PAGE_SIZE) return PageBackground.Solid(WHITE)
     val decoded = mutableListOf<DecodedArea>()

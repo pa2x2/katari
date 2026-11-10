@@ -23,14 +23,12 @@ import app.katari.core.image.progressive.rememberProgressivePreview
 import app.katari.entry.interactions.manga.reader.image.animation.AnimatedPageImage
 import app.katari.entry.interactions.manga.reader.image.background.brush
 import app.katari.entry.interactions.manga.reader.image.layout.PageBitmap
-import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
 import app.katari.entry.interactions.manga.reader.image.layout.displayedSize
 import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import app.katari.entry.interactions.manga.reader.image.tiles.TiledPageImage
 import app.katari.entry.interactions.manga.reader.text.surface.PageTextLayer
 import app.katari.presentation.kit.progress.CombinedCircularProgressIndicator
-import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
@@ -96,8 +94,7 @@ internal fun PagerPage(
     }
 
     val scope = rememberCoroutineScope()
-    // Paged layouts show one piece
-    val background = shown?.backgrounds?.firstOrNull()
+    val background = shown?.background
     Box(
         modifier = modifier.then(if (background != null) Modifier.background(background.brush()) else Modifier),
         contentAlignment = narrowedAgainst ?: Alignment.Center,

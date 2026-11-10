@@ -10,3 +10,10 @@ internal fun PageBackground.brush(): Brush = when (this) {
     is PageBackground.Solid -> SolidColor(pageBackdropColor(argb))
     is PageBackground.Gradient -> pageBackdropBrush(argb)
 }
+
+/** How the span is painted, fading from its top colour to its bottom one over the height of the area it fills. */
+internal fun BackdropSpan.brush(): Brush = if (topArgb == bottomArgb) {
+    SolidColor(pageBackdropColor(topArgb))
+} else {
+    pageBackdropBrush(listOf(topArgb, bottomArgb))
+}

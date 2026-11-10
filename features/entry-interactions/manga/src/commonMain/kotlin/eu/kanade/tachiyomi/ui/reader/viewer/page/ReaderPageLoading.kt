@@ -2,7 +2,7 @@ package eu.kanade.tachiyomi.ui.reader.viewer.page
 
 import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.manga.reader.image.background.PageBackground
-import app.katari.entry.interactions.manga.reader.image.background.chooseBackgrounds
+import app.katari.entry.interactions.manga.reader.image.background.chooseBackground
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
 import app.katari.entry.interactions.manga.reader.image.profile.DisplayProfile
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
@@ -23,13 +23,13 @@ internal sealed interface PageContent {
     data class Loading(val progress: Float?) : PageContent
 
     /**
-     * [backgrounds] is what surrounds each piece of [layout], in the order of its pieces, when the background follows
-     * the page, else empty; [cropBorders] is whether [image] was opened without its borders.
+     * [background] is what surrounds the page when the background follows the page, else null; [cropBorders] is
+     * whether [image] was opened without its borders.
      */
     data class Shown(
         val image: PageImage,
         val layout: PageImageLayout,
-        val backgrounds: List<PageBackground>,
+        val background: PageBackground?,
         val cropBorders: Boolean,
     ) : PageContent
 
@@ -82,12 +82,12 @@ private suspend fun openShown(page: ReaderPage, request: PageRequest): PageConte
         image = openPageImage(bytes, request.cropBorders, DisplayProfile.bytes)
             ?: return PageContent.Failed(null)
         val layout = request.layout(page, image.size)
-        val backgrounds = if (request.automaticBackground && image is PageImage.Still) {
-            image.chooseBackgrounds(layout, request.backgroundBesidePage)
+        val background = if (request.automaticBackground && image is PageImage.Still) {
+            image.chooseBackground(layout, request.backgroundBesidePage)
         } else {
-            emptyList()
+            null
         }
-        PageContent.Shown(image, layout, backgrounds, request.cropBorders)
+        PageContent.Shown(image, layout, background, request.cropBorders)
     } catch (e: Throwable) {
         image?.close()
         if (e is CancellationException) throw e
