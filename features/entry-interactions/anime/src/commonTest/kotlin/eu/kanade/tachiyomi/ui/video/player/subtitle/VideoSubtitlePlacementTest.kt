@@ -5,6 +5,7 @@ import app.katari.video.engine.spi.player.SubtitleCue
 import app.katari.video.engine.spi.player.SubtitleLine
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import tachiyomi.domain.entry.model.SubtitlePosition
 
 class VideoSubtitlePlacementTest {
 
@@ -28,15 +29,32 @@ class VideoSubtitlePlacementTest {
             measure = ::measure,
         )
 
-        placed.map { it.left to it.top } shouldBe listOf(
+        placed.cues.map { it.left to it.top } shouldBe listOf(
             // Centred in the picture (100 to 900), its bottom on the resting line at 552, moved down by 10
             475f to 512f,
             // A quarter across the picture and a tenth down it
             300f to 70f,
             // Above the first cue
             485f to 462f,
-            // Placed at the picture's bottom edge, held inside it
-            485f to 560f,
+            // Placed at the picture's bottom edge and moved down, held 8 inside the player
+            485f to 542f,
+        )
+    }
+
+    @Test
+    fun `a stack dragged past the player's edge is held as one block`() {
+        // Holding each line on its own would pile them on the same spot at the edge
+        val placed = placeSubtitles(
+            cues = listOf(SubtitleCue("aaaa"), SubtitleCue("bbbbbbbb")),
+            layout = LAYOUT.copy(position = SubtitlePosition.TOP_LEFT, shiftX = -200f, shiftY = 600f),
+            boundsWidth = 1000f,
+            measure = ::measure,
+        )
+
+        placed.cues.map { it.left to it.top } shouldBe listOf(
+            // Both lines keep the cell's left edge, the block's bottom 8 above the player's
+            8f to 542f,
+            8f to 492f,
         )
     }
 
@@ -51,18 +69,25 @@ class VideoSubtitlePlacementTest {
     }
 
     private companion object {
-        // A 4:3 picture fitted in a 1000 by 600 player, text 40 pixels tall (padded by 5 a side), dragged 10 down
+        // A 4:3 picture fitted in a 1000 by 600 player, text 40 pixels tall (padded by 5 a side), resting 48 from its
+        // edges, dragged 10 down
         val LAYOUT = VideoSubtitleLayout(
             playerWidth = 1000f,
             playerHeight = 600f,
             textSizePx = 40f,
-            bottomPx = 48f,
+            position = SubtitlePosition.BOTTOM_CENTER,
+            restTop = 48f,
+            restMiddle = 300f,
+            restBottom = 552f,
+            restLeft = 148f,
+            restRight = 852f,
             areaLeft = 100f,
             areaTop = 0f,
             areaWidth = 800f,
             areaHeight = 600f,
             shiftX = 0f,
             shiftY = 10f,
+            marginPx = 8f,
         )
     }
 }

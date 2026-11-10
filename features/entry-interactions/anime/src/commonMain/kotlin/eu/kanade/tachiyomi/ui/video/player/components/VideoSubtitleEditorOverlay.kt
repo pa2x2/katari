@@ -32,10 +32,7 @@ import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.video.engine.spi.player.SubtitleCue
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_X
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_Y
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_X
-import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_Y
+import eu.kanade.tachiyomi.ui.video.player.subtitle.SUBTITLE_OFFSET_LIMIT
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
@@ -176,9 +173,9 @@ private fun SubtitleEditorSample(
                             onDraftChange(
                                 currentAppearance.copy(
                                     offsetX = (currentAppearance.offsetX + (dragAmount.x / base.areaWidth))
-                                        .coerceIn(MIN_SUBTITLE_OFFSET_X, MAX_SUBTITLE_OFFSET_X),
+                                        .coerceIn(-SUBTITLE_OFFSET_LIMIT, SUBTITLE_OFFSET_LIMIT),
                                     offsetY = (currentAppearance.offsetY + (dragAmount.y / base.areaHeight))
-                                        .coerceIn(MIN_SUBTITLE_OFFSET_Y, MAX_SUBTITLE_OFFSET_Y),
+                                        .coerceIn(-SUBTITLE_OFFSET_LIMIT, SUBTITLE_OFFSET_LIMIT),
                                 ),
                             )
                             change.consume()

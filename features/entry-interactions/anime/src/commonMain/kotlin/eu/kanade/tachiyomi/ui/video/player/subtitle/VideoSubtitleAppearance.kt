@@ -32,8 +32,8 @@ internal data class VideoSubtitleAppearance(
 
     fun normalized(): VideoSubtitleAppearance {
         return copy(
-            offsetX = offsetX.coerceIn(MIN_SUBTITLE_OFFSET_X, MAX_SUBTITLE_OFFSET_X),
-            offsetY = offsetY.coerceIn(MIN_SUBTITLE_OFFSET_Y, MAX_SUBTITLE_OFFSET_Y),
+            offsetX = offsetX.coerceIn(-SUBTITLE_OFFSET_LIMIT, SUBTITLE_OFFSET_LIMIT),
+            offsetY = offsetY.coerceIn(-SUBTITLE_OFFSET_LIMIT, SUBTITLE_OFFSET_LIMIT),
             textSize = textSize.coerceIn(MIN_SUBTITLE_TEXT_SIZE, MAX_SUBTITLE_TEXT_SIZE),
             backgroundOpacity = backgroundOpacity.coerceIn(0f, 1f),
         )
@@ -94,18 +94,19 @@ internal fun VideoSubtitleAppearance.toPersistedBackgroundOpacity(): Double? {
 }
 
 internal const val DEFAULT_SUBTITLE_TEXT_SIZE = 0.0533f
-internal const val DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION = 0.08f
 internal const val DEFAULT_SUBTITLE_BACKGROUND_OPACITY = 0.72f
 internal const val DEFAULT_SUBTITLE_OFFSET_X = 0f
 internal const val DEFAULT_SUBTITLE_OFFSET_Y = 0f
 internal const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
 internal const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
-internal const val MIN_SUBTITLE_OFFSET_X = -0.45f
-internal const val MAX_SUBTITLE_OFFSET_X = 0.45f
-internal const val MIN_SUBTITLE_OFFSET_Y = -0.78f
-internal const val MAX_SUBTITLE_OFFSET_Y = 0.25f
 internal const val DEFAULT_SUBTITLE_TEXT_COLOR = 0xFFFFFFFF.toInt()
 internal const val DEFAULT_SUBTITLE_BACKGROUND_COLOR = 0xFF000000.toInt()
+
+// How far subtitles rest from the picture's edges, a share of its height
+internal const val SUBTITLE_EDGE_FRACTION = 0.08f
+
+// Far enough to cross the picture from any cell; the player holds the lines inside it whatever the offset
+internal const val SUBTITLE_OFFSET_LIMIT = 1f
 
 /** The colours the subtitle editor offers for subtitle text, as ARGB integers. */
 internal val SUBTITLE_TEXT_COLOR_PRESETS = listOf(

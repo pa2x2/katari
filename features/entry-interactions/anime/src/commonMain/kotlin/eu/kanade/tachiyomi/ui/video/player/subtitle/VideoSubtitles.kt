@@ -66,7 +66,7 @@ internal fun VideoSubtitles(
                         ),
                     )
                 }
-                placed.forEach { subtitle ->
+                placed.cues.forEach { subtitle ->
                     when (subtitle) {
                         is PlacedSubtitle.Text -> drawSubtitleText(
                             subtitle.text.layout,
