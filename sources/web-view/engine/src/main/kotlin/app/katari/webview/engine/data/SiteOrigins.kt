@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.data
+package app.katari.webview.engine.data
 
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull

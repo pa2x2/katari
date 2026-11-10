@@ -1,10 +1,10 @@
-package app.katari.webview.jcef.cookie
+package app.katari.webview.engine.cookie
 
 /**
  * Chromium's cookies, as the [ChromiumCookieMirror] changes and reads them. Changes don't wait for Chromium and take
  * effect in the order they're made; [read] sees every change made before it.
  */
-internal interface ChromiumCookieManager {
+interface ChromiumCookieManager {
     /** Sets [cookie] in place of the one with its [ChromiumCookie.key]. */
     fun set(cookie: ChromiumCookie)
 

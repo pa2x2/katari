@@ -7,9 +7,9 @@ import app.katari.core.platform.clipboard.TextClipboard
 import app.katari.core.platform.link.LinkOpener
 import app.katari.desktop.webview.DesktopJcefHost
 import app.katari.desktop.webview.WindowWebViewDestination
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.data.ChromiumWebViewData
-import app.katari.webview.jcef.data.SiteOrigins
 import app.katari.webview.jcef.page.challenge.ChromiumChallengePage
 import app.katari.webview.jcef.page.extension.ChromiumExtensionPages
 import app.katari.webview.jcef.runtime.JbrJcefRuntime

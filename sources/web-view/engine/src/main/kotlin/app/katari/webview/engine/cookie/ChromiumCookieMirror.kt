@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.cookie
+package app.katari.webview.engine.cookie
 
 import app.katari.core.common.network.cookie.CookieChange
 import app.katari.core.common.network.cookie.DesktopCookieStore
@@ -69,7 +69,7 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
     }
 
     /** Hands Chromium the store's cookies and keeps it in step from then on; completes once Chromium has them. */
-    internal fun attach(manager: ChromiumCookieManager): CompletableFuture<Unit> = scope.future {
+    fun attach(manager: ChromiumCookieManager): CompletableFuture<Unit> = scope.future {
         val seeded = CompletableDeferred<Unit>()
         following = scope.launch {
             store.changes
@@ -95,7 +95,7 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
      * Brings Chromium's last changes into the store, empties Chromium and stops following the store, waiting a bounded
      * time; called as Chromium shuts down.
      */
-    internal fun detach() {
+    fun detach() {
         val detached = runBlocking { withTimeoutOrNull(DETACH_TIMEOUT) { lock.withLock { detachChromium() } } }
         if (detached == null) {
             logcat(LogPriority.WARN) { "Chromium's cookies weren't read back and removed in $DETACH_TIMEOUT" }
@@ -108,7 +108,7 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
      * Stops following the store without reading Chromium back, as its server has ended and its cookies with it. The
      * store keeps what Chromium last handed back.
      */
-    internal fun forget() {
+    fun forget() {
         scope.launch {
             lock.withLock {
                 following?.cancel()

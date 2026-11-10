@@ -194,6 +194,7 @@ include(
     ":sources:source-api",
     ":sources:source-compat",
     ":sources:source-local",
+    ":sources:web-view:engine",
     ":sources:web-view:jcef",
 )
 

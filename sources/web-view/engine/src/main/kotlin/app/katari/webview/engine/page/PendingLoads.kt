@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.page.extension
+package app.katari.webview.engine.page
 
 import app.katari.core.common.web.ExtensionPageResponse
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -11,7 +11,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  * A load waits for its own URL, so a navigation the page starts meanwhile gets neither; a later load of the same kind
  * replaces an earlier one that never came. Read on Chromium's threads, written on the page's.
  */
-internal class PendingLoads {
+class PendingLoads {
     private var headers: Pair<String, Map<String, String>>? = null
     private var content: Pair<String, () -> ExtensionPageResponse>? = null
 

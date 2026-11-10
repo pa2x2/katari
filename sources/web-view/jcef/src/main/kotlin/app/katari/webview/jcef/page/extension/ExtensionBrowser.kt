@@ -5,10 +5,13 @@ import app.katari.core.common.web.ExtensionPageEvents
 import app.katari.core.common.web.ExtensionPageResponse
 import app.katari.core.common.web.ExtensionPageSettings
 import app.katari.core.common.web.ExtensionPageTouch
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.devtools.DevToolsSession
-import app.katari.webview.jcef.devtools.PageUserAgent
-import app.katari.webview.jcef.devtools.evaluate
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.PageUserAgent
+import app.katari.webview.engine.devtools.evaluate
+import app.katari.webview.engine.page.ExtensionBridges
+import app.katari.webview.engine.page.PendingLoads
+import app.katari.webview.jcef.devtools.JcefDevToolsSession
 import app.katari.webview.jcef.page.HiddenBrowser
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
@@ -202,7 +205,7 @@ internal class ExtensionBrowser(
         var devTools: DevToolsSession? = null
         try {
             browser.createImmediately()
-            val session = DevToolsSession(created.await()).also { devTools = it }
+            val session = JcefDevToolsSession(created.await()).also { devTools = it }
             val page = OpenPage(browser, session, PageUserAgent(session, settings.userAgent), pageScope)
             withTimeoutOrNull(SETUP_TIMEOUT) {
                 page.userAgent.apply()

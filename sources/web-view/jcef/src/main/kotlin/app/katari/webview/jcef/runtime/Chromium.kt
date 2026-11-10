@@ -1,6 +1,6 @@
 package app.katari.webview.jcef.runtime
 
-import app.katari.webview.jcef.cookie.ChromiumCookieManager
+import app.katari.webview.engine.cookie.ChromiumCookieManager
 import app.katari.webview.jcef.cookie.JcefCookieManager
 import com.jetbrains.cef.JCefAppConfig
 import logcat.LogPriority

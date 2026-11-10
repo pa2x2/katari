@@ -4,7 +4,9 @@ import app.katari.core.common.web.ExtensionPageEvents
 import app.katari.core.common.web.ExtensionPageEvents.ConsoleLevel
 import app.katari.core.common.web.ExtensionPageRequest
 import app.katari.core.common.web.ExtensionPageResponse
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.page.ExtensionBridges
+import app.katari.webview.engine.page.PendingLoads
 import app.katari.webview.jcef.page.HiddenBrowser
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope

@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.devtools
+package app.katari.webview.engine.devtools
 
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -12,7 +12,7 @@ import kotlinx.serialization.json.put
  *
  * `Runtime.evaluate` needs no `Runtime.enable`, which a page's scripts could tell.
  */
-internal suspend fun DevToolsSession.evaluate(script: String): String? {
+suspend fun DevToolsSession.evaluate(script: String): String? {
     val response = call(
         "Runtime.evaluate",
         buildJsonObject {

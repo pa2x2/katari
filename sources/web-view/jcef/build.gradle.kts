@@ -15,6 +15,7 @@ dependencies {
     compileOnly(libs.jcef)
 
     api(projects.core.common)
+    api(projects.sources.webView.engine)
 
     // The browser view the shared web view screen shows, drawn with the kit's menus and tooltips over it
     implementation(projects.appUi)

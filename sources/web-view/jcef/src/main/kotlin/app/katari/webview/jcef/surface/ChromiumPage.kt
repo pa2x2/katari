@@ -3,8 +3,8 @@ package app.katari.webview.jcef.surface
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.data.SiteOrigins
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents

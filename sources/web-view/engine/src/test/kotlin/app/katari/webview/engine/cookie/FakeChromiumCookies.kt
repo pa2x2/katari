@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.cookie
+package app.katari.webview.engine.cookie
 
 import kotlin.time.Duration.Companion.days
 

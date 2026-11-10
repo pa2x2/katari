@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.core.platform.clipboard.TextClipboard
 import app.katari.core.platform.link.LinkOpener
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.data.SiteOrigins
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.runtime.JcefRuntime
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage

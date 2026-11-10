@@ -1,6 +1,7 @@
 package app.katari.webview.jcef.data
 
-import app.katari.webview.jcef.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.DevToolsSession
+import app.katari.webview.jcef.devtools.JcefDevToolsSession
 import app.katari.webview.jcef.surface.PageFrame
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeout
@@ -45,7 +46,7 @@ internal object LoadedSiteData {
         browser.createImmediately()
         try {
             withTimeout(BROWSER_TIMEOUT) { created.await() }
-            val session = DevToolsSession(browser)
+            val session = JcefDevToolsSession(browser)
             try {
                 session.call("Network.clearBrowserCache")
                 origins.forEach { origin ->

@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.devtools
+package app.katari.webview.engine.devtools
 
 import kotlinx.serialization.json.JsonArrayBuilder
 import kotlinx.serialization.json.JsonObject

@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.devtools
+package app.katari.webview.engine.devtools
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -19,14 +19,14 @@ import java.util.concurrent.atomic.AtomicInteger
  * the app's requests, sent as the page, never get through with, and a site that sees two user agents may ask a person
  * to prove they are one. The user agent goes with the platform and client hints that fit it ([userAgentOverride]).
  *
- * A service worker is no target of the page's and keeps the user agent Chromium started with, the app's own
- * ([JcefHost.userAgent][app.katari.webview.jcef.runtime.JcefHost.userAgent]).
+ * A service worker is no target of the page's and keeps the user agent Chromium started with, which is why Chromium is
+ * started with the app's own.
  *
  * Each new target is held at its start ([waitForDebuggerOnStart][AUTO_ATTACH]) until it has the user agent, and is
  * watched for targets of its own in turn. JCEF's DevTools calls name no session, so the calls to a target go wrapped in
  * `Target.sendMessageToTarget` for each target on the way to it, and its events come back wrapped the same way.
  */
-internal class PageUserAgent(private val session: DevToolsSession, userAgent: String) {
+class PageUserAgent(private val session: DevToolsSession, userAgent: String) {
     private val messageIds = AtomicInteger()
 
     @Volatile

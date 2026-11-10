@@ -1,6 +1,6 @@
-package app.katari.webview.jcef.page.extension
+package app.katari.webview.engine.page
 
-import app.katari.webview.jcef.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.DevToolsSession
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
@@ -25,7 +25,7 @@ import java.util.Base64
  * Android's, a call returns nothing and doesn't wait for the extension. It needs no DevTools binding, which Chromium
  * gives only while the Runtime domain is enabled, which pages can tell.
  */
-internal class ExtensionBridges {
+class ExtensionBridges {
     private val secret = ByteArray(SECRET_BYTES)
         .also(SecureRandom()::nextBytes)
         .let { Base64.getUrlEncoder().withoutPadding().encodeToString(it) + ":" }

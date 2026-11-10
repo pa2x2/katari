@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.cookie
+package app.katari.webview.engine.cookie
 
 import okhttp3.Cookie
 
@@ -10,7 +10,7 @@ import okhttp3.Cookie
  * @property expiresAt milliseconds since the epoch; null for a session cookie. Chromium keeps at most 400 days from
  * when the cookie was set, and of a cookie set through JCEF only whole seconds.
  */
-internal data class ChromiumCookie(
+data class ChromiumCookie(
     val name: String,
     val value: String,
     val domain: String,
@@ -74,7 +74,7 @@ internal data class ChromiumCookie(
 }
 
 /** The cookie as Chromium is to hold it; Chromium gives it the `SameSite` of a cookie set without one. */
-internal fun Cookie.toChromiumCookie() = ChromiumCookie(
+fun Cookie.toChromiumCookie() = ChromiumCookie(
     name = name,
     value = value,
     domain = if (hostOnly) domain else ".$domain",

@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.data
+package app.katari.webview.engine.data
 
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -12,7 +12,7 @@ import kotlin.io.path.exists
  * deleted while Chromium isn't running, which has its files open; a deletion asked for while it runs waits for the
  * next start, before Chromium opens them again.
  */
-internal class ChromiumProfileData(private val directory: Path) {
+class ChromiumProfileData(private val directory: Path) {
     fun delete() {
         val deleted = directory.toFile().listFiles()?.all { it.deleteRecursively() } ?: true
         if (!deleted) logcat(LogPriority.WARN) { "Some of Chromium's data in $directory couldn't be deleted" }

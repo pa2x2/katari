@@ -1,9 +1,10 @@
 package app.katari.webview.jcef.page.challenge
 
 import app.katari.core.common.web.ChallengePageEvents
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.devtools.DevToolsSession
-import app.katari.webview.jcef.devtools.PageUserAgent
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.PageUserAgent
+import app.katari.webview.jcef.devtools.JcefDevToolsSession
 import app.katari.webview.jcef.page.HiddenBrowser
 import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.runtime.JcefStartException
@@ -72,7 +73,7 @@ internal class ChallengeBrowser(
         var devTools: DevToolsSession? = null
         try {
             browser.createImmediately()
-            val session = DevToolsSession(created.await()).also { devTools = it }
+            val session = JcefDevToolsSession(created.await()).also { devTools = it }
             withTimeoutOrNull(SETUP_TIMEOUT) {
                 PageUserAgent(session, userAgent).apply()
                 listener.listen(session)

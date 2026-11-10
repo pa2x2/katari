@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.cookie
+package app.katari.webview.engine.cookie
 
 import app.katari.core.common.network.cookie.CookieChange
 import app.katari.core.common.network.cookie.DesktopCookieStore

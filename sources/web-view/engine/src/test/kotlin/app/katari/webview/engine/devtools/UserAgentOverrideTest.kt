@@ -1,4 +1,4 @@
-package app.katari.webview.jcef.devtools
+package app.katari.webview.engine.devtools
 
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.boolean

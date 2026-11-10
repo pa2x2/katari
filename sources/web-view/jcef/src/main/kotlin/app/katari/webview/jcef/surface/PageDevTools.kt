@@ -1,8 +1,9 @@
 package app.katari.webview.jcef.surface
 
-import app.katari.webview.jcef.devtools.DevToolsSession
-import app.katari.webview.jcef.devtools.PageUserAgent
-import app.katari.webview.jcef.devtools.evaluate
+import app.katari.webview.engine.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.PageUserAgent
+import app.katari.webview.engine.devtools.evaluate
+import app.katari.webview.jcef.devtools.JcefDevToolsSession
 import org.cef.browser.CefBrowser
 
 /**
@@ -12,7 +13,7 @@ import org.cef.browser.CefBrowser
  * holds only while it is open.
  */
 internal class PageDevTools(browser: CefBrowser) {
-    private val session = DevToolsSession(browser)
+    private val session = JcefDevToolsSession(browser)
 
     /**
      * Sends [userAgent] with every request the page and each of its frames make, other sites' frames among them, and

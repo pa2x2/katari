@@ -1,7 +1,7 @@
 package app.katari.webview.jcef.runtime
 
-import app.katari.webview.jcef.cookie.ChromiumCookieMirror
-import app.katari.webview.jcef.data.ChromiumProfileData
+import app.katari.webview.engine.cookie.ChromiumCookieMirror
+import app.katari.webview.engine.data.ChromiumProfileData
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.future.await
 import logcat.LogPriority

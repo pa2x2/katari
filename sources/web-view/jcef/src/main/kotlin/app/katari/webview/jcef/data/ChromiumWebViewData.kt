@@ -1,6 +1,8 @@
 package app.katari.webview.jcef.data
 
 import app.katari.core.platform.PlatformContext
+import app.katari.webview.engine.data.ChromiumProfileData
+import app.katari.webview.engine.data.SiteOrigins
 import app.katari.webview.jcef.runtime.JcefHost
 import app.katari.webview.jcef.runtime.JcefPresence
 import app.katari.webview.jcef.runtime.JcefRuntime

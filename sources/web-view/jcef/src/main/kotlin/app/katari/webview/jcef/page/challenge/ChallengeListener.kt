@@ -1,7 +1,7 @@
 package app.katari.webview.jcef.page.challenge
 
 import app.katari.core.common.web.ChallengePageEvents
-import app.katari.webview.jcef.devtools.DevToolsSession
+import app.katari.webview.engine.devtools.DevToolsSession
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
