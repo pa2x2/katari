@@ -11,7 +11,7 @@ import tachiyomi.i18n.platform.stringResource
 
 /** What [missingMember] gives a user: a web view for any of its classes, otherwise the member itself, named. */
 fun PlatformContext.platformGapFeature(missingMember: String): String = when {
-    WEB_VIEW_PACKAGES.any(missingMember::startsWith) -> stringResource(MR.strings.platform_gap_web_view)
+    isWebViewMember(missingMember) -> stringResource(MR.strings.platform_gap_web_view)
     else -> stringResource(MR.strings.platform_gap_android_member, missingMember)
 }
 
@@ -22,5 +22,8 @@ fun PlatformContext.platformGapExtensionMessage(extensionName: String, missingMe
 /** What a source's call failed for, when it needed [missingMember]. */
 fun PlatformContext.platformGapSourceMessage(missingMember: String): String =
     stringResource(MR.strings.platform_gap_source_message, platformGapFeature(missingMember))
+
+/** Whether [missingMember] is one of Android's web view. */
+fun isWebViewMember(missingMember: String): Boolean = WEB_VIEW_PACKAGES.any(missingMember::startsWith)
 
 private val WEB_VIEW_PACKAGES = listOf("android.webkit.", "androidx.webkit.")

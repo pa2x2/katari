@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
 import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetupFailure
 import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetupState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tachiyomi.i18n.*
 import tachiyomi.i18n.localized.stringResource
 import java.util.concurrent.atomic.AtomicBoolean
@@ -55,6 +57,9 @@ class DesktopWebViewSetup(
         }
     }
 
+    override val isManaged: Boolean
+        get() = runsInstalledChromium
+
     override val state: StateFlow<WebViewSetupState> =
         chromium.state.map(::setupState).stateIn(scope, SharingStarted.Eagerly, setupState(chromium.state.value))
 
@@ -63,6 +68,9 @@ class DesktopWebViewSetup(
 
     private val requested = MutableStateFlow(false)
     override val isRequested: StateFlow<Boolean> = requested.asStateFlow()
+
+    private val needed = MutableStateFlow(false)
+    override val wasNeeded: StateFlow<Boolean> = needed.asStateFlow()
 
     private val hasNoticedThisRun = AtomicBoolean()
 
@@ -77,6 +85,7 @@ class DesktopWebViewSetup(
             var before = state.value
             state.collect { now ->
                 if (now != WebViewSetupState.NotSetUp) takeNoticeAway()
+                if (now == WebViewSetupState.Ready) needed.value = false
                 if (now == WebViewSetupState.Ready && before != WebViewSetupState.Ready) {
                     messages.show(stringResource(MR.strings.webview_setup_ready))
                 }
@@ -87,6 +96,8 @@ class DesktopWebViewSetup(
 
     /** Something with no screen of its own needed a web view just now. */
     fun neededWithoutScreen() {
+        if (state.value == WebViewSetupState.Ready) return
+        needed.value = true
         if (state.value != WebViewSetupState.NotSetUp || !hasNoticedThisRun.compareAndSet(false, true)) return
         noticed.value = true
         notifications.value.show(
@@ -113,6 +124,14 @@ class DesktopWebViewSetup(
     override fun start() = chromium.install(allowMeteredNetwork = true)
 
     override fun cancel() = chromium.cancel()
+
+    override suspend fun storedBytes(): Long = chromium.storedBytes()
+
+    // Chromium's files can't go from under a Chromium that runs
+    override suspend fun remove() {
+        withContext(Dispatchers.IO) { runtime.stop() }
+        chromium.delete()
+    }
 
     private fun takeNoticeAway() {
         if (noticed.compareAndSet(expect = true, update = false)) notifications.value.withdraw(NOTIFICATION_KEY)

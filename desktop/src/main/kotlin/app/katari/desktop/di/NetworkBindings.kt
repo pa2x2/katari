@@ -16,6 +16,8 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.tls.LinuxCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.SystemCertificateAuthorities
 import eu.kanade.tachiyomi.network.tls.systemTrustManager
+import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
+import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetupState
 import kotlinx.coroutines.CoroutineScope
 
 @BindingContainer
@@ -44,11 +46,15 @@ object NetworkBindings {
         directories: DesktopDirectories,
         preferences: NetworkPreferences,
         certificateAuthorities: SystemCertificateAuthorities,
+        webViewSetup: Lazy<WebViewSetup>,
     ): NetworkHelper = NetworkHelper(
         context = application,
         cacheDirectory = directories.cache.toFile(),
         preferences = preferences,
-        webViewMessages = DesktopWebViewInterceptorMessages(),
+        // Asked as a message is worded: the set-up downloads with this client, so it is built after it
+        webViewMessages = DesktopWebViewInterceptorMessages {
+            webViewSetup.value.state.value != WebViewSetupState.Ready
+        },
         trustManager = systemTrustManager(certificateAuthorities),
     )
 }

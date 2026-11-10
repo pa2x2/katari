@@ -9,7 +9,13 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @PlatformFacility
 interface WebViewSetup {
+    /** Whether what the web view runs on is the app's to download and remove; false where the system brings it. */
+    val isManaged: Boolean
+
     val state: StateFlow<WebViewSetupState>
+
+    /** Whether anything needed the web view this run while it wasn't set up, so what failed since may be for that. */
+    val wasNeeded: StateFlow<Boolean>
 
     /**
      * Whether the Library tells that a web view was needed: something without a screen of its own, such as a source's
@@ -36,6 +42,12 @@ interface WebViewSetup {
     fun start()
 
     fun cancel()
+
+    /** The disk space the web view's own files take now, set up or downloaded in part. */
+    suspend fun storedBytes(): Long
+
+    /** Removes what [start] set up, closing the pages the web view shows; the next need asks to set it up again. */
+    suspend fun remove()
 }
 
 sealed interface WebViewSetupState {

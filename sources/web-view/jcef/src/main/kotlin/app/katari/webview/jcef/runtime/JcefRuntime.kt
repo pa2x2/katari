@@ -20,6 +20,12 @@ interface JcefRuntime {
     suspend fun start(): RunningChromium
 
     /**
+     * Ends the Chromium that runs, waiting a bounded time for it and its helper processes: its pages end as they do
+     * when Chromium is lost, and the next [start] begins another. Called before the app removes Chromium's files.
+     */
+    fun stop()
+
+    /**
      * Ends Chromium and its helper processes if it started, waiting a bounded time for them. The app calls it before
      * it ends or starts again, so a new process never finds Chromium's profile still in use; a process that ends
      * otherwise, such as on a crash, runs it as it exits.

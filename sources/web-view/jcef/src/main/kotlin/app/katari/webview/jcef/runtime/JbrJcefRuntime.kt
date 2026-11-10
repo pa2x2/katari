@@ -117,12 +117,24 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
         startup.fail(JcefStartException("Chromium's server ended"))
     }
 
+    override fun stop() {
+        val current = synchronized(lock) { if (hasEnded) null else startup } ?: return
+        end(current)
+        // JCEF tells of no loss when the app itself ends Chromium, so its pages are told here
+        current.lost.complete(Unit)
+        synchronized(lock) { if (startup === current) startup = null }
+    }
+
     override fun shutdown() {
         val current = synchronized(lock) {
             if (hasEnded) return
             hasEnded = true
             startup
         } ?: return
+        end(current)
+    }
+
+    private fun end(current: Startup) {
         // Shutting Chromium down while it initialises leaves its threads racing, so a start under way ends first
         runCatching { current.started.get(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS) }
         cookies.detach()
