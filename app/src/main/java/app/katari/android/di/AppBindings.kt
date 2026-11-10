@@ -57,6 +57,7 @@ import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.source.DefaultSourceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
@@ -146,12 +147,21 @@ interface AppBindings {
         // Not constructor-injected: production validation graphs substitute a controlled network.
         @Provides
         @SingleIn(AppScope::class)
-        fun networkHelper(context: Context, preferences: NetworkPreferences): NetworkHelper = NetworkHelper(
+        fun networkHelper(
+            context: Context,
+            preferences: NetworkPreferences,
+            webViewMessages: WebViewInterceptorMessages,
+        ): NetworkHelper = NetworkHelper(
             context = context,
             preferences = preferences,
-            webViewMessages = LocalizedWebViewInterceptorMessages(context),
+            webViewMessages = webViewMessages,
             localNetworkAccessDeniedMessage = context::localNetworkAccessDeniedMessage,
         )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun webViewInterceptorMessages(context: Context): WebViewInterceptorMessages =
+            LocalizedWebViewInterceptorMessages(context)
 
         @Provides
         @SingleIn(AppScope::class)

@@ -4,17 +4,23 @@ import org.cef.browser.CefBrowser
 import org.cef.handler.CefNativeRenderHandler
 import org.cef.handler.CefRenderHandlerAdapter
 import org.cef.handler.CefScreenInfo
+import java.awt.Dimension
 import java.awt.Point
 import java.awt.Rectangle
 
 /**
- * The view of a browser nothing draws: a desktop window's size for the page to lay out in and its scripts to read,
- * and paints that are dropped. The page stays visible to Chromium, which would otherwise slow its timers down.
+ * The view of a browser nothing draws: a window's size for the page to lay out in and its scripts to read, a desktop
+ * window's unless [size] is given another, and paints that are dropped. The page stays visible to Chromium, which
+ * would otherwise slow its timers down.
  */
 internal class UnpaintedView :
     CefRenderHandlerAdapter(),
     CefNativeRenderHandler {
-    override fun getViewRect(browser: CefBrowser): Rectangle = Rectangle(0, 0, WIDTH, HEIGHT)
+    /** In CSS pixels. A browser that is open learns of a change through `wasResized`. */
+    @Volatile
+    var size: Dimension = Dimension(WIDTH, HEIGHT)
+
+    override fun getViewRect(browser: CefBrowser): Rectangle = Rectangle(size)
 
     override fun getScreenInfo(browser: CefBrowser, screenInfo: CefScreenInfo): Boolean {
         val bounds = getViewRect(browser)
