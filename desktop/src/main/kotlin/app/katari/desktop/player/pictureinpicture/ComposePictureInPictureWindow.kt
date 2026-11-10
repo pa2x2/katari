@@ -21,7 +21,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutsHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.window_title_with_screen
+import tachiyomi.i18n.window_title_picture_in_picture
 import tachiyomi.presentation.core.i18n.stringResource
 import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
@@ -31,7 +31,8 @@ import kotlin.math.roundToInt
  * The picture-in-picture window as a Compose window of the app's: undecorated, so it has no title bar, and asking to
  * stay over the other windows, which X11 window managers do. It moves and resizes itself ([movesWindow],
  * [ResizeEdges]), as a window without a title bar or frame gets nothing from the window manager to do either with.
- * Its place and size are saved as they change and come back the next time it opens.
+ * Its place and size are saved as they change and come back the next time it opens. Its title differs from the main
+ * window's, which shares its window class, so desktops' window rules can tell the two apart.
  */
 internal class ComposePictureInPictureWindow(
     private val preferences: WindowPreferences,
@@ -66,7 +67,11 @@ internal class ComposePictureInPictureWindow(
         Window(
             onCloseRequest = onCloseRequest,
             state = state,
-            title = stringResource(MR.strings.window_title_with_screen, DesktopAppVariant.current.displayName, title),
+            title = stringResource(
+                MR.strings.window_title_picture_in_picture,
+                DesktopAppVariant.current.displayName,
+                title,
+            ),
             icon = icon,
             undecorated = true,
             // It resizes itself, keeping the video's shape; resizable, Compose would let any edge stretch it

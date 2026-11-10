@@ -734,6 +734,8 @@
     <string name="key_menu">Menu</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
+    <!-- The picture-in-picture window's title: the app's name, then the episode's title. Desktops' window rules, such as one keeping it above other windows, find it by "Picture-in-Picture" -->
+    <string name="window_title_picture_in_picture">%1$s Picture-in-Picture — %2$s</string>
     <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
     <string name="quit_while_working_title">Quit while work is running?</string>
     <string name="quit_while_working_text">A library update, backup or other task is still running. Quitting stops it, and it starts again the next time the app opens.</string>
