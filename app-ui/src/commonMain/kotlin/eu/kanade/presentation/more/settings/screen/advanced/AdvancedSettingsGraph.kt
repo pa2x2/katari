@@ -20,7 +20,6 @@ interface AdvancedSettingsGraph {
     val entryMergeConsequenceStatusFeature: EntryMergeConsequenceStatusFeature
     val metadataUpdateRunner: MetadataUpdateRunner
     val trustExtension: TrustExtension
-    val appNotifications: AppNotifications
     val backgroundWorkRestrictions: BackgroundWorkRestrictions
     val webViewData: WebViewData
     val readerBasePreferences: ReaderBasePreferences

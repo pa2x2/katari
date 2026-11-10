@@ -1032,6 +1032,7 @@
     <string name="pref_display_images_description">Render images in manga descriptions</string>
 
     <string name="pref_manage_notifications">Manage notifications</string>
+    <string name="pref_category_notifications">Notifications</string>
     <string name="pref_app_language">App language</string>
 
     <string name="pref_category_security">Security and privacy</string>
@@ -2863,6 +2864,7 @@
     <string name="channel_library_updates_profile">Library updates · %s</string>
     <string name="channel_ext_updates">Extension updates</string>
     <string name="channel_video_playback">Video playback</string>
+    <string name="notification_kinds_other">Other</string>
 
     <!-- S Pen actions -->
     <string name="spen_previous_page">Previous page</string>
