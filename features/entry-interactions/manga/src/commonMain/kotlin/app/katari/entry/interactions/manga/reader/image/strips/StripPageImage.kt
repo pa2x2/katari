@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.scale
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.image.layout.rememberPageImagePaint
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import app.katari.entry.interactions.manga.reader.image.tiles.drawTiles
-import app.katari.entry.interactions.manga.reader.image.tiles.rememberTilePaint
 
 /**
  * Draws a still page [image] in [layout], stretched over the composable's size, from strips decoded once for [width],
@@ -54,11 +54,11 @@ internal fun StripPageImage(
         }
     }
     DisposableEffect(image, layout) { onDispose { strips?.release() } }
-    val paint = rememberTilePaint()
+    val paint = rememberPageImagePaint()
     Canvas(modifier) {
         val shown = strips ?: return@Canvas
-        if (shown.displayedSize.width <= 0) return@Canvas
-        scale(size.width / shown.displayedSize.width, pivot = Offset.Zero) {
+        if (shown.displayedSize.width <= 0 || shown.displayedSize.height <= 0) return@Canvas
+        scale(size.width / shown.displayedSize.width, size.height / shown.displayedSize.height, Offset.Zero) {
             drawTiles(shown.pieces, shown.bands, paint)
         }
     }

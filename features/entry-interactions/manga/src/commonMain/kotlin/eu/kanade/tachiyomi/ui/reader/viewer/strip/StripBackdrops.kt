@@ -13,6 +13,7 @@ import app.katari.entry.interactions.manga.reader.image.layout.displayedSize
 import app.katari.entry.interactions.manga.reader.image.layout.pieces
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
+import kotlin.math.roundToInt
 
 /**
  * The backgrounds that follow the strip's pages when the reader theme is automatic: each page shown registers the
@@ -39,19 +40,24 @@ internal class StripBackdropRow(val top: Float, val bottom: Float, val backgroun
 
 /**
  * The rows each piece of a page covers for [backgrounds] in the order of [layout]'s pieces, with the page's image
- * [imageSize] shown [width] strip pixels wide.
+ * [imageSize] stretched over [height] strip pixels, the height the page is laid out at, so its last row ends where the
+ * next page begins.
  */
 internal fun stripBackdropRows(
     layout: PageImageLayout,
     imageSize: IntSize,
     backgrounds: List<PageBackground>,
-    width: Int,
+    height: Int,
 ): List<StripBackdropRow> {
-    val displayedWidth = layout.displayedSize(imageSize).width
-    if (displayedWidth <= 0) return emptyList()
-    val scale = width.toFloat() / displayedWidth
+    val displayedHeight = layout.displayedSize(imageSize).height
+    if (displayedHeight <= 0 || height <= 0) return emptyList()
     return layout.pieces(imageSize).zip(backgrounds) { piece, background ->
-        StripBackdropRow(piece.displayedBounds.top * scale, piece.displayedBounds.bottom * scale, background)
+        val bounds = piece.displayedBounds
+        StripBackdropRow(
+            top = bounds.top.toFloat() * height / displayedHeight,
+            bottom = bounds.bottom.toFloat() * height / displayedHeight,
+            background = background,
+        )
     }
 }
 
@@ -64,9 +70,14 @@ internal fun Modifier.paintedBehind(viewer: StripViewer): Modifier = drawBehind 
     for (slot in viewer.listState.layoutInfo.visibleItemsInfo) {
         val page = (viewer.items.getOrNull(slot.index) as? ReaderViewerItem.Page)?.page ?: continue
         for (row in viewer.backdrops[page]) {
+            // Rows end on whole pixels: rows meeting at a fractional one would each cover it only partly, antialiased,
+            // and leave a line of the reader's background between them
+            val top = ((slot.offset + row.top) * scale).roundToInt()
+            val bottom = ((slot.offset + row.bottom) * scale).roundToInt()
+            if (bottom <= top) continue
             // A gradient spans the area it is drawn in from the origin, so the row is drawn from its own top
-            translate(top = (slot.offset + row.top) * scale) {
-                drawRect(row.background.brush(), size = Size(size.width, (row.bottom - row.top) * scale))
+            translate(top = top.toFloat()) {
+                drawRect(row.background.brush(), size = Size(size.width, (bottom - top).toFloat()))
             }
         }
     }
