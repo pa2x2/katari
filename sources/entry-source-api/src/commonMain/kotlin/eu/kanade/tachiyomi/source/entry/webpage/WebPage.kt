@@ -50,8 +50,9 @@ interface WebPage {
      * Returns once the page has seen the finger lift, while what the swipe set moving may still move; [click] taps an
      * element where it comes to rest.
      *
-     * It is for what a site's scripts move. An area the browser scrolls itself doesn't follow the finger on Android;
-     * [scrollTo] and [click] bring what it holds into view on both apps.
+     * It is for what a site's scripts move. What the browser scrolls itself answers a swipe differently on each app:
+     * on Android an area inside the page doesn't move, and the page itself moves further than the finger. [scrollTo],
+     * [scrollToEnd] and [click] bring such content into view on both.
      *
      * Fails where a finger couldn't land on the element, as [click] does.
      */
