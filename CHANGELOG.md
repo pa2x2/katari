@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.1.3] - 2026-11-10
+
+### 🐛 Fixed
+
+- The app no longer crashes when you open a chapter or episode from a title, or switch to another app while a title is open.
+
 ## [3.1.2] - 2026-11-09
 
 ### 🔄 Changed
@@ -1172,7 +1178,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.3...HEAD
+[3.1.3]: https://github.com/pa2x2/katari/releases/tag/v3.1.3
 [3.1.2]: https://github.com/pa2x2/katari/releases/tag/v3.1.2
 [3.1.1]: https://github.com/pa2x2/katari/releases/tag/v3.1.1
 [3.1.0]: https://github.com/pa2x2/katari/releases/tag/v3.1.0
