@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.2.0] - 2026-11-10
+
+### ✨ Added
+
+- The Library, the Extensions tab and the extensions sheet offer to install or uninstall the extensions you installed or uninstalled on your other devices. Installed extensions in What syncs turns this off.
+- Katari loads extensions built with SDK 4.1, whose sources can use sites that only work with their scripts running.
+
+### 🧩 Improved
+
+- A chapter read or marked as read on another device has its download deleted by your after-reading settings, as one read on this device does.
+- The automatic background reaches the long strip's sides, taking the colours of the gaps between panels down each page, and fills the space around a two-page spread.
+- In the subtitle editor, you drag subtitles by their lines, they snap to guides, and a position grid has a Recenter button. Each title keeps where its subtitles rest, and they stay inside the video wherever you move them.
+- A wide side sheet's content fills the sheet instead of a narrow column in its middle.
+
+### 🐛 Fixed
+
+- Long strip pages meet without a line between them at any zoom.
+- With the page slider at the side, the reader's toolbar fits its buttons instead of stretching across the page with the buttons at one end.
+- A source's immersive view hides the side dock in large windows.
+- Previous and Next over a video now dim while another episode opens.
+- With mpv, a stream with separate audio shows loading until its audio is in, instead of a still picture, and its subtitles no longer delay the start.
+
 ## [3.1.3] - 2026-11-10
 
 ### 🐛 Fixed
@@ -1178,7 +1200,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.1.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/pa2x2/katari/releases/tag/v3.2.0
 [3.1.3]: https://github.com/pa2x2/katari/releases/tag/v3.1.3
 [3.1.2]: https://github.com/pa2x2/katari/releases/tag/v3.1.2
 [3.1.1]: https://github.com/pa2x2/katari/releases/tag/v3.1.1
