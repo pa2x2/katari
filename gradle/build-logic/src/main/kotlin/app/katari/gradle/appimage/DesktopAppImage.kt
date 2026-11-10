@@ -26,9 +26,9 @@ import org.jetbrains.compose.desktop.DesktopExtension
  * Registers `packageAppImage`, which packs the desktop app with the JetBrains Runtime into
  * `build/appimage/<name>-<version>-x86_64.AppImage`, as [release] or as the development build. The two install side by
  * side under their own names, as `DesktopAppVariant` keeps their data apart; only the release opens the app's links.
- * [icon] is the SVG of that build's icon.
+ * [icon] is the SVG of that build's icon, and [splash] the PNG the AppImage shows while the app starts.
  */
-fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile>) {
+fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile>, splash: Provider<RegularFile>) {
     if (!isAppImageArchitecture()) {
         tasks.register("packageAppImage") {
             group = "distribution"
@@ -97,6 +97,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         directoryName.set(identity.directoryName)
         linkSchemes.set(identity.linkSchemes)
         this.icon.set(icon)
+        this.splash.set(splash)
         appDir.set(layout.buildDirectory.dir("appimage/${identity.fileName}.AppDir"))
     }
     tasks.register<PackAppImageTask>("packageAppImage") {

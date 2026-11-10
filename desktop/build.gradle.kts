@@ -1,6 +1,7 @@
 import app.katari.gradle.Config
 import app.katari.gradle.appimage.registerDesktopAppImage
 import app.katari.gradle.desktopicon.GenerateDesktopIconTask
+import app.katari.gradle.desktopicon.GenerateDesktopSplashTask
 import app.katari.gradle.extensions.extensionHostJvmArguments
 import app.katari.gradle.getAppVersionCode
 import app.katari.gradle.getAppVersionName
@@ -41,12 +42,20 @@ kotlin {
 }
 
 // The Android app's launcher icon of the same build: the development one for every build but the release
+val (iconSourceSet, iconName) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
+val iconDrawables = layout.settingsDirectory.dir("app/src/$iconSourceSet/res/drawable")
 val generateDesktopIcon = tasks.register<GenerateDesktopIconTask>("generateDesktopIcon") {
-    val (sourceSet, name) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
-    val drawables = layout.settingsDirectory.dir("app/src/$sourceSet/res/drawable")
-    background.set(drawables.file("${name}_background.xml"))
-    foreground.set(drawables.file("${name}_foreground.xml"))
+    background.set(iconDrawables.file("${iconName}_background.xml"))
+    foreground.set(iconDrawables.file("${iconName}_foreground.xml"))
     icon.set(layout.buildDirectory.file("generated/desktopIcon/app-icon.svg"))
+}
+
+// The same icon as the image the AppImage shows from the moment it is started until the app's window opens
+val generateDesktopSplash = tasks.register<GenerateDesktopSplashTask>("generateDesktopSplash") {
+    background.set(iconDrawables.file("${iconName}_background.xml"))
+    foreground.set(iconDrawables.file("${iconName}_foreground.xml"))
+    size.set(256)
+    splash.set(layout.buildDirectory.file("generated/desktopSplash/splash.png"))
 }
 
 // The licences screen reads the definitions AboutLibraries exports from the app's dependencies, as the Android plugin
@@ -134,4 +143,8 @@ compose.desktop.application {
     jvmArgs += extensionHostJvmArguments
 }
 
-registerDesktopAppImage(release = Config.desktopRelease, icon = generateDesktopIcon.flatMap { it.icon })
+registerDesktopAppImage(
+    release = Config.desktopRelease,
+    icon = generateDesktopIcon.flatMap { it.icon },
+    splash = generateDesktopSplash.flatMap { it.splash },
+)
