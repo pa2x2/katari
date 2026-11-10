@@ -212,11 +212,12 @@ internal class BookDocumentReaderController(
         }
     }
 
-    fun onStart() = chapterCoordinator.startReading()
-
     fun onResume() {
         selectionCoordinator?.onResume()
+        chapterCoordinator.resumeReading()
     }
+
+    fun onPause() = chapterCoordinator.pauseReading()
 
     /** [persist] saves where the reader is; Android leaves it out while it recreates the activity. */
     fun onStop(persist: Boolean) {

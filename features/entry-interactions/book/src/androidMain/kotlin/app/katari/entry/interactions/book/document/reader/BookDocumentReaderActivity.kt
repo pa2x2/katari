@@ -105,14 +105,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         controller.start()
     }
 
-    override fun onStart() {
-        super.onStart()
-        controller.onStart()
-    }
-
     override fun onResume() {
         super.onResume()
         controller.onResume()
+    }
+
+    override fun onPause() {
+        controller.onPause()
+        super.onPause()
     }
 
     override fun onStop() {
