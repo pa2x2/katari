@@ -17,6 +17,8 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
  * the connection.
  */
 class MpvVideoEngine(private val networkHelper: NetworkHelper) : VideoEngine {
+    override val name: String = "mpv"
+
     private val platform = DesktopMpvPlatform()
     private val bandwidthMeter = MpvBandwidthMeter()
     private val feedBandwidthMeter = MpvBandwidthMeter()

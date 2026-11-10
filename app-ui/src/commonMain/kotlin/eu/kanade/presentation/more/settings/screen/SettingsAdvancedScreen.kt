@@ -70,7 +70,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
         val globalLibraryPreferences = graph.globalLibraryPreferences
         val globalCustomPreferences = graph.globalCustomPreferences
         val dumpLogs = rememberLogDump()
-        val appNotifications = graph.appNotifications
 
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
@@ -103,11 +102,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_onboarding_guide),
                 onClick = { navigator.push(OnboardingScreen()) },
-            ),
-            Preference.PreferenceItem.TextPreference(
-                title = stringResource(MR.strings.pref_manage_notifications),
-                visible = appNotifications.hasSystemSettings,
-                onClick = { appNotifications.openSystemSettings(context) },
             ),
             getBackgroundActivityGroup(),
             getDataGroup(),

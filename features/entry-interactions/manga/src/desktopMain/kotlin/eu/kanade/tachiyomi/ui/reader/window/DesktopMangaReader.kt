@@ -114,7 +114,10 @@ internal class DesktopMangaReader(
         val fullScreen = LocalWindowFullScreen.current
         val shown = viewer
         val guideDue = inputGuideDue(preferences, shown = shown != null)
-        val pointer = rememberReaderPointer(hidesWhenStill = !state.menuVisible && state.dialog == null && !guideDue)
+        val pointer = rememberReaderPointer(
+            hidesWhenStill = !state.menuVisible && state.dialog == null && !guideDue,
+            zoomsAboutPointer = true,
+        )
         ViewerFullScreen(fullScreen) {
             Box(modifier = Modifier.fillMaxSize().then(pointer)) {
                 if (shown != null && settings != null) ReaderPages(shown, settings, tapZonesHeld = guideDue)

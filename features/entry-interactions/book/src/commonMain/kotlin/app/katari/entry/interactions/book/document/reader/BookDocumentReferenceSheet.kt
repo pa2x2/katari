@@ -27,7 +27,7 @@ internal fun BookDocumentReferenceSheet(
     onLink: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLink: (String) -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismiss, capHeight = true) {
+    Sheet(onDismissRequest = onDismiss, capHeight = true) {
         Column {
             SheetHeader(title = stringResource(MR.strings.book_document_reference_title))
             key(section.key) {

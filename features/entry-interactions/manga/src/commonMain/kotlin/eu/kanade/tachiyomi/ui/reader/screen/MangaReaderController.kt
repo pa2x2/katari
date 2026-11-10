@@ -222,7 +222,7 @@ internal class MangaReaderController(
     fun onResumed() {
         viewModel.textSession.resume()
         viewModel.textTranslation.onResume()
-        viewModel.restartReadTimer()
+        viewModel.startReadTimer()
         checkpointJob?.cancel()
         checkpointJob = scope.launchIO {
             while (isActive) {
@@ -237,7 +237,9 @@ internal class MangaReaderController(
         checkpointJob?.cancel()
         checkpointJob = null
         viewModel.saveChapterProgress()
-        scope.launchNonCancellable { viewModel.updateHistory() }
+        // The clock stops here rather than in the record, which a resume right after could otherwise overtake.
+        val timeRead = viewModel.stopReadTimer()
+        scope.launchNonCancellable { viewModel.recordTimeRead(timeRead) }
     }
 
     fun onStopped() {
@@ -311,6 +313,10 @@ internal class MangaReaderController(
 
     fun toggleCropBorders() {
         showNotice(if (viewModel.toggleCropBorders()) MR.strings.on else MR.strings.off)
+    }
+
+    fun onPageShown(page: ReaderPage) {
+        viewModel.onPageShown(page)
     }
 
     fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {

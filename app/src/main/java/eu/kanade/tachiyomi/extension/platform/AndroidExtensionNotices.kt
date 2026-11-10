@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.platform
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import app.katari.notification.AppNotificationKind
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
@@ -40,7 +41,7 @@ class AndroidExtensionNotices(
     }
 
     override fun backupExtensionsInstalled(installed: List<String>, missed: List<String>) {
-        context.notify(Notifications.ID_RESTORE_EXTENSIONS, Notifications.CHANNEL_BACKUP_RESTORE_COMPLETE) {
+        context.notify(Notifications.ID_RESTORE_EXTENSIONS, AppNotificationKind.BACKUP_RESTORE_COMPLETE.id) {
             setContentTitle(
                 context.pluralStringResource(
                     MR.plurals.restore_extensions_installed,

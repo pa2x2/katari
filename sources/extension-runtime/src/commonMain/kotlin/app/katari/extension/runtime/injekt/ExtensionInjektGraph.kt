@@ -3,6 +3,7 @@ package app.katari.extension.runtime.injekt
 import eu.kanade.tachiyomi.network.JavaScriptEngine
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.source.entry.webpage.WebPages
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import nl.adaptivity.xmlutil.serialization.XML
@@ -15,4 +16,5 @@ interface ExtensionInjektGraph {
     val networkHelper: NetworkHelper
     val javaScriptEngine: JavaScriptEngine
     val entryPreferenceProvider: EntryPreferenceProvider
+    val webPages: WebPages
 }

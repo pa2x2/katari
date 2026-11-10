@@ -1,8 +1,9 @@
 package app.katari.sync.client.setting.scope
 
 /**
- * The device itself: `NetworkPreferences`, `PrivacyPreferences`, `ProgressiveImagePreferences`, `AppUpdatePreferences`
- * and Android's `BasePreferences` and extension installer.
+ * The device itself: `NetworkPreferences`, `PrivacyPreferences`, `ProgressiveImagePreferences`, `AppUpdatePreferences`,
+ * `NotificationPreferences`, the notification setting of `SecurityPreferences` and Android's `BasePreferences` and
+ * extension installer.
  */
 internal val SystemScopes = PreferenceScopeTable {
     device(DeviceBound.DIAGNOSTICS, "redact_sensitive_headers", "verbose_logging")
@@ -12,4 +13,9 @@ internal val SystemScopes = PreferenceScopeTable {
     device(DeviceBound.APP, "app_update_check_on_launch", "app_update_channel")
     device(DeviceBound.HARDWARE, "pref_hardware_bitmap_threshold")
     device(DeviceBound.INSTALLED, "extension_installer")
+
+    // Whether this desktop shows notifications, and which kinds, as Android keeps per device for the app and each channel
+    device(DeviceBound.NOTIFICATIONS, "notifications_enabled")
+    device(DeviceBound.NOTIFICATIONS, "hide_notification_content")
+    devicePrefix(DeviceBound.NOTIFICATIONS, "notification_shown_")
 }

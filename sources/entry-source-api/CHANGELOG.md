@@ -1,5 +1,17 @@
 # SDK Changelog
 
+## [4.1.0] - 2026-11-10
+
+### ✨ Added
+
+- `WebPageSource`, in `eu.kanade.tachiyomi.source.entry.webpage`, is for sources whose site only works with its scripts running. Katari runs the site's pages in a web view nobody sees and keeps each one between the source's calls, so the site's app loads once and the source navigates inside it. The source describes a page in `webPageSpec(name)` as a `WebPageSpec`: the address it loads, a `WebPageSize` window (`PHONE` by default, or `DESKTOP`), a user agent and request headers. It brings a new page to a working state in `prepareWebPage`, which Katari also calls for a kept page whose profile changed.
+- A source reaches a page through `webPage(name) { page -> … }`, never by holding one. One caller has a page at a time and a second call for it waits. Katari closes pages that sit idle, run short of memory or lose their renderer, makes a new one for the next call, and keeps few pages per source.
+- `WebPage` drives a page: `load`, `url`, `document` for the page as its scripts rendered it, `evaluate`, `click`, `swipe` with a `WebPageDirection`, `type`, `press` with a `WebPageKey`, `scrollTo`, `scrollToEnd`, `awaitSelector`, `awaitUrl` and `responseTo`. Selectors are CSS selectors as `document.querySelector` takes them.
+- `evaluate` returns the value of the script's last statement as JSON. When the script is one expression whose value is a promise, it waits for what the promise resolves to. It fails with what the script threw or the promise was rejected with, and when the promise hasn't settled within the timeout.
+- `click` and `swipe` act as a finger the page can't tell from a person's, and return once the page has seen the tap or the lifted finger. They fail where the finger can't land on the element, such as one covered by a banner or a carousel slide out of view. `type` returns once the page has the text.
+- `responseTo` runs an action and returns the first response, as a `WebPageResponse`, that the page's own `fetch` or `XMLHttpRequest` calls receive and the matcher accepts. The watch starts before the action, so an immediate response isn't missed.
+- Every call throws `WebPageException`, an `IOException` whose message Katari shows as the source's error, when no page can be made, such as without a web view, when the page is gone, or when a wait times out.
+
 ## [4.0.0] - 2026-11-08
 
 > From SDK 3.0, [Upgrade to SDK 4.0](https://pa2x2.github.io/katari/developers/upgrade/4.0/) walks through the changes.
@@ -99,6 +111,7 @@
 - Included BOOK content descriptors, resource catalogs, availability and access metadata, and resource locations for source chapters, HTTP requests, inline content, local content URIs, and app-owned references.
 - Included shared BOOK publication and document models for structured text, styles, images, tables, links, table-of-contents navigation, and reading positions.
 
+[4.1.0]: https://github.com/pa2x2/katari/tree/sdk-4.1.0
 [4.0.0]: https://github.com/pa2x2/katari/tree/sdk-4.0.0
 [3.0.0]: https://github.com/pa2x2/katari/tree/sdk-3.0.0
 [2.6.0]: https://github.com/pa2x2/katari/tree/sdk-2.6.0

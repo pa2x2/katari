@@ -19,8 +19,6 @@ interface EntryDownloadForegroundNotificationProvider {
 }
 
 object EntryDownloadNotifications {
-    const val CHANNEL_PROGRESS = "downloader_progress_channel"
-    const val CHANNEL_ERROR = "downloader_error_channel"
     const val ID_PROGRESS = -201
     const val ID_ERROR = -202
 

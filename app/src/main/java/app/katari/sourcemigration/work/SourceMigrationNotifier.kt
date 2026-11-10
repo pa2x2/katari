@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import app.katari.notification.AppNotificationKind
 import app.katari.sourcemigration.session.model.SourceMigrationSessionId
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -21,7 +22,7 @@ class SourceMigrationNotifier(private val context: Context) {
         completed: Int,
         total: Int,
     ): Notification {
-        return context.notificationBuilder(Notifications.CHANNEL_SOURCE_MIGRATION_PROGRESS) {
+        return context.notificationBuilder(AppNotificationKind.SOURCE_MIGRATION_PROGRESS.id) {
             setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_discoveryTitle))
             setContentText(
                 if (total > 0) {
@@ -60,7 +61,7 @@ class SourceMigrationNotifier(private val context: Context) {
         completed: Int,
         total: Int,
     ): Notification {
-        return context.notificationBuilder(Notifications.CHANNEL_SOURCE_MIGRATION_PROGRESS) {
+        return context.notificationBuilder(AppNotificationKind.SOURCE_MIGRATION_PROGRESS.id) {
             setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_executionTitle))
             setContentText(
                 if (total > 0) {
@@ -99,7 +100,7 @@ class SourceMigrationNotifier(private val context: Context) {
         if (SourceMigrationNotificationVisibility.isVisible(sessionId)) return
         context.notify(
             resultNotificationId(sessionId),
-            Notifications.CHANNEL_SOURCE_MIGRATION_COMPLETE,
+            AppNotificationKind.SOURCE_MIGRATION_COMPLETE.id,
         ) {
             setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_reviewReadyTitle))
             setContentText(
@@ -116,7 +117,7 @@ class SourceMigrationNotifier(private val context: Context) {
         if (SourceMigrationNotificationVisibility.isVisible(sessionId)) return
         context.notify(
             resultNotificationId(sessionId),
-            Notifications.CHANNEL_SOURCE_MIGRATION_COMPLETE,
+            AppNotificationKind.SOURCE_MIGRATION_COMPLETE.id,
         ) {
             setContentTitle(context.stringResource(MR.strings.sourceMigration_notification_completeTitle))
             setContentText(

@@ -12,6 +12,7 @@ import app.katari.entry.interactions.book.reader.failure.BookReaderChapterHeadin
 import app.katari.entry.interactions.child.EntryChildListFeature
 import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.reader.image.export.ReaderImageExport
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReports
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.state.EntryBookmarkFeature
 import app.katari.entry.interactions.translation.EntryTranslationLanguagesFeature
@@ -73,6 +74,7 @@ class BookReaderDependencies internal constructor(
     sharedSettingsRegistry: Lazy<ReaderSharedSettingsRegistry>,
     deviceControls: Lazy<ViewerDeviceControls>,
     progressOffers: Lazy<EntryProgressOffers>,
+    readingSessionReports: Lazy<ReadingSessionReports>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -102,4 +104,5 @@ class BookReaderDependencies internal constructor(
     internal val sharedSettingsRegistry by sharedSettingsRegistry
     internal val deviceControls by deviceControls
     internal val progressOffers by progressOffers
+    internal val readingSessionReports by readingSessionReports
 }

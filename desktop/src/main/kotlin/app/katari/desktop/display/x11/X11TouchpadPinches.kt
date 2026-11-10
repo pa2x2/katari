@@ -44,15 +44,12 @@ internal object X11TouchpadPinches {
             .flowOn(Dispatchers.IO)
     }
 
-    /**
-     * A connection of its own that has asked for the pinches over the window [windowId]. It also made [wakeWindow], an
-     * unmapped window that no one else knows, for [stop] to send a message to, which ends the wait for the next event.
-     */
+    /** A connection of its own that has asked for the pinches over a window, and reads them until [stop] wakes it. */
     private class PinchListener(
         private val xlib: Xlib,
         private val display: Pointer,
         private val opcode: Int,
-        private val wakeWindow: NativeLong,
+        private val wakeWindow: X11WakeWindow,
     ) {
         /** Reads the pinches into [send] until [stop], then closes the connection. */
         fun read(send: (TouchpadPinch) -> Unit) {
@@ -90,28 +87,12 @@ internal object X11TouchpadPinches {
                     }
                 }
             } finally {
-                xlib.destroyWindow(display, wakeWindow)
+                wakeWindow.destroy()
                 xlib.closeDisplay(display)
             }
         }
 
-        // From a connection of its own: this one is the reading thread's
-        fun stop() {
-            val other = xlib.openDisplay(null) ?: return
-            try {
-                val message = XClientMessageEvent().apply {
-                    type = CLIENT_MESSAGE
-                    this.display = other
-                    window = wakeWindow
-                }
-                message.writeBytes(ByteArray(0))
-                // With no event mask the message goes to the window's creator, the reading connection
-                xlib.sendEvent(other, wakeWindow, false, NativeLong(0), message)
-                xlib.flush(other)
-            } finally {
-                xlib.closeDisplay(other)
-            }
-        }
+        fun stop() = wakeWindow.wake()
 
         companion object {
             /**
@@ -124,41 +105,25 @@ internal object X11TouchpadPinches {
                 val opcode = IntByReference()
                 val major = IntByReference(GESTURES_MAJOR)
                 val minor = IntByReference(GESTURES_MINOR)
-                val hasGestures = xlib.queryExtension(display, XINPUT, opcode, IntByReference(), IntByReference()) &&
-                    xInput.queryVersion(display, major, minor) == 0 &&
-                    major.value == GESTURES_MAJOR &&
-                    minor.value >= GESTURES_MINOR
+                val hasGestures =
+                    xlib.queryExtension(display, XINPUT_EXTENSION, opcode, IntByReference(), IntByReference()) &&
+                        xInput.queryVersion(display, major, minor) == 0 &&
+                        major.value == GESTURES_MAJOR &&
+                        minor.value >= GESTURES_MINOR
                 if (!hasGestures) {
                     logcat(LogPriority.INFO) { "The display has no XInput 2.4, so no touchpad pinches" }
                     xlib.closeDisplay(display)
                     return null
                 }
-                xInput.selectEvents(display, windowId, XIEventMask(XI_ALL_MASTER_DEVICES, PINCH_MASK), 1)
-                val wakeWindow = xlib.createSimpleWindow(
-                    display,
-                    xlib.defaultRootWindow(display),
-                    0,
-                    0,
-                    1,
-                    1,
-                    0,
-                    NativeLong(0),
-                    NativeLong(0),
-                )
+                val pinches = xiEventMask(XI_ALL_MASTER_DEVICES, XI_GESTURE_PINCH_BEGIN..XI_GESTURE_PINCH_END)
+                xInput.selectEvents(display, windowId, pinches, 1)
+                val wakeWindow = X11WakeWindow(xlib, display)
                 xlib.flush(display)
                 return PinchListener(xlib, display, opcode.value, wakeWindow)
             }
         }
     }
 
-    private const val XINPUT = "XInputExtension"
     private const val GESTURES_MAJOR = 2
     private const val GESTURES_MINOR = 4
-
-    // A bit for each pinch event type, in as many bytes as all of XInput's types take (XIMaskLen)
-    private val PINCH_MASK = ByteArray(XI_LAST_EVENT / 8 + 1).apply {
-        for (type in XI_GESTURE_PINCH_BEGIN..XI_GESTURE_PINCH_END) {
-            this[type / 8] = (this[type / 8].toInt() or (1 shl (type % 8))).toByte()
-        }
-    }
 }

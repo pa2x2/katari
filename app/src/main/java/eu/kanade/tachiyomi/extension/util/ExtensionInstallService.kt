@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.IBinder
+import app.katari.notification.AppNotificationKind
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -26,7 +27,7 @@ internal class ExtensionInstallService : Service() {
     private var installer: Installer? = null
 
     override fun onCreate() {
-        val notification = notificationBuilder(Notifications.CHANNEL_EXTENSIONS_UPDATE) {
+        val notification = notificationBuilder(AppNotificationKind.EXTENSION_UPDATES.id) {
             setSmallIcon(R.drawable.ic_katari)
             setAutoCancel(false)
             setOngoing(true)

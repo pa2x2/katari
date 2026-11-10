@@ -1,5 +1,33 @@
 # Desktop Changelog
 
+## [1.0.0-beta.9] - 2026-11-10
+
+### ✨ Added
+
+- Settings has a Notifications page with a switch that turns every notification off, one for each kind of notification, and Hide notification content, which moved there from Security and privacy.
+- Profile locks and protected settings also take a fingerprint on systems whose own sign-in doesn't read the fingerprint reader.
+- A touchpad pinch zooms and moves the manga reader's page or strip.
+- The Library, the Extensions tab and the extensions sheet offer to install or uninstall the extensions you installed or uninstalled on your other devices. Installed extensions in What syncs turns this off.
+- Katari loads extensions built with SDK 4.1, whose sources can use sites that only work with their scripts running.
+
+### 🧩 Improved
+
+- Touchpad scrolling follows your fingers and glides on after a flick, instead of moving in mouse-wheel steps.
+- Scrolling or clicking to turn pages in the readers keeps the pointer hidden, and nudging the mouse no longer brings it back in the readers, the player or the immersive feed.
+- The picture-in-picture window is titled "Katari Picture-in-Picture" and the episode, so window rules can tell it from the main window.
+- A chapter read or marked as read on another device has its download deleted by your after-reading settings, as one read on this device does.
+- The automatic background reaches the long strip's sides, taking the colours of the gaps between panels down each page, and fills the space around a two-page spread.
+- A wide side sheet's content fills the sheet instead of a narrow column in its middle.
+
+### 🐛 Fixed
+
+- Your desktop's own notification settings for Katari now apply to its notifications.
+- A wheel or touchpad swipe on the feed switcher opens the feed it turns to, instead of moving only the switcher.
+- The manga and book readers no longer count reading time while their window is out of focus.
+- Long strip pages meet without a line between them at any zoom.
+- With the page slider at the side, the reader's toolbar fits its buttons instead of stretching across the page with the buttons at one end.
+- A source's immersive view hides the side dock, and switching tabs while titles are selected no longer leaves the navigation hidden.
+
 ## [1.0.0-beta.8] - 2026-11-10
 
 ### ✨ Added
@@ -251,7 +279,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.8...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.9...HEAD
+[1.0.0-beta.9]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.7
 [1.0.0-beta.6]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.6

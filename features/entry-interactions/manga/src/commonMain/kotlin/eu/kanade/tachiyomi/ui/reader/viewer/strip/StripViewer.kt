@@ -76,6 +76,8 @@ internal class StripViewer(
     private var autoScroll: Job? = null
     private var autoScrollLevel = MangaReaderSettings.AUTO_SCROLL_LEVEL_DEFAULT
 
+    internal val backdrops = StripBackdrops(items = { items })
+
     internal val textSurfaces = ViewerTextSurfaces(decorations = { viewModel.textSession.decoration(it) })
 
     override fun visibleTextSurfaces(): List<MangaPageTextSurface> = textSurfaces.visible()
@@ -265,10 +267,13 @@ internal class StripViewer(
     /** Whether the text features take a tap at ([x], [y]) in the window, as translate mode does. */
     internal fun onTextTap(x: Float, y: Float): Boolean = controller.textInteraction.onTap(x, y)
 
+    internal fun onPageShown(page: ReaderPage) = controller.onPageShown(page)
+
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
+        // The strip reads what continues each page beside it itself, over the pages around it too (StripBackdrops)
         automaticBackground = false,
-        landscape = false,
+        backgroundBesidePage = false,
         layout = { _, imageSize -> stripPageLayout(imageSize, settings.bindings) },
     )
 

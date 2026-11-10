@@ -36,6 +36,9 @@ interface EntryChapterRepository {
 
     suspend fun updateAll(chapters: List<EntryChapter>): Boolean
 
+    /** Notes that the read ones of [chapterIds] are read because the person marked them, not by reading them. */
+    suspend fun noteMarkedRead(chapterIds: Collection<Long>)
+
     suspend fun delete(id: Long): Boolean
 
     suspend fun deleteByEntryId(entryId: Long): Boolean

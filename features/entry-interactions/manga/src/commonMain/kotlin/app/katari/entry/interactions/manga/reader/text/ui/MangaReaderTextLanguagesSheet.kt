@@ -28,7 +28,7 @@ internal fun MangaReaderTextLanguagesSheet(
     onTranslateDownloadsChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismiss) {
+    Sheet(onDismissRequest = onDismiss) {
         Column {
             SheetHeader(stringResource(MR.strings.reader_text_languages))
             RowGroup {

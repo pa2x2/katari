@@ -1,0 +1,22 @@
+-- Chapters read because the person marked them read, rather than by reading them to the end. Sync tells other devices
+-- which it was, so each applies the matching download setting. A chapter made unread loses its row here, so one read
+-- again later has a row only when it is marked again.
+CREATE TABLE chapters_marked_read(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER chapters_marked_read_unread
+AFTER UPDATE OF read ON chapters
+FOR EACH ROW
+WHEN new.read = 0
+BEGIN
+    DELETE FROM chapters_marked_read
+    WHERE chapter_id = new._id;
+END;
+
+insert:
+INSERT OR IGNORE INTO chapters_marked_read(chapter_id)
+SELECT _id
+FROM chapters
+WHERE _id IN :chapterIds AND read = 1;

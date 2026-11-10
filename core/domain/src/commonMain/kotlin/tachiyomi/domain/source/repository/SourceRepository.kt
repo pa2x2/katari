@@ -16,6 +16,9 @@ interface SourceRepository {
     /** The sources library entries of every profile come from that aren't installed, the local source aside. */
     fun getMissingLibrarySources(): Flow<List<MissingLibrarySource>>
 
+    /** How many library entries each profile has from each source, by source key and then profile ID. */
+    fun getLibraryCountsBySource(): Flow<Map<Long, Map<Long, Long>>>
+
     /** Which of [sourceIds] any profile has entries from, in its library or not. */
     suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long>
 }

@@ -18,6 +18,7 @@ import app.katari.entry.interactions.media.EntryMediaSessionProcessor
 import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.media.session.EntryMediaSessionEventSink
 import app.katari.entry.interactions.runtime.EntryTypeKey
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReports
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.interactions.source.EntrySourceSettingsFeature
 import app.katari.entry.interactions.source.EntryWebViewFeature
@@ -120,6 +121,7 @@ object AnimePlayerBindings {
         aniSkipLookup: AniSkipLookup,
         theIntroDbLookup: TheIntroDbLookup,
         progressOffers: EntryProgressOffers,
+        readingSessionReports: ReadingSessionReports,
         @AppCoroutineScope appScope: CoroutineScope,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = VideoPlayerViewModel(
@@ -144,6 +146,7 @@ object AnimePlayerBindings {
             aniSkipLookup = aniSkipLookup,
             theIntroDbLookup = theIntroDbLookup,
             progressOffers = progressOffers,
+            sessionReport = readingSessionReports.start(EntryType.ANIME),
             persistenceScope = appScope,
         )
     }

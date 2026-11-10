@@ -18,7 +18,7 @@ fun ModeSelectionSheet(
     onUseDefault: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column {
             SheetHeader(title = title)
             content()

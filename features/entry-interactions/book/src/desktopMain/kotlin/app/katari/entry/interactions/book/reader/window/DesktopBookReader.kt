@@ -185,7 +185,7 @@ internal class DesktopBookReader(
             // Nothing but the book shows: no menu, and no sheet or dialog, which back would close
             val overBook = state != null && !state.chromeVisible && !controller.handlesBack &&
                 controller.pendingHiddenText == null
-            val pointer = rememberReaderPointer(hidesWhenStill = overBook && !guideDue)
+            val pointer = rememberReaderPointer(hidesWhenStill = overBook && !guideDue, zoomsAboutPointer = false)
             Box(modifier = Modifier.fillMaxSize().then(pointer)) {
                 BookDocumentReaderContent(controller, host, dependencies)
                 BookReaderKeys(controller, LocalWindowFullScreen.current, enabled = state != null && !guideDue)
@@ -226,8 +226,8 @@ private fun FollowLifecycle(controller: BookDocumentReaderController, persistOnL
     DisposableEffect(lifecycle, controller) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_START -> controller.onStart()
                 Lifecycle.Event.ON_RESUME -> controller.onResume()
+                Lifecycle.Event.ON_PAUSE -> controller.onPause()
                 Lifecycle.Event.ON_STOP -> controller.onStop(persist = true)
                 else -> Unit
             }

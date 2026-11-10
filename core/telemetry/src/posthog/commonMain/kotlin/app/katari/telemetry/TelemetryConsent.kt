@@ -18,23 +18,24 @@ internal class TelemetryConsent {
     private var crashReports = false
 
     @Volatile
-    private var usageStatistics = false
+    var usageStatistics = false
+        private set
+
+    val allowsAnything: Boolean get() = crashReports || usageStatistics
 
     /**
-     * Reads the switches and follows them for as long as [scope] lives. [onAllowsAnything] hears whether either is on:
-     * on the calling thread before this returns, then again, from [scope], with each change, and possibly with the
-     * same value as before.
+     * Reads the switches and follows them for as long as [scope] lives. [onChange] runs on the calling thread before
+     * this returns, then again, from [scope], with each change, possibly to the same values as before.
      */
-    fun follow(preferences: PrivacyPreferences, scope: CoroutineScope, onAllowsAnything: (Boolean) -> Unit) {
+    fun follow(preferences: PrivacyPreferences, scope: CoroutineScope, onChange: () -> Unit) {
         crashReports = preferences.crashReports.get()
         usageStatistics = preferences.analytics.get()
-        onAllowsAnything(crashReports || usageStatistics)
+        onChange()
         combine(preferences.crashReports.changes(), preferences.analytics.changes()) { crashReports, analytics ->
             this.crashReports = crashReports
             usageStatistics = analytics
-            crashReports || analytics
         }
-            .onEach(onAllowsAnything)
+            .onEach { onChange() }
             .launchIn(scope)
     }
 

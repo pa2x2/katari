@@ -1,0 +1,21 @@
+import kotlin.Boolean;
+
+-- The extensions this device has installed, and those it uninstalled, each with when that last changed, so the
+-- account's other devices can be offered the same. changed_at is 0 for an extension that was already installed when
+-- this device began keeping them, whose install time is unknown.
+CREATE TABLE extension_installs(
+    pkg_name TEXT NOT NULL PRIMARY KEY,
+    installed INTEGER AS Boolean NOT NULL,
+    changed_at INTEGER NOT NULL
+);
+
+all:
+SELECT pkg_name, installed, changed_at
+FROM extension_installs;
+
+set:
+INSERT INTO extension_installs(pkg_name, installed, changed_at)
+VALUES (:pkgName, :installed, :changedAt)
+ON CONFLICT(pkg_name) DO UPDATE SET
+    installed = excluded.installed,
+    changed_at = excluded.changed_at;

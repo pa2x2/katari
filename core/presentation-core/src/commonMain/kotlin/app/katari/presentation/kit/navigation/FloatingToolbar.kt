@@ -3,7 +3,6 @@ package app.katari.presentation.kit.navigation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,7 +45,10 @@ fun FloatingToolbarBox(
     }
 }
 
-/** A pill of controls floating over content, such as a feed's switcher beside its view buttons. */
+/**
+ * A pill of controls floating over content, such as a feed's switcher beside its view buttons. It is as wide as its
+ * controls, or as wide as it may be when one of them takes a weight, such as a slider.
+ */
 @Composable
 fun FloatingToolbar(
     modifier: Modifier = Modifier,
@@ -59,9 +61,7 @@ fun FloatingToolbar(
         shadow = true,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(KatariTheme.spacing.xs),
+            modifier = Modifier.padding(KatariTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
             content = content,
         )

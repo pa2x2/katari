@@ -8,7 +8,7 @@ import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import app.katari.entry.interactions.media.playback.VideoPlaybackNotifications
-import tachiyomi.i18n.*
+import app.katari.notification.AppNotificationKind
 import app.katari.icons.materialsymbols.R as MaterialSymbolsR
 
 /**
@@ -24,8 +24,8 @@ internal class VideoPlaybackService : MediaSessionService() {
         super.onCreate()
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider.Builder(this)
-                .setChannelId(VideoPlaybackNotifications.CHANNEL)
-                .setChannelName(MR.strings.channel_video_playback.resourceId)
+                .setChannelId(AppNotificationKind.VIDEO_PLAYBACK.id)
+                .setChannelName(AppNotificationKind.VIDEO_PLAYBACK.title.resourceId)
                 .setNotificationId(VideoPlaybackNotifications.ID)
                 .build()
                 .apply { setSmallIcon(MaterialSymbolsR.drawable.rounded_filled_play_arrow) },

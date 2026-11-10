@@ -1,6 +1,7 @@
 package app.katari.desktop.notification
 
 import app.katari.desktop.home.HomeDestination
+import app.katari.notification.NotificationKind
 import kotlin.time.Duration
 
 /**
@@ -12,6 +13,7 @@ import kotlin.time.Duration
  * @param timeout how long it shows before the desktop takes it away; null for the desktop's own default.
  */
 class DesktopNotification(
+    val kind: NotificationKind,
     val title: String,
     val body: String? = null,
     val progress: NotificationProgress? = null,

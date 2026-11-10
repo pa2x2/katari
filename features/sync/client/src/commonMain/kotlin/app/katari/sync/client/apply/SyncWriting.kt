@@ -9,10 +9,13 @@ import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.part.OffParts
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
+import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
 import app.katari.sync.client.setting.apply.SettingWrites
 import app.katari.sync.data.Sync_outbox
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import tachiyomi.core.common.preference.plusAssign
 import tachiyomi.core.common.util.system.logcat
@@ -39,6 +42,7 @@ class SyncWriting(
     private val profileStore: ProfileStore,
     private val thisDevice: ThisDevice,
     private val preferences: SyncPreferences,
+    private val readElsewhereListeners: () -> Set<ChaptersReadElsewhereListener>,
 ) {
     internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T =
         write(takeAfter = null) { session, _ -> block(session) }
@@ -76,35 +80,54 @@ class SyncWriting(
         takeAfter: Long?,
         failing: Map<String, FailedStage>,
         block: suspend Database.(ApplySession, taken: List<Sync_outbox>) -> T,
-    ): T = handler.await(inTransaction = true) {
-        val taken = takeAfter?.let { seq ->
-            sync_outboxQueries.after(seq).awaitAsList().also { sync_outboxQueries.deleteAfter(seq) }
-        }.orEmpty()
-        do {
-            val drained = drain.drain()
-        } while (drained > 0)
-        val device = checkNotNull(sync_stateQueries.get().awaitAsOne().device_id) { "Not registered with a server" }
-        val capturedBefore = sync_outboxQueries.lastSeq().awaitAsOne()
-        val session = ApplySession(
-            database = this,
-            settings = settings,
-            profileDeletion = profileDeletion,
-            migrationRules = migrationRules,
-            activeProfileId = profileStore.currentProfileId,
-            parts = OffParts(preferences.choices(), this) { preferences.profilesAsking += it },
-            device = DeviceId(device),
-            appVersion = thisDevice.appVersion,
-            failing = failing,
-        ) { Clock.System.now().toEpochMilliseconds() }
-        val result = block(session, taken)
-        session.finish()
-        session.newestSeen?.let { seen ->
-            val clock = sync_clockQueries.get().awaitAsOne()
-            val isNewer = seen.physicalMillis > clock.seen_physical ||
-                (seen.physicalMillis == clock.seen_physical && seen.counter > clock.seen_counter)
-            if (isNewer) sync_clockQueries.setSeen(seen.physicalMillis, seen.counter.toLong())
+    ): T {
+        var read = emptyList<ChaptersReadElsewhere>()
+        val result = handler.await(inTransaction = true) {
+            val taken = takeAfter?.let { seq ->
+                sync_outboxQueries.after(seq).awaitAsList().also { sync_outboxQueries.deleteAfter(seq) }
+            }.orEmpty()
+            do {
+                val drained = drain.drain()
+            } while (drained > 0)
+            val device = checkNotNull(sync_stateQueries.get().awaitAsOne().device_id) { "Not registered with a server" }
+            val capturedBefore = sync_outboxQueries.lastSeq().awaitAsOne()
+            val session = ApplySession(
+                database = this,
+                settings = settings,
+                profileDeletion = profileDeletion,
+                migrationRules = migrationRules,
+                activeProfileId = profileStore.currentProfileId,
+                parts = OffParts(preferences.choices(), this) { preferences.profilesAsking += it },
+                device = DeviceId(device),
+                appVersion = thisDevice.appVersion,
+                failing = failing,
+            ) { Clock.System.now().toEpochMilliseconds() }
+            val written = block(session, taken)
+            session.finish()
+            session.newestSeen?.let { seen ->
+                val clock = sync_clockQueries.get().awaitAsOne()
+                val isNewer = seen.physicalMillis > clock.seen_physical ||
+                    (seen.physicalMillis == clock.seen_physical && seen.counter > clock.seen_counter)
+                if (isNewer) sync_clockQueries.setSeen(seen.physicalMillis, seen.counter.toLong())
+            }
+            sync_outboxQueries.deleteAfter(capturedBefore)
+            read = session.chaptersRead
+            written
         }
-        sync_outboxQueries.deleteAfter(capturedBefore)
-        result
+        // Told only once committed, so listeners act on rows that stay
+        if (read.isNotEmpty()) tellReadElsewhere(read)
+        return result
+    }
+
+    private suspend fun tellReadElsewhere(reads: List<ChaptersReadElsewhere>) {
+        readElsewhereListeners().forEach { listener ->
+            try {
+                listener.onReadElsewhere(reads)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Acting on chapters read on other devices failed" }
+            }
+        }
     }
 }

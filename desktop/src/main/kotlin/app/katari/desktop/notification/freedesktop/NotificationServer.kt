@@ -36,6 +36,8 @@ internal interface NotificationServer : Closeable {
 /**
  * The arguments of a `Notify` call.
  *
+ * @param desktopEntry the `desktop-entry` hint: the name of the app's desktop file without `.desktop`, by which the
+ * server finds the app's own notification settings and icon.
  * @param appIcon a `file://` URI of the icon, or the empty string for none.
  * @param actions pairs of an action's key and its label; the key `default` is what clicking the notification invokes.
  * @param progressPercent the `value` hint, which some servers show as a progress bar.
@@ -45,6 +47,7 @@ internal interface NotificationServer : Closeable {
  */
 internal data class ServerNotification(
     val appName: String,
+    val desktopEntry: String,
     val appIcon: String,
     val summary: String,
     val body: String,

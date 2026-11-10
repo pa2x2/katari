@@ -60,7 +60,7 @@ fun MigrationConfigScreenSheet(
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     var carriedOptions by rememberSaveable(stateSaver = CarriedOptionsSaver) { mutableStateOf(CARRIED_OPTIONS) }
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.migrationConfigScreen_optionsTitle))
             Column(

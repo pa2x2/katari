@@ -734,6 +734,8 @@
     <string name="key_menu">Menu</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
+    <!-- The picture-in-picture window's title: the app's name, then the episode's title. Desktops' window rules, such as one keeping it above other windows, find it by "Picture-in-Picture" -->
+    <string name="window_title_picture_in_picture">%1$s Picture-in-Picture — %2$s</string>
     <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
     <string name="quit_while_working_title">Quit while work is running?</string>
     <string name="quit_while_working_text">A library update, backup or other task is still running. Quitting stops it, and it starts again the next time the app opens.</string>
@@ -1030,6 +1032,10 @@
     <string name="pref_display_images_description">Render images in manga descriptions</string>
 
     <string name="pref_manage_notifications">Manage notifications</string>
+    <string name="pref_category_notifications">Notifications</string>
+    <string name="pref_notifications_summary">Which notifications show, hide their content</string>
+    <string name="pref_manage_notifications_in_system_summary">In the system\'s settings: which kinds show, their sound and pop-ups</string>
+    <string name="pref_notifications_enabled">Enable notifications</string>
     <string name="pref_app_language">App language</string>
 
     <string name="pref_category_security">Security and privacy</string>
@@ -1049,6 +1055,10 @@
     <string name="sign_in_check_refused">Wrong password. Too many wrong tries can lock your account on this computer for a while.</string>
     <string name="sign_in_check_failed">Katari couldn\'t check your sign-in on this computer.</string>
     <string name="sign_in_check_checking">Checking…</string>
+    <string name="sign_in_check_fingerprint_waiting">You can also touch the fingerprint reader.</string>
+    <string name="sign_in_check_fingerprint_not_recognized">Fingerprint not recognized. Touch the reader again.</string>
+    <string name="sign_in_check_fingerprint_read_again">The reader couldn\'t read your finger. Touch it again.</string>
+    <string name="sign_in_check_fingerprint_too_many_tries">Too many tries with your fingerprint. Enter your password instead.</string>
     <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
     <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
     <string name="profile_lock_unavailable">Profile lock isn\'t available</string>
@@ -1263,6 +1273,7 @@
     <string name="missing_source_install_from">From %1$s · %2$s</string>
     <string name="missing_source_migrate">Migrate to another source</string>
     <string name="missing_extensions_title">Install extensions</string>
+    <string name="missing_extensions_sheet_title">Extensions for this device</string>
     <string name="missing_extensions_note">Titles in your library come from these extensions.</string>
     <string name="missing_extensions_untrusted">Installed, not trusted here</string>
     <string name="missing_extensions_ready">Ready to install</string>
@@ -1278,6 +1289,14 @@
     <string name="missing_extensions_restore_note">After restoring, the Library offers to install the extensions these titles need.</string>
     <string name="missing_extensions_restore_installable">Can be installed</string>
     <string name="missing_extensions_restore_line">%1$s · %2$s</string>
+    <string name="other_device_extensions_installs">Installed on your other devices</string>
+    <string name="other_device_extensions_uninstalls">Uninstalled on your other devices</string>
+    <string name="other_device_extensions_installed_on">Installed on %1$s · %2$s · %3$s</string>
+    <string name="other_device_extensions_uninstalled_on">Uninstalled on %1$s</string>
+    <string name="other_device_extensions_uninstalled_titles">Uninstalled on %1$s · %2$s here</string>
+    <string name="other_device_extensions_dont_suggest">Don\'t suggest unchecked</string>
+    <string name="other_device_extensions_your_devices">Your other devices</string>
+    <string name="other_device_extensions_card_both">%1$s installed and uninstalled extensions. Do the same here?</string>
     <string name="restore_extensions_missed">Not listed by the store they came from any more, or failed to install: %1$s</string>
     <string name="ext_replace_title">Replace %1$s?</string>
     <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
@@ -1489,7 +1508,7 @@
     <string name="reader_guide_right_click">Right-click for page actions</string>
     <string name="reader_guide_scroll">Scroll to move through pages</string>
     <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
-    <string name="reader_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="reader_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
     <string name="reader_guide_keys_turn">← and → turn pages</string>
     <string name="reader_guide_keys_chapter">N and P change chapter</string>
     <string name="reader_guide_keys_list">? lists every key</string>
@@ -2848,6 +2867,7 @@
     <string name="channel_library_updates_profile">Library updates · %s</string>
     <string name="channel_ext_updates">Extension updates</string>
     <string name="channel_video_playback">Video playback</string>
+    <string name="notification_kinds_other">Other</string>
 
     <!-- S Pen actions -->
     <string name="spen_previous_page">Previous page</string>
@@ -3448,6 +3468,8 @@
     <string name="sync_choice_title_choices">Title choices</string>
     <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title</string>
     <string name="sync_choice_repositories">Extension repositories</string>
+    <string name="sync_choice_installed_extensions">Installed extensions</string>
+    <string name="sync_choice_installed_extensions_summary">Offers to install or uninstall what you did on your other devices</string>
     <string name="sync_choice_fonts">Imported fonts</string>
     <string name="sync_choice_fonts_summary">Fonts added for the book reader</string>
     <string name="sync_choice_covers">Custom covers</string>

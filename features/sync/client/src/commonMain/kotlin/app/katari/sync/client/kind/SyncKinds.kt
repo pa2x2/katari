@@ -17,6 +17,7 @@ import app.katari.sync.client.kind.entrychoice.TheIntroDbPickKind
 import app.katari.sync.client.kind.entrychoice.TranslationLanguagesKind
 import app.katari.sync.client.kind.entrychoice.ViewerSettingKind
 import app.katari.sync.client.kind.extension.ExtensionRepositoryKind
+import app.katari.sync.client.kind.extension.InstalledExtensionKind
 import app.katari.sync.client.kind.font.ImportedFontKind
 import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.libraryupdate.LibraryUpdateKind
@@ -62,6 +63,7 @@ object SyncKinds {
         MergeMemberKind,
         EntryReplacementKind,
         ExtensionRepositoryKind,
+        InstalledExtensionKind,
         ImportedFontKind,
         ProfileSettingKind,
         SharedSettingKind,

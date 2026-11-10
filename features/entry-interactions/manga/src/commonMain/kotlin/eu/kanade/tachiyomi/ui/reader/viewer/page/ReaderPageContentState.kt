@@ -33,17 +33,29 @@ internal class ReaderPageContentState {
 
 /**
  * Loads [page] while composed, again when [settingsKey] changes, as when a setting that shapes the image does; the
- * request is read from [request] each time the image is ready. [preloadCount] is as [loadReaderPage] takes it.
+ * request is read from [request] each time the image is ready. [onShown] hears each time the image is shown, for the
+ * reader's session report. [preloadCount] is as [loadReaderPage] takes it.
  */
 @Composable
 internal fun rememberReaderPageContent(
     page: ReaderPage,
     settingsKey: Any?,
     request: () -> PageRequest,
+    onShown: (ReaderPage) -> Unit = {},
     preloadCount: Int? = null,
 ): ReaderPageContentState {
     val state = remember(page) { ReaderPageContentState() }
-    LaunchedEffect(state, settingsKey) { loadReaderPage(page, request, state::show, preloadCount) }
+    LaunchedEffect(state, settingsKey) {
+        loadReaderPage(
+            page = page,
+            request = request,
+            onContent = { content ->
+                state.show(content)
+                if (content is PageContent.Shown) onShown(page)
+            },
+            preloadCount = preloadCount,
+        )
+    }
     DisposableEffect(state) { onDispose { (state.content as? PageContent.Shown)?.image?.close() } }
     return state
 }

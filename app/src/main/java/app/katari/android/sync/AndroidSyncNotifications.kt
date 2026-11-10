@@ -2,6 +2,7 @@ package app.katari.android.sync
 
 import android.app.Application
 import androidx.core.app.NotificationCompat
+import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.ui.notice.SyncNotifications
 import dev.zacsweers.metro.Inject
@@ -43,7 +44,7 @@ class AndroidSyncNotifications(private val application: Application) : SyncNotif
     override fun withdrawStopped() = application.cancelNotification(Notifications.ID_SYNC_STOPPED)
 
     private fun notify(id: Int, title: String, text: String?, action: String) {
-        application.notify(id, Notifications.CHANNEL_SYNC) {
+        application.notify(id, AppNotificationKind.SYNC.id) {
             setSmallIcon(R.drawable.ic_katari)
             setContentTitle(title)
             setContentText(text)

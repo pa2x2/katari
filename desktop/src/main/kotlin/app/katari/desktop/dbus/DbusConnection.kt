@@ -17,9 +17,10 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
- * Linux: a connection of the app's own to the session bus, for services whose calls must share one connection, such
- * as the Secret Service, whose sessions belong to the connection that opened them, which [Gdbus] can't keep. It speaks
- * the D-Bus wire protocol over the bus's Unix socket and authenticates as the user running the app. Calls block the
+ * Linux: a connection of the app's own to the session or system bus, for services whose calls must share one
+ * connection, such as the Secret Service, whose sessions belong to the connection that opened them, or the fingerprint
+ * reader, which stays claimed by the connection that claimed it, neither of which [Gdbus] can keep. It speaks the
+ * D-Bus wire protocol over the bus's Unix socket and authenticates as the user running the app. Calls block the
  * calling thread until the answer arrives or the timeout passes. A connection that owns a name ([requestName]) also
  * serves the objects behind it: [nextMessage] hands it the calls others make, which it answers with [reply] or
  * [replyError], and it broadcasts its changes with [emitSignal]. One caller at a time, except for [wakeUp].
@@ -188,7 +189,7 @@ internal class DbusConnection private constructor(private val channel: SocketCha
 
     private fun read(buffer: ByteBuffer): Int {
         val count = channel.read(buffer)
-        if (count < 0) throw IOException("The session bus closed the connection")
+        if (count < 0) throw IOException("The bus closed the connection")
         return count
     }
 
@@ -207,12 +208,30 @@ internal class DbusConnection private constructor(private val channel: SocketCha
     companion object {
         private val DEFAULT_TIMEOUT = 25.seconds
 
+        // Where the D-Bus specification puts the system bus when nothing says otherwise
+        private const val DEFAULT_SYSTEM_BUS_ADDRESS = "unix:path=/var/run/dbus/system_bus_socket"
+
         // The bus sends a message whole, so the rest of one that has started arrives at once
         private val MESSAGE_TIMEOUT = 5.seconds
 
         /** The user's session bus, or null where there is none to reach. */
         fun session(): DbusConnection? {
-            val socket = sessionBusSocket() ?: return null
+            val address = System.getenv("DBUS_SESSION_BUS_ADDRESS")
+            val socket = if (address != null) {
+                socketIn(address)
+            } else {
+                System.getenv("XDG_RUNTIME_DIR")?.let { Path.of(it, "bus") }?.takeIf { it.exists() }
+            }
+            return socket?.let(::open)
+        }
+
+        /** The system bus, or null where there is none to reach. */
+        fun system(): DbusConnection? {
+            val address = System.getenv("DBUS_SYSTEM_BUS_ADDRESS") ?: DEFAULT_SYSTEM_BUS_ADDRESS
+            return socketIn(address)?.let(::open)
+        }
+
+        private fun open(socket: Path): DbusConnection? {
             val channel = try {
                 SocketChannel.open(StandardProtocolFamily.UNIX)
             } catch (_: IOException) {
@@ -231,22 +250,16 @@ internal class DbusConnection private constructor(private val channel: SocketCha
             }
         }
 
-        // The address lists ways to reach the bus; the first Unix socket with a path is the one a desktop sets up.
-        private fun sessionBusSocket(): Path? {
-            val address = System.getenv("DBUS_SESSION_BUS_ADDRESS")
-            val fromAddress = address?.split(';')
-                ?.filter { it.startsWith("unix:") }
-                ?.firstNotNullOfOrNull { entry ->
-                    entry.removePrefix("unix:").split(',')
-                        .firstOrNull { it.startsWith("path=") }
-                        ?.removePrefix("path=")
-                        ?.let(::unescape)
-                        ?.let(Path::of)
-                }
-            if (fromAddress != null) return fromAddress
-            if (address != null) return null
-            return System.getenv("XDG_RUNTIME_DIR")?.let { Path.of(it, "bus") }?.takeIf { it.exists() }
-        }
+        // An address lists ways to reach the bus; the first Unix socket with a path is the one a desktop sets up.
+        private fun socketIn(address: String): Path? = address.split(';')
+            .filter { it.startsWith("unix:") }
+            .firstNotNullOfOrNull { entry ->
+                entry.removePrefix("unix:").split(',')
+                    .firstOrNull { it.startsWith("path=") }
+                    ?.removePrefix("path=")
+                    ?.let(::unescape)
+                    ?.let(Path::of)
+            }
 
         private fun unescape(value: String): String = Regex("%([0-9A-Fa-f]{2})").replace(value) {
             it.groupValues[1].toInt(16).toChar().toString()
@@ -258,7 +271,7 @@ internal class DbusConnection private constructor(private val channel: SocketCha
             val hexUid = uid.toByteArray(Charsets.US_ASCII).joinToString("") { "%02x".format(it) }
             channel.write(ByteBuffer.wrap("\u0000AUTH EXTERNAL $hexUid\r\n".toByteArray(Charsets.US_ASCII)))
             val answer = readLine(channel)
-            if (!answer.startsWith("OK ")) throw IOException("The session bus refused to authenticate: $answer")
+            if (!answer.startsWith("OK ")) throw IOException("The bus refused to authenticate: $answer")
             channel.write(ByteBuffer.wrap("BEGIN\r\n".toByteArray(Charsets.US_ASCII)))
         }
 
@@ -267,7 +280,7 @@ internal class DbusConnection private constructor(private val channel: SocketCha
             val byte = ByteBuffer.allocate(1)
             while (!line.endsWith("\r\n")) {
                 byte.clear()
-                if (channel.read(byte) < 0) throw IOException("The session bus closed the connection")
+                if (channel.read(byte) < 0) throw IOException("The bus closed the connection")
                 line.append(byte.get(0).toInt().toChar())
             }
             return line.removeSuffix("\r\n").toString()
@@ -296,4 +309,4 @@ internal class DbusConnection private constructor(private val channel: SocketCha
 /** An error a service answered a call with, such as `org.freedesktop.DBus.Error.ServiceUnknown`. */
 internal class DbusException(val name: String, message: String?) : Exception("$name: ${message.orEmpty()}")
 
-private class DbusTimeoutException : IOException("The session bus didn't answer in time")
+private class DbusTimeoutException : IOException("The bus didn't answer in time")

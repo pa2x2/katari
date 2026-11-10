@@ -31,6 +31,7 @@ import app.katari.entry.interactions.manga.translation.context.mangaWorkContext
 import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
 import app.katari.entry.interactions.media.session.EntryMediaSessionEvent
+import app.katari.entry.interactions.media.session.ReadingClock
 import app.katari.entry.interactions.reader.image.export.ReaderImageExport
 import app.katari.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import app.katari.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
@@ -38,6 +39,7 @@ import app.katari.entry.interactions.reader.preparation.ReaderChapterPreparation
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.reader.settings.ReaderOrientation
 import app.katari.entry.interactions.reader.settings.ReadingMode
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.state.EntryBookmarkFeature
@@ -148,7 +150,7 @@ import java.io.File
 import java.io.InputStream
 import java.time.Instant
 import kotlin.getValue
-import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -189,6 +191,7 @@ internal class ReaderViewModel(
     powerSource: PowerSource,
     private val pageImageExport: ReaderImageExport,
     private val progressOffers: EntryProgressOffers,
+    private val sessionReport: ReadingSessionReport,
 ) : ViewModel() {
 
     private val navigationPresenter = EntryReaderNavigationPresenter(getEntryWithChapters, childListFeature)
@@ -359,10 +362,8 @@ internal class ReaderViewModel(
      */
     private var loader: ChapterLoader? = null
 
-    /**
-     * The time the chapter was started reading
-     */
-    private var chapterReadStartTime: Long? = null
+    /** Times what the reader records as read, running while the reader is in front. */
+    private val readingClock = ReadingClock()
 
     private var chapterToDownload: MangaDownload? = null
     private var nextChapterPreparationJob: Job? = null
@@ -498,6 +499,7 @@ internal class ReaderViewModel(
 
     // Cleared once the reader is left for good, when its activity finishes or its desktop screen leaves the navigation
     override fun onCleared() {
+        sessionReport.endReading(effectiveReadingMode.value)
         saveChapterProgress()
         deletePendingChapters()
         textTranslationSpeech.close()
@@ -536,6 +538,7 @@ internal class ReaderViewModel(
                             message = "Requested entry of id $mangaId not found",
                             canRetry = false,
                         )
+                    sessionReport.sourceKnown(entry.source)
                     if (!sourceManager.isInitialized.value) showStartupStep(ReaderStartupStep.LoadingExtensions)
                     sourceManager.isInitialized.first { it }
                     installViewerSettingBindings(entry)
@@ -624,8 +627,7 @@ internal class ReaderViewModel(
         viewModelScope.launchIO {
             logcat { "Loading ${chapter.chapter.url}" }
 
-            updateHistory()
-            restartReadTimer()
+            recordTimeRead(readingClock.lap())
 
             try {
                 loadChapter(loader, chapter)
@@ -729,6 +731,11 @@ internal class ReaderViewModel(
 
     fun onShowsTwoPagesChanged(showsTwoPages: Boolean) {
         mutableState.update { it.copy(showsTwoPages = showsTwoPages) }
+    }
+
+    /** A page's image is on screen; a downloaded or local chapter's pages are on the device. */
+    fun onPageShown(page: ReaderPage) {
+        sessionReport.shown(downloaded = page.chapter.pageLoader?.isLocal == true)
     }
 
     /**
@@ -835,6 +842,7 @@ internal class ReaderViewModel(
         pendingProgressSave?.cancel()
 
         if (readerChapter.pages?.lastIndex == page.index) {
+            readerChapter.chapter.id?.let(sessionReport::finished)
             pendingProgress = null
             writeChapterProgress(progress)
         } else {
@@ -899,29 +907,24 @@ internal class ReaderViewModel(
         )
     }
 
-    fun restartReadTimer() {
-        chapterReadStartTime = Clock.System.now().toEpochMilliseconds()
-    }
+    /** The reader came to the front: time read counts from now. */
+    fun startReadTimer() = readingClock.start()
 
-    /**
-     * Reports completed reader activity through the shared media-session boundary.
-     */
-    suspend fun updateHistory() {
-        recordHistory(continueReading = false)
-    }
+    /** The reader left the front: time read stops counting, and the time since the last record is handed back. */
+    fun stopReadTimer(): Duration = readingClock.stop()
 
+    /** Records the time read since the last record while the reader stays in front. */
     suspend fun checkpointHistory() {
-        recordHistory(continueReading = true)
+        recordTimeRead(readingClock.lap())
     }
 
-    private suspend fun recordHistory(continueReading: Boolean) {
+    /** Reports [timeRead] on the current chapter through the shared media-session boundary. */
+    suspend fun recordTimeRead(timeRead: Duration) {
+        val sessionReadDuration = timeRead.inWholeMilliseconds
+        if (sessionReadDuration <= 0L) return
         activityMutex.withLock {
             val endTime = System.currentTimeMillis()
-            val startedAt = chapterReadStartTime
-            chapterReadStartTime = if (continueReading) endTime else null
             val readerChapter = getCurrentChapter() ?: return@withLock
-            val sessionReadDuration = startedAt?.let { endTime - it } ?: return@withLock
-            if (sessionReadDuration <= 0L) return@withLock
             val visibleEntry = manga?.let { getEntry.await(it.id) } ?: return@withLock
             val child = readerChapter.chapter.toDomainChapter()?.toEntryChapter() ?: return@withLock
             withContext(NonCancellable) {

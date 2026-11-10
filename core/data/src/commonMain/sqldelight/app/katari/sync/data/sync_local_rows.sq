@@ -48,7 +48,8 @@ LEFT JOIN sources Name ON Name._id = Entry.source
 WHERE Entry._id = :entryId;
 
 chapterRow:
-SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order
+SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order,
+    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = chapters._id) AS marked_read
 FROM chapters
 WHERE _id = :chapterId;
 
@@ -219,6 +220,11 @@ extensionRepositoryRow:
 SELECT index_url, name, badge_label, signing_key, contact_website, contact_discord, format, extension_list_url
 FROM extension_store
 WHERE index_url = :indexUrl;
+
+extensionInstallRow:
+SELECT pkg_name, installed, changed_at
+FROM extension_installs
+WHERE pkg_name = :pkgName;
 
 -- The stable identity of the source this device stores under :localKey, for preferences that name sources.
 sourceIdentity:

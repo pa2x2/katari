@@ -1,0 +1,101 @@
+# Version updates are opened against upcoming, where every change is merged first. Security updates are left off in the
+# repository settings: GitHub always opens those against the default branch, main, which only receives upcoming.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    target-branch: upcoming
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: ci
+    groups:
+      ci-actions:
+        patterns:
+          - "*"
+
+  # Dependabot reads only gradle/libs.versions.toml and the wrapper. gradle/katari.versions.toml (Android SDK and NDK,
+  # JetBrains Runtime, Chromium, AppImage tools) is upgraded by hand.
+  - package-ecosystem: gradle
+    directory: /
+    target-branch: upcoming
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: dependencies
+    ignore:
+      # Built by tools/ or released from the pa2x2 forks and downloaded from GitHub releases, which Dependabot can't
+      # read. libmpv moves only through the mpv-fork-upgrade skill.
+      - dependency-name: app.katari.*
+      - dependency-name: io.github.pa2x2:*
+      # Follows the JCEF of the JetBrains Runtime pinned in gradle/katari.versions.toml.
+      - dependency-name: org.jetbrains.intellij.deps.jcef:*
+      # Follows dex2jar.
+      - dependency-name: org.ow2.asm:*
+      # Follows okhttp-brotli.
+      - dependency-name: org.brotli:*
+    groups:
+      # Metro is a compiler plugin built for specific Kotlin versions, so it moves with Kotlin.
+      build-tooling:
+        patterns:
+          - gradle-wrapper
+          - com.android.*
+          - org.jetbrains.kotlin:*
+          - org.jetbrains.kotlin.*
+          - dev.zacsweers.metro*
+      compose:
+        patterns:
+          - androidx.compose*
+          - org.jetbrains.compose*
+          - org.jetbrains.androidx.*
+      libraries:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: /website
+    target-branch: upcoming
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: website
+    groups:
+      website:
+        patterns:
+          - "*"
+
+  # tools/lnreader-bundle and tools/script-runtime-bundle are left out: they build bundles committed with their
+  # SHA256SUMS, which a package.json bump alone would leave stale.
+  - package-ecosystem: npm
+    directory: /tools/showcase
+    target-branch: upcoming
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: showcase
+    groups:
+      showcase:
+        patterns:
+          - "*"
+
+  # tools/onnxruntime/linux is left out: its image only matters when the ONNX Runtime release is rebuilt.
+  - package-ecosystem: docker
+    directory: /features/sync/server
+    target-branch: upcoming
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: sync server

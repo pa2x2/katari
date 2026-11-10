@@ -9,8 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import app.katari.core.image.progressive.rememberProgressivePreview
@@ -40,7 +44,8 @@ internal fun StripPage(
     placeholderHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
+    val contentState =
+        rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest, viewer::onPageShown)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
 
@@ -58,13 +63,17 @@ internal fun StripPage(
         shown != null -> shown.layout.displayedSize(shown.image.size)
         else -> null
     }
+    // The height the page is laid out at, which its backdrop rows span; the aspect ratio rounds it to a whole pixel
+    var laidOutHeight by remember { mutableIntStateOf(0) }
+    viewer.FollowPageBackdrop(page, shown, laidOutHeight)
+
     val sized = if (displayedSize != null && displayedSize.width > 0 && displayedSize.height > 0) {
         Modifier.aspectRatio(displayedSize.width.toFloat() / displayedSize.height)
     } else {
         Modifier.height(placeholderHeight)
     }
 
-    Box(modifier.then(sized)) {
+    Box(modifier.then(sized).onSizeChanged { laidOutHeight = it.height }) {
         when {
             previewImage != null && previewSize != null && previewLayout != null ->
                 PageBitmap(previewImage, previewSize, previewLayout, Modifier.fillMaxSize())

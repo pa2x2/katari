@@ -18,7 +18,8 @@ import java.io.IOException
 
 /**
  * The user's sign-in to this computer, checked by the system ([SystemSignInCheck]), as Android checks the device's
- * unlock. [isAvailable] is false where the system can't check it.
+ * unlock, with a password or, where there is a [fingerprintReader], a finger. [isAvailable] is false where the system
+ * can't check it.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -30,6 +31,9 @@ class SystemSignIn(private val check: SystemSignInCheck) {
 
     val isAvailable: Boolean
         get() = configuration != null
+
+    /** The reader the user can sign in with instead of the password; null where [SystemSignInCheck] offers none. */
+    val fingerprintReader: FingerprintReader? by lazy { configuration?.let(check::fingerprintReader) }
 
     /** Starts a check, in a process of its own (see [SignInCheckProcess]); null where none can start. */
     fun start(): SignInCheckRun? {

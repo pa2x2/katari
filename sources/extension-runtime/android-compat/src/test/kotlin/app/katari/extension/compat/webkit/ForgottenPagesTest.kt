@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.webkit.WebView
 import app.katari.core.common.web.ExtensionPage
 import app.katari.core.common.web.ExtensionPageEvents
+import app.katari.core.common.web.ExtensionPageKey
 import app.katari.core.common.web.ExtensionPageSettings
 import app.katari.core.common.web.ExtensionPageTouch
 import app.katari.core.common.web.ExtensionPages
@@ -108,7 +109,15 @@ class ForgottenPagesTest {
 
                 override fun removeBridge(name: String) = Unit
 
+                override fun addStartScript(script: String) = Unit
+
+                override fun resize(width: Int, height: Int) = Unit
+
                 override fun touch(touch: ExtensionPageTouch) = Unit
+
+                override fun insertText(text: String) = Unit
+
+                override fun press(key: ExtensionPageKey) = Unit
 
                 override fun stopLoading() = Unit
 

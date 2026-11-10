@@ -57,6 +57,29 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
         name = ""
     }
 `;
+
+const webPages = `
+class ExampleShows : EntryHttpSource(), WebPageSource {
+    override fun webPageSpec(name: String) = WebPageSpec(url = "https://shows.example/")
+
+    // The site's app has started once its search field shows
+    override suspend fun prepareWebPage(name: String, page: WebPage) {
+        page.awaitSelector("input[name=q]")
+    }
+
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = webPage { site ->
+        site.type("input[name=q]", query)
+        val response = site.responseTo({ it.url.contains("/api/search") }) {
+            site.press(WebPageKey.ENTER)
+        }
+        searchResults(response.body)
+    }
+}
+`;
 ---
 
 <GuidePage
@@ -142,6 +165,14 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
           </Member>
         </Members>
       </Member>
+      <Member signature="interface WebPageSource : UnifiedSource">
+        Pages of a site that only works with its scripts running, which Katari keeps open out of sight between the source's calls, as
+        in <a href="#web-pages">Sites that need scripts</a>.
+        <Members label="Implement">
+          <Member signature="fun webPageSpec(name: String): WebPageSpec" />
+          <Member signature="suspend fun prepareWebPage(name: String, page: WebPage)" />
+        </Members>
+      </Member>
       <Member signature="interface ChapterWebViewSource : WebViewSource">
         <strong>WebView</strong> for a single chapter. <code>EntryImageHttpSource</code> already has it.
         <Members label="Implement">
@@ -219,5 +250,76 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
     </ol>
     <Snippet lang="kotlin" code={links} />
     <p>Here <code>refresh</code> fills in the title, along with the rest of the details.</p>
+  </Task>
+
+  <Task id="web-pages" title="Sites that need scripts">
+    <p>
+      Some sites send an empty page and build everything with their scripts, or sign their own API requests in a way only those
+      scripts know. A <code>WebPageSource</code> uses such a site the way a person does. Katari loads the address from
+      <code>webPageSpec</code> in a web view nobody sees, calls <code>prepareWebPage</code> once it has loaded, and keeps the page open
+      between the source's calls, so the site's app starts once and later calls move around inside it.
+    </p>
+    <Snippet lang="kotlin" code={webPages} />
+    <p>
+      <code>webPage</code> lends the source its page named <code>"main"</code> for the length of the block. Don't keep the page after
+      the block returns, and don't ask for the same page again inside it, which would wait for itself. One call has a page at a time, and a
+      second call for it waits. Here <code>searchResults</code> stands for the source's own reading of the site's JSON.
+    </p>
+    <Members>
+      <Member signature="class WebPageSpec(url: String, size: WebPageSize = WebPageSize.PHONE, userAgent: String? = null, headers: Map<String, String> = emptyMap())">
+        The window the site lays itself out in is the same on Android and Linux, so the source's selectors meet one layout of the site:
+        <code>PHONE</code> is 412 × 915, <code>DESKTOP</code> 1280 × 800. A null <code>userAgent</code> sends the one Katari's own
+        requests send. <code>headers</code> go with the request for <code>url</code> and with every <code>load</code>, not with what the
+        page's scripts request.
+      </Member>
+      <Member signature="suspend fun load(url: String)">
+        Loads a new document and waits for it to finish. Nothing else waits for a page to load, since a site's app changes route without
+        loading one: wait for what the route shows with <code>awaitSelector</code>, where it leads with <code>awaitUrl</code>, or what it
+        requests with <code>responseTo</code>.
+      </Member>
+      <Member signature="suspend fun evaluate(script: String, timeout: Duration = 30.seconds): String">
+        Runs the script as the page's own scripts run and returns the value of its last statement as JSON. When the script is one
+        expression whose value is a promise, such as <code>(async () =&gt; {"{ … }"})()</code>, it returns what the promise resolves to.
+        It fails with what the script threw or the promise was rejected with, and when the promise hasn't settled after
+        <code>timeout</code>.
+      </Member>
+      <Member signature="suspend fun document(): Document">The page as its scripts rendered it, to read with Jsoup as usual.</Member>
+      <Member signature="suspend fun click(selector: String)">
+        Scrolls the element into view and taps its middle as a finger would, which the page can't tell from a person's tap. It returns
+        once the page has seen the tap, and fails where the tap can't land on the element, such as one under a banner.
+      </Member>
+      <Member signature="suspend fun swipe(selector: String, direction: WebPageDirection)">
+        Moves a finger across the element, for what the site's scripts move, such as a carousel. What the browser scrolls itself answers
+        differently on Android and Linux; bring it into view with <code>scrollTo</code>, <code>scrollToEnd</code> or <code>click</code>.
+      </Member>
+      <Member signature="suspend fun type(selector: String, text: String)">
+        Replaces what the field holds with <code>text</code>, all at once as a keyboard's text entry does, and returns once the page has
+        it.
+      </Member>
+      <Member signature="suspend fun press(key: WebPageKey)">Presses a key, such as <code>ENTER</code>, on whatever has the focus.</Member>
+      <Member signature="suspend fun scrollToEnd()">Scrolls to the end of the document, where a site that loads more as you read asks for the next part.</Member>
+      <Member signature="suspend fun responseTo(matches: (WebPageResponse) -> Boolean, timeout: Duration = 30.seconds, action: suspend () -> Unit): WebPageResponse">
+        Runs <code>action</code> and returns the first response the page's scripts receive that <code>matches</code> accepts, with its
+        <code>url</code>, <code>status</code> and text <code>body</code>. The watch starts before the action, so an immediate answer isn't
+        missed. It sees only what the page's own document requests with <code>fetch</code> or <code>XMLHttpRequest</code>.
+      </Member>
+    </Members>
+    <p>
+      <code>WebPage</code> also has <code>url</code>, <code>scrollTo</code>, <code>awaitSelector</code> and <code>awaitUrl</code>.
+      Selectors are CSS selectors as <code>document.querySelector</code> takes them, and the first match counts.
+    </p>
+    <p>
+      Katari closes a page after five minutes without a call, when memory runs short, or when its renderer stops, and makes and prepares
+      a new one for the next call. It calls <code>prepareWebPage</code> again for a kept page when the user switches
+      <a href={sitePath("docs/profiles/")}>profile</a>, since the source's settings may differ. It keeps two pages per source on Android
+      and one on Linux, so a second name waits for, or replaces, the source's other page there.
+    </p>
+    <Callout label="Errors" tone="warning">
+      <p>
+        Every call throws <code>WebPageException</code>, an <code>IOException</code> whose message Katari shows as the source's error,
+        when no page can be made, when the page is gone, or when a wait runs out. On Linux, pages run in the Chromium Katari downloads;
+        until the user has it, calls fail and Katari tells the user that the source needs WebView.
+      </p>
+    </Callout>
   </Task>
 </GuidePage>

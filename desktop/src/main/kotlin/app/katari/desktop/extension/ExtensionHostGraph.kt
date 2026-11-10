@@ -4,6 +4,7 @@ import app.katari.domain.extension.repository.ExtensionStoreRepository
 import app.katari.extension.compat.AndroidCompatEnvironment
 import app.katari.extension.runtime.injekt.ExtensionInjektGraph
 import app.katari.extension.runtime.injekt.MetroInjektRegistrar
+import app.katari.extension.runtime.jvm.application.DesktopExtensionHostStart
 import app.katari.extension.runtime.jvm.application.ExtensionApplication
 import app.katari.extension.runtime.jvm.application.MainLooperThread
 import app.katari.extension.runtime.jvm.loading.ExtensionUncaughtErrors
@@ -22,6 +23,7 @@ import uy.kohesive.injekt.api.InjektScope
 interface ExtensionHostGraph : ExtensionInjektGraph {
     val androidCompatEnvironment: AndroidCompatEnvironment
     val extensionApplication: ExtensionApplication
+    val extensionHostStart: DesktopExtensionHostStart
     val extensionManager: ExtensionManager
     val extensionStoreRepository: ExtensionStoreRepository
     val extensionKinds: ExtensionKinds
@@ -31,9 +33,10 @@ interface ExtensionHostGraph : ExtensionInjektGraph {
 
 /**
  * Extensions run on the Android stand-ins, whose environment and main thread come first. Injekt then hands them the
- * graph's services, and building the extension manager loads the installed ones. The active profile must be loaded
- * first, since extensions read its source settings. Errors of extensions' own background work stop at
- * [ExtensionUncaughtErrors], in front of the crash handling installed before.
+ * graph's services, and the extension manager loads the installed ones once [prepareExtensionHost] marks the host
+ * started, whenever it was built. The active profile must be loaded first, since extensions read its source settings.
+ * Errors of extensions' own background work stop at [ExtensionUncaughtErrors], in front of the crash handling
+ * installed before.
  */
 fun ExtensionHostGraph.startExtensionHost() {
     ExtensionUncaughtErrors.install()
@@ -49,4 +52,5 @@ fun ExtensionHostGraph.prepareExtensionHost() {
     AndroidCompatEnvironment.install(androidCompatEnvironment)
     MainLooperThread.start()
     Injekt = InjektScope(MetroInjektRegistrar(application = extensionApplication, graph = { this }))
+    extensionHostStart.markStarted()
 }

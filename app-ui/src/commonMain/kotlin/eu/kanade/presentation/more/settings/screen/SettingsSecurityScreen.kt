@@ -45,13 +45,12 @@ class SettingsSecurityScreen : SearchableSettings() {
         val authSupported = remember { graph.profileUnlock.isAvailable(context) }
         val wording = graph.profileUnlock.lockSettingsWording
         val secureScreenOffered = graph.secureScreen.isOffered
-        val notificationsOffered = graph.appNotifications.isOffered
         val useAuthPref = securityPreferences.useAuthenticator
         val useAuth by useAuthPref.collectAsState()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_security),
-            visible = authSupported || wording != null || notificationsOffered || secureScreenOffered,
+            visible = authSupported || wording != null || secureScreenOffered,
             preferenceItems = listOfNotNull(
                 wording?.takeUnless { authSupported }?.let {
                     Preference.PreferenceItem.TextPreference(
@@ -95,11 +94,6 @@ class SettingsSecurityScreen : SearchableSettings() {
                     },
                 ),
 
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = securityPreferences.hideNotificationContent,
-                    title = stringResource(MR.strings.hide_notification_content),
-                    visible = notificationsOffered,
-                ),
                 Preference.PreferenceItem.ListPreference(
                     preference = securityPreferences.secureScreen,
                     entries = SecurityPreferences.SecureScreenMode.entries

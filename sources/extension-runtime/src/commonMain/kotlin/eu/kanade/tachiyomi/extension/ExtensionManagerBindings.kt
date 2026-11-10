@@ -17,6 +17,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
+import eu.kanade.tachiyomi.extension.platform.ExtensionHostStart
 import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
 import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
@@ -34,6 +35,7 @@ object ExtensionManagerBindings {
     @SingleIn(AppScope::class)
     fun extensionManager(
         loader: ExtensionLoader,
+        hostStart: ExtensionHostStart,
         kinds: ExtensionKinds,
         packageInstaller: ExtensionPackageInstaller,
         installEvents: ExtensionInstallEvents,
@@ -54,6 +56,7 @@ object ExtensionManagerBindings {
         @AppCoroutineScope scope: CoroutineScope,
     ): ExtensionManager = ExtensionManager(
         loader = loader,
+        hostStart = hostStart,
         kinds = kinds,
         packageInstaller = packageInstaller,
         installEvents = installEvents,

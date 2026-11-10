@@ -10,6 +10,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 
@@ -23,11 +24,13 @@ object EntryStateBindings {
         interactions: EntryInteractions,
         downloadLifecycle: EntryDownloadLifecycleEventSink,
         history: EntryHistoryFeature,
+        chapters: EntryChapterRepository,
     ): EntryConsumptionFeature = DefaultEntryConsumptionFeature(
         applicableTypes = consumptionProcessors.keys,
         interaction = interactions.consumption,
         downloadLifecycle = downloadLifecycle,
         history = history,
+        chapters = chapters,
     )
 
     @Provides

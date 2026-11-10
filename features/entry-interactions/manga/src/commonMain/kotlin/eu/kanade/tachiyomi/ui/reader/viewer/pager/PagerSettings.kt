@@ -5,6 +5,7 @@ import app.katari.entry.interactions.reader.settings.ChapterTransitionMode
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.reader.settings.ReaderPageLayout
 import app.katari.entry.viewer.settings.ViewerSettingBinding
+import eu.kanade.tachiyomi.ui.reader.viewer.automaticBackground
 import eu.kanade.tachiyomi.ui.reader.viewer.current
 
 /**
@@ -15,8 +16,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.current
 internal class PagerSettings(private val settings: MangaReaderSettingsBindings, private val direction: PagerDirection) {
     val bindings: MangaReaderSettingsBindings get() = settings
 
-    /** The reader theme that follows each page's own margins. */
-    val automaticBackground: Boolean get() = settings.readerTheme.current == AUTOMATIC_THEME
+    val automaticBackground: Boolean get() = settings.automaticBackground
     val scaleType: PageScaleType get() = PageScaleType.fromSetting(settings.imageScaleType.current)
     val cropBorders: Boolean get() = settings.cropBorders.current
     val landscapeZoom: Boolean get() = settings.landscapeZoom.current
@@ -50,5 +50,3 @@ internal class PagerSettings(private val settings: MangaReaderSettingsBindings, 
         splitInvert = settings.dualPageInvertPaged.current,
     )
 }
-
-private const val AUTOMATIC_THEME = 3

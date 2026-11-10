@@ -13,5 +13,8 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
  */
 @PlatformFacility
 interface VideoEngine {
+    /** The engine's name in lower case, such as `mpv`, as the player's usage statistics report it. */
+    val name: String
+
     fun createPlayer(stream: VideoStream, role: VideoPlayerRole): VideoPlayer
 }

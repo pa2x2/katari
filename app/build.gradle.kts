@@ -64,8 +64,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 97
-        versionName = "3.1.3"
+        versionCode = 98
+        versionName = "3.2.0"
 
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
     }
@@ -284,6 +284,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.sources.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.sources.scriptRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sources.sourceLocal.path)))
+    implementation(dependencies.project(mapOf("path" to projects.sources.webPages.path)))
     implementation(dependencies.project(mapOf("path" to projects.features.sync.client.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.data.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.domain.path)))

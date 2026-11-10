@@ -341,10 +341,12 @@ internal class PagedViewer(
     internal fun onTextTap(x: Float, y: Float): Boolean = controller.textInteraction.onTap(x, y)
 
     /** What opening [page]'s image needs now: the settings, and the layout rules that report on the pages around it. */
+    internal fun onPageShown(page: ReaderPage) = controller.onPageShown(page)
+
     internal fun pageRequest(): PageRequest = PageRequest(
         cropBorders = settings.cropBorders,
         automaticBackground = settings.automaticBackground,
-        landscape = landscape,
+        backgroundBesidePage = landscape,
         layout = ::layoutAndReport,
     )
 

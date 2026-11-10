@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
@@ -30,8 +31,8 @@ class DetailsLink(
 
 /**
  * Explains one item, such as an engine or a library: optional [artwork], a title and [subtitle], an optional [status]
- * line, then its sections ([DetailsSection]) together in one card and its [links] as rows in a second. As a side sheet
- * its title row ends with a close button.
+ * line, then its sections ([DetailsSection]) together in one card as wide as the sheet and its [links] as rows in a
+ * second. As a side sheet its title row ends with a close button.
  */
 @Composable
 fun DetailsSheet(
@@ -45,7 +46,7 @@ fun DetailsSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val spacing = KatariTheme.spacing
-    Sheet(onDismissRequest = onDismissRequest, modifier = modifier, short = true) {
+    Sheet(onDismissRequest = onDismissRequest, modifier = modifier) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -70,17 +71,20 @@ fun DetailsSheet(
                 }
                 status?.invoke()
             }
-            RowGroup(
-                rows = listOf<@Composable () -> Unit> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(spacing.l),
-                        verticalArrangement = Arrangement.spacedBy(spacing.l),
-                        content = content,
-                    )
-                },
-            )
+            // The sections are one card, not a row to wrap beside another, so they take the whole of a wide sheet
+            CompositionLocalProvider(LocalSheetColumns provides 1) {
+                RowGroup(
+                    rows = listOf<@Composable () -> Unit> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(spacing.l),
+                            verticalArrangement = Arrangement.spacedBy(spacing.l),
+                            content = content,
+                        )
+                    },
+                )
+            }
             if (links.isNotEmpty()) {
                 RowGroup(
                     rows = links.map<DetailsLink, @Composable () -> Unit> { link ->

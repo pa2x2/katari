@@ -19,6 +19,7 @@ import app.katari.entry.interactions.manga.translation.artifact.MangaChapterTran
 import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.reader.image.export.ReaderImageExport
 import app.katari.entry.interactions.reader.settings.MangaReaderSettings
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReports
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.state.EntryBookmarkFeature
 import app.katari.entry.interactions.translate.EntryTranslateFeature
@@ -37,6 +38,7 @@ import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactoryKey
+import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import kotlinx.coroutines.CoroutineScope
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -112,6 +114,7 @@ object MangaReaderBindings {
         powerSource: PowerSource,
         pageImageExport: ReaderImageExport,
         progressOffers: EntryProgressOffers,
+        readingSessionReports: ReadingSessionReports,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = ReaderViewModel(
             savedState = extras.createSavedStateHandle(),
@@ -148,6 +151,7 @@ object MangaReaderBindings {
             powerSource = powerSource,
             pageImageExport = pageImageExport,
             progressOffers = progressOffers,
+            sessionReport = readingSessionReports.start(EntryType.MANGA),
         )
     }
 }

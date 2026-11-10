@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import app.katari.book.api.BookLocator
 import app.katari.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import app.katari.entry.interactions.book.reader.OpenedBookReaderSession
+import app.katari.entry.interactions.reader.settings.BookDocumentReadingMode
+import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +16,7 @@ import tachiyomi.domain.entry.model.Entry
  * Retains the bounded document-reader session window while the reader is rebuilt, as on an Android configuration
  * change or when it reopens for new text rules. Only the current chapter outlives process death: sessions reopen from
  * persisted progress, but the reader must reopen the chapter it had moved on to, not the one it was launched with.
+ * It also keeps the usage report of the reader session, which ends with it.
  */
 internal class BookDocumentReaderSessionViewModel(private val savedState: SavedStateHandle) : ViewModel() {
     val jumpHistory = BookDocumentJumpHistory()
@@ -33,11 +36,21 @@ internal class BookDocumentReaderSessionViewModel(private val savedState: SavedS
 
     private val mutableCurrentOwner = MutableStateFlow<Entry?>(null)
 
+    private var report: ReadingSessionReport? = null
+
+    /** The reading mode the reader shows, which the session's report ends with. */
+    var readingMode: BookDocumentReadingMode? = null
+
     /** The entry the current chapter belongs to: in a merged book, the chapter's member rather than the opened entry. */
     val currentOwner: StateFlow<Entry?> = mutableCurrentOwner.asStateFlow()
 
-    fun attachInitial(session: OpenedBookReaderSession) {
+    /**
+     * Attaches the chapter the reader opens with. [report] is the session's unless it has one already, as when the
+     * chapter opens again for new text rules within the same session.
+     */
+    fun attachInitial(session: OpenedBookReaderSession, report: ReadingSessionReport) {
         check(sessions.isEmpty()) { "An initial document reader session is already attached" }
+        if (this.report == null) this.report = report.apply { sourceKnown(session.owner.source) }
         sessions[session.chapter.id] = session
         // A chapter opened again in place keeps where the reader was rather than its last saved position.
         if (session.chapter.id !in locators) session.initialLocator?.let { locators[session.chapter.id] = it }
@@ -70,6 +83,15 @@ internal class BookDocumentReaderSessionViewModel(private val savedState: SavedS
 
     fun locator(chapterId: Long): BookLocator? = locators[chapterId]
 
+    /** The reader shows text of [chapterId]. */
+    fun shown(chapterId: Long) {
+        sessions[chapterId]?.let { report?.shown(it.downloaded) }
+    }
+
+    fun finished(chapterId: Long) {
+        report?.finished(chapterId)
+    }
+
     fun retain(chapterIds: Set<Long>) {
         sessions.keys.toList()
             .filterNot(chapterIds::contains)
@@ -97,7 +119,10 @@ internal class BookDocumentReaderSessionViewModel(private val savedState: SavedS
         mutableCurrentOwner.value = null
     }
 
-    override fun onCleared() = release()
+    override fun onCleared() {
+        readingMode?.let { report?.endReading(it) }
+        release()
+    }
 
     private companion object {
         const val CURRENT_CHAPTER_ID_KEY = "current_chapter_id"

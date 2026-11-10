@@ -40,7 +40,8 @@ internal sealed interface PageContent {
 internal class PageRequest(
     val cropBorders: Boolean,
     val automaticBackground: Boolean,
-    val landscape: Boolean,
+    /** Whether the background shows beside the page rather than above and below it. */
+    val backgroundBesidePage: Boolean,
     /** Decides the page's layout from its image size, and tells the viewer what that means for the pages around it. */
     val layout: (ReaderPage, imageSize: IntSize) -> PageImageLayout,
 )
@@ -82,7 +83,7 @@ private suspend fun openShown(page: ReaderPage, request: PageRequest): PageConte
             ?: return PageContent.Failed(null)
         val layout = request.layout(page, image.size)
         val background = if (request.automaticBackground && image is PageImage.Still) {
-            image.chooseBackground(layout, request.landscape)
+            image.chooseBackground(layout, request.backgroundBesidePage)
         } else {
             null
         }

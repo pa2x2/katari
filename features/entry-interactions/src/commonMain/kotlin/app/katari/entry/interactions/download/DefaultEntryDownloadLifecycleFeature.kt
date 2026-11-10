@@ -38,6 +38,7 @@ internal class DefaultEntryDownloadLifecycleFeature(
         try {
             when (event) {
                 is EntryDownloadLifecycleEvent.MarkedConsumed -> afterMarkedConsumed(event)
+                is EntryDownloadLifecycleEvent.ConsumedElsewhere -> afterConsumedElsewhere(event)
                 is EntryDownloadLifecycleEvent.Progressed -> afterProgressed(event)
                 is EntryDownloadLifecycleEvent.Completed -> afterCompleted(event)
             }
@@ -51,6 +52,25 @@ internal class DefaultEntryDownloadLifecycleFeature(
         val enabled = downloadPreferences.removeAfterMarkedAsRead.get()
         if (!enabled) return
         deleteEligible(event.visibleEntry, event.children, deferUntilViewerCloses = false)
+    }
+
+    /**
+     * Each setting acts on what happened on the other device as it acts on the same here. Reading there moves where
+     * the person is as reading here does, so the chapters the same number of places behind go; downloading ahead
+     * stays with reading here, where the next chapters are about to be read.
+     */
+    private suspend fun afterConsumedElsewhere(event: EntryDownloadLifecycleEvent.ConsumedElsewhere) {
+        val removeAfterMarked = downloadPreferences.removeAfterMarkedAsRead.get()
+        val removeAfterReadSlots = downloadPreferences.removeAfterReadSlots.get()
+        val marked = event.markedIds.takeIf { removeAfterMarked }.orEmpty()
+        val consumed = event.consumedIds.takeIf { removeAfterReadSlots >= 0 }.orEmpty()
+        if (marked.isEmpty() && consumed.isEmpty()) return
+        val readingOrder = getEntryWithChapters.awaitChapters(event.visibleEntry).sortedForReading(event.visibleEntry)
+        // One made unread here since sync took it in is no longer consumed
+        val stillRead = readingOrder.filter(EntryChapter::read)
+        val behind = stillRead.filter { it.id in consumed }.mapNotNull { readingOrder.behind(it, removeAfterReadSlots) }
+        val delete = (stillRead.filter { it.id in marked } + behind).distinctBy(EntryChapter::id)
+        deleteEligible(event.visibleEntry, delete, deferUntilViewerCloses = false)
     }
 
     private suspend fun afterProgressed(event: EntryDownloadLifecycleEvent.Progressed) {
@@ -111,8 +131,7 @@ internal class DefaultEntryDownloadLifecycleFeature(
         val cleanupEnabled = removeAfterReadSlots >= 0
         if (cleanupEnabled) {
             val readingOrder = readingOrder(event.visibleEntry, event.child, event.deduplicateByNumber)
-            val currentIndex = readingOrder.indexOfFirst { it.id == event.child.id }
-            readingOrder.getOrNull(currentIndex - removeAfterReadSlots)?.let { child ->
+            readingOrder.behind(event.child, removeAfterReadSlots)?.let { child ->
                 val duplicates = if (event.completeEquivalentChildrenByNumber) {
                     completedDuplicates(event.visibleEntry, child)
                 } else {
@@ -163,6 +182,9 @@ internal class DefaultEntryDownloadLifecycleFeature(
             it.id != child.id && it.read && it.isRecognizedNumber && it.numberKey == child.numberKey
         }
     }
+
+    private fun List<EntryChapter>.behind(child: EntryChapter, places: Int): EntryChapter? =
+        getOrNull(indexOfFirst { it.id == child.id } - places)
 
     private suspend fun isExcluded(entry: Entry): Boolean {
         val excluded = downloadPreferences.removeExcludeCategories.get()

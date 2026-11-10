@@ -18,7 +18,6 @@ import app.katari.ui.telemetry.ShownScreenReport
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
-import eu.kanade.tachiyomi.ui.home.HomeScreen
 
 /**
  * Shows the screens of [navigator] with the home destinations beside every one of them in a wide window, not only beside
@@ -33,9 +32,7 @@ fun HomeSideNavigationHost(
     val tabSettings = rememberUpdatedState(rememberHomeTabSettings())
     val state = remember(tabSettings) { HomeNavigationState(tabSettings) }
     val usesSideNavigation = currentWindowLayout().usesSideNavigation
-    val besideDock = { screen: Screen ->
-        usesSideNavigation && screen !is FullWindowScreen && !(screen is HomeScreen && state.hiddenByTab)
-    }
+    val besideDock = { screen: Screen -> usesSideNavigation && !state.hidesNavigation(screen) }
     val configuration = state.configuration
     val selectedTab = state.markedTab(navigator)
     val profileSwitcher = LocalProfileSwitcher.current
@@ -68,7 +65,9 @@ fun HomeSideNavigationHost(
             modifier = modifier,
         ) {
             DefaultNavigatorScreenTransition(navigator = navigator) { screen ->
-                DockedScreen(besideDock = besideDock(screen)) { screen.Content() }
+                DockedScreen(besideDock = besideDock(screen)) {
+                    CompositionLocalProvider(LocalHomeNavigationScreen provides screen.key) { screen.Content() }
+                }
             }
         }
     }

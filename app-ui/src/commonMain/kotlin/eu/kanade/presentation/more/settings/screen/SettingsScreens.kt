@@ -22,6 +22,7 @@ private fun mainSettingsScreens() = listOf(
     SettingsTextRecognitionScreen(),
     SettingsBrowseScreen(),
     SettingsDataScreen(),
+    SettingsNotificationsScreen(),
     SettingsSecurityScreen(),
     SettingsProfilesScreen(),
     SettingsAdvancedScreen(),

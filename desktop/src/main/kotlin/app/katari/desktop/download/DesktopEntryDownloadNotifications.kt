@@ -14,6 +14,7 @@ import app.katari.entry.interactions.download.EntryDownloadErrorNotification
 import app.katari.entry.interactions.download.EntryDownloadNotificationPresenter
 import app.katari.entry.interactions.download.EntryDownloadProgressNotification
 import app.katari.entry.interactions.download.EntryDownloadRuntimeFeature
+import app.katari.notification.AppNotificationKind
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -69,6 +70,7 @@ class DesktopEntryDownloadNotifications(
         notifications.show(
             PROGRESS,
             DesktopNotification(
+                kind = AppNotificationKind.DOWNLOAD_PROGRESS,
                 title = if (hideContent) content.hiddenTitle ?: downloader() else content.title,
                 body = content.text.takeUnless { hideContent },
                 progress = if (content.indeterminate) {
@@ -96,6 +98,7 @@ class DesktopEntryDownloadNotifications(
         notifications.show(
             PAUSED,
             DesktopNotification(
+                kind = AppNotificationKind.DOWNLOAD_PROGRESS,
                 title = stringResource(MR.strings.chapter_paused),
                 body = stringResource(MR.strings.download_notifier_download_paused),
                 onClick = NotificationResponse.Open(HomeDestination.DownloadQueue),
@@ -121,6 +124,7 @@ class DesktopEntryDownloadNotifications(
         notifications.show(
             ERROR,
             DesktopNotification(
+                kind = AppNotificationKind.DOWNLOAD_ERRORS,
                 title = content.title.takeUnless { hideContent } ?: downloader(),
                 body = content.message.takeUnless { hideContent }
                     ?: stringResource(MR.strings.download_notifier_unknown_error),
@@ -134,6 +138,7 @@ class DesktopEntryDownloadNotifications(
         notifications.show(
             ERROR,
             DesktopNotification(
+                kind = AppNotificationKind.DOWNLOAD_ERRORS,
                 title = downloader(),
                 body = reason,
                 onClick = helpUrl?.let { url -> NotificationResponse.Run { linkOpener.open(context, url) } }

@@ -14,6 +14,7 @@ import app.katari.entry.interactions.book.reader.BookReaderOpenResult
 import app.katari.entry.interactions.book.reader.BookReaderSessionFactory
 import app.katari.entry.interactions.book.reader.OpenedBookReaderSession
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
+import app.katari.entry.interactions.media.session.ReadingClock
 import app.katari.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +34,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
-import kotlin.time.TimeSource
+import kotlin.time.Duration
 
 /** Owns bounded adjacent session loading, activation, progress persistence, and completion evidence. */
 internal class BookDocumentChapterCoordinator(
@@ -53,7 +54,10 @@ internal class BookDocumentChapterCoordinator(
     private val chapterSelectionRequests = mutableSetOf<Long>()
     private var persistLocationJob: Job? = null
     private var activityCheckpointJob: Job? = null
-    private var readingStartedAt: TimeSource.Monotonic.ValueTimeMark? = null
+    private val readingClock = ReadingClock()
+
+    /** The reader is resumed, which on the desktop means its window has focus; only then does time read count. */
+    private var inFront = false
     private val activitySession = EntryMediaSessionActivitySession()
     private val activityMutex = Mutex()
     private var navigationRequestId = 0L
@@ -62,11 +66,23 @@ internal class BookDocumentChapterCoordinator(
     /** A selected chapter whose opening records a return point; nothing moves until it opens. */
     private var originRecordingChapterId: Long? = null
 
+    fun resumeReading() {
+        inFront = true
+        startReading()
+    }
+
+    fun pauseReading() {
+        inFront = false
+        val timeRead = stopClock()
+        val session = retainedSessions.currentSession() ?: return
+        scope.launchNonCancellable { recordActivity(session, timeRead) }
+    }
+
+    /** A chapter is open: time read counts if the reader is in front. */
     fun startReading() {
-        if (retainedSessions.currentSession() != null && readingStartedAt == null) {
-            readingStartedAt = TimeSource.Monotonic.markNow()
-        }
-        if (retainedSessions.currentSession() != null && activityCheckpointJob?.isActive != true) {
+        if (!inFront || retainedSessions.currentSession() == null) return
+        readingClock.start()
+        if (activityCheckpointJob?.isActive != true) {
             activityCheckpointJob = scope.launchIO {
                 while (isActive) {
                     delay(ACTIVITY_CHECKPOINT_INTERVAL_MILLIS)
@@ -77,18 +93,22 @@ internal class BookDocumentChapterCoordinator(
     }
 
     fun stopReading(persist: Boolean) {
-        activityCheckpointJob?.cancel()
-        activityCheckpointJob = null
         persistLocationJob?.cancel()
         val session = retainedSessions.currentSession()
         val locator = session?.let { retainedSessions.locator(it.chapter.id) }
-        val elapsed = consumeReadingDuration()
+        val timeRead = stopClock()
         if (session != null) {
             scope.launchNonCancellable {
                 if (persist) locator?.let { session.saveLocation(it) }
-                recordActivity(session, elapsed)
+                recordActivity(session, timeRead)
             }
         }
+    }
+
+    private fun stopClock(): Duration {
+        activityCheckpointJob?.cancel()
+        activityCheckpointJob = null
+        return readingClock.stop()
     }
 
     fun loadChapter(chapter: EntryChapter, activate: Boolean, retry: Boolean) {
@@ -268,6 +288,8 @@ internal class BookDocumentChapterCoordinator(
     fun onLocation(location: BookDocumentViewerLocation<EntryChapter>) {
         val state = currentState() ?: return
         val chapterId = location.section.owner.id
+        // Before the navigation check, which can turn away the first location: the text is on screen all the same
+        retainedSessions.shown(chapterId)
         val navigationRequest = state.navigationRequest
         if (!navigationRequest.acceptsLocation(
                 chapterId,
@@ -485,12 +507,12 @@ internal class BookDocumentChapterCoordinator(
             observedLocation?.let { section.totalProgression(it.visualProgression) } ?: progression,
         )
         onSessionActivated(session)
-        readingStartedAt = TimeSource.Monotonic.markNow()
         return true
     }
 
     private fun completeChapter(chapterId: Long) {
         val session = retainedSessions.session(chapterId) ?: return
+        retainedSessions.finished(chapterId)
         val state = currentState() ?: return
         val section = state.loadedSections[chapterId]?.sections?.lastOrNull() ?: return
         val total = 1.0
@@ -531,31 +553,24 @@ internal class BookDocumentChapterCoordinator(
         )
     }
 
+    /** The time read so far goes to the chapter the reader leaves; a running clock runs on for the next one. */
     private fun recordElapsedFor(chapterId: Long) {
-        val elapsed = consumeReadingDuration()
+        val timeRead = readingClock.lap()
         val session = retainedSessions.session(chapterId) ?: return
-        scope.launchNonCancellable { recordActivity(session, elapsed) }
+        scope.launchNonCancellable { recordActivity(session, timeRead) }
     }
 
-    private suspend fun recordActivity(session: OpenedBookReaderSession, durationMillis: Long) {
+    private suspend fun recordActivity(session: OpenedBookReaderSession, timeRead: Duration) {
         activityMutex.withLock {
             withContext(NonCancellable) {
-                session.recordHistory(durationMillis, activitySession)
+                session.recordHistory(timeRead.inWholeMilliseconds, activitySession)
             }
         }
     }
 
     private suspend fun checkpointReading() {
         val session = retainedSessions.currentSession() ?: return
-        val elapsed = consumeReadingDuration()
-        readingStartedAt = TimeSource.Monotonic.markNow()
-        recordActivity(session, elapsed)
-    }
-
-    private fun consumeReadingDuration(): Long {
-        val started = readingStartedAt ?: return 0L
-        readingStartedAt = null
-        return started.elapsedNow().inWholeMilliseconds.coerceAtLeast(0L)
+        recordActivity(session, readingClock.lap())
     }
 
     private companion object {

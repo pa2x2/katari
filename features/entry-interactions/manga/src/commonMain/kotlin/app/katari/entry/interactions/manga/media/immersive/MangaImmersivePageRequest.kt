@@ -7,6 +7,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
 internal val ImmersivePageRequest = PageRequest(
     cropBorders = false,
     automaticBackground = false,
-    landscape = false,
+    backgroundBesidePage = false,
     layout = { _, _ -> PageImageLayout.Whole },
 )

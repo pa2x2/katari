@@ -255,6 +255,7 @@ internal class BookReaderSessionFactory(
                             readerSettingsSurfaceId = readerProcessor.viewerSettingsSurfaceId,
                             readerCapabilities = readerProcessor.readerCapabilities(publication.model),
                             sourceName = sourceManager.get(owner.source)?.name,
+                            downloaded = contentSession is DownloadedBookContentSession,
                         ),
                     )
                 } catch (error: CancellationException) {

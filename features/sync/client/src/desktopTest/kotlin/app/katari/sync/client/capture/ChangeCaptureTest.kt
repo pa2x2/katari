@@ -178,6 +178,10 @@ class ChangeCaptureTest {
                     extensionListUrl = null,
                 )
             }
+            expect("install and uninstall an extension", "extension.installed", "extension.installed") {
+                db.extension_installsQueries.set("eu.kanade.extension.show", installed = true, changedAt = 1000)
+                db.extension_installsQueries.set("eu.kanade.extension.show", installed = false, changedAt = 2000)
+            }
             expect("move to another profile", "entry", "entry.replacement") {
                 db.entriesQueries.moveToProfile(destinationProfileId = 2, sourceProfileId = 1, entryId = 2)
             }

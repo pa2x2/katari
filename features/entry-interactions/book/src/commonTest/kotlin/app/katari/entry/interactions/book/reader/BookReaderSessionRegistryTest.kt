@@ -13,11 +13,11 @@ class BookReaderSessionRegistryTest {
     @Test
     fun `session handoff can only be claimed once`() {
         val request = BookReaderRequest(entryId = 1L, chapterId = 2L)
-        val session = session(request)
+        val handoff = BookReaderHandoff(session(request), mockk())
         val registry = BookReaderSessionRegistry()
-        val token = registry.register(session)
+        val token = registry.register(handoff)
 
-        assertSame(session, registry.claim(token, request))
+        assertSame(handoff, registry.claim(token, request))
         assertNull(registry.claim(token, request))
     }
 

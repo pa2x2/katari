@@ -27,7 +27,8 @@ class InstallableListingsTest {
             availableExtension(name = "Entry 3.0", libVersionName = "3.0.0"),
             availableExtension(name = "Entry 4.0", libVersionName = "4.0.0"),
             availableExtension(name = "Entry 4.0 patch", libVersionName = "4.0.1"),
-            availableExtension(name = "Future Entry 4.1", libVersionName = "4.1.0"),
+            availableExtension(name = "Entry 4.1", libVersionName = "4.1.0"),
+            availableExtension(name = "Future Entry 4.2", libVersionName = "4.2.0"),
             availableExtension(name = "Aniyomi 14", libVersionName = "14", sourceIdScheme = SourceIdScheme.ANIYOMI),
             availableExtension(
                 name = "Future Aniyomi 18",
@@ -43,6 +44,7 @@ class InstallableListingsTest {
             "Legacy 1.6 patch",
             "Entry 4.0",
             "Entry 4.0 patch",
+            "Entry 4.1",
             "Aniyomi 14",
         )
     }

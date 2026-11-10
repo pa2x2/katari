@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
+import app.katari.notification.AppNotificationKind
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
@@ -33,7 +34,7 @@ class BackupNotifier(
     private val storageFiles: StorageFileResolver,
 ) : BackupRestoreReporter {
     private val progressNotificationBuilder = context.notificationBuilder(
-        Notifications.CHANNEL_BACKUP_RESTORE_PROGRESS,
+        AppNotificationKind.BACKUP_RESTORE_PROGRESS.id,
     ) {
         setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
         setSmallIcon(R.drawable.ic_katari)
@@ -43,7 +44,7 @@ class BackupNotifier(
     }
 
     private val completeNotificationBuilder = context.notificationBuilder(
-        Notifications.CHANNEL_BACKUP_RESTORE_COMPLETE,
+        AppNotificationKind.BACKUP_RESTORE_COMPLETE.id,
     ) {
         setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
         setSmallIcon(R.drawable.ic_katari)

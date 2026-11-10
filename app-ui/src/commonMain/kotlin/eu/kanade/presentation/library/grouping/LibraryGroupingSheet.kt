@@ -18,7 +18,7 @@ fun LibraryGroupingSheet(
     onGroupingChange: (LibraryGrouping) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    Sheet(short = true, onDismissRequest = onDismissRequest) {
+    Sheet(onDismissRequest = onDismissRequest) {
         Column {
             SheetHeader(title = stringResource(MR.strings.library_grouping_hierarchy))
             LibraryGroupingEditor(

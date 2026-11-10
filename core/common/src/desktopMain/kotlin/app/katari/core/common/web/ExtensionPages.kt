@@ -1,8 +1,8 @@
 package app.katari.core.common.web
 
 /**
- * The pages extensions' own web views run on desktop, where the Android stand-ins' `android.webkit.WebView` drives
- * one each. A page is never drawn, as a challenge page isn't. It sends the app's cookies and leaves the ones it sets in
+ * The pages extensions run on desktop: their own web views, where the Android stand-ins' `android.webkit.WebView`
+ * drives one each, and the pages the app keeps for sources. A page is never drawn, as a challenge page isn't. It sends the app's cookies and leaves the ones it sets in
  * the app's cookie jar ([ChallengePage] says how), and it sends [its user agent][ExtensionPageSettings.userAgent] from
  * every frame, other sites' frames among them.
  */
@@ -51,8 +51,23 @@ interface ExtensionPage {
 
     fun removeBridge(name: String)
 
-    /** Hands the page [touch] as a touchscreen's input, which its documents can't tell from a person's own. */
+    /** Runs [script] at the start of every document the page's frames load from now on, before their own scripts. */
+    fun addStartScript(script: String)
+
+    /** Lays the page out in a window of [width] by [height] CSS pixels instead of a desktop window's. */
+    fun resize(width: Int, height: Int)
+
+    /**
+     * Hands the page [touch] as a touchscreen's input, which its documents can't tell from a person's own. Whatever
+     * its tool, the page takes it for a finger's.
+     */
     fun touch(touch: ExtensionPageTouch)
+
+    /** Enters [text] into the focused field as a keyboard's own text entry does; nothing where none has the focus. */
+    fun insertText(text: String)
+
+    /** Presses and releases [key] on whatever has the page's focus, as a person's keyboard does. */
+    fun press(key: ExtensionPageKey)
 
     fun stopLoading()
 

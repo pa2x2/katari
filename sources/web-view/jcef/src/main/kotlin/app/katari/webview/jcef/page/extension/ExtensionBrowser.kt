@@ -2,6 +2,7 @@ package app.katari.webview.jcef.page.extension
 
 import app.katari.core.common.web.ExtensionPage
 import app.katari.core.common.web.ExtensionPageEvents
+import app.katari.core.common.web.ExtensionPageKey
 import app.katari.core.common.web.ExtensionPageResponse
 import app.katari.core.common.web.ExtensionPageSettings
 import app.katari.core.common.web.ExtensionPageTouch
@@ -58,6 +59,9 @@ internal class ExtensionBrowser(
     private val calls = Channel<Call>(Channel.UNLIMITED)
     private val closed = AtomicBoolean(false)
     private val bridges = ExtensionBridges()
+
+    // Only on the pages' thread
+    private val touchscreen = PageTouchscreen()
     private val loads = PendingLoads()
 
     /** Where the browser paints: nowhere, or a dialog of the app's that shows the page. */
@@ -135,9 +139,33 @@ internal class ExtensionBrowser(
         call { bridges.remove(name, devTools) }
     }
 
+    override fun addStartScript(script: String) {
+        call {
+            devTools.call("Page.addScriptToEvaluateOnNewDocument", buildJsonObject { put("source", script) })
+                ?: logcat(LogPriority.WARN) { "An extension page's start script wasn't added" }
+        }
+    }
+
+    override fun resize(width: Int, height: Int) {
+        // The size alone opens no page; one that opens later is laid out at it from the start
+        display.resizeHidden(width, height)
+    }
+
+    // Input methods are sent, not called: the browser process answers them, and JCEF loses such answers
+
     override fun touch(touch: ExtensionPageTouch) {
-        // Through the browser's own input, so the page's events are trusted as a person's are
-        call { browser.sendTouchEvent(touch.toCefTouchEvent()) }
+        call { devTools.send("Input.dispatchTouchEvent", touchscreen.event(touch)) }
+    }
+
+    override fun insertText(text: String) {
+        call { devTools.send("Input.insertText", buildJsonObject { put("text", text) }) }
+    }
+
+    override fun press(key: ExtensionPageKey) {
+        call {
+            devTools.send("Input.dispatchKeyEvent", key.event("keyDown", typed = key.text))
+            devTools.send("Input.dispatchKeyEvent", key.event("keyUp", typed = null))
+        }
     }
 
     override fun stopLoading() {
@@ -229,6 +257,14 @@ internal class ExtensionBrowser(
             // What the page changed until it closed reaches the app's store
             cookies.readBack()
         }
+    }
+
+    private fun ExtensionPageKey.event(type: String, typed: String?) = buildJsonObject {
+        put("type", type)
+        put("key", key)
+        put("code", code)
+        put("windowsVirtualKeyCode", keyCode)
+        typed?.let { put("text", it) }
     }
 
     private class Call(val opens: Boolean, val block: suspend OpenPage.() -> Unit)

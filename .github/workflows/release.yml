@@ -115,9 +115,11 @@ jobs:
       - name: Install the PostHog CLI
         run: npm install --global @posthog/cli@0.19.0
 
+      # The project token is passed here alone, so only a release sends to PostHog
       - name: Build
-        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
+        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Pposthog-project-token="$POSTHOG_PROJECT_TOKEN"
         env:
+          POSTHOG_PROJECT_TOKEN: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
           # Signs with the keystore below; the desktop job has none, so the app's build script must not ask for it.
           KATARI_GITHUB_RELEASE: true
           storeFile: ${{ runner.temp }}/katari.keystore
@@ -294,8 +296,11 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
           cache-read-only: true
 
+      # The project token is passed here alone, so only a release sends to PostHog
       - name: Build
-        run: ./gradlew :desktop:packageAppImage -Pdesktop-release -Pinclude-telemetry
+        run: ./gradlew :desktop:packageAppImage -Pdesktop-release -Pinclude-telemetry -Pposthog-project-token="$POSTHOG_PROJECT_TOKEN"
+        env:
+          POSTHOG_PROJECT_TOKEN: ${{ secrets.POSTHOG_PROJECT_TOKEN }}
 
       # Only the release build is named Katari-<version>; a development build, made without -Pdesktop-release,
       # finds nothing to upload and fails the release.

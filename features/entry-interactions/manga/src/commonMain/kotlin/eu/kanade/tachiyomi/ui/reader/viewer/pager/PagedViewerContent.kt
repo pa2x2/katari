@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -46,8 +47,8 @@ import kotlinx.coroutines.launch
 /**
  * The paged viewer on screen: the slots in a pager turning [PagedViewer.direction], each a page, two facing pages or a
  * chapter transition. A tap or click anywhere goes to the tap zones of the whole pager, a double tap zooms the page
- * under it, a long press or right click opens its actions, the wheel scrolls and turns pages ([pagerWheel]), and a
- * mouse drags pages as a finger does.
+ * under it, a long press or right click opens its actions, the wheel scrolls and turns pages ([pagerWheel]), a
+ * touchpad pinch zooms the page under the pointer ([pagerTouchpadPinch]), and a mouse drags pages as a finger does.
  */
 @Composable
 internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Boolean = false) {
@@ -96,6 +97,7 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
             }
             .hidesTapZones(tapZones)
             .pagerWheel(viewer) { pageAt(it) }
+            .pagerTouchpadPinch(viewer) { pageAt(it) }
             .pagerMouseDrags(pagerState, vertical, scope)
             .pointerInput(viewer) {
                 detectReaderTaps(
@@ -172,8 +174,9 @@ private fun PagedViewer.Slot(item: ReaderViewerItem, onPagePlaced: (ReaderPage, 
                 PagerPage(
                     page = item.page,
                     viewer = this,
-                    narrowToImage = false,
-                    modifier = Modifier.fillMaxSize().onGloballyPositioned { onPagePlaced(item.page, it) },
+                    narrowedAgainst = null,
+                    onPlaced = { onPagePlaced(item.page, it) },
+                    modifier = Modifier.fillMaxSize(),
                 )
             } else {
                 FacingPages(item, facing, onPagePlaced)
@@ -195,7 +198,8 @@ private fun PagedViewer.Slot(item: ReaderViewerItem, onPagePlaced: (ReaderPage, 
 
 /**
  * Two facing pages, the earlier one on the reading direction's side. While the scale type fits whole pages, each is
- * as wide as its image at the slot's height and meets the other at the split, as a printed spread does.
+ * as wide as its image at the slot's height and meets the other at the split, as a printed spread does. Each page's
+ * background fills its whole side of the split.
  */
 @Composable
 private fun PagedViewer.FacingPages(
@@ -220,22 +224,24 @@ private fun PagedViewer.FacingPages(
                 PagerPage(
                     page = leftPage,
                     viewer = this@FacingPages,
-                    narrowToImage = narrow,
-                    modifier = Modifier.onGloballyPositioned {
+                    narrowedAgainst = if (narrow) AbsoluteAlignment.CenterRight else null,
+                    onPlaced = {
                         onPagePlaced(leftPage, it)
                         spread.left = it
                     },
+                    modifier = Modifier.fillMaxSize(),
                 )
             },
             right = {
                 PagerPage(
                     page = rightPage,
                     viewer = this@FacingPages,
-                    narrowToImage = narrow,
-                    modifier = Modifier.onGloballyPositioned {
+                    narrowedAgainst = if (narrow) AbsoluteAlignment.CenterLeft else null,
+                    onPlaced = {
                         onPagePlaced(rightPage, it)
                         spread.right = it
                     },
+                    modifier = Modifier.fillMaxSize(),
                 )
             },
             modifier = Modifier.fillMaxSize(),

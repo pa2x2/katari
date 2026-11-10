@@ -21,6 +21,7 @@ import app.katari.core.common.HomeScreenTabs
 import app.katari.core.platform.currentPlatformContext
 import app.katari.missingextensions.ui.MissingExtensionsLibraryNotice
 import app.katari.missingextensions.ui.MissingExtensionsSheet
+import app.katari.missingextensions.ui.OtherDeviceExtensionsLibraryNotice
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.presentation.kit.layout.ScreenFrame
@@ -65,7 +66,7 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
-import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -293,6 +294,10 @@ data object LibraryTab : Tab {
                                 onReview = { showMissingExtensions = true },
                                 modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                             )
+                            OtherDeviceExtensionsLibraryNotice(
+                                onReview = { showMissingExtensions = true },
+                                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            )
                         },
                         onGlobalSearchClicked = {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
@@ -428,10 +433,7 @@ data object LibraryTab : Tab {
             },
         )
 
-        val homeNavigation = LocalHomeNavigation.current
-        LaunchedEffect(state.selectionMode) {
-            homeNavigation.hiddenByTab = state.selectionMode
-        }
+        HideHomeNavigation(hidden = state.selectionMode)
 
         val contentReadiness = LocalHomeContentReadiness.current
         LaunchedEffect(state.isLoading) {

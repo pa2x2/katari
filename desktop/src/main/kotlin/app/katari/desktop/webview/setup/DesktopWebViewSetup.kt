@@ -5,6 +5,7 @@ import app.katari.desktop.notification.DesktopNotification
 import app.katari.desktop.notification.DesktopNotifications
 import app.katari.desktop.notification.NotificationResponse
 import app.katari.model.artifacts.api.state.ModelArtifactFailure
+import app.katari.notification.AppNotificationKind
 import app.katari.presentation.kit.feedback.AppMessages
 import app.katari.webview.chromium.ChromiumFailure
 import app.katari.webview.chromium.ChromiumInstallation
@@ -103,6 +104,7 @@ class DesktopWebViewSetup(
         notifications.value.show(
             NOTIFICATION_KEY,
             DesktopNotification(
+                kind = AppNotificationKind.COMMON,
                 title = stringResource(MR.strings.webview_setup_title),
                 body = stringResource(MR.strings.webview_setup_notice),
                 onClick = NotificationResponse.Show(::request),

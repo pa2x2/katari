@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
 import app.katari.entry.interactions.manga.reader.image.layout.PageImageLayout
+import app.katari.entry.interactions.manga.reader.image.layout.rememberPageImagePaint
 import app.katari.entry.interactions.manga.reader.image.source.PageImage
 import kotlinx.coroutines.flow.collectLatest
 
@@ -38,10 +39,12 @@ internal fun TiledPageImage(
     LaunchedEffect(store) {
         snapshotFlow { currentView() to boxSize }.collectLatest { (view, size) -> store.load(this, view, size) }
     }
-    val tilePaint = rememberTilePaint()
+    val tilePaint = rememberPageImagePaint()
     Canvas(modifier.onSizeChanged { boxSize = it }) {
-        if (store.displayedSize.width <= 0) return@Canvas
-        val boxScale = size.width / store.displayedSize.width
-        scale(boxScale, pivot = Offset.Zero) { drawTiles(store.pieces, store.decoded, tilePaint) }
+        val displayed = store.displayedSize
+        if (displayed.width <= 0 || displayed.height <= 0) return@Canvas
+        scale(size.width / displayed.width, size.height / displayed.height, Offset.Zero) {
+            drawTiles(store.pieces, store.decoded, tilePaint)
+        }
     }
 }

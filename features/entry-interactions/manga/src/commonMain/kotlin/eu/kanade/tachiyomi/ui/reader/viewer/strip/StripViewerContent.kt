@@ -55,7 +55,7 @@ import kotlin.math.roundToInt
  * The long strip on screen: its slots in a lazy column at the strip's width, magnified as [StripViewer.zoom] says. A
  * tap or click goes to the tap zones of the whole strip, a double tap zooms, a long press or right click opens the
  * actions of the page under it, and the wheel and drags scroll, a mouse's as a finger's ([stripWheel] adds Ctrl to
- * zoom).
+ * zoom, and [stripTouchpadPinch] zooms with a touchpad pinch).
  */
 @Composable
 internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Boolean = false) {
@@ -73,6 +73,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
     val tapMode = bindings.webtoonNavigationMode.state.collectAsState().value.effectiveValue
     val tapInversion = bindings.webtoonNavigationInverted.state.collectAsState().value.effectiveValue.ordinal
     FollowTapZoneSettings(tapZones, tapMode, tapInversion)
+    ReadNeighbourBackdrops()
 
     val state = listState
     LaunchedEffect(state) { snapshotFlow { state.layoutInfo }.collect(::onLayout) }
@@ -110,6 +111,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
             )
             .stripZoomGestures(zoom, scope, ::scrollBy, onZoomStart = ::onDirectManipulation)
             .stripWheel(zoom, ::scrollBy)
+            .stripTouchpadPinch(zoom, ::scrollBy, onZoomStart = ::onDirectManipulation)
             .mouseDrags(
                 key = viewer,
                 onStart = ::onDirectManipulation,
@@ -153,7 +155,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
         PageStrip(
             state = state,
             sideInset = insetDp,
-            modifier = Modifier.zoomedBy(zoom).nestedScroll(menuHider),
+            modifier = Modifier.paintedBehind(viewer).zoomedBy(zoom).nestedScroll(menuHider),
         ) {
             items(items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
