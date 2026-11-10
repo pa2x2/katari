@@ -34,6 +34,9 @@ interface WebPage {
      * Scrolls the element into view and taps its middle as a finger would, which the page can't tell from a person's
      * tap; a click made by script, it can. Returns once the tap is made, before the page answered it: wait for what
      * the tap brings with [awaitSelector], [awaitUrl] or [responseTo].
+     *
+     * Fails where the tap couldn't land on the element: scrolling doesn't bring it into view, as with a carousel's
+     * other slides, or something else lies over its middle, such as a banner.
      */
     suspend fun click(selector: String)
 

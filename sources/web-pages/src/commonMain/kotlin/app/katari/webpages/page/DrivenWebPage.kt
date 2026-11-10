@@ -73,7 +73,12 @@ internal class DrivenWebPage private constructor(
     }
 
     override suspend fun click(selector: String) {
-        val middle = runCatching { Json.parseToJsonElement(run(middleOf(selector))) }.getOrNull() as? JsonArray
+        val found = run(middleOf(selector))
+        when (text(found)) {
+            OUT_OF_VIEW -> throw WebPageException("$selector can't be tapped: scrolling doesn't bring it into view")
+            COVERED -> throw WebPageException("$selector can't be tapped: something else on the page lies over it")
+        }
+        val middle = runCatching { Json.parseToJsonElement(found) }.getOrNull() as? JsonArray
         val x = middle?.getOrNull(0)?.jsonPrimitive?.floatOrNull
         val y = middle?.getOrNull(1)?.jsonPrimitive?.floatOrNull
         if (x == null || y == null) throw unmatched(selector)
@@ -160,14 +165,24 @@ internal class DrivenWebPage private constructor(
         private const val SCROLL_TO_END =
             "window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' })"
 
-        // Scrolled at once: a site's smooth scrolling would still be moving the element when it is measured
+        private const val OUT_OF_VIEW = "out of view"
+        private const val COVERED = "covered"
+
+        // Scrolled at once: a site's smooth scrolling would still be moving the element when it is measured. A tap
+        // lands on whatever is at its point, so one that can't land on the element is refused: scrolling doesn't
+        // bring in what a transform moved away, such as a carousel's other slides, and a banner over the element
+        // takes its tap.
         private fun middleOf(selector: String) = """
             (() => {
                 const element = document.querySelector(${quoted(selector)});
                 if (!element) return null;
                 element.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
                 const box = element.getBoundingClientRect();
-                return [box.left + box.width / 2, box.top + box.height / 2];
+                const x = box.left + box.width / 2, y = box.top + box.height / 2;
+                const shown = box.width > 0 && box.height > 0;
+                if (!shown || x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) return ${quoted(OUT_OF_VIEW)};
+                if (!element.contains(document.elementFromPoint(x, y))) return ${quoted(COVERED)};
+                return [x, y];
             })()
         """.trimIndent()
 
