@@ -3,14 +3,15 @@ package app.katari.presentation.kit.pointer
 import androidx.compose.ui.input.pointer.PointerEvent
 
 /**
- * Where a scroll event lies in a touchpad's two-finger scroll: the fingers [Start] it, [Move] on, and once they lift
- * after a flick the scrolling runs out as a [Glide].
+ * The two-finger scroll of a touchpad that a scroll event is a step of. [swipe] numbers the scroll: every step has
+ * the same from the fingers' first to the end of the glide they leave, and the next scroll has another. [gliding] is
+ * set for the steps after the fingers lifted, while the content runs on by itself.
  */
-enum class TouchpadScrollStage { Start, Move, Glide }
+class TouchpadScroll(val swipe: Int, val gliding: Boolean)
 
 /**
- * The stage of the touchpad scroll this scroll event belongs to; null for a wheel's event, and where the platform
- * doesn't tell fingers from a wheel. What counts scrolling into steps, as page turns are, takes a [Start] for the
- * next swipe however soon it follows the last one's glide.
+ * The touchpad scroll this scroll event is a step of; null for a wheel's event, and where the platform doesn't tell
+ * fingers from a wheel. What counts scrolling into steps, as page turns are, tells one swipe from the next by it,
+ * whichever of a swipe's events it gets to see.
  */
-expect val PointerEvent.touchpadScrollStage: TouchpadScrollStage?
+expect val PointerEvent.touchpadScroll: TouchpadScroll?

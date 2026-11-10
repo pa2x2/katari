@@ -5,8 +5,8 @@ import androidx.compose.ui.input.pointer.PointerEvent
 import java.awt.Component
 import java.awt.event.MouseWheelEvent
 
-actual val PointerEvent.touchpadScrollStage: TouchpadScrollStage?
-    get() = (awtEventOrNull as? TouchpadWheelEvent)?.stage
+actual val PointerEvent.touchpadScroll: TouchpadScroll?
+    get() = (awtEventOrNull as? TouchpadWheelEvent)?.scroll
 
 /**
  * The wheel event a step of a touchpad's two-finger scroll reaches the window as, made by the app from the display's
@@ -27,7 +27,7 @@ class TouchpadWheelEvent(
     yOnScreen: Int,
     rotation: Double,
     val pixels: Double,
-    val stage: TouchpadScrollStage,
+    val scroll: TouchpadScroll,
 ) : MouseWheelEvent(
     source,
     MOUSE_WHEEL,

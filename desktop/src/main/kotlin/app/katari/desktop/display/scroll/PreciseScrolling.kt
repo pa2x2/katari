@@ -1,6 +1,6 @@
 package app.katari.desktop.display.scroll
 
-import app.katari.presentation.kit.pointer.TouchpadScrollStage
+import app.katari.presentation.kit.pointer.TouchpadScroll
 import app.katari.presentation.kit.pointer.TouchpadWheelEvent
 import java.awt.AWTEvent
 import java.awt.Component
@@ -37,8 +37,8 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
     private val verticalNotches = WheelTurn()
     private val horizontalNotches = WheelTurn()
 
-    // The next event of the fingers is their scroll's first
-    private var starting = false
+    // Numbers the fingers' scrolls, for what counts them
+    private var swipe = 0
 
     // What turns a time on the display's clock into AWT's, the system's
     private var clockOffset: Long? = null
@@ -75,10 +75,10 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
             }
             is ScrollMotion.Fingers -> {
                 if (motion.starts) {
-                    starting = true
+                    swipe++
                     vertical.reset()
                     horizontal.reset()
-                    velocity.start(motion.at.timeMillis)
+                    velocity.start()
                 }
                 val x = motion.horizontal * FINGER_GAIN
                 val y = motion.vertical * FINGER_GAIN
@@ -125,12 +125,6 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
     }
 
     private fun fingersEvent(at: ScrollPoint, pixels: Double, gliding: Boolean, sideways: Boolean): MouseWheelEvent {
-        val stage = when {
-            gliding -> TouchpadScrollStage.Glide
-            starting -> TouchpadScrollStage.Start
-            else -> TouchpadScrollStage.Move
-        }
-        starting = false
         val scale = awtScale()
         val insets = window.insets
         val extent = if (sideways) {
@@ -152,7 +146,7 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
             yOnScreen = place.yOnScreen,
             rotation = pixels / pixelsPerRotation,
             pixels = pixels,
-            stage = stage,
+            scroll = TouchpadScroll(swipe, gliding),
         )
     }
 

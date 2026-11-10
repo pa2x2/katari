@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test
 class ScrollGlideTest {
     // Fingers moving the content down at 1500 pixels a second, reported every 8 ms
     private fun flick(velocity: FingerVelocity): Long {
-        velocity.start(0)
+        velocity.start()
         for (time in 8L..160L step 8) velocity.add(time, 0.0, 12.0)
         return 160
     }
 
     @Test
-    fun `a flick glides on by its speed and comes to rest, and fingers that rested before lifting leave no glide`() {
+    fun `a flick glides on by its speed and comes to rest, and fingers that rested or only brushed leave no glide`() {
         val velocity = FingerVelocity()
         val last = flick(velocity)
 
@@ -29,5 +29,12 @@ class ScrollGlideTest {
 
         val (restedX, restedY) = velocity.atLift(last + 150)
         ScrollGlide.from(restedX, restedY) shouldBe null
+
+        // Two steps of leaving fingers, 16 pixels in 8 ms: fast, but for no time
+        velocity.start()
+        velocity.add(1_004, 0.0, 8.0)
+        velocity.add(1_008, 0.0, 8.0)
+        val (brushedX, brushedY) = velocity.atLift(1_012)
+        ScrollGlide.from(brushedX, brushedY) shouldBe null
     }
 }

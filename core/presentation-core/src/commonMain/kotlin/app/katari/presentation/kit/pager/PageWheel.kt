@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
-import app.katari.presentation.kit.pointer.touchpadScrollStage
+import app.katari.presentation.kit.pointer.touchpadScroll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -38,7 +38,7 @@ internal fun Modifier.pageWheel(
                 val along = if (orientation == Orientation.Vertical) delta.y else delta.x
                 if (along == 0f) continue
                 change.consume()
-                turns.onScroll(Offset(along, 0f), change.uptimeMillis, event.touchpadScrollStage) { notches ->
+                turns.onScroll(Offset(along, 0f), change.uptimeMillis, event.touchpadScroll) { notches ->
                     val step = notches.x.toInt()
                     // A turn under way already counts, so a quick next swipe goes on from the page it is turning to
                     val from = if (state.isScrollInProgress) state.targetPage else state.currentPage

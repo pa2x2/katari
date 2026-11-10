@@ -1,7 +1,7 @@
 package app.katari.presentation.kit.pager
 
 import androidx.compose.ui.geometry.Offset
-import app.katari.presentation.kit.pointer.TouchpadScrollStage
+import app.katari.presentation.kit.pointer.TouchpadScroll
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -10,9 +10,9 @@ class WheelTurnsTest {
     private var pages = 0
     private var now = 0L
 
-    private fun scroll(gapMillis: Long, notches: Float = 1f, stage: TouchpadScrollStage? = null) {
+    private fun scroll(gapMillis: Long, notches: Float = 1f, touchpad: TouchpadScroll? = null) {
         now += gapMillis
-        turns.onScroll(Offset(0f, notches), now, stage) { counted ->
+        turns.onScroll(Offset(0f, notches), now, touchpad) { counted ->
             val whole = counted.y.toInt()
             pages += whole
             Offset(0f, whole.toFloat())
@@ -43,18 +43,28 @@ class WheelTurnsTest {
     }
 
     @Test
-    fun `a swipe that cuts the last one's glide short turns the next page, where the touchpad's stages are known`() {
-        fun fingers() {
-            scroll(8, notches = 0.6f, stage = TouchpadScrollStage.Start)
-            repeat(4) { scroll(8, notches = 0.6f, stage = TouchpadScrollStage.Move) }
-        }
+    fun `a touchpad's swipe turns one page whatever follows it, and the next swipe the next, even into its glide`() {
+        fun fingers(swipe: Int, steps: Int, notches: Float = 0.6f) =
+            repeat(steps) { scroll(8, notches, TouchpadScroll(swipe, gliding = false)) }
 
-        fingers()
-        repeat(10) { scroll(8, notches = 0.3f, stage = TouchpadScrollStage.Glide) }
+        fun glide(swipe: Int) = repeat(25) { scroll(8, notches = 0.3f, TouchpadScroll(swipe, gliding = true)) }
+
+        fingers(swipe = 1, steps = 5)
+        glide(swipe = 1)
         pages shouldBe 1
 
         // No gap tells this swipe from the glide it follows
-        fingers()
+        fingers(swipe = 2, steps = 5)
+        pages shouldBe 2
+
+        // The display ends the scroll and starts another under fingers that never lifted
+        fingers(swipe = 3, steps = 5)
+        pages shouldBe 2
+
+        // The leaving fingers brush the touchpad: a short scroll of its own, fast enough to leave a glide
+        now += 300
+        fingers(swipe = 4, steps = 2, notches = 0.1f)
+        glide(swipe = 4)
         pages shouldBe 2
     }
 }

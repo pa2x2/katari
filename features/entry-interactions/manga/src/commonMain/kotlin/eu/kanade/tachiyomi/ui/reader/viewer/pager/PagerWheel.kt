@@ -8,7 +8,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import app.katari.presentation.kit.pager.WheelTurns
-import app.katari.presentation.kit.pointer.touchpadScrollStage
+import app.katari.presentation.kit.pointer.touchpadScroll
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlin.math.abs
 import kotlin.math.pow
@@ -40,7 +40,7 @@ internal fun Modifier.pagerWheel(
                 turns.reset()
                 continue
             }
-            if (!ctrl) turns.onScroll(delta, change.uptimeMillis, event.touchpadScrollStage, viewer::turnBy)
+            if (!ctrl) turns.onScroll(delta, change.uptimeMillis, event.touchpadScroll, viewer::turnBy)
         }
     }
 }

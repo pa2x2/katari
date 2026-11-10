@@ -42,18 +42,15 @@ internal class ScrollGlide private constructor(private val velocityX: Double, pr
 
 /**
  * The speed content moves at as a touchpad's fingers lift, from the steps they moved it by just before: the distance
- * of the last [WINDOW_MS] over that time, so fingers that rested before lifting leave none.
+ * of the last [WINDOW_MS] over that time, so fingers that rested before lifting leave none, and neither do fingers
+ * that only brushed the touchpad, whose few steps are a fast scroll by themselves but none over that time.
  */
 internal class FingerVelocity {
     private class Step(val timeMillis: Long, val x: Double, val y: Double)
 
     private val steps = ArrayDeque<Step>()
-    private var startedAt = 0L
 
-    fun start(timeMillis: Long) {
-        steps.clear()
-        startedAt = timeMillis
-    }
+    fun start() = steps.clear()
 
     fun add(timeMillis: Long, x: Double, y: Double) {
         steps += Step(timeMillis, x, y)
@@ -63,16 +60,12 @@ internal class FingerVelocity {
     /** Pixels a second along each axis for fingers lifting at [timeMillis]. */
     fun atLift(timeMillis: Long): Pair<Double, Double> {
         val recent = steps.filter { it.timeMillis >= timeMillis - WINDOW_MS }
-        // A scroll shorter than the window took only as long as it lasted
-        val seconds = (timeMillis - startedAt).coerceIn(SHORTEST_MS, WINDOW_MS) / MILLIS
+        val seconds = WINDOW_MS / MILLIS
         return recent.sumOf { it.x } / seconds to recent.sumOf { it.y } / seconds
     }
 
     private companion object {
         const val WINDOW_MS = 80L
-
-        // Two reports of a touchpad apart, below which a speed is noise
-        const val SHORTEST_MS = 16L
         const val MILLIS = 1_000.0
     }
 }
