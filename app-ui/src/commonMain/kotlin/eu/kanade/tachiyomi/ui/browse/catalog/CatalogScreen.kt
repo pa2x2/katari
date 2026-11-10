@@ -60,6 +60,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.search.EntryGenreSearchOrigin
+import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -144,6 +145,8 @@ data class CatalogScreen(
         LaunchedEffect(immersiveAvailable) {
             if (!immersiveAvailable) immersiveMode = false
         }
+
+        HideHomeNavigation(hidden = immersiveMode)
 
         val onWebViewClick = viewModel.homeUrl?.takeIf { webViewDestination.isAvailable }?.let { url ->
             {

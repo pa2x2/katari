@@ -118,7 +118,8 @@ object HomeScreen : Screen(), EntrySearchOrigin {
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 // A wide window shows these beside every screen instead, through HomeSideNavigationHost
                 FloatingDockHost(
-                    dockVisible = !currentWindowLayout().usesSideNavigation && !homeNavigation.hiddenByTab,
+                    dockVisible =
+                    !currentWindowLayout().usesSideNavigation && !homeNavigation.hidesNavigation(HomeScreen),
                     dock = {
                         HomeNavigationBar(
                             primaryTabs = navigationConfiguration.primaryTabs,
