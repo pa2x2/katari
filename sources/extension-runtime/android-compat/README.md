@@ -91,8 +91,8 @@ and limited to what extensions use:
   reach the page; the rest are kept and read back. A view an extension forgets closes its page once collected. What a
   page nobody sees can't do, such as history, zoom, find or printing, throws as the stub does, and without the host's
   pages so does the constructor, which reports the source as needing a web view. The touch events an extension
-  dispatches to a web view reach its page as a touchscreen's input, through Chromium's own input, so the page takes them
-  for a person's.
+  dispatches to a web view reach its page as a touchscreen's input, through the DevTools protocol's, so the page takes
+  them for a person's; a stylus or mouse reaches it as a finger.
 - `android/view/InputEvent` and `MotionEvent`, with `MotionEvent`'s `PointerCoords` and `PointerProperties`: the events
   an extension builds with `obtain` to dispatch to its web view, their pointers, axes, actions and times, kept in Java
   fields where AOSP keeps them in a native event. Nothing on desktop reports motion. Events hold no history, so batches,

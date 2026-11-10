@@ -59,6 +59,9 @@ internal class ExtensionBrowser(
     private val calls = Channel<Call>(Channel.UNLIMITED)
     private val closed = AtomicBoolean(false)
     private val bridges = ExtensionBridges()
+
+    // Only on the pages' thread
+    private val touchscreen = PageTouchscreen()
     private val loads = PendingLoads()
 
     /** Where the browser paints: nowhere, or a dialog of the app's that shows the page. */
@@ -148,12 +151,11 @@ internal class ExtensionBrowser(
         display.resizeHidden(width, height)
     }
 
-    override fun touch(touch: ExtensionPageTouch) {
-        // Through the browser's own input, so the page's events are trusted as a person's are
-        call { browser.sendTouchEvent(touch.toCefTouchEvent()) }
-    }
-
     // Input methods are sent, not called: the browser process answers them, and JCEF loses such answers
+
+    override fun touch(touch: ExtensionPageTouch) {
+        call { devTools.send("Input.dispatchTouchEvent", touchscreen.event(touch)) }
+    }
 
     override fun insertText(text: String) {
         call { devTools.send("Input.insertText", buildJsonObject { put("text", text) }) }

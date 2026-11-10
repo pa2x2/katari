@@ -57,7 +57,10 @@ interface ExtensionPage {
     /** Lays the page out in a window of [width] by [height] CSS pixels instead of a desktop window's. */
     fun resize(width: Int, height: Int)
 
-    /** Hands the page [touch] as a touchscreen's input, which its documents can't tell from a person's own. */
+    /**
+     * Hands the page [touch] as a touchscreen's input, which its documents can't tell from a person's own. Whatever
+     * its tool, the page takes it for a finger's.
+     */
     fun touch(touch: ExtensionPageTouch)
 
     /** Enters [text] into the focused field as a keyboard's own text entry does; nothing where none has the focus. */
