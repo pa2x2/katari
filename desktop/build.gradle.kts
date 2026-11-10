@@ -138,6 +138,14 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+// Libraries that come with parts of the app's libraries it never reaches
+configurations.implementation {
+    // Batik, with which moko-resources draws image resources kept as SVG; the app keeps only its strings there
+    exclude(group = "org.apache.xmlgraphics")
+    // Material 2, for the rich text editor's Material 2 fields; the app shows its Material 3 ones
+    exclude(group = "org.jetbrains.compose.material", module = "material")
+}
+
 compose.desktop.application {
     mainClass = "app.katari.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
