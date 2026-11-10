@@ -25,6 +25,7 @@ internal class VideoPlayerWatchActions(
     val seekStep: (VideoPlayerSeekDirection) -> Unit,
     val toggleFullScreen: () -> Unit,
     val openEpisodes: () -> Unit,
+    val dismissEpisodes: () -> Unit,
 
     /** Presses Skip, which does nothing while nothing is offered. */
     val skip: () -> Unit,
