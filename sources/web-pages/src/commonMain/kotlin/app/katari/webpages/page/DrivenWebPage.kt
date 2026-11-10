@@ -47,8 +47,12 @@ internal class DrivenWebPage private constructor(
     private val host: HostPage,
     private val headers: Map<String, String>,
     private val responses: SharedFlow<WebPageResponse>,
+    private val expressions: ExpressionValues,
+    private val promises: SharedFlow<ExpressionValues.Settled>,
     private val lost: Job,
 ) : WebPage {
+    private var expressionsRun = 0
+
     val isLost: Boolean
         get() = lost.isCompleted
 
@@ -65,7 +69,8 @@ internal class DrivenWebPage private constructor(
         }
     }
 
-    override suspend fun evaluate(script: String): String {
+    override suspend fun evaluate(script: String, timeout: Duration): String {
+        valueOfExpression(script, timeout)?.let { return it }
         val value = run(guarded(script))
         if (value.startsWith(THROWN_START)) {
             val thrown = (runCatching { Json.parseToJsonElement(value) }.getOrNull() as? JsonObject)?.get(THROWN)
@@ -165,6 +170,28 @@ internal class DrivenWebPage private constructor(
                 response.cancel()
                 throw WebPageException("The page received no response the source waited $timeout for")
             }
+    }
+
+    /** The value of [script] run as one expression, a promise's once it settled; null where it isn't one. */
+    private suspend fun valueOfExpression(script: String, timeout: Duration): String? = whileOpen {
+        val id = ++expressionsRun
+        // Subscribed before the script runs, as the flow keeps nothing for a late subscriber
+        val settled = async(start = CoroutineStart.UNDISPATCHED) { promises.first { it.id == id }.outcome }
+        val started = expressions.started(host.evaluate(expressions.script(script, id)))
+        val outcome = if (started == ExpressionValues.Outcome.Pending) {
+            withTimeoutOrNull(timeout) { settled.await() } ?: run {
+                settled.cancel()
+                throw WebPageException("The script's promise didn't settle in $timeout")
+            }
+        } else {
+            settled.cancel()
+            started as ExpressionValues.Outcome.Final?
+        }
+        when (outcome) {
+            null -> null
+            is ExpressionValues.Outcome.Value -> outcome.json
+            is ExpressionValues.Outcome.Threw -> throw WebPageException("The script threw ${outcome.text}")
+        }
     }
 
     private suspend fun run(script: String): String = whileOpen { host.evaluate(script) }
@@ -380,6 +407,11 @@ internal class DrivenWebPage private constructor(
                 extraBufferCapacity = RESPONSES_HELD,
                 onBufferOverflow = BufferOverflow.DROP_OLDEST,
             )
+            val expressions = ExpressionValues(capture.channel)
+            val promises = MutableSharedFlow<ExpressionValues.Settled>(
+                extraBufferCapacity = RESPONSES_HELD,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            )
             val lost = Job()
             val host = pages.open(
                 HostPageSettings(
@@ -392,6 +424,7 @@ internal class DrivenWebPage private constructor(
                 object : HostPageEvents {
                     override fun onMessage(message: String) {
                         capture.read(message)?.let(responses::tryEmit)
+                            ?: expressions.read(message)?.let(promises::tryEmit)
                     }
 
                     override fun onGone() {
@@ -399,7 +432,7 @@ internal class DrivenWebPage private constructor(
                     }
                 },
             )
-            return DrivenWebPage(host, spec.headers, responses, lost)
+            return DrivenWebPage(host, spec.headers, responses, expressions, promises, lost)
         }
     }
 }

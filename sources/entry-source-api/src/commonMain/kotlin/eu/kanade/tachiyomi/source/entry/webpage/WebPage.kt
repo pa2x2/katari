@@ -23,13 +23,19 @@ interface WebPage {
 
     /**
      * Runs [script] in the page as its own scripts run and returns the value of its last statement as JSON: a string
-     * in quotes, `null` where there is no value JSON can hold. A promise isn't waited for, and what the script
-     * declares with `let` or `const` is gone when it returns.
+     * in quotes, `null` where there is no value JSON can hold. What the script declares with `let` or `const` is gone
+     * when it returns.
      *
-     * Fails with what the script threw. A script the page can't read as JavaScript fails with the reason too, except
-     * on a site whose content security policy keeps the page from finding it, where it gives `null`.
+     * Where the script is one expression and its value a promise, the promise is waited for and what it resolves to
+     * is returned: `fetch(url).then(response => response.text())`, or an async function called on the spot,
+     * `(async () => { … })()`, for more than one step. A promise that a script of several statements ends with isn't
+     * waited for, and comes back as `{}`.
+     *
+     * Fails with what the script threw or its promise was rejected with, and where the promise hasn't settled after
+     * [timeout]. A script the page can't read as JavaScript fails with the reason too, except on a site whose content
+     * security policy keeps the page from finding it, where it gives `null`.
      */
-    suspend fun evaluate(script: String): String
+    suspend fun evaluate(script: String, timeout: Duration = 30.seconds): String
 
     /** The page as it stands now, with what its scripts rendered. */
     suspend fun document(): Document

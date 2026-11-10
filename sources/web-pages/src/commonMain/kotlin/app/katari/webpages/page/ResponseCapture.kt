@@ -9,7 +9,6 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-import java.security.SecureRandom
 
 /**
  * How a page's responses reach the app: [script], run before the document's own scripts, wraps `fetch` and
@@ -117,11 +116,5 @@ internal class ResponseCapture {
     private companion object {
         const val CHANNEL_LETTERS = 12
         const val SECRET_LETTERS = 24
-        const val ALPHABET = "abcdefghijklmnopqrstuvwxyz"
-
-        fun randomLetters(count: Int): String {
-            val random = SecureRandom()
-            return buildString { repeat(count) { append(ALPHABET[random.nextInt(ALPHABET.length)]) } }
-        }
     }
 }
