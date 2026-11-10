@@ -2777,9 +2777,9 @@
     <string name="information_webview_crashed">WebView stopped working and the page was closed</string>
     <string name="webview_setup_title">Set up WebView</string>
     <string name="webview_setup_message">Some sources need WebView to load pages or pass site checks. Katari runs it on Chromium, which it downloads once.</string>
-    <string name="webview_setup_size">Downloads %1$s once and uses %2$s on disk</string>
-    <string name="webview_setup_wait">WebView works once the download finishes</string>
-    <string name="webview_setup_updates">A Katari update can need a new download</string>
+    <string name="webview_setup_download_size">Download</string>
+    <string name="webview_setup_disk_size">On disk</string>
+    <string name="webview_setup_updates">A Katari update can need a new download.</string>
     <string name="webview_setup_downloading">Downloading Chromium · %1$s of %2$s</string>
     <string name="webview_setup_unpacking">Unpacking Chromium</string>
     <string name="webview_setup_failed">WebView couldn\'t be set up. %1$s</string>

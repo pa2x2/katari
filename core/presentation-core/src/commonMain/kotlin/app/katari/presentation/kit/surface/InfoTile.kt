@@ -20,11 +20,15 @@ import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.list.LocalInRowGroup
 import app.katari.presentation.kit.list.LocalRowGroupContainer
+import app.katari.presentation.kit.list.rowGroupEdgeInset
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
-/** A row of [InfoTile]s sharing the width and the tallest tile's height, such as an extension's version and language. */
+/**
+ * A row of [InfoTile]s sharing the width and the tallest tile's height, such as an extension's version and language,
+ * or what a download costs in a dialog. It lines up with the row group cards beside it, or with a dialog's text.
+ */
 @Composable
 fun InfoTileRow(
     modifier: Modifier = Modifier,
@@ -34,7 +38,7 @@ fun InfoTileRow(
         modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
-            .padding(horizontal = KatariTheme.spacing.m),
+            .padding(horizontal = rowGroupEdgeInset()),
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         content = tiles,
     )

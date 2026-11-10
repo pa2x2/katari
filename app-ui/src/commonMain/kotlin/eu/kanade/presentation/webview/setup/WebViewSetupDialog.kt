@@ -9,7 +9,9 @@ import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.dialog.Dialog
 import app.katari.presentation.kit.dialog.DialogAction
-import app.katari.presentation.kit.list.InfoRow
+import app.katari.presentation.kit.surface.InfoTile
+import app.katari.presentation.kit.surface.InfoTileRow
+import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
@@ -18,7 +20,7 @@ import tachiyomi.presentation.core.i18n.shortFileSize
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Asks before the web view's Chromium is downloaded, saying what the download costs: its size, the wait, and that an
+ * Asks before the web view's Chromium is downloaded, saying what the download costs: its size on tiles, and that an
  * update of the app can need another. [onDownload] follows the user agreeing, [onDismiss] putting it off.
  */
 @Composable
@@ -31,18 +33,24 @@ fun WebViewSetupDialog(setup: WebViewSetup, onDownload: () -> Unit, onDismiss: (
     ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
         ) {
             Text(stringResource(MR.strings.webview_setup_message), role = TextRole.Body)
-            InfoRow(
-                text = stringResource(
-                    MR.strings.webview_setup_size,
-                    shortFileSize(setup.downloadBytes),
-                    shortFileSize(setup.installedBytes),
-                ),
+            InfoTileRow {
+                InfoTile(
+                    value = shortFileSize(setup.downloadBytes),
+                    label = stringResource(MR.strings.webview_setup_download_size),
+                )
+                InfoTile(
+                    value = shortFileSize(setup.installedBytes),
+                    label = stringResource(MR.strings.webview_setup_disk_size),
+                )
+            }
+            Text(
+                stringResource(MR.strings.webview_setup_updates),
+                role = TextRole.Supporting,
+                tone = ContentTone.Secondary,
             )
-            InfoRow(stringResource(MR.strings.webview_setup_wait))
-            InfoRow(stringResource(MR.strings.webview_setup_updates))
         }
     }
 }
