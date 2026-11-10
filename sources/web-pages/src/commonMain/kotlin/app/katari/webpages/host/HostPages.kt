@@ -1,9 +1,11 @@
 package app.katari.webpages.host
 
+import app.katari.core.common.platform.PlatformFacility
 import eu.kanade.tachiyomi.source.entry.webpage.WebPageException
 import eu.kanade.tachiyomi.source.entry.webpage.WebPageKey
 
 /** A platform's web view as the keeper needs it: pages nobody sees, each laid out at a size of its own. */
+@PlatformFacility
 interface HostPages {
     /**
      * A page that has loaded nothing yet.

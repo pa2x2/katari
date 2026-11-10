@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -139,6 +140,20 @@ class WebPageKeeperTest {
         }
 
         response.body shouldBe "[1,2]"
+    }
+
+    // Leaving a screen cancels the source's call at any moment, and the page stays for the next one
+    @Test
+    fun `a call cancelled in the middle of a tap still lifts the finger`() = runTest {
+        val keeper = keeper()
+        val source = FakeWebPageSource(1)
+
+        val call = launch { keeper.use(source, "main") { page -> page.click("#open") } }
+        advanceTimeBy(FakeHostPage.TAP_HELD / 2)
+        pages.opened[0].isFingerDown shouldBe true
+        call.cancelAndJoin()
+
+        pages.opened[0].isFingerDown shouldBe false
     }
 
     @Test

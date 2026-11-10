@@ -31,7 +31,8 @@ interface WebPageSource : UnifiedSource {
  * that must work on two routes at once gives the second page another name; Katari keeps few pages per source and
  * fails the call for one more.
  *
- * [page] must not be used after [block] returns.
+ * [page] must not be used after [block] returns, and [block] must not ask for the page it runs on again, which would
+ * wait for itself.
  *
  * @throws WebPageException where no page can be made, such as without a web view.
  */

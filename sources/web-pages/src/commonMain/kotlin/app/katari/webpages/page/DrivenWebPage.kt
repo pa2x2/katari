@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.source.entry.webpage.WebPageSpec
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -75,7 +77,8 @@ internal class DrivenWebPage private constructor(
         val x = middle?.getOrNull(0)?.jsonPrimitive?.floatOrNull
         val y = middle?.getOrNull(1)?.jsonPrimitive?.floatOrNull
         if (x == null || y == null) throw unmatched(selector)
-        whileOpen { host.tap(x, y) }
+        // A call cancelled between the press and the lift would leave a finger on the page for the next call to find
+        whileOpen { withContext(NonCancellable) { host.tap(x, y) } }
     }
 
     override suspend fun type(selector: String, text: String) {

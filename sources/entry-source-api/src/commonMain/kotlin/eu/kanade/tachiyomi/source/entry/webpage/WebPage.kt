@@ -32,7 +32,8 @@ interface WebPage {
 
     /**
      * Scrolls the element into view and taps its middle as a finger would, which the page can't tell from a person's
-     * tap; a click made by script, it can.
+     * tap; a click made by script, it can. Returns once the tap is made, before the page answered it: wait for what
+     * the tap brings with [awaitSelector], [awaitUrl] or [responseTo].
      */
     suspend fun click(selector: String)
 
