@@ -7,6 +7,7 @@ import app.katari.desktop.notification.NotificationAction
 import app.katari.desktop.notification.NotificationProgress
 import app.katari.desktop.notification.NotificationResponse
 import app.katari.desktop.notification.NotificationUrgency
+import app.katari.notification.AppNotificationKind
 import app.katari.sourcemigration.session.model.SourceMigrationSessionId
 import app.katari.sourcemigration.work.SourceMigrationWorkScheduler
 import dev.icerock.moko.resources.StringResource
@@ -70,6 +71,7 @@ class DesktopSourceMigrationNotifier(
         showResult(
             sessionId,
             DesktopNotification(
+                kind = AppNotificationKind.SOURCE_MIGRATION_COMPLETE,
                 title = stringResource(MR.strings.sourceMigration_notification_reviewReadyTitle),
                 body = stringResource(MR.strings.sourceMigration_notification_reviewReadyText, completed),
                 onClick = NotificationResponse.Open(HomeDestination.SourceMigrationReview(sessionId)),
@@ -81,6 +83,7 @@ class DesktopSourceMigrationNotifier(
         showResult(
             sessionId,
             DesktopNotification(
+                kind = AppNotificationKind.SOURCE_MIGRATION_COMPLETE,
                 title = stringResource(MR.strings.sourceMigration_notification_completeTitle),
                 body = stringResource(MR.strings.sourceMigration_notification_completeText, migrated, attention),
             ),
@@ -106,6 +109,7 @@ class DesktopSourceMigrationNotifier(
         notifications.show(
             progressKey(sessionId),
             DesktopNotification(
+                kind = AppNotificationKind.SOURCE_MIGRATION_PROGRESS,
                 title = stringResource(title),
                 body = text,
                 progress = progress,

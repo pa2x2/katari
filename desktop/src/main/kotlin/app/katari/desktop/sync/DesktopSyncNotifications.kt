@@ -4,6 +4,7 @@ import app.katari.desktop.home.HomeDestination
 import app.katari.desktop.notification.DesktopNotification
 import app.katari.desktop.notification.DesktopNotifications
 import app.katari.desktop.notification.NotificationResponse
+import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.ui.notice.SyncNotifications
 import dev.zacsweers.metro.Inject
@@ -26,6 +27,7 @@ class DesktopSyncNotifications(private val notifications: DesktopNotifications) 
         notifications.show(
             QUESTIONS,
             DesktopNotification(
+                kind = AppNotificationKind.SYNC,
                 title = stringResource(MR.strings.sync_title),
                 body = pluralStringResource(MR.plurals.sync_questions_waiting, count, count),
                 onClick = NotificationResponse.Open(HomeDestination.SyncQuestions),
@@ -47,7 +49,12 @@ class DesktopSyncNotifications(private val notifications: DesktopNotifications) 
         }
         notifications.show(
             STOPPED,
-            DesktopNotification(title, body, onClick = NotificationResponse.Open(HomeDestination.SyncPage)),
+            DesktopNotification(
+                kind = AppNotificationKind.SYNC,
+                title,
+                body,
+                onClick = NotificationResponse.Open(HomeDestination.SyncPage),
+            ),
         )
     }
 

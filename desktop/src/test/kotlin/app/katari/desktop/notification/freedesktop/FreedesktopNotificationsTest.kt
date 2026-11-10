@@ -4,6 +4,7 @@ import app.katari.desktop.notification.DesktopNotification
 import app.katari.desktop.notification.NotificationProgress
 import app.katari.desktop.notification.NotificationResponse
 import app.katari.desktop.notification.SystemNotifications
+import app.katari.notification.AppNotificationKind
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -28,7 +29,7 @@ class FreedesktopNotificationsTest {
         val server = FakeServer()
         val notifications = notifications(server, Listener())
 
-        notifications.show("result", DesktopNotification(title = "New chapters"))
+        notifications.show("result", DesktopNotification(kind = AppNotificationKind.COMMON, title = "New chapters"))
         val updates = (1..4).map {
             thread {
                 repeat(50) { done -> notifications.show("progress", progress(done)) }
@@ -50,11 +51,11 @@ class FreedesktopNotificationsTest {
         val listener = Listener()
         val notifications = notifications(server, listener)
 
-        notifications.show("updates", DesktopNotification(title = "New chapters"))
+        notifications.show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "New chapters"))
         listener.unshown.poll(WAIT, TimeUnit.SECONDS)?.title shouldBe "New chapters"
 
         server.start()
-        notifications.show("updates", DesktopNotification(title = "More chapters"))
+        notifications.show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "More chapters"))
         notifications.close()
 
         listener.unshown.toList().shouldBeEmpty()
@@ -82,7 +83,7 @@ class FreedesktopNotificationsTest {
     fun `a later run replaces the result an earlier one left and takes away the work under way a crashed one left`() {
         val server = FakeServer()
         notifications(server, Listener()).apply {
-            show("updates", DesktopNotification(title = "2 updates"))
+            show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "2 updates"))
             close()
         }
         // A run that crashed while work was under way
@@ -96,7 +97,7 @@ class FreedesktopNotificationsTest {
 
         notifications(server, Listener()).apply {
             resume()
-            show("updates", DesktopNotification(title = "3 updates"))
+            show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "3 updates"))
             close()
         }
 
@@ -107,14 +108,14 @@ class FreedesktopNotificationsTest {
     fun `after the server restarted, a later run posts anew instead of replacing what took over its old id`() {
         val server = FakeServer()
         notifications(server, Listener()).apply {
-            show("updates", DesktopNotification(title = "2 updates"))
+            show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "2 updates"))
             close()
         }
         server.restart()
         server.notify(serverNotification("Another app's"), replacesId = 0)
 
         notifications(server, Listener()).apply {
-            show("updates", DesktopNotification(title = "3 updates"))
+            show("updates", DesktopNotification(kind = AppNotificationKind.COMMON, title = "3 updates"))
             close()
         }
 
@@ -136,7 +137,11 @@ class FreedesktopNotificationsTest {
         resident = false,
     )
 
-    private fun progress(done: Int) = DesktopNotification(title = "Progress", progress = NotificationProgress(done, 50))
+    private fun progress(done: Int) = DesktopNotification(
+        kind = AppNotificationKind.COMMON,
+        title = "Progress",
+        progress = NotificationProgress(done, 50),
+    )
 
     private class Listener : SystemNotifications.Listener {
         val unshown = LinkedBlockingQueue<DesktopNotification>()

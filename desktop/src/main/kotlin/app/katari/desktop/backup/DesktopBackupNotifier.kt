@@ -8,6 +8,7 @@ import app.katari.desktop.notification.NotificationAction
 import app.katari.desktop.notification.NotificationProgress
 import app.katari.desktop.notification.NotificationResponse
 import app.katari.desktop.notification.NotificationUrgency
+import app.katari.notification.AppNotificationKind
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -76,6 +77,7 @@ class DesktopBackupNotifier(
         notifications.show(
             BACKUP_PROGRESS,
             DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_PROGRESS,
                 title = stringResource(MR.strings.creating_backup),
                 body = text,
                 progress = shownProgress,
@@ -92,7 +94,11 @@ class DesktopBackupNotifier(
         withdrawBackupProgress()
         notifications.show(
             BACKUP_COMPLETE,
-            DesktopNotification(title = stringResource(MR.strings.backup_created), body = displayable(location)),
+            DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_COMPLETE,
+                title = stringResource(MR.strings.backup_created),
+                body = displayable(location),
+            ),
         )
     }
 
@@ -100,7 +106,11 @@ class DesktopBackupNotifier(
         withdrawBackupProgress()
         notifications.show(
             BACKUP_COMPLETE,
-            DesktopNotification(title = stringResource(MR.strings.creating_backup_error), body = error),
+            DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_COMPLETE,
+                title = stringResource(MR.strings.creating_backup_error),
+                body = error,
+            ),
         )
     }
 
@@ -108,6 +118,7 @@ class DesktopBackupNotifier(
         notifications.show(
             RESTORE_PROGRESS,
             DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_PROGRESS,
                 title = stringResource(if (sync) MR.strings.syncing_library else MR.strings.restoring_backup),
                 body = content.takeUnless { securityPreferences.hideNotificationContent.get() },
                 progress = NotificationProgress(progress, maxAmount),
@@ -149,6 +160,7 @@ class DesktopBackupNotifier(
         notifications.show(
             RESTORE_COMPLETE,
             DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_COMPLETE,
                 title = stringResource(if (sync) MR.strings.library_sync_complete else MR.strings.restore_completed),
                 body = listOfNotNull(message, profiles).joinToString("\n"),
                 onClick = errorLog,
@@ -163,7 +175,11 @@ class DesktopBackupNotifier(
         withdrawRestoreProgress()
         notifications.show(
             RESTORE_COMPLETE,
-            DesktopNotification(title = stringResource(MR.strings.restoring_backup_error), body = error),
+            DesktopNotification(
+                kind = AppNotificationKind.BACKUP_RESTORE_COMPLETE,
+                title = stringResource(MR.strings.restoring_backup_error),
+                body = error,
+            ),
         )
     }
 

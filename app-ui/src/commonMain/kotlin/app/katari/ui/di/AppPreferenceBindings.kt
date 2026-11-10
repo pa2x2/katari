@@ -5,6 +5,7 @@ import app.katari.core.common.GlobalCustomPreferences
 import app.katari.core.image.progressive.ProgressiveImagePreferences
 import app.katari.core.metro.BasePreferenceStore
 import app.katari.entry.interactions.translate.EntryTranslatePreferences
+import app.katari.notification.NotificationPreferences
 import app.katari.profiles.core.ProfileStore
 import app.katari.ui.buildinfo.AppBuild
 import app.katari.ui.buildinfo.AppBuildType
@@ -317,6 +318,11 @@ object AppPreferenceBindings {
     fun entryTranslatePreferences(
         @BasePreferenceStore store: PreferenceStore,
     ): EntryTranslatePreferences = EntryTranslatePreferences(store)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun notificationPreferences(@BasePreferenceStore store: PreferenceStore): NotificationPreferences =
+        NotificationPreferences(store)
 
     @Provides
     @SingleIn(AppScope::class)
