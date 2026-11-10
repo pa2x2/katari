@@ -653,6 +653,7 @@
     <string name="reader_text_failed">Text recognition failed: %s</string>
     <string name="reader_text_select_area">Select area</string>
     <string name="reader_text_select_area_hint">Drag over the text to translate</string>
+    <string name="reader_text_cancel_select_area">Cancel area selection</string>
     <string name="reader_text_controls_dock">Move to the screen edge</string>
     <string name="reader_text_controls_expand">Show translation controls</string>
     <string name="reader_text_area_empty">No text found in the selected area</string>
