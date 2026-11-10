@@ -1,0 +1,2 @@
+-- The grid cell where the subtitles rest before they are dragged, such as 'top_center'; null keeps the bottom centre.
+ALTER TABLE playback_preferences ADD COLUMN subtitle_position TEXT;

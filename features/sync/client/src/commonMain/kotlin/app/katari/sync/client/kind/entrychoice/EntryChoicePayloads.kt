@@ -105,4 +105,5 @@ data class PlaybackPreferencesPayload(
     @ProtoNumber(14) val subtitleTextEdge: Stamped<String?>,
     @ProtoNumber(15) val playerEngine: Stamped<String?>,
     @ProtoNumber(16) val serverKey: Stamped<String?>,
+    @ProtoNumber(17) val subtitlePosition: Stamped<String?> = Stamped(null, Stamped.UNKNOWN_EDIT),
 )

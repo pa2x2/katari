@@ -1,14 +1,17 @@
 package eu.kanade.tachiyomi.ui.video.player.subtitle
 
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.SubtitlePosition
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 /**
- * How the viewer wants a title's text subtitles to look. [textSize] is a share of the picture's height, the offsets
- * shares of its width and height the subtitles are dragged by, and the colours ARGB. A title saves it only once it
+ * How the viewer wants a title's text subtitles to look. [position] is where they rest, [textSize] a share of the
+ * picture's height, the offsets shares of its width and height the subtitles are dragged by from there, and the colours
+ * ARGB. A title saves it only once it
  * differs from the default; [normalized] holds every value to what the editor offers.
  */
 internal data class VideoSubtitleAppearance(
+    val position: SubtitlePosition = SubtitlePosition.BOTTOM_CENTER,
     val offsetX: Float = DEFAULT_SUBTITLE_OFFSET_X,
     val offsetY: Float = DEFAULT_SUBTITLE_OFFSET_Y,
     val textSize: Float = DEFAULT_SUBTITLE_TEXT_SIZE,
@@ -39,6 +42,7 @@ internal data class VideoSubtitleAppearance(
 
 internal fun PlaybackPreferences.toSubtitleAppearance(): VideoSubtitleAppearance {
     return VideoSubtitleAppearance(
+        position = subtitlePosition ?: SubtitlePosition.BOTTOM_CENTER,
         offsetX = subtitleOffsetX?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_X,
         offsetY = subtitleOffsetY?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_Y,
         textSize = subtitleTextSize?.toFloat() ?: DEFAULT_SUBTITLE_TEXT_SIZE,
@@ -47,6 +51,11 @@ internal fun PlaybackPreferences.toSubtitleAppearance(): VideoSubtitleAppearance
         backgroundOpacity = subtitleBackgroundOpacity?.toFloat() ?: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
         textEdge = subtitleTextEdge ?: SubtitleTextEdge.OUTLINE,
     ).normalized()
+}
+
+internal fun VideoSubtitleAppearance.toPersistedPosition(): SubtitlePosition? {
+    val normalized = normalized()
+    return normalized.position.takeIf { normalized.isCustomized }
 }
 
 internal fun VideoSubtitleAppearance.toPersistedOffsetX(): Double? {

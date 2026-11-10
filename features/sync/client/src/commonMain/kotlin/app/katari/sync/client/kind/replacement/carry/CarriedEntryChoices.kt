@@ -104,6 +104,7 @@ internal class CarriedEntryChoices(private val carry: ReplacementCarry) {
         subtitleTextEdge = pick(from.subtitleTextEdge, to?.subtitleTextEdge),
         playerEngine = pick(from.playerEngine, to?.playerEngine),
         serverKey = pick(from.serverKey, to?.serverKey),
+        subtitlePosition = pick(from.subtitlePosition, to?.subtitlePosition),
     )
 
     private fun Picks.downloadPreferences(

@@ -17,6 +17,8 @@ data class PlaybackPreferences(
     val subtitleBackgroundOpacity: Double? = null,
     /** Null keeps the outline. */
     val subtitleTextEdge: SubtitleTextEdge? = null,
+    /** Null rests them at the bottom centre. */
+    val subtitlePosition: SubtitlePosition? = null,
     /** Null while the player chooses by itself. */
     val playerEngine: PlayerEngineOverride? = null,
     /** The hint that the mpv add-on would play this title better has been shown; it shows once per title. */
