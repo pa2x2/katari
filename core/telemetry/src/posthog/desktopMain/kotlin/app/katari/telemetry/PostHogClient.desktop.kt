@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 
 internal actual object PostHogClient {
     actual fun setUp(
+        token: String,
         host: TelemetryHost,
         addedProperties: (event: String) -> Map<String, Any>?,
         onActivityResumed: (name: String) -> Unit,
@@ -19,7 +20,7 @@ internal actual object PostHogClient {
             addedProperties(event.event)?.let { added -> event.copy(properties = event.properties + added + session) }
         }
         val config = PostHogConfig(
-            projectToken = PostHogProject.TOKEN,
+            projectToken = token,
             host = PostHogProject.HOST,
             preloadFeatureFlags = false,
             beforeSend = listOf(beforeSend),

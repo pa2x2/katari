@@ -98,7 +98,8 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
-      # Only a tagged release uploads its R8 mapping to PostHog
+      # Carries PostHog to check it builds, but not the project token, so it sends nothing. Only a tagged release
+      # uploads its R8 mapping to PostHog.
       - name: Build app and verify extension runtime ABI
         run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -x uploadPostHogProguardMappingsRelease
 
@@ -127,6 +128,7 @@ jobs:
         with:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
+      # Carries PostHog to check it builds, but not the project token, so it sends nothing
       - name: Build the desktop AppImage
         run: ./gradlew :desktop:packageAppImage -Pdesktop-release -Pinclude-telemetry
 

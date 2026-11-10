@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 
 internal actual object PostHogClient {
     actual fun setUp(
+        token: String,
         host: TelemetryHost,
         addedProperties: (event: String) -> Map<String, Any>?,
         onActivityResumed: (name: String) -> Unit,
@@ -18,7 +19,7 @@ internal actual object PostHogClient {
         val resumedActivity = ResumedActivity(onActivityResumed)
         application.registerActivityLifecycleCallbacks(resumedActivity)
 
-        val config = PostHogAndroidConfig(PostHogProject.TOKEN, PostHogProject.HOST).apply {
+        val config = PostHogAndroidConfig(token, PostHogProject.HOST).apply {
             // Screen views name activities, which say nothing in an app of one activity, and a deep link can carry
             // the address of what someone reads. The day's report counts the days the app is used, in place of an
             // event each time it opens or goes to the background. Push notifications and feature flags aren't used.
