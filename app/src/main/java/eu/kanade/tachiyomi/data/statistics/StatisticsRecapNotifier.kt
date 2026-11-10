@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.statistics
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import app.katari.notification.AppNotificationKind
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
@@ -14,9 +15,9 @@ class StatisticsRecapNotifier(private val context: Context) {
     fun post(recap: DueStatisticsRecap) {
         when (recap) {
             is DueStatisticsRecap.Month ->
-                notify(Notifications.ID_STATISTICS_RECAP, Notifications.CHANNEL_MONTH_RECAP, recap)
+                notify(Notifications.ID_STATISTICS_RECAP, AppNotificationKind.MONTH_RECAP.id, recap)
             is DueStatisticsRecap.Year ->
-                notify(Notifications.ID_STATISTICS_YEAR_RECAP, Notifications.CHANNEL_YEAR_RECAP, recap)
+                notify(Notifications.ID_STATISTICS_YEAR_RECAP, AppNotificationKind.YEAR_RECAP.id, recap)
         }
     }
 

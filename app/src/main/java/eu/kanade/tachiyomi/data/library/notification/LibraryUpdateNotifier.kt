@@ -17,6 +17,8 @@ import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationInput
 import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationItem
 import app.katari.entry.interactions.library.EntryLibraryUpdateNotificationText
 import app.katari.entry.interactions.library.EntryLibraryUpdateQueueWarning
+import app.katari.notification.AppNotificationKind
+import app.katari.notification.LibraryUpdatesNotificationKind
 import coil3.asDrawable
 import coil3.imageLoader
 import coil3.request.ImageRequest
@@ -92,7 +94,7 @@ class LibraryUpdateNotifier(
         cancelIntent: PendingIntent,
         contentIntent: PendingIntent?,
     ): NotificationCompat.Builder {
-        return context.notificationBuilder(Notifications.CHANNEL_LIBRARY_PROGRESS) {
+        return context.notificationBuilder(AppNotificationKind.LIBRARY_PROGRESS.id) {
             setContentTitle(context.stringResource(MR.strings.updating_library))
             setSubText(profile.label)
             setSmallIcon(MaterialSymbolsR.drawable.rounded_refresh)
@@ -235,7 +237,7 @@ class LibraryUpdateNotifier(
         val helpIntent = NotificationHandler.openUrl(context, LibraryUpdateNotifications.LARGE_UPDATE_HELP_URL)
         context.notify(
             Notifications.ID_LIBRARY_SIZE_WARNING,
-            Notifications.CHANNEL_LIBRARY_PROGRESS,
+            AppNotificationKind.LIBRARY_PROGRESS.id,
         ) {
             setContentTitle(context.stringResource(MR.strings.label_warning))
             setSubText(profile.label)
@@ -279,7 +281,7 @@ class LibraryUpdateNotifier(
 
         context.notify(
             Notifications.idLibraryError(profile.id),
-            Notifications.CHANNEL_LIBRARY_ERROR,
+            AppNotificationKind.LIBRARY_ERRORS.id,
         ) {
             setContentTitle(context.pluralStringResource(MR.plurals.notification_update_error, failed, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
@@ -314,7 +316,7 @@ class LibraryUpdateNotifier(
         profile: LibraryUpdateNotificationProfile,
         group: EntryLibraryUpdateNotificationGroup,
     ) {
-        val channelId = Notifications.channelLibraryUpdates(profile.id)
+        val channelId = LibraryUpdatesNotificationKind(profile.id).id
         val groupKey = Notifications.groupLibraryUpdates(profile.id)
         val summaryId = Notifications.idLibraryUpdates(profile.id)
         val childUpdates = group.updates

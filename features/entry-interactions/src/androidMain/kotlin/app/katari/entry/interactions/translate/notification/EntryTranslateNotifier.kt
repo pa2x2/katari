@@ -8,6 +8,7 @@ import app.katari.entry.interactions.download.EntryDownloadNotificationActions
 import app.katari.entry.interactions.translate.EntryTranslateNotifications
 import app.katari.entry.interactions.translate.EntryTranslateWaiting
 import app.katari.entry.interactions.translate.work.EntryTranslateQueueRunner
+import app.katari.notification.AppNotificationKind
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -23,7 +24,7 @@ internal class EntryTranslateNotifier(
     val notificationId = EntryTranslateNotifications.ID_PROGRESS
 
     fun notification(active: EntryTranslateQueueRunner.Active?, waiting: EntryTranslateWaiting?): Notification =
-        NotificationCompat.Builder(context, EntryTranslateNotifications.CHANNEL_PROGRESS)
+        NotificationCompat.Builder(context, AppNotificationKind.TRANSLATION_PROGRESS.id)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle(context.stringResource(MR.strings.translate_notifier_title))
             .setOngoing(true)
@@ -55,7 +56,7 @@ internal class EntryTranslateNotifier(
     }
 
     fun showPaused() {
-        val notification = NotificationCompat.Builder(context, EntryTranslateNotifications.CHANNEL_PROGRESS)
+        val notification = NotificationCompat.Builder(context, AppNotificationKind.TRANSLATION_PROGRESS.id)
             .setSmallIcon(android.R.drawable.ic_media_pause)
             .setContentTitle(context.stringResource(MR.strings.translate_notifier_paused))
             .setOnlyAlertOnce(true)
