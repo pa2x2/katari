@@ -64,6 +64,13 @@ class SyncPreferences(profileStore: ProfileStore) {
     val askBeforeNewProfiles: Preference<Boolean> =
         store.getBoolean(Preference.appStateKey("sync_ask_before_new_profiles"), false)
 
+    /**
+     * Whether this device has kept the extensions it installs ([app.katari.sync.client.extension.InstalledExtensionLog])
+     * before. App state, so a backup restored elsewhere doesn't make that device's first extensions look new.
+     */
+    val installedExtensionsKept: Preference<Boolean> =
+        store.getBoolean(Preference.appStateKey("sync_installed_extensions_kept"), false)
+
     companion object {
         /** The intervals background syncs run at, in minutes; Android runs periodic work at least 15 minutes apart. */
         val BACKGROUND_INTERVALS = listOf(15, 30, 60, 180, 360, 720, 1440)

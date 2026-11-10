@@ -220,6 +220,11 @@ SELECT index_url, name, badge_label, signing_key, contact_website, contact_disco
 FROM extension_store
 WHERE index_url = :indexUrl;
 
+extensionInstallRow:
+SELECT pkg_name, installed, changed_at
+FROM extension_installs
+WHERE pkg_name = :pkgName;
+
 -- The stable identity of the source this device stores under :localKey, for preferences that name sources.
 sourceIdentity:
 SELECT id_scheme, external_id

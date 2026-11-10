@@ -22,6 +22,7 @@ import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.dialog.DialogAction
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.CheckRow
+import app.katari.presentation.kit.list.RowGroupAction
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.list.RowGroupNote
 import app.katari.presentation.kit.list.SettingsRow
@@ -43,8 +44,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Installs the extensions the library's titles need, or trusts those installed on the device but not trusted in this
- * app, from the Library card, the Sync page, Browse → Extensions or the first-run guide. Installs go on after it
- * closes. [onOpenStores] opens Extension stores, where a store that lists one is added.
+ * app, and installs and uninstalls what the account's other devices did, from the Library cards, the Sync page,
+ * Browse → Extensions or the first-run guide. Installs go on after it closes. [onOpenStores] opens Extension stores,
+ * where a store that lists one is added.
  */
 @Composable
 fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Unit) {
@@ -59,9 +61,9 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
 
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            SheetHeader(title = stringResource(MR.strings.missing_extensions_title))
-            RowGroupNote(stringResource(MR.strings.missing_extensions_note))
+            SheetHeader(title = stringResource(MR.strings.missing_extensions_sheet_title))
             val current = state ?: return@Column
+            if (current.hasMissing) RowGroupNote(stringResource(MR.strings.missing_extensions_note))
             RowList(modifier = Modifier.fillMaxWidth().weight(1f, fill = false)) {
                 if (current.untrusted.isNotEmpty()) {
                     item(key = "untrusted") { RowGroupHeader(stringResource(MR.strings.missing_extensions_untrusted)) }
@@ -73,6 +75,55 @@ fun MissingExtensionsSheet(onDismissRequest: () -> Unit, onOpenStores: () -> Uni
                     item(key = "ready") { RowGroupHeader(stringResource(MR.strings.missing_extensions_ready)) }
                     rowGroupItems(current.installable, key = { it.extension.key }) { row ->
                         InstallableRow(row, current, onTickedChange = { model.setTicked(row.extension.key, it) })
+                    }
+                }
+                if (current.otherInstalls.isNotEmpty()) {
+                    item(key = "other-installs") {
+                        RowGroupHeader(stringResource(MR.strings.other_device_extensions_installs))
+                    }
+                    rowGroupItems(current.otherInstalls, key = { "other-install-${it.extension.pkgName}" }) { row ->
+                        OtherInstallRow(row, onTickedChange = { model.setTicked(row.extension.pkgName, it) })
+                    }
+                    if (current.otherInstalls.any { !it.ticked && !it.installed }) {
+                        item(key = "other-installs-decline") {
+                            RowGroupAction(
+                                stringResource(MR.strings.other_device_extensions_dont_suggest),
+                                model::declineInstalls,
+                            )
+                        }
+                    }
+                }
+                if (current.otherUninstalls.isNotEmpty()) {
+                    item(key = "other-uninstalls") {
+                        RowGroupHeader(
+                            text = stringResource(MR.strings.other_device_extensions_uninstalls),
+                            actions = if (current.toUninstall > 0) {
+                                {
+                                    Button(
+                                        label = pluralStringResource(
+                                            MR.plurals.other_device_extensions_uninstall,
+                                            current.toUninstall,
+                                            current.toUninstall,
+                                        ),
+                                        onClick = model::uninstallOffered,
+                                        destructive = true,
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                    rowGroupItems(current.otherUninstalls, key = { "other-uninstall-${it.extension.pkgName}" }) { row ->
+                        UninstallRow(row, onTickedChange = { model.setUninstallTicked(row.extension.pkgName, it) })
+                    }
+                    if (current.otherUninstalls.any { !it.ticked }) {
+                        item(key = "other-uninstalls-decline") {
+                            RowGroupAction(
+                                stringResource(MR.strings.other_device_extensions_dont_suggest),
+                                model::declineUninstalls,
+                            )
+                        }
                     }
                 }
                 if (current.unavailable.isNotEmpty()) {
@@ -161,20 +212,12 @@ private fun InstallableRow(
 ) {
     val listing = row.extension.listing ?: return
     val step = row.step
-    val subtitle = when {
-        row.installed -> stringResource(MR.strings.ext_installed)
-        step == InstallStep.Pending -> stringResource(MR.strings.ext_pending)
-        step == InstallStep.Downloading -> stringResource(MR.strings.ext_downloading)
-        step == InstallStep.Installing -> stringResource(MR.strings.ext_installing)
-        step == InstallStep.Converting -> stringResource(MR.strings.ext_converting)
-        step == InstallStep.RequiresUserAction -> stringResource(MR.strings.ext_requires_user_action)
-        else -> stringResource(
-            MR.strings.missing_extensions_details,
-            titlesText(row.extension, state),
-            listing.store.name,
-            listing.versionName,
-        )
-    }
+    val subtitle = installStepText(row.installed, step) ?: stringResource(
+        MR.strings.missing_extensions_details,
+        titlesText(row.extension, state),
+        listing.store.name,
+        listing.versionName,
+    )
     CheckRow(
         title = row.extension.name,
         checked = row.ticked || row.installed,

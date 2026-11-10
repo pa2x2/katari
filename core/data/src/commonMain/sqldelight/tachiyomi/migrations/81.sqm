@@ -1,0 +1,8 @@
+import kotlin.Boolean;
+
+-- The extensions this device has installed and uninstalled, which sync offers the account's other devices.
+CREATE TABLE extension_installs(
+    pkg_name TEXT NOT NULL PRIMARY KEY,
+    installed INTEGER AS Boolean NOT NULL,
+    changed_at INTEGER NOT NULL
+);

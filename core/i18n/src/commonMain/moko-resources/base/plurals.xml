@@ -525,4 +525,16 @@
         <item quantity="one">Install %d</item>
         <item quantity="other">Install %d</item>
     </plurals>
+    <plurals name="other_device_extensions_uninstall">
+        <item quantity="one">Uninstall %d</item>
+        <item quantity="other">Uninstall %d</item>
+    </plurals>
+    <plurals name="other_device_extensions_card_installed">
+        <item quantity="one">%1$s installed %2$d extension this device doesn\'t have. Install it here too?</item>
+        <item quantity="other">%1$s installed %2$d extensions this device doesn\'t have. Install them here too?</item>
+    </plurals>
+    <plurals name="other_device_extensions_card_uninstalled">
+        <item quantity="one">%1$s uninstalled %2$d extension this device still has. Uninstall it here too?</item>
+        <item quantity="other">%1$s uninstalled %2$d extensions this device still has. Uninstall them here too?</item>
+    </plurals>
 </resources>

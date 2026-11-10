@@ -88,6 +88,14 @@ class SourceRepositoryImpl(
         }
     }
 
+    override fun getLibraryCountsBySource(): Flow<Map<Long, Map<Long, Long>>> = handler
+        .subscribeToList {
+            entriesQueries.getFavoriteCountsBySourceAndProfile { profileId, source, count ->
+                Triple(source, profileId, count)
+            }
+        }
+        .map { counts -> counts.groupBy({ it.first }, { it.second to it.third }).mapValues { it.value.toMap() } }
+
     override suspend fun getSourcesWithEntries(sourceIds: Collection<Long>): Set<Long> {
         return handler.awaitList { entriesQueries.getSourcesWithEntries(sourceIds) }.toSet()
     }

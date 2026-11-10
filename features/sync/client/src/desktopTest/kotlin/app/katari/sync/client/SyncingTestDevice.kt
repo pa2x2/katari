@@ -12,6 +12,7 @@ import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
+import app.katari.sync.client.extension.OtherDeviceExtensions
 import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.FileUploads
@@ -76,6 +77,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         resync,
     )
     val preferences = local.syncPreferences
+    val otherDeviceExtensions = OtherDeviceExtensions(local.handler, connection, directory, preferences)
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)

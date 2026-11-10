@@ -1265,6 +1265,7 @@
     <string name="missing_source_install_from">From %1$s · %2$s</string>
     <string name="missing_source_migrate">Migrate to another source</string>
     <string name="missing_extensions_title">Install extensions</string>
+    <string name="missing_extensions_sheet_title">Extensions for this device</string>
     <string name="missing_extensions_note">Titles in your library come from these extensions.</string>
     <string name="missing_extensions_untrusted">Installed, not trusted here</string>
     <string name="missing_extensions_ready">Ready to install</string>
@@ -1280,6 +1281,14 @@
     <string name="missing_extensions_restore_note">After restoring, the Library offers to install the extensions these titles need.</string>
     <string name="missing_extensions_restore_installable">Can be installed</string>
     <string name="missing_extensions_restore_line">%1$s · %2$s</string>
+    <string name="other_device_extensions_installs">Installed on your other devices</string>
+    <string name="other_device_extensions_uninstalls">Uninstalled on your other devices</string>
+    <string name="other_device_extensions_installed_on">Installed on %1$s · %2$s · %3$s</string>
+    <string name="other_device_extensions_uninstalled_on">Uninstalled on %1$s</string>
+    <string name="other_device_extensions_uninstalled_titles">Uninstalled on %1$s · %2$s here</string>
+    <string name="other_device_extensions_dont_suggest">Don\'t suggest unchecked</string>
+    <string name="other_device_extensions_your_devices">Your other devices</string>
+    <string name="other_device_extensions_card_both">%1$s installed and uninstalled extensions. Do the same here?</string>
     <string name="restore_extensions_missed">Not listed by the store they came from any more, or failed to install: %1$s</string>
     <string name="ext_replace_title">Replace %1$s?</string>
     <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
@@ -3450,6 +3459,8 @@
     <string name="sync_choice_title_choices">Title choices</string>
     <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title</string>
     <string name="sync_choice_repositories">Extension repositories</string>
+    <string name="sync_choice_installed_extensions">Installed extensions</string>
+    <string name="sync_choice_installed_extensions_summary">Offers to install or uninstall what you did on your other devices</string>
     <string name="sync_choice_fonts">Imported fonts</string>
     <string name="sync_choice_fonts_summary">Fonts added for the book reader</string>
     <string name="sync_choice_covers">Custom covers</string>
