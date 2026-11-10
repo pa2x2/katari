@@ -81,6 +81,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         sdkHome.set(sdk.home)
         licenses.set(layout.settingsDirectory.dir("tools/chromium/licenses"))
         archive.set(layout.buildDirectory.file("chromium/chromium-$chromiumVersion-linux-$ARCHITECTURE.tar.zst"))
+        licenceLibraries.set(layout.projectDirectory.dir(LICENCE_LIBRARIES))
     }
     val checkChromium = tasks.register<CheckChromiumVersionTask>("checkChromiumVersion") {
         group = "verification"
@@ -88,6 +89,7 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
         dependsOn(provisionRuntime)
         runtimeRelease.set(runtime.release)
         pinned.set(chromiumVersion)
+        licenceLibraries.set(layout.projectDirectory.dir(LICENCE_LIBRARIES))
     }
     tasks.named(VERIFY_TESTS_TASK_NAME) { dependsOn(checkChromium) }
     val checkModules = tasks.register<CheckAppImageModulesTask>("checkAppImageModules") {
@@ -205,3 +207,4 @@ private fun checkDistinct(names: List<String>) {
     val repeated = names.groupBy { it }.filterValues { it.size > 1 }.keys
     if (repeated.isNotEmpty()) throw GradleException("Jars of the desktop app share names in its AppImage: $repeated")
 }
+private const val LICENCE_LIBRARIES = "licences/libraries"

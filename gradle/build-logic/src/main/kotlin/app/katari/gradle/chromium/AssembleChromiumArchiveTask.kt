@@ -21,6 +21,7 @@ import javax.inject.Inject
  * Packs the Chromium of the JetBrains Runtime's SDK into the archive the desktop app downloads it from: the native
  * files of the SDK's `jcef` module as [ChromiumFiles] tells them apart, with the [licenses] they are passed on under in
  * `LICENSES/`. The same SDK gives the same archive, byte for byte, so the one published can be told from its checksum.
+ * It also writes the versions of what it packed into the licences screen's entries ([ChromiumLicenceEntries]).
  */
 abstract class AssembleChromiumArchiveTask : DefaultTask() {
 
@@ -37,6 +38,10 @@ abstract class AssembleChromiumArchiveTask : DefaultTask() {
 
     @get:OutputFile
     abstract val archive: RegularFileProperty
+
+    /** The folder of the licences screen's library definitions, committed with the pin. */
+    @get:Internal
+    abstract val licenceLibraries: DirectoryProperty
 
     @get:Inject
     abstract val execOperations: ExecOperations
@@ -79,6 +84,7 @@ abstract class AssembleChromiumArchiveTask : DefaultTask() {
                 ".",
             )
         }
+        ChromiumLicenceEntries(licenceLibraries.get().asFile).write(JcefRelease(sdk.resolve("release")))
         val installed = chromium.walkTopDown().filter { it.isFile }.sumOf { it.length() }
         logger.lifecycle(
             "${archive.name}: ${archive.length()} bytes, SHA-256 ${sha256(archive)}, $installed bytes installed",

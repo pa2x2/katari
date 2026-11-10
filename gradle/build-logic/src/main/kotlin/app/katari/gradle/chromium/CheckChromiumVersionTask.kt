@@ -2,18 +2,20 @@ package app.katari.gradle.chromium
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Fails when the Chromium pinned for the app to download isn't the one of the pinned JetBrains Runtime's JCEF. The
- * app's JCEF talks to Chromium's server in a protocol of that JCEF build's own, so a Chromium of another build is one
- * the app can't run.
+ * Fails when the Chromium pinned for the app to download isn't the one of the pinned JetBrains Runtime's JCEF, or when
+ * the licences screen names other versions of it. The app's JCEF talks to Chromium's server in a protocol of that JCEF
+ * build's own, so a Chromium of another build is one the app can't run.
  */
 abstract class CheckChromiumVersionTask : DefaultTask() {
 
@@ -25,15 +27,15 @@ abstract class CheckChromiumVersionTask : DefaultTask() {
     @get:Input
     abstract val pinned: Property<String>
 
+    /** The folder of the licences screen's library definitions. */
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val licenceLibraries: DirectoryProperty
+
     @TaskAction
     fun check() {
-        val release = runtimeRelease.get().asFile.readLines()
-        fun value(key: String) = release
-            .firstNotNullOfOrNull { line -> line.removePrefix("$key=").takeIf { it != line } }
-            ?.trim('"')
-            ?: throw GradleException("The JetBrains Runtime's release file names no $key")
-        // 150.0.14.1233+g9df0879 and the commit it abbreviates
-        val runtime = "${value(VERSION_KEY).substringBefore('+')}-${value(COMMIT_KEY).take(COMMIT_LENGTH)}"
+        val release = JcefRelease(runtimeRelease.get().asFile)
+        val runtime = release.pin
         if (runtime != pinned.get()) {
             throw GradleException(
                 "The JetBrains Runtime carries Chromium $runtime, but gradle/katari.versions.toml pins " +
@@ -42,11 +44,12 @@ abstract class CheckChromiumVersionTask : DefaultTask() {
                     "tools/chromium/publish-release.sh.",
             )
         }
-    }
-
-    private companion object {
-        const val VERSION_KEY = "JCEF_VERSION"
-        const val COMMIT_KEY = "JCEF_COMMIT_HASH"
-        const val COMMIT_LENGTH = 12
+        val outdated = ChromiumLicenceEntries(licenceLibraries.get().asFile).outdated(release)
+        if (outdated.isNotEmpty()) {
+            throw GradleException(
+                "The licences screen names other versions than the JetBrains Runtime's Chromium has, in " +
+                    "${outdated.joinToString()}. :desktop:assembleChromiumArchive writes them.",
+            )
+        }
     }
 }
