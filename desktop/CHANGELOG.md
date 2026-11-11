@@ -1,5 +1,18 @@
 # Desktop Changelog
 
+## [1.0.0-beta.10] - 2026-11-11
+
+### 🔄 Changed
+
+- Settings, hints and notifications say click, press and hold, and row buttons where they said tap, long press and swipe.
+- Sync, download, reader and translation settings and statuses talk about metered and unmetered networks instead of Wi-Fi and mobile data.
+- Sync shows this device as a computer, and icons that pictured a phone or a tapping hand show a computer or a mouse.
+- Settings no longer mention a secure screen or recap sharing the desktop app doesn't have, and Share crash logs is now Save crash logs.
+
+### 🗑️ Removed
+
+- The manga reader's Show actions on long tap setting. Holding the mouse button drags the page, and a right click opens its actions.
+
 ## [1.0.0-beta.9] - 2026-11-10
 
 ### ✨ Added
@@ -279,7 +292,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.9...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.10...HEAD
+[1.0.0-beta.10]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.10
 [1.0.0-beta.9]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.8
 [1.0.0-beta.7]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.7
