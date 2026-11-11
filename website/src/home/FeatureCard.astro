@@ -39,11 +39,12 @@ const { feature } = Astro.props;
     background: var(--surface);
   }
 
+  /* Three phones still fit across a phone's own width. */
   .shots {
     display: flex;
     flex: none;
     gap: 0.75rem;
-    --shot-width: 7rem;
+    --shot-width: min(7rem, 27cqi);
   }
 
   /* At this size a phone's frame is thinner and its corners tighter, and a caption under each would be a column of
