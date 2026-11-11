@@ -13,11 +13,14 @@ let beside = 0;
 ---
 
 <section id={chapter.id} class="chapter" aria-labelledby={`${chapter.id}-title`}>
-  <header>
-    <span class="numeral" lang="ja" aria-hidden="true" data-pagefind-ignore>{chapter.numeral}</span>
-    <div>
-      <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>
-      <p>{chapter.intro}</p>
+  <header style={`--tint-from: ${chapter.tint[0]}; --tint-to: ${chapter.tint[1]}`}>
+    <div class="inner">
+      <span class="numeral" lang="ja" aria-hidden="true" data-pagefind-ignore>{chapter.numeral}</span>
+      <div>
+        <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>
+        <p>{chapter.intro}</p>
+      </div>
+      <span class="word" lang="ja" aria-hidden="true" data-pagefind-ignore>{chapter.word}</span>
     </div>
   </header>
   {
@@ -28,22 +31,23 @@ let beside = 0;
 </section>
 
 <style>
+  /* A title page: the chapter's own tint across the window. It is dark in either theme, as the recap band is, so its
+     text and seal take the dark theme's colours. */
   header {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    max-width: var(--page-width);
-    margin: 0 auto;
-    padding: 6rem var(--gutter) 1rem;
+    color-scheme: dark;
+    margin-top: 4rem;
+    background: linear-gradient(160deg, var(--tint-from), var(--tint-to) 70%);
+    color: var(--text-strong);
   }
 
-  header::after {
-    content: "";
-    flex: 1;
-    align-self: center;
-    height: 1px;
-    margin-left: 1rem;
-    background: var(--border);
+  .inner {
+    display: flex;
+    align-items: center;
+    gap: 2.25rem;
+    max-width: var(--page-width);
+    min-height: 18rem;
+    margin: 0 auto;
+    padding: 3rem calc(var(--gutter) + 3rem);
   }
 
   /* A seal, so the numeral reads as a character rather than as a stroke. */
@@ -51,41 +55,62 @@ let beside = 0;
     display: grid;
     flex: none;
     place-items: center;
-    width: 4.2rem;
-    height: 4.2rem;
-    border-radius: 0.4rem;
+    width: 7rem;
+    height: 7rem;
+    border-radius: 0.6rem;
     background: var(--accent);
     color: var(--on-accent);
     font-family: var(--serif);
-    font-size: 2.4rem;
+    font-size: 4rem;
     font-weight: 700;
     line-height: 1;
   }
 
   h2 {
     margin: 0;
-    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-size: clamp(2.2rem, 5vw, 3.75rem);
   }
 
   p {
-    margin: 0.3rem 0 0;
-    color: var(--text-muted);
-    font-size: 1.1rem;
+    margin: 0.5rem 0 0;
+    color: var(--text);
+    font-size: 1.25rem;
+  }
+
+  .word {
+    margin-left: auto;
+    color: var(--accent);
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    writing-mode: vertical-rl;
   }
 
   @media (max-width: 44rem) {
     header {
-      padding-top: 4rem;
+      margin-top: 3rem;
     }
 
-    header::after {
-      display: none;
+    .inner {
+      gap: 1.25rem;
+      min-height: 11rem;
+      padding: 2rem var(--gutter);
     }
 
     .numeral {
-      width: 3.4rem;
-      height: 3.4rem;
-      font-size: 2rem;
+      width: 4rem;
+      height: 4rem;
+      font-size: 2.3rem;
+    }
+
+    p {
+      font-size: 1.05rem;
+    }
+
+    /* Upright beside the title it would squeeze the title onto three lines. */
+    .word {
+      display: none;
     }
   }
 </style>

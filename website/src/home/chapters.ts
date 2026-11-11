@@ -52,6 +52,10 @@ export interface Feature {
 export interface Chapter {
   id: string;
   numeral: string;
+  /** The chapter's name in Japanese, set upright on its title page like the hero's 語り. */
+  word: string;
+  /** The two colours the title page's background runs between; dark, so the page reads the same in either theme. */
+  tint: [string, string];
   title: string;
   intro: string;
   features: Feature[];
@@ -61,6 +65,8 @@ export const chapters: Chapter[] = [
   {
     id: "collect",
     numeral: "一",
+    word: "集める",
+    tint: ["#5a2a20", "#2a1611"],
     title: "Collect",
     intro: "Everything you read and watch, in one place.",
     features: [
@@ -116,6 +122,8 @@ export const chapters: Chapter[] = [
   {
     id: "read-and-watch",
     numeral: "二",
+    word: "読む・観る",
+    tint: ["#1c4a44", "#0f2624"],
     title: "Read & watch",
     intro: "A reader made for each format, in any language.",
     features: [
@@ -166,6 +174,8 @@ export const chapters: Chapter[] = [
   {
     id: "look-back",
     numeral: "三",
+    word: "振り返る",
+    tint: ["#1d3d66", "#0f1f38"],
     title: "Look back",
     intro: "Where your time went, and what it added up to.",
     features: [
@@ -198,6 +208,8 @@ export const chapters: Chapter[] = [
   {
     id: "everywhere",
     numeral: "四",
+    word: "どこでも",
+    tint: ["#40295f", "#1d1530"],
     title: "Everywhere",
     intro: "One library on all your devices.",
     features: [
