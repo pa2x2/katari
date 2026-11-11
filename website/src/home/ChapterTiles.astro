@@ -1,0 +1,136 @@
+---
+/** The page's map under the hero: a tile per chapter that jumps to it, with a shot from the chapter beside its name. */
+import { Image } from "astro:assets";
+import { isUpright } from "../media/devices.ts";
+import { isPlanned } from "../media/planned-captures.ts";
+import { type Chapter, chapters } from "./chapters.ts";
+
+/** The chapter's first upright screenshot that has been captured. */
+function thumbnail(chapter: Chapter) {
+  for (const feature of chapter.features) {
+    for (const shot of feature.shots) {
+      if (shot.kind === "still" && isUpright(shot.device ?? "phone") && !isPlanned(shot.image)) return shot.image;
+    }
+  }
+  return undefined;
+}
+
+const tiles = chapters.map((chapter) => ({ chapter, image: thumbnail(chapter) }));
+---
+
+<nav class="tiles" aria-label="Chapters">
+  {
+    tiles.map(({ chapter, image }) => (
+      <a href={`#${chapter.id}`}>
+        <span class="numeral" lang="ja" aria-hidden="true" data-pagefind-ignore>
+          {chapter.numeral}
+        </span>
+        <span class="text">
+          <strong>{chapter.title}</strong>
+          <span>{chapter.intro}</span>
+        </span>
+        {image && <Image class="thumbnail" src={image} alt="" width={128} loading="eager" />}
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    width: calc(min(100%, var(--page-width)) - 2 * var(--gutter));
+    margin: 1.75rem auto 0;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--surface);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    border-color: var(--accent);
+  }
+
+  .numeral {
+    display: grid;
+    flex: none;
+    align-self: flex-start;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.35rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .text {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  strong {
+    color: var(--text-strong);
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .text span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  /* The top of a phone's screen, which is where a screen says what it is. */
+  .thumbnail {
+    flex: none;
+    width: 3.6rem;
+    height: 6.5rem;
+    margin-left: auto;
+    border-radius: 0.55rem;
+    object-fit: cover;
+    object-position: top;
+    box-shadow: 0 0 0 1px var(--device-edge);
+  }
+
+  /* Two by two, and without the shots, once four across would leave each tile a column of single words. */
+  @media (max-width: 70rem) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .tiles {
+      gap: 0.6rem;
+    }
+
+    a {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .thumbnail {
+      display: none;
+    }
+
+    strong {
+      font-size: 1.15rem;
+    }
+  }
+</style>

@@ -1,5 +1,7 @@
 ---
 import Chapter from "../home/Chapter.astro";
+import ChapterBar from "../home/ChapterBar.astro";
+import ChapterTiles from "../home/ChapterTiles.astro";
 import { chapters } from "../home/chapters.ts";
 import Hero from "../home/Hero.astro";
 import LatestVersions from "../home/LatestVersions.astro";
@@ -15,7 +17,9 @@ import Page from "../site/Page.astro";
   <main data-pagefind-body data-pagefind-filter="section:Home">
     <Hero />
     <LatestVersions />
+    <ChapterTiles />
     <div id="features">
+      <ChapterBar />
       {chapters.map((chapter) => <Chapter chapter={chapter} />)}
     </div>
   </main>
