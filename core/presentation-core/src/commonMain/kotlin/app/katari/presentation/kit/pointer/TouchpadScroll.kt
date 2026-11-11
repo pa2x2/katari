@@ -6,15 +6,25 @@ import androidx.compose.ui.input.pointer.PointerEvent
 /**
  * The two-finger scroll of a touchpad that a scroll event is a step of. [swipe] numbers the scroll: every step has
  * the same from the fingers' first to the end of the glide they leave, and the next scroll has another. [distance] is
- * how far the step scrolls content, in pixels, down and right positive as a scroll's delta is.
+ * how far the step scrolls content, in pixels, down and right positive as a scroll's delta is. Where
+ * [contentFollowsFingers], as with natural scrolling, content moves the way the fingers do, so it scrolls toward its
+ * start as they go down; otherwise it scrolls the way they go, as under a wheel.
  *
  * A scroll event's delta is sized for content of the window's size, so what moves under the fingers other than such
  * content, as a zoomed image, moves by [distance]. Content scrolls on by itself once the fingers lift, so what a scroll
- * sets rather than moves, as a volume or a seek, takes its [distance] from the [fingersMoving] steps alone, as
+ * sets rather than moves, as a volume or a seek, follows the [fingerTravel] of the [fingersMoving] steps alone, as
  * [TouchpadSwipes] does.
  */
-class TouchpadScroll(val swipe: Int, val stage: TouchpadScrollStage, val distance: Offset) {
+class TouchpadScroll(
+    val swipe: Int,
+    val stage: TouchpadScrollStage,
+    val distance: Offset,
+    val contentFollowsFingers: Boolean,
+) {
     val fingersMoving: Boolean get() = stage == TouchpadScrollStage.Fingers
+
+    /** How far the fingers went in this step, in pixels, down and right positive. */
+    val fingerTravel: Offset get() = if (contentFollowsFingers) -distance else distance
 }
 
 enum class TouchpadScrollStage {

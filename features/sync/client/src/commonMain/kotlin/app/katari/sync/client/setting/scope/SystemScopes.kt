@@ -2,8 +2,8 @@ package app.katari.sync.client.setting.scope
 
 /**
  * The device itself: `NetworkPreferences`, `PrivacyPreferences`, `ProgressiveImagePreferences`, `AppUpdatePreferences`,
- * `NotificationPreferences`, the notification setting of `SecurityPreferences` and Android's `BasePreferences` and
- * extension installer.
+ * `NotificationPreferences`, the notification setting of `SecurityPreferences`, Android's `BasePreferences` and
+ * extension installer, and the desktop's `TouchpadPreferences`.
  */
 internal val SystemScopes = PreferenceScopeTable {
     device(DeviceBound.DIAGNOSTICS, "redact_sensitive_headers", "verbose_logging")
@@ -18,4 +18,7 @@ internal val SystemScopes = PreferenceScopeTable {
     device(DeviceBound.NOTIFICATIONS, "notifications_enabled")
     device(DeviceBound.NOTIFICATIONS, "hide_notification_content")
     devicePrefix(DeviceBound.NOTIFICATIONS, "notification_shown_")
+
+    // Desktop: TouchpadPreferences, for this computer's touchpad and the system's own setting for it
+    device(DeviceBound.HARDWARE, "touchpad_natural_scrolling")
 }

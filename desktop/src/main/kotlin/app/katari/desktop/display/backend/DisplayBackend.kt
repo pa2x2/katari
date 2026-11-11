@@ -1,7 +1,9 @@
 package app.katari.desktop.display.backend
 
+import app.katari.desktop.display.scroll.natural.TouchpadPreferences
 import app.katari.presentation.kit.pointer.TouchpadPinch
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.awt.Frame
 import java.awt.Window
 
@@ -26,7 +28,14 @@ interface DisplayBackend {
     /**
      * Scrolls [window], a shown window that Compose draws, by the display's own account of scrolling until closed:
      * content follows a touchpad's fingers and glides on after a flick, where the window toolkit knows only whole
-     * wheel notches. Null where the display's scrolling can't be read, and the toolkit's stays.
+     * wheel notches, in the direction [TouchpadPreferences.naturalScrolling] chooses. Null where the display's
+     * scrolling can't be read, and the toolkit's stays.
      */
     fun preciseScrolling(window: Window): AutoCloseable?
+
+    /**
+     * Whether the system has its touchpads scroll naturally, as of the last look the windows' scrolling took; null
+     * where it can't be read.
+     */
+    val systemNaturalScrolling: StateFlow<Boolean?>
 }

@@ -1,16 +1,26 @@
 package app.katari.desktop.display.x11
 
+import app.katari.desktop.display.scroll.natural.DisplayTouchpads
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import com.sun.jna.ptr.NativeLongByReference
+import com.sun.jna.ptr.PointerByReference
 
 /**
  * The display's devices that scroll, and how far each event moved their scroll axes. An axis reports where it is, not
  * how far it moved. It moves on while the pointer is over other clients' windows, so [refresh] reads where every axis
  * is afresh whenever the pointer comes back, as Qt does; and when another device takes the pointer over, the display
- * says where that one's axes are ([changed]), before its first event. Used by the thread that reads [display].
+ * says where that one's axes are ([changed]), before its first event. Each look tells [onTouchpads] whether the
+ * touchpads scroll naturally, so a change in the system's settings counts from when the pointer comes back. Used by
+ * the thread that reads [display].
  */
-internal class X11ScrollDevices(private val xlib: Xlib, private val xInput: XInput, private val display: Pointer) {
+internal class X11ScrollDevices(
+    private val xlib: Xlib,
+    private val xInput: XInput,
+    private val display: Pointer,
+    private val onTouchpads: (DisplayTouchpads) -> Unit,
+) {
     private var devices: Map<Int, Device> = emptyMap()
 
     // Every device of the last look, scrolling or not
@@ -32,6 +42,7 @@ internal class X11ScrollDevices(private val xlib: Xlib, private val xInput: XInp
         } finally {
             xInput.freeDeviceInfo(infos)
         }
+        onTouchpads(touchpads())
     }
 
     /**
@@ -97,6 +108,32 @@ internal class X11ScrollDevices(private val xlib: Xlib, private val xInput: XInp
         return Device(kind, axes)
     }
 
+    private fun touchpads(): DisplayTouchpads {
+        if (devices.values.any { it.kind == ScrollDeviceKind.Xwayland }) return DisplayTouchpads.Compositor
+        val natural = xlib.internAtom(display, NATURAL_SCROLLING_PROPERTY, true).toLong()
+        val settings = devices.filterValues { it.kind == ScrollDeviceKind.Touchpad }.keys.map { flag(it, natural) }
+        return DisplayTouchpads.Server(settings.distinct().singleOrNull())
+    }
+
+    /** The device's [property] that holds one 8-bit flag, as libinput's X driver keeps its settings; null without it. */
+    private fun flag(deviceId: Int, property: Long): Boolean? {
+        if (property == 0L) return null
+        val format = IntByReference()
+        val count = NativeLongByReference()
+        val data = PointerByReference()
+        val status = xInput.getProperty(
+            display, deviceId, NativeLong(property), NativeLong(0), NativeLong(1), false, NativeLong(0),
+            NativeLongByReference(), format, count, NativeLongByReference(), data,
+        )
+        val items = data.value ?: return null
+        try {
+            val holdsFlag = status == 0 && format.value == 8 && count.value.toLong() > 0
+            return if (holdsFlag) items.getByte(0) != 0.toByte() else null
+        } finally {
+            xlib.free(items)
+        }
+    }
+
     private fun valuesByAxis(classes: Array<Pointer>): Map<Int, Double> = classes
         .filter { xiClassType(it) == XI_VALUATOR_CLASS }
         .map(::XIValuatorClassInfo)
@@ -115,6 +152,9 @@ internal class X11ScrollDevices(private val xlib: Xlib, private val xInput: XInp
     private companion object {
         // Only touchpads tap, so libinput's X driver gives the property to them alone, as GTK tells them by
         const val TAPPING_PROPERTY = "libinput Tapping Enabled"
+
+        // What the desktop's settings set for a touchpad that libinput's X driver drives
+        const val NATURAL_SCROLLING_PROPERTY = "libinput Natural Scrolling Enabled"
 
         const val XWAYLAND_DEVICE_PREFIX = "xwayland-"
     }

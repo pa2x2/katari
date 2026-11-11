@@ -1,6 +1,9 @@
 package app.katari.desktop.display.backend
 
 import app.katari.desktop.display.scroll.PreciseScrolling
+import app.katari.desktop.display.scroll.natural.SystemNaturalScrolling
+import app.katari.desktop.display.scroll.natural.TouchpadPreferences
+import app.katari.desktop.display.scroll.natural.TouchpadScrollDirection
 import app.katari.desktop.display.size.SessionScale
 import app.katari.desktop.display.x11.X11LaunchHandover
 import app.katari.desktop.display.x11.X11PointerButtons
@@ -9,6 +12,7 @@ import app.katari.desktop.display.x11.X11TouchpadPinches
 import app.katari.desktop.display.x11.X11WindowClass
 import app.katari.presentation.kit.pointer.TouchpadPinch
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.awt.EventQueue
 import java.awt.Frame
 import java.awt.Window
@@ -18,7 +22,15 @@ import java.awt.Window
  * named after [applicationId] as their `WM_CLASS`, as the app's desktop entry is, so the desktop shows them as the
  * app's.
  */
-class LinuxDisplayBackend(private val applicationId: String, private val sessionScale: SessionScale) : DisplayBackend {
+class LinuxDisplayBackend(
+    private val applicationId: String,
+    private val sessionScale: SessionScale,
+    private val touchpadPreferences: TouchpadPreferences,
+) : DisplayBackend {
+    private val naturalScrolling = SystemNaturalScrolling()
+
+    override val systemNaturalScrolling: StateFlow<Boolean?> = naturalScrolling.natural
+
     override fun start() {
         X11WindowClass.set(applicationId)
         X11PointerButtons.install()
@@ -39,8 +51,14 @@ class LinuxDisplayBackend(private val applicationId: String, private val session
     override fun touchpadPinches(window: Window): Flow<TouchpadPinch>? = X11TouchpadPinches.over(window)
 
     override fun preciseScrolling(window: Window): AutoCloseable? {
-        val scrolling = PreciseScrolling(window, sessionScale.pixelsPerDp)
-        val motions = X11ScrollMotions.over(window, pointerOver = window.mousePosition != null) { motion ->
+        val scrolling = PreciseScrolling(window, sessionScale.pixelsPerDp) {
+            TouchpadScrollDirection.of(naturalScrolling.natural.value, touchpadPreferences.naturalScrolling.get())
+        }
+        val motions = X11ScrollMotions.over(
+            window,
+            pointerOver = window.mousePosition != null,
+            onTouchpads = naturalScrolling::on,
+        ) { motion ->
             EventQueue.invokeLater { scrolling.on(motion) }
         } ?: return null
         return AutoCloseable {

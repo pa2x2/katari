@@ -13,12 +13,17 @@ class TouchpadSwipesTest {
             seen += "start $axis"
             axis == Orientation.Vertical
         },
-        onMove = { axis, distance -> seen += "move $axis $distance" },
+        onMove = { axis, travel -> seen += "move $axis $travel" },
         onEnd = { seen += "end" },
     )
 
-    private fun step(swipe: Int, stage: TouchpadScrollStage, x: Float = 0f, y: Float = 0f) =
-        swipes.onStep(TouchpadScroll(swipe, stage, Offset(x, y)))
+    private fun step(
+        swipe: Int,
+        stage: TouchpadScrollStage,
+        x: Float = 0f,
+        y: Float = 0f,
+        contentFollowsFingers: Boolean = false,
+    ) = swipes.onStep(TouchpadScroll(swipe, stage, Offset(x, y), contentFollowsFingers))
 
     @Test
     fun `a swipe keeps to the axis it first goes along and ends once as the fingers lift, its glide set aside`() {
@@ -46,5 +51,13 @@ class TouchpadSwipesTest {
         step(2, TouchpadScrollStage.Fingers, y = -12f)
 
         seen shouldBe listOf("start Vertical", "move Vertical 12.0", "end", "start Vertical", "move Vertical -12.0")
+    }
+
+    @Test
+    fun `with natural scrolling the control follows the fingers, not the content they move the other way`() {
+        step(1, TouchpadScrollStage.Fingers, y = 14f, contentFollowsFingers = true)
+        step(1, TouchpadScrollStage.Fingers, y = 6f, contentFollowsFingers = true)
+
+        seen shouldBe listOf("start Vertical", "move Vertical -14.0", "move Vertical -20.0")
     }
 }

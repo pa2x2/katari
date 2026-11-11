@@ -46,10 +46,20 @@ class WheelTurnsTest {
     @Test
     fun `a touchpad's swipe turns one page whatever follows it, and the next swipe the next, even into its glide`() {
         fun fingers(swipe: Int, steps: Int, notches: Float = 0.6f) =
-            repeat(steps) { scroll(8, notches, TouchpadScroll(swipe, TouchpadScrollStage.Fingers, Offset.Zero)) }
+            repeat(steps) {
+                scroll(
+                    8,
+                    notches,
+                    TouchpadScroll(swipe, TouchpadScrollStage.Fingers, Offset.Zero, contentFollowsFingers = false),
+                )
+            }
 
         fun glide(swipe: Int) = repeat(25) {
-            scroll(8, notches = 0.3f, TouchpadScroll(swipe, TouchpadScrollStage.Gliding, Offset.Zero))
+            scroll(
+                8,
+                notches = 0.3f,
+                TouchpadScroll(swipe, TouchpadScrollStage.Gliding, Offset.Zero, contentFollowsFingers = false),
+            )
         }
 
         fingers(swipe = 1, steps = 5)
