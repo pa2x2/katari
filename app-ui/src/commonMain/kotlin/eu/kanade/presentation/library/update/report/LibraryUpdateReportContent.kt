@@ -35,6 +35,7 @@ import eu.kanade.presentation.library.update.report.components.ReportProgressCar
 import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.library.update.report.components.ReportRunNote
 import eu.kanade.presentation.library.update.report.components.ReportSectionHeader
+import eu.kanade.presentation.library.update.report.components.SharedFailureGroup
 import eu.kanade.presentation.library.update.report.components.reasonGroups
 import eu.kanade.presentation.library.update.report.components.reasonSection
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
@@ -134,20 +135,42 @@ fun LibraryUpdateReportContent(
             }
         }
 
-        val failedCount = failedSources.sumOf { it.items.size } + report.failed.size
-        if (failedCount > 0) {
+        val sharedFailure = report.sharedFailure
+        val failedEntries = sharedFailure?.items.orEmpty().map { it.entry } +
+            failedSources.flatMap { source -> source.items.map { it.entry } } +
+            report.failed.map { it.entry }
+        if (failedEntries.isNotEmpty()) {
             item(key = "header-failed") {
                 ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.Error,
                     title = MR.strings.library_update_report_failed,
-                    count = failedCount,
+                    count = failedEntries.size,
                     isError = true,
+                    trailing = if (failedEntries.size > 1) {
+                        {
+                            Button(
+                                label = stringResource(MR.strings.library_update_report_retry_all),
+                                onClick = { actions.onRetry(failedEntries) },
+                                style = ButtonStyle.Text,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
-            val cardSize = failedSources.size + report.failed.size
-            failingSourceItems("failed", failedSources, cardSize, state, actions)
+            val sharedRows = if (sharedFailure != null) 1 else 0
+            val cardSize = sharedRows + failedSources.size + report.failed.size
+            if (sharedFailure != null) {
+                item(key = "failed-shared") {
+                    RowGroupItem(position = RowGroupPosition.of(0, cardSize)) {
+                        SharedFailureGroup(failure = sharedFailure, actions = actions)
+                    }
+                }
+            }
+            failingSourceItems("failed", failedSources, cardSize, state, actions, offset = sharedRows)
             itemsIndexed(report.failed, key = { _, it -> "failed-${it.entry.id}" }) { index, item ->
-                RowGroupItem(position = RowGroupPosition.of(failedSources.size + index, cardSize)) {
+                RowGroupItem(position = RowGroupPosition.of(sharedRows + failedSources.size + index, cardSize)) {
                     ReportRow(
                         entry = item.entry,
                         title = item.entry.title,
@@ -272,16 +295,17 @@ fun LibraryUpdateReportContent(
     }
 }
 
-/** Sources whose entries failed alike, as the first rows of their section's card of [cardSize] rows. */
+/** Sources whose entries failed alike, as rows of their section's card of [cardSize] rows from the [offset]th on. */
 private fun LazyListScope.failingSourceItems(
     key: String,
     sources: List<LibraryUpdateReport.FailingSource>,
     cardSize: Int,
     state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
+    offset: Int = 0,
 ) {
     itemsIndexed(sources, key = { _, it -> "$key-source-${it.sourceId}-${it.error}" }) { index, source ->
-        RowGroupItem(position = RowGroupPosition.of(index, cardSize)) {
+        RowGroupItem(position = RowGroupPosition.of(offset + index, cardSize)) {
             FailingSourceGroup(
                 source = source,
                 name = state.sourceNames[source.sourceId],

@@ -394,6 +394,10 @@
         <item quantity="one">Retry %d</item>
         <item quantity="other">Retry %d</item>
     </plurals>
+    <plurals name="library_update_report_shared_failure">
+        <item quantity="one">%1$d entry on %2$d sources</item>
+        <item quantity="other">%1$d entries on %2$d sources</item>
+    </plurals>
     <plurals name="library_update_report_migrate_entries">
         <item quantity="one">Migrate %d</item>
         <item quantity="other">Migrate %d</item>

@@ -1144,6 +1144,7 @@
     <string name="library_update_pause_pick">Pick a date and time…</string>
     <string name="library_update_pause_until_title">Pause until</string>
     <string name="library_update_report_retry">Retry</string>
+    <string name="library_update_report_retry_all">Retry all</string>
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
     <string name="library_update_report_with_rechecked">%s · rechecked</string>
