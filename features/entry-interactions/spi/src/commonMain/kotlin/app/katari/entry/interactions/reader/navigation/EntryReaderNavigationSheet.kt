@@ -13,6 +13,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.scrollToItemInMiddle
 import app.katari.presentation.kit.list.ChapterRow
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
@@ -45,7 +46,7 @@ fun <T> EntryReaderNavigationSheet(
 
     val listState = rememberLazyListState()
     LaunchedEffect(visible, rows, selectedIndex) {
-        if (visible && selectedIndex >= 0) listState.scrollToItem(selectedIndex)
+        if (visible && selectedIndex >= 0) listState.scrollToItemInMiddle(selectedIndex)
     }
 
     Sheet(

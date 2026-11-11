@@ -16,6 +16,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.automirroredroundedfilled.ViewList
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.RowList
+import app.katari.presentation.kit.layout.scrollToItemInMiddle
 import app.katari.presentation.kit.list.ChapterRow
 import app.katari.presentation.kit.list.CollapsibleRowGroupHeader
 import app.katari.presentation.kit.list.CollapsibleRowGroupSubheader
@@ -52,7 +53,6 @@ internal fun VideoPlayerEpisodesDrawer(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listState = rememberLazyListState()
     val shownItems = remember(episodeListItems, expandedMemberIds, expandedGroupIds) {
         episodeListItems.withoutCollapsedSections(expandedMemberIds, expandedGroupIds)
     }
@@ -60,15 +60,9 @@ internal fun VideoPlayerEpisodesDrawer(
         (entry as? VideoPlayerEpisodeListEntry.Item)?.episode?.id == currentEpisodeId
     }
     // When the playing episode opens its member or group, the headers right above it stay in view to name it
-    val scrollIndex = (currentEpisodeIndex downTo 1)
+    val namingHeadersIndex = (currentEpisodeIndex downTo 1)
         .firstOrNull { shownItems[it - 1] is VideoPlayerEpisodeListEntry.Item }
         ?: 0
-
-    LaunchedEffect(visible, currentEpisodeId, episodeListItems) {
-        if (visible && currentEpisodeIndex >= 0) {
-            listState.scrollToItem(scrollIndex)
-        }
-    }
 
     OverlayListDrawer(
         visible = visible,
@@ -79,6 +73,13 @@ internal fun VideoPlayerEpisodesDrawer(
         modifier = modifier,
         drawerModifier = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
     ) {
+        // Held by the drawer's content, so each opening lays the list out afresh before it is scrolled
+        val listState = rememberLazyListState()
+        LaunchedEffect(currentEpisodeId, episodeListItems) {
+            if (currentEpisodeIndex >= 0) {
+                listState.scrollToItemInMiddle(currentEpisodeIndex, keptFrom = namingHeadersIndex)
+            }
+        }
         RowList(
             modifier = Modifier.fillMaxSize(),
             fastScroll = true,
