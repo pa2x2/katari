@@ -20,6 +20,7 @@ import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
+import eu.kanade.presentation.library.update.rememberAwaitingUpdateState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch

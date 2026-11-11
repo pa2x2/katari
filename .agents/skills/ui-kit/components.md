@@ -178,6 +178,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
+| A line at the top of a list saying how the work behind it stands and opening its details, such as when the library last updated on Updates | `StatusLine` | Scrolls with the list. Its action (such as Cancel) and the arrow keep their place at the end while the lines wrap beside them; `progress` adds a bar under the lines |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
 | A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; it steps aside while a snackbar shows above the action. `FloatingChip` for a chip that jumps through a list |

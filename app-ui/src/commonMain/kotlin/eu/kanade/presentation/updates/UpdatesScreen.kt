@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,12 +37,12 @@ import app.katari.profiles.ui.switcher.ActiveProfileButton
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import eu.kanade.presentation.entry.components.chapterSelectionActions
+import eu.kanade.presentation.library.update.rememberAwaitingUpdateState
 import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun <T> UpdatesScreen(
@@ -52,6 +50,7 @@ fun <T> UpdatesScreen(
     snackbarHostState: SnackbarHostState,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    libraryUpdate: LibraryUpdateState?,
     onUpdateLibrary: (suspend () -> Boolean)?,
     onCalendarClicked: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
@@ -110,19 +109,15 @@ fun <T> UpdatesScreen(
         when {
             state.isLoading -> loadingContent(Modifier.padding(contentPadding))
             else -> {
-                var isRefreshing by remember { mutableStateOf(false) }
+                var awaitingUpdate by rememberAwaitingUpdateState(libraryUpdate)
 
                 PullRefresh(
                     modifier = Modifier.fillMaxSize(),
-                    refreshing = isRefreshing,
+                    refreshing = awaitingUpdate,
                     onRefresh = {
                         val update = onUpdateLibrary ?: return@PullRefresh
                         scope.launch {
-                            val started = update()
-                            if (!started) return@launch
-                            isRefreshing = true
-                            delay(1.seconds)
-                            isRefreshing = false
+                            if (update()) awaitingUpdate = true
                         }
                     },
                     enabled = !state.selectionMode && onUpdateLibrary != null,
