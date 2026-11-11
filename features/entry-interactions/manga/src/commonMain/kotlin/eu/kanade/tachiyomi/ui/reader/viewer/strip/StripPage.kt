@@ -9,12 +9,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import app.katari.core.image.progressive.rememberProgressivePreview
@@ -33,22 +30,21 @@ import eu.kanade.tachiyomi.ui.reader.viewer.page.rememberReaderPageContent
 import kotlin.math.roundToInt
 
 /**
- * One page of the long strip, [width] pixels wide: as tall as the page once its size is known, and [placeholderHeight]
- * pixels tall before, with its download progress a quarter of the way down; the progressive preview while it arrives;
- * the page itself; or why it failed with a retry. [onResized] hears by how many pixels its height changes, before the
- * strip lays it out at the new height.
+ * One page of the long strip in the slot [slotKey], [width] pixels wide: as tall as the page once its size is known,
+ * or was known when it showed before, and [placeholderHeight] pixels tall until then, with its download progress a
+ * quarter of the way down; the progressive preview while it arrives; the page itself; or why it failed with a retry.
  */
 @Composable
 internal fun StripPage(
     page: ReaderPage,
+    slotKey: String,
     viewer: StripViewer,
     width: Int,
     placeholderHeight: Int,
-    onResized: (delta: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val contentState =
-        rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest, viewer::onPageShown)
+    val settingsKey = viewer.imageSettingsKey()
+    val contentState = rememberReaderPageContent(page, settingsKey, viewer::pageRequest, viewer::onPageShown)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
 
@@ -65,27 +61,23 @@ internal fun StripPage(
         previewImage != null && previewSize != null && previewLayout != null -> previewLayout.displayedSize(previewSize)
         shown != null -> shown.layout.displayedSize(shown.image.size)
         else -> null
-    }
-    // The height the page is laid out at, which its backdrop rows span; the aspect ratio rounds it to a whole pixel
-    var laidOutHeight by remember { mutableIntStateOf(0) }
-    viewer.FollowPageBackdrop(page, shown, laidOutHeight)
+    }?.takeIf { it.width > 0 && it.height > 0 }
+    val size = displayedSize ?: viewer.pageSizes[slotKey, settingsKey]
+    val height = size?.let { (width.toDouble() * it.height / it.width).roundToInt() } ?: placeholderHeight
+    viewer.FollowPageBackdrop(page, shown, height)
 
-    val height = if (displayedSize != null && displayedSize.width > 0 && displayedSize.height > 0) {
-        (width.toDouble() * displayedSize.height / displayedSize.width).roundToInt()
-    } else {
-        placeholderHeight
-    }
     val composedHeight = remember { ComposedHeight(height) }
     // The height changes only with state set between frames, so this runs in a frame's composition, before the strip
     // measures this page at the new height
     SideEffect {
+        if (displayedSize != null) viewer.pageSizes[slotKey, settingsKey] = displayedSize
         val delta = height - composedHeight.pixels
         composedHeight.pixels = height
-        if (delta != 0) onResized(delta)
+        if (delta != 0) viewer.slotAnchor.onSlotResized(slotKey, delta, viewer.listState)
     }
 
     val density = LocalDensity.current
-    Box(modifier.height(with(density) { height.toDp() }).onSizeChanged { laidOutHeight = it.height }) {
+    Box(modifier.height(with(density) { height.toDp() })) {
         when {
             previewImage != null && previewSize != null && previewLayout != null ->
                 PageBitmap(previewImage, previewSize, previewLayout, Modifier.fillMaxSize())

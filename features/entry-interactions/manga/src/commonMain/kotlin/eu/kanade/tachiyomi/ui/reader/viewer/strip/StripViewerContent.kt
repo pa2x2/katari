@@ -165,10 +165,10 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
                 when (item) {
                     is ReaderViewerItem.Page -> StripPage(
                         page = item.page,
+                        slotKey = item.key,
                         viewer = viewer,
                         width = pageWidth,
                         placeholderHeight = placeholderHeight,
-                        onResized = { delta -> slotAnchor.onSlotResized(item.key, delta, state) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = if (continuous) KatariTheme.sizes.none else KatariTheme.spacing.l),
