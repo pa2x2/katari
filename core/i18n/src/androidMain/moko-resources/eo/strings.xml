@@ -7,4 +7,6 @@
     <string name="information_empty_category">Vi havas neniun kategorion. Tuŝeti la butonon kun plus, por krei ian kaj organizi vian bibliotekon.</string>
     <string name="pref_double_tap_zoom">Duoble tuŝeti por zomi</string>
     <string name="pref_double_tap_anim_speed">Animacia rapido de duobla tuŝeto</string>
+    <string name="pref_load_ahead_only_over_wifi">Antaŭŝargi nur per vifio</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Ŝparas poŝtelefonretajn datumojn per ŝargado de nur la paĝoj proksimaj al tiu, kiun vi legas</string>
 </resources>

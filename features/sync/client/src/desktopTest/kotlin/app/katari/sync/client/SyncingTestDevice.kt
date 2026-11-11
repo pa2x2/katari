@@ -202,8 +202,6 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         override fun state() = state
 
         override fun current() = state.value
-
-        override val knowsWifi = true
     }
 
     class RecordedBackgroundWork : SyncBackgroundWork {

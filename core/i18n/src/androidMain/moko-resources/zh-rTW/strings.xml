@@ -7,4 +7,6 @@
     <string name="information_empty_category">尚無任何類別，輕觸新增按鈕即可建立類別以組織你的書櫃</string>
     <string name="pref_double_tap_zoom">輕觸兩下以縮放</string>
     <string name="pref_double_tap_anim_speed">輕觸兩下動畫速度</string>
+    <string name="pref_load_ahead_only_over_wifi">僅在 Wi-Fi 下預先載入</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">僅載入您正在閱讀的頁面附近內容，以節省行動數據</string>
 </resources>

@@ -809,9 +809,7 @@
     <string name="pref_hardware_bitmap_threshold">Llindar personalitzat dels mapes de bits per maquinari</string>
     <string name="app_migrating_summary">S’estan enllestint algunes coses després de l’actualització. Pot tardar uns minuts, mantingueu oberta l’aplicació.</string>
     <string name="ext_not_loaded_details">Per què no s’ha carregat</string>
-    <string name="pref_load_ahead_only_over_wifi">Precarrega només amb Wi-Fi</string>
     <string name="app_migrating_title">S’està finalitzant l’actualització</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Estalvia dades mòbils carregant només les pàgines pròximes a la que esteu llegint</string>
     <string name="information_webview_crashed">El WebView ha deixat de funcionar i s’ha tancat la pàgina</string>
     <string name="pref_time_format">Format d’hora</string>
     <string name="follow_system">El del sistema</string>

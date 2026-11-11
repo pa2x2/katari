@@ -52,7 +52,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
     @Composable
     override fun getPreferences(): List<Preference> {
         val graph = LocalAppUiGraph.current
-        return listOf(syncOptionsGroup(graph.syncPreferences, graph.networkConnectivity.knowsWifi))
+        return listOf(syncOptionsGroup(graph.syncPreferences))
     }
 
     @Composable
@@ -60,7 +60,6 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.current
         val model = metroViewModel<SyncViewModel>()
-        val knowsWifi = LocalAppUiGraph.current.networkConnectivity.knowsWifi
         val status by model.status.collectAsState()
         val devices by model.devices.collectAsState()
         val canKeepSignIn by model.canKeepSignIn.collectAsState()
@@ -109,7 +108,6 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
                         preferences = model.preferences,
                         choices = choices,
                         profilesNotSynced = profilesNotSynced,
-                        knowsWifi = knowsWifi,
                         missingExtensions = missingExtensions,
                         actions = actions,
                     )

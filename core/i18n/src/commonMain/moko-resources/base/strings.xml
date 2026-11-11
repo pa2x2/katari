@@ -1191,7 +1191,6 @@
     <string name="pref_library_update_restriction">Automatic updates device restrictions</string>
     <string name="connected_to_wifi">Only on Wi-Fi</string>
     <string name="network_not_metered">Only on unmetered network</string>
-    <string name="pref_download_only_unmetered_summary">Waits while the system marks the connection as metered</string>
     <string name="charging">When charging</string>
     <string name="restrictions">Restrictions: %s</string>
 
@@ -1419,8 +1418,6 @@
     <string name="pref_page_rotate_invert">Flip orientation of rotated wide pages</string>
     <string name="pref_cutout_short">Show content in cutout area</string>
     <string name="pref_page_transitions">Animate page transitions</string>
-    <string name="pref_load_ahead_only_over_wifi">Load ahead only on Wi-Fi</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Saves mobile data by loading only the pages near the one you\'re reading</string>
     <string name="pref_flash_page">Flash on page change</string>
     <string name="pref_flash_page_summ">Reduces ghosting on e-ink displays</string>
     <string name="pref_flash_duration">Flash duration</string>
@@ -1587,7 +1584,6 @@
     <string name="pref_translate_new_summary">Items downloaded automatically are translated as well</string>
     <string name="pref_translate_ahead">Translate ahead while viewing</string>
     <string name="pref_translate_only_while_charging">Only while charging</string>
-    <string name="pref_translate_only_over_wifi">Only on Wi-Fi</string>
     <string name="pref_translate_only_over_wifi_summary">For engines that send text over the network</string>
     <string name="pref_translate_info">Items are translated with their series\' languages and the default translation engine. Only downloaded items or items being downloaded are translated.</string>
     <string name="save_chapter_as_cbz">Save items as CBZ archive</string>
@@ -2785,7 +2781,6 @@
     <string name="download_notifier_downloader_title">Downloader</string>
     <string name="translate_notifier_title">Translating chapters</string>
     <string name="translate_waiting_for_charger">Waiting for charger</string>
-    <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="translate_notifier_paused">Translations paused</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
@@ -3243,9 +3238,7 @@
     <string name="sync_status_downloading_changes">Downloading changes · %1$d%%</string>
     <string name="sync_status_uploading_files">Uploading covers and fonts · %1$d of %2$d</string>
     <string name="sync_status_downloading_files">Downloading covers and fonts · %1$d of %2$d</string>
-    <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
     <string name="sync_status_paused">Syncing paused</string>
-    <string name="sync_status_changes_wifi">Changes wait for Wi-Fi</string>
     <string name="sync_status_offline">Offline · changes will sync when you\'re online</string>
     <!-- %1$s is the server's address, such as sync.home.lan -->
     <string name="sync_status_unreachable">Can\'t reach %1$s right now</string>
@@ -3270,7 +3263,6 @@
     <string name="sync_status_with_note">%1$s · %2$s</string>
     <string name="sync_unsent_no_connection">no connection</string>
     <string name="sync_unsent_paused">syncing paused</string>
-    <string name="sync_unsent_waiting_for_wifi">waiting for Wi-Fi</string>
     <!-- %1$s is the server's address -->
     <string name="sync_unsent_unreachable">can\'t reach %1$s</string>
     <string name="sync_kind_entries">entries</string>
@@ -3389,18 +3381,11 @@
     <!-- %1$s is the name the device has from its system, such as the phone's model -->
     <string name="sync_rename_device_hint">Your other devices show this name. Leave it empty to use %1$s.</string>
     <string name="sync_options">Options</string>
-    <string name="sync_use_mobile_data">Use mobile data for covers, fonts and first download</string>
-    <string name="sync_use_metered">Use metered networks for covers, fonts and first download</string>
-    <string name="sync_use_metered_summary">The system decides which connections are metered</string>
     <string name="sync_in_background">Sync in the background</string>
     <string name="sync_in_background_summary">While the app is closed</string>
     <string name="sync_background_interval">How often</string>
     <string name="sync_pause">Pause syncing</string>
     <string name="sync_pause_summary">Changes wait on this device until you resume</string>
-    <string name="sync_changes_on_mobile_data">Use mobile data for changes</string>
-    <string name="sync_changes_on_mobile_data_summary">When off, changes wait for Wi-Fi. Opening a title still checks its progress</string>
-    <string name="sync_changes_on_metered">Use metered networks for changes</string>
-    <string name="sync_changes_on_metered_summary">When off, changes wait for an unmetered network. Opening a title still checks its progress</string>
     <string name="sync_choices_title">What syncs</string>
     <string name="sync_choices_note">These choices are this device's. Your other devices keep their own.</string>
     <string name="sync_choices_everything">Everything</string>

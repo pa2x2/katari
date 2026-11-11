@@ -38,4 +38,15 @@
     <string name="statistics_year_recap_notification_text">%s. Click to watch your year.</string>
     <string name="statistics_recap_tap_to_start">Click to start</string>
     <string name="pref_anime_seek_step_summary">%s · seek buttons and arrow keys</string>
+    <string name="sync_use_metered">Use metered networks for covers, fonts and first download</string>
+    <string name="sync_use_metered_summary">The system decides which connections are metered</string>
+    <string name="sync_changes_on_metered">Use metered networks for changes</string>
+    <string name="sync_changes_on_metered_summary">When off, changes wait for an unmetered network. Opening a title still checks its progress</string>
+    <string name="pref_download_only_unmetered_summary">Waits while the system marks the connection as metered</string>
+    <string name="pref_load_ahead_only_unmetered">Load ahead only on unmetered networks</string>
+    <string name="pref_load_ahead_only_unmetered_summary">Saves metered data by loading only the pages near the one you\'re reading</string>
+    <string name="translate_waiting_for_unmetered">Waiting for an unmetered network</string>
+    <string name="sync_status_first_download_unmetered">First download waits for an unmetered network</string>
+    <string name="sync_status_changes_unmetered">Changes wait for an unmetered network</string>
+    <string name="sync_unsent_waiting_for_unmetered">waiting for an unmetered network</string>
 </resources>

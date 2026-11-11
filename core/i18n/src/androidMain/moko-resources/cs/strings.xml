@@ -7,4 +7,6 @@
     <string name="information_empty_category">Nemáte žádné kategorie. Klikněte na tlačítko plus a vytvořte nějakou pro zorganizování vaší knihovny.</string>
     <string name="pref_double_tap_zoom">Přiblížení dvojitým klepnutím</string>
     <string name="pref_double_tap_anim_speed">Rychlost animace při dvojkliku</string>
+    <string name="pref_load_ahead_only_over_wifi">Načíst dopředu pouze přes Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Šetří mobilní data tím, že načítá pouze stránky v blízkosti té, kterou právě čtete</string>
 </resources>

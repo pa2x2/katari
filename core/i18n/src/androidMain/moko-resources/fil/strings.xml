@@ -7,4 +7,6 @@
     <string name="information_empty_category">Wala ka pang kategorya. Pindutin ang plus button para gumawa ng isa para sa pag-aayos ng iyong aklatan.</string>
     <string name="pref_double_tap_zoom">I-double tap para mag-zoom</string>
     <string name="pref_double_tap_anim_speed">Bilis ng animasyon sa pagdoble-pindot</string>
+    <string name="pref_load_ahead_only_over_wifi">Mag-load lang sa Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Makatitipid sa mobile data sa pag-load lang ng mga pahinang malapit sa kasalukuyan mong binabasa</string>
 </resources>

@@ -7,4 +7,6 @@
     <string name="information_empty_category">Anda belum memiliki kategori. Tekan tombol tambah untuk menambahkan kategori baru untuk mengatur pustaka Anda.</string>
     <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
     <string name="pref_double_tap_anim_speed">Kecepatan animasi ketukan dua kali</string>
+    <string name="pref_load_ahead_only_over_wifi">Muat data lebih awal hanya melalui Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Menghemat data seluler dengan hanya memuat halaman yang berdekatan dengan halaman yang sedang Anda baca</string>
 </resources>

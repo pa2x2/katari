@@ -102,8 +102,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">이 확장 앱에서 제공하는 소스는 안전한 컨텐츠와 18세 이상 컨텐츠를 모두 포함할 수 있습니다.</string>
     <string name="ext_content_warning_nsfw_description">이 확장 앱의 소스는 주로 18세 이상 컨텐츠로 구성되어 있습니다.</string>
-    <string name="pref_load_ahead_only_over_wifi">Wi-Fi 연결 시에만 미리 불러오기</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">읽고 있는 페이지 근처의 페이지만 불러와 모바일 데이터를 절약합니다</string>
     <string name="information_webview_crashed">WebView가 정지되어 페이지가 닫혔습니다</string>
     <string name="ext_uninstall">삭제</string>
     <string name="untrusted_extension">신뢰할 수 없는 확장 앱</string>

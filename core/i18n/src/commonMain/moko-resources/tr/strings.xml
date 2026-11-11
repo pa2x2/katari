@@ -807,8 +807,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Bu uzantının sağladığı kaynaklar güvenli ve 18+ içerik içerebilir.</string>
     <string name="ext_content_warning_nsfw_description">Bu uzantının sağladığı kaynaklar 18+ içeriklere odaklıdır.</string>
-    <string name="pref_load_ahead_only_over_wifi">Yalnızı Wi-Fi ile önden yükle</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Yalnızca okuduğunuz sayfaya yakın olan sayfaları yükleyerek mobil veri tasarruf sağlar</string>
     <string name="information_webview_crashed">WebView çalışmayı durdurdu ve sayfa kapatıldı</string>
     <string name="pref_hardware_bitmap_threshold">Özel bitmap donanım sınırı</string>
     <string name="pref_hardware_bitmap_threshold_default">Varsayılan (%d)</string>

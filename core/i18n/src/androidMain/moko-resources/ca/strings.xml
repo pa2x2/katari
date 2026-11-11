@@ -7,4 +7,6 @@
     <string name="information_empty_category">No teniu categories. Premeu el botó més per a crear-ne una i organitzar la vostra biblioteca.</string>
     <string name="pref_double_tap_zoom">Toca dues vegades per a ampliar</string>
     <string name="pref_double_tap_anim_speed">Velocitat de l’animació del doble toc</string>
+    <string name="pref_load_ahead_only_over_wifi">Precarrega només amb Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Estalvia dades mòbils carregant només les pàgines pròximes a la que esteu llegint</string>
 </resources>

@@ -7,4 +7,6 @@
     <string name="information_empty_category">카테고리가 없습니다. 서재 구성을 위해 + 버튼을 눌러 생성하세요.</string>
     <string name="pref_double_tap_zoom">두 번 탭하여 줌</string>
     <string name="pref_double_tap_anim_speed">더블 탭 애니메이션 속도</string>
+    <string name="pref_load_ahead_only_over_wifi">Wi-Fi 연결 시에만 미리 불러오기</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">읽고 있는 페이지 근처의 페이지만 불러와 모바일 데이터를 절약합니다</string>
 </resources>

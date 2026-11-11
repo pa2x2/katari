@@ -7,4 +7,6 @@
     <string name="information_empty_category">Kategoriniz yok. Kitaplığınızı düzenlemek için artı düğmesine basarak bir tane oluşturun.</string>
     <string name="pref_double_tap_zoom">Yakınlaştırmak için iki kez dokun</string>
     <string name="pref_double_tap_anim_speed">Çift dokunma animasyon hızı</string>
+    <string name="pref_load_ahead_only_over_wifi">Yalnızı Wi-Fi ile önden yükle</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Yalnızca okuduğunuz sayfaya yakın olan sayfaları yükleyerek mobil veri tasarruf sağlar</string>
 </resources>

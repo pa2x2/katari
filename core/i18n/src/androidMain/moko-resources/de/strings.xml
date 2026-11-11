@@ -7,4 +7,6 @@
     <string name="information_empty_category">Keine Kategorien vorhanden. Tippe auf die Plus-Schaltfläche, um eine Kategorie zum Sortieren deiner Bibliothek zu erstellen.</string>
     <string name="pref_double_tap_zoom">Zum Zoomen doppeltippen</string>
     <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
+    <string name="pref_load_ahead_only_over_wifi">Nur über WLAN im Voraus herunterladen</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Spart mobile Daten, indem nur Seiten um die aktuelle Seite herum geladen werden</string>
 </resources>

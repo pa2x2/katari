@@ -1,6 +1,7 @@
 package app.katari.platform.presentation
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
 
 /**
@@ -34,6 +35,25 @@ data class PlatformPresentation(
     /** Takes the year's total time. */
     val yearRecapNotificationText: StringResource,
     val cloudflareHelpLabel: StringResource,
+    /**
+     * Names the network that work kept off costly connections waits for: Wi-Fi where the platform can tell it, and
+     * otherwise a network the system doesn't call metered.
+     */
+    val downloadOnlyOnUnmeteredLabel: StringResource,
+    val downloadOnlyOnUnmeteredSummary: StringResource?,
+    val translateOnlyOnUnmeteredLabel: StringResource,
+    val translateWaitsForUnmeteredLabel: StringResource,
+    val loadAheadOnlyOnUnmeteredLabel: StringResource,
+    val loadAheadOnlyOnUnmeteredSummary: StringResource,
+    val syncFilesOnMeteredLabel: StringResource,
+    val syncFilesOnMeteredSummary: StringResource?,
+    val syncChangesOnMeteredLabel: StringResource,
+    val syncChangesOnMeteredSummary: StringResource,
+    val syncFirstDownloadWaitsLabel: StringResource,
+    val syncChangesWaitLabel: StringResource,
+    /** Follows a count of unsent changes. */
+    val syncUnsentWaitingNote: StringResource,
+    val syncFilesWaitingPlural: PluralsResource,
 )
 
 expect val platformPresentation: PlatformPresentation

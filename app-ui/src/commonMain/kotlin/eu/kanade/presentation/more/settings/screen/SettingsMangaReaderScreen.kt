@@ -77,8 +77,8 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = settings.profilePreference(settingBinder, settings.reading.loadAheadOnlyOverWifi),
-                title = stringResource(MR.strings.pref_load_ahead_only_over_wifi),
-                subtitle = stringResource(MR.strings.pref_load_ahead_only_over_wifi_summary),
+                title = stringResource(platformPresentation.loadAheadOnlyOnUnmeteredLabel),
+                subtitle = stringResource(platformPresentation.loadAheadOnlyOnUnmeteredSummary),
             ),
             getDisplayGroup(settings, settingBinder, deviceControls, defaultOrientation),
             getEInkGroup(settings, settingBinder, deviceControls),

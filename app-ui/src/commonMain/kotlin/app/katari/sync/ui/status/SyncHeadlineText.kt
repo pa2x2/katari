@@ -52,11 +52,11 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
             ?.let { stringResource(MR.strings.sync_status_catching_up, it) }
             ?: stringResource(MR.strings.sync_status_catching_up_unknown)
     is SyncHeadline.Step -> stepText(headline.step)
-    SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
+    SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(platformPresentation.syncFirstDownloadWaitsLabel)
     is SyncHeadline.Paused -> unsentText(headline.unsent, MR.strings.sync_unsent_paused)
         ?: stringResource(MR.strings.sync_status_paused)
-    is SyncHeadline.ChangesWaitForWifi -> unsentText(headline.unsent, MR.strings.sync_unsent_waiting_for_wifi)
-        ?: stringResource(MR.strings.sync_status_changes_wifi)
+    is SyncHeadline.ChangesWaitForWifi -> unsentText(headline.unsent, platformPresentation.syncUnsentWaitingNote)
+        ?: stringResource(platformPresentation.syncChangesWaitLabel)
     SyncHeadline.Syncing -> stringResource(MR.strings.sync_status_syncing)
     is SyncHeadline.Unsent -> stringResource(
         MR.strings.sync_status_with_note,
@@ -80,7 +80,11 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
             is SyncHeadline.FilesNote.WaitingForWifi -> stringResource(
                 MR.strings.sync_status_with_note,
                 upToDate,
-                pluralStringResource(MR.plurals.sync_files_waiting_for_wifi, files.count.toInt(), files.count.toInt()),
+                pluralStringResource(
+                    platformPresentation.syncFilesWaitingPlural,
+                    files.count.toInt(),
+                    files.count.toInt(),
+                ),
             )
             is SyncHeadline.FilesNote.MissingOnServer -> stringResource(
                 MR.strings.sync_status_with_note,

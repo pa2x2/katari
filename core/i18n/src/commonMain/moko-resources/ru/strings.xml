@@ -707,8 +707,6 @@
     <string name="app_migrating_summary">Подготовка после обновления. Это может занять несколько минут, поэтому не закрывайте приложение.</string>
     <string name="ext_not_loaded_details">Почему это не загрузилось</string>
     <string name="app_migrating_title">Завершение обновления</string>
-    <string name="pref_load_ahead_only_over_wifi">Загрузить наперёд только с Wi-Fi</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Экономит мобильный трафик, загружая только те страницы, которые находятся рядом с той, которую вы читаете</string>
     <string name="information_webview_crashed">WebView перестало работать, и страница была закрыта</string>
     <string name="pref_time_format">Формат времени</string>
     <string name="follow_system">Как в системе</string>

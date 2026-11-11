@@ -807,8 +807,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">來自此擴充套件的來源可能同時包含安全與 18+ 內容。</string>
     <string name="ext_content_warning_nsfw_description">來自此擴充套件的來源主要以 18+ 內容為主。</string>
-    <string name="pref_load_ahead_only_over_wifi">僅在 Wi-Fi 下預先載入</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">僅載入您正在閱讀的頁面附近內容，以節省行動數據</string>
     <string name="information_webview_crashed">WebView 停止運作，且頁面已關閉</string>
     <string name="pref_hardware_bitmap_threshold">自訂硬體點陣圖的閾值設定</string>
     <string name="pref_hardware_bitmap_threshold_summary">如果閱讀時載入的是空白影像，請逐步降低閾值\n已選擇：%s</string>
