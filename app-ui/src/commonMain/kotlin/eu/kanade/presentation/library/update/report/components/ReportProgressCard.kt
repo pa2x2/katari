@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -13,6 +14,7 @@ import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.progress.LinearProgressIndicator
+import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.data.library.label
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.i18n.*
@@ -47,7 +49,7 @@ internal fun ReportProgressCard(update: LibraryUpdateState, onStop: () -> Unit) 
                     below = {
                         if (progress.total > 0) {
                             LinearProgressIndicator(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.s),
                                 progress = { progress.completed.toFloat() / progress.total },
                             )
                         }

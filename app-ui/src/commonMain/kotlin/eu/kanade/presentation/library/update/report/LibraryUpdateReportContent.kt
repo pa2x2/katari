@@ -18,6 +18,7 @@ import app.katari.icons.materialsymbols.rounded.SkipNext
 import app.katari.icons.materialsymbols.rounded.Warning
 import app.katari.library.update.report.LibraryUpdateReport
 import app.katari.presentation.kit.button.Button
+import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.chip.AssistChip
@@ -146,18 +147,22 @@ fun LibraryUpdateReportContent(
             failedSources.flatMap { source -> source.items.map { it.entry } } +
             report.failed.map { it.entry }
         if (failedEntries.isNotEmpty()) {
+            val sharedRows = if (sharedFailure != null) 1 else 0
+            val cardSize = sharedRows + failedSources.size + report.failed.size
             item(key = "header-failed") {
                 ReportSectionHeader(
                     icon = MaterialSymbols.Rounded.Error,
                     title = MR.strings.library_update_report_failed,
                     count = failedEntries.size,
                     isError = true,
-                    trailing = if (failedEntries.size > 1) {
+                    // A single row already retries everything it stands for.
+                    trailing = if (cardSize > 1) {
                         {
                             Button(
                                 label = stringResource(MR.strings.library_update_report_retry_all),
                                 onClick = { actions.onRetry(failedEntries) },
                                 style = ButtonStyle.Text,
+                                size = ButtonSize.Small,
                             )
                         }
                     } else {
@@ -165,8 +170,6 @@ fun LibraryUpdateReportContent(
                     },
                 )
             }
-            val sharedRows = if (sharedFailure != null) 1 else 0
-            val cardSize = sharedRows + failedSources.size + report.failed.size
             if (sharedFailure != null) {
                 item(key = "failed-shared") {
                     RowGroupItem(position = RowGroupPosition.of(0, cardSize)) {

@@ -32,6 +32,7 @@ import app.katari.library.update.pause.PausedLibrarySources
 import app.katari.presentation.kit.feedback.SnackbarHostState
 import app.katari.profiles.core.ProfileScopedStateEvent
 import app.katari.profiles.core.observeProfileScopedState
+import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdate
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
@@ -57,7 +58,6 @@ import eu.kanade.tachiyomi.ui.library.update.report.NewerOtherDeviceUpdate
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -95,6 +95,8 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.update.model.LibraryUpdateResultsSoFar
+import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
 import tachiyomi.domain.library.update.model.LibraryUpdateStart
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.domain.library.update.model.subscribeLatestSummary
@@ -184,39 +186,74 @@ class UpdatesViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    private val libraryUpdate: Flow<LibraryUpdateState?> = libraryUpdateQueue.activeProfileState(activeProfileProvider)
+    // Each source starts from a value of its own, so the header shows even while one of them, such as another device's
+    // update over sync, hasn't answered yet.
+    private val libraryUpdate: StateFlow<LibraryUpdateState?> = libraryUpdateQueue.activeProfileState(
+        activeProfileProvider,
+    )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    private val pausedSourceNames: Flow<List<String>> = PausedLibrarySources(
+    private val resultsSoFar: StateFlow<LibraryUpdateResultsSoFar?> = libraryUpdate
+        .map { (it as? LibraryUpdateState.Running)?.progress?.startedAt }
+        .distinctUntilChanged()
+        .flatMapLatest { startedAt -> startedAt?.let(reportRepository::subscribeResultsSince) ?: flowOf(null) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val lastUpdated: StateFlow<Long> = combine(
+        libraryPreferences.lastUpdateFinishedAt.changes(),
+        libraryPreferences.lastUpdatedTimestamp.changes(),
+        ::lastUpdatedAt,
+    )
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            lastUpdatedAt(libraryPreferences.lastUpdateFinishedAt.get(), libraryPreferences.lastUpdatedTimestamp.get()),
+        )
+
+    private val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val otherDeviceUpdate: StateFlow<OtherDeviceLibraryUpdate?> = newerOtherDeviceUpdate.subscribe()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
         sourcePauses = LibrarySourcePauses(libraryPreferences),
         sourceRepository = sourceRepository,
         sourceManager = sourceManager,
     )
         .subscribe()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val libraryUpdateStatus: StateFlow<UpdatesLibraryUpdateStatus?> = combine(
+    val libraryUpdateStatus: StateFlow<UpdatesLibraryUpdateStatus> = combine(
         libraryUpdate,
-        libraryUpdate
-            .map { (it as? LibraryUpdateState.Running)?.progress?.startedAt }
-            .distinctUntilChanged()
-            .flatMapLatest { startedAt -> startedAt?.let(reportRepository::subscribeResultsSince) ?: flowOf(null) },
-        combine(
-            libraryPreferences.lastUpdateFinishedAt.changes(),
-            libraryPreferences.lastUpdatedTimestamp.changes(),
-        ) { finishedAt, startedAt -> finishedAt.takeIf { it > 0 } ?: startedAt },
-        combine(reportRepository.subscribeLatestSummary(), newerOtherDeviceUpdate.subscribe(), ::Pair),
+        resultsSoFar,
+        lastUpdated,
+        combine(latestUpdateSummary, otherDeviceUpdate, ::Pair),
         pausedSourceNames,
-    ) { update, resultsSoFar, lastUpdated, (latest, otherDevice), pausedSources ->
+    ) { update, results, updatedAt, (latest, otherDevice), pausedSources ->
         UpdatesLibraryUpdateStatus(
             update = update,
-            resultsSoFar = resultsSoFar,
-            lastUpdated = lastUpdated,
+            resultsSoFar = results,
+            lastUpdated = updatedAt,
             failed = latest?.failed ?: 0,
             otherDevice = otherDevice,
             pausedSources = pausedSources,
             hasReport = latest != null || otherDevice != null,
         )
     }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            UpdatesLibraryUpdateStatus(
+                update = null,
+                resultsSoFar = null,
+                lastUpdated = lastUpdated.value,
+                failed = 0,
+                otherDevice = null,
+                pausedSources = emptyList(),
+                hasReport = false,
+            ),
+        )
 
     fun cancelLibraryUpdate() {
         viewModelScope.launchIO { libraryUpdateQueue.stop() }
@@ -808,3 +845,6 @@ private fun UpdateItem.EntryUpdate.consumptionStatus(): EntryConsumptionStatus {
 private fun UpdateItem.EntryUpdate.bookmarkStatus(): EntryBookmarkStatus {
     return EntryBookmarkStatus(bookmarked = update.bookmark)
 }
+
+// Updates written before the end of an update was recorded only know when they started.
+private fun lastUpdatedAt(finishedAt: Long, startedAt: Long): Long = finishedAt.takeIf { it > 0 } ?: startedAt

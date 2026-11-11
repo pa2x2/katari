@@ -91,7 +91,7 @@ data object UpdatesTab : Tab {
         )
 
         val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }
-            .takeIf { libraryUpdateStatus?.hasReport == true }
+            .takeIf { libraryUpdateStatus.hasReport }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -147,7 +147,7 @@ data object UpdatesTab : Tab {
             snackbarHostState = viewModel.snackbarHostState,
             onSelectAll = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
-            libraryUpdate = libraryUpdateStatus?.update,
+            libraryUpdate = libraryUpdateStatus.update,
             onUpdateLibrary = suspend { updateStarter.start(viewModel::updateLibrary) }
                 .takeIf { graph.libraryUpdateQueue.isOffered },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
@@ -170,13 +170,11 @@ data object UpdatesTab : Tab {
                 // An update that found nothing still says when it ran and what it couldn't check
                 FramedContent(modifier = modifier.fillMaxSize()) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        libraryUpdateStatus?.let {
-                            UpdatesLibraryUpdateHeader(
-                                status = it,
-                                onClick = openUpdateReport,
-                                onCancel = viewModel::cancelLibraryUpdate,
-                            )
-                        }
+                        UpdatesLibraryUpdateHeader(
+                            status = libraryUpdateStatus,
+                            onClick = openUpdateReport,
+                            onCancel = viewModel::cancelLibraryUpdate,
+                        )
                         if (feed.hiddenByFilters > 0) {
                             UpdatesFilteredEmptyScreen(
                                 summary = filterSummary,
@@ -190,13 +188,11 @@ data object UpdatesTab : Tab {
                 }
             },
         ) {
-            libraryUpdateStatus?.let {
-                updatesLibraryUpdateItem(
-                    status = it,
-                    onClick = openUpdateReport,
-                    onCancel = viewModel::cancelLibraryUpdate,
-                )
-            }
+            updatesLibraryUpdateItem(
+                status = libraryUpdateStatus,
+                onClick = openUpdateReport,
+                onCancel = viewModel::cancelLibraryUpdate,
+            )
             unifiedUpdatesUiItems(
                 uiModels = state.getUiModel(),
                 selectionMode = state.selectionMode,
