@@ -30,6 +30,7 @@ import eu.kanade.presentation.more.settings.screen.debug.DebugInfoGraph
 import eu.kanade.presentation.more.settings.screen.notifications.NotificationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.security.SecuritySettingsGraph
 import eu.kanade.presentation.more.settings.screen.textrecognition.TextRecognitionSettingsGraph
+import eu.kanade.presentation.more.settings.screen.touchpad.TouchpadSettingsGraph
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
@@ -66,6 +67,7 @@ interface AppUiGraph :
     DataSettingsGraph,
     SecuritySettingsGraph,
     NotificationSettingsGraph,
+    TouchpadSettingsGraph,
     AdvancedSettingsGraph,
     DebugInfoGraph,
     AboutGraph,

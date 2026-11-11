@@ -87,6 +87,14 @@ data class PlatformPresentation(
     val defaultReadingModeIcon: ImageVector,
     /** Pictures the network that work kept off costly connections waits for. */
     val unmeteredNetworkIcon: ImageVector,
+    /**
+     * The Settings entry of the app's own touchpad settings; null where the system hands the app touchpad swipes as
+     * touches, as Android does, and the app has none.
+     */
+    val touchpadSettings: SettingsEntryPresentation?,
 )
+
+/** How a Settings entry for a page of its own shows in the list of settings. */
+data class SettingsEntryPresentation(val title: StringResource, val summary: StringResource, val icon: ImageVector)
 
 expect val platformPresentation: PlatformPresentation

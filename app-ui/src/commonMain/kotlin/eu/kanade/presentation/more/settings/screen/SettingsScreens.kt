@@ -12,6 +12,7 @@ fun settingsScreens(graph: AppUiGraph): List<SearchableSettings> =
 
 private fun mainSettingsScreens() = listOf(
     SettingsAppearanceScreen(),
+    SettingsTouchpadScreen(),
     SettingsLibraryScreen(),
     SettingsLibraryUpdatesScreen(),
     SettingsReaderScreen(),

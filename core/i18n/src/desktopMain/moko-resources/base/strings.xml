@@ -71,4 +71,12 @@
     <string name="pref_browse_long_press_action_open_settings">Press-and-hold actions</string>
     <string name="browse_feed_long_press_actions_for_source">Press-and-hold actions for %1$s</string>
     <string name="filter_tristate_chip_hint">Click to include, click again to exclude. Press and hold to exclude.</string>
+    <string name="pref_category_touchpad">Touchpad</string>
+    <string name="pref_touchpad_summary">Natural scrolling</string>
+    <string name="pref_natural_scrolling">Natural scrolling</string>
+    <string name="natural_scrolling_as_system_on">As the system sets it: on</string>
+    <string name="natural_scrolling_as_system_off">As the system sets it: off</string>
+    <string name="natural_scrolling_as_system_unknown">As the system sets it: not found, so off</string>
+    <string name="pref_natural_scrolling_info">With natural scrolling, lists and pages move the way your fingers go, as on a touch screen. Volume and seek swipes in the player follow your fingers either way.</string>
+    <string name="pref_natural_scrolling_unknown_info">Katari can\'t read this desktop\'s touchpad setting, so choose the one your system uses. Lists and pages keep scrolling the way the system scrolls them, and volume and seek swipes follow your fingers.</string>
 </resources>

@@ -7,6 +7,7 @@ import app.katari.icons.platformsymbols.rounded.Computer
 import app.katari.icons.platformsymbols.rounded.ComputerCancel
 import app.katari.icons.platformsymbols.rounded.DisplaySettings
 import app.katari.icons.platformsymbols.rounded.Mouse
+import app.katari.icons.platformsymbols.rounded.TrackpadInput2
 import tachiyomi.i18n.*
 
 actual val platformPresentation = PlatformPresentation(
@@ -61,4 +62,9 @@ actual val platformPresentation = PlatformPresentation(
     wifiOnlyLabel = null,
     defaultReadingModeIcon = PlatformSymbols.Rounded.DisplaySettings,
     unmeteredNetworkIcon = MaterialSymbols.Rounded.Public,
+    touchpadSettings = SettingsEntryPresentation(
+        title = PlatformStrings.pref_category_touchpad,
+        summary = PlatformStrings.pref_touchpad_summary,
+        icon = PlatformSymbols.Rounded.TrackpadInput2,
+    ),
 )

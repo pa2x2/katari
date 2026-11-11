@@ -165,15 +165,23 @@ private data class Item(
     val screen: VoyagerScreen,
 )
 
-/** Look, library, reading and media, services, and the app itself. */
+/** Look and touchpad, library, reading and media, services, and the app itself. */
 private fun itemGroups() = listOf(
-    listOf(
+    listOfNotNull(
         Item(
             titleRes = MR.strings.pref_category_appearance,
             subtitleRes = MR.strings.pref_appearance_summary,
             icon = MaterialSymbols.Rounded.Palette,
             screen = SettingsAppearanceScreen(),
         ),
+        platformPresentation.touchpadSettings?.let { entry ->
+            Item(
+                titleRes = entry.title,
+                subtitleRes = entry.summary,
+                icon = entry.icon,
+                screen = SettingsTouchpadScreen(),
+            )
+        },
     ),
     listOf(
         Item(
