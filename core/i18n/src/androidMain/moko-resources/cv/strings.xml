@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Йӑнӑшсене кӑтарт</string>
+    <string name="information_empty_category">Санӑн пухмӑшсем ҫук. Хӑвӑн вулавӑша пухмӑшсем туса йӗркелеме «Хуш» пускӑч ҫине пус.</string>
+    <string name="pref_double_tap_zoom">Пысӑклатма икӗ хут пусмалла</string>
+    <string name="pref_double_tap_anim_speed">Икӗ хут пуссан эним хӑвӑртлӑхӗ</string>
+    <string name="pref_dump_crash_logs">Йӑнӑш кӗнекине тийесе йар</string>
+    <string name="pref_security_summary">Апа ҫаклатни, ыкран хӳтӗлевӗ</string>
+    <string name="pref_viewer_nav">Куҫӑм палли</string>
+    <string name="pref_read_with_tapping_inverted">Пусӑмсене вырӑнсемпе улӑштар</string>
+    <string name="pref_read_with_long_tap">Пусса тӑннӑ чух кӑтарт</string>
+    <string name="pref_chapter_swipe_start">Сулахайалла туртсан сыпӑк</string>
+    <string name="pref_chapter_swipe_end">Сылтӑмалла туртсан сыпӑк</string>
+    <string name="ext_permission_install_apps_warning">Хушмасене лартма ирӗксем кирлӗ. Ирӗксене пама кунта пус.</string>
+    <string name="connected_to_wifi">Wi-Fi урлӑ ҫеҫ</string>
+</resources>

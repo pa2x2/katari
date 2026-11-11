@@ -188,7 +188,6 @@
     <string name="download_notifier_downloader_title">Pengunduh</string>
     <string name="download_notifier_title_error">Gagal</string>
     <string name="download_notifier_unknown_error">Terjadi kesalahan saat mengunduh bab</string>
-    <string name="download_notifier_text_only_wifi">Tidak terhubung dengan Wi-Fi</string>
     <string name="download_notifier_no_network">Tidak ada koneksi jaringan yang tersedia</string>
     <string name="download_notifier_download_paused">Unduhan dijeda</string>
     <string name="action_global_search">Pencarian Global</string>
@@ -198,7 +197,6 @@
     <string name="latest">Terbaru</string>
     <string name="browse">Jelajahi</string>
     <string name="channel_common">Umum</string>
-    <string name="information_empty_category">Anda belum memiliki kategori. Tekan tombol tambah untuk menambahkan kategori baru untuk mengatur pustaka Anda.</string>
     <string name="label_migration">Migrasi</string>
     <string name="label_extensions">Ekstensi</string>
     <string name="label_extension_info">Info Ekstensi</string>
@@ -213,7 +211,6 @@
     <string name="ext_uninstall">Lepas</string>
     <string name="untrusted_extension">Ekstensi tidak terpercaya</string>
     <string name="untrusted_extension_message">Ekstensi berbahaya dapat membaca semua kredensial login yang disimpan atau menjalankan kode berbahaya. \n \nDengan mempercayai sertifikat ekstensi ini, Anda menerima risiko ini.</string>
-    <string name="pref_double_tap_anim_speed">Kecepatan animasi ketukan dua kali</string>
     <string name="double_tap_anim_speed_0">Tanpa animasi</string>
     <string name="double_tap_anim_speed_normal">Normal</string>
     <string name="double_tap_anim_speed_fast">Cepat</string>
@@ -235,7 +232,6 @@
     <string name="transition_pages_error">Gagal memuat halaman: %1$s</string>
     <string name="action_open_in_web_view">Buka dalam WebView</string>
     <string name="pref_skip_read_chapters">Lewati bab yang sudah dibaca</string>
-    <string name="pref_read_with_long_tap">Tampilkan tindakan saat tekan lama</string>
     <string name="pref_color_filter_mode">Mode saringan warna campur</string>
     <string name="filter_mode_overlay">Lapisan</string>
     <string name="filter_mode_multiply">Gandakan</string>
@@ -345,7 +341,6 @@
     <string name="tapping_inverted_vertical">Tegak</string>
     <string name="tapping_inverted_horizontal">Mendatar</string>
     <string name="tapping_inverted_none">Tidak</string>
-    <string name="pref_read_with_tapping_inverted">Balikkan zona ketuk</string>
     <string name="unknown_status">Status tidak diketahui</string>
     <string name="unknown_author">Penulis tidak diketahui</string>
     <string name="whats_new">Apa yang baru</string>
@@ -385,13 +380,10 @@
     <string name="action_asc">Urutan naik</string>
     <string name="action_order_by_chapter_number">Menurut nomor bab</string>
     <string name="action_order_by_upload_date">Menurut tanggal unggahan</string>
-    <string name="pref_dump_crash_logs">Bagikan log kerusakan</string>
     <string name="pref_dump_crash_logs_summary">Simpan log kerusakan ke sebuah berkas untuk dibagikan dengan pengembang aplikasi</string>
-    <string name="pref_viewer_nav">Zona ketuk</string>
     <string name="right_and_left_nav">Kanan dan Kiri</string>
     <string name="action_display_show_number_of_items">Tampilkan jumlah item</string>
     <string name="none">Kosong</string>
-    <string name="action_show_errors">Ketuk untuk melihat detail</string>
     <string name="action_sort_chapter_fetch_date">Tanggal bab dimasukkan</string>
     <string name="pref_reader_actions">Aksi</string>
     <string name="nav_zone_right">Kanan</string>
@@ -419,7 +411,6 @@
     <string name="pref_download_new_categories_details">Entri dalam kategori yang dikecualikan tidak akan diunduh meskipun mereka juga termasuk dalam kategori yang disertakan.</string>
     <string name="rotation_type">Rotasi</string>
     <string name="pref_grayscale">Skala abu-abu</string>
-    <string name="pref_show_navigation_mode">Tampilkan zona ketukan</string>
     <string name="date">Tanggal</string>
     <string name="local_filter_order_by">Urutkan menurut</string>
     <string name="local_invalid_format">Format bab tidak valid</string>
@@ -472,8 +463,6 @@
     <string name="ext_installer_legacy">Warisan</string>
     <string name="ext_installer_pref">Pemasang</string>
     <string name="action_sort_count">Total entri</string>
-    <string name="notification_size_warning">Pembaruan berskala besar membahayakan sumber, dapat membuat pembaruan lambat dan meningkatkan penggunaan baterai. Ketuk untuk mempelajari lebih lanjut.</string>
-    <string name="download_queue_size_warning">Peringatan: mengunduh dalam jumlah besar bisa menyebabkan sumber menjadi lambat dan/atau memblokir %s. Ketuk untuk mempelajari lebih lanjut.</string>
     <string name="label_warning">Peringatan</string>
     <string name="pref_verbose_logging_summary">Cetak catatan berlebih ke catatan sistem (mengurangi kinerja aplikasi)</string>
     <string name="backup_info">Anda juga harus menyimpan salinan cadangan di tempat lain. Cadangan mungkin berisi data sensitif termasuk kata sandi yang tersimpan; berhati-hatilah jika berbagi.</string>
@@ -482,7 +471,6 @@
     <string name="pref_custom_brightness">Atur kecerahan</string>
     <string name="action_display_language_badge">Bahasa</string>
     <string name="update_72hour">Tiap 3 hari</string>
-    <string name="connected_to_wifi">Hanya pada Wi-FI</string>
     <string name="ext_update_all">Perbarui semuanya</string>
     <string name="pref_auto_clear_chapter_cache">Bersihkan cache bab saat aplikasi dibuka</string>
     <string name="database_clean">Tidak ada yang perlu dibersihkan</string>
@@ -497,7 +485,6 @@
     <string name="action_display_cover_only_grid">Grid sampul saja</string>
     <string name="pref_landscape_zoom">Secara otomatis melebarkan gambar</string>
     <string name="pref_navigate_pan">Geser gambar lebar</string>
-    <string name="learn_more">Pelajari lebih lanjut</string>
     <string name="rotation_reverse_portrait">Layar tegak terbalik</string>
     <string name="action_move_to_top_all_for_series">Pindahkan seri ke atas</string>
     <string name="disabled_nav">Dinonaktifkan</string>
@@ -545,14 +532,11 @@
     <string name="multi_lang">Semua</string>
     <string name="are_you_sure">Apa kamu yakin?</string>
     <string name="popular">Populer</string>
-    <string name="missing_storage_permission">Izin penyimpanan tidak diberikan</string>
     <string name="action_search_hint">Cari…</string>
     <string name="pref_browse_summary">Sumber, ekstensi, pencarian global</string>
     <string name="pref_reader_summary">Mode membaca, tampilan, navigasi</string>
     <string name="pref_downloads_summary">Unduh otomatis, unduh terlebih dahulu</string>
-    <string name="pref_security_summary">Kunci aplikasi, amankan layar</string>
     <string name="pref_appearance_summary">Tema, format tanggal &amp; waktu</string>
-    <string name="pref_library_summary">Kategori, pembaruan global, geser chapter</string>
     <string name="pref_backup_summary">Pencadangan manual &amp; otomatis, ruang penyimpanan</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="crash_screen_restart_application">Mulai ulang aplikasi</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">Memutar halaman lebar agar pas</string>
     <string name="pref_page_rotate_invert">Orientasi balik halaman lebar yang diputar</string>
     <string name="pref_debug_info">Info debug</string>
-    <string name="pref_chapter_swipe_end">Bab tentang geser ke kanan</string>
-    <string name="pref_chapter_swipe_start">Bab tentang geser ke kiri</string>
-    <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
     <string name="action_set_interval">Terapkan jeda waktu</string>
     <string name="action_filter_interval_custom">Penyesuaian frekuensi update</string>
     <string name="action_sort_next_updated">Pembaruan yang diharapkan berikutnya</string>
@@ -610,7 +591,6 @@
     <string name="has_results">Memiliki hasil</string>
     <string name="syncing_library">Sinkronisasi pustaka</string>
     <string name="library_sync_complete">Sinkronisasi pustaka selesai</string>
-    <string name="information_cloudflare_help">Ketuk di sini untuk bantuan dengan Cloudflare</string>
     <string name="download_cache_invalidated">Membuat ulang indeks unduhan</string>
     <string name="create_backup_file_error">Tidak dapat membuat file cadangan</string>
     <string name="unlock_app_title">Buka kunci %s</string>
@@ -662,7 +642,6 @@
     <string name="onboarding_storage_help_info">Memperbarui dari versi lama dan tak yakin harus pilih mana? lihat panduan penyimpanan untuk informasi lebih lanjut.</string>
     <string name="invalid_backup_file_error">Kesalahan penuh:</string>
     <string name="private_settings">Sertakan pengaturan sensitif (contohnya, token login)</string>
-    <string name="ext_permission_install_apps_warning">Izin diperlukan untuk memasang ekstensi. Klik disini untuk memberi izin.</string>
     <string name="manga_interval_expected_update">Bab baru diperkirakan akan dirils sekitar %1$s, diperiksa setiap sekitar %2$s.</string>
     <string name="available_disk_space_info">Tersedia:%1$s/Total:%2$s</string>
     <string name="manga_interval_custom_amount">Frekuensi pembaruan khusus:</string>
@@ -809,8 +788,6 @@
     <string name="ext_content_warning_mixed_description">Sumber dari ekstensi ini mungkin berisi konten aman maupun 18+.</string>
     <string name="ext_content_warning_nsfw_description">Sumber dari ekstensi ini utamanya berfokus pada konten 18+.</string>
     <string name="downloading_with_progress">Mengunduh… (%d%%)</string>
-    <string name="pref_load_ahead_only_over_wifi">Muat data lebih awal hanya melalui Wi-Fi</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Menghemat data seluler dengan hanya memuat halaman yang berdekatan dengan halaman yang sedang Anda baca</string>
     <string name="pref_vertical_navigator">Gunakan navigator bab vertikal di</string>
     <string name="pref_vertical_navigator_height">Tinggi navigator vertikal</string>
     <string name="ext_content_warning_nsfw">18+</string>

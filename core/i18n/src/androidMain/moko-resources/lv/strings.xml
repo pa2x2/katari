@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Pieskarieties šeit, lai iegūtu palīdzību ar Cloudflare</string>
+    <string name="action_show_errors">Pieskarieties, lai skatītu detalizētu informāciju</string>
+    <string name="notification_size_warning">Daudz atjauninājumi kaitē avotiem un var izraisīt lēnākus atjauninājumus un arī lielāku akumulatora lietojumu. Pieskarieties, lai uzzinātu vairāk.</string>
+    <string name="download_queue_size_warning">Brīdinājums: liela apjoma lejupielāde var izraisīt to, ka avoti kļūst lēnāki un/vai bloķē %s. Pieskarieties, lai uzzinātu vairāk.</string>
+    <string name="information_empty_category">Jums nav nevienas kategorijas. Pieskarieties plus pogai, lai izveidotu kategoriju savas bibliotēkas organizēšanai.</string>
+    <string name="pref_double_tap_zoom">Dubult-pieskarieties, lai tuvinātu</string>
+    <string name="pref_double_tap_anim_speed">Dubultpieskāriena animācijas ātrums</string>
+    <string name="pref_dump_crash_logs">Dalīties ar avārijas žurnālu</string>
+    <string name="pref_security_summary">Aplikācijas slēdzis, ekrāna aizsargāšana</string>
+    <string name="pref_viewer_nav">Skāriena zonas</string>
+    <string name="pref_read_with_tapping_inverted">Invertētas skāriena zonas</string>
+    <string name="pref_show_navigation_mode">Rādīt skāriena zonu pārklājumu</string>
+    <string name="pref_read_with_long_tap">Rādīt darbīūbas ar ilgu pieskārienu</string>
+    <string name="pref_chapter_swipe_start">Vilkt uz kreisās puses darbību</string>
+    <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>
+    <string name="connected_to_wifi">Tikai uz Wi-Fi</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Klicka här för hjälp med Cloudflare</string>
+    <string name="action_show_errors">Tryck för att se detaljer</string>
+    <string name="notification_size_warning">Stora uppdateringar skadar källor och kan leda till långsammare uppdateringar samt en ökad batterianvändning. Tryck för att få veta mer.</string>
+    <string name="download_queue_size_warning">Varning: stora massnerladdningar kan leda till att källor blir långsamma och/eller blockerar %s. Tryck för att få veta mer.</string>
+    <string name="information_empty_category">Du har inga kategorier. Tryck på plusknappen för att skapa en för att organisera ditt bibliotek.</string>
+    <string name="pref_double_tap_zoom">Dubbeltryck för att zooma</string>
+    <string name="pref_double_tap_anim_speed">Animationshastighet för dubbelklick</string>
+    <string name="pref_dump_crash_logs">Dela kraschloggar</string>
+    <string name="pref_security_summary">Applikationslås, säkerhetsskärm</string>
+    <string name="pref_viewer_nav">Tryckzoner</string>
+    <string name="pref_read_with_tapping_inverted">Invertera tryckzoner</string>
+    <string name="pref_show_navigation_mode">Visa överlägg för tryckzoner</string>
+    <string name="pref_read_with_long_tap">Visa åtgärder vid lång tryckning</string>
+    <string name="pref_chapter_swipe_start">Vänstersvep på kapitel</string>
+    <string name="pref_chapter_swipe_end">Högersvep på kapitel</string>
+    <string name="ext_permission_install_apps_warning">Behörigheter krävs för att installera tillägg. Tryck här för att bevilja.</string>
+    <string name="connected_to_wifi">Bara över Wi-Fi</string>
+</resources>

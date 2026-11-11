@@ -3,10 +3,9 @@ package app.katari.sync.ui.page
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.Computer
 import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.QrCode2
-import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.platform.presentation.devicePlatformIcon
 import app.katari.presentation.kit.menu.DropdownMenuItem
 import app.katari.presentation.kit.menu.OverflowMenu
 import app.katari.presentation.kit.theme.ContentTone
@@ -75,7 +74,7 @@ private fun DeviceRow(device: AccountDevice, actions: SyncPageActions) {
             summary
         },
         subtitleTone = if (device.isThisDevice) ContentTone.Primary else ContentTone.Inherit,
-        icon = platformIcon(description.platform),
+        icon = devicePlatformIcon(description.platform),
         widget = {
             OverflowMenu { close ->
                 if (device.isThisDevice) {
@@ -98,11 +97,4 @@ private fun DeviceRow(device: AccountDevice, actions: SyncPageActions) {
             }
         },
     )
-}
-
-/** The platform names devices give themselves are free text (`DeviceDescription.platform`), so unknown ones show a neutral icon. */
-private fun platformIcon(platform: String): ImageVector = when (platform.lowercase()) {
-    "android" -> MaterialSymbols.Rounded.Smartphone
-    "linux", "windows", "macos" -> MaterialSymbols.Rounded.Computer
-    else -> MaterialSymbols.Rounded.Devices
 }

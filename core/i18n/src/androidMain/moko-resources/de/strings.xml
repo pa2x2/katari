@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Tippe hier, um Hilfe zu Cloudflare zu erhalten</string>
+    <string name="action_show_errors">Tippe, um Details anzuzeigen</string>
+    <string name="notification_size_warning">Große Aktualisierungen schaden Quellen und könnten zu langsameren Aktualisierungen sowie höherem Akkuverbrauch führen. Tippe, um mehr zu erfahren.</string>
+    <string name="download_queue_size_warning">Achtung: Große Downloads könnten dazu führen, dass Quellen langsamer werden und/oder %s blockieren. Tippe um mehr zu erfahren.</string>
+    <string name="information_empty_category">Keine Kategorien vorhanden. Tippe auf die Plus-Schaltfläche, um eine Kategorie zum Sortieren deiner Bibliothek zu erstellen.</string>
+    <string name="pref_double_tap_zoom">Zum Zoomen doppeltippen</string>
+    <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
+    <string name="pref_load_ahead_only_over_wifi">Nur über WLAN im Voraus herunterladen</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Spart mobile Daten, indem nur Seiten um die aktuelle Seite herum geladen werden</string>
+    <string name="pref_dump_crash_logs">Absturzprotokolle teilen</string>
+    <string name="pref_security_summary">App-Sperre, sicherer Bildschirm</string>
+    <string name="pref_viewer_nav">Tippzonen</string>
+    <string name="pref_read_with_tapping_inverted">Tippzonen umkehren</string>
+    <string name="pref_show_navigation_mode">Tippzonen-Overlay anzeigen</string>
+    <string name="pref_read_with_long_tap">Aktionen bei langem Antippen anzeigen</string>
+    <string name="pref_chapter_swipe_start">Kapitel beim Streichen nach links</string>
+    <string name="pref_chapter_swipe_end">Kapitel beim Streichen nach rechts</string>
+    <string name="ext_permission_install_apps_warning">Für das Installieren von Erweiterungen sind Berechtigungen erforderlich. Tippe hier, um sie zu gewähren.</string>
+    <string name="connected_to_wifi">Nur über WLAN</string>
+</resources>

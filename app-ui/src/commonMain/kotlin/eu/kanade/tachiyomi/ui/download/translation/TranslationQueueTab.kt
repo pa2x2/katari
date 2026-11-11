@@ -24,6 +24,7 @@ import app.katari.icons.materialsymbols.rounded.MoreVert
 import app.katari.icons.materialsymbols.rounded.PlayArrow
 import app.katari.icons.materialsymbols.roundedfilled.Pause
 import app.katari.icons.materialsymbols.roundedfilled.PlayArrow
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.button.FloatingActionButton
@@ -212,5 +213,5 @@ private fun RowActions(
 @Composable
 private fun heldText(waiting: EntryTranslateWaiting): String = when (waiting) {
     EntryTranslateWaiting.Charger -> stringResource(MR.strings.translate_waiting_for_charger)
-    EntryTranslateWaiting.Wifi -> stringResource(MR.strings.translate_waiting_for_wifi)
+    EntryTranslateWaiting.Wifi -> stringResource(platformPresentation.translateWaitsForUnmeteredLabel)
 }

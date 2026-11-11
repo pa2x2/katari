@@ -10,7 +10,7 @@ import app.katari.icons.materialsymbols.rounded.CloudOff
 import app.katari.icons.materialsymbols.rounded.CloudUpload
 import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
-import app.katari.icons.materialsymbols.rounded.Wifi
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Spin
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.theme.ContentTone
@@ -50,7 +50,7 @@ fun rememberSyncStatusAction(onClick: () -> Unit): AppBar.Action? {
             badgeCount = headline.count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
         )
         headline is SyncHeadline.FirstDownloadWaitsForWifi || headline is SyncHeadline.ChangesWaitForWifi ->
-            AppBar.Action(title = title, icon = MaterialSymbols.Rounded.Wifi, onClick = onClick)
+            AppBar.Action(title = title, icon = platformPresentation.unmeteredNetworkIcon, onClick = onClick)
         headline is SyncHeadline.Paused ->
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.SyncDisabled, onClick = onClick)
         headline is SyncHeadline.Offline || headline is SyncHeadline.Unreachable ->

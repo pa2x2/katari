@@ -40,6 +40,7 @@ kotlin {
                 implementation(projects.features.entryViewerChromeUi)
                 implementation(projects.features.entryViewerSettingsUi)
                 implementation(projects.core.i18n)
+                implementation(projects.core.platformPresentation)
                 implementation(projects.core.icons.customMaterialSymbols)
                 implementation(projects.core.icons.materialSymbols)
                 implementation(projects.features.language.api)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">ದೋಷಗಳನ್ನು ತೋರಿಸು</string>
+    <string name="information_empty_category">ನೀವು ವರ್ಗಗಳನ್ನು ಹೊಂದಿಲ್ಲ. ನಿಮ್ಮ ಗ್ರಂಥಾಲಯದಲ್ಲಿ ವರ್ಗ ಒಂದನ್ನು ರಚಿಸಲು ಪ್ಲಸ್ ಬಟನ್ ಒತ್ತಿರಿ.</string>
+    <string name="pref_double_tap_anim_speed">ಡಬಲ್ ಟ್ಯಾಪ್ ಅನಿಮೇಷನ್ ವೇಗ</string>
+    <string name="pref_dump_crash_logs">ಕ್ರ್ಯಾಶ್ ಲಾಗ್‌ಗಳನ್ನು ಡಂಪ್ ಮಾಡಿ</string>
+    <string name="pref_viewer_nav">ನ್ಯಾವಿಗೇಶನ್ ಲೇಔಟ್</string>
+    <string name="pref_read_with_tapping_inverted">ಟ್ಯಾಪಿಂಗ ಅನ್ನು ತಿರುಗಿಸಿ</string>
+    <string name="pref_show_navigation_mode">ನ್ಯಾವಿಗೇಶನ್ ಲೇಔಟ್ ಓವರ್ ಲೇ ತೋರಿಸಿ</string>
+    <string name="pref_read_with_long_tap">ಲಾಂಗ್ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ತೋರಿಸಿ</string>
+</resources>

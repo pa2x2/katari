@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Натисни тук за помощ с Cloudflare</string>
+    <string name="action_show_errors">Вижте пълните подробности за грешката</string>
+    <string name="notification_size_warning">Предупреждение: големите актуализации вредят на източниците и могат да доведат до по-бавни актуализации, както и до повишено използване на батерията. Натиснете тук, за да научите повече.</string>
+    <string name="download_queue_size_warning">Предупреждение: големите масови изтегляния могат да доведат до забавяне на източниците и/или блокиране на %s. Натиснете тук, за да научите повече.</string>
+    <string name="information_empty_category">Нямате категории. Натиснете плюса, за да създадете такава и да организирате библиотеката си.</string>
+    <string name="pref_double_tap_zoom">Натисни два пъти за увеличение</string>
+    <string name="pref_double_tap_anim_speed">Скорост на анимацията</string>
+    <string name="pref_dump_crash_logs">Разтовари записите от сривовете</string>
+    <string name="pref_security_summary">Заключване на приложението, екран за сигурност</string>
+    <string name="pref_viewer_nav">Схема на навигацията</string>
+    <string name="pref_read_with_tapping_inverted">Инвертирай докосване</string>
+    <string name="pref_show_navigation_mode">Покажи оформлението на навигацията</string>
+    <string name="pref_read_with_long_tap">Покажи при задържане върху екрана</string>
+    <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>
+    <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
+    <string name="connected_to_wifi">Само през Wi-Fi</string>
+</resources>

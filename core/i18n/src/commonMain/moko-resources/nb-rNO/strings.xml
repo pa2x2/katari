@@ -99,7 +99,6 @@
     <string name="pref_skip_read_chapters">Hopp over kapitler markert som lest</string>
     <string name="pref_read_with_volume_keys">Lydstyrkejusteringstaster</string>
     <string name="pref_read_with_volume_keys_inverted">Inverter lydstyrketaster</string>
-    <string name="pref_read_with_long_tap">Vis handlinger ved langt trykk</string>
     <string name="pref_reader_theme">Bakgrunnsfarge</string>
     <string name="white_background">Hvit</string>
     <string name="black_background">Svart</string>
@@ -223,7 +222,6 @@
     <string name="label_help">Hjelp</string>
     <string name="action_display_download_badge">Last ned kapitler</string>
     <string name="untrusted_extension_message">Skadelige utvidelser kan lese alle lagrede innloggingsdetaljer eller kjøre vilkårlig kode. \n \nVed å godta denne utvidelsen, aksepterer du disse risikoene.</string>
-    <string name="pref_double_tap_anim_speed">Animasjonshastighet ved dobbelklikk</string>
     <string name="pager_viewer">Sider</string>
     <string name="confirm_set_image_as_cover">Bruk dette bildet som omslag?</string>
     <string name="download_queue_error">Kunne ikke laste ned kapitler. Du kan prøve igjen i nedlastingsdelen</string>
@@ -233,11 +231,9 @@
     <string name="information_no_recent">Ingen nylige oppdateringer</string>
     <string name="information_no_recent_manga">Ingenting lest nylig</string>
     <string name="information_empty_library">Biblioteket ditt er tomt</string>
-    <string name="information_empty_category">Du har ingen kategorier. Trykk på pluss-knappen for å lage en for å organisere biblioteket ditt.</string>
     <string name="download_notifier_downloader_title">Nedlaster</string>
     <string name="download_notifier_title_error">Feil</string>
     <string name="download_notifier_unknown_error">Kunne ikke laste ned kapittel grunnet uventet feil</string>
-    <string name="download_notifier_text_only_wifi">Ingen trådløstilkobling tilgjengelig</string>
     <string name="download_notifier_no_network">Ingen nettverkstilkobling tilgjengelig</string>
     <string name="download_notifier_download_paused">Nedlastinger pauset</string>
     <string name="pref_color_filter_mode">Blandingsmodus for fargefilter</string>
@@ -331,7 +327,6 @@
     <string name="action_disable_all">deaktiver alle</string>
     <string name="action_enable_all">aktiver alle</string>
     <string name="action_sort_latest_chapter">Siste kapittel</string>
-    <string name="pref_read_with_tapping_inverted">Inverter trykk</string>
     <string name="restoring_backup_error">Gjenoppretting av sikkerhetskopi mislyktes</string>
     <string name="backup_in_progress">Sikkerhetskopiering allerede underveis</string>
     <string name="invalid_backup_file">Ugyldig sikkerhetskopieringsfil:</string>
@@ -381,9 +376,7 @@
     <string name="manga_from_library">Fra biblioteket</string>
     <string name="pref_incognito_mode_summary">Setter lesehistorikken på pause</string>
     <string name="pref_incognito_mode">Inkognitomodus</string>
-    <string name="pref_dump_crash_logs">Del krasjlogger</string>
     <string name="pref_dump_crash_logs_summary">Lagrer feillogger i en fil som kan sendes til utviklerne</string>
-    <string name="pref_viewer_nav">Navigasjonsoppsett</string>
     <string name="edge_nav">Kant</string>
     <string name="kindlish_nav">Kindle-basert</string>
     <string name="l_nav">L-formet</string>
@@ -394,7 +387,6 @@
     <string name="pref_dual_page_invert_summary">Hvis plasseringen av sideoppsettet for delte brede sider ikke samsvarer med leseretningen</string>
     <string name="pref_dual_page_invert">Invertert sideoppsett for delte sider</string>
     <string name="pref_dual_page_split">Del brede sider</string>
-    <string name="pref_show_navigation_mode">Vis overlay for navigasjonsoppsett</string>
     <string name="backup_restore_content_full">Du vil måtte installere manglende utvidelser etterpå for å bruke dem.</string>
     <string name="pref_show_navigation_mode_summary">Vis tap-bare områder når leseren åpnes</string>
     <string name="none">Ingen</string>
@@ -410,7 +402,6 @@
     <string name="action_sort_chapter_fetch_date">Dato hentet</string>
     <string name="pref_download_new_categories_details">Oppføringer i utelukkede kategorier vil ikke bli nedlastet selv om de også er i inkluderte kategorier.</string>
     <string name="pref_category_auto_download">Last ned automatisk</string>
-    <string name="action_show_errors">Trykk for å se detaljer</string>
     <string name="clipboard_copy_error">Kunne ikke kopiere til utklippstavlen</string>
     <string name="rotation_landscape">Liggende</string>
     <string name="rotation_portrait">Stående</string>
@@ -478,10 +469,8 @@
     <string name="pref_verbose_logging">Sirlig loggføring</string>
     <string name="pref_verbose_logging_summary">Skriv utfyllende logg til systemloggen (reduserer programytelse)</string>
     <string name="label_warning">Advarsel</string>
-    <string name="notification_size_warning">Store oppdateringer skader kilder og kan føre til tregere oppdateringer samt økt batteribruk. Trykk for å lære mer.</string>
     <string name="backup_info">Du bør oppbevare ekstra kopier av sikkershetskopier andre steder også. Sikkerhetskopier kan inneholde sensitiv data, inkludert eventuelle lagrede passord. Vær forsiktig ved deling.</string>
     <string name="update_72hour">Hver 3. dag</string>
-    <string name="connected_to_wifi">Bare på Wi-Fi</string>
     <string name="action_show_manga">Vis oppføring</string>
     <string name="privacy_policy">Personvernerklæring</string>
     <string name="publishing_finished">Ferdig publisert</string>
@@ -490,7 +479,6 @@
     <string name="save_chapter_as_cbz">Lagre som CBZ-arkiv</string>
     <string name="ext_update_all">Oppdater alle</string>
     <string name="database_clean">Ingenting å fjerne</string>
-    <string name="download_queue_size_warning">Advarsel: store bulknedlastinger kan føre til at kilder blir tregere og/eller blokkerer %s. Trykk for å lære mer.</string>
     <string name="action_display_cover_only_grid">Kun omslags-rutenett</string>
     <string name="pref_landscape_zoom">Zoom automatisk inn for brede bilder</string>
     <string name="pref_navigate_pan">Panorer brede bilder</string>
@@ -499,7 +487,6 @@
     <string name="extension_api_error">Klarte ikke å hente tilgjengelige utvidelser</string>
     <string name="rotation_reverse_portrait">Omvendt portrett</string>
     <string name="pref_auto_clear_chapter_cache">Tøm kapittel hurtigbufferen ved oppstart av appen</string>
-    <string name="learn_more">Trykk for å finne ut mer</string>
     <string name="disabled_nav">Deaktivert</string>
     <string name="empty_backup_error">Ingen bibliotekoppføringer å sikkerhetskopiere</string>
     <string name="error_saving_picture">Feil ved lagring av bilde</string>
@@ -519,8 +506,6 @@
     <string name="download_ahead_info">Fungerer kun hvis det nåværende kapittelet + det neste allerede er lastet ned.</string>
     <string name="crash_screen_restart_application">Start applikasjonen på nytt</string>
     <string name="download_notifier_split_page_path_not_found">Kunne ikke finne filbanen til side %d</string>
-    <string name="pref_security_summary">Applås, sikker skjerm</string>
-    <string name="missing_storage_permission">Lagringstilgang er ikke gitt</string>
     <string name="error_user_agent_string_invalid">Ugyldig streng for brukeragent</string>
     <string name="pref_reset_viewer_flags">Tilbakestill leserinnstillinger per serie</string>
     <string name="theme_tidalwave">Tidevannsbølge</string>
@@ -550,7 +535,6 @@
     <string name="appwidget_unavailable_locked">Moduler er ikke tilgjengelig når applås er aktivert</string>
     <string name="pref_user_agent_string">Standard streng for brukeragent</string>
     <string name="pref_appearance_summary">Tema, dato- og klokkeslettformat</string>
-    <string name="pref_library_summary">Kategorier, global oppdatering, kapittelsveip</string>
     <string name="pref_downloads_summary">Automatisk nedlasting, last ned i forkant</string>
     <string name="pref_reader_summary">Lesemodus, skjerm, navigasjon</string>
     <string name="update_already_running">En oppdatering kjører allerede</string>
@@ -600,17 +584,13 @@
     <string name="action_set_interval">Sett intervall</string>
     <string name="action_filter_interval_custom">Egendefinert oppdateringsintervall</string>
     <string name="action_sort_next_updated">Neste forventede oppdatering</string>
-    <string name="pref_chapter_swipe_end">Sveip til høyre handling</string>
     <string name="intervals_header">Intervaller</string>
     <string name="manga_display_interval_title">Anslå hver</string>
     <string name="delete_downloaded">Slett nedlastede</string>
-    <string name="pref_double_tap_zoom">Dobbelttrykk for å zoome</string>
-    <string name="pref_chapter_swipe_start">Sveip til venstre handling</string>
     <string name="action_ok">OK</string>
     <string name="has_results">Har resultater</string>
     <string name="syncing_library">Synkroniserer biblioteket</string>
     <string name="library_sync_complete">Biblioteksynkronisering fullført</string>
-    <string name="information_cloudflare_help">Trykk her for å få hjelp med Cloudflare</string>
     <string name="download_cache_invalidated">Nedlastingsindeksen er ugyldiggjort</string>
     <string name="create_backup_file_error">Kunne ikke opprette en backup-fil</string>
     <string name="unlock_app_title">Lås opp %s</string>
@@ -661,7 +641,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Batteribruk i bakgrunnen</string>
     <string name="onboarding_permission_install_apps_description">For å installere kildeutvidelser.</string>
     <string name="onboarding_permission_notifications_description">Få varsler for oppdateringer i biblioteket og mer.</string>
-    <string name="ext_permission_install_apps_warning">Tillatelse er nødvendig for å installere utvidelser. Trykk her for å tillate.</string>
     <string name="private_settings">Inkluder sensitive innstillinger (f.eks., innloggingstoken)</string>
     <string name="onboarding_permission_action_grant">Tillat</string>
     <string name="onboarding_storage_help_info">Oppdaterer du fra en eldre versjon og er usikker på hva du skal velge? Sjekk lagringsguiden for mer informasjon.</string>

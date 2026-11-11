@@ -19,6 +19,10 @@
 - Avoid catch-all directories such as `common`, `misc`, or `utils`. Name structural groups after concrete ownership, and place narrowly shared helpers with the feature that owns their semantics.
 - Before finishing a change, inspect every touched source file and directory. If responsibilities or ownership are not clear from the tree alone, reorganize that area before committing rather than leaving cleanup for a follow-up.
 
+## Platform wording and imagery
+- Shared code never names a phrase or picture that fits one platform only. A string that says how the app is pointed at and pressed (tap, swipe, click, right-click), names Wi-Fi or mobile data, or names the device or what the system offers there goes in that platform's string files (`core/i18n/src/androidMain/moko-resources`, `core/i18n/src/desktopMain/moko-resources`), which only that platform's code sees, as `PlatformStrings` and `PlatformPlurals`. Icons that picture a device or a pointer live in `:core:icons:platform-symbols`, which only `:core:platform-presentation` depends on.
+- Shared code reads what differs between the platforms from `platformPresentation` (`core/platform-presentation`): add a field to `PlatformPresentation` and fill it in both platforms' files. Only a phrase that is true on every platform belongs in the shared string files.
+
 ## UI
 - Before writing or changing UI (any composable, including a fix inside one) or adding to `presentation-core`, load the `ui-kit` skill, and the `adaptive-layout` skill for screens, lists, grids, panes and window sizes.
 

@@ -8,11 +8,10 @@ import app.katari.icons.materialsymbols.rounded.CloudDownload
 import app.katari.icons.materialsymbols.rounded.CloudOff
 import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.icons.materialsymbols.rounded.CloudUpload
-import app.katari.icons.materialsymbols.rounded.PhonelinkErase
 import app.katari.icons.materialsymbols.rounded.Sync
 import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
-import app.katari.icons.materialsymbols.rounded.Wifi
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.run.SyncStep
 import dev.icerock.moko.resources.StringResource
@@ -52,11 +51,11 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
             ?.let { stringResource(MR.strings.sync_status_catching_up, it) }
             ?: stringResource(MR.strings.sync_status_catching_up_unknown)
     is SyncHeadline.Step -> stepText(headline.step)
-    SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(MR.strings.sync_status_first_download_wifi)
+    SyncHeadline.FirstDownloadWaitsForWifi -> stringResource(platformPresentation.syncFirstDownloadWaitsLabel)
     is SyncHeadline.Paused -> unsentText(headline.unsent, MR.strings.sync_unsent_paused)
         ?: stringResource(MR.strings.sync_status_paused)
-    is SyncHeadline.ChangesWaitForWifi -> unsentText(headline.unsent, MR.strings.sync_unsent_waiting_for_wifi)
-        ?: stringResource(MR.strings.sync_status_changes_wifi)
+    is SyncHeadline.ChangesWaitForWifi -> unsentText(headline.unsent, platformPresentation.syncUnsentWaitingNote)
+        ?: stringResource(platformPresentation.syncChangesWaitLabel)
     SyncHeadline.Syncing -> stringResource(MR.strings.sync_status_syncing)
     is SyncHeadline.Unsent -> stringResource(
         MR.strings.sync_status_with_note,
@@ -80,7 +79,11 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
             is SyncHeadline.FilesNote.WaitingForWifi -> stringResource(
                 MR.strings.sync_status_with_note,
                 upToDate,
-                pluralStringResource(MR.plurals.sync_files_waiting_for_wifi, files.count.toInt(), files.count.toInt()),
+                pluralStringResource(
+                    platformPresentation.syncFilesWaitingPlural,
+                    files.count.toInt(),
+                    files.count.toInt(),
+                ),
             )
             is SyncHeadline.FilesNote.MissingOnServer -> stringResource(
                 MR.strings.sync_status_with_note,
@@ -139,7 +142,7 @@ fun SyncHeadline.stopsSync(): Boolean = when (this) {
 
 fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
-    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase
+    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> platformPresentation.thisDeviceRemovedIcon
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
     SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
     is SyncHeadline.Failed,
@@ -153,11 +156,12 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
         SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload
         SyncStep.Kind.DOWNLOADING_FILES, SyncStep.Kind.DOWNLOADING_CHANGES -> MaterialSymbols.Rounded.CloudDownload
     }
-    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi -> MaterialSymbols.Rounded.Wifi
+    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi ->
+        platformPresentation.unmeteredNetworkIcon
     is SyncHeadline.Paused -> MaterialSymbols.Rounded.SyncDisabled
     SyncHeadline.Syncing -> MaterialSymbols.Rounded.Sync
     is SyncHeadline.UpToDate -> if (files is SyncHeadline.FilesNote.WaitingForWifi) {
-        MaterialSymbols.Rounded.Wifi
+        platformPresentation.unmeteredNetworkIcon
     } else {
         MaterialSymbols.Rounded.CloudDone
     }

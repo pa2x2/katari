@@ -24,6 +24,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(projects.core.i18n)
+                implementation(projects.core.platformPresentation)
                 implementation(projects.core.icons.materialSymbols)
                 implementation(projects.core.presentationCore)
 

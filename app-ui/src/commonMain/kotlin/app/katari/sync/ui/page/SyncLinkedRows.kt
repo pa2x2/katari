@@ -13,6 +13,7 @@ import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.missingextensions.model.MissingExtension
 import app.katari.missingextensions.ui.noticeText
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonSize
 import app.katari.presentation.kit.button.ButtonStyle
@@ -58,7 +59,6 @@ internal fun linkedPreferences(
     preferences: SyncPreferences,
     choices: ChoiceSet,
     profilesNotSynced: List<ProfileSync>,
-    knowsWifi: Boolean,
     missingExtensions: List<MissingExtension>,
     actions: SyncPageActions,
 ): List<Preference> = buildList {
@@ -82,7 +82,7 @@ internal fun linkedPreferences(
         whatSyncsRow(choices, profilesNotSynced.map { it.name }, actions),
         serverAddressRow(link, actions),
     )
-    add(syncOptionsGroup(preferences, knowsWifi, linkedOptions))
+    add(syncOptionsGroup(preferences, linkedOptions))
     add(
         Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.sync_disconnect)) {
             TextPreferenceWidget(
@@ -221,7 +221,7 @@ private fun attentionRows(
             )
         }
         is SyncHeadline.Failed -> listOf(
-            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
+            Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncFailedHelp)),
         )
         is SyncHeadline.ServerTooOld -> {
             val openGuide = rememberOpenSyncGuide()
@@ -294,13 +294,12 @@ private fun serverAddressRow(
 
 /**
  * The device's own sync options, which every device sets for itself (D022, D050), led by [leading] rows once linked:
- * what syncs and the server's address. Where the platform can't tell Wi-Fi ([knowsWifi] false), the mobile data
- * switches hold files and changes back on networks the system marks metered, and say so.
+ * what syncs and the server's address. Where the platform can't tell Wi-Fi, the mobile data switches hold files and
+ * changes back on networks the system marks metered, and say so.
  */
 @Composable
 internal fun syncOptionsGroup(
     preferences: SyncPreferences,
-    knowsWifi: Boolean,
     leading: List<Preference.PreferenceItem<out Any, out Any>> = emptyList(),
 ): Preference.PreferenceGroup {
     val inBackground by preferences.syncInBackground.collectAsState()
@@ -315,21 +314,13 @@ internal fun syncOptionsGroup(
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = preferences.useMobileData,
-                title = stringResource(if (knowsWifi) MR.strings.sync_use_mobile_data else MR.strings.sync_use_metered),
-                subtitle = if (knowsWifi) null else stringResource(MR.strings.sync_use_metered_summary),
+                title = stringResource(platformPresentation.syncFilesOnMeteredLabel),
+                subtitle = platformPresentation.syncFilesOnMeteredSummary?.let { stringResource(it) },
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = preferences.changesOnMobileData,
-                title = stringResource(
-                    if (knowsWifi) MR.strings.sync_changes_on_mobile_data else MR.strings.sync_changes_on_metered,
-                ),
-                subtitle = stringResource(
-                    if (knowsWifi) {
-                        MR.strings.sync_changes_on_mobile_data_summary
-                    } else {
-                        MR.strings.sync_changes_on_metered_summary
-                    },
-                ),
+                title = stringResource(platformPresentation.syncChangesOnMeteredLabel),
+                subtitle = stringResource(platformPresentation.syncChangesOnMeteredSummary),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = preferences.syncInBackground,

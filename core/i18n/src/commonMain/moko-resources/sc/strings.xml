@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Estensione non afidàbile</string>
     <string name="untrusted_extension_message">Un\'estensione mala diat pòdere lèghere totu sas informatziones de atzessu sarvadas o fàghere esecutare còdighe arbitràriu. \n \nPonende fide in custa estensione atzetas custos arriscos.</string>
     <string name="pref_page_transitions">Ànima sas transitziones de sas pàginas</string>
-    <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
     <string name="pref_show_page_number">Ammustra su nùmeru de sa pàgina</string>
     <string name="pref_crop_borders">Sega sos oros</string>
     <string name="pref_custom_brightness">Luminosidade personalizada</string>
@@ -100,7 +99,6 @@
     <string name="pref_reader_navigation">Navigatzione</string>
     <string name="pref_read_with_volume_keys">Teclas de su volume</string>
     <string name="pref_read_with_volume_keys_inverted">Fùrria sas teclas de su volume</string>
-    <string name="pref_read_with_long_tap">Ammustra sas atziones cun su tocu longu</string>
     <string name="pref_reader_theme">Colore de isfundu</string>
     <string name="white_background">Arbu/biancu</string>
     <string name="black_background">Nieddu</string>
@@ -228,11 +226,9 @@
     <string name="information_no_recent">Perunu agiornamentu reghente</string>
     <string name="information_no_recent_manga">Nudda de lèghidu dae pagu</string>
     <string name="information_empty_library">Sa biblioteca tua est bòida</string>
-    <string name="information_empty_category">Non tenes categorias. Incarca su butone de su \"prus\" pro nde creare una pro organizare sa biblioteca tua.</string>
     <string name="download_notifier_downloader_title">Iscarrigadore</string>
     <string name="download_notifier_title_error">Errore</string>
     <string name="download_notifier_unknown_error">Iscarrigamentu de su capìtulu fallidu pro more de un\'errore imprevistu</string>
-    <string name="download_notifier_text_only_wifi">Peruna connessione Wi-Fi disponìbile</string>
     <string name="download_notifier_no_network">Peruna connessione de retza disponìbile</string>
     <string name="download_notifier_download_paused">Iscarrigamentos in pàusa</string>
     <string name="channel_common">Comunu</string>
@@ -347,7 +343,6 @@
     <string name="tapping_inverted_vertical">Verticale</string>
     <string name="tapping_inverted_horizontal">Orizontale</string>
     <string name="tapping_inverted_none">Perunu</string>
-    <string name="pref_read_with_tapping_inverted">Fùrria sas zonas de tocu</string>
     <string name="unknown_status">Istadu disconnotu</string>
     <string name="unknown_author">Autore disconnotu</string>
     <string name="whats_new">Ite b\'at de nou</string>
@@ -382,11 +377,9 @@
     <string name="migration_help_guide">Ghia a sa tràmuda de sas fontes</string>
     <string name="file_picker_error">Peruna aplicatzione pro ischertare documentos agatada</string>
     <string name="edge_nav">Oru</string>
-    <string name="pref_viewer_nav">Zonas de tocu</string>
     <string name="kindlish_nav">A tipu Kindle</string>
     <string name="l_nav">A forma de L</string>
     <string name="pref_dump_crash_logs_summary">Sarva sos registros de sos errores in unu documentu pro lu cumpartzire cun sos isvilupadores</string>
-    <string name="pref_dump_crash_logs">Cumpartzi sos registros de sos arrestos anòmalos</string>
     <string name="action_desc">In achirrada</string>
     <string name="action_asc">Creschente</string>
     <string name="action_order_by_chapter_number">Pro nùmeru de capìtulu</string>
@@ -402,7 +395,6 @@
     <string name="nav_zone_next">Imbeniente</string>
     <string name="nav_zone_prev">Antepostu</string>
     <string name="pref_show_navigation_mode_summary">Ammustra pro pagu cando aberis su leghidore</string>
-    <string name="pref_show_navigation_mode">Ammustra sa subrapositzione de sas zonas de tocu</string>
     <string name="pref_dns_over_https">DNS pro mèdiu de HTTPS (DoH)</string>
     <string name="exclude">Esclude: %s</string>
     <string name="include">Include: %s</string>
@@ -410,7 +402,6 @@
     <string name="action_sort_chapter_fetch_date">Data de recùperu de su capìtulu</string>
     <string name="pref_download_new_categories_details">Sos elementos in sas categorias esclùdidas non s\'ant a iscarrigare nemmancu si sunt fintzas in categorias inclùdidas.</string>
     <string name="pref_category_auto_download">Iscarrigamentu automàticu</string>
-    <string name="action_show_errors">Toca pro bìdere sos detàllios</string>
     <string name="clipboard_copy_error">Còpia in punta de billete fallida</string>
     <string name="rotation_landscape">Orizontale</string>
     <string name="rotation_portrait">Verticale</string>
@@ -479,10 +470,7 @@
     <string name="label_warning">Dae cara</string>
     <string name="action_display_language_badge">Limba</string>
     <string name="backup_info">Dias dèpere tènnere còpias de seguresa fintzas in àteros logos.</string>
-    <string name="notification_size_warning">Sos agiornamentos mannos diant pòdere fàghere dannu a sas fontes e causare agiornamentos prus lentos e fintzas un\'impreu de sa bateria prus mannu. Toca pro nde ischire de prus.</string>
     <string name="update_72hour">Cada 3 dies</string>
-    <string name="connected_to_wifi">Petzi cun su Wi-Fi</string>
-    <string name="download_queue_size_warning">Dae cara: sos iscarrigamentos de massa mannos diant pòdere rallentare sas fontes e/o blocare %s. Toca pro nde ischire de prus.</string>
     <string name="ext_update_all">Agiorna totu</string>
     <string name="clear_database_source_item_count">%1$d elementos chi non sunt in sa biblioteca in sa base de datos</string>
     <string name="extension_api_error">Recùperu de sa lista de sas estensiones fallidu</string>
@@ -497,7 +485,6 @@
     <string name="pref_landscape_zoom">Ismànnia in automàticu sas immàgines largas</string>
     <string name="action_display_cover_only_grid">Grìllia cun coberteddas ebbia</string>
     <string name="pref_navigate_pan">Iscurre sas pàginas largas</string>
-    <string name="learn_more">Toca pro àteras informatziones</string>
     <string name="rotation_reverse_portrait">Verticale a s\'imbesse</string>
     <string name="action_move_to_top_all_for_series">Move sa sèrie cara a pitzos</string>
     <string name="disabled_nav">Disabilitadu</string>
@@ -545,16 +532,13 @@
     <string name="multi_lang">Mùltiplas</string>
     <string name="updates_last_update_info">Ùrtimu agiornamentu de sa biblioteca: %s</string>
     <string name="popular">Populare</string>
-    <string name="missing_storage_permission">Permissu de archiviatzione non cuntzessu</string>
     <string name="action_search_hint">Chirca…</string>
     <string name="crash_screen_restart_application">Torra a allùghere s\'aplicatzione</string>
     <string name="pref_appearance_summary">Tema, data e formadu de s\'ora</string>
-    <string name="pref_library_summary">Categorias, agiornamentos globales, iscurrimentu de capìtulos</string>
     <string name="pref_reader_summary">Modalidade de leghidura, aspetu, navigatzione</string>
     <string name="pref_downloads_summary">Iscarrigamentu automàticu, iscarrigamentu antitzipadu</string>
     <string name="pref_browse_summary">Fontes, estensiones, chirca globale</string>
     <string name="pref_backup_summary">Còpias de seguresa manuales e globales</string>
-    <string name="pref_security_summary">Blocu de s\'aplicatzione, ischermu seguru</string>
     <string name="crash_screen_title">Oops!</string>
     <string name="invalid_location">Positzione non vàlida: %s</string>
     <string name="unknown_title">Tìtulu disconnotu</string>
@@ -595,9 +579,6 @@
     <string name="overlay_header">Istratu superiore</string>
     <string name="pref_page_rotate">Gira sas pàginas largas pro las adatare</string>
     <string name="pref_page_rotate_invert">Fùrria s\'orientamentu de sas pàginas largas giradas</string>
-    <string name="pref_double_tap_zoom">Tocu dòpiu pro ismanniare</string>
-    <string name="pref_chapter_swipe_end">Capìtulu iscurrende a destra</string>
-    <string name="pref_chapter_swipe_start">Capìtulu iscurrende a manca</string>
     <string name="pref_debug_info">Informatziones de depuratzione de còdighe</string>
     <string name="manga_display_interval_title">Càrcula cada</string>
     <string name="action_filter_interval_custom">Intervallu de recùperu personalizadu</string>
@@ -607,7 +588,6 @@
     <string name="action_set_interval">Imposta s\'intervallu</string>
     <string name="action_ok">AB</string>
     <string name="delete_downloaded">Iscantzella sos iscarrigados</string>
-    <string name="information_cloudflare_help">Toca inoghe pro agiudu cun Cloudflare</string>
     <string name="unlock_app_title">Isbloca %s</string>
     <string name="syncing_library">Sincronizende sa biblioteca</string>
     <string name="create_backup_file_error">Non at s\'est pòdidu creare un\'archìviu de còpia de seguresa</string>
@@ -644,7 +624,6 @@
     <string name="exclude_scanlators">Esclude sos iscandutores (iscansidores+tradutores)</string>
     <string name="manga_interval_expected_update_null">Custu manga est acabbadu o non b\'at una data de publicatzione previdida.</string>
     <string name="file_picker_uri_permission_unsupported">Non s\'est pòdidu otènnere s\'atzessu permanente a sa cartella. S\'aplicatzione si diat pòdere cumportare in manera no isetada.</string>
-    <string name="ext_permission_install_apps_warning">B\'at bisòngiu de sos permissos pro installare estensiones. Toca inoghe pro los frunire.</string>
     <string name="no_location_set">Perunu logu de archiviatzione isseberadu</string>
     <string name="pref_flash_duration">Durada de su flash</string>
     <string name="pref_flash_duration_summary">%1$s ms</string>

@@ -26,6 +26,7 @@ import app.katari.icons.materialsymbols.rounded.Security
 import app.katari.icons.materialsymbols.rounded.Storage
 import app.katari.icons.materialsymbols.rounded.Translate
 import app.katari.icons.materialsymbols.rounded.Update
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupGap
 import app.katari.presentation.kit.list.rowGroupItems
@@ -255,7 +256,7 @@ private fun itemGroups() = listOf(
         ),
         Item(
             titleRes = MR.strings.pref_category_security,
-            subtitleRes = MR.strings.pref_security_summary,
+            subtitleRes = platformPresentation.securitySettingsSummary,
             icon = MaterialSymbols.Rounded.Security,
             screen = SettingsSecurityScreen(),
         ),

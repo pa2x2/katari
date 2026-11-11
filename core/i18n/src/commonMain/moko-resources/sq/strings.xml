@@ -48,7 +48,6 @@
     <string name="update_12hour">Çdo 12 orë</string>
     <string name="update_24hour">Ditore</string>
     <string name="update_weekly">Javore</string>
-    <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
     <string name="network_not_metered">Vetëm në rrjet pa matje</string>
     <string name="charging">Gjatë karikimit</string>
     <string name="pref_library_update_refresh_metadata_summary">Kontrolloni për kopertinë dhe detaje të reja kur përditësoni bibliotekën</string>
@@ -64,11 +63,9 @@
     <string name="download_notifier_split_page_path_not_found">Nuk mund të gjendej shtegu i skedarit të faqes %d</string>
     <string name="information_no_recent_manga">Asgjë e lexuar kohët e fundit</string>
     <string name="download_notifier_title_error">Gabim</string>
-    <string name="download_notifier_text_only_wifi">Nuk ofrohet lidhje Wi-Fi</string>
     <string name="information_empty_library">Biblioteka juaj është bosh</string>
     <string name="getting_started_guide">Udhëzues për fillimin</string>
     <string name="information_no_entries_found">Nuk u gjet asnjë element në këtë kategori</string>
-    <string name="information_empty_category">Nuk ke kategori. Prekni butonin plus për të krijuar një për organizimin e bibliotekës tuaj.</string>
     <string name="information_webview_required">WebView kërkohet për Katari</string>
     <string name="information_cloudflare_bypass_failure">Dështoi të anashkalojë Cloudflare</string>
     <string name="information_empty_category_dialog">Nuk ke ende asnjë kategori.</string>
@@ -124,15 +121,12 @@
     <string name="action_save">Ruaj</string>
     <string name="action_reset">Rivendos</string>
     <string name="action_share">Shpërndaje</string>
-    <string name="action_show_errors">Prekni për të parë detajet</string>
     <string name="action_webview_back">Mbrapa</string>
     <string name="action_start_downloading_now">Fillo shkarkimin tani</string>
     <string name="internal_error">Gabim i brendshëm: Kontrolloni regjistrat e përplasjeve për informacione të mëtejshme</string>
-    <string name="pref_security_summary">Kyçja e aplikacionit, ekran i sigurt</string>
     <string name="theme_tealturquoise">Blu në Jeshile</string>
     <string name="pref_category_general">të përgjithshme</string>
     <string name="pref_category_appearance">Paraqitja</string>
-    <string name="pref_library_summary">Kategoritë, përditësimi global</string>
     <string name="pref_category_library">Biblioteka</string>
     <string name="pref_category_reader">Lexues</string>
     <string name="pref_category_downloads">Shkarkimet</string>
@@ -227,13 +221,11 @@
     <string name="ext_info_version">Versioni</string>
     <string name="ext_install_service_notif">Po instalon shtesën…</string>
     <string name="ext_installer_pref">Instalues</string>
-    <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
     <string name="pref_show_navigation_mode_summary">Trego shkurtimisht kur hapet lexuesi</string>
     <string name="pref_dual_page_split">Ndani faqet e gjera</string>
     <string name="pref_dual_page_invert">Inverto vendosjen e faqeve të ndara</string>
     <string name="pref_dual_page_invert_summary">Nëse vendosja e faqeve të ndara gjerësisht nuk përputhet me drejtimin e leximit</string>
     <string name="pref_cutout_short">Shfaq përmbajtjen në zonën e prerjes</string>
-    <string name="pref_double_tap_anim_speed">Prekni dy herë shpejtësia e animacionit</string>
     <string name="pref_show_page_number">Shfaq numrin e faqes</string>
     <string name="pref_show_reading_mode">Shfaq modalitetin e leximit</string>
     <string name="pref_custom_brightness">Shkëlqimi i personalizuar</string>
@@ -246,11 +238,9 @@
     <string name="pref_skip_filtered_chapters">Kapërceni kapitujt e filtruar</string>
     <string name="pref_reader_navigation">Navigimi</string>
     <string name="pref_read_with_volume_keys_inverted">Inverto tastet e volumit</string>
-    <string name="pref_read_with_tapping_inverted">Inverto zonat e trokitjes</string>
     <string name="tapping_inverted_none">Asnje</string>
     <string name="tapping_inverted_vertical">Vertikale</string>
     <string name="pref_reader_actions">Veprimet</string>
-    <string name="pref_read_with_long_tap">Shfaq në trokitje të gjatë</string>
     <string name="pref_crop_borders">Kufijtë e prerjeve</string>
     <string name="filter_mode_multiply">Shumohen</string>
     <string name="filter_mode_screen">Ekrani</string>
@@ -283,7 +273,6 @@
     <string name="right_to_left_viewer">Nga e djathta në të majtë</string>
     <string name="vertical_plus_viewer">Vertikale e vazhdueshme</string>
     <string name="pager_viewer">Faqe</string>
-    <string name="pref_viewer_nav">Prekni zonat</string>
     <string name="pref_image_scale_type">Lloji i shkallës</string>
     <string name="scale_type_stretch">Shtrirje</string>
     <string name="scale_type_fit_height">Lartësia e përshtatshme</string>
@@ -388,7 +377,6 @@
     <string name="unknown_title">Titulli i panjohur</string>
     <string name="migration_dialog_what_to_include">Zgjidhni të dhënat për të përfshirë</string>
     <string name="download_queue_error">Kapitujt nuk mund të shkarkoheshin. Mund të provoni përsëri në seksionin e shkarkimeve</string>
-    <string name="notification_size_warning">Përditësimet e mëdha dëmtojnë burimet dhe mund të çojnë në përditësime më të ngadalta dhe gjithashtu rritje të përdorimit të baterisë. Trokit për të mësuar më shumë.</string>
     <string name="clear_database_completed">Elementet u fshinë</string>
     <string name="pref_disable_battery_optimization">Çaktivizo optimizimin e baterisë</string>
     <string name="password">Fjalëkalimi</string>
@@ -440,7 +428,6 @@
     <string name="backup_choice">Çfarë dëshironi të bëni rezervë?</string>
     <string name="creating_backup">Duke krijuar rezervë</string>
     <string name="creating_backup_error">Rezervimi dështoi</string>
-    <string name="missing_storage_permission">Lejet e ruajtjes nuk janë dhënë</string>
     <string name="empty_backup_error">Nuk ka element në bibliotekë për të rezervuar</string>
     <string name="restore_in_progress">Rivendosja është tashmë në proces</string>
     <string name="restoring_backup">Rivendosja e rezervës</string>
@@ -463,7 +450,6 @@
     <string name="pref_reset_viewer_flags">Rivendos cilësimet e lexuesit për seri</string>
     <string name="pref_reset_viewer_flags_summary">Rivendos modalitetin e leximit dhe orientimin e të gjitha serive</string>
     <string name="pref_reset_viewer_flags_error">Cilësimet e lexuesit nuk mund të rivendoseshin</string>
-    <string name="pref_dump_crash_logs">Hidh regjistrat e aksidenteve</string>
     <string name="label_background_activity">Aktiviteti në sfond</string>
     <string name="pref_disable_battery_optimization_summary">Ndihmon me përditësimet dhe kopjet rezervë të bibliotekës në sfond</string>
     <string name="pref_dump_crash_logs_summary">Ruan regjistrat e gabimeve në një skedar për t\'i ndarë me zhvilluesit</string>
@@ -538,8 +524,6 @@
     <string name="migrate">Migroni</string>
     <string name="crash_screen_restart_application">Rinisni aplikacionin</string>
     <string name="download_insufficient_space">Kapitujt nuk mund të shkarkoheshin për shkak të hapësirës së ulët të ruajtjes</string>
-    <string name="download_queue_size_warning">Paralajmërim: shkarkimet e mëdha me shumicë mund të çojnë në ngadalësimin e burimeve dhe/ose bllokimin e %s. Trokit për të mësuar më shumë.</string>
-    <string name="learn_more">Trokit për të mësuar më shumë</string>
     <string name="notification_cover_update_failed">Përditësimi i kopertinës dështoi</string>
     <string name="chapter_settings_updated">Cilësimet e kapitullit të parazgjedhur të përditësuara</string>
     <string name="theme_midnightdusk">Perëndim Mesnate</string>

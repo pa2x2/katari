@@ -93,5 +93,5 @@ internal class EntryTranslateNotifier(
 private val EntryTranslateWaiting.text
     get() = when (this) {
         EntryTranslateWaiting.Charger -> MR.strings.translate_waiting_for_charger
-        EntryTranslateWaiting.Wifi -> MR.strings.translate_waiting_for_wifi
+        EntryTranslateWaiting.Wifi -> PlatformStrings.translate_waiting_for_wifi
     }

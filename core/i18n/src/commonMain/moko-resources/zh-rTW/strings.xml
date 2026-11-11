@@ -86,7 +86,6 @@
     <string name="ext_installing">安裝中</string>
     <string name="ext_installed">已安裝</string>
     <string name="ext_uninstall">解除安裝</string>
-    <string name="pref_double_tap_anim_speed">輕觸兩下動畫速度</string>
     <string name="pref_show_page_number">顯示頁碼</string>
     <string name="pref_custom_brightness">自訂亮度</string>
     <string name="pref_custom_color_filter">色彩濾鏡</string>
@@ -133,7 +132,6 @@
     <string name="copy">副本</string>
     <string name="information_no_downloads">尚無下載作業</string>
     <string name="download_notifier_title_error">錯誤</string>
-    <string name="download_notifier_text_only_wifi">沒有可用的 Wi-Fi 連線</string>
     <string name="download_notifier_no_network">尚未連接至網路</string>
     <string name="download_notifier_download_paused">下載已暫停</string>
     <string name="pref_page_transitions">翻頁轉場動畫</string>
@@ -147,7 +145,6 @@
     <string name="pref_reader_navigation">導覽</string>
     <string name="pref_read_with_volume_keys">音量按鈕</string>
     <string name="pref_read_with_volume_keys_inverted">反轉音量按鈕</string>
-    <string name="pref_read_with_long_tap">長按時彈出快顯選單</string>
     <string name="pref_reader_theme">背景顏色</string>
     <string name="white_background">白色</string>
     <string name="black_background">黑色</string>
@@ -205,7 +202,6 @@
     <string name="title">標題</string>
     <string name="decode_image_error">圖片無法載入</string>
     <string name="notification_first_add_to_library">請先將作品收藏至書櫃</string>
-    <string name="information_empty_category">尚無任何類別，輕觸新增按鈕即可建立類別以組織你的書櫃</string>
     <string name="download_notifier_downloader_title">下載管理</string>
     <string name="download_unread">未讀</string>
     <string name="confirm_set_image_as_cover">要將該圖片設為封面嗎？</string>
@@ -336,7 +332,6 @@
     <string name="tapping_inverted_both">全部</string>
     <string name="tapping_inverted_vertical">垂直</string>
     <string name="tapping_inverted_horizontal">水平</string>
-    <string name="pref_read_with_tapping_inverted">反轉輕觸區域</string>
     <string name="vertical_plus_viewer">捲動(留空)</string>
     <string name="tapping_inverted_none">無</string>
     <string name="restore_duration">%1$02d 分， %2$02d 秒</string>
@@ -383,8 +378,6 @@
     <string name="kindlish_nav">Kindle 式</string>
     <string name="l_nav">L 式</string>
     <string name="pref_dump_crash_logs_summary">產生錯誤記錄檔以便分享予開發人員</string>
-    <string name="pref_dump_crash_logs">分享當機記錄</string>
-    <string name="pref_viewer_nav">輕觸區域</string>
     <string name="right_and_left_nav">左右式</string>
     <string name="action_order_by_upload_date">依上傳日期</string>
     <string name="action_desc">遞減</string>
@@ -410,14 +403,12 @@
     <string name="exclude">排除：%s</string>
     <string name="include">包含：%s</string>
     <string name="none">無</string>
-    <string name="action_show_errors">輕觸以檢視詳細資訊</string>
     <string name="clipboard_copy_error">無法複製到剪貼簿</string>
     <string name="backup_restore_content_full">你可能需要在之後安裝任何缺少的擴充套件以開始使用</string>
     <string name="pref_download_new_categories_details">類別同時屬於「排除」及「包含」的作品，將不會自動下載</string>
     <string name="pref_create_folder_per_manga">儲存頁面至個別資料夾</string>
     <string name="pref_create_folder_per_manga_summary">根據作品標題建立資料夾</string>
     <string name="pref_show_navigation_mode_summary">開始閱讀時，短暫浮現輕觸區域</string>
-    <string name="pref_show_navigation_mode">輕觸區域提示</string>
     <string name="cancel_all_for_series">取消此作品</string>
     <string name="automatic_background">自動</string>
     <string name="pref_grayscale">灰階</string>
@@ -476,13 +467,10 @@
     <string name="action_sort_count">作品總數</string>
     <string name="action_display_language_badge">語言</string>
     <string name="label_warning">警告</string>
-    <string name="notification_size_warning">大量更新會損害來源，並可能導致更新速度緩慢、電池用量增加，輕觸以瞭解詳情</string>
     <string name="pref_verbose_logging">錄製詳細記錄</string>
     <string name="backup_info">你應該在多處儲存備份副本，備份檔可能含有敏感資料 (包括任何已儲存的密碼)，分享時請留意</string>
     <string name="pref_verbose_logging_summary">傾印詳細記錄至系統日誌 (將降低應用程式效能)</string>
-    <string name="connected_to_wifi">僅透過 Wi-Fi</string>
     <string name="update_72hour">每 3 天</string>
-    <string name="download_queue_size_warning">警告：大量批次下載可能壅塞來源，甚至使其封鎖 %s，輕觸以瞭解詳情</string>
     <string name="ext_update_all">全部更新</string>
     <string name="pref_auto_clear_chapter_cache">啟動應用程式時清除章節快取</string>
     <string name="clear_database_source_item_count">資料庫中有 %1$d 部作品未加入書櫃</string>
@@ -498,7 +486,6 @@
     <string name="pref_navigate_pan">導覽寬頁時先平移後翻頁</string>
     <string name="action_display_cover_only_grid">純封面格狀</string>
     <string name="rotation_reverse_portrait">顛倒直向</string>
-    <string name="learn_more">瞭解詳情</string>
     <string name="action_move_to_top_all_for_series">置頂此作品</string>
     <string name="disabled_nav">停用</string>
     <string name="empty_backup_error">書櫃中尚無作品可供備份</string>
@@ -545,16 +532,13 @@
     <string name="remove_manga">即將從書櫃中移除《%s》</string>
     <string name="updates_last_update_info">書櫃更新於：%s</string>
     <string name="popular">熱門</string>
-    <string name="missing_storage_permission">未被授予儲存空間權限</string>
     <string name="action_search_hint">搜尋…</string>
     <string name="pref_reader_summary">閱讀模式、檢視、導覽</string>
     <string name="pref_appearance_summary">主題、日期格式</string>
     <string name="pref_downloads_summary">自動下載、預先下載</string>
     <string name="pref_backup_summary">手動與自動備份、儲存空間</string>
-    <string name="pref_security_summary">上鎖應用程式、防窺畫面</string>
     <string name="crash_screen_restart_application">重新啟動應用程式</string>
     <string name="crash_screen_title">哎呀！</string>
-    <string name="pref_library_summary">類別、全域更新、目錄滑動動作</string>
     <string name="pref_browse_summary">來源、擴充套件、全域搜尋</string>
     <string name="invalid_location">無效的位置：%s</string>
     <string name="unknown_title">未知的標題</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">旋轉寬頁以符合螢幕</string>
     <string name="pref_page_rotate_invert">調換旋轉寬頁方向</string>
     <string name="pref_debug_info">偵錯資訊</string>
-    <string name="pref_chapter_swipe_start">向左滑動章節</string>
-    <string name="pref_double_tap_zoom">輕觸兩下以縮放</string>
-    <string name="pref_chapter_swipe_end">向右滑動章節</string>
     <string name="action_ok">確定</string>
     <string name="delete_downloaded">刪除舊有下載章節</string>
     <string name="action_filter_interval_custom">已自訂更新頻率</string>
@@ -611,7 +592,6 @@
     <string name="syncing_library">正在同步書櫃</string>
     <string name="library_sync_complete">書櫃同步完成</string>
     <string name="download_cache_invalidated">正在重新建立下載索引</string>
-    <string name="information_cloudflare_help">查看 Cloudflare 相關說明</string>
     <string name="create_backup_file_error">無法建立備份檔</string>
     <string name="exception_http">HTTP %d，請在 WebView 中檢查網站</string>
     <string name="exception_offline">沒有網路連線</string>
@@ -659,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">用以傳送書櫃更新等通知</string>
     <string name="onboarding_permission_action_grant">授予</string>
     <string name="available_disk_space_info">可用：%1$s / 總計：%2$s</string>
-    <string name="ext_permission_install_apps_warning">缺少安裝擴充套件所需的權限，輕觸此處以授予</string>
     <string name="private_settings">包含敏感設定 (如：登入權杖)</string>
     <string name="manga_interval_expected_update">預計 %1$s後更新，每 %2$s檢查一次</string>
     <string name="invalid_backup_file_error">完整錯誤訊息：</string>
@@ -814,8 +793,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">來自此擴充套件的來源可能同時包含安全與 18+ 內容。</string>
     <string name="ext_content_warning_nsfw_description">來自此擴充套件的來源主要以 18+ 內容為主。</string>
-    <string name="pref_load_ahead_only_over_wifi">僅在 Wi-Fi 下預先載入</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">僅載入您正在閱讀的頁面附近內容，以節省行動數據</string>
     <string name="information_webview_crashed">WebView 停止運作，且頁面已關閉</string>
     <string name="pref_hardware_bitmap_threshold">自訂硬體點陣圖的閾值設定</string>
     <string name="pref_hardware_bitmap_threshold_summary">如果閱讀時載入的是空白影像，請逐步降低閾值\n已選擇：%s</string>

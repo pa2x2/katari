@@ -122,7 +122,6 @@
     <string name="information_no_recent_manga">Nic nedávno čtené</string>
     <string name="download_notifier_title_error">Chyba</string>
     <string name="download_notifier_unknown_error">Při stahování kapitoly došlo k neznámé chybě</string>
-    <string name="download_notifier_text_only_wifi">WiFi připojení není dostupné</string>
     <string name="download_notifier_no_network">Síťové připojení není dostupné</string>
     <string name="download_notifier_download_paused">Stahování pozastaveno</string>
     <string name="label_download_queue">Stahovací fronta</string>
@@ -153,7 +152,6 @@
     <string name="charging">Při nabíjení</string>
     <string name="default_category">Výchozí kategorie</string>
     <string name="default_category_summary">Vždy se zeptat</string>
-    <string name="pref_double_tap_anim_speed">Rychlost animace při dvojkliku</string>
     <string name="pref_crop_borders">Oříznout okraje</string>
     <string name="pref_custom_brightness">Vlastní jas</string>
     <string name="pref_custom_color_filter">Vlastní barevný filtr</string>
@@ -232,12 +230,10 @@
     <string name="file_select_cover">Vybrat obrázek obalu</string>
     <string name="information_no_downloads">Žádné stahování</string>
     <string name="information_empty_library">Vaše knihovna je prázdná</string>
-    <string name="information_empty_category">Nemáte žádné kategorie. Klikněte na tlačítko plus a vytvořte nějakou pro zorganizování vaší knihovny.</string>
     <string name="download_notifier_downloader_title">Stahovač</string>
     <string name="channel_common">Běžný</string>
     <string name="label_help">Nápověda</string>
     <string name="action_open_in_web_view">Otevřít ve WebView</string>
-    <string name="pref_read_with_long_tap">Zobrazit akce dlouhým stisknutím</string>
     <string name="pref_skip_read_chapters">Přeskakovat přečtené kapitoly</string>
     <string name="pref_color_filter_mode">Režim mísení filtru barev</string>
     <string name="filter_mode_overlay">Překrytí</string>
@@ -301,7 +297,6 @@
     <string name="pref_disable_battery_optimization_summary">Pomáhá s aktualizacemi knihovny a záloh na pozadí</string>
     <string name="pref_disable_battery_optimization">Vypnout optimalizaci baterie</string>
     <string name="pref_dump_crash_logs_summary">Uloží chybové protokoly do souboru pro sdílení s vývojáři</string>
-    <string name="pref_dump_crash_logs">Sdílet protokoly o selhání</string>
     <string name="pref_refresh_library_covers">Obnovit přebaly v knihovně</string>
     <string name="label_data">Data</string>
     <string name="requires_app_restart">Pro projevení je nutný restart aplikace</string>
@@ -320,7 +315,6 @@
     <string name="pref_remove_bookmarked_chapters">Povolení mazání kapitol se záložkami</string>
     <string name="pref_category_delete_chapters">Smazat kapitoly</string>
     <string name="pref_category_reading_mode">Režim čtení</string>
-    <string name="pref_viewer_nav">Oblasti dotyku</string>
     <string name="nav_zone_next">Další</string>
     <string name="right_and_left_nav">Vpravo a Vlevo</string>
     <string name="l_nav">Ve tvaru písmene L</string>
@@ -393,7 +387,6 @@
     <string name="pref_cutout_short">Zobrazovat obsah v oblasti výřezu displeje</string>
     <string name="pref_dual_page_invert_summary">Pokud umístění rozdělených širokých stránek neodpovídá směru čtení</string>
     <string name="pref_dual_page_invert">Invertovat umístění rozdělené stránky</string>
-    <string name="pref_show_navigation_mode">Zobrazit překrytí oblastí dotyku</string>
     <string name="exclude">Vynechat: %s</string>
     <string name="include">Zahrnout: %s</string>
     <string name="none">Žádné</string>
@@ -402,11 +395,9 @@
     <string name="clipboard_copy_error">Kopírování do schránky se nezdařilo</string>
     <string name="vertical_plus_viewer">Dlouhý pruh s mezerami</string>
     <string name="edge_nav">Okraj</string>
-    <string name="pref_read_with_tapping_inverted">Invertovat oblasti dotyku</string>
     <string name="pref_dual_page_split">Rozdělit široké stránky</string>
     <string name="pref_show_navigation_mode_summary">Krátce zobrazit, když je čtečka otevřena</string>
     <string name="theme_system">Systém</string>
-    <string name="action_show_errors">Klepněte pro zobrazení podrobností</string>
     <string name="action_sort_chapter_fetch_date">Datum načtení kapitoly</string>
     <string name="rotation_landscape">Na šířku</string>
     <string name="rotation_portrait">Na výšku</string>
@@ -478,12 +469,9 @@
     <string name="action_select_inverse">Vybrat obráceně</string>
     <string name="action_display_language_badge">Jazyk</string>
     <string name="update_72hour">Každé 3 dny</string>
-    <string name="connected_to_wifi">Jen na Wi-Fi</string>
     <string name="pref_verbose_logging">Podrobné protokolování</string>
-    <string name="download_queue_size_warning">Varování: hromadné stahování může vést k tomu, že zdroje zpomalí a/nebo zablokují %s. Klepnutím se dozvíte více.</string>
     <string name="ext_update_all">Aktualizovat vše</string>
     <string name="pref_verbose_logging_summary">Vypisovat podrobné informace do systémového protokolu (sníží výkon aplikace)</string>
-    <string name="notification_size_warning">Varování: velké aktualizace poškozují zdroje a můžou vést k pomalejším aktualizacím a zvýšenému využití baterie. Klepnutím se dozvíte více.</string>
     <string name="pref_auto_clear_chapter_cache">Vymazat mezipaměť kapitol při spuštění aplikace</string>
     <string name="extension_api_error">Chyba v získání seznamu rozšíření</string>
     <string name="privacy_policy">Zásady ochrany osobních údajů</string>
@@ -496,7 +484,6 @@
     <string name="action_display_cover_only_grid">Mřížka jen s přebaly</string>
     <string name="on_hiatus">Má pauzu</string>
     <string name="action_move_to_top_all_for_series">Přesunout sérii na začátek</string>
-    <string name="learn_more">Klepnutím se dozvíte více</string>
     <string name="disabled_nav">Zakázáno</string>
     <string name="empty_backup_error">Žádné záznamy v knihovně k zálohování</string>
     <string name="source_empty_screen">Žádný zdroj nenalezen</string>
@@ -545,14 +532,11 @@
     <string name="multi_lang">Více</string>
     <string name="updates_last_update_info">Poslední aktualizace knihovny: %s</string>
     <string name="popular">Populární</string>
-    <string name="missing_storage_permission">Nebyla udělena oprávnění k úložišti</string>
     <string name="action_search_hint">Vyhledat…</string>
     <string name="pref_reader_summary">Režim čtení, displej, navigace</string>
     <string name="pref_appearance_summary">Téma, formát data a času</string>
-    <string name="pref_library_summary">Kategorie, globální aktualizace, přejetí po kapitole</string>
     <string name="pref_downloads_summary">Automatické stahování, stahování dopředu</string>
     <string name="pref_browse_summary">Zdroje, rozšíření, globální vyhledávání</string>
-    <string name="pref_security_summary">Zámek aplikace, zabezpečená obrazovka</string>
     <string name="crash_screen_restart_application">Restartujte aplikaci</string>
     <string name="pref_backup_summary">Ruční a automatické zálohování, místo v úložišti</string>
     <string name="crash_screen_title">Ups!</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate_invert">Překlopení orientace otočených širokých stránek</string>
     <string name="pref_page_rotate">Otočení širokých stránek tak, aby se vešly</string>
     <string name="pref_debug_info">Ladící informace</string>
-    <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
-    <string name="pref_chapter_swipe_start">Kapitola po přejetí doleva</string>
-    <string name="pref_double_tap_zoom">Přiblížení dvojitým klepnutím</string>
     <string name="action_filter_interval_custom">Přizpůsobený interval aktualizace</string>
     <string name="action_sort_next_updated">Další očekávaná aktualizace</string>
     <string name="manga_display_interval_title">Odhadovat každý</string>
@@ -610,7 +591,6 @@
     <string name="has_results">Má výsledky</string>
     <string name="syncing_library">Synchronizace knihovny</string>
     <string name="library_sync_complete">Synchronizace knihovny dokončena</string>
-    <string name="information_cloudflare_help">Klepněte zde pro pomoc s Cloudflare</string>
     <string name="download_cache_invalidated">Obnovování indexu stažených</string>
     <string name="create_backup_file_error">Nelze vytvořit soubor zálohy</string>
     <string name="exception_offline">Bez připojení k internetu</string>
@@ -656,7 +636,6 @@
     <string name="action_bar_up_description">Navigovat nahoru</string>
     <string name="no_location_set">Není nastaveno umístění úložiště</string>
     <string name="onboarding_permission_notifications_description">Buďte upozorněni na aktualizaci knihovny atd.</string>
-    <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
     <string name="private_settings">Zahrnout citlivé nastavení (např. přihlašovací tokeny)</string>
     <string name="onboarding_permission_action_grant">Udělit</string>
     <string name="onboarding_storage_folder_info">Vyberte složku, kde %1$s bude ukládat stahování kapitol, zálohy a další. \n \nJe doporučena vyhrazená složka.</string>
@@ -814,8 +793,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Zdroje z tohoto rozšíření mohou obsahovat jak bezpečný obsah, tak obsah určený pro osoby starší 18 let.</string>
     <string name="ext_content_warning_nsfw_description">Zdroje tohoto rozšíření se zaměřují především na obsah pro osoby starší 18 let.</string>
-    <string name="pref_load_ahead_only_over_wifi">Načíst dopředu pouze přes Wi-Fi</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Šetří mobilní data tím, že načítá pouze stránky v blízkosti té, kterou právě čtete</string>
     <string name="information_webview_crashed">WebView přestal fungovat a stránka byla zavřena</string>
     <string name="pref_time_format">Formát času</string>
     <string name="follow_system">Sledovací systém</string>

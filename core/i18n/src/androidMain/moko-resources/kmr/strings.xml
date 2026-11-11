@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Ji bo hûrgulîyan bitikîne</string>
+    <string name="pref_security_summary">Kilîta sepanê, ekrana ewle</string>
+    <string name="pref_chapter_swipe_start">Kişandina beşê ber bi çepê</string>
+    <string name="pref_chapter_swipe_end">Kişandina beşê ber bi rastê</string>
+    <string name="connected_to_wifi">Tenê bi Wi-Fi\'ê</string>
+</resources>

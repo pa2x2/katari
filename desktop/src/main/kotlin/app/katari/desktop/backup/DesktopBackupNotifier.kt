@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreReporter
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.PlatformStrings
 import tachiyomi.i18n.action_cancel
 import tachiyomi.i18n.action_show_errors
 import tachiyomi.i18n.backup_created
@@ -165,7 +166,7 @@ class DesktopBackupNotifier(
                 body = listOfNotNull(message, profiles).joinToString("\n"),
                 onClick = errorLog,
                 actions = listOfNotNull(
-                    errorLog?.let { NotificationAction(stringResource(MR.strings.action_show_errors), it) },
+                    errorLog?.let { NotificationAction(stringResource(PlatformStrings.action_show_errors), it) },
                 ),
             ),
         )

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Sakatu xehetasunak ikusteko</string>
+    <string name="notification_size_warning">Eguneratze handiek bateriaren erabilera areagotzea eta iturriak motelagoak izatea eragin dezakete</string>
+    <string name="download_queue_size_warning">Abisua: deskarga handiek iturriak motelagoak izatea eta/edo %s blokeatzea ekar dezakete.</string>
+    <string name="information_empty_category">Ez daukazu kategoriarik. Sakatu gehiketa botoia zure liburutegia antolatzeko bat sortzeko.</string>
+    <string name="pref_double_tap_anim_speed">Sakaketa bikoitzaren animazioaren abiadura</string>
+    <string name="pref_dump_crash_logs">Sortu erroreen erregistroak</string>
+    <string name="pref_viewer_nav">Nabigazio-diseinua</string>
+    <string name="pref_read_with_tapping_inverted">Sakatzea alderantzikatu</string>
+    <string name="pref_show_navigation_mode">Nabigazio-diseinuaren geruza erakutsi</string>
+    <string name="pref_read_with_long_tap">Erakutsi sakaketa luzean</string>
+    <string name="connected_to_wifi">Wi-Fi bidez bakarrik</string>
+</resources>

@@ -27,9 +27,6 @@ import kotlinx.coroutines.launch
  * every collector at once.
  */
 class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
-    // The portal reports whether a network is metered, not what carries it
-    override val knowsWifi: Boolean = false
-
     private val state = callbackFlow {
         val monitor = PortalGdbus.monitor()
         send(read())

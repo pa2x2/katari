@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
+    <string name="action_show_errors">Toque para ver detalhes</string>
+    <string name="notification_size_warning">Grandes atualizações prejudicam as fontes e podem levar a atualizações lentas e ainda ao aumento do uso da bateria. Toque para saber mais.</string>
+    <string name="download_queue_size_warning">Aviso: downloads grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
+    <string name="information_empty_category">Não tem nenhuma categoria. Toque no botão (+) para criar uma e organizar a sua biblioteca.</string>
+    <string name="pref_double_tap_zoom">Toque duplo para aproximar</string>
+    <string name="pref_double_tap_anim_speed">Velocidade de animação de toque duplo</string>
+    <string name="pref_dump_crash_logs">Compartilhar registros de falha</string>
+    <string name="pref_security_summary">Bloqueio da app, ecrã seguro</string>
+    <string name="pref_viewer_nav">Zonas de toque</string>
+    <string name="pref_read_with_tapping_inverted">Inverter zonas toque</string>
+    <string name="pref_show_navigation_mode">Mostrar sobreposição das zonas de toque</string>
+    <string name="pref_read_with_long_tap">Mostrar com toque longo</string>
+    <string name="pref_chapter_swipe_start">Capítulo ao deslizar para a esquerda</string>
+    <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
+    <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
+    <string name="connected_to_wifi">Só com Wi-Fi</string>
+</resources>

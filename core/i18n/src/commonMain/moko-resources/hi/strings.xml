@@ -193,11 +193,9 @@
     <string name="information_no_recent">कोई हालिया अपडेट नहीं</string>
     <string name="information_no_recent_manga">हाल ही में कुछ भी नहीं पढ़ा</string>
     <string name="information_empty_library">आपका पुस्तकालय खाली है़ें। स्रोतों से अपने पुस्तकालय में श्रृंखला जोड़ें</string>
-    <string name="information_empty_category">आपके पास कोई श्रेणियां नहीं हैं। अपने पुस्तकालय के आयोजन के लिए एक बनाने के लिए प्लस बटन को दबाएं।</string>
     <string name="download_notifier_downloader_title">डाउनलोडर</string>
     <string name="download_notifier_title_error">त्रुटि</string>
     <string name="download_notifier_unknown_error">अनपेक्षित त्रुटि के कारण अध्याय डाउनलोड नहीं किया जा सका</string>
-    <string name="download_notifier_text_only_wifi">कोई वाई-फ़ाई कनेक्शन उपलब्ध नहीं है</string>
     <string name="download_notifier_no_network">कोई नेटवर्क कनेक्शन उपलब्ध नहीं है</string>
     <string name="download_notifier_download_paused">डाउनलोड रोक दिया है</string>
     <string name="channel_common">सामान्य</string>
@@ -215,7 +213,6 @@
     <string name="ext_uninstall">स्थापना रद्द करें</string>
     <string name="untrusted_extension">अविश्वस्त एक्सटेंशन</string>
     <string name="untrusted_extension_message">यह एक्सटेंशन एक अविश्वस्त प्रमाणपत्र के साथ हस्ताक्षरित हुआ था और सक्रिय नहीं हुआ था। \n \nदुर्भावनापूर्ण विस्तार, किसी भी लॉगिन क्रेडेंशियल्स को ताचियोमी में संग्रहीत या मनमाना कोड निष्पादित कर सकता है \n \nइस प्रमाणपत्र पर विश्वास करके आप इन जोखिमों को स्वीकार करते हैं।</string>
-    <string name="pref_double_tap_anim_speed">डबल टैप एनीमेशन गति</string>
     <string name="double_tap_anim_speed_0">कोई एनीमेशन नहीं</string>
     <string name="double_tap_anim_speed_normal">साधारण</string>
     <string name="double_tap_anim_speed_fast">तेज</string>
@@ -235,7 +232,6 @@
     <string name="transition_no_previous">कोई पिछला अध्याय नहीं है</string>
     <string name="transition_pages_loading">पेज लोड हो रहे है …</string>
     <string name="transition_pages_error">पृष्ठों को लोड करने में विफल है: %1$s</string>
-    <string name="pref_read_with_long_tap">लंबे टैप पर क्रियाएँ दिखाएँ</string>
     <string name="action_open_in_web_view">WebView में खोलें</string>
     <string name="pref_skip_read_chapters">पढ़े हुए अध्यायों को छोड़ें</string>
     <string name="pref_color_filter_mode">रंग फिल्टर मिश्रण मोड</string>
@@ -346,7 +342,6 @@
     <string name="tapping_inverted_vertical">शीर्ष से असंतत</string>
     <string name="tapping_inverted_horizontal">क्षैतिज</string>
     <string name="tapping_inverted_none">कोई नहीं</string>
-    <string name="pref_read_with_tapping_inverted">टैप ज़ोन उलटें</string>
     <string name="unknown_status">अज्ञात स्थिति</string>
     <string name="unknown_author">अज्ञात लेखक</string>
     <string name="requires_app_restart">प्रभावी होने के लिए एप्लिकेशन पुनरारंभ की आवश्यकता होती है</string>
@@ -382,8 +377,6 @@
     <string name="migration_help_guide">स्रोत माइग्रेशन गाइड</string>
     <string name="file_picker_error">कोई फ़ाइल पिकर ऐप नहीं मिला</string>
     <string name="pref_dump_crash_logs_summary">डेवलपर्स के साथ साझा करने के लिए फ़ाइल में त्रुटि लॉग सहेजता है</string>
-    <string name="pref_dump_crash_logs">क्रैश लॉग शेयर करें</string>
-    <string name="pref_viewer_nav">टैप ज़ोन</string>
     <string name="right_and_left_nav">दाएं और बाएं</string>
     <string name="edge_nav">धार</string>
     <string name="kindlish_nav">किंडल-जैसे</string>
@@ -398,7 +391,6 @@
     <string name="pref_dual_page_invert">स्प्लिट पेज प्लेसमेंट को उल्टा करें</string>
     <string name="pref_dual_page_split">चौड़े पृष्ठ को दो भागों में बांट दे</string>
     <string name="action_start_downloading_now">अभी डाउनलोड करना शुरू करें</string>
-    <string name="action_show_errors">विवरण देखने के लिए टैप करें</string>
     <string name="cancel_all_for_series">इस श्रृंखला के लिए सभी रद्द करें</string>
     <string name="action_display_local_badge">स्थानीय स्रोत</string>
     <string name="pref_dark_theme_pure_black">पूरा काला मोड़</string>
@@ -418,7 +410,6 @@
     <string name="on">चालू</string>
     <string name="pref_high">उच्च</string>
     <string name="pref_tablet_ui_mode">टैबलेट यूआई</string>
-    <string name="pref_show_navigation_mode">टैप ज़ोन ओवरले दिखाएं</string>
     <string name="pref_reader_actions">कार्रवाई</string>
     <string name="label_default">डिफॉल्ट</string>
     <string name="source_unsupported">स्रोत समर्थित नहीं है</string>
@@ -480,10 +471,7 @@
     <string name="label_warning">चेतावनी</string>
     <string name="action_display_language_badge">भाषा</string>
     <string name="backup_info">आपको अन्य स्थानों पर भी बैकअप की प्रतियाँ रखनी चाहिए।</string>
-    <string name="download_queue_size_warning">चेतावनी: बड़े पैमाने पर डाउनलोड से स्रोत धीमे हो सकते हैं और/या %s को ब्लॉक कर सकते हैं। अधिक जानने के लिए टैप करें।</string>
-    <string name="notification_size_warning">बड़े अपडेट स्रोतों को नुकसान पहुंचाते हैं और इससे धीमे अपडेट हो सकते हैं, और बैटरी का उपयोग भी बढ़ सकता है। अधिक जानने के लिए टैप करें ।</string>
     <string name="update_72hour">हर 3 दिन</string>
-    <string name="connected_to_wifi">केवल वाई-फ़ाई पर</string>
     <string name="clear_database_source_item_count">डेटाबेस में %1$d गैर-पुस्तकालय आइटम</string>
     <string name="pref_auto_clear_chapter_cache">ऐप लॉन्च पर चैप्टर कैशे साफ़ करें</string>
     <string name="database_clean">साफ़ करने के लिए कुछ नहीं है</string>
@@ -493,7 +481,6 @@
     <string name="cancelled">रद्द किया गया</string>
     <string name="on_hiatus">अंतराल पर है</string>
     <string name="publishing_finished">प्रकाशन समाप्त</string>
-    <string name="learn_more">अधिक जानकारी के लिए दबाए</string>
     <string name="action_show_manga">प्रविष्टि दिखाएँ</string>
     <string name="action_display_cover_only_grid">केवल कवर ग्रिड</string>
     <string name="disabled_nav">अक्षम</string>
@@ -562,17 +549,13 @@
     <string name="pref_downloads_summary">स्वचालित डाउनलोड, आगे डाउनलोड करें</string>
     <string name="pref_library_update_show_tab_badge">नए अपडेट आइकन पर अपठित संख्या दिखाएं</string>
     <string name="pref_hide_in_library_items">पुस्तकालय में पहले से ही रही आइटम को छिपाएँ</string>
-    <string name="pref_library_summary">श्रेणियाँ, वैश्विक अपडेट, अध्याय स्वाइप</string>
     <string name="pref_page_rotate">फिट होने के लिए चौड़े पृष्ठों को घुमाएं</string>
     <string name="pref_backup_summary">मैनुअल और स्वचालित बैकअप</string>
-    <string name="pref_security_summary">ऐप लॉक, सुरक्षित स्क्रीन</string>
     <string name="action_set_interval">अंतराल निर्धारित करें</string>
     <string name="action_filter_interval_custom">अनुकूलित लाने का अंतराल</string>
     <string name="intervals_header">अंतराल</string>
-    <string name="pref_chapter_swipe_end">अध्यााय: दाएँ स्वाइप करें</string>
     <string name="action_sort_next_updated">अगला अपेक्षित अपडेट</string>
     <string name="pref_debug_info">डीबग जानकारी</string>
-    <string name="pref_chapter_swipe_start">अध्यााय: बाएँ स्वाइप करें</string>
     <string name="library_sync_complete">लाइब्रेरी सिंक पूरा</string>
     <string name="download_cache_invalidated">डाउनलोड इंडेक्स को पुनः बनाया जा रहा है</string>
     <string name="action_ok">ठीक है</string>
@@ -615,7 +598,6 @@
     <string name="possible_duplicates_summary">आपकी पुस्तकालय में एक समान नाम वाली प्रविष्टियाँ हैं।\n\nस्थानांतरित करने के लिए एक प्रविष्टि चुनें या फिर भी जोड़ें।</string>
     <string name="onboarding_storage_folder_info">%1$s अध्याय डाउनलोड, बैकअप और अन्य चीज़ों को संग्रहित करने के लिए एक फ़ोल्डर चुनें।\n\nएक समर्पित फ़ोल्डर उपयुक्त रहेगा।</string>
     <string name="onboarding_storage_selected_folder">चयनित फ़ोल्डर: %s</string>
-    <string name="ext_permission_install_apps_warning">एक्सटेंशन स्थापित करने के लिए अनुमतियाँ आवश्यक हैं। अनुमति देने के लिए यहाँ टैप करें।</string>
     <string name="onboarding_permission_install_apps">अनुप्रयोग संस्थापित करने की अनुमति</string>
     <string name="onboarding_permission_install_apps_description">स्रोत विस्तार संस्थापित करने हेतु।</string>
     <string name="onboarding_permission_notifications">अधिसूचना अनुमति</string>
@@ -640,7 +622,6 @@
     <string name="pref_hide_missing_chapter_indicators">गुम हुए अध्याय के संकेत छुपाएँ</string>
     <string name="ext_revoke_trust">विश्वसनीय अज्ञात एक्सटेंशन्स रद्द करें</string>
     <string name="pref_page_rotate_invert">घुमाए गए चौड़े पृष्ठों की ओरिएंटेशन उलटें</string>
-    <string name="pref_double_tap_zoom">दुबारा टैप करके ज़ूम करें</string>
     <string name="pref_flash_page">पृष्ठ बदलने पर फ्लैश करें</string>
     <string name="pref_flash_page_summ">ई-इंक डिस्प्ले पर घोस्टिंग कम करता है</string>
     <string name="pref_flash_duration">फ्लैश की अवधि</string>
@@ -666,7 +647,6 @@
     <string name="source_settings">स्रोत सेटिंग्स</string>
     <string name="private_settings">संवेदनशील सेटिंग्स शामिल करें (जैसे, लॉगिन टोकन)</string>
     <string name="non_library_settings">सभी पढ़ी गई प्रविष्टियाँ</string>
-    <string name="missing_storage_permission">स्टोरेज अनुमति नहीं मिली है</string>
     <string name="create_backup_file_error">बैकअप फ़ाइल बनाने में असमर्थ</string>
     <string name="last_auto_backup_info">अंतिम स्वचालित बैकअप: %s</string>
     <string name="pref_storage_usage">स्टोरेज उपयोग</string>
@@ -724,7 +704,6 @@
     <string name="file_null_uri_error">कोई फ़ाइल चयनित नहीं</string>
     <string name="information_no_manga_category">श्रेणी खाली है</string>
     <string name="information_no_entries_found">इस श्रेणी में कोई प्रविष्टियाँ नहीं मिलीं</string>
-    <string name="information_cloudflare_help">Cloudflare सहायता के लिए यहां टैप करें</string>
     <string name="download_notifier_cache_renewal">डाउनलोड जांच रहे हैं</string>
     <string name="exception_http">HTTP %d, वेबसाइट WebView में जांचें</string>
     <string name="exception_offline">इंटरनेट कनेक्शन नहीं है</string>

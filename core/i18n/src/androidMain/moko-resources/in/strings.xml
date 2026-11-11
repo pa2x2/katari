@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Ketuk di sini untuk bantuan dengan Cloudflare</string>
+    <string name="action_show_errors">Ketuk untuk melihat detail</string>
+    <string name="notification_size_warning">Pembaruan berskala besar membahayakan sumber, dapat membuat pembaruan lambat dan meningkatkan penggunaan baterai. Ketuk untuk mempelajari lebih lanjut.</string>
+    <string name="download_queue_size_warning">Peringatan: mengunduh dalam jumlah besar bisa menyebabkan sumber menjadi lambat dan/atau memblokir %s. Ketuk untuk mempelajari lebih lanjut.</string>
+    <string name="information_empty_category">Anda belum memiliki kategori. Tekan tombol tambah untuk menambahkan kategori baru untuk mengatur pustaka Anda.</string>
+    <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
+    <string name="pref_double_tap_anim_speed">Kecepatan animasi ketukan dua kali</string>
+    <string name="pref_load_ahead_only_over_wifi">Muat data lebih awal hanya melalui Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Menghemat data seluler dengan hanya memuat halaman yang berdekatan dengan halaman yang sedang Anda baca</string>
+    <string name="pref_dump_crash_logs">Bagikan log kerusakan</string>
+    <string name="pref_security_summary">Kunci aplikasi, amankan layar</string>
+    <string name="pref_viewer_nav">Zona ketuk</string>
+    <string name="pref_read_with_tapping_inverted">Balikkan zona ketuk</string>
+    <string name="pref_show_navigation_mode">Tampilkan zona ketukan</string>
+    <string name="pref_read_with_long_tap">Tampilkan tindakan saat tekan lama</string>
+    <string name="pref_chapter_swipe_start">Bab tentang geser ke kiri</string>
+    <string name="pref_chapter_swipe_end">Bab tentang geser ke kanan</string>
+    <string name="ext_permission_install_apps_warning">Izin diperlukan untuk memasang ekstensi. Klik disini untuk memberi izin.</string>
+    <string name="connected_to_wifi">Hanya pada Wi-FI</string>
+</resources>

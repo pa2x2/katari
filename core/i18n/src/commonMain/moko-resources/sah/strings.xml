@@ -31,7 +31,6 @@
     <string name="chapters">Түһүмэхтэр</string>
     <string name="manga">Маанга</string>
     <string name="categories">Бөлөхтөр</string>
-    <string name="information_empty_category">Эйиэхэ бөлөхтөр суохтар. Эбэр бэлиэни батта, бэбэлэтиэкэҕэ саҥа бөлөҕү оҥорорго.</string>
     <string name="information_empty_library">Эн бэбэлэтиэкэн кураанах. Бэбэлэтиэкэҕэ айымньыыларыы көрдөөһүнтэн эп.</string>
     <string name="information_no_recent_manga">Бүтэһик кэмҥэ тугу да аахпатын</string>
     <string name="information_no_recent">Саҥардыылар суохтар</string>
@@ -164,7 +163,6 @@
     <string name="gray_background">Бороҥ</string>
     <string name="white_background">Маҥан</string>
     <string name="pref_reader_theme">Кэнники өҥ</string>
-    <string name="pref_read_with_long_tap">Уһун баттааһыҥҥа - кэпсэтии</string>
     <string name="pref_read_with_volume_keys_inverted">Тыас талкыйдарын миэстэлэрин уларыт</string>
     <string name="pref_read_with_volume_keys">Тыас талкыйдара</string>
     <string name="pref_reader_navigation">Хамсыы</string>
@@ -183,7 +181,6 @@
     <string name="pref_custom_brightness">Туттааччы сырдыга</string>
     <string name="pref_crop_borders">Быһыллы кыраныыссата</string>
     <string name="pref_show_page_number">Сирэй нүөмэрин көрдөр</string>
-    <string name="pref_double_tap_anim_speed">Иккитэ баттыырга хамсааһын түргэнэ</string>
     <string name="pref_page_transitions">Хамсааһыннах, сирэй арыйыыта</string>
     <string name="pref_cutout_short">Быһыллыбыт хонууга баары көрдөр</string>
     <string name="obsolete_extension_message">Бу кэҥэтии кыаллыбат буолла.</string>
@@ -350,14 +347,12 @@
     <string name="spen_previous_page">Иннинээҕи сирэй</string>
     <string name="file_picker_error">Билэни талар эбилик булуллубата</string>
     <string name="migration_help_guide">Төрүттэр көһөрүүтүн туһунан салалта</string>
-    <string name="pref_viewer_nav">Нэбигээссийэ бэлиэтэ</string>
     <string name="edge_nav">Кытыы</string>
     <string name="kindlish_nav">Kindle курдук</string>
     <string name="l_nav">L курдук</string>
     <string name="exclude">Киллэримэ: %s</string>
     <string name="include">Киллэр: %s</string>
     <string name="none">Суох</string>
-    <string name="action_show_errors">Сыһааһыннары көрдөр</string>
     <string name="action_desc">Кыччыытынан</string>
     <string name="action_asc">Улаатыытынан</string>
     <string name="action_order_by_chapter_number">Түһүмэх нүөмэринэн</string>

@@ -7,8 +7,8 @@ import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.manga.reader.settings.MangaReaderPreferences
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Keyboard
-import app.katari.icons.materialsymbols.rounded.Mouse
 import app.katari.icons.materialsymbols.rounded.SwipeVertical
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.gesture.InputGuide
 import app.katari.presentation.kit.gesture.InputGuideHint
 import tachiyomi.i18n.*
@@ -34,27 +34,27 @@ internal fun MangaReaderInputGuide(preferences: MangaReaderPreferences) {
     InputGuide(
         hints = listOf(
             InputGuideHint(
-                icon = MaterialSymbols.Rounded.Mouse,
-                title = stringResource(MR.strings.reader_guide_click),
+                icon = platformPresentation.pointerIcon,
+                title = stringResource(PlatformStrings.reader_guide_click),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_double_click),
-                    stringResource(MR.strings.reader_guide_right_click),
+                    stringResource(PlatformStrings.reader_guide_double_click),
+                    stringResource(PlatformStrings.reader_guide_right_click),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.reader_guide_scroll),
+                title = stringResource(PlatformStrings.reader_guide_scroll),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_scroll_zoomed),
-                    stringResource(MR.strings.reader_guide_scroll_zoom),
+                    stringResource(PlatformStrings.reader_guide_scroll_zoomed),
+                    stringResource(PlatformStrings.reader_guide_scroll_zoom),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,
-                title = stringResource(MR.strings.reader_guide_keys_turn),
+                title = stringResource(PlatformStrings.reader_guide_keys_turn),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_keys_chapter),
-                    stringResource(MR.strings.reader_guide_keys_list),
+                    stringResource(PlatformStrings.reader_guide_keys_chapter),
+                    stringResource(PlatformStrings.reader_guide_keys_list),
                 ),
             ),
         ),

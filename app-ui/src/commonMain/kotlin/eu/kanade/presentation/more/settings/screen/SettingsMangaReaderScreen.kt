@@ -13,6 +13,7 @@ import app.katari.entry.viewer.settings.ViewerSettingBinder
 import app.katari.entry.viewer.settings.ViewerSettingDefinition
 import app.katari.entry.viewer.settings.asProfilePreference
 import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
+import app.katari.platform.presentation.platformPresentation
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.Preference
 import tachiyomi.i18n.*
@@ -55,7 +56,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     500 to stringResource(MR.strings.double_tap_anim_speed_normal),
                     250 to stringResource(MR.strings.double_tap_anim_speed_fast),
                 ),
-                title = stringResource(MR.strings.pref_double_tap_anim_speed),
+                title = stringResource(platformPresentation.doubleTapAnimationSpeedLabel),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = settings.profilePreference(settingBinder, settings.display.showReadingMode),
@@ -67,7 +68,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     settingBinder,
                     settings.display.showNavigationOverlayOnStart,
                 ),
-                title = stringResource(MR.strings.pref_show_navigation_mode),
+                title = stringResource(platformPresentation.showPageZonesOverlayLabel),
                 subtitle = stringResource(MR.strings.pref_show_navigation_mode_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
@@ -76,8 +77,8 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = settings.profilePreference(settingBinder, settings.reading.loadAheadOnlyOverWifi),
-                title = stringResource(MR.strings.pref_load_ahead_only_over_wifi),
-                subtitle = stringResource(MR.strings.pref_load_ahead_only_over_wifi_summary),
+                title = stringResource(platformPresentation.loadAheadOnlyOnUnmeteredLabel),
+                subtitle = stringResource(platformPresentation.loadAheadOnlyOnUnmeteredSummary),
             ),
             getDisplayGroup(settings, settingBinder, deviceControls, defaultOrientation),
             getEInkGroup(settings, settingBinder, deviceControls),
@@ -258,13 +259,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
-                    title = stringResource(MR.strings.pref_viewer_nav),
+                    title = stringResource(platformPresentation.pageZonesLabel),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = settings.profilePreference(settingBinder, settings.pager.navigationInverted),
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
-                    title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                    title = stringResource(platformPresentation.invertPageZonesLabel),
                     visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.ListPreference(
@@ -354,13 +355,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
-                    title = stringResource(MR.strings.pref_viewer_nav),
+                    title = stringResource(platformPresentation.pageZonesLabel),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.navigationInverted),
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
-                    title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                    title = stringResource(platformPresentation.invertPageZonesLabel),
                     visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.SliderPreference(
@@ -418,7 +419,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.doubleTapZoom),
-                    title = stringResource(MR.strings.pref_double_tap_zoom),
+                    title = stringResource(platformPresentation.doubleTapZoomLabel),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.disableZoomOut),
@@ -495,7 +496,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = autoScrollEnabledPref,
                     title = stringResource(MR.strings.pref_enable_auto_scroll),
-                    subtitle = stringResource(MR.strings.pref_auto_scroll_summary),
+                    subtitle = stringResource(platformPresentation.autoScrollSummary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     preference = autoScrollSpeedPref,
@@ -519,7 +520,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.pageText.translationOverlay),
                     title = stringResource(MR.strings.pref_page_text_translation_overlay),
-                    subtitle = stringResource(MR.strings.pref_page_text_translation_overlay_summary),
+                    subtitle = stringResource(platformPresentation.translateEveryTextSummary),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(
@@ -548,11 +549,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_reader_actions),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
-                    title = stringResource(MR.strings.pref_read_with_long_tap),
-                ),
+            preferenceItems = listOfNotNull(
+                platformPresentation.pageActionsOnLongPressLabel?.let { label ->
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
+                        title = stringResource(label),
+                    )
+                },
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.reading.folderPerManga),
                     title = stringResource(MR.strings.pref_create_folder_per_manga),

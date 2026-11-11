@@ -151,7 +151,6 @@
     <string name="action_webview_forward">Наперад</string>
     <string name="action_webview_back">Назад</string>
     <string name="action_restore">Аднавіць</string>
-    <string name="action_show_errors">Націсніце для падрабязнасцей</string>
     <string name="action_open_log">Адкрыць журнал</string>
     <string name="action_undo">Адмяніць</string>
     <string name="action_reset">Скінуць</string>
@@ -167,11 +166,9 @@
     <string name="pref_dual_page_invert">Інвертаваць размяшчэнне палоў падзеленай старонкі</string>
     <string name="pref_dual_page_split">Падзяляць шырокія старонкі напалову</string>
     <string name="pref_show_navigation_mode_summary">Кароткачасова паказваць пры адкрыцці чытанкі</string>
-    <string name="pref_show_navigation_mode">Паказваць накладанне зон дотыку</string>
     <string name="obsolete_extension_message">Гэта пашырэнне больш недаступнае. Яно можа працаваць некарэктна і выклікаць праблемы ў праграме. Рэкамендуецца яго дэінсталяваць.</string>
     <string name="untrusted_extension_message">Шкодныя пашырэнні могуць счытваць любыя захаваныя ўліковыя даныя або выконваць адвольны код.\n\nДавяраючы гэтаму пашырэнню, вы прымаеце гэтыя рызыкі.</string>
     <string name="untrusted_extension">Ненадзейнае пашырэнне</string>
-    <string name="pref_viewer_nav">Зоны дотыку</string>
     <string name="pager_viewer">Пастаронкава</string>
     <string name="vertical_plus_viewer">Рулон з прамежкамі</string>
     <string name="webtoon_viewer">Рулон</string>
@@ -194,13 +191,11 @@
     <string name="pref_reader_theme">Колер фону</string>
     <string name="pref_create_folder_per_manga_summary">Ствараць тэчкі ў адпаведнасці з назвай твора</string>
     <string name="pref_create_folder_per_manga">Захоўваць старонкі ў асобныя тэчкі</string>
-    <string name="pref_read_with_long_tap">Паказваць дзеянні пры доўгім дотыку</string>
     <string name="pref_reader_actions">Дзеянні</string>
     <string name="tapping_inverted_both">Па абедзвум</string>
     <string name="tapping_inverted_vertical">Вертыкальна</string>
     <string name="tapping_inverted_horizontal">Гарызантальна</string>
     <string name="tapping_inverted_none">Няма</string>
-    <string name="pref_read_with_tapping_inverted">Інвертаваць зоны дотыку</string>
     <string name="pref_read_with_volume_keys_inverted">Інвертаваць клавішы гучнасці</string>
     <string name="pref_read_with_volume_keys">Клавішы гучнасці</string>
     <string name="pref_reader_navigation">Навігацыя</string>
@@ -222,7 +217,6 @@
     <string name="pref_show_reading_mode_summary">Ненадоўга паказваць бягучы рэжым пры адкрыцці чытанкі</string>
     <string name="pref_show_reading_mode">Паказваць рэжым чытання</string>
     <string name="pref_show_page_number">Паказваць нумар старонкі</string>
-    <string name="pref_double_tap_anim_speed">Хуткасць анімацыі пры падвойным дотыку</string>
     <string name="double_tap_anim_speed_fast">Хуткая</string>
     <string name="double_tap_anim_speed_normal">Звычайная</string>
     <string name="double_tap_anim_speed_0">Без анімацыі</string>
@@ -244,7 +238,6 @@
     <string name="pref_category_appearance">Выгляд</string>
     <string name="confirm_lock_change">Аўтэнтыфікуйцеся, каб падтвердзіць змену</string>
     <string name="label_default">Па змаўчанні</string>
-    <string name="information_empty_category">У вас няма катэгорый. Націсніце «плюс», каб стварыць іх і ўпарадкаваць бібліятэку.</string>
     <string name="information_empty_library">Ваша бібліятэка пустая</string>
     <string name="information_no_recent_manga">Нядаўна прачытанага няма</string>
     <string name="pref_download_new_categories_details">Творы з выключаных катэгорый не будуць спампоўвацца, нават калі яны ёсць у іншых катэгорыях.</string>
@@ -305,7 +298,6 @@
     <string name="ext_installer_legacy">Састарэлы</string>
     <string name="action_remove_everything">Прыбраць усё</string>
     <string name="update_72hour">Кожныя 3 дні</string>
-    <string name="connected_to_wifi">Толькі праз Wi-Fi</string>
     <string name="not_selected">Не выбрана</string>
     <string name="action_bar_up_description">Перайсці ўверх</string>
     <string name="unlock_app_title">Разблакаваць %s</string>
@@ -362,12 +354,10 @@
     <string name="onboarding_permission_analytics_description">Ананімна дасылаць даныя выкарыстання праграмы для паляпшэння яе функцый.</string>
     <string name="onboarding_permission_action_grant">Надаць</string>
     <string name="pref_appearance_summary">Тэма, фармат даты і часу</string>
-    <string name="pref_library_summary">Катэгорыі, глабальнае абнаўленне, гартанне раздзелаў</string>
     <string name="pref_reader_summary">Рэжым чытання, адлюстраванне, навігацыя</string>
     <string name="pref_downloads_summary">Аўтаматычнае спампоўванне, спампоўванне наперад</string>
     <string name="pref_browse_summary">Крыніцы, пашырэнні, глабальны пошук</string>
     <string name="pref_backup_summary">Ручныя і аўтаматычныя рэзервоўкі, сховішча</string>
-    <string name="pref_security_summary">Блакіроўка праграмы, абарона экрана</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="theme_monochrome">Манахром</string>
     <string name="theme_nord">Nord</string>
@@ -380,8 +370,6 @@
     <string name="telemetry_summary">Адпраўка журналаў збояў і аналітыкі дазволіць нам выяўляць і выпраўляць памылкі, паляпшаць прадукцыйнасць і развіваць праграму з улікам вашых патрэб</string>
     <string name="pref_library_update_show_tab_badge">Паказваць колькасць непрачытаных на значку «Абнаўленні»</string>
     <string name="pref_behavior">Паводзіны</string>
-    <string name="pref_chapter_swipe_end">Раздзел пры змахванні ўправа</string>
-    <string name="pref_chapter_swipe_start">Раздзел пры змахванні ўлева</string>
     <string name="pref_mark_duplicate_read_chapter_read">Пазначаць прачытаны дублікат раздзела як «прачытаны»</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Пасля прачытання раздзела</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Пасля атрымання новага раздзела</string>
@@ -392,12 +380,10 @@
     <string name="ext_remove">Прыбраць</string>
     <string name="ext_confirm_remove">Прыбраць пашырэнне?</string>
     <string name="remove_private_extension_message">Вы сапраўды хочаце прыбраць пашырэнне «%s»?</string>
-    <string name="ext_permission_install_apps_warning">Для ўсталёўкі пашырэнняў патрабуюцца дазволы. Націсніце сюды, каб даць іх.</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Усталюйце і запусціце Shizuku, каб выкарыстоўваць яго як усталёўнік пашырэнняў.</string>
     <string name="ext_revoke_trust">Адклікаць давер да ненадзейных пашырэнняў</string>
     <string name="pref_page_rotate">Паварочваць шырокія старонкі пад памер экрана</string>
     <string name="pref_page_rotate_invert">Адлюстроўваць арыентацыю павернутых шырокіх старонак</string>
-    <string name="pref_double_tap_zoom">Падвойны дотык для павелічэння</string>
     <string name="pref_flash_page">Мігаць пры змене старонкі</string>
     <string name="pref_flash_page_summ">Змяншае дваенне выявы на экранах e-ink</string>
     <string name="pref_flash_duration">Час мігацення</string>
@@ -454,7 +440,6 @@
     <string name="non_library_settings">Усе прачытаныя творы</string>
     <string name="creating_backup">Зарэзерваванне</string>
     <string name="creating_backup_error">Памылка рэзервавання</string>
-    <string name="missing_storage_permission">Не нададзены дазволы на захаванне даных</string>
     <string name="empty_backup_error">У бібліятэцы няма твораў для рэзервавання</string>
     <string name="create_backup_file_error">Не ўдалося стварыць файл рэзервоўкі</string>
     <string name="restore_miui_warning">Рэзервоўка і аднаўленне могуць працаваць неналежным чынам, калі адключана «Аптымізацыя MIUI».</string>
@@ -504,7 +489,6 @@
     <string name="pref_reset_viewer_flags_summary">Скідае рэжым чытання і арыентацыю ўсіх серый</string>
     <string name="pref_reset_viewer_flags_success">Усе налады чытанкі скінуты</string>
     <string name="pref_reset_viewer_flags_error">Не ўдалося скінуць параметры чытанкі</string>
-    <string name="pref_dump_crash_logs">Падзяліцца журналам збояў</string>
     <string name="pref_dump_crash_logs_summary">Захоўвае журналы збояў у файл для адпраўкі распрацоўнікам</string>
     <string name="label_background_activity">Фонавая актыўнасць</string>
     <string name="pref_disable_battery_optimization">Адключыць аптымізацыю батарэі</string>
@@ -696,13 +680,10 @@
     <string name="seconds_short">%dс</string>
     <string name="download_queue_error">Не ўдалося спампаваць раздзелы. Паспрабуйце яшчэ раз у раздзеле спамповак</string>
     <string name="download_insufficient_space">Не ўдалося спампаваць праз недахоп месца ў сховішчы</string>
-    <string name="download_queue_size_warning">Папярэджанне: вялікая колькасць спамповак можа прывесці да запавольвання працы крыніц і/або блакіроўкі %s. Націсніце, каб даведацца больш.</string>
     <string name="notification_updating_progress">Абнаўленне бібліятэкі… (%s)</string>
-    <string name="notification_size_warning">Вялікія абнаўленні шкодзяць крыніцам і могуць прывесці да іх запавольвання і павялічанага расходу батарэі. Націсніце, каб даведацца больш.</string>
     <string name="notification_chapters_single">Раздзел %1$s</string>
     <string name="notification_chapters_single_and_more">Раздзел %1$s ды яшчэ %2$d</string>
     <string name="notification_chapters_multiple">Раздзелы %1$s</string>
-    <string name="learn_more">Націсніце, каб даведацца больш</string>
     <string name="notification_cover_update_failed">Не ўдалося абнавіць вокладку</string>
     <string name="notification_first_add_to_library">Калі ласка, дадайце твор у бібліятэку перад гэтым дзеяннем</string>
     <string name="file_select_cover">Абраць вокладку</string>
@@ -714,14 +695,12 @@
     <string name="information_no_entries_found">У гэтай катэгорыі твораў не знойдзена</string>
     <string name="information_empty_category_dialog">У вас яшчэ няма катэгорый.</string>
     <string name="information_cloudflare_bypass_failure">Не ўдалося прайсці Cloudflare</string>
-    <string name="information_cloudflare_help">Націсніце тут, каб атрымаць дапамогу з Cloudflare</string>
     <string name="information_webview_required">WebView неабходны для працы праграмы</string>
     <string name="information_webview_outdated">Калі ласка, абнавіце WebView для лепшай сумяшчальнасці</string>
     <string name="chapter_settings_updated">Стандартныя параметры раздзелаў абноўлены</string>
     <string name="download_notifier_downloader_title">Пампоўшчык</string>
     <string name="download_notifier_title_error">Памылка</string>
     <string name="download_notifier_unknown_error">Не ўдалося спампаваць раздзел праз непрадбачаную памылку</string>
-    <string name="download_notifier_text_only_wifi">Няма Wi-Fi злучэння</string>
     <string name="download_notifier_no_network">Няма злучэння з сеткай</string>
     <string name="download_notifier_download_paused">Спампоўванне прыпынена</string>
     <string name="download_notifier_split_page_path_not_found">Шлях да файлу старонкі %d не знойдзены</string>

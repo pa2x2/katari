@@ -171,7 +171,6 @@
     <string name="pref_category_general">Ĝeneralaj</string>
     <string name="app_not_available">Apo maldisponebla</string>
     <string name="action_restore">Restaŭri</string>
-    <string name="action_show_errors">Tuŝeti pro vidi detalojn</string>
     <string name="action_reset">Restartigi</string>
     <string name="action_display_show_number_of_items">Montri nombron da elementoj</string>
     <string name="action_display_show_tabs">Montri kategoriajn langetojn</string>
@@ -289,7 +288,6 @@
     <string name="zoom_start_center">Centra</string>
     <string name="zoom_start_right">Dekstra</string>
     <string name="zoom_start_left">Maldekstra</string>
-    <string name="pref_viewer_nav">Tuŝetzonoj</string>
     <string name="pager_viewer">Paĝigita</string>
     <string name="right_to_left_viewer">Paĝigita (dekstre maldekstren)</string>
     <string name="left_to_right_viewer">Paĝigita (maldekstre dekstren)</string>
@@ -318,7 +316,6 @@
     <string name="action_order_by_upload_date">Laŭ alŝuta dato</string>
     <string name="action_select_inverse">Elekti inverse</string>
     <string name="label_default">Defaŭlte</string>
-    <string name="information_empty_category">Vi havas neniun kategorion. Tuŝeti la butonon kun plus, por krei ian kaj organizi vian bibliotekon.</string>
     <string name="channel_ext_updates">Etendaĵaj ĝisdatigoj</string>
     <string name="download_notifier_download_paused">Elŝutoj paŭzigitaj</string>
     <string name="download_notifier_downloader_title">Elŝutilo</string>
@@ -376,8 +373,6 @@
     <string name="pref_cutout_short">Montri enhavon en fortondareo</string>
     <string name="pref_library_update_restriction">Aparataj limigoj por aŭtomataj ĝisdatigoj</string>
     <string name="pref_page_transitions">Animacii paĝajn transpasojn</string>
-    <string name="pref_double_tap_anim_speed">Animacia rapido de duobla tuŝeto</string>
-    <string name="pref_show_navigation_mode">Montri plustavolon kun tuŝetzonoj</string>
     <string name="secure_screen">Sekura ekrano</string>
     <string name="lock_with_biometrics">Devigi malŝlosi</string>
     <string name="pref_refresh_library_covers">Aktualigi kovrilojn en biblioteko</string>
@@ -434,7 +429,6 @@
     <string name="onboarding_action_next">Sekve</string>
     <string name="onboarding_storage_selection_required">Dosierujo devas esti elektita</string>
     <string name="pref_appearance_summary">Etoso, formo de dato k tempo</string>
-    <string name="pref_security_summary">Apa ŝloso, sekura ekrano</string>
     <string name="unlock_app_title">Malŝlosi %s</string>
     <string name="disabled_nav">Malŝaltita</string>
     <string name="invalid_backup_file_error">Tuta eraro:</string>
@@ -484,7 +478,6 @@
     <string name="pref_downloads_summary">Aŭtomata elŝuto, elŝuti antaŭe</string>
     <string name="label_upcoming">Baldaŭa</string>
     <string name="onboarding_permission_install_apps_description">Por instali etendaĵojn de fontoj.</string>
-    <string name="pref_library_summary">Kategorioj, ĉiea ĝisdatigo, ĉapitra ŝovumo</string>
     <string name="pref_onboarding_guide">Komencanta gvidilo</string>
     <string name="action_display_show_continue_reading_button">Butono por daŭrigi legadon</string>
     <string name="action_sort_unread_count">Nombro de nelegitaj</string>
@@ -522,8 +515,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Fontoj de ĉi tiu etendaĵo eble enhavas kaj sendanĝeran kaj 18+-an enhavon.</string>
     <string name="ext_content_warning_nsfw_description">Fontoj de ĉi tiu etendaĵo estas ĉefe koncentrita pri 18+-enhavo.</string>
-    <string name="pref_load_ahead_only_over_wifi">Antaŭŝargi nur per vifio</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Ŝparas poŝtelefonretajn datumojn per ŝargado de nur la paĝoj proksimaj al tiu, kiun vi legas</string>
     <string name="information_webview_crashed">WebView ĉesis funkcii kaj la paĝo estis fermita</string>
     <string name="ext_malformed_message">Al ĉi tiu etendaĵo mankas informo, kiun la apo bezonas por ŝargi ĝin.</string>
     <string name="ext_info_warning">Averto</string>
@@ -533,21 +524,17 @@
     <string name="time_24_hours">24-hora</string>
     <string name="time_12_hours">12-hora</string>
     <string name="update_72hour">Ĉiun 3-an tagon</string>
-    <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
     <string name="ext_remove">Forigi</string>
     <string name="ext_confirm_remove">Ĉu forigi etendaĵon?</string>
     <string name="remove_private_extension_message">Ĉu vi vere volas forigi etendaĵon \"%s\"?</string>
     <string name="label_completed_titles">Finitaj elementoj</string>
-    <string name="connected_to_wifi">Nur per vifio</string>
     <string name="ext_installer_shizuku_stopped">Shizuku ne ruliĝas</string>
     <string name="categorized_display_settings">Agordoj de ordigo laŭ kategorio</string>
-    <string name="pref_chapter_swipe_start">Ĉapitro je ŝovumo maldekstren</string>
     <string name="untrusted_extension_message">Malicaj etendaĵoj povas legi ĉiujn el konservitaj ensalutiloj aŭ plenumi arbitran kodon.\n\nFidante ĉi tiun etendaĵon, vi akceptas tiujn riskojn.</string>
     <string name="pref_library_update_show_tab_badge">Montri nombron de la nelegitaj sur piktogramo Ĝisdatigoj</string>
     <string name="multi_lang">Plur</string>
     <string name="ext_app_info">Pri apo</string>
     <string name="extension_api_error">Malsukcesis akiri etendaĵan liston</string>
-    <string name="ext_permission_install_apps_warning">Permesoj bezonatas por instali etendaĵojn. Tuŝetu ĉi tie por permesi.</string>
     <string name="ext_install_service_notif">Instalado de etendaĵo…</string>
     <string name="network_not_metered">Nur per nemezurata reto</string>
     <string name="pref_flash_page">Fulmi je paĝa ŝanĝo</string>
@@ -561,7 +548,6 @@
     <string name="pref_show_reading_mode_summary">Koncize montri aktualan reĝimon kiam legilo estas malfermita</string>
     <string name="pref_dual_page_invert">Inversigi lokadon de dividitaj paĝoj</string>
     <string name="pref_dual_page_invert_summary">Se la lokado de la dividitaj larĝaj paĝoj ne kongruas kun lega direkto</string>
-    <string name="pref_double_tap_zoom">Duoble tuŝeti por zomi</string>
     <string name="pref_flash_duration_summary">%1$s ms</string>
     <string name="pref_flash_page_interval">Fulmi ĉiu</string>
     <string name="pref_flash_with">Fulmi per</string>
@@ -571,11 +557,9 @@
     <string name="pref_color_filter_mode">Miksada reĝimo de kolorfiltrilo</string>
     <string name="filter_mode_lighten">Heligi</string>
     <string name="pref_skip_dupe_chapters">Preterpasi duoblaĵojn de ĉapitroj</string>
-    <string name="pref_read_with_tapping_inverted">Inversigi tuŝetzonojn</string>
     <string name="pref_display_profile">Propra montrada profilo</string>
     <string name="pref_create_folder_per_manga">Konservi paĝojn al apartaj dosierujoj</string>
     <string name="pref_image_scale_type">Skala speco</string>
-    <string name="pref_read_with_long_tap">Montri agojn post longa tuŝeto</string>
     <string name="download_ahead_info">Nur funkcias se la aktuala ĉapitro + la sekva estas jam elŝutitaj.</string>
     <string name="pref_remove_bookmarked_chapters">Permesi forigi legosignajn ĉapitrojn</string>
     <string name="pref_remove_exclude_categories">Ekskluzivitaj kategorioj</string>
@@ -619,7 +603,6 @@
     <string name="invalid_backup_file_unknown">Savkopia dosiero estas difektita</string>
     <string name="action_create">Krei</string>
     <string name="invalid_backup_file_json">JSON-savkopio ne subtenata</string>
-    <string name="missing_storage_permission">Konservejaj permesoj ne donitaj</string>
     <string name="pref_hide_in_library_items">Kaŝi elementojn jam en biblioteko</string>
     <string name="pref_storage_location_info">Uzata por aŭtomataj savkopioj, ĉapitraj elŝutoj kaj lokaj fontoj.</string>
     <string name="pref_create_backup_summ">Povas esti uzita por restaŭri aktualan bibliotekon</string>
@@ -641,7 +624,6 @@
     <string name="database_clean">Nenio por viŝi</string>
     <string name="pref_invalidate_download_cache_summary">Devigu apon rekontroli elŝutitajn ĉapitrojn</string>
     <string name="webview_data_deleted">Datumoj de WebView viŝitaj</string>
-    <string name="pref_dump_crash_logs">Konigi prikolapsajn protokolojn</string>
     <string name="pref_reset_viewer_flags">Restarigi legilajn agordojn de individuaj serioj</string>
     <string name="pref_disable_battery_optimization_summary">Helpas pri fonaj ĝisdatigoj de biblioteko kaj savkopioj</string>
     <string name="battery_optimization_disabled">Bateria optimumigo jam estis malŝaltita</string>
@@ -729,10 +711,7 @@
     <string name="hour_short">%dh</string>
     <string name="minute_short">%dm</string>
     <string name="seconds_short">%ds</string>
-    <string name="download_queue_size_warning">Averto: grandaj amasaj elŝutoj povas igi fontojn fariĝi pli malrapidaj kaj/aŭ bloki %s. Tuŝetu por ekscii pli.</string>
     <string name="notification_updating_progress">Ĝisdatigado de biblioteko… (%s)</string>
-    <string name="notification_size_warning">Grandaj ĝisdatigoj povas damaĝi fontojn kaj konduki al pli malrapidaj ĝisdatigoj kaj pliigan baterian uzadon. Tuŝetu por ekscii pli.</string>
-    <string name="learn_more">Tuŝetu por ekscii pli</string>
     <string name="notification_first_add_to_library">Bonvolu aldoni la elementon al via biblioteko antaŭ ol fari tion</string>
     <string name="file_picker_error">Neniu dosierelektila apo trovita</string>
     <string name="file_picker_uri_permission_unsupported">Fiaskis akiri aliron al persista dosierujo. La apo eble kondutos neatendate.</string>
@@ -743,12 +722,10 @@
     <string name="getting_started_guide">Komencanta gvidilo</string>
     <string name="information_empty_category_dialog">Vi nune havas neniujn kategoriojn.</string>
     <string name="information_cloudflare_bypass_failure">Malsukcesis ĉirkaŭpasi Cloudflare</string>
-    <string name="information_cloudflare_help">Tuŝetu ĉi tie por helpo kun Cloudflare</string>
     <string name="information_webview_required">WebView estas nepra por ke la apo funkcios</string>
     <string name="information_webview_outdated">Bonvolu ĝisdatigi la WebView-apon por plibona kongruo</string>
     <string name="chapter_settings_updated">Aktualigis defaŭltajn ĉapitrajn agordojn</string>
     <string name="download_notifier_unknown_error">Ne eblis elŝuti ĉapitron pro neatendita eraro</string>
-    <string name="download_notifier_text_only_wifi">Neniu Wi-Fi-konekto disponebla</string>
     <string name="download_notifier_no_network">Neniu retkonekto disponebla</string>
     <string name="download_notifier_cache_renewal">Kontrolado de elŝutoj</string>
     <string name="appwidget_updates_description">Vidi vian laste ĝisdatigitaj elementoj</string>

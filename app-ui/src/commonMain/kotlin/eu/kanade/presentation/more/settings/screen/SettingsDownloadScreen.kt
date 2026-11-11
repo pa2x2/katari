@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
 import app.katari.entry.interactions.download.EntryDownloadSetting
 import app.katari.entry.interactions.translate.EntryTranslatePreferences
+import app.katari.platform.presentation.platformPresentation
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
@@ -43,12 +44,11 @@ class SettingsDownloadScreen : SearchableSettings() {
             graph.entryTranslateFeature.let { feature -> EntryType.entries.any(feature::isApplicable) }
         }
         val downloadNewItems by downloadPreferences.downloadNewEntryChapters.collectAsState()
-        val knowsWifi = graph.networkConnectivity.knowsWifi
         return listOfNotNull(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi,
-                title = stringResource(if (knowsWifi) MR.strings.connected_to_wifi else MR.strings.network_not_metered),
-                subtitle = if (knowsWifi) null else stringResource(MR.strings.pref_download_only_unmetered_summary),
+                title = stringResource(platformPresentation.downloadOnlyOnUnmeteredLabel),
+                subtitle = platformPresentation.downloadOnlyOnUnmeteredSummary?.let { stringResource(it) },
             ),
             getSpecializedDownloadGroup(
                 downloadPreferences = downloadPreferences,
@@ -260,7 +260,7 @@ class SettingsDownloadScreen : SearchableSettings() {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = translatePreferences.onlyOverWifi,
-                    title = stringResource(MR.strings.pref_translate_only_over_wifi),
+                    title = stringResource(platformPresentation.translateOnlyOnUnmeteredLabel),
                     subtitle = stringResource(MR.strings.pref_translate_only_over_wifi_summary),
                 ),
                 Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_translate_info)),

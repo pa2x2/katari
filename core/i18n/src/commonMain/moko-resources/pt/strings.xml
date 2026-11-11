@@ -135,7 +135,6 @@
     <string name="information_empty_library">A sua biblioteca está vazia</string>
     <string name="download_notifier_title_error">Erro</string>
     <string name="download_notifier_unknown_error">Não foi possível transferir o capítulo devido a um erro inesperado</string>
-    <string name="download_notifier_text_only_wifi">A ligação Wi-Fi está indisponível</string>
     <string name="categories">Categorias</string>
     <string name="manga">Entradas da biblioteca</string>
     <string name="history">Histórico</string>
@@ -189,7 +188,6 @@
     <string name="label_migration">Migrar</string>
     <string name="action_reset">Reiniciar</string>
     <string name="action_open_log">Abrir registo</string>
-    <string name="pref_double_tap_anim_speed">Velocidade de animação de toque duplo</string>
     <string name="pager_viewer">Paginação</string>
     <string name="color_filter_r_value">Vermelho</string>
     <string name="backup_created">Cópia de segurança criada</string>
@@ -198,7 +196,6 @@
     <string name="action_display_download_badge">Capítulos transferidos</string>
     <string name="ext_trust">Confiar</string>
     <string name="ext_untrusted">Não confiável</string>
-    <string name="pref_read_with_long_tap">Mostrar com toque longo</string>
     <string name="action_open_in_web_view">Abrir em WebView</string>
     <string name="pref_skip_read_chapters">Ignorar capítulos marcados como lido</string>
     <string name="no_more_results">Sem mais resultados</string>
@@ -233,7 +230,6 @@
     <string name="migrate">Migrar</string>
     <string name="copy">Copiar</string>
     <string name="notification_cover_update_failed">Falha ao atualizar a capa</string>
-    <string name="information_empty_category">Não tem nenhuma categoria. Toque no botão (+) para criar uma e organizar a sua biblioteca.</string>
     <string name="download_notifier_downloader_title">Gestor de transferências</string>
     <string name="download_notifier_no_network">A ligação à rede está indisponível</string>
     <string name="download_notifier_download_paused">Transferências em pausa</string>
@@ -344,7 +340,6 @@
     <string name="tapping_inverted_vertical">Vertical</string>
     <string name="tapping_inverted_horizontal">Horizontal</string>
     <string name="tapping_inverted_none">Nenhum</string>
-    <string name="pref_read_with_tapping_inverted">Inverter zonas toque</string>
     <string name="loader_not_implemented_error">Fonte não encontrada</string>
     <string name="unknown_status">Estado desconhecido</string>
     <string name="unknown_author">Autor desconhecido</string>
@@ -381,7 +376,6 @@
     <string name="spen_previous_page">Página anterior</string>
     <string name="migration_help_guide">Guia de migração de fonte</string>
     <string name="file_picker_error">Não foi encontrada nenhuma app de seleção de ficheiros</string>
-    <string name="pref_viewer_nav">Zonas de toque</string>
     <string name="kindlish_nav">Estilo Kindle</string>
     <string name="l_nav">Em forma de L</string>
     <string name="action_desc">Descendente</string>
@@ -389,7 +383,6 @@
     <string name="action_order_by_chapter_number">Por número do capítulo</string>
     <string name="action_order_by_upload_date">Por data de envio</string>
     <string name="edge_nav">Borda</string>
-    <string name="pref_dump_crash_logs">Compartilhar registros de falha</string>
     <string name="pref_dump_crash_logs_summary">Guarda registos de erros num ficheiro para partilhar com os desenvolvedores</string>
     <string name="action_display_show_number_of_items">Mostrar número de itens</string>
     <string name="right_and_left_nav">Direita e Esquerda</string>
@@ -402,7 +395,6 @@
     <string name="nav_zone_next">Seguinte</string>
     <string name="nav_zone_prev">Anterior</string>
     <string name="pref_show_navigation_mode_summary">Brevemente mostrar quando o leitor é aberto</string>
-    <string name="pref_show_navigation_mode">Mostrar sobreposição das zonas de toque</string>
     <string name="none">Nenhum</string>
     <string name="pref_dns_over_https">DNS por HTTPS (DoH)</string>
     <string name="pref_category_auto_download">Transferir automaticamente</string>
@@ -410,7 +402,6 @@
     <string name="pref_download_new_categories_details">Os itens nas categorias excluídas não serão disponibilizados offline mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="exclude">Excluir: %s</string>
     <string name="include">Incluir: %s</string>
-    <string name="action_show_errors">Toque para ver detalhes</string>
     <string name="action_sort_chapter_fetch_date">Data de procura do capítulo</string>
     <string name="rotation_landscape">Horizontal</string>
     <string name="rotation_portrait">Vertical</string>
@@ -460,7 +451,6 @@
     <string name="action_sort_count">Total de entradas</string>
     <string name="action_display_language_badge">Idioma</string>
     <string name="pref_category_appearance">Aparência</string>
-    <string name="connected_to_wifi">Só com Wi-Fi</string>
     <string name="update_72hour">A cada 3 dias</string>
     <string name="ext_update_all">Atualizar tudo</string>
     <string name="ext_app_info">Informações da app</string>
@@ -469,8 +459,6 @@
     <string name="save_chapter_as_cbz">Guardar como ficheiro CBZ</string>
     <string name="clear_database_source_item_count">%1$d itens que não estão na biblioteca no banco de dados</string>
     <string name="database_clean">Nada para limpar</string>
-    <string name="download_queue_size_warning">Aviso: downloads grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
-    <string name="notification_size_warning">Grandes atualizações prejudicam as fontes e podem levar a atualizações lentas e ainda ao aumento do uso da bateria. Toque para saber mais.</string>
     <string name="pref_auto_clear_chapter_cache">Limpar a cache de capítulos ao fechar a app</string>
     <string name="pref_hide_threshold">Sensibilidade para ocultar menu ao deslocar</string>
     <string name="pref_high">Alta</string>
@@ -503,7 +491,6 @@
     <string name="webview_data_deleted">Dados do WebView limpos</string>
     <string name="rotation_reverse_portrait">Vertical invertido</string>
     <string name="source_filter_empty_screen">Nenhuma fonte instalada encontrada</string>
-    <string name="learn_more">Toque para saber mais</string>
     <string name="pref_navigate_pan">Imagens panorâmicas</string>
     <string name="pref_landscape_zoom">Ampliar imagem horizontal</string>
     <string name="update_check_open">Abrir no GitHub</string>
@@ -546,10 +533,8 @@
     <string name="theme_lavender">Lavanda</string>
     <string name="popular">Famoso</string>
     <string name="action_search_hint">Pesquisar…</string>
-    <string name="missing_storage_permission">Permissões de armazenamento não concedidas</string>
     <string name="action_display_show_continue_reading_button">Botão de continuar a ler</string>
     <string name="pref_appearance_summary">Tema, data e formato de hora</string>
-    <string name="pref_library_summary">Categorias, atualização global, trocar de capítulo</string>
     <string name="pref_reader_summary">Modo leitura, exibir, navegação</string>
     <string name="action_open_random_manga">Abrir entrada aleatória</string>
     <string name="label_stats">Estatísticas</string>
@@ -577,7 +562,6 @@
     <string name="invalid_location">Local inválido: %s</string>
     <string name="label_titles_section">Itens</string>
     <string name="label_read_duration">Duração de leitura</string>
-    <string name="pref_security_summary">Bloqueio da app, ecrã seguro</string>
     <string name="pref_invalidate_download_cache">Reindexar descargas</string>
     <string name="minute_short">%dm</string>
     <string name="action_not_now">Agora não</string>
@@ -595,11 +579,8 @@
     <string name="overlay_header">Sobreposição</string>
     <string name="pref_page_rotate">Girar páginas largas para caber</string>
     <string name="pref_page_rotate_invert">Virar a orientação de páginas largas giradas</string>
-    <string name="pref_chapter_swipe_start">Capítulo ao deslizar para a esquerda</string>
-    <string name="pref_double_tap_zoom">Toque duplo para aproximar</string>
     <string name="action_set_interval">Definir intervalo</string>
     <string name="pref_debug_info">Informações de depuração</string>
-    <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
     <string name="intervals_header">intervalos</string>
     <string name="manga_display_interval_title">Estimado a cada</string>
     <string name="action_filter_interval_custom">Frequência da atualização personalizada</string>
@@ -618,11 +599,9 @@
     <string name="exception_unknown_host">Não foi possível resolver %s</string>
     <string name="manga_interval_custom_amount">Frequência de atualização personalizada:</string>
     <string name="file_null_uri_error">Nenhum ficheiro selecionado</string>
-    <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
     <string name="action_add_anyway">Adicionar de qualquer maneira</string>
     <string name="onboarding_permission_notifications_description">Seja notificado para atualizações da biblioteca e mais.</string>
     <string name="pref_relative_format">Datas relativas</string>
-    <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
     <string name="pref_display_profile">Perfil de exibição personalizado</string>
     <string name="exception_offline">Sem conexão de internet</string>
     <string name="pref_flash_page">Flash ao mudar de página</string>

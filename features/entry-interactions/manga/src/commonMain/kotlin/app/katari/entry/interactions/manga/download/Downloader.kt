@@ -10,6 +10,7 @@ import app.katari.entry.interactions.download.EntryDownloadSetting
 import app.katari.entry.interactions.manga.download.model.DownloadState
 import app.katari.entry.interactions.manga.download.model.MangaDownload
 import app.katari.entry.interactions.runtime.EntryPageImageCache
+import app.katari.platform.presentation.platformPresentation
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
@@ -424,7 +425,7 @@ internal class Downloader(
                 ) {
                     reportWarning(
                         message = EntryDownloadMessage.Resource(
-                            resource = MR.strings.download_queue_size_warning,
+                            resource = platformPresentation.downloadQueueSizeWarning,
                             args = listOf(context.stringResource(MR.strings.app_name)),
                         ),
                         timeoutMillis = WARNING_NOTIF_TIMEOUT_MS,

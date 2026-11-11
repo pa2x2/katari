@@ -22,7 +22,6 @@
     <string name="action_display_comfortable_grid">Komfortabelt grid</string>
     <string name="action_display_cover_only_grid">Kun covers som grid</string>
     <string name="information_empty_library">Dit bibliotek er tomt</string>
-    <string name="information_empty_category">Du har ikke nogen kategorier. Tryk på plusset for at oprette en og organisere dit bibliotek.</string>
     <string name="label_more">Mere</string>
     <string name="label_library">Bibliotek</string>
     <string name="categories">Kategorier</string>
@@ -104,7 +103,6 @@
     <string name="action_asc">Stigende</string>
     <string name="action_newest">Nyeste</string>
     <string name="action_desc">Faldende</string>
-    <string name="action_show_errors">Tryk for at se detaljer</string>
     <string name="action_restore">Gendan</string>
     <string name="action_webview_back">Tilbage</string>
     <string name="action_webview_refresh">Genindlæs</string>
@@ -147,7 +145,6 @@
     <string name="secure_screen_summary">Sikker skærm skjuler app indhold, når der skiftes mellem apps, og blokerer for skærmbilleder</string>
     <string name="pref_category_display">Vis</string>
     <string name="pref_library_update_restriction">Enhedsbegrænsninger for automatiske opdateringer</string>
-    <string name="connected_to_wifi">Kun på WiFi</string>
     <string name="pref_library_update_interval">Automatiske opdateringer</string>
     <string name="update_never">Fra</string>
     <string name="update_6hour">Hver 6. time</string>

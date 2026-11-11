@@ -48,7 +48,6 @@
     <string name="chapters">అధ్యాయాలు</string>
     <string name="manga">లైబ్రరీ ఎంట్రీలు</string>
     <string name="categories">విభాగములు</string>
-    <string name="information_empty_category">మీ దగ్గర ఏ విభాగములు లేవు। మీ గ్రంథాలయాన్ని సరికూర్చుకోడానికి ప్లస్ చిహ్నాన్ని నొక్కి కొత్త దాన్ని సృష్టించుకోండి॥</string>
     <string name="information_empty_library">మీ గ్రంథాలయము ఖాళీగా ఉన్నది</string>
     <string name="information_no_recent_manga">ఈ మధ్య మీరు ఏమి చదవలేదు</string>
     <string name="information_no_recent">కొత్త నవీకరణలు లేవు</string>
@@ -121,7 +120,6 @@
     <string name="action_install">ప్రతిష్ఠాపించుము</string>
     <string name="action_undo">పూర్వ స్థితికి వెళ్ళుము</string>
     <string name="theme_monet">క్రియాశీలము</string>
-    <string name="action_show_errors">తప్పిద వివరములను చూచుటకై నొక్కుము</string>
     <string name="theme_greenapple">ఆకుపచ్చ సేవఫలము</string>
     <string name="theme_yinyang">యిన్ మరియు యాంగ్</string>
     <string name="lock_never">ఎప్పుడూ వద్దు</string>

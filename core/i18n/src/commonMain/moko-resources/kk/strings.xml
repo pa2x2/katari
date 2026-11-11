@@ -36,7 +36,6 @@
     <string name="nav_zone_left">Сол</string>
     <string name="nav_zone_right">Оң</string>
     <string name="left_to_right_viewer">Бет (солдан оңға қарай)</string>
-    <string name="information_empty_category">Санаттарыңыз жоқ. Жаңа санат жасау үшін және кітапханаңызды ұйымдастыру үшін қосу батырмасын басыңыз.</string>
     <string name="nav_zone_next">Келесі</string>
     <string name="action_sort_last_manga_update">Соңғы жаңартпа тексеруі</string>
     <string name="action_sort_unread_count">Оқылмаған тарауы</string>
@@ -73,7 +72,6 @@
     <string name="update_72hour">Әр 3 күн сайын</string>
     <string name="update_weekly">Апта сайын</string>
     <string name="pref_library_update_restriction">Автоматты жаңартуларға құрылғы шектеулері</string>
-    <string name="connected_to_wifi">Тек Wi-Fi болғанда</string>
     <string name="charging">Қуаттандыру кездінде</string>
     <string name="restrictions">Шектеулер: %s</string>
     <string name="secure_screen_summary">Қауіпсіз экран қолданбаларды ауыстырған кезде қолданба мазмұнын жасырады және скриншот жасауды бұғаттайды</string>
@@ -146,7 +144,6 @@
     <string name="action_reset">Қалпына келтіру</string>
     <string name="action_undo">Болдырмау</string>
     <string name="action_open_log">Тіркеуді ашу</string>
-    <string name="action_show_errors">Толық ақпарат алу үшін басыңыз</string>
     <string name="action_restore">Қалпына келтіру</string>
     <string name="action_webview_back">Артқа</string>
     <string name="action_webview_forward">Алға</string>
@@ -201,7 +198,6 @@
     <string name="ext_trust">Сенім</string>
     <string name="ext_untrusted">Сенімсіз</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Shizuku-ны кеңейту орнатушысы ретінде пайдалану үшін Shizuku-ны орнатып іске қосыңыз.</string>
-    <string name="pref_show_navigation_mode">Түрту аймақтарының қабаттасуын көрсету</string>
     <string name="pref_show_navigation_mode_summary">Оқыма ашылғаннан кейін қысқаша көрсету</string>
     <string name="pref_dual_page_split">Қең беттерді бөлу</string>
     <string name="pref_show_page_number">Бет нөмірін көрсету</string>
@@ -222,7 +218,6 @@
     <string name="untrusted_extension_message">Бұл кеңейту сенімсіз сертификатпен қол қойылған және іске қосылмаған. \n \nЗиянды кеңейту Katari-де сақталған кез келген кіру тіркелгі деректерін оқуы немесе еркін кодты орындауы мүмкін. \n \nОсы сертификатқа сену арқылы сіз осы қауіп-қатерді қабылдайсыз.</string>
     <string name="ext_install_service_notif">Кеңейту орнатылуда…</string>
     <string name="pref_page_transitions">Беттің ауысуын анимациялау</string>
-    <string name="pref_double_tap_anim_speed">Қосарлы түрту анимация жылдамдығы</string>
     <string name="in_library">Кітапханада</string>
     <string name="completed">Аяқталған</string>
     <string name="remove_from_library">Кітапханадан жою</string>
@@ -257,7 +252,6 @@
     <string name="black_background">Қара</string>
     <string name="automatic_background">Автоматты</string>
     <string name="pref_reader_actions">Әрекеттер</string>
-    <string name="pref_read_with_long_tap">Ұзақ түртуде көрсету</string>
     <string name="gray_background">Сұр</string>
     <string name="pref_viewer_type">Әдепкі оқу режимі</string>
     <string name="pref_highest">Ең жоғары</string>
@@ -316,7 +310,6 @@
     <string name="theme_tidalwave">Көтерілу Толқыны</string>
     <string name="filter_mode_lighten">Жарық қылу</string>
     <string name="filter_mode_darken">Қараңғы қылу</string>
-    <string name="pref_read_with_tapping_inverted">Басу аймағын терістету</string>
     <string name="tapping_inverted_vertical">Тік</string>
     <string name="kindlish_nav">Kindle тәріздес</string>
     <string name="download_ahead_info">Кітапханадағы жазбаларда ғана жұмыс істейді, сондай-ақ ағымдағы және келесі тарау әлдеқашан жүктелген болса</string>
@@ -330,7 +323,6 @@
     <string name="pref_hide_threshold">Айналдырғандағы мәзірді жасыру сезгіштігі</string>
     <string name="pref_image_scale_type">Масштабтау</string>
     <string name="vertical_plus_viewer">Тоқтаусыз тік</string>
-    <string name="pref_viewer_nav">Басу аймағы</string>
     <string name="pref_read_with_volume_keys_inverted">Теріс дыбыс пернелері</string>
     <string name="tapping_inverted_none">Жоқ</string>
     <string name="pager_viewer">Беттеп</string>
@@ -339,7 +331,6 @@
     <string name="invalid_backup_file">Сақтық көшірмесінің қате файлы</string>
     <string name="restore_completed">Қалпына келтіру дайын</string>
     <string name="pref_user_agent_string">Әдепкі қалпы бойынша user agent</string>
-    <string name="missing_storage_permission">Жадыға рұқсаттар берілмеді</string>
     <string name="downloaded_chapters">Жүктелген тараулар</string>
     <string name="pinned_sources">Бекітілген</string>
     <string name="invalid_backup_file_missing_manga">Сақтық көшірмеде кітапхана жазбалары жоқ.</string>
@@ -359,7 +350,6 @@
     <string name="cancelled">Күші жойылған</string>
     <string name="publishing_finished">Басылымы яқталды</string>
     <string name="add_to_library">Кітапханаға қосу</string>
-    <string name="pref_dump_crash_logs">Қателер тіркеулерімен бөлісу</string>
     <string name="clear_database_completed">Жазбалар жойылды</string>
     <string name="database_clean">Тазалайтын түк жоқ</string>
     <string name="pref_refresh_library_covers">Туындылар мұқабасын жаңарту</string>
@@ -462,7 +452,6 @@
     <string name="channel_complete">Аяқталды</string>
     <string name="pref_reader_summary">Оқу түрі, көрсету, навигация</string>
     <string name="pref_browse_summary">Дереккөздер, кеңейтулер, ауқымды іздеу</string>
-    <string name="pref_security_summary">Қолданбаны бұғаттау, экранды қорғау</string>
     <string name="manga_info_collapse">Азырақ</string>
     <string name="manga_added_library">Кітапханаға қосылды</string>
     <string name="description_placeholder">Сипаттамасыз</string>
@@ -474,7 +463,6 @@
     <string name="error_sharing_cover">Мұқаба жіберілмеді</string>
     <string name="cover_saved">Мұқаба сақталды</string>
     <string name="confirm_set_chapter_settings">Бұл баптауды әдепкі қылып сақтағыңыз келеді ме?</string>
-    <string name="learn_more">Көбірек білу үшін басу</string>
     <string name="channel_common">Ортақ</string>
     <string name="channel_progress">Прогресс</string>
     <string name="also_set_chapter_settings_for_library">Сонымен қоса кітапханадағы жазбаларға қолдану</string>
@@ -485,7 +473,6 @@
     <string name="not_installed">Орнатылмады</string>
     <string name="notification_chapters_multiple">%1$s Тарау</string>
     <string name="pref_appearance_summary">Кейіп, күні мен уақыт пішімі</string>
-    <string name="pref_library_summary">Санаттар, ауқымды жаңарту</string>
     <string name="pref_backup_summary">Қолмен және автоматты сақтық көшірмелері</string>
     <string name="manga_removed_library">Кітапханадан жойылды</string>
     <string name="chapter_downloading_progress">(%1$d/%2$d) жүктелуде</string>
@@ -539,13 +526,10 @@
     <string name="sort_by_source">Дереккөз бойынша</string>
     <string name="confirm_delete_chapters">Таңдалған тараулардың жойылуын қалайсыз ба?</string>
     <string name="migration_help_guide">Дереккөздерді тасымалдау нұсқаулары</string>
-    <string name="download_notifier_text_only_wifi">Wi-Fi байланысы жоқ</string>
     <string name="download_notifier_download_paused">Жүктеулер тоқтатылды</string>
     <string name="appwidget_unavailable_locked">Биометриялық бұғаттау қосылып тұрғанда виджет қолжетімді емес</string>
     <string name="custom_filter">Жеке сүзгі</string>
-    <string name="notification_size_warning">Көп жаңалтулар саны дереккөздер жұмысын баяулата және батарея жұмысын өтімін көбейте алады. Көбірек білу үшін басыңыз.</string>
     <string name="notification_chapters_single">%1$s-Тарау</string>
-    <string name="download_queue_size_warning">Ескерту: Көп жүктеулер саны дереккөздер жұмысын баяулата алады және/немесе %s бұғатталына алады. Толығырақ оқу үшін басыңыз.</string>
     <string name="pref_downloads_summary">Автоматты жүктеу, алдын ала жүктеу</string>
     <string name="manga_info_expand">Көбірек</string>
     <string name="delete_downloads_for_manga">Жүктелген тарауларды жоямыз ба?</string>

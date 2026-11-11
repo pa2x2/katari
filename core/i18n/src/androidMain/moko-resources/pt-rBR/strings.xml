@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
+    <string name="action_show_errors">Toque para ver os detalhes</string>
+    <string name="notification_size_warning">Atualizações com muitos itens prejudicam as fontes e podem deixar as atualizações lentas e aumentar o uso da bateria. Toque para saber mais.</string>
+    <string name="download_queue_size_warning">Aviso: grandes downloads em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
+    <string name="information_empty_category">Você ainda não tem nenhuma categoria. Toque no botão Adicionar para criar uma e organizar a sua biblioteca.</string>
+    <string name="pref_double_tap_zoom">Toque duplo para dar zoom</string>
+    <string name="pref_double_tap_anim_speed">Velocidade da animação do toque duplo</string>
+    <string name="pref_dump_crash_logs">Compartilhar os registros de travamentos</string>
+    <string name="pref_security_summary">Bloqueio do aplicativo, tela segura</string>
+    <string name="pref_viewer_nav">Zonas de toque</string>
+    <string name="pref_read_with_tapping_inverted">Inverter as zonas de toque</string>
+    <string name="pref_show_navigation_mode">Mostrar a sobreposição das zonas de toque</string>
+    <string name="pref_read_with_long_tap">Mostrar as ações no toque longo</string>
+    <string name="pref_chapter_swipe_start">Ação de deslizar para a esquerda</string>
+    <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
+    <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
+    <string name="connected_to_wifi">Somente no Wi-Fi</string>
+</resources>

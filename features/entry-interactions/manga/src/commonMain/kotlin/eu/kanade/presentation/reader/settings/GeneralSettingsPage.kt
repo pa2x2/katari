@@ -10,6 +10,7 @@ import app.katari.entry.interactions.reader.settings.MangaReaderSettings
 import app.katari.entry.interactions.reader.settings.ReadingMode
 import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
 import app.katari.entry.viewer.settings.updateEntry
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.chip.FilterChip
 import app.katari.presentation.kit.list.ChipsRow
 import app.katari.presentation.kit.list.RowGroup
@@ -116,7 +117,9 @@ internal fun ColumnScope.GeneralPage(
             row { BindingToggleRow(stringResource(MR.strings.pref_cutout_short), settings.drawUnderCutout) }
         }
         row { BindingToggleRow(stringResource(MR.strings.pref_keep_screen_on), settings.keepScreenOn) }
-        row { BindingToggleRow(stringResource(MR.strings.pref_read_with_long_tap), settings.readWithLongTap) }
+        platformPresentation.pageActionsOnLongPressLabel?.let { label ->
+            row { BindingToggleRow(stringResource(label), settings.readWithLongTap) }
+        }
     }
 
     val chapterTransitionMode by settings.chapterTransition.state.collectAsState()

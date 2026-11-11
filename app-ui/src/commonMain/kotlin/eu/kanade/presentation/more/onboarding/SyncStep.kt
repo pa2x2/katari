@@ -12,7 +12,7 @@ import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.Dns
 import app.katari.icons.materialsymbols.rounded.Keyboard
 import app.katari.icons.materialsymbols.rounded.QrCodeScanner
-import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.feedback.GuidePageHeading
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupGap
@@ -108,7 +108,7 @@ internal class SyncStep(statusState: SyncStatusState) : OnboardingStep {
                     SettingsRow(
                         title = stringResource(MR.strings.sync_what_stays_title),
                         subtitle = stringResource(MR.strings.sync_what_stays),
-                        icon = MaterialSymbols.Rounded.Smartphone,
+                        icon = platformPresentation.thisDeviceIcon,
                     )
                 }
             }

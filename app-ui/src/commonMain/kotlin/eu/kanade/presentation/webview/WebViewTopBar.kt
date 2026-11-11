@@ -18,6 +18,7 @@ import app.katari.icons.materialsymbols.rounded.OpenInBrowser
 import app.katari.icons.materialsymbols.rounded.Refresh
 import app.katari.icons.materialsymbols.rounded.Share
 import app.katari.icons.materialsymbols.rounded.TabClose
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
 import app.katari.presentation.kit.progress.LinearProgressIndicator
@@ -117,7 +118,7 @@ internal fun WebViewTopBar(
 
             if (showCloudflareHelp) {
                 NoticeCard(
-                    text = stringResource(cloudflareHelpText),
+                    text = stringResource(platformPresentation.cloudflareHelpLabel),
                     tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },

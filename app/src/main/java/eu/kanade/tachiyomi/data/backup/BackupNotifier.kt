@@ -224,7 +224,7 @@ class BackupNotifier(
                 setContentIntent(errorLogIntent)
                 addAction(
                     MaterialSymbolsR.drawable.rounded_filled_folder,
-                    context.stringResource(MR.strings.action_show_errors),
+                    context.stringResource(PlatformStrings.action_show_errors),
                     errorLogIntent,
                 )
             }

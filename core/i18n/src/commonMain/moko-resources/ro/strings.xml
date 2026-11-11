@@ -91,7 +91,6 @@
     <string name="untrusted_extension_message">Extensiile rău intenționate pot citi orice credențiale de autentificare stocate sau pot executa cod arbitrar. \n \nAcordând încredere acestei extensii, acceptați aceste riscuri.</string>
     <string name="pref_page_transitions">Animați tranzițiile de pagini</string>
     <string name="action_display_download_badge">Capitole descărcate</string>
-    <string name="pref_double_tap_anim_speed">Viteza de animație pentru apăsare dublă</string>
     <string name="pref_show_page_number">Arată numărul paginii</string>
     <string name="pref_crop_borders">Taie marginile</string>
     <string name="pref_custom_brightness">Luminozitate personalizată</string>
@@ -227,11 +226,9 @@
     <string name="information_no_recent">Nu există actualizări recente</string>
     <string name="information_no_recent_manga">Nimic citit recent</string>
     <string name="information_empty_library">Biblioteca este goală</string>
-    <string name="information_empty_category">Nu aveți categorii. Apăsați butonul plus pentru a crea una pentru a vă organiza biblioteca.</string>
     <string name="download_notifier_downloader_title">Client de descărcare</string>
     <string name="download_notifier_title_error">Eroare</string>
     <string name="download_notifier_unknown_error">Nu s-a putut descărca capitolul din cauza unei erori neașteptate</string>
-    <string name="download_notifier_text_only_wifi">Nu este disponibilă nicio conexiune Wi Fi</string>
     <string name="download_notifier_no_network">Nici o conexiune la internet valabilă</string>
     <string name="download_notifier_download_paused">Descărcare întreruptă</string>
     <string name="channel_common">General</string>
@@ -243,7 +240,6 @@
     <string name="filter_mode_lighten">Luminează</string>
     <string name="filter_mode_darken">Întunecă</string>
     <string name="pref_skip_read_chapters">Treci peste capitolele marcate ca Citit</string>
-    <string name="pref_read_with_long_tap">Afișare la atingerea lungă</string>
     <string name="label_help">Ajutor</string>
     <string name="no_results_found">Nici un rezultat găsit</string>
     <string name="migration_selection_prompt">Selectați o sursă din care să migrați</string>
@@ -347,7 +343,6 @@
     <string name="tapping_inverted_vertical">Vertical</string>
     <string name="tapping_inverted_horizontal">Orizontal</string>
     <string name="tapping_inverted_none">Nici unul</string>
-    <string name="pref_read_with_tapping_inverted">Inversați zonele de atingere</string>
     <string name="unknown_status">Stare necunoscută</string>
     <string name="unknown_author">Autor necunoscut</string>
     <string name="whats_new">Ce este nou</string>
@@ -384,20 +379,16 @@
     <string name="pref_dual_page_invert">Inversează plasamentul paginilor duble despărțite</string>
     <string name="pref_dual_page_split">Împărțire pagini duble</string>
     <string name="pref_show_navigation_mode_summary">Afișați pe scurt când cititorul este deschis</string>
-    <string name="pref_show_navigation_mode">Afișați suprapunerea zonelor de atingere</string>
     <string name="action_desc">Descendent</string>
     <string name="action_asc">Ascendent</string>
     <string name="action_order_by_chapter_number">După numărul capitolului</string>
     <string name="action_order_by_upload_date">După data postării</string>
     <string name="exclude">Excludeți: %s</string>
     <string name="include">Includeți: %s</string>
-    <string name="action_show_errors">Atingeți pentru a vedea detaliile</string>
     <string name="action_display_show_number_of_items">Afișare număr de elemente</string>
     <string name="none">Nici unul</string>
     <string name="pref_dns_over_https">DNS prin HTTPS (DoH)</string>
-    <string name="pref_dump_crash_logs">Aruncați jurnalele de erori fatale</string>
     <string name="pref_dump_crash_logs_summary">Salvează jurnalele de erori într-un fișier pentru partajarea cu dezvoltatorii</string>
-    <string name="pref_viewer_nav">Zone de atingere</string>
     <string name="edge_nav">Margine</string>
     <string name="kindlish_nav">Similar unui Kindle</string>
     <string name="l_nav">În formă de L</string>
@@ -439,7 +430,6 @@
     <string name="cancelled">Anulat</string>
     <string name="on_hiatus">În hiatus</string>
     <string name="local_invalid_format">Format de capitol invalid</string>
-    <string name="download_queue_size_warning">Atenție : actualizarile mari în masă vor face sursele mai incete și/sau vor bloca %s. Apăsați pentru mai multe informatii.</string>
     <string name="getting_started_guide">Ghidul de inceput</string>
     <string name="empty_backup_error">Nu există intrări în bibliotecă pentru a face backupuri</string>
     <string name="delete_category">Ștergeți categoria</string>
@@ -475,7 +465,6 @@
     <string name="action_sort_unread_count">Număr de necitite</string>
     <string name="restore_miui_warning">Este posibil să nu funcționeze corect backup/restaurare dacă MIUI Optimization este dezactivată.</string>
     <string name="update_72hour">La fiecare 3 zile</string>
-    <string name="connected_to_wifi">Doar prin Wi Fi</string>
     <string name="off">Oprit</string>
     <string name="ext_app_info">Informații despre aplicație</string>
     <string name="custom_cover">Copertă personalizată</string>
@@ -512,14 +501,12 @@
     <string name="download_ahead_info">Funcționează numai dacă capitolul curent + următorul sunt deja descărcate.</string>
     <string name="pref_grayscale">Alb-negru</string>
     <string name="rotation_landscape">Peisaj</string>
-    <string name="learn_more">Apasă pentru a afla mai multe</string>
     <string name="pref_landscape_zoom">Măriți imaginea în format peisaj</string>
     <string name="pref_reset_viewer_flags">Resetați setările de cititor per serie</string>
     <string name="pref_tablet_ui_mode">Interfață de tabletă</string>
     <string name="pref_reset_viewer_flags_summary">Resetați modul de citire si orientare pentru toate seriile</string>
     <string name="download_ahead">Descarcă înainte</string>
     <string name="multi_lang">Multiple</string>
-    <string name="notification_size_warning">Actualizări mari dăunează surselor și pot duce la actualizări mai lente și creșterea nivelului de utilizare a bateriei. Apasă pentru a afla mai multe.</string>
     <string name="label_background_activity">Activități în fundal</string>
     <string name="update_check_open">Deschide pe GitHub</string>
     <string name="not_installed">Nu este instalat</string>
@@ -528,7 +515,6 @@
     <string name="theme_tidalwave">Tsunami</string>
     <string name="ext_installer_legacy">Versiune veche</string>
     <string name="rotation_reverse_portrait">Format portret întors</string>
-    <string name="missing_storage_permission">Permisiunile de stocare nu au fost acceptate</string>
     <string name="pref_reset_viewer_flags_success">Toate setările de citire au fost resetate</string>
     <string name="popular">Populare</string>
     <string name="error_no_match">Nimic asemănător nu a fost găsit</string>
@@ -549,12 +535,10 @@
     <string name="pref_verbose_logging">Consemnare verbală</string>
     <string name="appwidget_unavailable_locked">Widgetul nu este disponibil atunci când este activată blocarea aplicației</string>
     <string name="pref_appearance_summary">Tema, formatul datei și al orei</string>
-    <string name="pref_library_summary">Categorii, actualizări globale</string>
     <string name="pref_reader_summary">Modul de citire, afișare, navigare</string>
     <string name="pref_downloads_summary">Descărcare automată, descărcare anticipată</string>
     <string name="pref_browse_summary">Surse, extensii, căutare globală</string>
     <string name="pref_backup_summary">Copii de rezervă manuale și automate</string>
-    <string name="pref_security_summary">Blocarea aplicației, securizarea ecranului</string>
     <string name="pref_user_agent_string">Șirul implicit de agent al utilizatorului</string>
     <string name="error_user_agent_string_blank">Șirul agentului de utilizator nu poate fi gol</string>
     <string name="crash_screen_title">Ups!</string>
@@ -597,7 +581,6 @@
     <string name="action_sort_next_updated">Următoarea actualizare așteptată</string>
     <string name="action_filter_interval_custom">Frecvență de actualizare personalizată</string>
     <string name="pref_storage_location">Locație de stocare</string>
-    <string name="information_cloudflare_help">Atinge aici pentru ajutor cu Cloudflare</string>
     <string name="action_create">Creați</string>
     <string name="relative_time_span_never">Niciodată</string>
     <string name="pref_flash_page_summ">Reduceți imaginile fantomă pe ecranele e-ink</string>
@@ -619,7 +602,6 @@
     <string name="no_scanlators_found">Nici un scanlator nu a fost găsit</string>
     <string name="not_selected">Nu a fost selectat</string>
     <string name="action_move_to_bottom_all_for_series">Mutați seria pe ultima poziție</string>
-    <string name="pref_chapter_swipe_end">Glisare către dreapta a unui capitol</string>
     <string name="exception_offline">Fără conexiune la internet</string>
     <string name="pref_storage_usage">Utilizarea spațiului de stocare</string>
     <string name="notification_updating_progress">Actualizare bibliotecă… (%s)</string>
@@ -628,10 +610,8 @@
     <string name="file_null_uri_error">Nici o filă selectată</string>
     <string name="source_settings">Setări surse</string>
     <string name="app_settings">Setări aplicație</string>
-    <string name="pref_chapter_swipe_start">Glisare către stânga a unui capitol</string>
     <string name="has_results">Au fost găsite rezultate</string>
     <string name="action_ok">Ok</string>
-    <string name="pref_double_tap_zoom">Atingeți de două ori pentru a mări</string>
     <string name="pref_hide_in_library_items">Ascundeți înregistrările care se află deja în bibliotecă</string>
     <string name="pref_relative_format">Marcaje de timp relative</string>
     <string name="exception_http">HTTP %d, verificați site-ul in modul WebView</string>
@@ -664,7 +644,6 @@
     <string name="onboarding_storage_selected_folder">Folder-ul selectat: %s</string>
     <string name="onboarding_permission_notifications">Permisiune de notificare</string>
     <string name="onboarding_permission_notifications_description">Primiți notificări pentru actualizările bibliotecii și altele.</string>
-    <string name="ext_permission_install_apps_warning">Sunt necesare permisiuni pentru instalarea de extensii. Atingeți aici pentru a permite.</string>
     <string name="ext_revoke_trust">Revocați încrederea extensiilor necunoscute</string>
     <string name="label_upcoming">Viitoare</string>
     <string name="theme_nord">Nord</string>

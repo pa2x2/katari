@@ -69,7 +69,6 @@
     <string name="information_no_recent_manga">អ្នកពុំបានអានអ្វីថ្មីឡើយ</string>
     <string name="label_extension_info">អំពីប្រភពម៊េងហ្គា</string>
     <string name="information_empty_library">បណ្ណាល័យរបស់អ្នកទទេស្អាត</string>
-    <string name="information_empty_category">អ្នកពុំមានការទម្រៀបម៊េងហ្គាឡើយ។ ចុចប៊ូតុងសញ្ញាបូកដើម្បីទម្រៀបម៊េងហ្គាសម្រាប់បណ្ណាល័យរបស់អ្នក។</string>
     <string name="manga">បណ្តុំក្នុងបណ្ណាល័យ</string>
     <string name="confirm_lock_change">ផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវដើម្បីបញ្ជាក់ការផ្លាស់ប្តូរ</string>
     <string name="action_settings">ការកំណត់</string>
@@ -102,7 +101,6 @@
     <string name="action_reset">Reset</string>
     <string name="action_undo">ត្រឡប់វាវិញ</string>
     <string name="action_open_log">បើកlog</string>
-    <string name="action_show_errors">ប៉ះដើម្បីមើលលម្អិត</string>
     <string name="action_restore">restore</string>
     <string name="action_webview_back">ត្រឡប់</string>
     <string name="action_start_downloading_now">ចាប់ផ្ដើមទាញយកឥឡូវនេះ</string>
@@ -142,7 +140,6 @@
     <string name="update_72hour">រាល់៣ថ្ងៃម្ដង</string>
     <string name="update_weekly">រាល់សប្ដាហ៍</string>
     <string name="pref_library_update_restriction">ធ្វើប្ចុប្បន្នភាពdevice restrictionsដោយស្វ័យប្រវត្ត</string>
-    <string name="connected_to_wifi">នៅពេលបើកWi-Fiប៉ុណ្ណោះ</string>
     <string name="action_webview_forward">ទៅមុខ</string>
     <string name="action_webview_refresh">រីហ្វ្រេស</string>
     <string name="pref_category_general">ទូទៅ</string>

@@ -65,7 +65,6 @@
     <string name="filter_mode_lighten">روشن کردن / کاهش تیرگی</string>
     <string name="update_12hour">هر ۱۲ ساعت یکبار</string>
     <string name="action_move_category">انتخاب دسته بندی</string>
-    <string name="information_empty_category">هیچ دسته بندی وجود ندارد. با زدن دکمه به علاوه دسته بندی جدیدی بسازید.</string>
     <string name="information_empty_library">کتابخانه شما خالی است</string>
     <string name="information_no_recent_manga">هیچ چیز مانگاای به تازگی خوانده شده</string>
     <string name="information_no_recent">هیچ قسمت جدیدی یافت نشد</string>
@@ -119,14 +118,12 @@
     <string name="scale_type_smart_fit">هم اندازه حالت هوشمند</string>
     <string name="filter_mode_multiply">ضرب کردن</string>
     <string name="filter_mode_overlay">پوشش</string>
-    <string name="pref_double_tap_anim_speed">سرعت انیمیشن دو بار ضربه زدن</string>
     <string name="ext_install">نصب</string>
     <string name="action_bookmark">نشانک قسمت</string>
     <string name="channel_ext_updates">آپدیت افزونه‌ها</string>
     <string name="channel_common">عمومی</string>
     <string name="download_notifier_download_paused">دانلود متوقف شد</string>
     <string name="download_notifier_no_network">اتصال شبکه در دسترس نیست</string>
-    <string name="download_notifier_text_only_wifi">اتصال وای فای در دسترس نیست</string>
     <string name="download_notifier_unknown_error">به علت خطای غیرمنتظره بارگیری این چپتر، ممکن نیست</string>
     <string name="download_notifier_title_error">خطا</string>
     <string name="download_notifier_downloader_title">سیستم دانلود کننده</string>
@@ -165,7 +162,6 @@
     <string name="gray_background">خاکستری</string>
     <string name="white_background">سفید</string>
     <string name="pref_reader_theme">رنگ پس زمینه</string>
-    <string name="pref_read_with_long_tap">با لمس طولانی نشان بده</string>
     <string name="pref_read_with_volume_keys">دکمه‌های صدا</string>
     <string name="pref_read_with_volume_keys_inverted">معکوس کردن دکمه‌های صدا</string>
     <string name="pref_reader_navigation">نوار ناوبری Navigation</string>
@@ -374,7 +370,6 @@
     <string name="tapping_inverted_vertical">عمودی</string>
     <string name="tapping_inverted_horizontal">افقی</string>
     <string name="tapping_inverted_none">هیچ کدام</string>
-    <string name="pref_read_with_tapping_inverted">منطقه‌های لمس را معکوس کن</string>
     <string name="chapter_settings_updated">تنظیمات پیش فرض چپتر به روز شد</string>
     <string name="share_page_info">%1$s: %2$s, صفحه %3$d</string>
     <string name="chapter_settings">تنظیمات قسمت ها</string>
@@ -427,12 +422,10 @@
     <string name="theme_yotsuba">یوتسوبا</string>
     <string name="action_move_to_top_all_for_series">انتقال سری به بالا</string>
     <string name="action_start_downloading_now">همین الان شروع به دانلود کن</string>
-    <string name="action_show_errors">برای دیدن جزئیات لمس کنید</string>
     <string name="network_not_metered">فقط روی شبکه‌ی نامحدود</string>
     <string name="restrictions">محدودیت‌ها: %s</string>
     <string name="relative_time_today">امروز</string>
     <string name="update_72hour">هر 3 روز</string>
-    <string name="connected_to_wifi">فقط روی Wi-Fi</string>
     <string name="categorized_display_settings">تنظیمات بر اساس دسته‌بندی برای ترتیب و نمایش</string>
     <string name="ext_app_info">اطلاعات برنامه</string>
     <string name="pref_dual_page_invert">معکوس کردن جای دو صفحه‌ی تقسیم شده</string>
@@ -460,11 +453,9 @@
     <string name="pref_low">پایین</string>
     <string name="action_display_cover_only_grid">الگوی فقط جلد</string>
     <string name="pref_lowest">پایین‌ترین</string>
-    <string name="pref_viewer_nav">مناطق قابل لمس</string>
     <string name="on">روشن</string>
     <string name="theme_tako">تاکو</string>
     <string name="off">خاموش</string>
-    <string name="pref_show_navigation_mode">مناطق قابل لمس را نشان بده</string>
     <string name="ext_installer_shizuku_unavailable_dialog">برای استفاده از Shizuku به عنوان یک نصب‌کننده‌ی افزونه، آن را نصب و اجرا کنید.</string>
     <string name="disabled_nav">غیر فعال</string>
     <string name="nav_zone_prev">قبلی</string>
@@ -478,14 +469,12 @@
     <string name="publishing_finished">انتشار به پایان رسید</string>
     <string name="local_invalid_format">قالب فصل نامعتبر است</string>
     <string name="cancelled">لغو شد</string>
-    <string name="pref_security_summary">قفل برنامه، صفحه امن</string>
     <string name="theme_lavender">ارغوانی</string>
     <string name="theme_tidalwave">تم جزر و مدی</string>
     <string name="pref_app_language">زبان برنامه</string>
     <string name="invalid_location">مکان نامعتبر: %s</string>
     <string name="pref_download_new_categories_details">ورودی ها در دسته بندی های حذف شده حتی اگر در دسته بندی های در نظر گرفته شده نیز باشند، دانلود نخواهند شد.</string>
     <string name="pref_appearance_summary">قالب تم، تاریخ و زمان</string>
-    <string name="pref_library_summary">دسته‌ها، به روز رسانی سراسری</string>
     <string name="pref_reader_summary">حالت خواندن، نمایش، نوار وضعیت</string>
     <string name="multi_lang">چند</string>
     <string name="delete_category_confirmation">آیا می خواهید دسته \"%s\" را حذف کنید؟</string>
@@ -507,7 +496,6 @@
     <string name="action_not_now">الان نه</string>
     <string name="action_display_show_continue_reading_button">نمایش دکمه ادامه خواندن</string>
     <string name="download_ahead_info">اگر قسمت فعلی و بعدی دانلود شده باشند، تنها برای ورودی‌های کتابخانه کار می‌کند.</string>
-    <string name="missing_storage_permission">اجازه دسترسی به حافظه داده نشد</string>
     <string name="backup_restore_content_full">ممکن است لازم باشد پس از آن افزونه‌های موجود نبودن را برای استفاده از آن‌ها نصب کنید.</string>
     <string name="pref_skip_dupe_chapters">چپتر های تکراری را رد کن</string>
     <string name="empty_backup_error">هیچ داده کتابخانه ای نیست که پشتیبانی شود</string>
@@ -528,15 +516,11 @@
     <string name="label_data_storage">داده های و ذخیره سازی</string>
     <string name="action_ok">باشه</string>
     <string name="action_sort_next_updated">به روز رسانی مورد انتظار بعدی</string>
-    <string name="download_queue_size_warning">هشدار: حجم زیاد بارگیری ممکن است باعث اهسته تر شدن سرعت ویا مسدود کردن %s از منبع شود. برای اطلاعات بیشتر لمس کنید.</string>
     <string name="pref_relative_format_summary">\"%1$s\" به جای \"%2$s\"</string>
     <string name="pref_page_rotate">صفحات عریض را بچرخان تا جا شوند</string>
     <string name="popular">محبوب</string>
-    <string name="pref_chapter_swipe_end">چپتر مربوط به کشیدن به راست</string>
     <string name="pref_flash_page">در هنگام عوض شدن صفحه فلاش سفید بزن</string>
-    <string name="pref_chapter_swipe_start">چپتر مربوط به کشیدن به چپ</string>
     <string name="updates_last_update_info">آخرین به روز رسانی کتابخانه: %s</string>
-    <string name="pref_double_tap_zoom">برای بزرگ نمایی دوبار ضربه بزنید</string>
     <string name="action_filter_interval_custom">تناوب به روز رسانی شخسی سازی شده</string>
     <string name="onboarding_action_next">بعدی</string>
     <string name="onboarding_permission_install_apps_description">برای نصب افزانه منبع.</string>
@@ -553,7 +537,6 @@
     <string name="pref_storage_location">محل زخیره سازی</string>
     <string name="onboarding_action_finish">شروع کنید</string>
     <string name="onboarding_action_skip">پرش</string>
-    <string name="ext_permission_install_apps_warning">مجوز برای نصب افزونه ها لازم است. به اینجا ضربه بزنید تا اعطا کنید.</string>
     <string name="pref_flash_page_summ">مقدار رد باقی مانده در نمایش گر های E-ink کاهش میابد</string>
     <string name="onboarding_storage_action_select">انتخاب یک پوشه</string>
     <string name="onboarding_storage_selection_required">یک پوشه باید انتخاب شود</string>
@@ -577,7 +560,6 @@
     <string name="extensionStoresScreen.deleteStore.body">آیا می‌خواهید فروشگاه افزونه \"%1$s\" (%2$s) را حذف کنید؟</string>
     <string name="upcoming_guide">راهنمای پیش‌رو</string>
     <string name="crash_screen_title">اوه!</string>
-    <string name="information_cloudflare_help">برای دریافت کمک در مورد کلادفلر اینجا ضربه بزنید</string>
     <string name="library_exported">کتابخانه صادر شد</string>
     <string name="information_no_entries_found">هیچ موردی در این دسته‌بندی یافت نشد</string>
     <string name="remove_private_extension_message">آیا واقعاً می‌خواهید افزونه «%s» را حذف کنید؟</string>
@@ -629,7 +611,6 @@
     <string name="migrationListScreen.latestChapterLabel">جدیدترین‌ها: %1$s</string>
     <string name="pref_incognito_mode_extension_summary">توقف ثبت تاریخچه مطالعه برای افزونه</string>
     <string name="pref_hide_missing_chapter_indicators">پنهان‌سازی نشانگرهای چپترهای مفقود</string>
-    <string name="learn_more">برای کسب اطلاعات بیشتر ضربه بزنید</string>
     <string name="onboarding_permission_crash_reports_description">گزارش‌های خرابیِ ناشناس‌سازی‌شده را برای توسعه‌دهندگان ارسال کنید.</string>
     <string name="intervals_header">فواصل</string>
     <string name="day_short">%dروز</string>
@@ -664,7 +645,6 @@
     <string name="pref_flash_style_black">مشکی</string>
     <string name="action_copy_link">رونوشت پیوند</string>
     <string name="cover_saved">جلد ذخیره شد</string>
-    <string name="pref_dump_crash_logs">اشتراک‌گذاری گزارش‌های خرابی</string>
     <string name="label_total_chapters">مجموع</string>
     <string name="pref_reset_viewer_flags_summary">حالت مطالعه و جهت‌گیری تمام سری‌ها را بازنشانی می‌کند</string>
     <string name="manga_interval_custom_amount">بسامد به‌روزرسانی سفارشی:</string>
@@ -713,7 +693,6 @@
     <string name="remove_manga">شما در حال حذف «%s» از کتابخانه خود هستید</string>
     <string name="pref_verbose_logging_summary">چاپ گزارش‌های مشروح در گزارش سیستم (عملکرد برنامه را کاهش می‌دهد)</string>
     <string name="artist">هنرمند</string>
-    <string name="notification_size_warning">به‌روزرسانی‌های حجیم به منابع سیستم آسیب می‌رسانند و ممکن است منجر به کندی روند به‌روزرسانی و افزایش مصرف باتری شوند. برای کسب اطلاعات بیشتر، ضربه بزنید.</string>
     <string name="pref_webtoon_vertical_navigator_on_left">ناوبر عمودی را در سمت چپ قرار دهید</string>
     <string name="extensionStoresScreen.deleteStore.title">حذف فروشگاه افزونه‌ها</string>
     <string name="file_null_uri_error">هیچ فایلی انتخاب نشده</string>

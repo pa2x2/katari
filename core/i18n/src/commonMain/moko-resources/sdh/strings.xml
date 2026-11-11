@@ -45,7 +45,6 @@
     <string name="action_sort_date_added">بەرواری بەردەست بوون</string>
     <string name="action_search">گەڕان</string>
     <string name="action_download">داونلۆد</string>
-    <string name="information_empty_category">هیچ کاتیگۆرییەکت نییە. دەست بنێ بە دوگمەی زیادە تا کاتیگۆرییەک بۆ ڕێکخستنی تۆماری ڕابردووت درووست بکەیت.</string>
     <string name="action_delete">سڕینەوە</string>
     <string name="information_no_recent">هێج نوێکارییەک نییە لەم دواییانەدا</string>
     <string name="label_sources">سەرچاوەکان</string>
@@ -83,7 +82,6 @@
     <string name="action_webview_forward">بەرەو پێشەوە</string>
     <string name="action_webview_refresh">فرێشکردنەوە</string>
     <string name="action_start_downloading_now">ئێستا دەست بکە بە داونلۆد کردن</string>
-    <string name="action_show_errors">وردەکاری هەموو ئیرۆرەکان ببینە</string>
     <string name="action_desc">بە پلە نزم بوونەوە</string>
     <string name="action_move_category">دیاریکردنی کاتیگۆرییەکان</string>
     <string name="action_edit_cover">گۆڕینی وێنەی بەرگەکە</string>
@@ -115,7 +113,6 @@
     <string name="pref_category_downloads">داونلۆدەکان</string>
     <string name="pref_category_advanced">سازکارییە ئاڵۆزەکان</string>
     <string name="pager_viewer">شێوازی لاپەڕەکان</string>
-    <string name="pref_viewer_nav">شێوازی گەڕان</string>
     <string name="scale_type_stretch">ڕاکێشراو</string>
     <string name="scale_type_original_size">قەبارەی بنەڕەتی</string>
     <string name="scale_type_smart_fit">گونجاندنی زیرەک</string>
@@ -162,7 +159,6 @@
     <string name="secure_screen_summary">سکرین شۆت بلۆکردن و شاردنەوەی ناوەڕۆک، لە کاتی گۆڕین و دەرچوون لە بەرنامە</string>
     <string name="relative_time_today">ئەمڕۆ</string>
     <string name="pref_category_display">شێوازی پیشاندان</string>
-    <string name="pref_read_with_tapping_inverted">نەرمە لێدانی پێچەوانە</string>
     <string name="tapping_inverted_none">هیچ</string>
     <string name="tapping_inverted_vertical">ستوونی</string>
     <string name="tapping_inverted_both">هەردووکیان</string>
@@ -187,7 +183,6 @@
     <string name="nav_zone_prev">پێشتر</string>
     <string name="vertical_plus_viewer">ستوونی بەردەوام</string>
     <string name="pref_read_with_volume_keys_inverted">دوگمەی دەنگی پێچەوانە</string>
-    <string name="pref_read_with_long_tap">پیشاندان لە کاتی دەست لەسەر دانانی ماوە درێژ</string>
     <string name="tapping_inverted_horizontal">ئاسۆیی</string>
     <string name="black_background">ڕەش</string>
     <string name="pref_image_scale_type">دەوروبەری لاپەڕە</string>

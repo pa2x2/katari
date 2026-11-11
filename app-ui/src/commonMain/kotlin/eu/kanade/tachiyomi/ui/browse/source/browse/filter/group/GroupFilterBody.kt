@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.NoResults
 import app.katari.presentation.kit.list.currentRowInset
@@ -64,7 +65,7 @@ internal fun GroupFilterBody(
             }
             if (children.any { it is EntryFilter.TriState }) {
                 Text(
-                    text = stringResource(MR.strings.filter_tristate_chip_hint),
+                    text = stringResource(platformPresentation.triStateChipHint),
                     modifier = Modifier.padding(
                         horizontal = currentRowInset,
                         vertical = KatariTheme.spacing.xs,

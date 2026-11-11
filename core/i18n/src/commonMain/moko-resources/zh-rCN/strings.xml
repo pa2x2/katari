@@ -99,7 +99,6 @@
     <string name="untrusted_extension">插件未受信任</string>
     <string name="untrusted_extension_message">恶意插件可能会读取所有登录的账号或执行任意代码。 \n \n信任此插件即代表你愿意承担上述风险。</string>
     <string name="pref_page_transitions">翻页动画</string>
-    <string name="pref_double_tap_anim_speed">双击动画速度</string>
     <string name="pref_show_page_number">显示页码</string>
     <string name="pref_crop_borders">裁剪边缘</string>
     <string name="pref_custom_brightness">自定义亮度</string>
@@ -235,15 +234,12 @@
     <string name="information_no_recent">最近没有更新</string>
     <string name="information_no_recent_manga">最近没有阅读</string>
     <string name="information_empty_library">书架为空</string>
-    <string name="information_empty_category">尚无分类，点击加号按钮创建分类用来管理书架。</string>
     <string name="download_notifier_downloader_title">下载</string>
     <string name="download_notifier_title_error">出错</string>
     <string name="download_notifier_unknown_error">下载时发生意外错误</string>
-    <string name="download_notifier_text_only_wifi">未连接 Wi-Fi</string>
     <string name="download_notifier_no_network">未连接网络</string>
     <string name="download_notifier_download_paused">下载已暂停</string>
     <string name="channel_common">通用</string>
-    <string name="pref_read_with_long_tap">长按显示操作菜单</string>
     <string name="action_open_in_web_view">在 WebView 中打开</string>
     <string name="pref_skip_read_chapters">跳过已读章节</string>
     <string name="pref_color_filter_mode">滤镜混合模式</string>
@@ -363,7 +359,6 @@
     <string name="pref_category_reading_mode">阅读模式</string>
     <string name="pref_category_theme">主题</string>
     <string name="action_sort_date_added">收藏日期</string>
-    <string name="pref_read_with_tapping_inverted">反转点按区域</string>
     <string name="no_pinned_sources">没有置顶图源</string>
     <string name="channel_complete">完成</string>
     <string name="channel_progress">进度</string>
@@ -389,12 +384,10 @@
     <string name="spen_previous_page">上一页</string>
     <string name="migration_help_guide">图源迁移指南</string>
     <string name="file_picker_error">没有文件管理器</string>
-    <string name="pref_viewer_nav">点按区域</string>
     <string name="edge_nav">两侧</string>
     <string name="kindlish_nav">Kindle</string>
     <string name="l_nav">L 形</string>
     <string name="pref_dump_crash_logs_summary">将错误日志保存到文件中，以便提供给开发者</string>
-    <string name="pref_dump_crash_logs">导出崩溃日志</string>
     <string name="action_desc">降序</string>
     <string name="action_asc">升序</string>
     <string name="action_order_by_chapter_number">按章节编号</string>
@@ -410,7 +403,6 @@
     <string name="nav_zone_next">下一页</string>
     <string name="nav_zone_prev">上一页</string>
     <string name="pref_show_navigation_mode_summary">开始阅读时，短暂显示点按区域</string>
-    <string name="pref_show_navigation_mode">点按区域提示</string>
     <string name="pref_dns_over_https">DNS over HTTPS (DoH)</string>
     <string name="none">无</string>
     <string name="exclude">排除：%s</string>
@@ -418,7 +410,6 @@
     <string name="action_sort_chapter_fetch_date">章节获取时间</string>
     <string name="pref_download_new_categories_details">排除优先于包含，同时属于包含和排除分类的作品不会自动下载。</string>
     <string name="pref_category_auto_download">自动下载</string>
-    <string name="action_show_errors">点击查看详情</string>
     <string name="clipboard_copy_error">复制到剪贴板失败</string>
     <string name="rotation_landscape">横屏</string>
     <string name="rotation_portrait">竖屏</string>
@@ -487,10 +478,7 @@
     <string name="label_warning">警告</string>
     <string name="action_display_language_badge">语言</string>
     <string name="backup_info">你应该将备份数据保存到多个地方。备份可能含有敏感数据（例如储存的密码），分享时请留意。</string>
-    <string name="notification_size_warning">大量更新会损害图源，并可能导致更新变慢、耗电增加。点击了解详情。</string>
-    <string name="connected_to_wifi">仅连接 Wi-Fi 时</string>
     <string name="update_72hour">每 3 天</string>
-    <string name="download_queue_size_warning">警告：批量下载可能导致图源变慢，甚至会使得它们屏蔽 %s 。点击了解详情。</string>
     <string name="ext_update_all">全部更新</string>
     <string name="pref_auto_clear_chapter_cache">启动时清除章节缓存</string>
     <string name="database_clean">无需清理</string>
@@ -505,7 +493,6 @@
     <string name="action_display_cover_only_grid">封面网格</string>
     <string name="pref_landscape_zoom">自动放大横向图片</string>
     <string name="pref_navigate_pan">图片放大时先平移再翻页</string>
-    <string name="learn_more">点击了解详情</string>
     <string name="rotation_reverse_portrait">反向竖屏</string>
     <string name="action_move_to_top_all_for_series">将作品移到顶部</string>
     <string name="disabled_nav">关闭</string>
@@ -559,15 +546,12 @@
     <string name="updates_last_update_info">书架更新时间：%s</string>
     <string name="remove_manga">即将从书架中删除 \"%s\"</string>
     <string name="popular">热门</string>
-    <string name="missing_storage_permission">未授予存储权限</string>
     <string name="action_search_hint">搜索…</string>
     <string name="crash_screen_title">哦豁！</string>
     <string name="crash_screen_restart_application">重启应用</string>
     <string name="pref_appearance_summary">主题 • 日期格式</string>
-    <string name="pref_library_summary">分类 • 全局更新 • 目录左右滑动</string>
     <string name="pref_downloads_summary">自动下载 • 预先下载</string>
     <string name="pref_backup_summary">手动备份 • 自动备份 • 存储空间</string>
-    <string name="pref_security_summary">应用锁 • 隐私界面</string>
     <string name="pref_browse_summary">图源 • 插件 • 全局搜索</string>
     <string name="pref_reader_summary">阅读模式 • 显示 • 翻页</string>
     <string name="unknown_title">未知标题</string>
@@ -610,9 +594,6 @@
     <string name="pref_page_rotate">旋转横向图片</string>
     <string name="pref_page_rotate_invert">旋转横向图片时反转方向</string>
     <string name="pref_debug_info">调试信息</string>
-    <string name="pref_chapter_swipe_end">向右滑动章节</string>
-    <string name="pref_chapter_swipe_start">向左滑动章节</string>
-    <string name="pref_double_tap_zoom">双击放大</string>
     <string name="action_ok">确定</string>
     <string name="delete_downloaded">删除已下载章节</string>
     <string name="action_filter_interval_custom">自定义更新频率</string>
@@ -624,7 +605,6 @@
     <string name="has_results">有结果</string>
     <string name="syncing_library">正在同步书架</string>
     <string name="library_sync_complete">书架同步完成</string>
-    <string name="information_cloudflare_help">点击这里查看 Cloudflare 帮助</string>
     <string name="download_cache_invalidated">重建下载索引</string>
     <string name="create_backup_file_error">创建备份文件失败</string>
     <string name="exception_offline">未连接网络</string>
@@ -663,7 +643,6 @@
     <string name="no_location_set">未设置存储位置</string>
     <string name="invalid_backup_file_error">完整错误信息：</string>
     <string name="onboarding_permission_ignore_battery_opts">后台运行权限</string>
-    <string name="ext_permission_install_apps_warning">需要安装插件的权限，点击此处授权。</string>
     <string name="private_settings">包含敏感设置（例如账号登录信息）</string>
     <string name="pref_storage_location_info">用于自动备份、章节下载、本地图源。</string>
     <string name="manga_interval_expected_update">预计 %1$s后更新，每 %2$s检查一次。</string>

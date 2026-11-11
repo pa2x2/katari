@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Naciśnij tutaj aby uzyskać pomoc dotyczącą Cloudflare</string>
+    <string name="action_show_errors">Kliknij aby wyświetlić szczegóły</string>
+    <string name="notification_size_warning">Ostrzeżenie: duże aktualizacje biblioteki mogą prowadzić do zwiększonego zużycia baterii oraz spowolnienia działania źródeł. Kliknij, by dowiedzieć się więcej.</string>
+    <string name="download_queue_size_warning">Ostrzeżenie: Duże aktualizacje biblioteki mogą prowadzić do zwiększonego zużycia baterii oraz spowolnienia działania źródeł.</string>
+    <string name="information_empty_category">Nie masz żadnych kategorii. Dotknij plusa, aby je utworzyć i zorganizować swoją bibliotekę.</string>
+    <string name="pref_double_tap_zoom">Dotknij dwukrotnie, aby powiększyć</string>
+    <string name="pref_double_tap_anim_speed">Szybkość animacji podwójnego dotknięcia</string>
+    <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
+    <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
+    <string name="pref_viewer_nav">Strefy kliknięcia</string>
+    <string name="pref_read_with_tapping_inverted">Odwróć strefy kliknięcia</string>
+    <string name="pref_show_navigation_mode">Pokazuj nakładkę stref kliknięcia</string>
+    <string name="pref_read_with_long_tap">Pokaż akcje po przytrzymaniu</string>
+    <string name="pref_chapter_swipe_start">Przesuń palcem w lewo</string>
+    <string name="pref_chapter_swipe_end">Przesuń palcem w prawo</string>
+    <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
+    <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
+</resources>

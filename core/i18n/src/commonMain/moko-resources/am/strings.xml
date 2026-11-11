@@ -125,7 +125,6 @@
     <string name="chapters">ምዕራፎች</string>
     <string name="manga">ማንጋ</string>
     <string name="categories">ምድቦች</string>
-    <string name="information_empty_category">ምንም ምድቦች የሉዎትም። ቤተ-መጽሐፍትዎን ለማደራጀት አንድ ለመፍጠር የመደመር አዝራሩን መታ ያድርጉ።</string>
     <string name="information_empty_library">ቤተ-መጽሐፍትዎ ባዶ ነው ተከታታዮችን ከአሰሳ ወደ ቤተ-መጽሐፍትዎ ያክሉ።</string>
     <string name="information_no_recent_manga">በቅርቡ የተነበበ ነገር የለም</string>
     <string name="information_no_recent">የቅርብ ጊዜ ዝመናዎች የሉም</string>
@@ -179,7 +178,6 @@
     <string name="gray_background">ግራጫ</string>
     <string name="white_background">ነጭ</string>
     <string name="pref_reader_theme">የጀርባ ቀለም</string>
-    <string name="pref_read_with_long_tap">ረጅም መታ መገናኛ</string>
     <string name="pref_read_with_volume_keys_inverted">የድምጽ ቁልፎችን ገልብጥ</string>
     <string name="pref_read_with_volume_keys">የድምፅ ቁልፎች</string>
     <string name="pref_reader_navigation">አሰሳ</string>
@@ -198,7 +196,6 @@
     <string name="pref_show_reading_mode_summary">አንባቢ ሲከፈት የአሁኑን ሁነታ በአጭሩ ያሳዩ</string>
     <string name="pref_show_reading_mode">የንባብ ሁነታን አሳይ</string>
     <string name="pref_show_page_number">የገጽ ቁጥርን አሳይ</string>
-    <string name="pref_double_tap_anim_speed">ሁለቴ መታ የአኒሜሽን ፍጥነት</string>
     <string name="pref_page_transitions">የገጽ ሽግግሮች</string>
     <string name="pref_cutout_short">በመቁረጥ አካባቢ ውስጥ ይዘትን አሳይ</string>
     <string name="action_sort_alpha">በፊደል ደርድር</string>
@@ -209,7 +206,6 @@
     <string name="tapping_inverted_vertical">አቀባዊ</string>
     <string name="tapping_inverted_horizontal">አግድም</string>
     <string name="tapping_inverted_none">የለም</string>
-    <string name="pref_read_with_tapping_inverted">ተገልብጦ መታ ማድረግ</string>
     <string name="channel_ext_updates">የቅጥያ ዝመናዎች</string>
     <string name="channel_errors">ስህተቶች</string>
     <string name="channel_complete">ተጠናቀቀ</string>
@@ -233,7 +229,6 @@
     <string name="second_to_last">ሁለተኛ እስከ መጨረሻው ምዕራፍ</string>
     <string name="last_read_chapter">ለመጨረሻ ጊዜ የተነበበው ምዕራፍ</string>
     <string name="disabled">ተሰናክሏል</string>
-    <string name="download_notifier_text_only_wifi">ምንም የ ዋይ-ፋይ ግንኙነት የለም</string>
     <string name="download_notifier_unknown_error">ባልተጠበቀ ስህተት ምክንያት ምዕራፍ ማውረድ አልተቻለም</string>
     <string name="download_notifier_title_error">ስህተት</string>
     <string name="download_notifier_downloader_title">አውራጅ</string>

@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Μη αξιόπιστη επέκταση</string>
     <string name="untrusted_extension_message">Οι κακόβουλες επεκτάσεις μπορούν να διαβάσουν τυχόν αποθηκευμένα διαπιστευτήρια σύνδεσης ή να εκτελέσουν αυθαίρετο κώδικα. \n \nΜε την εμπιστοσύνη αυτής της επέκτασης, αποδέχεστε αυτούς τους κινδύνους.</string>
     <string name="pref_page_transitions">Ζωντανή μετάβαση σελίδας</string>
-    <string name="pref_double_tap_anim_speed">Ταχύτητα κίνησης διπλού αγγίγματος</string>
     <string name="pref_show_page_number">Εμφάνιση αριθμού σελίδας</string>
     <string name="pref_crop_borders">Περικοπή άκρων</string>
     <string name="pref_custom_brightness">Προσαρμοσμένη φωτεινότητα</string>
@@ -227,15 +226,12 @@
     <string name="information_no_recent">Δεν υπάρχουν πρόσφατες ενημερώσεις</string>
     <string name="information_no_recent_manga">Τίποτα δεν διαβάστηκε πρόσφατα</string>
     <string name="information_empty_library">Η βιβλιοθήκη σας είναι κενή</string>
-    <string name="information_empty_category">Δεν έχετε κατηγορίες. Πατήστε το κουμπί συν για να δημιουργήσετε μία για την οργάνωση της βιβλιοθήκης σας.</string>
     <string name="download_notifier_downloader_title">Πρόγραμμα λήψης</string>
     <string name="download_notifier_title_error">Σφάλμα</string>
     <string name="download_notifier_unknown_error">Το κεφάλαιο δεν μπορούσε να ληφθεί λόγο μη αναμενόμενου σφάλματος</string>
-    <string name="download_notifier_text_only_wifi">Δεν υπάρχει διαθέσιμη σύνδεση Wi-Fi</string>
     <string name="download_notifier_no_network">Δεν υπάρχει διαθέσιμη σύνδεση δικτύου</string>
     <string name="download_notifier_download_paused">Λήψεις σε παύση</string>
     <string name="channel_common">Κοινό</string>
-    <string name="pref_read_with_long_tap">Εμφάνιση ενεργειών με παρατεταμένο πάτημα</string>
     <string name="action_open_in_web_view">Άνοιγμα στο WebView</string>
     <string name="pref_skip_read_chapters">Προσπέραση διαβασμένων κεφαλαίων</string>
     <string name="filter_mode_overlay">Επικάλυψη</string>
@@ -347,7 +343,6 @@
     <string name="tapping_inverted_vertical">Κάθετα</string>
     <string name="tapping_inverted_horizontal">Οριζόντια</string>
     <string name="tapping_inverted_none">Κανένα</string>
-    <string name="pref_read_with_tapping_inverted">Αντιστροφή ζωνών πατήματος</string>
     <string name="unknown_status">Άγνωστη κατάσταση</string>
     <string name="unknown_author">Άγνωστος συγγραφέας</string>
     <string name="whats_new">Τι νέο υπάρχει</string>
@@ -381,12 +376,10 @@
     <string name="spen_previous_page">Προηγούμενη σελίδα</string>
     <string name="migration_help_guide">Οδηγός μεταφοράς πηγής</string>
     <string name="file_picker_error">Δεν βρέθηκε εφαρμογή επιλογής αρχείων</string>
-    <string name="pref_viewer_nav">Ζώνες πατήματος</string>
     <string name="edge_nav">Άκρη</string>
     <string name="kindlish_nav">Σαν Kindle</string>
     <string name="l_nav">Σχήματος L</string>
     <string name="pref_dump_crash_logs_summary">Αποθηκεύει αρχεία καταγραφής σφαλμάτων σε ένα αρχείο για κοινή χρήση με τους προγραμματιστές</string>
-    <string name="pref_dump_crash_logs">Κοινή χρήση αρχείων καταγραφής σφαλμάτων</string>
     <string name="action_desc">Φθίνουσα</string>
     <string name="action_asc">Αύξουσα</string>
     <string name="action_order_by_chapter_number">Κατά αριθμό κεφαλαίου</string>
@@ -398,7 +391,6 @@
     <string name="pref_dual_page_invert">Αντιστροφή τοποθέτησης διαχωρισμένης σελίδας</string>
     <string name="backup_restore_content_full">Ενδέχεται να χρειαστεί στη συνέχεια να εγκαταστήσετε τυχόν επεκτάσεις που λείπουν για να τις χρησιμοποιήσετε.</string>
     <string name="pref_show_navigation_mode_summary">Εμφάνιση εν συντομία κατά το άνοιγμα του προγράμματος ανάγνωσης</string>
-    <string name="pref_show_navigation_mode">Εμφάνιση επικάλυψης ζωνών πατήματος</string>
     <string name="nav_zone_right">Δεξιά</string>
     <string name="nav_zone_left">Αριστερά</string>
     <string name="nav_zone_next">Επόμενο</string>
@@ -410,7 +402,6 @@
     <string name="action_sort_chapter_fetch_date">Ημερομηνία ανάκτησης κεφαλαίου</string>
     <string name="pref_download_new_categories_details">Οι καταχωρήσεις σε εξαιρούμενες κατηγορίες δε θα ληφθούν ακόμη και αν βρίσκονται επίσης σε κατηγορίες που περιλαμβάνονται.</string>
     <string name="pref_category_auto_download">Αυτόματη λήψη</string>
-    <string name="action_show_errors">Πατήστε για να δείτε λεπτομέρειες</string>
     <string name="clipboard_copy_error">Απέτυχε η αντιγραφή στο πρόχειρο</string>
     <string name="rotation_landscape">Οριζόντια</string>
     <string name="rotation_portrait">Κατακόρυφα</string>
@@ -479,10 +470,7 @@
     <string name="action_display_language_badge">Γλώσσα</string>
     <string name="label_warning">Προειδοποίηση</string>
     <string name="backup_info">Θα πρέπει να κρατάτε αντίγραφα αντιγράφων ασφαλείας και σε άλλα μέρη. Τα αντίγραφα ασφαλείας ενδέχεται να περιέχουν ευαίσθητα δεδομένα, συμπεριλαμβανομένων τυχόν αποθηκευμένων κωδικών πρόσβασης, να είστε προσεκτικοί αν τα μοιράζεστε.</string>
-    <string name="notification_size_warning">Οι μεγάλες ενημερώσεις βλάπτουν τις πηγές και μπορεί να οδηγήσουν σε πιο αργές ενημερώσεις και σε αυξημένη χρήση της μπαταρίας. Πατήστε για να μάθετε περισσότερα.</string>
-    <string name="connected_to_wifi">Μόνο σε Wi-Fi</string>
     <string name="update_72hour">Κάθε 3 ημέρες</string>
-    <string name="download_queue_size_warning">Προειδοποίηση: οι μαζικές λήψεις ενδέχεται να οδηγήσουν σε επιβράδυνση των πηγών ή/και αποκλεισμό του %s. Πατήστε για να μάθετε περισσότερα.</string>
     <string name="ext_update_all">Ενημέρωση όλων</string>
     <string name="pref_auto_clear_chapter_cache">Εκκαθάριση της προσωρινής μνήμης κεφαλαίων κατά την εκκίνηση της εφαρμογής</string>
     <string name="clear_database_source_item_count">%1$d καταχωρήσεις εκτός βιβλιοθήκης στη βάση δεδομένων</string>
@@ -497,7 +485,6 @@
     <string name="pref_landscape_zoom">Αυτόματο ζουμ σε ευρείες εικόνες</string>
     <string name="action_display_cover_only_grid">Πλέγμα μόνο με εξώφυλλα</string>
     <string name="pref_navigate_pan">Μετατόπιση πλατιών εικόνων</string>
-    <string name="learn_more">Πατήστε για να μάθετε περισσότερα</string>
     <string name="rotation_reverse_portrait">Αντίστροφο πορτρέτο</string>
     <string name="action_move_to_top_all_for_series">Μετακίνηση σειράς προς τα πάνω</string>
     <string name="disabled_nav">Απενεργοποιημένο</string>
@@ -545,15 +532,12 @@
     <string name="popular">Δημοφιλή</string>
     <string name="updates_last_update_info">Τελευταία ενημέρωση βιβλιοθήκης: %s</string>
     <string name="remove_manga">Πρόκειται να αφαιρέσετε το \"%s\" από τη βιβλιοθήκη σας</string>
-    <string name="missing_storage_permission">Δεν έχουν χορηγηθεί δικαιώματα αποθήκευσης</string>
     <string name="action_search_hint">Αναζήτηση…</string>
     <string name="pref_browse_summary">Πηγές, επεκτάσεις, καθολική αναζήτηση</string>
     <string name="crash_screen_title">Ουπς!</string>
     <string name="pref_appearance_summary">Θέμα, μορφή ημερομηνίας και ώρας</string>
-    <string name="pref_library_summary">Κατηγορίες, καθολική ενημέρωση, σύρσιμο κεφαλαίου</string>
     <string name="pref_reader_summary">Λειτουργία ανάγνωσης, οθόνη, πλοήγηση</string>
     <string name="pref_backup_summary">Χειροκίνητα &amp; αυτόματα αντίγραφα ασφαλείας, χώρος αποθήκευσης</string>
-    <string name="pref_security_summary">Κλείδωμα εφαρμογής, ασφαλής οθόνη</string>
     <string name="crash_screen_restart_application">Επανεκκίνηση της εφαρμογής</string>
     <string name="pref_downloads_summary">Αυτόματη λήψη, λήψη εκ των προτέρων</string>
     <string name="unknown_title">Άγνωστος τίτλος</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">Περιστροφή πλατιών σελίδων για να χωρέσουν</string>
     <string name="pref_page_rotate_invert">Αναστροφή του προσανατολισμού των πλατιών σελίδων που έχουν περιστραφεί</string>
     <string name="pref_debug_info">Πληροφορίες εντοπισμού σφαλμάτων</string>
-    <string name="pref_double_tap_zoom">Διπλό πάτημα για ζουμ</string>
-    <string name="pref_chapter_swipe_start">Κεφάλαιο με σύρσιμο προς τα αριστερά</string>
-    <string name="pref_chapter_swipe_end">Κεφάλαιο με σύρσιμο προς τα δεξιά</string>
     <string name="action_set_interval">Ορισμός χρονικού διαστήματος</string>
     <string name="action_filter_interval_custom">Προσαρμοσμένη συχνότητα ενημέρωσης</string>
     <string name="intervals_header">Διαστήματα</string>
@@ -610,7 +591,6 @@
     <string name="has_results">Έχει αποτελέσματα</string>
     <string name="syncing_library">Συγχρονισμός βιβλιοθήκης</string>
     <string name="library_sync_complete">Ο συγχρονισμός βιβλιοθήκης ολοκληρώθηκε</string>
-    <string name="information_cloudflare_help">Πατήστε εδώ για βοήθεια με το Cloudflare</string>
     <string name="download_cache_invalidated">Αναδημιουργία ευρετηρίου λήψεων</string>
     <string name="create_backup_file_error">Δεν ήταν δυνατή η δημιουργία αντιγράφου ασφαλείας</string>
     <string name="exception_unknown_host">Δεν ήταν δυνατή η πρόσβαση στο %s</string>
@@ -659,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">Ειδοποιηθείτε για ενημερώσεις της βιβλιοθήκης και άλλων.</string>
     <string name="onboarding_permission_action_grant">Παραχώρηση</string>
     <string name="available_disk_space_info">Διαθέσιμο: %1$s / Σύνολο: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Απαιτούνται δικαιώματα για την εγκατάσταση επεκτάσεων. Πατήστε εδώ για παραχώρηση.</string>
     <string name="private_settings">Συμπεριλάβετε ευαίσθητες ρυθμίσεις (π.χ. διακριτικά σύνδεσης)</string>
     <string name="invalid_backup_file_error">Πλήρες σφάλμα:</string>
     <string name="onboarding_storage_help_info">Ενημερώνετε από μια παλαιότερη έκδοση και δεν είστε σίγουροι τι να επιλέξετε; Ανατρέξτε στον οδηγό αποθήκευσης για περισσότερες πληροφορίες.</string>

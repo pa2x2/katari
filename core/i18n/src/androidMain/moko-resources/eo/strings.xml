@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Tuŝetu ĉi tie por helpo kun Cloudflare</string>
+    <string name="action_show_errors">Tuŝeti pro vidi detalojn</string>
+    <string name="notification_size_warning">Grandaj ĝisdatigoj povas damaĝi fontojn kaj konduki al pli malrapidaj ĝisdatigoj kaj pliigan baterian uzadon. Tuŝetu por ekscii pli.</string>
+    <string name="download_queue_size_warning">Averto: grandaj amasaj elŝutoj povas igi fontojn fariĝi pli malrapidaj kaj/aŭ bloki %s. Tuŝetu por ekscii pli.</string>
+    <string name="information_empty_category">Vi havas neniun kategorion. Tuŝeti la butonon kun plus, por krei ian kaj organizi vian bibliotekon.</string>
+    <string name="pref_double_tap_zoom">Duoble tuŝeti por zomi</string>
+    <string name="pref_double_tap_anim_speed">Animacia rapido de duobla tuŝeto</string>
+    <string name="pref_load_ahead_only_over_wifi">Antaŭŝargi nur per vifio</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Ŝparas poŝtelefonretajn datumojn per ŝargado de nur la paĝoj proksimaj al tiu, kiun vi legas</string>
+    <string name="pref_dump_crash_logs">Konigi prikolapsajn protokolojn</string>
+    <string name="pref_security_summary">Apa ŝloso, sekura ekrano</string>
+    <string name="pref_viewer_nav">Tuŝetzonoj</string>
+    <string name="pref_read_with_tapping_inverted">Inversigi tuŝetzonojn</string>
+    <string name="pref_show_navigation_mode">Montri plustavolon kun tuŝetzonoj</string>
+    <string name="pref_read_with_long_tap">Montri agojn post longa tuŝeto</string>
+    <string name="pref_chapter_swipe_start">Ĉapitro je ŝovumo maldekstren</string>
+    <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
+    <string name="ext_permission_install_apps_warning">Permesoj bezonatas por instali etendaĵojn. Tuŝetu ĉi tie por permesi.</string>
+    <string name="connected_to_wifi">Nur per vifio</string>
+</resources>

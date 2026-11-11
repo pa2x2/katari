@@ -189,7 +189,6 @@
     <string name="download_notifier_downloader_title">Downloader</string>
     <string name="download_notifier_title_error">Fehler</string>
     <string name="download_notifier_unknown_error">Kapitel konnte aufgrund eines unerwarteten Fehlers nicht heruntergeladen werden</string>
-    <string name="download_notifier_text_only_wifi">Keine WLAN-Verbindung verfügbar</string>
     <string name="download_notifier_no_network">Kein Netzwerk verfügbar</string>
     <string name="download_notifier_download_paused">Downloads pausiert</string>
     <string name="label_recent_updates">Neues</string>
@@ -200,7 +199,6 @@
     <string name="browse">Stöbern</string>
     <string name="channel_common">Allgemein</string>
     <string name="action_display_download_badge">Heruntergelade Kapitel</string>
-    <string name="information_empty_category">Keine Kategorien vorhanden. Tippe auf die Plus-Schaltfläche, um eine Kategorie zum Sortieren deiner Bibliothek zu erstellen.</string>
     <string name="label_migration">Migrieren</string>
     <string name="label_extensions">Erweiterungen</string>
     <string name="label_extension_info">Erweiterungsinformationen</string>
@@ -232,8 +230,6 @@
     <string name="follow_language">Sprachstandard</string>
     <string name="time_24_hours">24-Stunden-Format</string>
     <string name="time_12_hours">12-Stunden-Format</string>
-    <string name="pref_load_ahead_only_over_wifi">Nur über WLAN im Voraus herunterladen</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Spart mobile Daten, indem nur Seiten um die aktuelle Seite herum geladen werden</string>
     <string name="app_migrating_title">Aktualisierung wird abgeschlossen</string>
     <string name="app_migrating_summary">Die Aktualisierung wird abgeschlossen. Das kann einige Minuten dauern. Bitte lass die App so lange geöffnet.</string>
     <string name="ext_not_loaded_details">Warum nicht geladen?</string>
@@ -245,7 +241,6 @@
     <string name="ext_malformed_message">Dieser Erweiterung fehlen Daten, welche die App benötigt, um sie zu laden.</string>
     <string name="ext_load_failed_message">Diese Erweiterung konnte wegen eines Fehlers nicht geladen werden, weswegen keine ihrer Quellen zur Verfügung stehen.</string>
     <string name="untrusted_extension">Nicht vertrauenswürdige Erweiterung</string>
-    <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
     <string name="migration_dialog_what_to_include">Wähle zu beinhaltende Daten</string>
     <string name="pager_viewer">Seiten</string>
     <string name="source_not_installed">Quelle nicht installiert: %1$s</string>
@@ -259,7 +254,6 @@
     <string name="transition_pages_error">Seiten konnten nicht geladen werden: %1$s</string>
     <string name="action_open_in_web_view">In WebView öffnen</string>
     <string name="pref_skip_read_chapters">Gelesene Kapitel überspringen</string>
-    <string name="pref_read_with_long_tap">Aktionen bei langem Antippen anzeigen</string>
     <string name="filter_mode_overlay">Overlay</string>
     <string name="filter_mode_multiply">Multiplizieren</string>
     <string name="filter_mode_screen">Bildschirm</string>
@@ -365,7 +359,6 @@
     <string name="action_disable">Deaktivieren</string>
     <string name="requires_app_restart">Erfordert einen Neustart der App, um wirksam zu werden</string>
     <string name="label_network">Vernetzung</string>
-    <string name="pref_read_with_tapping_inverted">Tippzonen umkehren</string>
     <string name="tapping_inverted_both">Beide</string>
     <string name="tapping_inverted_vertical">Vertikal</string>
     <string name="tapping_inverted_horizontal">Horizontal</string>
@@ -404,11 +397,9 @@
     <string name="migration_help_guide">Quellenmigration</string>
     <string name="file_picker_error">Keine Dateiauswahl-App gefunden</string>
     <string name="edge_nav">Rand</string>
-    <string name="pref_viewer_nav">Tippzonen</string>
     <string name="kindlish_nav">Kindle-Stil</string>
     <string name="l_nav">L-förmig</string>
     <string name="pref_dump_crash_logs_summary">Speichert Fehlerprotokolle in einer Datei, die dann mit den Entwicklern geteilt wird</string>
-    <string name="pref_dump_crash_logs">Absturzprotokolle teilen</string>
     <string name="action_desc">Absteigend</string>
     <string name="action_asc">Aufsteigend</string>
     <string name="action_order_by_chapter_number">Nach Kapitelnummer</string>
@@ -420,7 +411,6 @@
     <string name="pref_dual_page_invert">Platzierung aufgeteilter Seiten umkehren</string>
     <string name="backup_restore_content_full">Du musst anschließend jegliche fehlende Erweiterungen installieren, um sie zu benutzen.</string>
     <string name="pref_show_navigation_mode_summary">Kurz anzeigen, wenn der Leser geöffnet wird</string>
-    <string name="pref_show_navigation_mode">Tippzonen-Overlay anzeigen</string>
     <string name="nav_zone_right">Rechts</string>
     <string name="nav_zone_left">Links</string>
     <string name="nav_zone_next">Weiter</string>
@@ -432,7 +422,6 @@
     <string name="action_sort_chapter_fetch_date">Abrufdatum des Kapitels</string>
     <string name="pref_download_new_categories_details">Einträge in ausgeschlossenen Kategorien werden nicht heruntergeladen, auch wenn sie in eingeschlossenen Kategorien vorhanden sind.</string>
     <string name="pref_category_auto_download">Automatisches Herunterladen</string>
-    <string name="action_show_errors">Tippe, um Details anzuzeigen</string>
     <string name="clipboard_copy_error">Kopieren in die Zwischenablage fehlgeschlagen</string>
     <string name="rotation_landscape">Querformat</string>
     <string name="rotation_portrait">Hochformat</string>
@@ -500,11 +489,8 @@
     <string name="pref_verbose_logging_summary">Ausführliche Protokolle im Systemprotokoll ausgeben (verringert die App-Leistung)</string>
     <string name="action_display_language_badge">Sprache</string>
     <string name="label_warning">Warnung</string>
-    <string name="notification_size_warning">Große Aktualisierungen schaden Quellen und könnten zu langsameren Aktualisierungen sowie höherem Akkuverbrauch führen. Tippe, um mehr zu erfahren.</string>
     <string name="backup_info">Du solltest Kopien der Datensicherungen auch an anderen Orten aufbewahren. Datensicherungen beinhalten möglicherweise sensible Daten, einschließlich gespeicherter Passwörter. Sei vorsichtig beim Teilen.</string>
-    <string name="connected_to_wifi">Nur über WLAN</string>
     <string name="update_72hour">Alle 3 Tage</string>
-    <string name="download_queue_size_warning">Achtung: Große Downloads könnten dazu führen, dass Quellen langsamer werden und/oder %s blockieren. Tippe um mehr zu erfahren.</string>
     <string name="ext_update_all">Alle aktualisieren</string>
     <string name="pref_auto_clear_chapter_cache">Kapitel-Zwischenspeicher beim Öffnen der App löschen</string>
     <string name="clear_database_source_item_count">%1$d Nicht-Bibliothekseinträge in der Datenbank</string>
@@ -519,7 +505,6 @@
     <string name="action_display_cover_only_grid">Nur-Cover-Kacheln</string>
     <string name="pref_landscape_zoom">Bei breiten Bildern automatisch hineinzoomen</string>
     <string name="pref_navigate_pan">Innerhalb breiter Seiten navigieren</string>
-    <string name="learn_more">Antippen, um mehr zu erfahren</string>
     <string name="rotation_reverse_portrait">Umgekehrtes Hochformat</string>
     <string name="action_move_to_top_all_for_series">Serie nach oben verschieben</string>
     <string name="disabled_nav">Deaktiviert</string>
@@ -569,17 +554,14 @@
     <string name="multi_lang">Mehrere Sprachen</string>
     <string name="updates_last_update_info">Bibliothek zuletzt aktualisiert: %s</string>
     <string name="popular">Beliebt</string>
-    <string name="missing_storage_permission">Speicherberechtigungen nicht erteilt</string>
     <string name="action_search_hint">Suchen…</string>
     <string name="pref_appearance_summary">Thema, Datums- und Zeitformat</string>
     <string name="pref_reader_summary">Lesemodus, Anzeige, Navigation</string>
     <string name="pref_downloads_summary">Automatische Downloads, im Voraus herunterladen</string>
-    <string name="pref_library_summary">Kategorien, globale Aktualisierungen, Kapitelaktionen</string>
     <string name="crash_screen_restart_application">App neustarten</string>
     <string name="pref_browse_summary">Quellen, Erweiterungen, globale Suche</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="pref_backup_summary">Manuelle und automatische Datensicherungen, Speicherplatz</string>
-    <string name="pref_security_summary">App-Sperre, sicherer Bildschirm</string>
     <string name="unknown_title">Unbekannter Titel</string>
     <string name="invalid_location">Ungültiger Speicherort: %s</string>
     <string name="error_user_agent_string_invalid">Ungültiger User-Agent-Text</string>
@@ -620,9 +602,6 @@
     <string name="pref_page_rotate">Breite Seiten drehen, damit sie passen</string>
     <string name="pref_page_rotate_invert">Ausrichtung gedrehter breiter Seiten spiegeln</string>
     <string name="pref_debug_info">Debug-Info</string>
-    <string name="pref_chapter_swipe_end">Kapitel beim Streichen nach rechts</string>
-    <string name="pref_chapter_swipe_start">Kapitel beim Streichen nach links</string>
-    <string name="pref_double_tap_zoom">Zum Zoomen doppeltippen</string>
     <string name="intervals_header">Intervalle</string>
     <string name="action_filter_interval_custom">Benutzerdefiniertes Aktualisierungsintervall</string>
     <string name="action_set_interval">Intervall einstellen</string>
@@ -634,7 +613,6 @@
     <string name="has_results">Hat Ergebnisse</string>
     <string name="syncing_library">Bibliothek wird synchronisiert</string>
     <string name="library_sync_complete">Bibliothekssynchronisierung abgeschlossen</string>
-    <string name="information_cloudflare_help">Tippe hier, um Hilfe zu Cloudflare zu erhalten</string>
     <string name="download_cache_invalidated">Downloads werden neu indexiert</string>
     <string name="create_backup_file_error">Sicherungsdatei konnte nicht erstellt werden</string>
     <string name="exception_http">HTTP %d, überprüfe die Webseite in WebView</string>
@@ -682,7 +660,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Akkunutzung im Hintergrund</string>
     <string name="onboarding_permission_install_apps_description">Zum Installieren von Quellenerweiterungen.</string>
     <string name="onboarding_permission_notifications_description">Erhalte Benachrichtigungen für Bibliotheksaktualisierungen und mehr.</string>
-    <string name="ext_permission_install_apps_warning">Für das Installieren von Erweiterungen sind Berechtigungen erforderlich. Tippe hier, um sie zu gewähren.</string>
     <string name="private_settings">Sensible Einstellungen einbeziehen (z. B. Login-Token)</string>
     <string name="onboarding_permission_action_grant">Zulassen</string>
     <string name="invalid_backup_file_error">Vollständiger Fehler:</string>
