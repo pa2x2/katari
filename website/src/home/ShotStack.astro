@@ -1,15 +1,9 @@
 ---
 /**
- * A feature's screenshots. Beside text the upright ones overlap: the first in front, the others tucked behind it to the
- * side, each caption below where its phone stands. In a band they stand side by side. On a phone either becomes a row to swipe
- * through. Wherever upright shots stand in a row, they share one height whatever their proportions.
- *
- * A wide shot, such as the player or a desktop window, can't share a height with phones, so it has a row of its own
- * under the others, below their captions. In a scene it stands behind instead, as wide as the column, with the upright
- * shots in a row in front of its lower edge; on a phone the scene becomes the wide shot over the row to swipe through.
- *
- * Windows stand the same way: the first stands behind, and the others share a height in a row that hangs over its lower
- * edge. On a phone the first stays on top and the others become the row to swipe through.
+ * A feature's screenshots. In a band they stand side by side at one height, whatever their proportions. Beside a
+ * feature's text one shows at a time and a button per caption switches to another, so none is covered; the others keep
+ * their place behind it, which holds the column at the tallest one's height. On a phone either becomes a row to swipe
+ * through.
  */
 import { aspectOf } from "../media/aspect.ts";
 import { isUpright } from "../media/devices.ts";
@@ -18,70 +12,52 @@ import ShotView from "./ShotView.astro";
 
 interface Props {
   shots: Shot[];
-  arrangement: "overlap" | "row" | "scene" | "windows";
+  arrangement: "row" | "switch";
 }
 
 const { shots, arrangement } = Astro.props;
 
 const isWide = (shot: Shot) => shot.kind === "still" && !isUpright(shot.device ?? "phone");
-const upright = shots.filter((shot) => !isWide(shot));
-const wide = shots.filter(isWide);
-
-const layered = arrangement === "scene" || arrangement === "windows";
-const behind = arrangement === "windows" ? shots.slice(0, 1) : arrangement === "scene" ? wide : [];
-const inFront = arrangement === "windows" ? shots.slice(1) : upright;
-
-type Place = "front" | "left" | "right";
-// A second upright shot sits behind the front one on the left; a third goes behind on the right.
-const places: Place[] = ["front", "left", "right"];
-const placed = inFront.map((shot, index) => ({ shot, place: places[index] ?? "right" }));
-
 const aspect = (shot: Shot) =>
   shot.kind === "still" ? aspectOf(shot.image, shot.device ?? "phone") : aspectOf(shot.kind === "compare" ? shot.after : shot.poster, "phone");
+const switched = arrangement === "switch" && shots.length > 1;
 ---
 
-<div
-  class:list={["stack", arrangement, `upright-${upright.length}`]}
-  style={behind[0] ? `--back-aspect: ${aspect(behind[0])}` : undefined}
-  data-zoom-group
-  data-reveal
->
-  {
-    behind.map((shot) => (
-      <div class="wide">
-        <ShotView shot={shot} />
-      </div>
-    ))
-  }
+<div class:list={["stack", arrangement, { switched }]} data-zoom-group data-reveal>
   <div class="shots">
     {
-      placed.map(({ shot, place }) => (
-        <div class:list={["slot", arrangement === "overlap" && place]} style={`--aspect: ${aspect(shot)}`}>
+      shots.map((shot, index) => (
+        <div class:list={["slot", { wide: isWide(shot), current: index === 0 }]} style={`--aspect: ${aspect(shot)}`}>
           <ShotView shot={shot} />
         </div>
       ))
     }
   </div>
   {
-    arrangement === "overlap" && (
-      <ul class="legend" aria-hidden="true" data-pagefind-ignore>
-        {placed.map(({ shot, place }) => (
-          <li class={place}>
-            <span>{shot.caption}</span>
-          </li>
+    switched && (
+      <div class="captions" role="group" aria-label="Screenshots" data-pagefind-ignore>
+        {shots.map((shot, index) => (
+          <button type="button" aria-pressed={index === 0 ? "true" : "false"}>
+            {shot.caption}
+          </button>
         ))}
-      </ul>
+      </div>
     )
   }
-  {
-    !layered &&
-      wide.map((shot) => (
-        <div class="wide">
-          <ShotView shot={shot} />
-        </div>
-      ))
-  }
 </div>
+
+<script>
+  for (const stack of document.querySelectorAll<HTMLElement>(".stack.switched")) {
+    const slots = [...stack.querySelectorAll<HTMLElement>(".slot")];
+    const buttons = [...stack.querySelectorAll<HTMLButtonElement>(".captions button")];
+    buttons.forEach((button, chosen) =>
+      button.addEventListener("click", () => {
+        slots.forEach((slot, index) => slot.classList.toggle("current", index === chosen));
+        buttons.forEach((other, index) => other.setAttribute("aria-pressed", String(index === chosen)));
+      }),
+    );
+  }
+</script>
 
 <style>
   .stack {
@@ -90,194 +66,11 @@ const aspect = (shot: Shot) =>
     --frame: 0.9rem;
   }
 
-  .slot {
-    /* As wide as a frame of --row-height needs to be for this shot's proportions. */
-    --shot-width: calc((var(--row-height) - var(--frame)) * var(--aspect) + var(--frame));
-  }
-
-  .wide {
-    --shot-width: 100%;
-  }
-
-  .legend {
+  .captions {
     display: none;
   }
 
   @media (width > 44rem) {
-    .overlap .shots {
-      display: grid;
-      justify-items: center;
-      padding-bottom: 2.5rem;
-    }
-
-    /* The phones shrink with a narrow column so that the ones behind, which reach about 2.1 phone widths across for
-       three and 1.5 for two, stay inside it. Their captions in the legend take the same widths and offsets, so each
-       sits under its phone. */
-    .overlap .slot,
-    .legend li {
-      grid-area: 1 / 1;
-      --shot-width: min(20rem, 46cqi);
-    }
-
-    .overlap.upright-1 :is(.slot, .legend li),
-    .overlap.upright-2 :is(.slot, .legend li) {
-      --shot-width: min(20rem, 62cqi);
-    }
-
-    /* The phones' own captions would sit under the front one, so the legend shows them; screen readers still read
-       them with their shots. */
-    .overlap .slot :global(figcaption) {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-
-    .overlap .front {
-      z-index: 2;
-    }
-
-    .overlap.upright-2 .front {
-      transform: translateX(22%);
-    }
-
-    .overlap.upright-2 .left {
-      transform: translate(-34%, 2.5rem) scale(0.9);
-    }
-
-    .overlap.upright-3 .left {
-      transform: translate(-62%, 2.5rem) scale(0.86);
-    }
-
-    .overlap.upright-3 .right {
-      transform: translate(62%, 2.5rem) scale(0.86);
-    }
-
-    /* The phones behind are scaled about their centres, so their captions only need the sideways shift. */
-    .overlap.upright-2 .legend .front {
-      transform: translateX(22%);
-    }
-
-    .overlap.upright-2 .legend .left {
-      transform: translateX(-34%);
-    }
-
-    .overlap.upright-3 .legend .left {
-      transform: translateX(-62%);
-    }
-
-    .overlap.upright-3 .legend .right {
-      transform: translateX(62%);
-    }
-
-    .overlap .wide {
-      width: min(33rem, 90cqi);
-      margin: 2rem auto 0;
-    }
-
-    .legend {
-      display: grid;
-      justify-items: center;
-      margin: 1rem 0 0;
-      padding: 0;
-      list-style: none;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.4;
-      text-align: center;
-    }
-
-    .legend li {
-      display: flex;
-      justify-content: center;
-      width: var(--shot-width);
-    }
-
-    /* A caption may reach almost to its neighbour, whose phone's centre is 56% of a phone away for two phones and 62% for
-       three. One that still needs two lines splits them evenly rather than leaving a word on its own. */
-    .legend span {
-      text-wrap: balance;
-    }
-
-    .overlap.upright-2 .legend span {
-      max-width: calc(56% - 0.75rem);
-    }
-
-    .overlap.upright-3 .legend span {
-      max-width: calc(62% - 0.75rem);
-    }
-
-    .overlap.upright-1 .legend span {
-      max-width: 100%;
-    }
-
-    .overlap .wide :global(figcaption) {
-      margin-top: 0.6rem;
-    }
-
-    /* The shots in front would cover the caption of the one behind them; screen readers still read it. */
-    :is(.scene, .windows) .wide :global(figcaption) {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-
-    /* The phones cover the middle of the shot behind, so a labelled frame standing in for it says what it is higher up. */
-    .scene .wide :global(.planned) {
-      justify-content: flex-start;
-      padding-top: 14%;
-    }
-
-    /* The row rises over the lower 45% of the shot behind, whose height follows from the column's width. The phones
-       hang from one top edge, so a caption that wraps doesn't lift its phone. */
-    .scene .shots {
-      position: relative;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-end;
-      gap: 1rem;
-      width: 58%;
-      margin: calc(-45cqi / var(--back-aspect)) 4% 0 auto;
-    }
-
-    .scene .slot {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .scene .slot > :global(*) {
-      --shot-width: 100%;
-    }
-
-    /* The window behind leaves room on its right for the row in front, which rises over the lower 30% of it and hangs
-       below. Each window in the row takes a share of the row's width in proportion to its own, so they share a height. */
-    .windows .wide {
-      width: 86%;
-    }
-
-    .windows .shots {
-      position: relative;
-      display: flex;
-      align-items: flex-start;
-      gap: 1.25rem;
-      width: 92%;
-      margin: calc(-0.3 * 86cqi / var(--back-aspect)) 0 0 auto;
-    }
-
-    .windows .slot {
-      flex: var(--aspect) 1 0;
-      min-width: 0;
-    }
-
-    .windows .slot > :global(*) {
-      --shot-width: 100%;
-    }
-
     .row .shots {
       display: flex;
       align-items: flex-start;
@@ -288,12 +81,77 @@ const aspect = (shot: Shot) =>
     /* Each starts as wide as the shared height needs, and a narrow page shrinks them all in proportion. */
     .row .slot {
       --row-height: 44rem;
+      --shot-width: calc((var(--row-height) - var(--frame)) * var(--aspect) + var(--frame));
       flex: 0 1 var(--shot-width);
       min-width: 0;
     }
 
     .row .slot > :global(*) {
       --shot-width: 100%;
+    }
+
+    /* Every shot takes the same cell, and only the current one shows. */
+    .switch .shots {
+      display: grid;
+      place-items: center;
+    }
+
+    .switch .slot {
+      grid-area: 1 / 1;
+      --shot-width: min(22rem, 62cqi);
+    }
+
+    .switch .slot.wide {
+      --shot-width: min(44rem, 100cqi);
+    }
+
+    .switched .slot:not(.current) {
+      visibility: hidden;
+    }
+
+    /* The buttons carry the captions; screen readers still read each with its shot. */
+    .switched .slot :global(figcaption) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .captions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .captions button {
+      padding: 0.45rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-muted);
+      font: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .captions button:hover {
+      color: var(--text-strong);
+    }
+
+    .captions button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .captions button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--on-accent);
+      font-weight: 600;
     }
   }
 
@@ -313,20 +171,13 @@ const aspect = (shot: Shot) =>
     /* Tall enough to read, short enough that a phone fits on screen under the header with its caption. */
     .slot {
       --row-height: min(100svh - 12rem, 157vw);
+      --shot-width: calc((var(--row-height) - var(--frame)) * var(--aspect) + var(--frame));
       flex: none;
       scroll-snap-align: center;
     }
 
-    .wide {
-      margin-top: 0.5rem;
-    }
-
-    :is(.scene, .windows) .wide {
-      margin: 0 0 0.5rem;
-    }
-
     /* A window as tall as a phone in the row would be wider than the screen. */
-    .windows .slot {
+    .slot.wide {
       --shot-width: min(85vw, 26rem);
     }
   }

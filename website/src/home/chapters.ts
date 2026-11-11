@@ -34,6 +34,7 @@ interface FeatureBase {
   id: string;
   title: string;
   text: string;
+  /** The first shot is the one a full-size feature shows first. */
   shots: Shot[];
   /** Paths of the docs pages that explain the feature. */
   docs: string[];
@@ -44,11 +45,6 @@ export interface FullFeature extends FeatureBase {
   highlights: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
-  /**
-   * How the shots stand beside the text: in a scene the wide shot comes first and the upright ones follow; with windows
-   * every shot is a window.
-   */
-  arrangement?: "scene" | "windows";
 }
 
 /** A feature shown as a card under its chapter's full-size ones: its upright shots, its title, one sentence and its docs. */
@@ -232,7 +228,6 @@ export const chapters: Chapter[] = [
           "Keep an episode playing in a small window while you work",
           "The desktop's media controls pause it and change episodes",
         ],
-        arrangement: "windows",
         shots: [
           {
             kind: "still",
@@ -268,7 +263,6 @@ export const chapters: Chapter[] = [
           "Link a new device by scanning a code",
           "Choose what each device syncs, down to single settings and profiles",
         ],
-        arrangement: "scene",
         shots: [
           {
             kind: "still",
