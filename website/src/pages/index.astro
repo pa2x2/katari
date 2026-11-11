@@ -2,7 +2,7 @@
 import Chapter from "../home/Chapter.astro";
 import { chapters } from "../home/chapters.ts";
 import Hero from "../home/Hero.astro";
-import LatestChanges from "../home/LatestChanges.astro";
+import LatestVersions from "../home/LatestVersions.astro";
 import Viewer from "../media/Viewer.astro";
 import Page from "../site/Page.astro";
 ---
@@ -14,7 +14,7 @@ import Page from "../site/Page.astro";
 >
   <main data-pagefind-body data-pagefind-filter="section:Home">
     <Hero />
-    <LatestChanges />
+    <LatestVersions />
     <div id="features">
       {chapters.map((chapter) => <Chapter chapter={chapter} />)}
     </div>
