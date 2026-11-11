@@ -27,8 +27,8 @@ import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.library.update.report.components.ActionChips
-import eu.kanade.presentation.library.update.report.components.CollapsibleReportSection
 import eu.kanade.presentation.library.update.report.components.FailingSourceGroup
+import eu.kanade.presentation.library.update.report.components.NewChaptersRow
 import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
 import eu.kanade.presentation.library.update.report.components.ReportProgressCard
@@ -36,10 +36,13 @@ import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.library.update.report.components.ReportRunNote
 import eu.kanade.presentation.library.update.report.components.ReportSectionHeader
 import eu.kanade.presentation.library.update.report.components.SharedFailureGroup
+import eu.kanade.presentation.library.update.report.components.foldedSection
 import eu.kanade.presentation.library.update.report.components.reasonGroups
 import eu.kanade.presentation.library.update.report.components.reasonSection
+import eu.kanade.presentation.library.update.report.components.withRecheck
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportViewModel
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -58,6 +61,7 @@ class LibraryUpdateReportActions(
     val onRetry: (List<Entry>) -> Unit,
     val onCheckSkipped: () -> Unit,
     val onStopUpdate: () -> Unit,
+    val onOpenChapter: (Entry, EntryChapter) -> Unit,
 )
 
 @Composable
@@ -67,6 +71,7 @@ fun LibraryUpdateReportContent(
     contentPadding: PaddingValues,
 ) {
     val report = state.report
+    val sourceNameOf = { entry: Entry -> state.sourceNames[entry.source] }
     RowList(contentPadding = contentPadding) {
         state.update?.let { update ->
             item(key = "running") {
@@ -97,6 +102,7 @@ fun LibraryUpdateReportContent(
                     ReportRow(
                         entry = item.entry,
                         title = item.entry.title,
+                        sourceName = sourceNameOf(item.entry),
                         subtitle = item.withRecheck(
                             pluralStringResource(
                                 MR.plurals.library_update_report_failed_in_a_row,
@@ -164,7 +170,7 @@ fun LibraryUpdateReportContent(
             if (sharedFailure != null) {
                 item(key = "failed-shared") {
                     RowGroupItem(position = RowGroupPosition.of(0, cardSize)) {
-                        SharedFailureGroup(failure = sharedFailure, actions = actions)
+                        SharedFailureGroup(failure = sharedFailure, sourceNameOf = sourceNameOf, actions = actions)
                     }
                 }
             }
@@ -174,6 +180,7 @@ fun LibraryUpdateReportContent(
                     ReportRow(
                         entry = item.entry,
                         title = item.entry.title,
+                        sourceName = sourceNameOf(item.entry),
                         subtitle = item.withRecheck(
                             item.status.error ?: stringResource(MR.strings.library_update_report_unknown_error),
                         ),
@@ -200,37 +207,31 @@ fun LibraryUpdateReportContent(
                 )
             }
             rowGroupItems(report.newChapters, key = { "new-${it.entry.id}" }) { item ->
-                ReportRow(
-                    entry = item.entry,
-                    title = item.entry.title,
-                    subtitle = item.withRecheck(
-                        pluralStringResource(
-                            MR.plurals.library_updates_new_chapters,
-                            item.status.newChapters,
-                            item.status.newChapters,
-                        ),
-                    ),
-                    onClick = { actions.onClickEntry(item.entry) },
+                NewChaptersRow(
+                    item = item,
+                    chapters = state.newChapters[item.entry.id].orEmpty(),
+                    sourceName = sourceNameOf(item.entry),
+                    onClickEntry = actions.onClickEntry,
+                    onOpenChapter = actions.onOpenChapter,
                 )
             }
         }
 
-        if (report.noChanges.isNotEmpty()) {
-            item(key = "no-changes") {
-                CollapsibleReportSection(
-                    icon = MaterialSymbols.Rounded.CheckCircle,
-                    title = MR.strings.library_update_report_no_changes,
-                    items = report.noChanges,
-                    onClickEntry = actions.onClickEntry,
-                )
-            }
-        }
+        foldedSection(
+            key = "no-changes",
+            icon = MaterialSymbols.Rounded.CheckCircle,
+            title = MR.strings.library_update_report_no_changes,
+            items = report.noChanges,
+            sourceNameOf = sourceNameOf,
+            onClickEntry = actions.onClickEntry,
+        )
 
         reasonSection(
             key = "skipped",
             icon = MaterialSymbols.Rounded.SkipNext,
             title = MR.strings.library_update_report_skipped,
             groups = report.skipped,
+            sourceNameOf = sourceNameOf,
             onClickEntry = actions.onClickEntry,
         )
         if (report.skippedCount > 0) {
@@ -273,6 +274,7 @@ fun LibraryUpdateReportContent(
         reasonGroups(
             key = "not-checked",
             groups = report.notChecked,
+            sourceNameOf = sourceNameOf,
             onClickEntry = actions.onClickEntry,
             offset = report.pausedSources.size,
             cardSize = notCheckedCardSize,
@@ -315,9 +317,4 @@ private fun LazyListScope.failingSourceItems(
             )
         }
     }
-}
-
-@Composable
-private fun LibraryUpdateReport.Item.withRecheck(subtitle: String): String {
-    return if (isRechecked) stringResource(MR.strings.library_update_report_with_rechecked, subtitle) else subtitle
 }

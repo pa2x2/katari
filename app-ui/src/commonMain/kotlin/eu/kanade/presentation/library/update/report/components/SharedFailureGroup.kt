@@ -13,6 +13,7 @@ import app.katari.library.update.report.LibraryUpdateReport
 import app.katari.presentation.kit.chip.AssistChip
 import app.katari.presentation.kit.content.Icon
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
@@ -23,6 +24,7 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 @Composable
 internal fun SharedFailureGroup(
     failure: LibraryUpdateReport.SharedFailure,
+    sourceNameOf: (Entry) -> String?,
     actions: LibraryUpdateReportActions,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -67,6 +69,7 @@ internal fun SharedFailureGroup(
                     entry = item.entry,
                     title = item.entry.title,
                     subtitle = null,
+                    sourceName = sourceNameOf(item.entry),
                     onClick = { actions.onClickEntry(item.entry) },
                 )
             }

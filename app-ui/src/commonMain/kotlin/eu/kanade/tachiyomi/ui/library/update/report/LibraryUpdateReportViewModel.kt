@@ -3,9 +3,12 @@ package eu.kanade.tachiyomi.ui.library.update.report
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.katari.core.platform.PlatformContext
 import app.katari.entry.interactions.migration.EntryMigrationFeature
 import app.katari.entry.interactions.migration.EntryMigrationSelectionResult
 import app.katari.entry.interactions.migration.EntryMigrationSubject
+import app.katari.entry.interactions.navigation.EntryOpenFeature
+import app.katari.entry.interactions.navigation.EntryOpenResult
 import app.katari.entry.interactions.source.EntryWebViewFeature
 import app.katari.entry.interactions.source.EntryWebViewResolution
 import app.katari.library.update.pause.LibrarySourcePauses
@@ -29,6 +32,8 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateQueue
@@ -51,6 +56,8 @@ class LibraryUpdateReportViewModel(
     private val reportRepository: LibraryUpdateReportRepository,
     private val rulesRepository: LibraryUpdateRulesRepository,
     private val entryRepository: EntryRepository,
+    private val entryChapterRepository: EntryChapterRepository,
+    private val entryOpenFeature: EntryOpenFeature,
     private val libraryPreferences: LibraryPreferences,
     private val sourceManager: SourceManager,
     private val migrationFeature: EntryMigrationFeature,
@@ -109,9 +116,9 @@ class LibraryUpdateReportViewModel(
     }
 
     // Actions that can't work for an entry are left out of the report instead of doing nothing when tapped.
-    private fun resolve(report: LibraryUpdateReport): State.Ready {
+    private suspend fun resolve(report: LibraryUpdateReport): State.Ready {
         val failures = report.failingRepeatedly + report.failingSources.flatMap { it.items }
-        val sourceNames = (report.failingSources.map { it.sourceId } + report.pausedSources.map { it.sourceId })
+        val sourceNames = report.allItems().map { it.entry.source }.distinct()
             .map(sourceManager::getDisplayInfo)
             .filter { it.hasKnownName }
             .associate { it.id to it.visualName() }
@@ -134,11 +141,33 @@ class LibraryUpdateReportViewModel(
                     ?.let { item.entry.id to it }
             }
                 .toMap(),
+            newChapters = newChaptersOf(report.newChapters),
             sourcePauses = emptyMap(),
             pausedEntryIds = emptySet(),
             update = null,
             otherDevice = null,
         )
+    }
+
+    /**
+     * The chapters each entry got from the update that decided about it, which the chapters it fetched then tell, newest
+     * first as the source lists them.
+     */
+    private suspend fun newChaptersOf(items: List<LibraryUpdateReport.Item>): Map<Long, List<EntryChapter>> {
+        val decidedAt = items.associate { it.entry.id to it.status.decidedAt }
+        return entryChapterRepository.getChaptersByEntryIdsAwait(decidedAt.keys)
+            .filter { chapter -> decidedAt[chapter.entryId]?.let { chapter.dateFetch >= it } == true }
+            .sortedBy { it.sourceOrder }
+            .groupBy { it.entryId }
+    }
+
+    private fun LibraryUpdateReport.allItems(): List<LibraryUpdateReport.Item> =
+        sharedFailure?.items.orEmpty() + failingSources.flatMap { it.items } + failingRepeatedly + failed +
+            newChapters + noChanges + skipped.values.flatten() + notChecked.values.flatten() +
+            pausedSources.flatMap { it.items }
+
+    suspend fun openChapter(context: PlatformContext, entry: Entry, chapter: EntryChapter): EntryOpenResult {
+        return entryOpenFeature.open(context, entry, chapter)
     }
 
     /** Pausing leaves the entry out of every library update until its mode is changed back. */
@@ -189,6 +218,8 @@ class LibraryUpdateReportViewModel(
             val report: LibraryUpdateReport,
             /** By source id; a source whose name was never recorded has none. */
             val sourceNames: Map<Long, String>,
+            /** By entry id, the chapters the update found for the entries with new chapters. */
+            val newChapters: Map<Long, List<EntryChapter>>,
             /** By entry id, for the failing entries whose page can be opened. */
             val webViews: Map<Long, EntryWebViewResolution.Available>,
             /** By entry id, for the failing entries that can be migrated. */

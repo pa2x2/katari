@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.migration.EntryMigrationSubject
 import app.katari.entry.interactions.source.EntryWebViewResolution
 import app.katari.presentation.kit.feedback.EmptyScreen
@@ -23,6 +24,7 @@ import eu.kanade.presentation.library.update.report.LibraryUpdateReportContent
 import eu.kanade.presentation.library.update.report.OtherDeviceUpdateReportContent
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import kotlinx.coroutines.launch
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
@@ -43,6 +45,8 @@ class LibraryUpdateReportScreen(private val thisDevice: Boolean = false) : Scree
         val viewModel = metroViewModel<LibraryUpdateReportViewModel>()
         val state by viewModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
+        val context = currentPlatformContext()
+        val openMessages = rememberEntryOpenMessages()
 
         // A started recheck shows up in this report as it runs, so only a queued or refused start needs a message.
         val updateStarter = rememberLibraryUpdateStarter(snackbarHostState)
@@ -94,6 +98,11 @@ class LibraryUpdateReportScreen(private val thisDevice: Boolean = false) : Scree
                             onRetry = { entries -> scope.launch { updateStarter.start { viewModel.retry(entries) } } },
                             onCheckSkipped = { scope.launch { updateStarter.start(viewModel::checkSkipped) } },
                             onStopUpdate = viewModel::stopUpdate,
+                            onOpenChapter = { entry, chapter ->
+                                scope.launch {
+                                    openMessages.report(entry.type, viewModel.openChapter(context, entry, chapter))
+                                }
+                            },
                         ),
                     )
                 }

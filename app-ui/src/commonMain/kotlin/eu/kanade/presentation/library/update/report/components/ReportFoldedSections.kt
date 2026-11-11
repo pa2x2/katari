@@ -9,9 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.library.update.report.LibraryUpdateReport
-import app.katari.presentation.kit.list.CollapsibleRowGroupHeader
 import app.katari.presentation.kit.list.CollapsibleRowGroupSubheader
-import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import dev.icerock.moko.resources.StringResource
@@ -22,25 +20,36 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A section whose entries need no action, so they stay folded under its header until asked for. */
-@Composable
-internal fun CollapsibleReportSection(
+/**
+ * A section whose entries need no action, such as the ones with nothing new: its header like any other section's, and
+ * one card whose entries stay folded until asked for.
+ */
+internal fun LazyListScope.foldedSection(
+    key: String,
     icon: ImageVector,
     title: StringResource,
     items: List<LibraryUpdateReport.Item>,
+    sourceNameOf: (Entry) -> String?,
     onClickEntry: (Entry) -> Unit,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Column {
-        CollapsibleRowGroupHeader(
-            title = stringResource(title),
-            summary = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
-            expanded = expanded,
-            onClick = { expanded = !expanded },
-            icon = icon,
-        )
-        if (expanded) {
-            RowGroup(rows = items.map { item -> { FoldedItem(item = item, onClickEntry = onClickEntry) } })
+    if (items.isEmpty()) return
+    item(key = "header-$key") {
+        ReportSectionHeader(icon = icon, title = title, count = items.size)
+    }
+    item(key = key) {
+        RowGroupItem(position = RowGroupPosition.Alone) {
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            CollapsibleGroup(
+                title = stringResource(
+                    if (expanded) MR.strings.library_updates_show_fewer else MR.strings.library_updates_show_all,
+                ),
+                items = items,
+                expanded = expanded,
+                onToggle = { expanded = !expanded },
+                sourceNameOf = sourceNameOf,
+                onClickEntry = onClickEntry,
+                itemTrailing = null,
+            )
         }
     }
 }
@@ -51,13 +60,14 @@ internal fun LazyListScope.reasonSection(
     icon: ImageVector,
     title: StringResource,
     groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
+    sourceNameOf: (Entry) -> String?,
     onClickEntry: (Entry) -> Unit,
 ) {
     if (groups.isEmpty()) return
     item(key = "header-$key") {
         ReportSectionHeader(icon = icon, title = title, count = groups.values.sumOf { it.size })
     }
-    reasonGroups(key = key, groups = groups, onClickEntry = onClickEntry)
+    reasonGroups(key = key, groups = groups, sourceNameOf = sourceNameOf, onClickEntry = onClickEntry)
 }
 
 /**
@@ -69,6 +79,7 @@ internal fun LazyListScope.reasonSection(
 internal fun LazyListScope.reasonGroups(
     key: String,
     groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
+    sourceNameOf: (Entry) -> String?,
     onClickEntry: (Entry) -> Unit,
     offset: Int = 0,
     cardSize: Int = groups.size,
@@ -77,9 +88,13 @@ internal fun LazyListScope.reasonGroups(
     groups.entries.forEachIndexed { index, (reason, items) ->
         item(key = "$key-${reason.name}") {
             RowGroupItem(position = RowGroupPosition.of(offset + index, cardSize)) {
+                var expanded by rememberSaveable { mutableStateOf(false) }
                 CollapsibleGroup(
                     title = stringResource(reason.labelRes),
                     items = items,
+                    expanded = expanded,
+                    onToggle = { expanded = !expanded },
+                    sourceNameOf = sourceNameOf,
                     onClickEntry = onClickEntry,
                     itemTrailing = itemTrailing,
                 )
@@ -92,36 +107,36 @@ internal fun LazyListScope.reasonGroups(
 private fun CollapsibleGroup(
     title: String,
     items: List<LibraryUpdateReport.Item>,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    sourceNameOf: (Entry) -> String?,
     onClickEntry: (Entry) -> Unit,
     itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)?,
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
     Column {
         CollapsibleRowGroupSubheader(
             title = title,
             summary = pluralStringResource(MR.plurals.library_updates_entries, items.size, items.size),
             expanded = expanded,
-            onClick = { expanded = !expanded },
+            onClick = onToggle,
         )
         if (expanded) {
             items.forEach { item ->
-                FoldedItem(item = item, onClickEntry = onClickEntry, itemTrailing = itemTrailing)
+                ReportRow(
+                    entry = item.entry,
+                    title = item.entry.title,
+                    subtitle = if (item.isRechecked) {
+                        stringResource(
+                            MR.strings.library_update_report_rechecked,
+                        )
+                    } else {
+                        null
+                    },
+                    sourceName = sourceNameOf(item.entry),
+                    onClick = { onClickEntry(item.entry) },
+                    trailing = itemTrailing?.let { { it(item) } },
+                )
             }
         }
     }
-}
-
-@Composable
-private fun FoldedItem(
-    item: LibraryUpdateReport.Item,
-    onClickEntry: (Entry) -> Unit,
-    itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
-) {
-    ReportRow(
-        entry = item.entry,
-        title = item.entry.title,
-        subtitle = if (item.isRechecked) stringResource(MR.strings.library_update_report_rechecked) else null,
-        onClick = { onClickEntry(item.entry) },
-        trailing = itemTrailing?.let { { it(item) } },
-    )
 }
