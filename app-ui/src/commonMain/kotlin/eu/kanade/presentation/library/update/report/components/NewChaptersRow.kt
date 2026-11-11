@@ -100,9 +100,10 @@ internal fun NewChaptersRow(
         if (expanded) {
             chapters.forEach { chapter ->
                 CoverRow(cover = null, onClick = { onOpenChapter(entry, chapter) }) {
+                    // The chapter is the row's only line, so it reads as body text as in an Updates group
                     Text(
                         text = chapter.name,
-                        role = TextRole.Supporting,
+                        role = TextRole.Body,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
