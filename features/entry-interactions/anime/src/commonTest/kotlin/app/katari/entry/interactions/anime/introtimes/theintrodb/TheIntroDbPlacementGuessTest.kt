@@ -1,6 +1,7 @@
 package app.katari.entry.interactions.anime.introtimes.theintrodb
 
 import app.katari.entry.interactions.anime.introtimes.IntroTimesScope
+import app.katari.entry.interactions.anime.introtimes.seasonNumber
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.TheIntroDbPlacement

@@ -20,7 +20,10 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import kotlin.time.Duration.Companion.seconds
 
-/** An episode of a series as it aired, numbered as TVDB numbers it. [aired] is null when TVmaze has no date. */
+/**
+ * An episode of a series as it aired, numbered as TVmaze numbers it, which for most series is as TVDB does. [aired] is
+ * null when TVmaze has no date.
+ */
 internal data class AiredEpisode(
     val season: Int,
     val number: Int,
@@ -30,7 +33,8 @@ internal data class AiredEpisode(
 
 /**
  * TVmaze's series, which need no account or key: found by title where Wikidata has none, and listed episode by episode
- * so a viewer can tell which one is playing. Its data is shared under CC BY-SA, so what it lists is credited to it.
+ * so a viewer can tell which one is playing and an episode past a season's end is found in the next. Its data is shared
+ * under CC BY-SA, so what it lists is credited to it.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -53,16 +57,23 @@ internal class TvMazeShows(
 
     /** The aired episodes of the series known by [tvdbId] or [imdbId]; empty when TVmaze doesn't know it. */
     suspend fun episodes(tvdbId: Long?, imdbId: String?): List<AiredEpisode> {
+        val show = show(tvdbId, imdbId) ?: return emptyList()
+        val episodes = get("$ENDPOINT/shows/${show.id}/episodes".toHttpUrl()) ?: return emptyList()
+        return json.decodeFromString<List<TvMazeEpisode>>(episodes).mapNotNull { it.toAired() }
+    }
+
+    /** The cover of the series known by [tvdbId] or [imdbId]; null when TVmaze doesn't know it or has none. */
+    suspend fun cover(tvdbId: Long?, imdbId: String?): String? = show(tvdbId, imdbId)?.image?.medium
+
+    private suspend fun show(tvdbId: Long?, imdbId: String?): TvMazeShow? {
         val lookup = "$ENDPOINT/lookup/shows".toHttpUrl().newBuilder().apply {
             when {
                 tvdbId != null -> addQueryParameter("thetvdb", tvdbId.toString())
                 imdbId != null -> addQueryParameter("imdb", imdbId)
-                else -> return emptyList()
+                else -> return null
             }
         }.build()
-        val show = json.decodeFromString<TvMazeShow>(get(lookup) ?: return emptyList())
-        val episodes = get("$ENDPOINT/shows/${show.id}/episodes".toHttpUrl()) ?: return emptyList()
-        return json.decodeFromString<List<TvMazeEpisode>>(episodes).mapNotNull { it.toAired() }
+        return get(lookup)?.let { json.decodeFromString<TvMazeShow>(it) }
     }
 
     /** The body TVmaze answers [url] with, or null for its 404, which it gives a series it doesn't know. */

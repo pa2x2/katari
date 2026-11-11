@@ -29,11 +29,12 @@ internal data class IntroTimesScope(
 
 /**
  * [number] is the episode's place in its scope, counted from 1 at [IntroTimesScope.firstNumber], or null when it has
- * no whole number to count by.
+ * no whole number to count by. [name] is what its source calls it.
  */
 internal data class IntroTimesEpisode(
     val scope: IntroTimesScope,
     val number: Int?,
+    val name: String,
 )
 
 /**
@@ -65,6 +66,7 @@ internal fun introTimesEpisode(
         ),
         // A season listed as 13 to 24 is episodes 1 to 12 of its own series.
         number = episode.wholeNumber?.let { number -> first?.wholeNumber?.let { number - it + 1 } },
+        name = episode.name,
     )
 }
 

@@ -1,0 +1,4 @@
+-- Where a matched AniSkip series' episodes start for the entry's, and how many the series has, so a number past its
+-- end is told from one nobody submitted times for.
+ALTER TABLE intro_times_matches ADD COLUMN first_episode INTEGER;
+ALTER TABLE intro_times_matches ADD COLUMN episodes INTEGER;

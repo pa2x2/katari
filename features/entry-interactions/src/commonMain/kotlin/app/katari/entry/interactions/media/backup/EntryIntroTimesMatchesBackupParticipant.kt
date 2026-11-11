@@ -60,6 +60,8 @@ private data class IntroTimesMatchBackup(
     val title: String? = null,
     val year: Int? = null,
     val pickedAt: Long,
+    val firstEpisode: Int? = null,
+    val episodes: Int? = null,
 )
 
 private fun IntroTimesMatch.toBackup() = IntroTimesMatchBackup(
@@ -69,11 +71,20 @@ private fun IntroTimesMatch.toBackup() = IntroTimesMatchBackup(
     title = series?.title,
     year = series?.year,
     pickedAt = checkedAt,
+    firstEpisode = series?.firstEpisode,
+    episodes = series?.episodes,
 )
 
 private fun IntroTimesMatchBackup.toMatch(entryId: Long): IntroTimesMatch {
     val series = if (anilistId != null && malId != null && title != null) {
-        IntroTimesSeries(anilistId = anilistId, malId = malId, title = title, year = year)
+        IntroTimesSeries(
+            anilistId = anilistId,
+            malId = malId,
+            title = title,
+            year = year,
+            episodes = episodes,
+            firstEpisode = firstEpisode ?: 1,
+        )
     } else {
         null
     }

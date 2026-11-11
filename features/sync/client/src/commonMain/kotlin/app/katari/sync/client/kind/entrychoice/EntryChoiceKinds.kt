@@ -344,7 +344,7 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
     override val capture = triggers(
         "intro_times_matches",
         listOf("entry_id", "group_key"),
-        listOf(Field(3, "anilist_id", "mal_id", "title", "year", "picked_by_user")),
+        listOf(Field(3, "anilist_id", "mal_id", "title", "year", "picked_by_user", "first_episode", "episodes")),
         condition = { "$it.picked_by_user = 1" },
     )
 
@@ -356,7 +356,14 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
                 groupKey = row.group_key,
                 match = stamps.field(
                     3,
-                    IntroTimesMatch(row.anilist_id, row.mal_id, row.title, row.year),
+                    IntroTimesMatch(
+                        row.anilist_id,
+                        row.mal_id,
+                        row.title,
+                        row.year,
+                        row.first_episode,
+                        row.episodes,
+                    ),
                     previous?.match,
                 ),
             )
@@ -377,6 +384,8 @@ object IntroTimesPickKind : SyncedKind<IntroTimesPickPayload>(
             malId = match.malId,
             title = match.title,
             year = match.year,
+            firstEpisode = match.firstEpisode,
+            episodes = match.episodes,
         )
         return ApplyOutcome.Applied(LocalRef.of(entryId, payload.groupKey))
     }
