@@ -125,18 +125,19 @@ internal class AniSkipLookup(
 
     /**
      * The series [scope]'s episodes belong to. Its whole title is tried first, as AniList keeps each season under a
-     * name of its own; a season its group names, or its title in words AniList doesn't use, is then looked for among
-     * the seasons of the show.
+     * name of its own; a season its source lists it under, or its title names in words AniList doesn't use, is then
+     * looked for among the seasons of the show.
      */
     private suspend fun match(scope: IntroTimesScope): IntroTimesSeries? {
         val candidates = seriesSearch.search(scope.title)
-        val groupSeason = seasonNumber(scope.seasonName)
-        if (groupSeason != null && groupSeason > 1) {
-            return firstSeason(candidates, scope.title, scope)?.let { season(it, groupSeason, scope) }
+        val listedSeason = scope.listedSeason
+        if (listedSeason != null && listedSeason > 1) {
+            return firstSeason(candidates, scope.title, scope)?.let { season(it, listedSeason, scope) }
         }
         bestSeries(candidates, scope)?.let { return it.toIntroTimesSeries() }
-        if (groupSeason != null) return null
-        val named = titleSeason(scope.title) ?: return null
+        if (listedSeason != null) return null
+        // A part of a season is a series of its own on AniList, found by its whole title or not at all.
+        val named = titleSeason(scope.title)?.takeIf { it.part == null } ?: return null
         val first = firstSeason(seriesSearch.search(named.series), named.series, scope) ?: return null
         return season(first, named.season, scope)
     }

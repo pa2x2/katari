@@ -74,9 +74,12 @@ class AniListSeriesRankingTest {
             groupKey = null,
             title = title,
             seasonName = null,
+            listedSeason = null,
             year = year,
             episodeCount = episodeCount,
             firstNumber = 1,
+            lastNumber = episodeCount,
             firstAired = null,
+            lastAired = null,
         )
 }

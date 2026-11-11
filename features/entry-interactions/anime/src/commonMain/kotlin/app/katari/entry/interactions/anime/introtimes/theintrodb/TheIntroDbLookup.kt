@@ -157,7 +157,11 @@ internal class TheIntroDbLookup(
         }
         // Nothing found while a service was down isn't kept, so the next episode searches again.
         if (candidate == null && unreached) return MediaLookup.Unreachable
-        val media = candidate?.toMedia(placement = if (candidate.film) null else placement(scope, candidate))
+        val media = candidate?.let { found ->
+            if (found.film) return@let found.toMedia(placement = null)
+            // A series whose episodes can't be placed isn't kept: the wrong episode's times are worse than none.
+            placement(scope, found)?.let { found.toMedia(placement = it) }
+        }
         matchRepository.upsert(
             TheIntroDbMatch(
                 entryId = scope.entryId,
@@ -170,7 +174,7 @@ internal class TheIntroDbLookup(
         return media?.let(MediaLookup::Found) ?: MediaLookup.NotFound
     }
 
-    private suspend fun placement(scope: IntroTimesScope, series: TheIntroDbCandidate): TheIntroDbPlacement =
+    private suspend fun placement(scope: IntroTimesScope, series: TheIntroDbCandidate): TheIntroDbPlacement? =
         guessPlacement(scope, aired(series.tvdbId, series.imdbId).orEmpty())
 
     private sealed interface MediaLookup {

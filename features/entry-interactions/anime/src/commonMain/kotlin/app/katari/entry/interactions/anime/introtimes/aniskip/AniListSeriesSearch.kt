@@ -99,7 +99,7 @@ internal class AniListSeriesSearch(networkHelper: NetworkHelper) {
             episodes = episodes,
             airedEpisodes = nextAiringEpisode?.let { it.episode - 1 }?.takeIf { episodes == null && it > 0 },
             coverUrl = coverImage?.medium,
-            episodeNames = episodeNames(streamingEpisodes.orEmpty().mapNotNull { it.title }),
+            episodeNames = episodeNames(streamingEpisodes.orEmpty().mapNotNull { it.title }, episodes),
             prequels = links.filter { it.relationType == "PREQUEL" }.map { it.node.toLink() },
             sequels = links.filter { it.relationType == "SEQUEL" }.map { it.node.toLink() },
         )
@@ -172,11 +172,17 @@ internal class AniListSeriesSearch(networkHelper: NetworkHelper) {
     }
 }
 
-/** AniList's episode names by number, out of the streaming titles it keeps them in, such as "Episode 3 - Name". */
-internal fun episodeNames(streamingTitles: List<String>): Map<Int, String> =
-    streamingTitles.mapNotNull { title ->
+/**
+ * AniList's episode names by number, out of the streaming titles it keeps them in, such as "Episode 3 - Name". More
+ * titles than the series has [episodes] are those of the whole show, numbered from its first season, so they name
+ * none of a later season's.
+ */
+internal fun episodeNames(streamingTitles: List<String>, episodes: Int?): Map<Int, String> {
+    if (episodes != null && streamingTitles.size > episodes) return emptyMap()
+    return streamingTitles.mapNotNull { title ->
         StreamingTitle.matchEntire(title.trim())?.let { it.groupValues[1].toInt() to it.groupValues[2] }
     }.toMap()
+}
 
 private val StreamingTitle = Regex("""Episode (\d+)\s*[-–:]\s*(.+)""")
 

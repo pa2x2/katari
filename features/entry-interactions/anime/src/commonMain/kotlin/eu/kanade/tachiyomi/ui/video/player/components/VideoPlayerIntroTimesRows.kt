@@ -153,7 +153,8 @@ private fun matchLine(matched: String, asked: IntroTimesAsked?): String {
 
 @Composable
 private fun matchedTo(title: String, year: Int?): String =
-    year?.let { stringResource(MR.strings.anime_intro_times_matched, title, it) }
+    // A title that tells remakes apart by the year, as in "Fairy Tail (2018)", says it already.
+    year?.takeIf { it.toString() !in title }?.let { stringResource(MR.strings.anime_intro_times_matched, title, it) }
         ?: stringResource(MR.strings.anime_intro_times_matched_no_year, title)
 
 private fun lines(vararg lines: String): String = lines.joinToString("\n")

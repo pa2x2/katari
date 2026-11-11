@@ -20,20 +20,24 @@ internal class TheIntroDbMatchSource(private val lookup: TheIntroDbLookup) :
     override suspend fun search(query: String): List<TheIntroDbCandidate> = lookup.search(query)
 
     override suspend fun openMatch(match: TheIntroDbMedia, episode: IntroTimesEpisode): TheIntroDbMatchChoice? {
-        if (match.placement == null) return TheIntroDbMatchChoice(lookup, match, emptyList(), PLAYING_FIRST)
+        if (match.placement == null) return film(match)
         val aired = lookup.aired(match.tvdbId, match.imdbId) ?: return null
-        return TheIntroDbMatchChoice(lookup, match, aired, episode.number ?: PLAYING_FIRST)
+        return TheIntroDbMatchChoice(lookup, match, film = false, aired, episode.number ?: PLAYING_FIRST)
     }
 
     override suspend fun openCandidate(
         candidate: TheIntroDbCandidate,
         episode: IntroTimesEpisode,
     ): TheIntroDbMatchChoice? {
-        if (candidate.film) return TheIntroDbMatchChoice(lookup, candidate.toMedia(null), emptyList(), PLAYING_FIRST)
+        if (candidate.film) return film(candidate.toMedia(null))
         val aired = lookup.aired(candidate.tvdbId, candidate.imdbId) ?: return null
+        // Where the scope's episodes can't be placed, the series opens with none pointed at.
         val media = candidate.toMedia(guessPlacement(episode.scope, aired))
-        return TheIntroDbMatchChoice(lookup, media, aired, episode.number ?: PLAYING_FIRST)
+        return TheIntroDbMatchChoice(lookup, media, film = false, aired, episode.number ?: PLAYING_FIRST)
     }
+
+    private fun film(media: TheIntroDbMedia) =
+        TheIntroDbMatchChoice(lookup, media, film = true, aired = emptyList(), number = PLAYING_FIRST)
 
     private companion object {
         // An episode without a number of its own is placed as the scope's first.
@@ -49,6 +53,7 @@ internal class TheIntroDbMatchSource(private val lookup: TheIntroDbLookup) :
 internal class TheIntroDbMatchChoice(
     private val lookup: TheIntroDbLookup,
     private val media: TheIntroDbMedia,
+    override val film: Boolean,
     private val aired: List<AiredEpisode>,
     private val number: Int,
 ) : IntroTimesMatchChoice<TheIntroDbMedia> {
@@ -56,7 +61,6 @@ internal class TheIntroDbMatchChoice(
 
     override val title get() = media.title
     override val year get() = media.year
-    override val film get() = media.placement == null
 
     override val seasons: List<IntroTimesMatchSeason> = when {
         oneRun -> listOf(
