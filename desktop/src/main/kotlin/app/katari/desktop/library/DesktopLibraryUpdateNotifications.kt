@@ -76,7 +76,7 @@ class DesktopLibraryUpdateNotifications(
     private var lastProgressShown: TimeSource.Monotonic.ValueTimeMark? = null
 
     /** What the progress last showed, to show it again when the queue behind it changes. */
-    private var lastProgress: Pair<List<Entry>, LibraryUpdateProgress>? = null
+    private var lastProgress: LibraryUpdateProgress? = null
 
     /** Name of the profile whose update runs after this one. */
     private var nextInQueue: String? = null
@@ -86,18 +86,17 @@ class DesktopLibraryUpdateNotifications(
             ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
     }
 
-    override suspend fun showProgress(profileId: Long, entries: List<Entry>, progress: LibraryUpdateProgress) {
-        showProgress(profile(profileId), entries, progress)
+    override suspend fun showProgress(profileId: Long, progress: LibraryUpdateProgress) {
+        showProgress(profile(profileId), progress)
     }
 
     // Called from several update coroutines at once; updates closer together than the eye follows are skipped
     @Synchronized
     private fun showProgress(
         profile: LibraryUpdateNotificationProfile,
-        entries: List<Entry>,
         progress: LibraryUpdateProgress,
     ) {
-        lastProgress = entries.toList() to progress
+        lastProgress = progress
         if (progress.completed < progress.total && !isProgressDue()) return
         val next = nextInQueue?.let { stringResource(MR.strings.notification_library_update_next, it) }
         notifications.show(
@@ -105,7 +104,7 @@ class DesktopLibraryUpdateNotifications(
             DesktopNotification(
                 kind = AppNotificationKind.LIBRARY_PROGRESS,
                 title = progress.label(context),
-                body = lines(profile.label, entries.titles(profile), next),
+                body = lines(profile.label, progress.checking.titles(profile), next),
                 progress = NotificationProgress(progress.completed, progress.total),
                 urgency = NotificationUrgency.Low,
                 onClick = NotificationResponse.Open(HomeDestination.Library(profile.id)),
@@ -127,9 +126,9 @@ class DesktopLibraryUpdateNotifications(
     private fun showNextInQueue(profile: LibraryUpdateNotificationProfile, profileName: String?) {
         if (nextInQueue == profileName) return
         nextInQueue = profileName
-        val (entries, progress) = lastProgress ?: return
+        val progress = lastProgress ?: return
         lastProgressShown = null
-        showProgress(profile, entries, progress)
+        showProgress(profile, progress)
     }
 
     override suspend fun showMetadataProgress(profileId: Long, entries: List<Entry>, completed: Int, total: Int) {
@@ -150,7 +149,7 @@ class DesktopLibraryUpdateNotifications(
             DesktopNotification(
                 kind = AppNotificationKind.LIBRARY_PROGRESS,
                 title = stringResource(MR.strings.notification_updating_progress, percent),
-                body = lines(profile.label, entries.titles(profile)),
+                body = lines(profile.label, entries.map { it.title }.titles(profile)),
                 progress = NotificationProgress(completed, total),
                 urgency = NotificationUrgency.Low,
                 actions = listOf(
@@ -261,8 +260,8 @@ class DesktopLibraryUpdateNotifications(
         return true
     }
 
-    private fun List<Entry>.titles(profile: LibraryUpdateNotificationProfile): String? =
-        takeUnless { profile.hidesContent }?.joinToString("\n") { it.title.chop(PROGRESS_TITLE_LENGTH) }
+    private fun List<String>.titles(profile: LibraryUpdateNotificationProfile): String? =
+        takeUnless { profile.hidesContent }?.joinToString("\n") { it.chop(PROGRESS_TITLE_LENGTH) }
 
     private companion object {
         // One for every profile, as the queue runs one update at a time

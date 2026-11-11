@@ -77,7 +77,7 @@ class LibraryUpdateNotifier(
     private var lastProgressNotificationTime = 0L
 
     /** What the library update progress last showed, to show it again when the queue behind it changes. */
-    private var lastProgress: Pair<List<Entry>, LibraryUpdateProgress>? = null
+    private var lastProgress: LibraryUpdateProgress? = null
 
     /** Name of the profile whose update runs after this one. */
     private var nextInQueue: String? = null
@@ -135,8 +135,8 @@ class LibraryUpdateNotifier(
             contentIntent = null,
         )
 
-    override suspend fun showProgress(profileId: Long, entries: List<Entry>, progress: LibraryUpdateProgress) {
-        showProgressNotification(profile(profileId), entries, progress)
+    override suspend fun showProgress(profileId: Long, progress: LibraryUpdateProgress) {
+        showProgressNotification(profile(profileId), progress)
     }
 
     /**
@@ -148,10 +148,9 @@ class LibraryUpdateNotifier(
     @Synchronized
     private fun showProgressNotification(
         profile: LibraryUpdateNotificationProfile,
-        entries: List<Entry>,
         progress: LibraryUpdateProgress,
     ) {
-        lastProgress = entries.toList() to progress
+        lastProgress = progress
         val now = SystemClock.elapsedRealtime()
         if (progress.completed < progress.total && now - lastProgressNotificationTime < NOTIF_PROGRESS_INTERVAL_MS) {
             return
@@ -159,7 +158,7 @@ class LibraryUpdateNotifier(
         lastProgressNotificationTime = now
 
         val next = nextInQueue?.let { context.stringResource(MR.strings.notification_library_update_next, it) }
-        val updating = entries.takeUnless { profile.hidesContent }?.joinToString("\n") { it.title.chop(40) }
+        val updating = progress.checking.takeUnless { profile.hidesContent }?.joinToString("\n") { it.chop(40) }
         val builder = libraryUpdateProgressBuilder(profile)
             .setContentTitle(progress.label(context))
             .setContentText(next)
@@ -185,9 +184,9 @@ class LibraryUpdateNotifier(
     private fun showNextInQueue(profile: LibraryUpdateNotificationProfile, profileName: String?) {
         if (nextInQueue == profileName) return
         nextInQueue = profileName
-        val (entries, progress) = lastProgress ?: return
+        val progress = lastProgress ?: return
         lastProgressNotificationTime = 0L
-        showProgressNotification(profile, entries, progress)
+        showProgressNotification(profile, progress)
     }
 
     override suspend fun showMetadataProgress(profileId: Long, entries: List<Entry>, completed: Int, total: Int) {

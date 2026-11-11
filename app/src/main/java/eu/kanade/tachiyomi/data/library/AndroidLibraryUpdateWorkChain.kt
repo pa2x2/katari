@@ -198,6 +198,8 @@ class AndroidLibraryUpdateWorkChain(
         KEY_PROGRESS_COMPLETED to progress.completed,
         KEY_PROGRESS_TOTAL to progress.total,
         KEY_PROGRESS_SKIPPED to progress.skipped,
+        KEY_PROGRESS_STARTED_AT to progress.startedAt,
+        KEY_PROGRESS_CHECKING to progress.checking.toTypedArray(),
     )
 
     private fun Data.toLibraryUpdateProgress(): LibraryUpdateProgress? {
@@ -210,6 +212,8 @@ class AndroidLibraryUpdateWorkChain(
             completed = getInt(KEY_PROGRESS_COMPLETED, 0),
             total = getInt(KEY_PROGRESS_TOTAL, 0),
             skipped = getInt(KEY_PROGRESS_SKIPPED, 0),
+            startedAt = getLong(KEY_PROGRESS_STARTED_AT, 0L),
+            checking = getNullableStringArray(KEY_PROGRESS_CHECKING)?.filterNotNull().orEmpty(),
         )
     }
 
@@ -250,5 +254,7 @@ class AndroidLibraryUpdateWorkChain(
         const val KEY_PROGRESS_COMPLETED = "progress_completed"
         const val KEY_PROGRESS_TOTAL = "progress_total"
         const val KEY_PROGRESS_SKIPPED = "progress_skipped"
+        const val KEY_PROGRESS_STARTED_AT = "progress_started_at"
+        const val KEY_PROGRESS_CHECKING = "progress_checking"
     }
 }
