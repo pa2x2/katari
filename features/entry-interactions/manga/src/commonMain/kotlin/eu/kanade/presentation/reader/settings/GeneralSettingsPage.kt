@@ -117,8 +117,8 @@ internal fun ColumnScope.GeneralPage(
             row { BindingToggleRow(stringResource(MR.strings.pref_cutout_short), settings.drawUnderCutout) }
         }
         row { BindingToggleRow(stringResource(MR.strings.pref_keep_screen_on), settings.keepScreenOn) }
-        row {
-            BindingToggleRow(stringResource(platformPresentation.pageActionsOnLongPressLabel), settings.readWithLongTap)
+        platformPresentation.pageActionsOnLongPressLabel?.let { label ->
+            row { BindingToggleRow(stringResource(label), settings.readWithLongTap) }
         }
     }
 

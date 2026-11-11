@@ -63,7 +63,8 @@ data class PlatformPresentation(
     val pageZonesLabel: StringResource,
     val invertPageZonesLabel: StringResource,
     val showPageZonesOverlayLabel: StringResource,
-    val pageActionsOnLongPressLabel: StringResource,
+    /** Null where a page can't be held: a held mouse button drags it, and the right button opens the actions. */
+    val pageActionsOnLongPressLabel: StringResource?,
     /**
      * Names the chapter row action a swipe towards the start runs. A mouse has nothing to swipe with, so there the
      * two actions are named as the buttons the row shows under the pointer, in their order.

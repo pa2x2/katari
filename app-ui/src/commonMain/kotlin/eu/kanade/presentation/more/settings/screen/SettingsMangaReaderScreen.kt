@@ -549,11 +549,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
     ): Preference.PreferenceGroup {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_reader_actions),
-            preferenceItems = listOf(
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
-                    title = stringResource(platformPresentation.pageActionsOnLongPressLabel),
-                ),
+            preferenceItems = listOfNotNull(
+                platformPresentation.pageActionsOnLongPressLabel?.let { label ->
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
+                        title = stringResource(label),
+                    )
+                },
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.reading.folderPerManga),
                     title = stringResource(MR.strings.pref_create_folder_per_manga),
