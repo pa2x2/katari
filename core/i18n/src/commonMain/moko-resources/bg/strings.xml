@@ -165,7 +165,6 @@
     <string name="download_notifier_downloader_title">Изтегли</string>
     <string name="download_notifier_title_error">Грешка</string>
     <string name="download_notifier_unknown_error">Получи се неочаквана грешка при изтеглянето на главата</string>
-    <string name="download_notifier_text_only_wifi">Няма налична Wi-Fi връзка</string>
     <string name="download_notifier_no_network">Няма налична мрежова връзка</string>
     <string name="categories">Категории</string>
     <string name="manga">Манга</string>
@@ -200,7 +199,6 @@
     <string name="browse">Търсене</string>
     <string name="channel_common">Общи</string>
     <string name="action_display_download_badge">Изтеглени глави</string>
-    <string name="information_empty_category">Нямате категории. Натиснете плюса, за да създадете такава и да организирате библиотеката си.</string>
     <string name="label_migration">Мигриране</string>
     <string name="label_extensions">Разширения</string>
     <string name="label_extension_info">Информация</string>
@@ -215,7 +213,6 @@
     <string name="ext_uninstall">Деинсталирай</string>
     <string name="untrusted_extension">Непотвърдено разширение</string>
     <string name="untrusted_extension_message">Следното разширение имаше непотвърден сертификат и не беше активирано. \n \nЗлонамереното разширение може да види всичката информация за вход в системата на Katari или да компилира неблагонадежден код. \n \nПотвърждавайки този сертификат, вие приемате тези рискове.</string>
-    <string name="pref_double_tap_anim_speed">Скорост на анимацията</string>
     <string name="double_tap_anim_speed_0">Без анимация</string>
     <string name="double_tap_anim_speed_normal">Нормална</string>
     <string name="double_tap_anim_speed_fast">Бързо</string>
@@ -235,7 +232,6 @@
     <string name="transition_no_previous">Няма предишна глава</string>
     <string name="transition_pages_loading">Зареждане на страниците…</string>
     <string name="transition_pages_error">Не бяха заредени успешно: %1$s страници</string>
-    <string name="pref_read_with_long_tap">Покажи при задържане върху екрана</string>
     <string name="action_open_in_web_view">Отвори в WebView</string>
     <string name="pref_skip_read_chapters">Пропускай прочетените глави</string>
     <string name="pref_color_filter_mode">Режим на цветовия филтър</string>
@@ -383,7 +379,6 @@
     <string name="ext_install_service_notif">Инсталиране на разширение…</string>
     <string name="ext_installer_legacy">Стара версия</string>
     <string name="ext_installer_pref">Инсталатор</string>
-    <string name="pref_dump_crash_logs">Разтовари записите от сривовете</string>
     <string name="off">Не</string>
     <string name="rotation_landscape">Пейзаж</string>
     <string name="label_background_activity">Работа на заден план</string>
@@ -394,7 +389,6 @@
     <string name="kindlish_nav">Kindle-подобно</string>
     <string name="pref_create_folder_per_manga_summary">Създава папки според заглавието на мангата</string>
     <string name="automatic_background">Автоматично</string>
-    <string name="pref_viewer_nav">Схема на навигацията</string>
     <string name="nav_zone_prev">Преди</string>
     <string name="nav_zone_next">След</string>
     <string name="nav_zone_left">Ляво</string>
@@ -412,7 +406,6 @@
     <string name="label_warning">Предупреждение</string>
     <string name="confirm_lock_change">Удостоверете, за да потвърдите промяната</string>
     <string name="cancel_all_for_series">Премахни всичко от тази серия</string>
-    <string name="action_show_errors">Вижте пълните подробности за грешката</string>
     <string name="pref_app_theme">Тема</string>
     <string name="theme_monet">Динамично</string>
     <string name="theme_greenapple">Зелена ябълка</string>
@@ -429,11 +422,9 @@
     <string name="exclude">Изключва: %s</string>
     <string name="ext_installer_shizuku_stopped">Shizuku не работи</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Инсталирайте и стартирайте Shizuku, за да използвате Shizuku като инсталатор на разширения.</string>
-    <string name="pref_show_navigation_mode">Покажи оформлението на навигацията</string>
     <string name="pref_dual_page_split">Разделяне на широки страници</string>
     <string name="pref_dual_page_invert_summary">Ако позицията на разделението на широката страница не съвпада с посоката на четене</string>
     <string name="pref_grayscale">Черно-бяло</string>
-    <string name="pref_read_with_tapping_inverted">Инвертирай докосване</string>
     <string name="pref_reader_actions">Действия</string>
     <string name="pref_create_folder_per_manga">Запазвай страниците в отделни папки</string>
     <string name="right_and_left_nav">Дясно и Ляво</string>
@@ -458,7 +449,6 @@
     <string name="clear_history_completed">Историята изтрита</string>
     <string name="clear_history_confirmation">Напълно ли сте сигурен? Всичката ви история ще бъде загубена.</string>
     <string name="migration_help_guide">Наръчник за мигриране между източници</string>
-    <string name="notification_size_warning">Предупреждение: големите актуализации вредят на източниците и могат да доведат до по-бавни актуализации, както и до повишено използване на батерията. Натиснете тук, за да научите повече.</string>
     <string name="file_picker_error">Не бе намерено приложение за подбор на файлове</string>
     <string name="getting_started_guide">Първи стъпки</string>
     <string name="chapter_settings_updated">Стандартните настройки на главите бяха обновени</string>
@@ -487,8 +477,6 @@
     <string name="ext_update_all">Обнови всички</string>
     <string name="extension_api_error">Неуспешно получаване на списък с разширения</string>
     <string name="update_72hour">На всеки 3 дена</string>
-    <string name="connected_to_wifi">Само през Wi-Fi</string>
-    <string name="download_queue_size_warning">Предупреждение: големите масови изтегляния могат да доведат до забавяне на източниците и/или блокиране на %s. Натиснете тук, за да научите повече.</string>
     <string name="action_show_manga">Покажи манга</string>
     <string name="action_display_cover_only_grid">Решетка само с корици</string>
     <string name="delete_category_confirmation">Искате ли да изтриете категорията \"%s\"?</string>
@@ -541,23 +529,18 @@
     <string name="custom_cover">Корица по избор</string>
     <string name="action_search_hint">Търсене…</string>
     <string name="disabled_nav">Деактивирано</string>
-    <string name="learn_more">Натисни, за да научиш повече</string>
     <string name="remove_manga">Искате да премахнете \"%s\" от библиотеката си</string>
     <string name="action_close">Затвори</string>
     <string name="pref_reset_viewer_flags_success">Всички настройки на четеца нулирани</string>
     <string name="pref_appearance_summary">Тема, формат на датата и времето</string>
-    <string name="pref_library_summary">Категории, глобални обновления</string>
     <string name="pref_reader_summary">Режим на четене, показване, навигация</string>
     <string name="pref_downloads_summary">Автоматични изтегляния, предстоящи изтегляния</string>
     <string name="pref_browse_summary">Източници, разширения, глобално търсене</string>
     <string name="pref_backup_summary">Ръчно и автоматично създаване на бекъп</string>
-    <string name="pref_security_summary">Заключване на приложението, екран за сигурност</string>
     <string name="multi_lang">Мулти</string>
     <string name="pref_navigate_pan">Увеличи широките изображения при натискане</string>
-    <string name="missing_storage_permission">Не е дадено разрешение за съхранение</string>
     <string name="publishing_finished">Приключено издаване</string>
     <string name="manga_interval_expected_update_soon">Скоро</string>
-    <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>
     <string name="selected">Избрано</string>
     <string name="action_display_show_continue_reading_button">Продължи да четеш</string>
     <string name="action_copy_link">Копирай връзка</string>
@@ -593,7 +576,6 @@
     <string name="label_read_chapters">Прочетено</string>
     <string name="hour_short">%dч</string>
     <string name="notification_updating_progress">Обновяване на библиотеката... (%s)</string>
-    <string name="information_cloudflare_help">Натисни тук за помощ с Cloudflare</string>
     <string name="day_short">%dд</string>
     <string name="pref_download_new_unread_chapters_only">Пропусни изтегляне на дублиращи се прочетени глави</string>
     <string name="intervals_header">Интервали</string>
@@ -636,8 +618,6 @@
     <string name="action_move_to_bottom_all_for_series">Премести най-долу</string>
     <string name="label_started">Започнати</string>
     <string name="author">Автор</string>
-    <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
-    <string name="pref_double_tap_zoom">Натисни два пъти за увеличение</string>
     <string name="pref_flash_style_black">Черно</string>
     <string name="invalid_location">Невалидно местоположение: %s</string>
     <string name="exception_unknown_host">Не можа да достигне %s</string>

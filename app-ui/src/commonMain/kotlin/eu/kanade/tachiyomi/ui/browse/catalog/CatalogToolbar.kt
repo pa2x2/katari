@@ -10,9 +10,9 @@ import app.katari.icons.materialsymbols.automirroredroundedfilled.ViewList
 import app.katari.icons.materialsymbols.rounded.Fullscreen
 import app.katari.icons.materialsymbols.rounded.Public
 import app.katari.icons.materialsymbols.rounded.Settings
-import app.katari.icons.materialsymbols.rounded.TouchApp
 import app.katari.icons.materialsymbols.roundedfilled.ViewCompact
 import app.katari.icons.materialsymbols.roundedfilled.ViewModule
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.RadioMenuItem
 import app.katari.presentation.kit.navigation.AppBar
@@ -139,9 +139,9 @@ internal fun CatalogToolbar(
                     }
                     add(
                         AppBar.OverflowAction(
-                            title = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
+                            title = stringResource(platformPresentation.longPressActionsLabel),
                             onClick = onLongPressActionsClick,
-                            icon = MaterialSymbols.Rounded.TouchApp,
+                            icon = platformPresentation.pointerIcon,
                         ),
                     )
                 },

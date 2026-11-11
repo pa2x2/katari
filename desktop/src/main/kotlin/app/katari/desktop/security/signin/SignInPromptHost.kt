@@ -101,7 +101,7 @@ private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn, presence:
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
             request.detail?.let { Text(it) }
-            Text(stringResource(MR.strings.sign_in_check_line, signIn.account))
+            Text(stringResource(PlatformStrings.sign_in_check_line, signIn.account))
             state.messages.forEach { InfoRow(it.text) }
             fingerprintLine(fingerprint)?.let { InfoRow(it) }
             SecureTextField(
@@ -109,8 +109,8 @@ private fun SignInDialog(request: SignInRequest, signIn: SystemSignIn, presence:
                 modifier = Modifier.focusRequester(focus),
                 label = question?.prompt?.trim()?.removeSuffix(":") ?: stringResource(MR.strings.password),
                 supportingText = when {
-                    state.failed -> stringResource(MR.strings.sign_in_check_failed)
-                    state.refused -> stringResource(MR.strings.sign_in_check_refused)
+                    state.failed -> stringResource(PlatformStrings.sign_in_check_failed)
+                    state.refused -> stringResource(PlatformStrings.sign_in_check_refused)
                     state.waiting -> stringResource(MR.strings.sign_in_check_waiting)
                     else -> null
                 },

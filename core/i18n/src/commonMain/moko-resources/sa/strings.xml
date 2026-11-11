@@ -83,7 +83,6 @@
     <string name="information_no_recent_manga">सद्यः किमपि न पठितम्</string>
     <string name="information_empty_library">तव ग्रन्थालयः रिक्तम् अस्ति</string>
     <string name="information_no_recent">सद्यः नवीकरणानि न सन्ति</string>
-    <string name="information_empty_category">तव वर्गाः एव न सन्ति। नूतनं निर्माणं कृत्वा व्यवस्थापयितुम् अधिकचिह्नं नोदयतु॥</string>
     <string name="action_display_mode">प्रदर्शनस्य अवस्था</string>
     <string name="action_display_comfortable_grid">सुसुखा ग्रिड्-शैली</string>
     <string name="action_display_language_badge">भाषा</string>
@@ -100,7 +99,6 @@
     <string name="action_save">रक्षतु</string>
     <string name="action_reset">पुनःस्थापयतु</string>
     <string name="action_undo">अपाकरोतु</string>
-    <string name="action_show_errors">विवरणानि द्रष्टुं स्पृशतु</string>
     <string name="action_restore">समाददातु</string>
     <string name="action_webview_refresh">नवीकरोतु</string>
     <string name="action_start_downloading_now">अवारोपणम् अधुना आरभताम्</string>
@@ -153,7 +151,6 @@
     <string name="update_12hour">प्रतिद्वादशघण्टा</string>
     <string name="update_weekly">प्रतिसप्ताहिकम्</string>
     <string name="pref_library_update_restriction">स्वयङ्कृतनवीकरणनाम् उपकरणनिर्बन्धाः</string>
-    <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
     <string name="pref_library_update_refresh_metadata_summary">ग्रन्थालयनवीकरणे सति नूतनमुखचित्राय विवरणाय च मार्गतु</string>
     <string name="default_category">प्राथमिकवर्गः</string>
     <string name="default_category_summary">सदा पृच्छतु</string>
@@ -184,13 +181,11 @@
     <string name="ext_installer_shizuku_stopped">शिज़ुकुः न चलति</string>
     <string name="ext_installer_pref">प्रतिष्ठापनसहायकम्</string>
     <string name="ext_installer_shizuku_unavailable_dialog">शिजुकुं विस्तारप्रतिष्ठापनसहायकम् इव उपयोगं कर्तुं शिजुकुं प्रतिष्ठापयित्वा आरभताम्।</string>
-    <string name="pref_show_navigation_mode">मार्गणविन्यासस्य उपरिस्तरं दर्शयतु</string>
     <string name="pref_dual_page_invert">द्विपुटविभाजनस्य स्थापनं व्यत्यासं कुरु</string>
     <string name="pref_dual_page_split">द्विपुटविभाजनम्</string>
     <string name="pref_cutout_short">खण्डितक्षेत्रे वस्तु दर्शयतु</string>
     <string name="pref_show_navigation_mode_summary">प्रदर्शकस्य उद्घाटने नोदनमण्डलानि दर्शयतु</string>
     <string name="pref_page_transitions">पुटसङ्क्रमान् जीवयतु</string>
-    <string name="pref_double_tap_anim_speed">द्विवारनोदनं सञ्जीवनवेगः</string>
     <string name="pref_dual_page_invert_summary">यदि द्विपुटविभजनस्य स्थापना पठनदिशा समः न भवति</string>
     <string name="pref_show_page_number">पुटसङ्ख्यां दर्शयतु</string>
     <string name="pref_show_reading_mode">पठनदशां दर्शयतु</string>
@@ -216,7 +211,6 @@
     <string name="tapping_inverted_horizontal">अनुप्रस्थम्</string>
     <string name="tapping_inverted_vertical">ऊर्ध्वम्</string>
     <string name="pref_reader_actions">कार्याणि</string>
-    <string name="pref_read_with_long_tap">दीर्घस्पर्शने दर्शयतु</string>
     <string name="pref_create_folder_per_manga">पुटानि भिन्नसञ्चयेषु रक्षतु</string>
     <string name="pref_reader_theme">पृष्ठभूमिवर्णः</string>
     <string name="white_background">श्वेतः</string>
@@ -235,10 +229,8 @@
     <string name="right_to_left_viewer">वामेतरात् वामतः</string>
     <string name="vertical_viewer">ऊर्ध्वम्</string>
     <string name="webtoon_viewer">वेब्-टून्</string>
-    <string name="pref_viewer_nav">मार्गणविन्यासः</string>
     <string name="pref_viewer_type">प्राथमिकपठनदशा</string>
     <string name="vertical_plus_viewer">सततम् ऊर्ध्वम्</string>
-    <string name="pref_read_with_tapping_inverted">विलोमं स्पर्शनम्</string>
     <string name="pref_skip_read_chapters">पठितम् इति चिह्नितान् अध्यायान् लङ्घयतु</string>
     <string name="filter_mode_lighten">प्रकाशयति</string>
     <string name="tapping_inverted_both">द्वयम्</string>
@@ -434,7 +426,6 @@
     <string name="pref_navigate_pan">पुटान्तरे प्लवतु</string>
     <string name="pref_landscape_zoom">अनुप्रस्थचित्रं सर्पकं करोतु</string>
     <string name="pref_refresh_library_covers">ग्रन्थालयमाङ्गामुखचित्राणि नवीकरोतु</string>
-    <string name="pref_dump_crash_logs">ध्वंसेतिवृत्तानि पातयतु</string>
     <string name="sort_by_upload_date">उपारोपिततिथ्या</string>
     <string name="error_saving_cover">मुखचित्ररक्षणे दोषः</string>
     <string name="error_sharing_cover">मुखचित्रप्रसारणे दोषः</string>
@@ -459,7 +450,6 @@
     <string name="battery_optimization_disabled">विद्युत्कोषवृद्धिकरणं पूर्वमेव अशक्तं कृतम्</string>
     <string name="clipboard_copy_error">अंशफलकान्ते प्रतिलेखनम् अनुत्तीर्णम्</string>
     <string name="transition_pages_error">पुटानाम् आरोहणम् अनुत्तीर्णम् - %1$s</string>
-    <string name="download_notifier_text_only_wifi">वै-फ़ै सम्पर्कः न उपलभ्यः</string>
     <string name="download_notifier_no_network">जालसम्पर्कः न उपलभ्यः</string>
     <string name="copied_to_clipboard">प्रतिलेखः अंशफलकान्ते कृतः - \n%1$s</string>
     <string name="notification_chapters_single_and_more">अध्यायः %1$s च इतोऽपि %2$d च</string>
@@ -477,7 +467,6 @@
     <string name="downloaded_only_summary">तव ग्रन्थालये सर्वाः माङ्गाः शोधनीकरोति</string>
     <string name="pref_clear_database_summary">तव ग्रन्थालये न रक्षितानां माङ्गानां चरित्रं नाशय</string>
     <string name="confirm_delete_chapters">त्वं निश्चितरूपेण सङ्गृहीतान् अध्यायान् नाशयितुम् इच्छसि किम् ?</string>
-    <string name="download_queue_size_warning">पूर्वसूचना -- महद्भाराणि अवारोपणानि कुर्यात् मूलानि मन्दानि। अपि च %s निवारयेत्॥</string>
     <string name="pref_dump_crash_logs_summary">व्युत्पादकेभ्यः प्रसारयितुं दोषदत्तम् एकस्यां सञ्चिकायां रक्षति</string>
     <string name="confirm_set_chapter_settings">इमानि समायोजनानि प्राथमिकानि इव रक्षितुं त्वं निश्चितं किम्</string>
     <string name="pref_acra_summary">स्खलितानां परिहरणे साहाय्यं करिष्यति। संवेदनशीलदत्तांशाः न प्रेषिष्यते॥</string>
@@ -493,8 +482,6 @@
     <string name="dialog_with_checkbox_reset">अस्यै माङ्गायै सर्वान् अध्यायान् पुनःस्थापयति</string>
     <string name="download_queue_error">अध्यायानाम् अवारोपणं न अशक्नोत्। त्वया अवारोपितानि नाम्नः विभागे पुनः यतितुं शक्यते</string>
     <string name="migration_selection_prompt">यस्मात् स्थानान्तरगमनं करणीयं तत् चिनोतु</string>
-    <string name="notification_size_warning">पूर्वसूचना -- मूलेभ्यः महद्नवीकरणानि हानिकारकाणि भवन्ति तस्मात् नवीकरणानि मन्दानि भवेयुः अपि च विद्युत्कोषोपयोगः अधिकं भवेत्</string>
-    <string name="learn_more">अधिकं जानातु</string>
     <string name="action_move_to_top_all_for_series">धारावाहिकम् अग्रस्थानं चालयतु</string>
     <string name="rotation_reverse_portrait">विपरीतं लम्बदर्शनम्</string>
     <string name="label_local">स्थानीयम्</string>

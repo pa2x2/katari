@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Klepněte zde pro pomoc s Cloudflare</string>
+    <string name="action_show_errors">Klepněte pro zobrazení podrobností</string>
+    <string name="notification_size_warning">Varování: velké aktualizace poškozují zdroje a můžou vést k pomalejším aktualizacím a zvýšenému využití baterie. Klepnutím se dozvíte více.</string>
+    <string name="download_queue_size_warning">Varování: hromadné stahování může vést k tomu, že zdroje zpomalí a/nebo zablokují %s. Klepnutím se dozvíte více.</string>
+    <string name="information_empty_category">Nemáte žádné kategorie. Klikněte na tlačítko plus a vytvořte nějakou pro zorganizování vaší knihovny.</string>
+    <string name="pref_double_tap_zoom">Přiblížení dvojitým klepnutím</string>
+    <string name="pref_double_tap_anim_speed">Rychlost animace při dvojkliku</string>
+    <string name="pref_load_ahead_only_over_wifi">Načíst dopředu pouze přes Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Šetří mobilní data tím, že načítá pouze stránky v blízkosti té, kterou právě čtete</string>
+    <string name="pref_dump_crash_logs">Sdílet protokoly o selhání</string>
+    <string name="pref_security_summary">Zámek aplikace, zabezpečená obrazovka</string>
+    <string name="pref_viewer_nav">Oblasti dotyku</string>
+    <string name="pref_read_with_tapping_inverted">Invertovat oblasti dotyku</string>
+    <string name="pref_show_navigation_mode">Zobrazit překrytí oblastí dotyku</string>
+    <string name="pref_read_with_long_tap">Zobrazit akce dlouhým stisknutím</string>
+    <string name="pref_chapter_swipe_start">Kapitola po přejetí doleva</string>
+    <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
+    <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
+    <string name="connected_to_wifi">Jen na Wi-Fi</string>
+</resources>

@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.StoryMetrics
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -41,7 +42,7 @@ internal fun ColumnScope.RecapOpeningPage(page: StatisticsRecapPage.Opening) {
     RecapKicker(stringResource(MR.strings.statistics_recap_year_title), order = 1)
     RecapText(page.year.toString(), TextRole.Hero, order = 2)
     RecapText(
-        text = stringResource(MR.strings.statistics_recap_tap_to_start),
+        text = stringResource(platformPresentation.recapStartLabel),
         role = TextRole.Body,
         order = 3,
         modifier = Modifier.recapPulse(),

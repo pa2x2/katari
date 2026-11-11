@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">വിശദാംശങ്ങൾ കാണാൻ തട്ടുക</string>
+    <string name="ext_permission_install_apps_warning">വിപുലീകരണങ്ങൾ ഇൻസ്റ്റാൾ ചെയ്യാൻ അനുമതികൾ ആവശ്യമാണ്. അനുവദിക്കാൻ ഇവിടെ അടിക്കുക.</string>
+</resources>

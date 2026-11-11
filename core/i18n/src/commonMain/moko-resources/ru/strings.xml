@@ -67,7 +67,6 @@
     <string name="display_mode_chapter">Глава %1$s</string>
     <string name="download_notifier_downloader_title">Загрузчик</string>
     <string name="download_notifier_no_network">Нет соединения с сетью</string>
-    <string name="download_notifier_text_only_wifi">Нет соединения Wi-Fi</string>
     <string name="download_notifier_title_error">Ошибка</string>
     <string name="download_notifier_unknown_error">Невозможно скачать главу из-за непредвиденной ошибки</string>
     <string name="download_queue_error">Невозможно скачать главы. Можете попробовать ещё раз в очереди загрузок</string>
@@ -200,7 +199,6 @@
     <string name="latest">Последние</string>
     <string name="browse">Поисковик</string>
     <string name="channel_common">Общий</string>
-    <string name="information_empty_category">Нет категорий в библиотеке. Нажмите кнопку «Добавить», чтобы создать категорию для организации вашей библиотеки.</string>
     <string name="label_migration">Перенос</string>
     <string name="label_extensions">Расширения</string>
     <string name="label_extension_info">Информация о расширении</string>
@@ -222,7 +220,6 @@
     <string name="ext_uninstall">Удалить</string>
     <string name="untrusted_extension">Ненадёжное расширение</string>
     <string name="untrusted_extension_message">Вредоносные расширения могут считывать любые хранящиеся учётные данные для входа или выполнять произвольный код. \n \nДоверяя этому расширению, вы принимаете эти риски.</string>
-    <string name="pref_double_tap_anim_speed">Скорость анимации при двойном нажатии</string>
     <string name="double_tap_anim_speed_0">Без анимации</string>
     <string name="double_tap_anim_speed_normal">Нормальная</string>
     <string name="double_tap_anim_speed_fast">Быстрая</string>
@@ -243,7 +240,6 @@
     <string name="transition_no_previous">Предыдущей главы нет</string>
     <string name="transition_pages_loading">Идёт загрузка страниц…</string>
     <string name="transition_pages_error">Не удалось загрузить страницы: %1$s</string>
-    <string name="pref_read_with_long_tap">Показать действия при долгом нажатии</string>
     <string name="action_open_in_web_view">Открыть в WebView</string>
     <string name="pref_skip_read_chapters">Пропускать прочитанные главы</string>
     <string name="pref_color_filter_mode">Режим светофильтра</string>
@@ -355,7 +351,6 @@
     <string name="tapping_inverted_vertical">Вертикально</string>
     <string name="tapping_inverted_horizontal">Горизонтально</string>
     <string name="tapping_inverted_none">Нет</string>
-    <string name="pref_read_with_tapping_inverted">Зоны касания наоборот</string>
     <string name="unknown_status">Неизвестный статус</string>
     <string name="unknown_author">Неизвестный автор</string>
     <string name="whats_new">Что нового</string>
@@ -389,12 +384,10 @@
     <string name="spen_previous_page">Предыдущая страница</string>
     <string name="migration_help_guide">Руководство по переносу источников</string>
     <string name="file_picker_error">Приложение для выбора файлов не найдено</string>
-    <string name="pref_viewer_nav">Зоны касания</string>
     <string name="edge_nav">По краям</string>
     <string name="kindlish_nav">Kindle-подобная</string>
     <string name="l_nav">L-образная</string>
     <string name="pref_dump_crash_logs_summary">Сохраняет журнал сбоев в файл для отправки разработчикам</string>
-    <string name="pref_dump_crash_logs">Поделиться журналом сбоев</string>
     <string name="action_desc">По убыванию</string>
     <string name="action_asc">По возрастанию</string>
     <string name="action_order_by_chapter_number">Номер главы</string>
@@ -410,7 +403,6 @@
     <string name="nav_zone_next">Следующая</string>
     <string name="nav_zone_prev">Предыдущая</string>
     <string name="pref_show_navigation_mode_summary">Ненадолго показать при начале чтения</string>
-    <string name="pref_show_navigation_mode">Наложение зон касания</string>
     <string name="pref_dns_over_https">DNS по HTTPS (DoH)</string>
     <string name="none">Нет</string>
     <string name="exclude">Исключать: %s</string>
@@ -418,7 +410,6 @@
     <string name="action_sort_chapter_fetch_date">Последнее получение главы</string>
     <string name="pref_download_new_categories_details">Серии в исключённых категориях не будут загружаться, даже если находятся во включённых категориях.</string>
     <string name="pref_category_auto_download">Автозагрузка</string>
-    <string name="action_show_errors">Нажать, чтобы увидеть подробности</string>
     <string name="clipboard_copy_error">Не удалось скопировать в буфер обмена</string>
     <string name="rotation_landscape">Альбомная</string>
     <string name="rotation_portrait">Портретная</string>
@@ -486,11 +477,8 @@
     <string name="pref_verbose_logging_summary">Записывать подробный журнал в системный журнал (Снижает производительность приложения)</string>
     <string name="action_display_language_badge">Язык</string>
     <string name="label_warning">Предупреждение</string>
-    <string name="notification_size_warning">Большое количество обновлений может привести к замедлению работы источников и увеличению расхода батареи. Нажмите для подробностей.</string>
     <string name="backup_info">Настоятельно рекомендуется хранить резервные копии в других местах или сервисах. Резервные копии могут содержать конфиденциальную информацию, как, например, пароли. Будьте осторожны при их отправке.</string>
-    <string name="connected_to_wifi">Только по Wi-Fi</string>
     <string name="update_72hour">Каждые 3 дня</string>
-    <string name="download_queue_size_warning">Предупреждение: Большое количество загрузок может привести к замедлению работы источников и/или блокировке %s. Нажмите для подробностей.</string>
     <string name="ext_update_all">Обновить все</string>
     <string name="pref_auto_clear_chapter_cache">Очищать кэш глав при запуске приложения</string>
     <string name="clear_database_source_item_count">%1$d не библиотечных серий в базе данных</string>
@@ -505,7 +493,6 @@
     <string name="action_display_cover_only_grid">Сетка без названия</string>
     <string name="pref_navigate_pan">Панорамирование широких изображений</string>
     <string name="pref_landscape_zoom">Автоматически увеличивать широкие изображения</string>
-    <string name="learn_more">Нажать для подробностей</string>
     <string name="rotation_reverse_portrait">Портретная наоборот</string>
     <string name="action_move_to_top_all_for_series">Переместить серию в начало</string>
     <string name="disabled_nav">Отключено</string>
@@ -559,16 +546,13 @@
     <string name="remove_manga">Вы собираетесь удалить \"%s\" из вашей библиотеки</string>
     <string name="updates_last_update_info">Последнее обновление библиотеки: %s</string>
     <string name="popular">Популярное</string>
-    <string name="missing_storage_permission">Не предоставлены разрешения на хранение</string>
     <string name="action_search_hint">Искать…</string>
     <string name="crash_screen_restart_application">Перезапустить приложение</string>
     <string name="pref_appearance_summary">Тема, формат даты и времени</string>
-    <string name="pref_library_summary">Категории, глобальное обновление, перелистывание глав</string>
     <string name="pref_reader_summary">Режим чтения, отображение, навигация</string>
     <string name="pref_downloads_summary">Автоматическая загрузка, загрузка наперёд</string>
     <string name="pref_browse_summary">Источники, расширения, глобальный поиск</string>
     <string name="pref_backup_summary">Ручные и автоматические резервные копии, хранилище</string>
-    <string name="pref_security_summary">Блокировка приложения, защита экрана</string>
     <string name="crash_screen_title">Ой, ошибочка вышла!</string>
     <string name="unknown_title">Неизвестное название</string>
     <string name="invalid_location">Недопустимое расположение: %s</string>
@@ -610,9 +594,6 @@
     <string name="pref_page_rotate">Развернуть широкие страницы под размер экрана</string>
     <string name="pref_page_rotate_invert">Отразить ориентацию развёрнутых широких страниц</string>
     <string name="pref_debug_info">Отладочная информация</string>
-    <string name="pref_chapter_swipe_end">Глава при смахивании вправо</string>
-    <string name="pref_chapter_swipe_start">Глава при смахивании влево</string>
-    <string name="pref_double_tap_zoom">Двойное нажатие для увеличения</string>
     <string name="action_filter_interval_custom">Настраиваемая частота обновления</string>
     <string name="intervals_header">Интервалы</string>
     <string name="manga_display_interval_title">Оценивать каждые</string>
@@ -624,7 +605,6 @@
     <string name="has_results">Имеет результаты</string>
     <string name="library_sync_complete">Синхронизация библиотеки завершена</string>
     <string name="syncing_library">Синхронизация библиотеки</string>
-    <string name="information_cloudflare_help">Нажмите здесь, чтобы получить помощь с Cloudflare</string>
     <string name="download_cache_invalidated">Пересоздаётся индекс загрузок</string>
     <string name="create_backup_file_error">Не удалось создать файл резервной копии</string>
     <string name="exception_http">HTTP %d, проверьте сайт в WebView</string>
@@ -673,7 +653,6 @@
     <string name="onboarding_permission_notifications_description">Получать уведомления об обновлениях библиотеки и т.д.</string>
     <string name="onboarding_permission_action_grant">Предоставить</string>
     <string name="available_disk_space_info">Доступно: %1$s / Всего: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Нужны разрешения для установки расширений. Нажмите сюда, чтобы их предоставить.</string>
     <string name="private_settings">Включать конфиденциальные настройки (например, токены для входа)</string>
     <string name="invalid_backup_file_error">Полная ошибка:</string>
     <string name="manga_interval_expected_update">Выход новых глав ожидается примерно через %1$s, следующая проверка будет через %2$s.</string>
@@ -714,8 +693,6 @@
     <string name="app_migrating_summary">Подготовка после обновления. Это может занять несколько минут, поэтому не закрывайте приложение.</string>
     <string name="ext_not_loaded_details">Почему это не загрузилось</string>
     <string name="app_migrating_title">Завершение обновления</string>
-    <string name="pref_load_ahead_only_over_wifi">Загрузить наперёд только с Wi-Fi</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Экономит мобильный трафик, загружая только те страницы, которые находятся рядом с той, которую вы читаете</string>
     <string name="information_webview_crashed">WebView перестало работать, и страница была закрыта</string>
     <string name="pref_time_format">Формат времени</string>
     <string name="follow_system">Как в системе</string>

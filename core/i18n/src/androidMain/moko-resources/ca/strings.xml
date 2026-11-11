@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Premeu aquí per a obtenir ajuda amb el Cloudflare</string>
+    <string name="action_show_errors">Premeu per a veure’n els detalls</string>
+    <string name="notification_size_warning">Les actualitzacions grosses perjudiquen les fonts i poden implicar actualitzacions més lentes i un augment en l’ús de bateria. Premeu per a obtenir-ne més informació.</string>
+    <string name="download_queue_size_warning">Advertència: Les baixades massa grosses poden fer que les fonts es tornin més lentes i/o bloquin el %s. Premeu per a obtenir-ne més informació.</string>
+    <string name="information_empty_category">No teniu categories. Premeu el botó més per a crear-ne una i organitzar la vostra biblioteca.</string>
+    <string name="pref_double_tap_zoom">Toca dues vegades per a ampliar</string>
+    <string name="pref_double_tap_anim_speed">Velocitat de l’animació del doble toc</string>
+    <string name="pref_load_ahead_only_over_wifi">Precarrega només amb Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Estalvia dades mòbils carregant només les pàgines pròximes a la que esteu llegint</string>
+    <string name="pref_dump_crash_logs">Comparteix el registre d’errors</string>
+    <string name="pref_security_summary">Blocatge de l’aplicació i mode discret</string>
+    <string name="pref_viewer_nav">Zones de toc</string>
+    <string name="pref_read_with_tapping_inverted">Inverteix les zones de toc</string>
+    <string name="pref_show_navigation_mode">Mostra la superposició de les zones de toc</string>
+    <string name="pref_read_with_long_tap">Mostra les accions amb un toc llarg</string>
+    <string name="pref_chapter_swipe_start">En lliscar cap a l’esquerra en un capítol</string>
+    <string name="pref_chapter_swipe_end">En lliscar cap a la dreta en un capítol</string>
+    <string name="ext_permission_install_apps_warning">Calen permisos per a instal·lar extensions. Premeu aquí per a concedir-les.</string>
+    <string name="connected_to_wifi">Només amb Wi-Fi</string>
+</resources>

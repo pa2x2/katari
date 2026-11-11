@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="sync_files_waiting_for_wifi">
+        <item quantity="one">%d cover or font waits for Wi-Fi</item>
+        <item quantity="other">%d covers and fonts wait for Wi-Fi</item>
+    </plurals>
+</resources>

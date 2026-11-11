@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Güvenilmeyen uzantı</string>
     <string name="untrusted_extension_message">Kötü niyetli uzantılar, oturum açma bilgilerini okuyabilir veya güvenilmeyen kodlar çalıştırabilir. \n \nBu uzantıya güvenerek bu riskleri kabul etmiş olursunuz.</string>
     <string name="pref_page_transitions">Sayfa geçişlerini animasyonla yap</string>
-    <string name="pref_double_tap_anim_speed">Çift dokunma animasyon hızı</string>
     <string name="pref_show_page_number">Sayfa numarası göster</string>
     <string name="pref_crop_borders">Kenarları kırp</string>
     <string name="pref_custom_brightness">Özel parlaklık</string>
@@ -219,11 +218,9 @@
     <string name="information_no_recent">Yeni güncelleme yok</string>
     <string name="information_no_recent_manga">Yakında okunan yok</string>
     <string name="information_empty_library">Kitaplığınız boş</string>
-    <string name="information_empty_category">Kategoriniz yok. Kitaplığınızı düzenlemek için artı düğmesine basarak bir tane oluşturun.</string>
     <string name="download_notifier_downloader_title">İndirici</string>
     <string name="download_notifier_title_error">Hata</string>
     <string name="download_notifier_unknown_error">Bölüm, beklenmeyen hata sonucu indirilemedi</string>
-    <string name="download_notifier_text_only_wifi">Kablosuz ağ bağlantısı yok</string>
     <string name="download_notifier_no_network">Ağ bağlantısı yok</string>
     <string name="download_notifier_download_paused">İndirmeler duraklatıldı</string>
     <string name="channel_common">Genel</string>
@@ -235,7 +232,6 @@
     <string name="transition_no_previous">Önceki bölüm yok</string>
     <string name="transition_pages_loading">Sayfalar yükleniyor…</string>
     <string name="transition_pages_error">Sayfalar yüklenemedi: %1$s</string>
-    <string name="pref_read_with_long_tap">Uzun dokununca eylemleri göster</string>
     <string name="action_open_in_web_view">WebView ile aç</string>
     <string name="pref_skip_read_chapters">Okundu olarak işaretlenmiş bölümleri atla</string>
     <string name="pref_color_filter_mode">Renk filtresi karışım modu</string>
@@ -344,7 +340,6 @@
     <string name="requires_app_restart">Etkili olması için uygulamanın yeniden başlatılmasını gerektirir</string>
     <string name="label_network">Ağ</string>
     <string name="tapping_inverted_none">Hiçbiri</string>
-    <string name="pref_read_with_tapping_inverted">Dokunma bölgelerini ters çevir</string>
     <string name="tapping_inverted_both">İkisi de</string>
     <string name="tapping_inverted_vertical">Dikey</string>
     <string name="tapping_inverted_horizontal">Yatay</string>
@@ -381,12 +376,10 @@
     <string name="spen_previous_page">Önceki sayfa</string>
     <string name="migration_help_guide">Kaynak taşıma kılavuzu</string>
     <string name="file_picker_error">Dosya seçme uygulaması bulunamadı</string>
-    <string name="pref_viewer_nav">Dokunma bölgeleri</string>
     <string name="edge_nav">Kenar</string>
     <string name="kindlish_nav">Kindle gibi</string>
     <string name="l_nav">L şeklinde</string>
     <string name="pref_dump_crash_logs_summary">Geliştiricilerle paylaşmak için hata günlüklerini bir dosyaya kaydeder</string>
-    <string name="pref_dump_crash_logs">Çökme günlüklerini paylaş</string>
     <string name="action_desc">Azalan</string>
     <string name="action_asc">Artan</string>
     <string name="action_order_by_chapter_number">Bölüm numarasına göre</string>
@@ -402,7 +395,6 @@
     <string name="nav_zone_next">Sonraki</string>
     <string name="nav_zone_prev">Önceki</string>
     <string name="pref_show_navigation_mode_summary">Okuyucu açıldığında kısaca göster</string>
-    <string name="pref_show_navigation_mode">Dokunma bölgelerini göster</string>
     <string name="pref_dns_over_https">HTTPS üzerinden DNS (DoH)</string>
     <string name="exclude">Hariç tut: %s</string>
     <string name="include">Dahil et: %s</string>
@@ -410,7 +402,6 @@
     <string name="action_sort_chapter_fetch_date">Bölümün alındığı tarih</string>
     <string name="pref_download_new_categories_details">Hariç tutulan kategorilerdeki girdiler, dahil edilen kategorilerde olsa bile indirilmeyecektir.</string>
     <string name="pref_category_auto_download">Otomatik indir</string>
-    <string name="action_show_errors">Ayrıntıları görmek için dokun</string>
     <string name="clipboard_copy_error">Panoya kopyalanamadı</string>
     <string name="rotation_landscape">Manzara</string>
     <string name="rotation_portrait">Portre</string>
@@ -477,11 +468,8 @@
     <string name="label_warning">Uyarı</string>
     <string name="action_display_language_badge">Dil</string>
     <string name="backup_info">Yedeklerin kopyalarını başka yerlerde de tutmalısınız. Yedekler, şifreler dahil olmak üzere hassas verileri içerebilirler; paylaşıyorsanız dikkat edin.</string>
-    <string name="notification_size_warning">Büyük güncellemeler kaynaklara zarar verir ve daha yavaş güncellemelere ve ayrıca pil kullanımının artmasına neden olabilir. Daha fazla bilgi için dokunun.</string>
     <string name="pref_verbose_logging">Ayrıntılı günlük kaydı</string>
     <string name="pref_verbose_logging_summary">Ayrıntılı günlükleri sistem günlüğüne yaz (uygulama performansını düşürür)</string>
-    <string name="connected_to_wifi">Yalnızca kablosuz ağda</string>
-    <string name="download_queue_size_warning">Uyarı: Büyük toplu indirmeler kaynakların yavaşlamasına ve/veya %s\'u engellemesine neden olabilir. Daha fazla bilgi için dokunun.</string>
     <string name="update_72hour">3 günde bir</string>
     <string name="ext_update_all">Tümünü güncelle</string>
     <string name="pref_auto_clear_chapter_cache">Uygulama başlatıldığında bölüm önbelleğini temizle</string>
@@ -497,7 +485,6 @@
     <string name="action_display_cover_only_grid">Izgara (Yalnızca kapak)</string>
     <string name="pref_navigate_pan">Geniş görselleri kaydır</string>
     <string name="pref_landscape_zoom">Geniş görsellere otomatik yakınlaştır</string>
-    <string name="learn_more">Daha fazla bilgi için dokunun</string>
     <string name="rotation_reverse_portrait">Ters portre</string>
     <string name="action_move_to_top_all_for_series">Seriyi en üste taşı</string>
     <string name="disabled_nav">Devre dışı</string>
@@ -545,11 +532,8 @@
     <string name="updates_last_update_info">Son kitaplık güncelleme: %s</string>
     <string name="multi_lang">Çoklu</string>
     <string name="popular">Popüler</string>
-    <string name="missing_storage_permission">Depolama izinleri verilmedi</string>
     <string name="action_search_hint">Ara…</string>
     <string name="pref_backup_summary">Elle ve otomatik yedeklemeler, depolama alanı</string>
-    <string name="pref_security_summary">Uygulama kilidi, güvenli ekran</string>
-    <string name="pref_library_summary">Kategoriler, genel güncelleme, kaydırma kontrolleri</string>
     <string name="pref_browse_summary">Kaynaklar, uzantılar, genel arama</string>
     <string name="pref_downloads_summary">Otomatik indirme, önceden indirme</string>
     <string name="pref_reader_summary">Okuma modu, görüntüleme, gezinme</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">Geniş sayfaları sığdırmak için döndür</string>
     <string name="pref_page_rotate_invert">Döndürülen geniş sayfaların yönünü ters çevir</string>
     <string name="pref_debug_info">Hata ayıklama bilgisi</string>
-    <string name="pref_chapter_swipe_end">Bölümü sağa kaydırma</string>
-    <string name="pref_chapter_swipe_start">Bölümü sola kaydırma</string>
-    <string name="pref_double_tap_zoom">Yakınlaştırmak için iki kez dokun</string>
     <string name="action_set_interval">Sıklığı ayarla</string>
     <string name="action_filter_interval_custom">Özel güncelleme sıklığı</string>
     <string name="intervals_header">Zaman aralıkları</string>
@@ -610,7 +591,6 @@
     <string name="delete_downloaded">İndirilenleri sil</string>
     <string name="create_backup_file_error">Yedekleme dosyası oluşturulamadı</string>
     <string name="download_cache_invalidated">İndirme dizini tekrar oluşturuluyor</string>
-    <string name="information_cloudflare_help">Cloudflare ile ilgili yardım için buraya dokunun</string>
     <string name="exception_unknown_host">%s verisine erişilemedi</string>
     <string name="library_sync_complete">Kitaplık eşitlemesi tamamlandı</string>
     <string name="exception_http">HTTP %d, siteyi WebView\'de kontrol et</string>
@@ -659,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">Kitaplık güncellemeleri ve daha fazlası için bildirim alın.</string>
     <string name="onboarding_permission_action_grant">İzin Ver</string>
     <string name="available_disk_space_info">Kullanılabilir: %1$s / Toplam: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Uzantıları yüklemek için izin gerekli. İzin vermek için buraya dokunun.</string>
     <string name="private_settings">Hassas ayarları dahil et (örn. oturum açma bilgileri)</string>
     <string name="manga_interval_expected_update">Sonraki bölümlerin %1$s içinde yayınlanacağı tahmin ediliyor, her %2$s içinde bir kontrol ediliyor.</string>
     <string name="invalid_backup_file_error">Tüm hata:</string>
@@ -814,8 +793,6 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Bu uzantının sağladığı kaynaklar güvenli ve 18+ içerik içerebilir.</string>
     <string name="ext_content_warning_nsfw_description">Bu uzantının sağladığı kaynaklar 18+ içeriklere odaklıdır.</string>
-    <string name="pref_load_ahead_only_over_wifi">Yalnızı Wi-Fi ile önden yükle</string>
-    <string name="pref_load_ahead_only_over_wifi_summary">Yalnızca okuduğunuz sayfaya yakın olan sayfaları yükleyerek mobil veri tasarruf sağlar</string>
     <string name="information_webview_crashed">WebView çalışmayı durdurdu ve sayfa kapatıldı</string>
     <string name="pref_hardware_bitmap_threshold">Özel bitmap donanım sınırı</string>
     <string name="pref_hardware_bitmap_threshold_default">Varsayılan (%d)</string>

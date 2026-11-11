@@ -33,7 +33,6 @@
     <string name="local_source">Iturri lokala</string>
     <string name="latest">Azkenak</string>
     <string name="no_more_results">Ez dago emaitza gehiagorik</string>
-    <string name="download_queue_size_warning">Abisua: deskarga handiek iturriak motelagoak izatea eta/edo %s blokeatzea ekar dezakete.</string>
     <string name="creating_backup">Babeskopia sortzen</string>
     <string name="restore_duration">%1$02d min, %2$02d seg</string>
     <string name="cache_delete_error">Errore bat gertatu da cachea garbitzean</string>
@@ -215,10 +214,8 @@
     <string name="nav_zone_next">Hurrengoa</string>
     <string name="pager_viewer">Orrikaldekatua</string>
     <string name="zoom_start_automatic">Automatikoa</string>
-    <string name="pref_double_tap_anim_speed">Sakaketa bikoitzaren animazioaren abiadura</string>
     <string name="automatic_background">Automatikoa</string>
     <string name="nav_zone_prev">Aurrekoa</string>
-    <string name="pref_viewer_nav">Nabigazio-diseinua</string>
     <string name="scale_type_stretch">Luzatu</string>
     <string name="scale_type_smart_fit">Smart doiketa</string>
     <string name="zoom_start_center">Erdian</string>
@@ -249,7 +246,6 @@
     <string name="sort_by_upload_date">Igoera dataren arabera</string>
     <string name="confirm_set_image_as_cover">Irudi hau azaleko arte gisa erabili?</string>
     <string name="download_insufficient_space">Ezin izan dira kapituluak deskargatu memorian leku gutxi dagoelako</string>
-    <string name="notification_size_warning">Eguneratze handiek bateriaren erabilera areagotzea eta iturriak motelagoak izatea eragin dezakete</string>
     <string name="download_notifier_download_paused">Deskarga pausatu da</string>
     <string name="pref_low">Baxua</string>
     <string name="pref_lowest">Baxuena</string>
@@ -275,7 +271,6 @@
     <string name="transition_pages_loading">Orriak kargatzen…</string>
     <string name="channel_common">Arrunta</string>
     <string name="information_webview_required">WebView beharrezkoa da Katarirentzat</string>
-    <string name="download_notifier_text_only_wifi">Ez dago Wi-Fi konexiorik erabilgarri</string>
     <string name="label_default">Lehenetsia</string>
     <string name="action_display_mode">Bistaratze-modua</string>
     <string name="action_display">Bistaratu</string>
@@ -287,7 +282,6 @@
     <string name="action_display_show_tabs">Erakutsi kategorien fitxak</string>
     <string name="pref_category_about">Honi buruz</string>
     <string name="pref_category_theme">Gaia</string>
-    <string name="pref_dump_crash_logs">Sortu erroreen erregistroak</string>
     <string name="notification_chapters_single">%1$s Kapitulua</string>
     <string name="notification_chapters_multiple">%1$s Kapituluak</string>
     <string name="pref_keep_screen_on">Mantendu pantaila piztuta</string>
@@ -377,7 +371,6 @@
     <string name="information_no_downloads">Deskargarik ez</string>
     <string name="information_no_recent">Ez dago azkenaldiko eguneraketarik</string>
     <string name="information_empty_library">Zure liburutegia hutsik dago</string>
-    <string name="information_empty_category">Ez daukazu kategoriarik. Sakatu gehiketa botoia zure liburutegia antolatzeko bat sortzeko.</string>
     <string name="spen_previous_page">Aurreko orrialdea</string>
     <string name="on">Piztu</string>
     <string name="action_newest">Berriena</string>
@@ -387,7 +380,6 @@
     <string name="lock_never">Inoiz ere ez</string>
     <string name="pref_crop_borders">Moztu ertzak</string>
     <string name="pref_read_with_volume_keys_inverted">Alderantzikatu bolumen-teklak</string>
-    <string name="pref_read_with_tapping_inverted">Sakatzea alderantzikatu</string>
     <string name="tapping_inverted_none">Ezer ez</string>
     <string name="tapping_inverted_horizontal">Horizontala</string>
     <string name="tapping_inverted_vertical">Bertikala</string>
@@ -447,14 +439,11 @@
     <string name="ext_trust">Fidagarritzat jo</string>
     <string name="tapping_inverted_both">Biak</string>
     <string name="pref_reader_actions">Ekintzak</string>
-    <string name="pref_read_with_long_tap">Erakutsi sakaketa luzean</string>
     <string name="username">Erabiltzaile-izena</string>
     <string name="password">Pasahitza</string>
     <string name="action_global_search_query">Bilatu \"%1$s\" toki guztietan</string>
-    <string name="action_show_errors">Sakatu xehetasunak ikusteko</string>
     <string name="update_72hour">3 egunean behin</string>
     <string name="update_weekly">Astero</string>
-    <string name="connected_to_wifi">Wi-Fi bidez bakarrik</string>
     <string name="restrictions">Mugaketak: %s</string>
     <string name="pref_library_update_refresh_metadata">Freskatu metadatuak automatikoki</string>
     <string name="invalid_backup_file_missing_manga">Babeskopiak ez du mangarik.</string>
@@ -485,7 +474,6 @@
     <string name="on_hiatus">Etenaldian</string>
     <string name="action_display_local_badge">Manga lokala</string>
     <string name="notification_chapters_single_and_more">%1$s kapitulua eta %2$d gehiago</string>
-    <string name="pref_show_navigation_mode">Nabigazio-diseinuaren geruza erakutsi</string>
     <string name="pref_show_navigation_mode_summary">Erakutsi ukipen-zonak irakurgailua irekitzen denean</string>
     <string name="pref_clear_database_summary">Ezabatu zure liburutegian gordeta ez dauden mangen historia</string>
     <string name="publishing_finished">Argitarapena amaitua</string>

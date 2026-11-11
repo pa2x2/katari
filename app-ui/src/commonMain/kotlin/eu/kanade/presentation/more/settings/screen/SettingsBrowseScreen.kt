@@ -11,6 +11,7 @@ import app.katari.entry.interactions.media.EntryPreviewSettings
 import app.katari.entry.interactions.media.EntryPreviewSize
 import app.katari.entry.interactions.media.EntryPreviewSourceRequirement
 import app.katari.entry.interactions.settings.EntryInteractionPreferences
+import app.katari.platform.presentation.platformPresentation
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -157,7 +158,7 @@ class SettingsBrowseScreen : SearchableSettings() {
                     subtitle = stringResource(MR.strings.pref_enable_feeds_summary),
                 ),
                 Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_browse_long_press_action),
+                    title = stringResource(platformPresentation.browseLongPressPriorityLabel),
                     subtitle = browseLongPressPrioritySummary(storedPriority),
                     isProfileSpecific = true,
                     onClick = onOpenLongPressActions,

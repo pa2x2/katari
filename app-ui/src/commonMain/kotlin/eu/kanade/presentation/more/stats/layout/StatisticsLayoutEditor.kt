@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.DragHandle
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.control.SegmentedButtons
@@ -157,7 +158,7 @@ internal fun StatisticsLayoutEditor(
                     RowGroupItem(position = RowGroupPosition.Middle) {
                         RecapNotificationSetting(
                             label = stringResource(MR.strings.statistics_monthly_recap),
-                            summary = stringResource(MR.strings.statistics_monthly_recap_summary),
+                            summary = stringResource(platformPresentation.monthlyRecapSummary),
                             enabled = recapNotifications.monthly,
                             onEnabledChange = { recapNotifications = recapNotifications.copy(monthly = it) },
                         )

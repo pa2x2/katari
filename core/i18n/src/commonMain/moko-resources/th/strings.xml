@@ -96,7 +96,6 @@
     <string name="untrusted_extension">ส่วนขยายที่ไม่น่าเชื่อถือ</string>
     <string name="untrusted_extension_message">ส่วนขยายที่เป็นอันตรายสามารถอ่านข้อมูลการเข้าสู่ระบบที่จัดเก็บไว้ หรือเรียกใช้โค้ดโดยอำเภอใจ \n \nการเชื่อถือส่วนขยายนี้แสดงว่าคุณยอมรับความเสี่ยงเหล่านี้</string>
     <string name="pref_page_transitions">แสดงแอนิเมชั่นเมื่อเปลี่ยนหน้า</string>
-    <string name="pref_double_tap_anim_speed">ความเร็วแอนิเมชั่นเมื่อแตะ 2 ครั้ง</string>
     <string name="pref_show_page_number">แสดงหมายเลขหน้า</string>
     <string name="pref_crop_borders">ตัดขอบ</string>
     <string name="pref_custom_brightness">ความสว่างแบบกำหนดเอง</string>
@@ -195,7 +194,6 @@
     <string name="download_unread">ที่ยังไม่ได้อ่าน</string>
     <string name="confirm_delete_chapters">แน่ใจหรือไม่ว่าต้องการลบตอนที่เลือก?</string>
     <string name="completed">จบแล้ว</string>
-    <string name="pref_read_with_long_tap">แสดงการกระทำเมื่อแตะค้าง</string>
     <string name="action_open_in_web_view">เปิดใน WebView</string>
     <string name="pref_skip_read_chapters">ข้ามตอนที่ทำเครื่องหมายว่าอ่านแล้ว</string>
     <string name="pref_color_filter_mode">โหมดผสมตัวกรองสี</string>
@@ -236,11 +234,9 @@
     <string name="information_no_recent">ไม่มีอัปเดตล่าสุด</string>
     <string name="information_no_recent_manga">ไม่มีอะไรที่อ่านเมื่อเร็ว ๆ นี้</string>
     <string name="information_empty_library">คลังว่างเปล่า</string>
-    <string name="information_empty_category">ไม่มีหมวดหมู่ แตะปุ่มบวกเพื่อสร้างปุ่มสำหรับจัดระเบียบคลัง</string>
     <string name="download_notifier_downloader_title">ตัวดาวน์โหลด</string>
     <string name="download_notifier_title_error">เกิดข้อผิดพลาด</string>
     <string name="download_notifier_unknown_error">ไม่สามารถดาวน์โหลดตอนได้เนื่องจากข้อผิดพลาดที่ไม่คาดคิด</string>
-    <string name="download_notifier_text_only_wifi">ไม่มีการเชื่อมต่อ Wi-Fi</string>
     <string name="download_notifier_no_network">ไม่มีการเชื่อมต่อเครือข่าย</string>
     <string name="download_notifier_download_paused">การดาวน์โหลดหยุดชั่วคราว</string>
     <string name="channel_common">ทั่วไป</string>
@@ -265,7 +261,6 @@
     <string name="tapping_inverted_vertical">แนวตั้ง</string>
     <string name="tapping_inverted_horizontal">แนวนอน</string>
     <string name="tapping_inverted_none">ไม่มี</string>
-    <string name="pref_read_with_tapping_inverted">กลับด้านโซนการแตะ</string>
     <string name="pref_skip_filtered_chapters">ข้ามตอนที่กรองไว้</string>
     <string name="pref_grayscale">โทนสีเทา</string>
     <string name="pref_show_reading_mode_summary">แสดงโหมดปัจจุบันสั้น ๆ เมื่อตัวอ่านเปิดขั้นมา</string>
@@ -275,7 +270,6 @@
     <string name="pref_dual_page_invert">แยกส่วนหน้ากว้างแบบสลับตำแหน่ง</string>
     <string name="pref_dual_page_split">แยกส่วนหน้ากว้าง</string>
     <string name="pref_show_navigation_mode_summary">แสดงครู่หนึ่งเมื่อเปิดตัวอ่าน</string>
-    <string name="pref_show_navigation_mode">แสดงตำแหน่งโซนการแตะ</string>
     <string name="obsolete_extension_message">ส่วนขยายนี้ไม่สามารถใช้ได้อีกต่อไป แอปอาจทำงานไม่ถูกต้องและอาจทำให้เกิดปัญหากับแอปได้ ขอแนะนำให้ถอนการติดตั้งออก</string>
     <string name="ext_obsolete">ล้าสมัย</string>
     <string name="ext_updates_pending">อัปเดตที่รอดำเนินการ</string>
@@ -303,7 +297,6 @@
     <string name="action_webview_refresh">โหลดซ้ำ</string>
     <string name="action_webview_forward">ไปข้างหน้า</string>
     <string name="action_webview_back">กลับ</string>
-    <string name="action_show_errors">แตะเพื่อดูรายละเอียด</string>
     <string name="action_move_to_bottom">ย้ายไปด้านล่าง</string>
     <string name="action_move_to_top">ย้ายไปด้านบน</string>
     <string name="action_desc">มากไปน้อย</string>
@@ -337,7 +330,6 @@
     <string name="pref_category_reading">การอ่าน</string>
     <string name="pref_category_reading_mode">โหมดการอ่าน</string>
     <string name="rotation_type">การหมุน</string>
-    <string name="pref_viewer_nav">โซนการแตะ</string>
     <string name="vertical_plus_viewer">หน้ายาวแยกช่องว่าง</string>
     <string name="nav_zone_right">ขวา</string>
     <string name="nav_zone_next">ถัดไป</string>
@@ -389,7 +381,6 @@
     <string name="pref_disable_battery_optimization_summary">ช่วยในการอัปเดตและสำรองข้อมูลคลังในพื้นหลัง</string>
     <string name="pref_disable_battery_optimization">ปิดการใช้งานการเพิ่มประสิทธิภาพแบตเตอรี่</string>
     <string name="pref_dump_crash_logs_summary">บันทึกบันทึกข้อผิดพลาดลงในแฟ้มเพื่อแบ่งปันกับผู้พัฒนา</string>
-    <string name="pref_dump_crash_logs">แบ่งปันบันทึกข้อขัดข้อง</string>
     <string name="pref_refresh_library_covers">โหลดปกในคลังใหม่</string>
     <string name="label_data">ข้อมูล</string>
     <string name="requires_app_restart">ต้องรีสตาร์ทแอปจึงจะมีผล</string>
@@ -487,9 +478,6 @@
     <string name="pref_dark_theme_pure_black">โหมดมืดดำสนิท</string>
     <string name="update_72hour">ทุก 3 วัน</string>
     <string name="restrictions">ข้อจำกัด: %s</string>
-    <string name="connected_to_wifi">เฉพาะขณะเชื่อมต่อ Wi-Fi</string>
-    <string name="download_queue_size_warning">คำเตือน: การดาวน์โหลดจำนวนมากอาจทำให้แหล่งที่มาทำงานช้าลงและ/หรือปิดกั้น %s แตะเพื่อเรียนรู้เพิ่มเติม</string>
-    <string name="notification_size_warning">การอัปเดตจำนวนมากเป็นอันตรายต่อแหล่งที่มาและอาจทำให้การอัปเดตช้าลงและใช้งานแบตเตอรี่เพิ่มขึ้น แตะเพื่อเรียนรู้เพิ่มเติม</string>
     <string name="publishing_finished">เผยแพร่จบแล้ว</string>
     <string name="cancelled">ถูกยกเลิก</string>
     <string name="on_hiatus">อยู่ระหว่างพัก</string>
@@ -497,7 +485,6 @@
     <string name="action_display_cover_only_grid">ตารางแสดงแค่หน้าปก</string>
     <string name="pref_landscape_zoom">ซูมภาพกว้างโดยอัตโนมัติ</string>
     <string name="action_show_manga">แสดงรายการ</string>
-    <string name="learn_more">แตะเพื่อเรียนรู้เพิ่มเติม</string>
     <string name="rotation_reverse_portrait">แนวตั้งแบบกลับด้าน</string>
     <string name="action_move_to_top_all_for_series">ย้ายเรื่องไปด้านบน</string>
     <string name="disabled_nav">ปิดใช้งาน</string>
@@ -545,15 +532,12 @@
     <string name="updates_last_update_info">อัปเดตคลังล่าสุด: %s</string>
     <string name="remove_manga">คุณกำลังจะนำ \"%s\" ออกจากคลัง</string>
     <string name="popular">ยอดนิยม</string>
-    <string name="missing_storage_permission">ไม่ได้รับการอนุญาตให้ใช้งานที่จัดเก็บ</string>
     <string name="action_search_hint">ค้นหา…</string>
     <string name="pref_appearance_summary">ธีม, รูปแบบวันที่และเวลา</string>
-    <string name="pref_library_summary">หมวดหมู่, การอัปเดตคลัง, การปัดรายการตอน</string>
     <string name="pref_reader_summary">โหมดการอ่าน, การแสดงผล, การนำทาง</string>
     <string name="pref_downloads_summary">การดาวน์โหลดอัตโนมัติ, การดาวน์โหลดล่วงหน้า</string>
     <string name="pref_browse_summary">แหล่งที่มา, ส่วนขยาย, การค้นหาทั้งหมด</string>
     <string name="pref_backup_summary">การสำรองข้อมูลและพื้นที่เก็บข้อมูลด้วยตนเองและอัตโนมัติ</string>
-    <string name="pref_security_summary">การล็อกแอป, หน้าจอความปลอดภัย</string>
     <string name="crash_screen_title">เกิดความผิดพลาด!</string>
     <string name="invalid_location">ตำแหน่งไม่ถูกต้อง: %s</string>
     <string name="unknown_title">ไม่ทราบชื่อเรื่อง</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">หมุนหน้ากว้างให้พอดี</string>
     <string name="pref_page_rotate_invert">พลิกการวางแนวของหน้ากว้างที่หมุน</string>
     <string name="pref_debug_info">ข้อมูลดีบัก</string>
-    <string name="pref_chapter_swipe_end">เปิดตอนเมื่อปัดไปทางขวา</string>
-    <string name="pref_chapter_swipe_start">เปิดตอนเมื่อปัดไปทางซ้าย</string>
-    <string name="pref_double_tap_zoom">แตะสองครั้งเพื่อซูม</string>
     <string name="action_set_interval">กำหนดช่วงเวลา</string>
     <string name="action_filter_interval_custom">กำหนดความถี่ในการอัปเดต</string>
     <string name="action_sort_next_updated">การอัปเดตที่คาดไว้ต่อไป</string>
@@ -611,7 +592,6 @@
     <string name="syncing_library">กำลังซิงค์คลัง</string>
     <string name="delete_downloaded">ลบการดาวน์โหลด</string>
     <string name="download_cache_invalidated">ดัชนีการดาวน์โหลดไม่ถูกต้อง</string>
-    <string name="information_cloudflare_help">แตะที่นี่เพื่อขอความช่วยเหลือเกี่ยวกับ Cloudflare</string>
     <string name="create_backup_file_error">ไม่สามารถสร้างไฟล์สำรองข้อมูล</string>
     <string name="unlock_app_title">ปลดล็อก %s</string>
     <string name="exception_offline">ไม่มีการเชื่อมต่ออินเทอร์เน็ต</string>
@@ -658,7 +638,6 @@
     <string name="onboarding_permission_install_apps_description">ในการติดตั้งส่วนขยายแหล่งที่มา</string>
     <string name="no_location_set">ไม่มีการกำหนดตำแหน่งจัดเก็บ</string>
     <string name="onboarding_permission_notifications_description">รับการแจ้งเตือนการอัปเดตคลังและอื่น ๆ</string>
-    <string name="ext_permission_install_apps_warning">จำเป็นต้องมีสิทธิ์ในการติดตั้งส่วนขยาย แตะที่นี่เพื่อให้สิทธิ์</string>
     <string name="private_settings">รวมการตั้งค่าที่ละเอียดอ่อน (เช่น โทเค็นการเข้าสู่ระบบ)</string>
     <string name="onboarding_permission_action_grant">อนุญาต</string>
     <string name="onboarding_storage_folder_info">เลือกโฟลเดอร์ที่ %1$s จะจัดเก็บการดาวน์โหลดบท การสำรองข้อมูล และอื่นๆ \n \nแนะนำให้ใช้โฟลเดอร์เฉพาะ</string>

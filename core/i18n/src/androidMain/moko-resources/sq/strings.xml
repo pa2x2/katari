@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Prekni për të parë detajet</string>
+    <string name="notification_size_warning">Përditësimet e mëdha dëmtojnë burimet dhe mund të çojnë në përditësime më të ngadalta dhe gjithashtu rritje të përdorimit të baterisë. Trokit për të mësuar më shumë.</string>
+    <string name="download_queue_size_warning">Paralajmërim: shkarkimet e mëdha me shumicë mund të çojnë në ngadalësimin e burimeve dhe/ose bllokimin e %s. Trokit për të mësuar më shumë.</string>
+    <string name="information_empty_category">Nuk ke kategori. Prekni butonin plus për të krijuar një për organizimin e bibliotekës tuaj.</string>
+    <string name="pref_double_tap_anim_speed">Prekni dy herë shpejtësia e animacionit</string>
+    <string name="pref_dump_crash_logs">Hidh regjistrat e aksidenteve</string>
+    <string name="pref_security_summary">Kyçja e aplikacionit, ekran i sigurt</string>
+    <string name="pref_viewer_nav">Prekni zonat</string>
+    <string name="pref_read_with_tapping_inverted">Inverto zonat e trokitjes</string>
+    <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
+    <string name="pref_read_with_long_tap">Shfaq në trokitje të gjatë</string>
+    <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
+</resources>

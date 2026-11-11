@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.CloudSync
-import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.TextRole
@@ -51,13 +51,13 @@ fun rememberSettingSyncMarks(): SettingSyncMarks? {
     return remember(choices, graph) { SettingSyncMarks(choices, graph.profileStore) }
 }
 
-/** A setting's sync mark after its title: a cloud where it syncs, a phone where it stays on this device. */
+/** A setting's sync mark after its title: a cloud where it syncs, this device where it stays on it. */
 @Composable
 fun SettingSyncMarkIcon(mark: SettingSyncMark) {
     InlineIcon(
         imageVector = when (mark) {
             SettingSyncMark.SYNCED -> MaterialSymbols.Rounded.CloudSync
-            SettingSyncMark.THIS_DEVICE -> MaterialSymbols.Rounded.Smartphone
+            SettingSyncMark.THIS_DEVICE -> platformPresentation.thisDeviceIcon
         },
         contentDescription = stringResource(
             when (mark) {

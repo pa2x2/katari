@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Натисніть тут, щоб отримати допомогу з Cloudflare</string>
+    <string name="action_show_errors">Тицьніть для перегляду подробиць</string>
+    <string name="notification_size_warning">Попередження: великі оновлення можуть призвести до сповільнення джерел або збільшити використання батареї. Тицьніть задля подробиць.</string>
+    <string name="download_queue_size_warning">Попередження: великий об\'єм завантажень може призвести до сповільнення роботи джерел та/або блокуванню %s.</string>
+    <string name="information_empty_category">У вас немає категорій. Тицьніть кнопку плюс, для початку облаштування вашої бібліотеки.</string>
+    <string name="pref_double_tap_zoom">Двічі торкніться, щоб збільшити</string>
+    <string name="pref_double_tap_anim_speed">Швидкість анімації при подвійному натиснені</string>
+    <string name="pref_dump_crash_logs">Поділіться журналами збоїв</string>
+    <string name="pref_security_summary">Блокування застосунку, захист екрану</string>
+    <string name="pref_viewer_nav">Зони тицяння</string>
+    <string name="pref_read_with_tapping_inverted">Інвертувати зони тицяння</string>
+    <string name="pref_show_navigation_mode">Оверлей зон дотику</string>
+    <string name="pref_read_with_long_tap">Показувати дії при довгому натисканні</string>
+    <string name="pref_chapter_swipe_start">Розділ при проведені пальцем ліворуч</string>
+    <string name="pref_chapter_swipe_end">Розділ при проведені пальцем вправоруч</string>
+    <string name="ext_permission_install_apps_warning">Потребуються дозволи для встановлення додатків. Натисніть сюди для отримання.</string>
+    <string name="connected_to_wifi">Тільки через Wi-Fi</string>
+</resources>

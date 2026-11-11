@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Appuyez ici pour de l\'aide sur Cloudflare</string>
+    <string name="action_show_errors">Appuyez pour voir les détails</string>
+    <string name="notification_size_warning">Les mises à jour importantes nuisent aux sources et peuvent entraîner un ralentissement des mises à jour ainsi qu\'une augmentation de l\'utilisation de la batterie. Appuyez pour en savoir plus.</string>
+    <string name="download_queue_size_warning">Attention : les téléchargements massifs peuvent entraîner un ralentissement des sources ou le blocage de %s. Appuyez pour en savoir plus.</string>
+    <string name="information_empty_category">Vous n\'avez aucune catégorie. Appuyez sur le bouton « + » pour en créer une afin d\'organiser votre bibliothèque.</string>
+    <string name="pref_double_tap_zoom">Appuyez deux fois pour zoomer</string>
+    <string name="pref_double_tap_anim_speed">Vitesse d\'animation du double-clic</string>
+    <string name="pref_dump_crash_logs">Partager les rapports de plantage</string>
+    <string name="pref_security_summary">Verrouillage des applications, écran sécurisé</string>
+    <string name="pref_viewer_nav">Zones tactiles</string>
+    <string name="pref_read_with_tapping_inverted">Inverser les zones tactiles</string>
+    <string name="pref_show_navigation_mode">Afficher les zones tactiles (superposition)</string>
+    <string name="pref_read_with_long_tap">Afficher les actions en appuyant longuement</string>
+    <string name="pref_chapter_swipe_start">Action de glisser à gauche</string>
+    <string name="pref_chapter_swipe_end">Action de glisser à droite</string>
+    <string name="ext_permission_install_apps_warning">Des permissions sont nécessaires pour installer des extensions. Appuyer ici pour les accorder.</string>
+    <string name="connected_to_wifi">Uniquement en Wi-Fi</string>
+</resources>

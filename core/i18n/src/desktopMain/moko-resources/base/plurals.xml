@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="sync_files_waiting_for_unmetered">
+        <item quantity="one">%d cover or font waits for an unmetered network</item>
+        <item quantity="other">%d covers and fonts wait for an unmetered network</item>
+    </plurals>
+</resources>

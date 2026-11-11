@@ -19,7 +19,6 @@
     <string name="lock_with_biometrics">আনলকৰ প্ৰয়োজন</string>
     <string name="lock_when_idle">নিস্ক্ৰিয় হ\'লে লক কৰক</string>
     <string name="pref_library_update_restriction">স্বয়ংক্ৰিয় আপডেট যন্ত্ৰৰ সীমাবদ্ধতা</string>
-    <string name="connected_to_wifi">কেৱল Wi-Fi ত</string>
     <string name="network_not_metered">কেৱল অমাপিত নেটৱৰ্কত</string>
     <string name="charging">চাৰ্জিং কৰোঁতে</string>
     <string name="default_category">ডিফল্ট শ্ৰেণী</string>
@@ -46,7 +45,6 @@
     <string name="invalid_backup_file_missing_manga">বেকআপত কোনো পুথিভঁৰাল প্ৰৱিষ্টি নাই।</string>
     <string name="restore_completed">পুনৰুদ্ধাৰ সম্পূৰ্ণ</string>
     <string name="restore_duration">%1$02d মিনিট, %2$02d ছেকেণ্ড</string>
-    <string name="missing_storage_permission">সংৰক্ষণ অনুমতি দিয়া হোৱা নাই</string>
     <string name="in_library">পুথিভঁৰালত</string>
     <string name="manga_added_library">পুথিভঁৰাললৈ যোগ কৰা হৈছে</string>
     <string name="snack_categories_deleted">শ্ৰেণী মচা হৈছে</string>
@@ -179,7 +177,6 @@
     <string name="action_undo">পূৰ্ববত কৰক</string>
     <string name="action_close">বন্ধ কৰক</string>
     <string name="action_open_log">লগ খোলক</string>
-    <string name="action_show_errors">বিৱৰণ চাবলৈ টাপ কৰক</string>
     <string name="action_restore">পুনৰুদ্ধাৰ কৰক</string>
     <string name="action_webview_back">পিছলৈ</string>
     <string name="action_start_downloading_now">এতিয়াই ডাউনলোড আৰম্ভ কৰক</string>
@@ -208,12 +205,10 @@
     <string name="pref_category_downloads">ডাউনলোড</string>
     <string name="pref_appearance_summary">থিম, তাৰিখ আৰু সময় বিন্যাস</string>
     <string name="pref_category_library">পুথিভঁৰাল</string>
-    <string name="pref_library_summary">শ্ৰেণী, বিশ্বব্যাপী আপডেট, অধ্যায় সুইপ</string>
     <string name="pref_reader_summary">পঢ়াৰ মোড, প্ৰদৰ্শন, নেভিগেশ্বন</string>
     <string name="pref_downloads_summary">স্বয়ংক্ৰিয় ডাউনলোড, আগতীয়া ডাউনলোড</string>
     <string name="pref_browse_summary">উৎস, এক্সটেনশ্বন, বিশ্বব্যাপী সন্ধান</string>
     <string name="pref_backup_summary">হস্তচালিত আৰু স্বয়ংক্ৰিয় বেকআপ, সংৰক্ষণ স্থান</string>
-    <string name="pref_security_summary">এপ লক, সুৰক্ষিত স্ক্ৰীন</string>
     <string name="pref_category_theme">থিম</string>
     <string name="pref_app_theme">এপ থিম</string>
     <string name="theme_system">চিষ্টেম</string>
@@ -261,8 +256,6 @@
     <string name="none">এটাও নহয়</string>
     <string name="include">অন্তৰ্ভুক্তি: %s</string>
     <string name="exclude">বাদ দিয়া: %s</string>
-    <string name="pref_chapter_swipe_end">সোঁফালে সুইপ কৰিলে অধ্যায়</string>
-    <string name="pref_chapter_swipe_start">বাওঁফালে সুইপ কৰিলে অধ্যায়</string>
     <string name="multi_lang">বহুভাষিক</string>
     <string name="ext_updates_pending">আপডেট মুলতুবি</string>
     <string name="ext_update">আপডেট</string>
@@ -282,18 +275,15 @@
     <string name="untrusted_extension_message">দুৰ্ভাৱপূৰ্ণ এক্সটেনশ্বনে সংৰক্ষিত যিকোনো লগইন প্ৰমাণপত্ৰ পঢ়িব পাৰে বা ইচ্ছামত কোড কাৰ্যকৰী কৰিব পাৰে।\n\nএই এক্সটেনশ্বন বিশ্বাস কৰি, আপুনি এই বিপদসমূহ গ্ৰহণ কৰে।</string>
     <string name="ext_info_version">সংস্কৰণ</string>
     <string name="ext_info_language">ভাষা</string>
-    <string name="ext_permission_install_apps_warning">এক্সটেনশ্বন ইন্সটল কৰিবলৈ অনুমতিৰ প্ৰয়োজন। অনুমতি দিবলৈ ইয়াত টাপ কৰক।</string>
     <string name="ext_install_service_notif">এক্সটেনশ্বন ইন্সটল কৰি আছে…</string>
     <string name="ext_installer_shizuku_stopped">Shizuku চলি থকা নাই</string>
     <string name="ext_revoke_trust">বিশ্বাসিত অজ্ঞাত এক্সটেনশ্বনৰ বিশ্বাস বাতিল কৰক</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Shizuku ব্যৱহাৰ কৰিবলৈ Shizuku ইন্সটল আৰু আৰম্ভ কৰক এক্সটেনশ্বন ইন্সটলাৰ হিচাপে।</string>
-    <string name="pref_show_navigation_mode">টেপ জোন ওভাৰলে দেখুৱাওক</string>
     <string name="pref_dual_page_split">বহল পৃষ্ঠা বিভক্ত কৰক</string>
     <string name="pref_dual_page_invert">বিভক্ত পৃষ্ঠা স্থান বিপৰীত কৰক</string>
     <string name="pref_dual_page_invert_summary">যদি বিভক্ত বহল পৃষ্ঠাৰ স্থান পঢ়াৰ দিশৰ সৈতে মিল নাখায়</string>
     <string name="pref_page_rotate">ফিট কৰিবলৈ বহল পৃষ্ঠা ঘূৰাওক</string>
     <string name="pref_page_rotate_invert">ঘূৰোৱা বহল পৃষ্ঠাৰ অভিমুখ বিপৰীত কৰক</string>
-    <string name="pref_double_tap_zoom">জুম কৰিবলৈ দ্বৈত টাপ কৰক</string>
     <string name="pref_cutout_short">কাটআউট অঞ্চলত বিষয়বস্তু দেখুৱাওক</string>
     <string name="pref_page_transitions">পৃষ্ঠা স্থানান্তৰ এনিমেট কৰক</string>
     <string name="pref_flash_page">পৃষ্ঠা সলনি হ\'লে ফ্লাচ কৰক</string>
@@ -304,7 +294,6 @@
     <string name="pref_flash_with">ফ্লাচ কৰক</string>
     <string name="pref_flash_style_black">ক\'লা</string>
     <string name="pref_flash_style_white">বগা</string>
-    <string name="pref_double_tap_anim_speed">দ্বৈত টাপ এনিমেচন গতি</string>
     <string name="pref_flash_style_white_black">বগা আৰু ক\'লা</string>
     <string name="pref_show_page_number">পৃষ্ঠা নম্বৰ দেখুৱাওক</string>
     <string name="pref_show_reading_mode">পঢ়াৰ মোড দেখুৱাওক</string>
@@ -323,7 +312,6 @@
     <string name="pref_skip_filtered_chapters">ফিল্টাৰ কৰা অধ্যায় স্কিপ কৰক</string>
     <string name="pref_skip_dupe_chapters">ডুপ্লিকেট অধ্যায় স্কিপ কৰক</string>
     <string name="pref_reader_navigation">নেভিগেশ্বন</string>
-    <string name="pref_read_with_tapping_inverted">টেপ জোন বিপৰীত কৰক</string>
     <string name="tapping_inverted_none">কোনো নহয়</string>
     <string name="tapping_inverted_horizontal">অনুভূমিক</string>
     <string name="pref_read_with_volume_keys">ভলিউম কি</string>
@@ -331,7 +319,6 @@
     <string name="tapping_inverted_both">দুয়োটা</string>
     <string name="pref_reader_actions">কাৰ্য্য</string>
     <string name="pref_create_folder_per_manga_summary">প্ৰৱিষ্টিৰ শিৰোনাম অনুসৰি ফোল্ডাৰ সৃষ্টি কৰে</string>
-    <string name="pref_read_with_long_tap">দীঘল টাপত কাৰ্য্য দেখুৱাওক</string>
     <string name="pref_create_folder_per_manga">পৃষ্ঠাবোৰ পৃথক ফোল্ডাৰত সাঁচক</string>
     <string name="pref_reader_theme">পটভূমিৰ ৰং</string>
     <string name="gray_background">গ্ৰে</string>
@@ -351,7 +338,6 @@
     <string name="webtoon_viewer">দীঘল ষ্ট্ৰিপ</string>
     <string name="vertical_plus_viewer">ফাঁক থকা দীঘল ষ্ট্ৰিপ</string>
     <string name="pager_viewer">পৃষ্ঠাযুক্ত</string>
-    <string name="pref_viewer_nav">টেপ জোন</string>
     <string name="pref_image_scale_type">স্কেল প্ৰকাৰ</string>
     <string name="scale_type_fit_screen">স্ক্ৰীনত ফিট কৰক</string>
     <string name="scale_type_stretch">প্ৰসাৰিত কৰক</string>
@@ -468,7 +454,6 @@
     <string name="pref_reset_viewer_flags_summary">সকলো শৃংখলাৰ পঢ়াৰ মোড আৰু অভিমুখ ৰিছেট কৰে</string>
     <string name="pref_reset_viewer_flags_success">সকলো পাঠক ছেটিং ৰিছেট কৰা হৈছে</string>
     <string name="pref_reset_viewer_flags_error">পাঠক ছেটিং ৰিছেট কৰিব পৰা নগ\'ল</string>
-    <string name="pref_dump_crash_logs">ক্ৰেশ লগ শ্বেয়াৰ কৰক</string>
     <string name="pref_dump_crash_logs_summary">বিকাশকৰ্তাৰ সৈতে শ্বেয়াৰ কৰিবলৈ ত্ৰুটি লগ এটা ফাইলত সাঁচে</string>
     <string name="label_background_activity">পৃষ্ঠভূমি কাৰ্য্যকলাপ</string>
     <string name="pref_disable_battery_optimization">বেটাৰী অনুকূলন নিষ্ক্ৰিয় কৰক</string>
@@ -644,13 +629,10 @@
     <string name="seconds_short">%dছে</string>
     <string name="download_queue_error">অধ্যায় ডাউনলোড কৰিব পৰা নগ\'ল। আপুনি ডাউনলোড অংশত পুনৰ চেষ্টা কৰিব পাৰে</string>
     <string name="download_insufficient_space">সংৰক্ষণ স্থান কম হোৱাৰ বাবে অধ্যায় ডাউনলোড কৰিব পৰা নগ\'ল</string>
-    <string name="download_queue_size_warning">সতৰ্কবাণী: বৃহৎ বাল্ক ডাউনলোডে উৎসসমূহ লেহুৱা আৰু/অথবা %s ব্লক কৰিব পাৰে। অধিক জানিবলৈ টাপ কৰক।</string>
     <string name="notification_updating_progress">পুথিভঁৰাল আপডেট কৰি আছে… (%s)</string>
-    <string name="notification_size_warning">বৃহৎ আপডেটে উৎসৰ ক্ষতি কৰে আৰু লেহুৱা আপডেট আৰু অধিক বেটাৰী ব্যৱহাৰৰ কাৰণ হ\'ব পাৰে। অধিক জানিবলৈ টাপ কৰক।</string>
     <string name="notification_chapters_single">অধ্যায় %1$s</string>
     <string name="notification_chapters_single_and_more">অধ্যায় %1$s আৰু %2$d অধিক</string>
     <string name="notification_chapters_multiple">অধ্যায়সমূহ %1$s</string>
-    <string name="learn_more">অধিক জানিবলৈ টাপ কৰক</string>
     <string name="notification_cover_update_failed">কভাৰ আপডেট কৰিবলৈ বিফল</string>
     <string name="notification_first_add_to_library">এইটো কৰাৰ আগতে অনুগ্ৰহ কৰি প্ৰৱিষ্টিটো আপোনাৰ পুথিভঁৰাললৈ যোগ কৰক</string>
     <string name="file_select_cover">কভাৰ ছবি বাছনি কৰক</string>
@@ -663,17 +645,14 @@
     <string name="information_no_manga_category">শ্ৰেণী খালী</string>
     <string name="information_no_entries_found">এই শ্ৰেণীত কোনো প্ৰৱিষ্টি পোৱা নগ\'ল</string>
     <string name="getting_started_guide">আৰম্ভণি গাইড</string>
-    <string name="information_empty_category">আপোনাৰ কোনো শ্ৰেণী নাই। আপোনাৰ পুথিভঁৰাল সংগঠিত কৰিবলৈ এটা সৃষ্টি কৰিবলৈ প্লাছ বুটামত টাপ কৰক।</string>
     <string name="information_empty_category_dialog">আপোনাৰ এতিয়াও কোনো শ্ৰেণী নাই।</string>
     <string name="information_cloudflare_bypass_failure">Cloudflare বাইপাছ কৰিবলৈ বিফল</string>
-    <string name="information_cloudflare_help">Cloudflare ৰ সৈতে সহায়ৰ বাবে ইয়াত টাপ কৰক</string>
     <string name="information_webview_required">এপটোৱে কাম কৰিবলৈ WebView আৱশ্যকীয়</string>
     <string name="information_webview_outdated">উন্নত সুসংগততাৰ বাবে অনুগ্ৰহ কৰি WebView এপ আপডেট কৰক</string>
     <string name="chapter_settings_updated">ডিফল্ট অধ্যায় ছেটিং আপডেট কৰা হৈছে</string>
     <string name="download_notifier_downloader_title">ডাউনলোডাৰ</string>
     <string name="download_notifier_title_error">ত্ৰুটি</string>
     <string name="download_notifier_unknown_error">অপ্রত্যাশিত ত্ৰুটিৰ বাবে অধ্যায় ডাউনলোড কৰিব পৰা নগ\'ল</string>
-    <string name="download_notifier_text_only_wifi">কোনো Wi-Fi সংযোগ উপলব্ধ নহয়</string>
     <string name="download_notifier_no_network">কোনো নেটৱৰ্ক সংযোগ উপলব্ধ নহয়</string>
     <string name="download_notifier_download_paused">ডাউনলোড বিৰাম দিয়া হৈছে</string>
     <string name="download_notifier_split_page_path_not_found">পৃষ্ঠা %d ৰ ফাইল পথ পোৱা নগ\'ল</string>

@@ -1,6 +1,8 @@
 // The self-hosted synchronization server: an HTTP API over one SQLite database and a folder of files in a data
 // directory, serving the protocol of :features:sync:protocol to every device of every account it holds. One artifact
 // both serves and carries the recovery command (see app.katari.sync.server.Main).
+import app.katari.gradle.syncserver.testOnSyncServerRuntime
+
 plugins {
     alias(katari.plugins.kotlin.jvm)
     alias(katari.plugins.spotless)
@@ -9,11 +11,20 @@ plugins {
 }
 
 // The server's own version, shown on its web page and released apart from the apps.
-version = "1.0.0"
+version = "1.0.1"
 
 application {
     applicationName = "katari-sync-server"
     mainClass = "app.katari.sync.server.MainKt"
+    // The SQLite driver loads its native library itself, which Java warns about and will block without this grant.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
+testOnSyncServerRuntime()
+
+tasks.test {
+    // The tests start the server's code as its start script does.
+    jvmArgs(application.applicationDefaultJvmArgs)
 }
 
 tasks.jar {

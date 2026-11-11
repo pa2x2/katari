@@ -8,6 +8,7 @@ import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
 import app.katari.entry.interactions.settings.AnimePlayerOrientation
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.viewer.settings.asProfilePreference
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.window.currentWindowLayout
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.Preference
@@ -164,7 +165,7 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     stringResource(MR.strings.seconds_short, it)
                 },
                 title = stringResource(MR.strings.pref_anime_seek_step),
-                subtitle = stringResource(MR.strings.pref_anime_seek_step_summary),
+                subtitle = stringResource(platformPresentation.seekStepSummary),
             ),
         )
 
@@ -181,7 +182,7 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     Preference.PreferenceItem.SwitchPreference(
                         preference = devicePreferences.rememberBrightness,
                         title = stringResource(MR.strings.pref_anime_remember_brightness),
-                        subtitle = stringResource(MR.strings.pref_anime_remember_brightness_summary),
+                        subtitle = platformPresentation.rememberBrightnessSummary?.let { stringResource(it) },
                     ),
                 ),
             ),

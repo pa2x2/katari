@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Толық ақпарат алу үшін басыңыз</string>
+    <string name="notification_size_warning">Көп жаңалтулар саны дереккөздер жұмысын баяулата және батарея жұмысын өтімін көбейте алады. Көбірек білу үшін басыңыз.</string>
+    <string name="download_queue_size_warning">Ескерту: Көп жүктеулер саны дереккөздер жұмысын баяулата алады және/немесе %s бұғатталына алады. Толығырақ оқу үшін басыңыз.</string>
+    <string name="information_empty_category">Санаттарыңыз жоқ. Жаңа санат жасау үшін және кітапханаңызды ұйымдастыру үшін қосу батырмасын басыңыз.</string>
+    <string name="pref_double_tap_anim_speed">Қосарлы түрту анимация жылдамдығы</string>
+    <string name="pref_dump_crash_logs">Қателер тіркеулерімен бөлісу</string>
+    <string name="pref_security_summary">Қолданбаны бұғаттау, экранды қорғау</string>
+    <string name="pref_viewer_nav">Басу аймағы</string>
+    <string name="pref_read_with_tapping_inverted">Басу аймағын терістету</string>
+    <string name="pref_show_navigation_mode">Түрту аймақтарының қабаттасуын көрсету</string>
+    <string name="pref_read_with_long_tap">Ұзақ түртуде көрсету</string>
+    <string name="connected_to_wifi">Тек Wi-Fi болғанда</string>
+</resources>

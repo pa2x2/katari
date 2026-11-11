@@ -24,6 +24,13 @@ chromium = "150.0.14.1233-9df0879ddc3d"
 chromium-linux-x64-sha256 = "a972b57e17cd82025961a0d9965b660aaaf9e52e89c74b2ce156bfb22af6d72e"
 chromium-linux-x64-size = "113559996"
 chromium-linux-x64-installed-size = "362092383"
+# The Temurin runtime the sync server's image ships, which the server's tests run on: the JRE archives of Adoptium's
+# temurin<feature version>-binaries releases on GitHub, with the SHA-256 sums Adoptium publishes beside each archive.
+# The image's base in features/sync/server/Dockerfile must carry this version, which the build workflow's image check
+# holds it to. Used in [/gradle/build-logic/src/main/kotlin/app/katari/gradle/syncserver/SyncServerRuntime.kt].
+sync-server-runtime = "25.0.5+8"
+sync-server-runtime-linux-x64-sha256 = "6fac98f0c8202efc3135a9e9e42aa61963ec42d1c5cbb40caf231e7b14a24ef6"
+sync-server-runtime-linux-aarch64-sha256 = "963931723891302ebb2687178532c3d793d71e2577cd058061c7efb396140a86"
 # appimagetool (https://github.com/AppImage/appimagetool/releases) packs the desktop app into an AppImage, which starts
 # through the AppImage type 2 runtime (https://github.com/AppImage/type2-runtime/releases), pinned here so packing
 # downloads nothing unpinned. The sums are GitHub's SHA-256 digests of their x86_64 release files, the one architecture

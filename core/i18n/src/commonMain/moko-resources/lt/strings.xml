@@ -7,7 +7,6 @@
     <string name="chapters">Skyriai</string>
     <string name="manga">Bibliotekos įrašai</string>
     <string name="categories">Kategorijos</string>
-    <string name="information_empty_category">Neturite jokių kategorijų. Paspauskite pliuso simbolį, kad sukurtumėte kategoriją jūsų bibliotekos organizavimui.</string>
     <string name="information_empty_library">Jūsų biblioteka tuščia</string>
     <string name="information_no_recent_manga">Nėra neseniai skaitytų</string>
     <string name="information_no_recent">Naujinių nėra</string>
@@ -79,7 +78,6 @@
     <string name="action_webview_forward">Į priekį</string>
     <string name="action_webview_back">Atgal</string>
     <string name="action_restore">Atkurti</string>
-    <string name="action_show_errors">Paspausti klaidų rodymui</string>
     <string name="action_open_log">Atidaryti ataskaitą</string>
     <string name="action_reset">Įkelti iš naujo</string>
     <string name="action_undo">Anuliuoti veiksmą</string>
@@ -161,7 +159,6 @@
     <string name="pref_show_reading_mode_summary">Trumpai parodyti dabartinį rėžimą, kai skaitiniai yra atidaryti</string>
     <string name="pref_show_reading_mode">Parodyti skaitymo rėžimą</string>
     <string name="pref_show_page_number">Parodyti puslapio numerį</string>
-    <string name="pref_double_tap_anim_speed">Dvigubo paspaudimo animacijos greitis</string>
     <string name="pref_page_transitions">Puslapių perėjimų animacijos</string>
     <string name="pref_cutout_short">Parodyti turinį iškirptoje zonoje</string>
     <string name="pref_dual_page_invert_summary">Jeigu perskirtų puslapių pozicijos nesutampa su skaitymo kryptimi</string>
@@ -199,7 +196,6 @@
     <string name="pref_skip_filtered_chapters">Praleisti perfiltruotus skyrius</string>
     <string name="tapping_inverted_vertical">Vertikalus</string>
     <string name="pref_reader_actions">Veiksmai</string>
-    <string name="pref_read_with_long_tap">Parodyti ilgiau paspaudus</string>
     <string name="pref_create_folder_per_manga">Išsaugoti puslapius atskiruose aplankuose</string>
     <string name="pref_create_folder_per_manga_summary">Sukuria aplankus pagal įrašo pavadinimą</string>
     <string name="pref_reader_theme">Fono spalva</string>
@@ -225,7 +221,6 @@
     <string name="filter_mode_overlay">Perdanga</string>
     <string name="pref_reader_navigation">Navigacija</string>
     <string name="pref_read_with_volume_keys_inverted">Apkeisti garso mygtukus</string>
-    <string name="pref_read_with_tapping_inverted">Invertuoti paspaudimo zonas</string>
     <string name="black_background">Juoda</string>
     <string name="automatic_background">Automatinis</string>
     <string name="pref_viewer_type">Numatytas skaitymo rėžimas</string>
@@ -248,7 +243,6 @@
     <string name="tapping_inverted_horizontal">Horizontalus</string>
     <string name="tapping_inverted_both">Abu</string>
     <string name="pager_viewer">Puslapiai</string>
-    <string name="pref_viewer_nav">Paspaudimų išdėstymas</string>
     <string name="scale_type_smart_fit">Protingas pritaikymas</string>
     <string name="zoom_start_automatic">Automatinis</string>
     <string name="zoom_start_left">Kairiau</string>
@@ -264,10 +258,8 @@
     <string name="action_display_language_badge">Kalba</string>
     <string name="extension_api_error">Nepavyko gauti papildinių sąrašo</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instaliuoti ir paleisti Shizuku, kad galėtumėte naudoti Shizuku kaip papildinių instaliuotoją.</string>
-    <string name="pref_show_navigation_mode">Rodyti lietimui jautrias zonas</string>
     <string name="label_warning">Įspėjimas</string>
     <string name="update_72hour">Kas 3 dienas</string>
-    <string name="connected_to_wifi">Kai naudojamas Wi-Fi</string>
     <string name="ext_updates_pending">Yra naujinių</string>
     <string name="pref_category_reading">Skaitoma</string>
     <string name="ext_installer_legacy">Pasenusi</string>
@@ -301,10 +293,8 @@
     <string name="pref_remove_exclude_categories">Neįtrauktos kategorijos</string>
     <string name="last_read_chapter">Paskiausiai skaitytas skyrius</string>
     <string name="pref_download_new_categories_details">Įrašai neįtrauktose kategorijose nebus atsisiųsti, net jei jie taip pat yra įtraukti į kategorijas.</string>
-    <string name="learn_more">Palieskite, kad sužinotumėte daugiau</string>
     <string name="transition_pages_loading">Įkeliami puslapiai…</string>
     <string name="transition_no_next">Kito skyriaus nėra</string>
-    <string name="notification_size_warning">Dideli atnaujinimai kenkia šaltiniams ir gali lemti lėtesnius atnaujinimus bei didesnį akumuliatoriaus naudojimą. Bakstelėkite , jei norite sužinoti daugiau.</string>
     <string name="viewer">Skaitymo rėžimas</string>
     <string name="recent_manga_time">Sk. %1$s - %2$s</string>
     <string name="updating_library">Atnaujinama biblioteka</string>
@@ -411,17 +401,14 @@
     <string name="restoring_backup">Atkuriama atsarginė kopija</string>
     <string name="requires_app_restart">Kad įsigaliotų, reikia iš naujo paleisti programą</string>
     <string name="pref_reset_viewer_flags">Iš naujo nustatyti kiekvienos serijos skaitytuvo nustatymus</string>
-    <string name="pref_dump_crash_logs">Išmeskite strigčių žurnalus</string>
     <string name="download_queue_error">Nepavyko atsisiųsti skyrių. Galite pabandyti dar kartą atsisiųsti</string>
     <string name="pref_user_agent_string">Numatytoji vartotojo agento eilutė</string>
     <string name="not_installed">Neįdiegtas</string>
     <string name="chapter_settings_updated">Atnaujinti numatytus skyrių nustatymus</string>
     <string name="download_notifier_downloader_title">Parsisiuntėjas</string>
     <string name="download_notifier_title_error">Klaida</string>
-    <string name="download_notifier_text_only_wifi">Nėra „Wi-Fi“ ryšio</string>
     <string name="channel_progress">Progresas</string>
     <string name="backup_in_progress">Atsarginė kopija jau kuriama</string>
-    <string name="download_queue_size_warning">Įspėjimas: dėl didelių masinių atsisiuntimų šaltiniai gali tapti lėtesni ir (arba) jie blokuoti \"%s\". Bakstelėkite , jei norite sužinoti daugiau.</string>
     <string name="pref_disable_battery_optimization">Išjungti akumuliatoriaus optimizavimą</string>
     <string name="restore_completed">Atkūrimas baigtas</string>
     <string name="restore_duration">%1$02d min, %2$02d sek</string>
@@ -545,14 +532,11 @@
     <string name="download_ahead_info">Veikia tik bibliotekoje esantiems įrašams ir tik tada, jei jau atsisiųstas dabartinis ir kitas skyrius</string>
     <string name="download_ahead">Atsisiųsti į priekį</string>
     <string name="auto_download_while_reading">Automatinis atsisiuntimas beskaitant</string>
-    <string name="missing_storage_permission">Nesuteikti saugojimo leidimai</string>
     <string name="pref_downloads_summary">Automatinis atsisiuntimas, atsisiuntimas į priekį</string>
     <string name="pref_backup_summary">Rankinės ir automatinės atsarginės kopijos</string>
-    <string name="pref_security_summary">Programos užraktas, saugus ekranas</string>
     <string name="pref_appearance_summary">Tema, datos ir laiko formatas</string>
     <string name="pref_reader_summary">Skaitymo režimas, rodymas, navigacija</string>
     <string name="pref_browse_summary">Šaltiniai, plėtiniai, visuotinė paieška</string>
-    <string name="pref_library_summary">Kategorijos, visuotinis atnaujinimas</string>
     <string name="multi_lang">Kelių kalbų</string>
     <string name="invalid_location">Netinkama vieta: %s</string>
     <string name="error_user_agent_string_invalid">Netinkama naudotojo agento eilutė</string>

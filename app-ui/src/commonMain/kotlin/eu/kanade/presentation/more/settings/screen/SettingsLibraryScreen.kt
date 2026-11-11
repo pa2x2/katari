@@ -9,6 +9,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.util.fastMap
+import app.katari.platform.presentation.platformPresentation
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
@@ -121,20 +122,6 @@ class SettingsLibraryScreen : SearchableSettings() {
             title = stringResource(MR.strings.pref_chapter_lists),
             preferenceItems = listOf(
                 Preference.PreferenceItem.ListPreference(
-                    preference = libraryPreferences.swipeToStartAction,
-                    entries = mapOf(
-                        LibraryPreferences.ChapterSwipeAction.Disabled to
-                            stringResource(MR.strings.disabled),
-                        LibraryPreferences.ChapterSwipeAction.ToggleBookmark to
-                            stringResource(MR.strings.action_bookmark),
-                        LibraryPreferences.ChapterSwipeAction.ToggleRead to
-                            stringResource(MR.strings.action_mark_as_seen),
-                        LibraryPreferences.ChapterSwipeAction.Download to
-                            stringResource(MR.strings.action_download),
-                    ),
-                    title = stringResource(MR.strings.pref_chapter_swipe_start),
-                ),
-                Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.swipeToEndAction,
                     entries = mapOf(
                         LibraryPreferences.ChapterSwipeAction.Disabled to
@@ -146,7 +133,21 @@ class SettingsLibraryScreen : SearchableSettings() {
                         LibraryPreferences.ChapterSwipeAction.Download to
                             stringResource(MR.strings.action_download),
                     ),
-                    title = stringResource(MR.strings.pref_chapter_swipe_end),
+                    title = stringResource(platformPresentation.chapterSwipeToEndLabel),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.swipeToStartAction,
+                    entries = mapOf(
+                        LibraryPreferences.ChapterSwipeAction.Disabled to
+                            stringResource(MR.strings.disabled),
+                        LibraryPreferences.ChapterSwipeAction.ToggleBookmark to
+                            stringResource(MR.strings.action_bookmark),
+                        LibraryPreferences.ChapterSwipeAction.ToggleRead to
+                            stringResource(MR.strings.action_mark_as_seen),
+                        LibraryPreferences.ChapterSwipeAction.Download to
+                            stringResource(MR.strings.action_download),
+                    ),
+                    title = stringResource(platformPresentation.chapterSwipeToStartLabel),
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = globalLibraryPreferences.markDuplicateReadChapterAsRead,

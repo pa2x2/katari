@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Додирни овде за помоћ са Cloudflare-ом</string>
+    <string name="action_show_errors">Прикажи детаље</string>
+    <string name="notification_size_warning">Велика ажурирања штете изворима и могу довести до споријег ажурирања и повећања потрошње батерије. Кликни да сазнаш више.</string>
+    <string name="download_queue_size_warning">Упозорење: велики број преузимања може довести до успоравања извора и/или блокирања %s-а. Додирни да сазнаш више.</string>
+    <string name="information_empty_category">Немате категорија. Додирните дугме плус да бисте направили нову категорију за организовање колекције.</string>
+    <string name="pref_double_tap_zoom">Додирни двапут за зумирање</string>
+    <string name="pref_double_tap_anim_speed">Брзина анимације двоклика</string>
+    <string name="pref_dump_crash_logs">Дели извештаје о паду</string>
+    <string name="pref_security_summary">Закључавање апликације, сигуран екран</string>
+    <string name="pref_viewer_nav">Начин навигације</string>
+    <string name="pref_read_with_tapping_inverted">Обрни додире</string>
+    <string name="pref_show_navigation_mode">Прикажи начин навигације</string>
+    <string name="pref_read_with_long_tap">Прикажи радње при дугом додиру</string>
+    <string name="pref_chapter_swipe_start">Превуци улево</string>
+    <string name="pref_chapter_swipe_end">Превуци удесно</string>
+    <string name="ext_permission_install_apps_warning">За инсталацију додатака потребне су дозволе. Додирни овде за одобрење</string>
+    <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
+</resources>

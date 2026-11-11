@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Нажмите здесь, чтобы получить помощь с Cloudflare</string>
+    <string name="action_show_errors">Нажать, чтобы увидеть подробности</string>
+    <string name="notification_size_warning">Большое количество обновлений может привести к замедлению работы источников и увеличению расхода батареи. Нажмите для подробностей.</string>
+    <string name="download_queue_size_warning">Предупреждение: Большое количество загрузок может привести к замедлению работы источников и/или блокировке %s. Нажмите для подробностей.</string>
+    <string name="information_empty_category">Нет категорий в библиотеке. Нажмите кнопку «Добавить», чтобы создать категорию для организации вашей библиотеки.</string>
+    <string name="pref_double_tap_zoom">Двойное нажатие для увеличения</string>
+    <string name="pref_double_tap_anim_speed">Скорость анимации при двойном нажатии</string>
+    <string name="pref_load_ahead_only_over_wifi">Загрузить наперёд только с Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Экономит мобильный трафик, загружая только те страницы, которые находятся рядом с той, которую вы читаете</string>
+    <string name="pref_dump_crash_logs">Поделиться журналом сбоев</string>
+    <string name="pref_security_summary">Блокировка приложения, защита экрана</string>
+    <string name="pref_viewer_nav">Зоны касания</string>
+    <string name="pref_read_with_tapping_inverted">Зоны касания наоборот</string>
+    <string name="pref_show_navigation_mode">Наложение зон касания</string>
+    <string name="pref_read_with_long_tap">Показать действия при долгом нажатии</string>
+    <string name="pref_chapter_swipe_start">Глава при смахивании влево</string>
+    <string name="pref_chapter_swipe_end">Глава при смахивании вправо</string>
+    <string name="ext_permission_install_apps_warning">Нужны разрешения для установки расширений. Нажмите сюда, чтобы их предоставить.</string>
+    <string name="connected_to_wifi">Только по Wi-Fi</string>
+</resources>

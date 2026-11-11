@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Paspausti klaidų rodymui</string>
+    <string name="notification_size_warning">Dideli atnaujinimai kenkia šaltiniams ir gali lemti lėtesnius atnaujinimus bei didesnį akumuliatoriaus naudojimą. Bakstelėkite , jei norite sužinoti daugiau.</string>
+    <string name="download_queue_size_warning">Įspėjimas: dėl didelių masinių atsisiuntimų šaltiniai gali tapti lėtesni ir (arba) jie blokuoti \"%s\". Bakstelėkite , jei norite sužinoti daugiau.</string>
+    <string name="information_empty_category">Neturite jokių kategorijų. Paspauskite pliuso simbolį, kad sukurtumėte kategoriją jūsų bibliotekos organizavimui.</string>
+    <string name="pref_double_tap_anim_speed">Dvigubo paspaudimo animacijos greitis</string>
+    <string name="pref_dump_crash_logs">Išmeskite strigčių žurnalus</string>
+    <string name="pref_security_summary">Programos užraktas, saugus ekranas</string>
+    <string name="pref_viewer_nav">Paspaudimų išdėstymas</string>
+    <string name="pref_read_with_tapping_inverted">Invertuoti paspaudimo zonas</string>
+    <string name="pref_show_navigation_mode">Rodyti lietimui jautrias zonas</string>
+    <string name="pref_read_with_long_tap">Parodyti ilgiau paspaudus</string>
+    <string name="connected_to_wifi">Kai naudojamas Wi-Fi</string>
+</resources>

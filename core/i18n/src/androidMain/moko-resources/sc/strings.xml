@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Toca inoghe pro agiudu cun Cloudflare</string>
+    <string name="action_show_errors">Toca pro bìdere sos detàllios</string>
+    <string name="notification_size_warning">Sos agiornamentos mannos diant pòdere fàghere dannu a sas fontes e causare agiornamentos prus lentos e fintzas un\'impreu de sa bateria prus mannu. Toca pro nde ischire de prus.</string>
+    <string name="download_queue_size_warning">Dae cara: sos iscarrigamentos de massa mannos diant pòdere rallentare sas fontes e/o blocare %s. Toca pro nde ischire de prus.</string>
+    <string name="information_empty_category">Non tenes categorias. Incarca su butone de su \"prus\" pro nde creare una pro organizare sa biblioteca tua.</string>
+    <string name="pref_double_tap_zoom">Tocu dòpiu pro ismanniare</string>
+    <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
+    <string name="pref_dump_crash_logs">Cumpartzi sos registros de sos arrestos anòmalos</string>
+    <string name="pref_security_summary">Blocu de s\'aplicatzione, ischermu seguru</string>
+    <string name="pref_viewer_nav">Zonas de tocu</string>
+    <string name="pref_read_with_tapping_inverted">Fùrria sas zonas de tocu</string>
+    <string name="pref_show_navigation_mode">Ammustra sa subrapositzione de sas zonas de tocu</string>
+    <string name="pref_read_with_long_tap">Ammustra sas atziones cun su tocu longu</string>
+    <string name="pref_chapter_swipe_start">Capìtulu iscurrende a manca</string>
+    <string name="pref_chapter_swipe_end">Capìtulu iscurrende a destra</string>
+    <string name="ext_permission_install_apps_warning">B\'at bisòngiu de sos permissos pro installare estensiones. Toca inoghe pro los frunire.</string>
+    <string name="connected_to_wifi">Petzi cun su Wi-Fi</string>
+</resources>

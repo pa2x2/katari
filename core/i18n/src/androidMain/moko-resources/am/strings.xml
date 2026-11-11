@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_empty_category">ምንም ምድቦች የሉዎትም። ቤተ-መጽሐፍትዎን ለማደራጀት አንድ ለመፍጠር የመደመር አዝራሩን መታ ያድርጉ።</string>
+    <string name="pref_double_tap_anim_speed">ሁለቴ መታ የአኒሜሽን ፍጥነት</string>
+    <string name="pref_read_with_tapping_inverted">ተገልብጦ መታ ማድረግ</string>
+    <string name="pref_read_with_long_tap">ረጅም መታ መገናኛ</string>
+</resources>

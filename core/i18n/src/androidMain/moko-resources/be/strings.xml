@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Націсніце тут, каб атрымаць дапамогу з Cloudflare</string>
+    <string name="action_show_errors">Націсніце для падрабязнасцей</string>
+    <string name="notification_size_warning">Вялікія абнаўленні шкодзяць крыніцам і могуць прывесці да іх запавольвання і павялічанага расходу батарэі. Націсніце, каб даведацца больш.</string>
+    <string name="download_queue_size_warning">Папярэджанне: вялікая колькасць спамповак можа прывесці да запавольвання працы крыніц і/або блакіроўкі %s. Націсніце, каб даведацца больш.</string>
+    <string name="information_empty_category">У вас няма катэгорый. Націсніце «плюс», каб стварыць іх і ўпарадкаваць бібліятэку.</string>
+    <string name="pref_double_tap_zoom">Падвойны дотык для павелічэння</string>
+    <string name="pref_double_tap_anim_speed">Хуткасць анімацыі пры падвойным дотыку</string>
+    <string name="pref_dump_crash_logs">Падзяліцца журналам збояў</string>
+    <string name="pref_security_summary">Блакіроўка праграмы, абарона экрана</string>
+    <string name="pref_viewer_nav">Зоны дотыку</string>
+    <string name="pref_read_with_tapping_inverted">Інвертаваць зоны дотыку</string>
+    <string name="pref_show_navigation_mode">Паказваць накладанне зон дотыку</string>
+    <string name="pref_read_with_long_tap">Паказваць дзеянні пры доўгім дотыку</string>
+    <string name="pref_chapter_swipe_start">Раздзел пры змахванні ўлева</string>
+    <string name="pref_chapter_swipe_end">Раздзел пры змахванні ўправа</string>
+    <string name="ext_permission_install_apps_warning">Для ўсталёўкі пашырэнняў патрабуюцца дазволы. Націсніце сюды, каб даць іх.</string>
+    <string name="connected_to_wifi">Толькі праз Wi-Fi</string>
+</resources>

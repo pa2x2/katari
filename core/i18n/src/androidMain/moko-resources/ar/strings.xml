@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">اضغط هنا للمساعدة فى Cloudflare</string>
+    <string name="action_show_errors">إنقر لإظهار التفاصيل</string>
+    <string name="notification_size_warning">التحديثات الكبيرة تضر بالمصادر، وتؤدي لتحديثات أبطأ، وقد تسبب زيادة في استهلاك البطارية۔ اضغط لمعرفة المزيد۔</string>
+    <string name="download_queue_size_warning">تحذير: يمكن أن تؤدِّي التنزيلات كبيرة الحجم والعدد إلى إبطاء المصادر، وقد يُحظر %s منها بسبب ذلك. اضغط لمعرفة المزيد۔</string>
+    <string name="information_empty_category">ليست لديك أيّة فئات، اضغط زر اﻹضافة لإنشاء واحدة لتنظيم مكتبتك.</string>
+    <string name="pref_double_tap_zoom">انقر مرتين لتكبِّر</string>
+    <string name="pref_double_tap_anim_speed">سرعة مؤثر النقر المزدوج</string>
+    <string name="pref_dump_crash_logs">شارك سجلَّات الاعطال</string>
+    <string name="pref_security_summary">قفل التطبيق، شاشة آمنة</string>
+    <string name="pref_viewer_nav">مناطق اللمس</string>
+    <string name="pref_read_with_tapping_inverted">عكس مناطق اللمس</string>
+    <string name="pref_show_navigation_mode">إظهار مناطق اللمس</string>
+    <string name="pref_read_with_long_tap">أظهر الإجراءات عند الضغط المطوَّل</string>
+    <string name="pref_chapter_swipe_start">إجراء التمرير الى اليسار</string>
+    <string name="pref_chapter_swipe_end">إجراء التمرير الى اليمين</string>
+    <string name="ext_permission_install_apps_warning">تثبيت الإضافات يتطلب أذونات. انقر هنا لمنحها.</string>
+    <string name="connected_to_wifi">فقط على شبكة Wi-Fi</string>
+</resources>

@@ -191,7 +191,6 @@
     <string name="information_no_recent">Brak ostatnio zaktualizowanych</string>
     <string name="information_no_recent_manga">Nic ostatnio nie czytano</string>
     <string name="download_notifier_downloader_title">Pobieranie</string>
-    <string name="download_notifier_text_only_wifi">Brak połączenia Wi-Fi</string>
     <string name="download_notifier_no_network">Brak połączenia z internetem</string>
     <string name="action_global_search">Wyszukiwanie globalne</string>
     <string name="other_source">Inne</string>
@@ -200,7 +199,6 @@
     <string name="channel_common">Zwykły</string>
     <string name="latest">Najnowsze</string>
     <string name="action_display_download_badge">Pobrane rozdziały</string>
-    <string name="information_empty_category">Nie masz żadnych kategorii. Dotknij plusa, aby je utworzyć i zorganizować swoją bibliotekę.</string>
     <string name="label_extensions">Rozszerzenia</string>
     <string name="ext_install">Zainstaluj</string>
     <string name="ext_pending">Oczekujące</string>
@@ -208,7 +206,6 @@
     <string name="ext_installing">Instalowanie</string>
     <string name="ext_installed">Zainstalowano</string>
     <string name="ext_uninstall">Odinstaluj</string>
-    <string name="pref_double_tap_anim_speed">Szybkość animacji podwójnego dotknięcia</string>
     <string name="double_tap_anim_speed_0">Bez animacji</string>
     <string name="double_tap_anim_speed_normal">Normalna</string>
     <string name="double_tap_anim_speed_fast">Szybka</string>
@@ -237,7 +234,6 @@
     <string name="transition_pages_error">Nie udało się załadować stron: %1$s</string>
     <string name="action_open_in_web_view">Otwórz używając WebView</string>
     <string name="pref_skip_read_chapters">Pomiń rozdziały ozn. jako przeczytane</string>
-    <string name="pref_read_with_long_tap">Pokaż akcje po przytrzymaniu</string>
     <string name="pref_color_filter_mode">Tryb mieszania kolorów</string>
     <string name="filter_mode_overlay">Nakładka</string>
     <string name="filter_mode_multiply">Pomnożenie</string>
@@ -347,7 +343,6 @@
     <string name="tapping_inverted_vertical">Wertykalnie</string>
     <string name="tapping_inverted_horizontal">Horyzontalnie</string>
     <string name="tapping_inverted_none">Brak</string>
-    <string name="pref_read_with_tapping_inverted">Odwróć strefy kliknięcia</string>
     <string name="download_insufficient_space">Nie udało się pobrać rozdziałów z powodu braku miejsca na urządzeniu</string>
     <string name="unknown_status">Nieznany status</string>
     <string name="unknown_author">Nieznany autor</string>
@@ -382,8 +377,6 @@
     <string name="pref_category_delete_chapters">Usuń rozdziały</string>
     <string name="file_picker_error">Nie znaleziono aplikacji do przeglądania plików</string>
     <string name="pref_dump_crash_logs_summary">Zapisuje logi błędów do pliku do udostępnienia programistom</string>
-    <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
-    <string name="pref_viewer_nav">Strefy kliknięcia</string>
     <string name="edge_nav">Przy krawędzi</string>
     <string name="kindlish_nav">Podobnie jak w czytniku Kindle</string>
     <string name="l_nav">W kształcie litery \"L\"</string>
@@ -403,7 +396,6 @@
     <string name="nav_zone_next">Następne</string>
     <string name="nav_zone_prev">Poprzednie</string>
     <string name="pref_show_navigation_mode_summary">Krótko pokazuj, kiedy czytnik zostaje otwarty</string>
-    <string name="pref_show_navigation_mode">Pokazuj nakładkę stref kliknięcia</string>
     <string name="exclude">Wyklucz: %s</string>
     <string name="include">Uwzględnij: %s</string>
     <string name="none">Brak</string>
@@ -412,7 +404,6 @@
     <string name="pref_category_auto_download">Automatyczne pobieranie</string>
     <string name="rotation_landscape">Poziomo</string>
     <string name="rotation_portrait">Pionowo</string>
-    <string name="action_show_errors">Kliknij aby wyświetlić szczegóły</string>
     <string name="notification_incognito_text">Wyłącz tryb incognito</string>
     <string name="action_sort_chapter_fetch_date">Data pobrania rozdziału</string>
     <string name="error_no_match">Nie znaleziono pasującego wyniku</string>
@@ -468,7 +459,6 @@
     <string name="relative_time_today">Dzisiaj</string>
     <string name="theme_tealturquoise">Błękitny &amp; Turkusowy</string>
     <string name="theme_midnightdusk">Zmierzch północy</string>
-    <string name="notification_size_warning">Ostrzeżenie: duże aktualizacje biblioteki mogą prowadzić do zwiększonego zużycia baterii oraz spowolnienia działania źródeł. Kliknij, by dowiedzieć się więcej.</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Zainstaluj i uruchom Shizuku, aby używać go jako instalatora rozszerzeń.</string>
     <string name="ext_installer_pref">Instalator</string>
     <string name="pref_verbose_logging">Szczegółowe logi</string>
@@ -479,9 +469,7 @@
     <string name="action_sort_count">Ilość wejść</string>
     <string name="action_display_language_badge">Język</string>
     <string name="label_warning">Ostrzeżenie</string>
-    <string name="download_queue_size_warning">Ostrzeżenie: Duże aktualizacje biblioteki mogą prowadzić do zwiększonego zużycia baterii oraz spowolnienia działania źródeł.</string>
     <string name="update_72hour">Co 3 dni</string>
-    <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
     <string name="ext_update_all">Zaktualizuj wszystko</string>
     <string name="ext_installer_legacy">Przestarzały</string>
     <string name="pref_auto_clear_chapter_cache">Wyczyść cache rozdziałów przy uruchamianiu aplikacji</string>
@@ -500,7 +488,6 @@
     <string name="action_close">Zamknij</string>
     <string name="action_move_to_top_all_for_series">Przenieś serię na górę</string>
     <string name="action_sort_unread_count">Ilość nieprzeczytanych</string>
-    <string name="learn_more">Kliknij, by dowiedzieć się więcej</string>
     <string name="update_check_open">Otwórz na GitHubie</string>
     <string name="pref_reset_viewer_flags_success">Reset wszystkich ustawień czytnika</string>
     <string name="ext_info_version">Wersja</string>
@@ -554,9 +541,7 @@
     <string name="invalid_location">Nieprawidłowa lokalizacja: %s</string>
     <string name="action_display_show_continue_reading_button">Przycisk wznów czytanie</string>
     <string name="pref_browse_summary">Źródła, rozszerzenia, globalne wyszukiwanie</string>
-    <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
     <string name="pref_appearance_summary">Tło, data &amp; format czasu</string>
-    <string name="missing_storage_permission">Nie przyznano uprawnień do przechowywania</string>
     <string name="pref_backup_summary">Manualna &amp; automatyczna kopia</string>
     <string name="label_read_duration">Czas odczytu</string>
     <string name="label_titles_section">Wpisy</string>
@@ -572,7 +557,6 @@
     <string name="label_total_chapters">Razem</string>
     <string name="action_search_hint">Szukaj…</string>
     <string name="action_open_random_manga">Otwórz losową pozycję</string>
-    <string name="pref_library_summary">Kategorie, aktualizacja globalna, przesunięcie rozdziału</string>
     <string name="pref_invalidate_download_cache">Odbuduj indeks pobierania</string>
     <string name="fdroid_warning">Kompilacje F-Droid nie są oficjalnie obsługiwane. \nNaciśnij, aby dowiedzieć się więcej.</string>
     <string name="label_read_chapters">Przeczytane</string>
@@ -596,9 +580,6 @@
     <string name="pref_page_rotate">Dopasuj szerokie strony</string>
     <string name="pref_page_rotate_invert">Zmień orientację obróconych obrazów</string>
     <string name="pref_debug_info">Informacje debugowania</string>
-    <string name="pref_double_tap_zoom">Dotknij dwukrotnie, aby powiększyć</string>
-    <string name="pref_chapter_swipe_end">Przesuń palcem w prawo</string>
-    <string name="pref_chapter_swipe_start">Przesuń palcem w lewo</string>
     <string name="action_set_interval">Ustaw interwał</string>
     <string name="action_sort_next_updated">Następna spodziewana aktualizacja</string>
     <string name="manga_display_modified_interval_title">Aktualizuj co</string>
@@ -611,7 +592,6 @@
     <string name="delete_downloaded">Usuń pobrane</string>
     <string name="library_sync_complete">Synchronizacja biblioteki zakończona</string>
     <string name="download_cache_invalidated">Indeksy pobrań unieważnione</string>
-    <string name="information_cloudflare_help">Naciśnij tutaj aby uzyskać pomoc dotyczącą Cloudflare</string>
     <string name="unlock_app_title">Odblokuj %s</string>
     <string name="action_filter_interval_custom">Dostosowany interwał aktualizacji</string>
     <string name="action_ok">OK</string>
@@ -651,7 +631,6 @@
     <string name="pref_relative_format">Użyj dat względnych</string>
     <string name="pref_relative_format_summary">\"%1$s\" zamiast \"%2$s\"</string>
     <string name="onboarding_storage_help_info">Aktualizujesz ze starszej wersji i nie jesteś pewien co wybrać? Zobacz na przewodnik po pamięci.</string>
-    <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
     <string name="onboarding_storage_folder_info">Wybierz folder gdzie %1$s będzie zapisywał pobrane rozdziały, kopie zapasowe i inne. \n \nZalecany jest dedykowany folder.</string>
     <string name="onboarding_storage_selected_folder">Wybrany folder:%s</string>
     <string name="ext_revoke_trust">Unieważnij zaufanie nieznanym rozszerzeniom</string>

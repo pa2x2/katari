@@ -48,6 +48,7 @@ kotlin {
                 // Extension and source icons load through the extension host.
                 implementation(projects.sources.extensionRuntime)
                 implementation(projects.core.i18n)
+                implementation(projects.core.platformPresentation)
                 implementation(projects.features.libraryUpdate)
                 // Source errors from script sources, such as LNReader plugins, are worded by their kind.
                 implementation(projects.sources.scriptRuntime)

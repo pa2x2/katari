@@ -159,7 +159,6 @@
     <string name="download_notifier_downloader_title">Gestione Download</string>
     <string name="download_notifier_title_error">Errore</string>
     <string name="download_notifier_unknown_error">Impossibile scaricare il capitolo a causa di un errore imprevisto</string>
-    <string name="download_notifier_text_only_wifi">Nessuna connessione Wi-Fi disponibile</string>
     <string name="download_notifier_no_network">Nessuna connessione di rete disponibile</string>
     <string name="categories">Categorie</string>
     <string name="manga">Voci della libreria</string>
@@ -208,7 +207,6 @@
     <string name="ext_uninstall">Disinstalla</string>
     <string name="untrusted_extension">Estensione non attendibile</string>
     <string name="untrusted_extension_message">Le estensioni dannose possono leggere le credenziali di accesso memorizzate o eseguire codice arbitrario. \n \nFidandoti di questa estensione, accetti questi rischi.</string>
-    <string name="pref_double_tap_anim_speed">Velocità animazioni doppio tocco</string>
     <string name="pager_viewer">Per pagina</string>
     <string name="double_tap_anim_speed_0">Senza animazione</string>
     <string name="double_tap_anim_speed_normal">Normale</string>
@@ -225,7 +223,6 @@
     <string name="migration_dialog_what_to_include">Seleziona i dati da includere</string>
     <string name="migrate">Migra</string>
     <string name="copy">Copia</string>
-    <string name="information_empty_category">Non hai categorie. Tocca il pulsante più per crearne una e organizzare la tua libreria.</string>
     <string name="channel_common">Comune</string>
     <string name="transition_finished">Finito:</string>
     <string name="transition_current">Corrente:</string>
@@ -238,7 +235,6 @@
     <string name="action_open_in_web_view">Apri in WebView</string>
     <string name="pref_skip_read_chapters">Salta i capitoli segnati come letti</string>
     <string name="filter_mode_screen">Schermo</string>
-    <string name="pref_read_with_long_tap">Mostra azioni con un tocco prolungato</string>
     <string name="pref_color_filter_mode">Modalità di fusione del filtro colore</string>
     <string name="filter_mode_overlay">Sovrimpressione</string>
     <string name="filter_mode_multiply">Moltiplica</string>
@@ -340,7 +336,6 @@
     <string name="tapping_inverted_vertical">Verticale</string>
     <string name="tapping_inverted_horizontal">Orizzontale</string>
     <string name="tapping_inverted_none">Nessuno</string>
-    <string name="pref_read_with_tapping_inverted">Inverti le zone di tocco</string>
     <string name="loader_not_implemented_error">Fonte non trovata</string>
     <string name="unknown_status">Stato sconosciuto</string>
     <string name="unknown_author">Autore sconosciuto</string>
@@ -381,12 +376,10 @@
     <string name="spen_previous_page">Pagina precedente</string>
     <string name="migration_help_guide">Guida alla migrazione delle fonti</string>
     <string name="file_picker_error">Nessuna app per la selezione dei file trovata</string>
-    <string name="pref_viewer_nav">Zone di tocco</string>
     <string name="edge_nav">Bordo</string>
     <string name="kindlish_nav">Stile Kindle</string>
     <string name="l_nav">A forma di L</string>
     <string name="pref_dump_crash_logs_summary">Salva un registro degli errori su un file per condividerlo con gli sviluppatori</string>
-    <string name="pref_dump_crash_logs">Condividi il registro dei crash</string>
     <string name="action_desc">Decrescente</string>
     <string name="action_asc">Crescente</string>
     <string name="action_order_by_chapter_number">Per numero di capitolo</string>
@@ -408,9 +401,7 @@
     <string name="nav_zone_right">Destra</string>
     <string name="nav_zone_left">Sinistra</string>
     <string name="pref_dns_over_https">DNS su HTTPS (DoH)</string>
-    <string name="pref_show_navigation_mode">Mostra sovrapposizione con zone di tocco</string>
     <string name="pref_show_navigation_mode_summary">Mostra brevemente quando il lettore viene aperto</string>
-    <string name="action_show_errors">Tocca per vedere i dettagli</string>
     <string name="clipboard_copy_error">Impossibile copiare negli appunti</string>
     <string name="rotation_type">Rotazione</string>
     <string name="notification_incognito_text">Disabilita modalità incognito</string>
@@ -479,10 +470,7 @@
     <string name="action_display_language_badge">Lingua</string>
     <string name="label_warning">Attenzione</string>
     <string name="backup_info">Dovresti tenere delle copie dei backup anche in altri posti. I backup possono contenere dati sensibili comprese le password memorizzate; fate attenzione al condividerli.</string>
-    <string name="notification_size_warning">Grossi aggiornamenti danneggiano le fonti, possono rallentare gli aggiornamenti e aumentare il consumo di batteria. Tocca per saperne di più.</string>
-    <string name="connected_to_wifi">Solo su Wi-Fi</string>
     <string name="update_72hour">Ogni 3 giorni</string>
-    <string name="download_queue_size_warning">Attenzione: grossi download di massa possono rallentare le fonti e/o bloccare %s. Tocca per saperne di più.</string>
     <string name="ext_update_all">Aggiorna tutto</string>
     <string name="pref_auto_clear_chapter_cache">Cancella la cache capitoli all\'avvio dell\'app</string>
     <string name="clear_database_source_item_count">%1$d voci non presenti in libreria nel database</string>
@@ -497,7 +485,6 @@
     <string name="pref_navigate_pan">Scorri le immagini larghe</string>
     <string name="pref_landscape_zoom">Ingrandisci automaticamente le immagini larghe</string>
     <string name="action_display_cover_only_grid">Griglia con solo copertine</string>
-    <string name="learn_more">Tocca per approfondire</string>
     <string name="rotation_reverse_portrait">Verticale inverso</string>
     <string name="action_move_to_top_all_for_series">Sposta la serie in cima</string>
     <string name="disabled_nav">Disattivato</string>
@@ -551,15 +538,12 @@
     <string name="updates_last_update_info">Ultimo aggiornamento libreria: %s</string>
     <string name="remove_manga">Stai per rimuovere «%s» dalla tua libreria</string>
     <string name="popular">Popolare</string>
-    <string name="missing_storage_permission">Autorizzazioni per l\'archiviazione non concesse</string>
     <string name="action_search_hint">Ricerca…</string>
     <string name="pref_appearance_summary">Tema, formato data e ora</string>
-    <string name="pref_library_summary">Categorie, aggiornamenti globali, azioni di scorrimento capitoli</string>
     <string name="pref_downloads_summary">Download automatico, download anticipato</string>
     <string name="pref_browse_summary">Fonti, estensioni, ricerca globale</string>
     <string name="pref_reader_summary">Modalità di lettura, aspetto, navigazione</string>
     <string name="pref_backup_summary">Backup manuali e automatici, spazio di archiviazione</string>
-    <string name="pref_security_summary">Blocco app, schermo protetto</string>
     <string name="crash_screen_title">Ops!</string>
     <string name="crash_screen_restart_application">Riavvia l\'applicazione</string>
     <string name="invalid_location">Posizione invalida: %s</string>
@@ -602,9 +586,6 @@
     <string name="pref_page_rotate">Ruota le pagine larghe per adattarle allo schermo</string>
     <string name="pref_page_rotate_invert">Capovolgi l\'orientamento delle pagine larghe ruotate</string>
     <string name="pref_debug_info">Informazioni di debug</string>
-    <string name="pref_double_tap_zoom">Doppio tocco per ingrandire</string>
-    <string name="pref_chapter_swipe_end">Capitoli allo scorrimento a destra</string>
-    <string name="pref_chapter_swipe_start">Capitoli allo scorrimento a sinistra</string>
     <string name="action_set_interval">Imposta intervallo</string>
     <string name="intervals_header">Intervalli</string>
     <string name="manga_display_interval_title">Stima ogni</string>
@@ -616,7 +597,6 @@
     <string name="has_results">Con risultati</string>
     <string name="library_sync_complete">Sincronizzazione libreria completata</string>
     <string name="syncing_library">Sincronizzazione libreria</string>
-    <string name="information_cloudflare_help">Tocca qua per assistenza con Cloudflare</string>
     <string name="download_cache_invalidated">Ricreando l\'indice dei download</string>
     <string name="create_backup_file_error">Non è stato possibile creare un file di backup</string>
     <string name="exception_http">HTTP %d, controlla il sito nella WebView</string>
@@ -648,7 +628,6 @@
     <string name="onboarding_permission_install_apps_description">Per installare le estensioni delle fonti.</string>
     <string name="action_bar_up_description">Navigare su</string>
     <string name="onboarding_permission_notifications_description">Ricevi notifiche per aggiornamenti della libreria e altro.</string>
-    <string name="ext_permission_install_apps_warning">È necessaria l\'autorizzazione per installare le estensioni. Tocca qui per concederla.</string>
     <string name="onboarding_storage_folder_info">Selezione una cartella dove %1$s salverà i capitoli scaricati, i backup e altro. \n \nÈ raccomandato usare una cartella dedicata.</string>
     <string name="onboarding_storage_selected_folder">Cartella selezionata: %s</string>
     <string name="pref_storage_location">Posizione di archiviazione</string>

@@ -40,6 +40,7 @@ import app.katari.entry.interactions.book.document.resource.ProseImageHeader
 import app.katari.entry.interactions.book.document.resource.decodeValidatedProseImage
 import app.katari.entry.interactions.book.document.resource.readProseImageHeader
 import app.katari.entry.interactions.book.preparation.BookPublicationResourceLoader
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.pointer.clickCursor
 import app.katari.presentation.kit.theme.KatariTheme
@@ -157,7 +158,7 @@ internal fun BookDocumentFigureRenderer(
             }
             else -> {
                 val fallback = content.image.alternativeText
-                val fallbackText = fallback?.text ?: stringResource(MR.strings.book_document_image_unavailable)
+                val fallbackText = fallback?.text ?: stringResource(platformPresentation.imageUnavailableLabel)
                 BookDocumentSelectableText(
                     text = fallbackText,
                     links = fallback?.links.orEmpty(),

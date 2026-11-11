@@ -13,6 +13,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Settings
 import app.katari.missingextensions.ui.MissingExtensionsNotice
 import app.katari.missingextensions.ui.OtherDeviceExtensionsNotice
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.EmptyScreenAction
@@ -161,10 +162,11 @@ private fun ExtensionContent(
             }
         }
 
-        if (installPermissionMissing) {
+        val installPermissionWarning = platformPresentation.installPermissionWarning
+        if (installPermissionMissing && installPermissionWarning != null) {
             item(key = "extension-permissions-warning") {
                 NoticeCard(
-                    text = stringResource(MR.strings.ext_permission_install_apps_warning),
+                    text = stringResource(installPermissionWarning),
                     tone = NoticeTone.Warning,
                     modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
                     onClick = { systemPackages.requestInstallPermission(context) },

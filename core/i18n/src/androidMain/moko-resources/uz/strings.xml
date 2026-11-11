@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Tafsilotlarni ko\'rish uchun bosing</string>
+    <string name="information_empty_category">Kutubxonada toifalar yo\'q. Toifalar yaratish uchun «Qo\'shish» tugmasini bosing.</string>
+    <string name="pref_double_tap_anim_speed">Ikki marta bosilganda animatsiya tezligi</string>
+    <string name="pref_security_summary">Ilova qulflanishi, ekran himoyasi</string>
+    <string name="pref_viewer_nav">Tegish qismlari</string>
+    <string name="pref_show_navigation_mode">Teginish hududlari</string>
+    <string name="pref_read_with_long_tap">Uzoq teginishda ko\'rsatiladigan variantlar</string>
+    <string name="connected_to_wifi">Faqat Wi-Fi orqali</string>
+</resources>
