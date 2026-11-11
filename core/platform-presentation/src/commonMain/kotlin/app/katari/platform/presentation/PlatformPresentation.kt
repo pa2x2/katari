@@ -75,6 +75,7 @@ data class PlatformPresentation(
     /** Takes the source's name. */
     val longPressActionsForSourceLabel: StringResource,
     val triStateChipHint: StringResource,
+    val autoScrollSummary: StringResource,
     /** Null where the platform asks no permission to install extensions. */
     val installPermissionWarning: StringResource?,
     /** Null where the player doesn't set the screen's brightness. */

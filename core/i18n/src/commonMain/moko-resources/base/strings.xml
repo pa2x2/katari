@@ -1754,7 +1754,6 @@
     <string name="pref_enable_feeds_summary">Show the Feeds tab and feed preset actions in Browse</string>
     <string name="pref_auto_scroll">Auto-scroll</string>
     <string name="pref_enable_auto_scroll">Enable auto-scroll</string>
-    <string name="pref_auto_scroll_summary">Shows a toolbar toggle in Long strip and Long strip with gaps. While active, volume up slows down and volume down speeds up.</string>
     <string name="pref_auto_scroll_speed">Default auto-scroll speed</string>
     <string name="auto_scroll_speed_slowest">Slowest</string>
     <string name="auto_scroll_speed_slower">Slower</string>

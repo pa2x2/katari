@@ -496,7 +496,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = autoScrollEnabledPref,
                     title = stringResource(MR.strings.pref_enable_auto_scroll),
-                    subtitle = stringResource(MR.strings.pref_auto_scroll_summary),
+                    subtitle = stringResource(platformPresentation.autoScrollSummary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     preference = autoScrollSpeedPref,

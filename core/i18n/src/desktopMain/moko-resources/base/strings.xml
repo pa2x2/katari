@@ -65,6 +65,7 @@
     <string name="pref_read_with_tapping_inverted">Invert click zones</string>
     <string name="pref_show_navigation_mode">Show click zones overlay</string>
     <string name="pref_read_with_long_tap">Show actions on press and hold</string>
+    <string name="pref_auto_scroll_summary">Shows a toolbar toggle in Long strip and Long strip with gaps.</string>
     <string name="pref_chapter_swipe_start">Second row button</string>
     <string name="pref_chapter_swipe_end">First row button</string>
     <string name="pref_browse_long_press_action">Browse and Feeds press-and-hold priority</string>

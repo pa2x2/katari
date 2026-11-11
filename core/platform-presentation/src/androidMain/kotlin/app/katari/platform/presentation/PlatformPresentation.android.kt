@@ -54,6 +54,7 @@ actual val platformPresentation = PlatformPresentation(
     longPressActionsLabel = PlatformStrings.pref_browse_long_press_action_open_settings,
     longPressActionsForSourceLabel = PlatformStrings.browse_feed_long_press_actions_for_source,
     triStateChipHint = PlatformStrings.filter_tristate_chip_hint,
+    autoScrollSummary = PlatformStrings.pref_auto_scroll_summary,
     installPermissionWarning = PlatformStrings.ext_permission_install_apps_warning,
     rememberBrightnessSummary = PlatformStrings.pref_anime_remember_brightness_summary,
     wifiOnlyLabel = PlatformStrings.connected_to_wifi,
