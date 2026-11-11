@@ -60,9 +60,17 @@ import { sitePath } from "../../site/links.ts";
       </li>
     </ol>
     <p>
-      The first sync uploads this device's library, or downloads the account's. Covers, fonts and the first download wait for Wi-Fi unless
+      The first sync uploads this device's library, or downloads the account's.
+    </p>
+    <p>
+      <PlatformLabel platform="Android" lead />Covers, fonts and the first download wait for Wi-Fi unless
       <strong>Use mobile data for covers, fonts and first download</strong> is on. Changes sync on any network unless
       <strong>Use mobile data for changes</strong> is off.
+    </p>
+    <p>
+      <PlatformLabel platform="Linux" lead />They wait for an unmetered network instead, and the switches are
+      <strong>Use metered networks for covers, fonts and first download</strong> and <strong>Use metered networks for changes</strong>.
+      The system decides which connections are metered.
     </p>
     <p>
       When this device and the account both have data, <strong>Before the first sync</strong> shows how they come together: libraries, read
@@ -176,12 +184,18 @@ import { sitePath } from "../../site/links.ts";
           <td>Check the connection and that the server is running. Changes wait on the device and nothing is lost.</td>
         </tr>
         <tr>
-          <td><strong>First download waits for Wi-Fi</strong></td>
+          <td><PlatformLabel platform="Android" lead /><strong>First download waits for Wi-Fi</strong></td>
           <td>Connect to Wi-Fi, or turn on <strong>Use mobile data for covers, fonts and first download</strong>.</td>
         </tr>
         <tr>
-          <td><strong>Syncing paused</strong>, or <strong>Changes wait for Wi-Fi</strong></td>
-          <td>Changes wait on the device. Turn off <strong>Pause syncing</strong>, or connect to Wi-Fi.</td>
+          <td><PlatformLabel platform="Linux" lead /><strong>First download waits for an unmetered network</strong></td>
+          <td>Connect to an unmetered network, or turn on <strong>Use metered networks for covers, fonts and first download</strong>.</td>
+        </tr>
+        <tr>
+          <td>
+            <strong>Syncing paused</strong>, <strong>Changes wait for Wi-Fi</strong>, or <strong>Changes wait for an unmetered network</strong>
+          </td>
+          <td>Changes wait on the device. Turn off <strong>Pause syncing</strong>, or connect to Wi-Fi or another unmetered network.</td>
         </tr>
         <tr>
           <td><strong>Live updates aren't working</strong></td>
@@ -194,7 +208,7 @@ import { sitePath } from "../../site/links.ts";
           <td><strong>Sync failed on this device</strong></td>
           <td>
             Something on the device stopped the sync, not the connection. <strong>Sync now</strong> tries again; if it keeps failing, update
-            Katari, and share crash logs from <Path>Settings › Advanced</Path> to report it.
+            Katari, and report it with the crash logs from <Path>Settings › Advanced</Path>.
           </td>
         </tr>
         <tr>

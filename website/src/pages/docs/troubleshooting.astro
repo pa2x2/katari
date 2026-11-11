@@ -106,8 +106,8 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
 
   <Task id="models" title="Text recognition models don't download">
     <p>
-      <strong>Waiting for a non-metered network</strong> means the download was approved for Wi-Fi only. Connect to Wi-Fi, or start it
-      again and tick <strong>Allow download on metered networks</strong>. <strong>Not enough storage</strong> needs space freed first. See
+      <strong>Waiting for a non-metered network</strong> means the download was approved for unmetered networks only. Connect to Wi-Fi or
+      another unmetered network, or start it again and tick <strong>Allow download on metered networks</strong>. <strong>Not enough storage</strong> needs space freed first. See
       <a href={sitePath("docs/translation/#text-recognition")}>Translation</a>.
     </p>
   </Task>
@@ -141,8 +141,8 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   <Task id="report" title="Report a problem">
     <ol>
       <li>
-        Under <Path>Settings › Advanced</Path>, select <strong>Share crash logs</strong>. On Android, save or send the file from the share
-        sheet; on Linux, choose where to save it.
+        Under <Path>Settings › Advanced</Path>, select <strong>Share crash logs</strong>, or <strong>Save crash logs</strong> on Linux. On
+        Android, save or send the file from the share sheet; on Linux, choose where to save it.
       </li>
       <li>In <Path>Settings › About</Path>, select <strong>Version</strong> to copy the version details.</li>
       <li>Open an <a href={`${REPOSITORY}/issues`} {...leavesSite()}>issue on GitHub</a> with both, and the steps that lead to the problem.</li>
