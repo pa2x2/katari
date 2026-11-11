@@ -21,9 +21,45 @@ const { feature, flip } = Astro.props;
     <DocsLinks paths={feature.docs} />
   </div>
   <div class="shots">
-    <ShotStack shots={feature.shots} arrangement="switch" />
+    {
+      feature.computerShots ? (
+        <div data-platform-shots>
+          <div class="platforms" role="group" aria-label="Device">
+            <button type="button" data-shows="phone" aria-pressed="true">
+              Phone
+            </button>
+            <button type="button" data-shows="computer" aria-pressed="false">
+              Computer
+            </button>
+          </div>
+          <div data-platform="phone">
+            <ShotStack shots={feature.shots} arrangement="switch" />
+          </div>
+          <div data-platform="computer" hidden>
+            <ShotStack shots={feature.computerShots} arrangement="switch" />
+          </div>
+        </div>
+      ) : (
+        <ShotStack shots={feature.shots} arrangement="switch" />
+      )
+    }
   </div>
 </section>
+
+<script>
+  import { visitorPlatform } from "../site/visitor-platform.ts";
+
+  for (const shots of document.querySelectorAll<HTMLElement>("[data-platform-shots]")) {
+    const buttons = [...shots.querySelectorAll<HTMLButtonElement>("[data-shows]")];
+    const show = (platform: string) => {
+      for (const button of buttons) button.setAttribute("aria-pressed", String(button.dataset.shows === platform));
+      for (const stack of shots.querySelectorAll<HTMLElement>("[data-platform]")) stack.hidden = stack.dataset.platform !== platform;
+    };
+    for (const button of buttons) button.addEventListener("click", () => show(button.dataset.shows!));
+    // A visitor on a Linux computer sees the Linux app first.
+    if (visitorPlatform() === "Linux") show("computer");
+  }
+</script>
 
 <style>
   .feature {
@@ -38,6 +74,39 @@ const { feature, flip } = Astro.props;
 
   .flip .text {
     order: 2;
+  }
+
+  .platforms {
+    display: flex;
+    gap: 0.15rem;
+    width: fit-content;
+    margin: 0 auto 1.5rem;
+    padding: 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .platforms button {
+    padding: 0.35rem 1.1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .platforms button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .platforms button[aria-pressed="true"] {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--text-strong);
   }
 
   h3 {

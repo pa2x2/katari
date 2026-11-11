@@ -43,6 +43,8 @@ interface FeatureBase {
 /** A feature shown at full size: beside its shots, or across the page as a band. */
 export interface FullFeature extends FeatureBase {
   highlights: string[];
+  /** The feature in Katari for Linux. With these, a switch above the shots chooses between phone and computer. */
+  computerShots?: Shot[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
 }
@@ -92,6 +94,15 @@ export const chapters: Chapter[] = [
             caption: "Two editions, one entry",
           },
           { kind: "still", image: updates, alt: "New episodes listed in the updates feed", caption: "The updates feed" },
+        ],
+        computerShots: [
+          {
+            kind: "still",
+            image: plannedCapture("sync-desktop.png"),
+            alt: "A library holding comics, books, and films in Katari for Linux",
+            caption: "The library in Katari for Linux",
+            device: "window",
+          },
         ],
       },
       {
