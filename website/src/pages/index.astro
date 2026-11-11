@@ -2,6 +2,7 @@
 import Chapter from "../home/Chapter.astro";
 import ChapterBar from "../home/ChapterBar.astro";
 import ChapterTiles from "../home/ChapterTiles.astro";
+import GoodToKnow from "../home/GoodToKnow.astro";
 import { chapters } from "../home/chapters.ts";
 import Hero from "../home/Hero.astro";
 import LatestVersions from "../home/LatestVersions.astro";
@@ -22,6 +23,7 @@ import Page from "../site/Page.astro";
       <ChapterBar />
       {chapters.map((chapter) => <Chapter chapter={chapter} />)}
     </div>
+    <GoodToKnow />
   </main>
   <Viewer />
 </Page>
