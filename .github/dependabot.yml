@@ -20,7 +20,7 @@ updates:
           - "*"
 
   # Dependabot reads only gradle/libs.versions.toml and the wrapper. gradle/katari.versions.toml (Android SDK and NDK,
-  # JetBrains Runtime, Chromium, AppImage tools) is upgraded by hand.
+  # JetBrains Runtime, Chromium, the sync server's runtime, AppImage tools) is upgraded by hand.
   - package-ecosystem: gradle
     directory: /
     target-branch: upcoming
@@ -89,7 +89,9 @@ updates:
         patterns:
           - "*"
 
-  # tools/onnxruntime/linux is left out: its image only matters when the ONNX Runtime release is rebuilt.
+  # tools/onnxruntime/linux is left out: its image only matters when the ONNX Runtime release is rebuilt. A base image
+  # with another Java than the sync server's runtime in gradle/katari.versions.toml fails the image check until the pin
+  # is moved in the same pull request.
   - package-ecosystem: docker
     directory: /features/sync/server
     target-branch: upcoming

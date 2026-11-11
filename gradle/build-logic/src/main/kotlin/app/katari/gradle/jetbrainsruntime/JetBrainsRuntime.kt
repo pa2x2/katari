@@ -1,29 +1,28 @@
 package app.katari.gradle.jetbrainsruntime
 
 import app.katari.gradle.extensions.katari
+import app.katari.gradle.javaruntime.PinnedJavaRuntime
+import app.katari.gradle.javaruntime.pinnedRuntimeArchitecture
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.register
 import java.io.File
 
 /**
  * The JetBrains Runtime with JCEF that the desktop app and the tools running its code start on, pinned in
- * `gradle/katari.versions.toml`: the JVM that carries Chromium for the desktop web view. The build downloads it once per
- * machine into the Gradle user home, where every build and worktree finds it.
+ * `gradle/katari.versions.toml`: the JVM that carries Chromium for the desktop web view.
  *
  * `-PsystemJdk` starts them on the JDK running Gradle instead, which has no JCEF, to try the app as it runs there.
  */
 internal class JetBrainsRuntime(
-    val version: String,
-    val build: String,
+    private val version: String,
+    private val build: String,
     private val architecture: String,
-    val sha512: String,
+    private val sha512: String,
     gradleUserHome: File,
     private val flavour: Flavour = Flavour.Runtime,
 ) {
     val archiveName: String = "${flavour.archivePrefix}-$version-linux-$architecture-$build"
 
-    val url: String = "$DOWNLOADS/$archiveName.tar.gz"
+    private val url: String = "$DOWNLOADS/$archiveName.tar.gz"
 
     /** The runtime's home, its `java.home`. */
     val home: File = gradleUserHome.resolve("caches/katari/jetbrains-runtime/$archiveName")
@@ -31,8 +30,18 @@ internal class JetBrainsRuntime(
     /** The runtime's `release` file, which names the JCEF it carries and the modules it has. */
     val release: File get() = home.resolve("release")
 
-    /** The name of the task that makes this runtime ready, one per flavour. */
-    val provisionTaskName: String get() = flavour.provisionTaskName
+    /** This runtime as the build downloads it and starts tasks on it. */
+    val pinned = PinnedJavaRuntime(
+        name = "the JetBrains Runtime",
+        url = url,
+        digest = sha512,
+        digestAlgorithm = "SHA-512",
+        home = home,
+        version = "$version+$build",
+        vendor = "JetBrains s.r.o.",
+        provisionTaskName = flavour.provisionTaskName,
+        offlineAlternative = "run with -PsystemJdk to start on the JDK running Gradle",
+    )
 
     /** Both carry JCEF; the plain runtime, without Chromium, is never used. */
     enum class Flavour(val archivePrefix: String, val provisionTaskName: String) {
@@ -57,11 +66,10 @@ internal val Project.runsOnSystemJdk: Boolean
 
 /** The pinned runtime for this machine's architecture. */
 internal fun Project.jetBrainsRuntime(): JetBrainsRuntime {
-    val architecture = when (val arch = System.getProperty("os.arch")) {
-        "amd64", "x86_64" -> "x64"
-        "aarch64", "arm64" -> "aarch64"
-        else -> error("The JetBrains Runtime is pinned for x64 and aarch64 Linux, not $arch; run with -PsystemJdk")
-    }
+    val architecture = pinnedRuntimeArchitecture() ?: error(
+        "The JetBrains Runtime is pinned for x64 and aarch64 Linux, not ${System.getProperty("os.arch")}; " +
+            "run with -PsystemJdk",
+    )
     val runtime = katari.versions.jbr
     return JetBrainsRuntime(
         version = runtime.asProvider().get(),
@@ -86,18 +94,4 @@ internal fun Project.jetBrainsRuntimeSdk(): JetBrainsRuntime {
         gradleUserHome = gradle.gradleUserHomeDir,
         flavour = JetBrainsRuntime.Flavour.Sdk,
     )
-}
-
-/** This project's task that makes [runtime] ready, registered by the first caller. */
-internal fun Project.provisionJetBrainsRuntime(runtime: JetBrainsRuntime): TaskProvider<ProvisionJetBrainsRuntimeTask> {
-    val name = runtime.provisionTaskName
-    if (name in tasks.names) return tasks.named(name, ProvisionJetBrainsRuntimeTask::class.java)
-    val offline = gradle.startParameter.isOffline
-    return tasks.register<ProvisionJetBrainsRuntimeTask>(name) {
-        description = "Downloads, verifies and unpacks ${runtime.archiveName}."
-        url.set(runtime.url)
-        sha512.set(runtime.sha512)
-        home.set(runtime.home)
-        this.offline.set(offline)
-    }
 }

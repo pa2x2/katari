@@ -3,8 +3,7 @@
 #   ./gradlew :features:sync:server:installDist
 #   docker buildx build --platform linux/amd64,linux/arm64 -f features/sync/server/Dockerfile features/sync/server/build/install/katari-sync-server
 
-# eclipse-temurin:21-jre (Ubuntu 26.04), pinned to the multi-platform index so both architectures get the same build.
-FROM eclipse-temurin:21-jre@sha256:0b99b3376fbb50dbf9c0af8535fdd5b8eb0d3fdfc8b1e4967f383b6919f6901a
+FROM eclipse-temurin:25-jre@sha256:ecdc0adb37bde1a281c4d245a3cd535004b1fc8322d560f5b09463b248c81df0
 
 COPY . /opt/katari-sync-server
 
@@ -19,8 +18,9 @@ VOLUME /data
 EXPOSE 8080
 
 # The server's info call needs no account or protocol header. The start period covers the first start's schema setup.
+# The base image has no HTTP client, so Bash's /dev/tcp sends the request.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
-    CMD curl -fsS -o /dev/null "http://127.0.0.1:${KATARI_SYNC_PORT:-8080}/api/info" || exit 1
+    CMD bash -c 'exec 3<>"/dev/tcp/127.0.0.1/${KATARI_SYNC_PORT:-8080}" && printf "GET /api/info HTTP/1.0\r\n\r\n" >&3 && read -r _ status _ <&3 && [[ $status == 200 ]]'
 
 # The start script execs Java, so `docker stop` reaches the server. Recovery runs beside the serving server:
 #   docker exec <container> katari-sync-server reset-password <user>

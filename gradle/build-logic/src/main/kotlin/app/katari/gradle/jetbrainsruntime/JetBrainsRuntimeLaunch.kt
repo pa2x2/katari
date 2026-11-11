@@ -1,5 +1,7 @@
 package app.katari.gradle.jetbrainsruntime
 
+import app.katari.gradle.javaruntime.pinnedJavaRuntimeLauncher
+import app.katari.gradle.javaruntime.provisionJavaRuntime
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.TaskProvider
@@ -12,9 +14,9 @@ import org.jetbrains.compose.desktop.application.dsl.JvmApplication
  */
 fun Project.launchOnJetBrainsRuntime(task: TaskProvider<out JavaExec>) {
     if (runsOnSystemJdk) return
-    val runtime = jetBrainsRuntime()
-    val provision = provisionJetBrainsRuntime(runtime)
-    val launcher = launcher(runtime)
+    val runtime = jetBrainsRuntime().pinned
+    val provision = provisionJavaRuntime(runtime)
+    val launcher = pinnedJavaRuntimeLauncher(runtime)
     task.configure {
         dependsOn(provision)
         javaLauncher.set(launcher)
@@ -29,22 +31,16 @@ fun Project.launchOnJetBrainsRuntime(task: TaskProvider<out JavaExec>) {
  */
 internal fun Project.runOnJetBrainsRuntime(application: JvmApplication) {
     if (runsOnSystemJdk) return
-    val runtime = jetBrainsRuntime()
-    val provision = provisionJetBrainsRuntime(runtime)
+    val runtime = jetBrainsRuntime().pinned
+    val provision = provisionJavaRuntime(runtime)
     application.javaHome = runtime.home.absolutePath
     application.jvmArgs += JCEF_NATIVE_ACCESS
-    val launcher = launcher(runtime)
+    val launcher = pinnedJavaRuntimeLauncher(runtime)
     tasks.withType<JavaExec>().configureEach {
         dependsOn(provision)
         javaLauncher.set(launcher)
     }
 }
-
-private fun Project.launcher(runtime: JetBrainsRuntime) = JetBrainsRuntimeLauncher(
-    home = layout.projectDirectory.dir(runtime.home.absolutePath),
-    version = runtime.version,
-    build = runtime.build,
-)
 
 /**
  * The JVM option that lets the runtime's JCEF load Chromium: JCEF is a module of the runtime, so the app's own grant to
