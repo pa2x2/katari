@@ -21,9 +21,10 @@ const isWide = (shot: Shot) => shot.kind === "still" && !isUpright(shot.device ?
 const aspect = (shot: Shot) =>
   shot.kind === "still" ? aspectOf(shot.image, shot.device ?? "phone") : aspectOf(shot.kind === "compare" ? shot.after : shot.poster, "phone");
 const switched = arrangement === "switch" && shots.length > 1;
+const mixed = shots.some(isWide) && !shots.every(isWide);
 ---
 
-<div class:list={["stack", arrangement, { switched }]} data-zoom-group data-reveal>
+<div class:list={["stack", arrangement, { switched, mixed }]} data-zoom-group data-reveal>
   <div class="shots">
     {
       shots.map((shot, index) => (
@@ -103,6 +104,11 @@ const switched = arrangement === "switch" && shots.length > 1;
 
     .switch .slot.wide {
       --shot-width: min(44rem, 100cqi);
+    }
+
+    /* Beside a window a full-size phone is twice as tall, and the room it holds would stand empty around the window. */
+    .switch.mixed .slot:not(.wide) {
+      --shot-width: min(16rem, 46cqi);
     }
 
     .switched .slot:not(.current) {

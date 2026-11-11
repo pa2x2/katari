@@ -32,11 +32,13 @@ const { feature, flip } = Astro.props;
               Computer
             </button>
           </div>
-          <div data-platform="phone">
-            <ShotStack shots={feature.shots} arrangement="switch" />
-          </div>
-          <div data-platform="computer" hidden>
-            <ShotStack shots={feature.computerShots} arrangement="switch" />
+          <div class="sides">
+            <div class="side current" data-platform="phone">
+              <ShotStack shots={feature.shots} arrangement="switch" />
+            </div>
+            <div class="side" data-platform="computer">
+              <ShotStack shots={feature.computerShots} arrangement="switch" />
+            </div>
           </div>
         </div>
       ) : (
@@ -53,7 +55,7 @@ const { feature, flip } = Astro.props;
     const buttons = [...shots.querySelectorAll<HTMLButtonElement>("[data-shows]")];
     const show = (platform: string) => {
       for (const button of buttons) button.setAttribute("aria-pressed", String(button.dataset.shows === platform));
-      for (const stack of shots.querySelectorAll<HTMLElement>("[data-platform]")) stack.hidden = stack.dataset.platform !== platform;
+      for (const side of shots.querySelectorAll<HTMLElement>("[data-platform]")) side.classList.toggle("current", side.dataset.platform === platform);
     };
     for (const button of buttons) button.addEventListener("click", () => show(button.dataset.shows!));
     // A visitor on a Linux computer sees the Linux app first.
@@ -107,6 +109,21 @@ const { feature, flip } = Astro.props;
     background: var(--surface);
     box-shadow: inset 0 0 0 1px var(--border);
     color: var(--text-strong);
+  }
+
+  /* Both sides take the same cell and only the chosen one shows, so switching moves nothing below. */
+  .sides {
+    display: grid;
+    align-items: center;
+  }
+
+  .side {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .side:not(.current) {
+    visibility: hidden;
   }
 
   h3 {
