@@ -29,6 +29,8 @@ data class LibraryUpdateReport(
     val notChecked: Map<EntryUpdateDecisionReason, List<Item>>,
     /** Their entries are listed nowhere else. */
     val pausedSources: List<PausedSource>,
+    /** Entries the update checked, whatever came of it. */
+    val checked: Int,
 ) {
     val skippedCount: Int
         get() = skipped.values.sumOf { it.size }
@@ -60,12 +62,13 @@ data class LibraryUpdateReport(
             entries: Map<Long, Entry>,
             pausedSourceIds: Set<Long>,
         ): LibraryUpdateReport {
-            val (pausedItems, items) = statuses
+            val allItems = statuses
                 .filter { it.decidedAt >= run.startedAt }
                 .mapNotNull { status ->
                     entries[status.entryId]?.let { Item(it, status, isRechecked = status.decidedAt > run.startedAt) }
                 }
                 .sortedBy { it.entry.title.lowercase() }
+            val (pausedItems, items) = allItems
                 .partition { item ->
                     item.status.reason == EntryUpdateDecisionReason.SOURCE_OFF ||
                         (
@@ -103,6 +106,7 @@ data class LibraryUpdateReport(
                 pausedSources = pausedItems
                     .groupBy { it.entry.source }
                     .map { (sourceId, group) -> PausedSource(sourceId, group) },
+                checked = allItems.count { it.status.outcome in CHECKED_OUTCOMES },
             )
         }
 

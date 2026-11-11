@@ -1,7 +1,6 @@
 package eu.kanade.presentation.library.update.report
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -26,13 +25,13 @@ import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.rowGroupItems
-import app.katari.presentation.kit.progress.LinearProgressIndicator
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.library.update.report.components.ActionChips
 import eu.kanade.presentation.library.update.report.components.CollapsibleReportSection
 import eu.kanade.presentation.library.update.report.components.FailingSourceGroup
 import eu.kanade.presentation.library.update.report.components.PauseChip
 import eu.kanade.presentation.library.update.report.components.PausedSourceGroup
+import eu.kanade.presentation.library.update.report.components.ReportProgressCard
 import eu.kanade.presentation.library.update.report.components.ReportRow
 import eu.kanade.presentation.library.update.report.components.ReportRunNote
 import eu.kanade.presentation.library.update.report.components.ReportSectionHeader
@@ -57,6 +56,7 @@ class LibraryUpdateReportActions(
     val onResumeSource: (Long) -> Unit,
     val onRetry: (List<Entry>) -> Unit,
     val onCheckSkipped: () -> Unit,
+    val onStopUpdate: () -> Unit,
 )
 
 @Composable
@@ -67,13 +67,13 @@ fun LibraryUpdateReportContent(
 ) {
     val report = state.report
     RowList(contentPadding = contentPadding) {
-        if (state.isUpdating) {
+        state.update?.let { update ->
             item(key = "running") {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                ReportProgressCard(update = update, onStop = actions.onStopUpdate)
             }
         }
         item(key = "header") {
-            ReportRunNote(report.run)
+            ReportRunNote(report.run, report.checked)
         }
 
         val (repeatedSources, failedSources) = report.failingSources.partition { it.isFailingRepeatedly }

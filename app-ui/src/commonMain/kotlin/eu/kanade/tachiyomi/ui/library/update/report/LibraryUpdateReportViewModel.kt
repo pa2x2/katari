@@ -17,13 +17,13 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.tachiyomi.source.visualName
+import eu.kanade.tachiyomi.ui.library.update.activeProfileState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
@@ -81,9 +81,7 @@ class LibraryUpdateReportViewModel(
         val pausedEntryIds = rulesRepository.subscribeEntryModes()
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
-        val isUpdating = activeProfileProvider.activeProfileIdFlow
-            .flatMapLatest { libraryUpdateQueue.stateFlow(it) }
-            .map { it is LibraryUpdateState.Running }
+        val update = libraryUpdateQueue.activeProfileState(activeProfileProvider)
         val otherDevice = combine(newerOtherDeviceUpdate.subscribe(), reportRepository.subscribeLatestSummary()) {
                 update,
                 here,
@@ -91,17 +89,17 @@ class LibraryUpdateReportViewModel(
             update?.let { OtherDeviceReport(it, here) }
         }
         viewModelScope.launch {
-            combine(reports, pauses, pausedEntryIds, isUpdating, otherDevice) {
+            combine(reports, pauses, pausedEntryIds, update, otherDevice) {
                     latest,
                     sourcePausesNow,
                     entryIds,
-                    updating,
+                    running,
                     elsewhere,
                 ->
                 latest?.copy(
                     sourcePauses = sourcePausesNow,
                     pausedEntryIds = entryIds,
-                    isUpdating = updating,
+                    update = running,
                     otherDevice = elsewhere,
                 )
                     ?: State.Empty(elsewhere)
@@ -138,7 +136,7 @@ class LibraryUpdateReportViewModel(
                 .toMap(),
             sourcePauses = emptyMap(),
             pausedEntryIds = emptySet(),
-            isUpdating = false,
+            update = null,
             otherDevice = null,
         )
     }
@@ -163,6 +161,11 @@ class LibraryUpdateReportViewModel(
     }
 
     suspend fun checkSkipped(): LibraryUpdateStart = libraryUpdateQueue.startSkippedOfLatest()
+
+    /** Stops the running update, or takes a waiting one out of the queue; what it checked stays in the report. */
+    fun stopUpdate() {
+        viewModelScope.launch { libraryUpdateQueue.stop() }
+    }
 
     /** Another device's update of the whole library, newer than any here, with this device's own latest one. */
     @Immutable
@@ -193,7 +196,8 @@ class LibraryUpdateReportViewModel(
             /** By source id, the pauses in effect now. */
             val sourcePauses: Map<Long, SourceUpdatePause>,
             val pausedEntryIds: Set<Long>,
-            val isUpdating: Boolean,
+            /** This profile's update while it runs or waits its turn, such as a recheck folding into the report. */
+            val update: LibraryUpdateState?,
             override val otherDevice: OtherDeviceReport?,
         ) : State
     }

@@ -93,6 +93,7 @@ class LibraryUpdateReportScreen(private val thisDevice: Boolean = false) : Scree
                             onResumeSource = viewModel::resumeSource,
                             onRetry = { entries -> scope.launch { updateStarter.start { viewModel.retry(entries) } } },
                             onCheckSkipped = { scope.launch { updateStarter.start(viewModel::checkSkipped) } },
+                            onStopUpdate = viewModel::stopUpdate,
                         ),
                     )
                 }
