@@ -43,8 +43,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * A titled grid of numbers where one can be chosen, such as which episode of a season is playing. [numbers] go by rows
  * in the order given, and [selected] is null while none is chosen. A run too long to look through shows the stretch the
- * chosen number is in, with buttons that step through the others and a field named [jumpLabel], such as "Go to
- * episode", that shows a typed number's stretch and chooses it when the typing is confirmed. [supportingText] says
+ * chosen number is in, with a field named [jumpLabel] under it, such as "Go to episode", that shows a typed number's
+ * stretch and chooses it when the typing is confirmed, and buttons beside the field that step through the stretches. [supportingText] says
  * something of the choice under the grid, such as the chosen episode's name. It sits between row group cards, lined up
  * with their edges.
  */
@@ -65,28 +65,7 @@ fun NumberChoiceRow(
     val shown = if (stretches) numbers.drop(stretch * STRETCH).take(STRETCH) else numbers
     val bottomPadding = LocalRowDensity.current.verticalPadding
     Column(modifier) {
-        RowGroupHeader(
-            text = title,
-            actions = if (stretches && shown.isNotEmpty()) {
-                {
-                    IconButton(
-                        icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
-                        contentDescription = stringResource(MR.strings.action_previous),
-                        onClick = { stretch-- },
-                        enabled = stretch > 0,
-                    )
-                    Text("${shown.first()}–${shown.last()}", role = TextRole.Label, tone = ContentTone.Secondary)
-                    IconButton(
-                        icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
-                        contentDescription = stringResource(MR.strings.action_next),
-                        onClick = { stretch++ },
-                        enabled = (stretch + 1) * STRETCH < numbers.size,
-                    )
-                }
-            } else {
-                null
-            },
-        )
+        RowGroupHeader(title)
         Column(
             modifier = Modifier
                 .padding(
@@ -112,22 +91,40 @@ fun NumberChoiceRow(
                 }
             }
             if (stretches) {
-                TextField(
-                    value = typed,
-                    onValueChange = { text ->
-                        typed = text.filter(Char::isDigit)
-                        val at = numbers.indexOf(typed.toIntOrNull())
-                        if (at >= 0) stretch = at / STRETCH
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = KatariTheme.spacing.s),
-                    label = jumpLabel,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(
-                        onDone = { typed.toIntOrNull()?.takeIf { it in numbers }?.let(onSelect) },
-                    ),
-                )
+                Row(
+                    modifier = Modifier.padding(top = KatariTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextField(
+                        value = typed,
+                        onValueChange = { text ->
+                            typed = text.filter(Char::isDigit)
+                            val at = numbers.indexOf(typed.toIntOrNull())
+                            if (at >= 0) stretch = at / STRETCH
+                        },
+                        modifier = Modifier.weight(1f),
+                        label = jumpLabel,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { typed.toIntOrNull()?.takeIf { it in numbers }?.let(onSelect) },
+                        ),
+                    )
+                    IconButton(
+                        icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowLeft,
+                        contentDescription = stringResource(MR.strings.action_previous),
+                        onClick = { stretch-- },
+                        enabled = stretch > 0,
+                    )
+                    IconButton(
+                        icon = MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight,
+                        contentDescription = stringResource(MR.strings.action_next),
+                        onClick = { stretch++ },
+                        enabled = (stretch + 1) * STRETCH < numbers.size,
+                    )
+                }
             }
         }
         if (supportingText != null) {

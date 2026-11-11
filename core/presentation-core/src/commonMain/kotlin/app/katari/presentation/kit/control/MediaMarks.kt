@@ -43,7 +43,7 @@ fun MediaMarksLine(spans: List<MediaMarkedSpan>, modifier: Modifier = Modifier) 
             .fillMaxWidth()
             .height(MARKS_LINE_HEIGHT)
             .clip(KatariTheme.shapes.full)
-            .background(colors.surfaceContainerHighest),
+            .background(colors.outlineVariant),
     ) {
         spans.forEach { span ->
             val left = size.width * span.start.coerceIn(0f, 1f)

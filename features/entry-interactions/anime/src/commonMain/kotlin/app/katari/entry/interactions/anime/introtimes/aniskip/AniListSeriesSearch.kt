@@ -47,8 +47,8 @@ internal data class AniListSeries(
     val prequels: List<AniListLink>,
     val sequels: List<AniListLink>,
 ) {
-    /** A run of episodes, which a season is, rather than a film, a special or an OVA. */
-    val isSeries: Boolean get() = format in SeriesFormats
+    /** A run of episodes, which a season is, rather than a film, a special, an OVA or a single episode put online. */
+    val isSeries: Boolean get() = isSeries(format, episodes)
 }
 
 /** Another anime an [AniListSeries] is linked to. */
@@ -105,7 +105,7 @@ internal class AniListSeriesSearch(networkHelper: NetworkHelper) {
         )
     }
 
-    private fun RelatedMedia.toLink() = AniListLink(anilistId = id, isSeries = format in SeriesFormats)
+    private fun RelatedMedia.toLink() = AniListLink(anilistId = id, isSeries = isSeries(format, episodes))
 
     @Serializable
     private data class SearchResponse(val data: Data)
@@ -154,7 +154,12 @@ internal class AniListSeriesSearch(networkHelper: NetworkHelper) {
     private data class Relation(val relationType: String? = null, val node: RelatedMedia)
 
     @Serializable
-    private data class RelatedMedia(val id: Long, val type: String? = null, val format: String? = null)
+    private data class RelatedMedia(
+        val id: Long,
+        val type: String? = null,
+        val format: String? = null,
+        val episodes: Int? = null,
+    )
 
     private companion object {
         const val ENDPOINT = "https://graphql.anilist.co"
@@ -162,7 +167,7 @@ internal class AniListSeriesSearch(networkHelper: NetworkHelper) {
         const val ANIME = "ANIME"
         const val FIELDS = "id idMal title { romaji english native } synonyms seasonYear " +
             "startDate { year month day } format episodes nextAiringEpisode { episode } coverImage { medium } " +
-            "streamingEpisodes { title } relations { edges { relationType node { id type format } } }"
+            "streamingEpisodes { title } relations { edges { relationType node { id type format episodes } } }"
         val json = Json { ignoreUnknownKeys = true }
     }
 }
@@ -174,6 +179,9 @@ internal fun episodeNames(streamingTitles: List<String>): Map<Int, String> =
     }.toMap()
 
 private val StreamingTitle = Regex("""Episode (\d+)\s*[-–:]\s*(.+)""")
+
+// A story told in one episode, such as a short put online before a show, is linked like a season but isn't one.
+private fun isSeries(format: String?, episodes: Int?): Boolean = format in SeriesFormats && episodes != 1
 
 // AniList's formats for anime that run as a series.
 private val SeriesFormats = setOf("TV", "TV_SHORT", "ONA")
