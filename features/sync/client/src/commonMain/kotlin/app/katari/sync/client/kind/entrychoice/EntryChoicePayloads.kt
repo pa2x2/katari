@@ -62,6 +62,8 @@ data class IntroTimesMatch(
     @ProtoNumber(2) val malId: Long? = null,
     @ProtoNumber(3) val title: String? = null,
     @ProtoNumber(4) val year: Long? = null,
+    @ProtoNumber(5) val firstEpisode: Long? = null,
+    @ProtoNumber(6) val episodes: Long? = null,
 )
 
 /** The series or film the person picked for a season group's TheIntroDB times. */

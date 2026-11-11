@@ -8,15 +8,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import app.katari.entry.interactions.anime.introtimes.IntroTimesResult
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
-import app.katari.entry.interactions.anime.introtimes.matched
 import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAniSkipPage
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAniSkipMatchPage
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEngineChoice
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerIntroTimesRows
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerMarkerSkipChoice
@@ -24,12 +22,12 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerMarkerSkipRow
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerTheIntroDbPage
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerTheIntroDbMatchPage
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
 import eu.kanade.tachiyomi.ui.video.player.engine.mpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimesState
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerServiceTimes
+import eu.kanade.tachiyomi.ui.video.player.introtimes.open
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
@@ -73,19 +71,16 @@ internal fun VideoPlayerSettingsLayer(
         visible = ui.settingsVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible,
         onDismissRequest = actions.dismissSettings,
     ) { settingsFrame, settingsModifier ->
-        val episode = introTimes?.episode
-        if (episode != null) {
+        if (introTimes?.episode != null) {
             when (matchPage) {
                 IntroTimesService.ANISKIP -> {
-                    val result = (introTimes.aniSkip as? VideoPlayerServiceTimes.Done)?.result
-                    VideoPlayerAniSkipPage(
+                    VideoPlayerAniSkipMatchPage(
                         frame = settingsFrame,
-                        initialQuery = episode.scope.title,
-                        currentAnilistId = result?.matched?.anilistId,
-                        pickedNone = result == IntroTimesResult.TurnedOff,
-                        search = viewModel.seriesSearch.state.collectAsState().value,
-                        onSearch = viewModel.seriesSearch::search,
-                        onPick = viewModel.introTimes::pickAniSkipSeries,
+                        match = viewModel.aniSkipMatch,
+                        onUse = { series ->
+                            viewModel.introTimes.pickAniSkipSeries(series)
+                            matchPage = null
+                        },
                         onBack = { matchPage = null },
                         onDismissRequest = actions.dismissSettings,
                         modifier = settingsModifier,
@@ -93,17 +88,13 @@ internal fun VideoPlayerSettingsLayer(
                     return@VideoPlayerSettings
                 }
                 IntroTimesService.THEINTRODB -> {
-                    val result = (introTimes.theIntroDb as? VideoPlayerServiceTimes.Done)?.result
-                    VideoPlayerTheIntroDbPage(
+                    VideoPlayerTheIntroDbMatchPage(
                         frame = settingsFrame,
-                        episode = episode,
-                        current = result?.matched,
-                        pickedNone = result == IntroTimesResult.TurnedOff,
-                        search = viewModel.mediaSearch.state.collectAsState().value,
-                        onSearch = viewModel.mediaSearch::search,
-                        episodes = viewModel.airedEpisodes.state.collectAsState().value,
-                        onLoadEpisodes = viewModel.airedEpisodes::load,
-                        onPick = viewModel.introTimes::pickTheIntroDbMedia,
+                        match = viewModel.theIntroDbMatch,
+                        onUse = { media ->
+                            viewModel.introTimes.pickTheIntroDbMedia(media)
+                            matchPage = null
+                        },
                         onBack = { matchPage = null },
                         onDismissRequest = actions.dismissSettings,
                         modifier = settingsModifier,
@@ -199,7 +190,15 @@ internal fun VideoPlayerSettingsLayer(
                     if (introTimes != null) {
                         VideoPlayerIntroTimesRows(
                             state = introTimes,
-                            onChange = { matchPage = it },
+                            onChange = { service ->
+                                when (service) {
+                                    IntroTimesService.ANISKIP ->
+                                        viewModel.aniSkipMatch.open(introTimes, introTimes.aniSkip)
+                                    IntroTimesService.THEINTRODB ->
+                                        viewModel.theIntroDbMatch.open(introTimes, introTimes.theIntroDb)
+                                }
+                                matchPage = service
+                            },
                             onRetry = viewModel.introTimes::retry,
                         )
                     }

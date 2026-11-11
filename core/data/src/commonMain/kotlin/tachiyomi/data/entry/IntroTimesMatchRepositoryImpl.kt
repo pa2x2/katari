@@ -37,6 +37,8 @@ class IntroTimesMatchRepositoryImpl(
                 year = match.series?.year?.toLong(),
                 pickedByUser = match.pickedByUser,
                 checkedAt = match.checkedAt,
+                firstEpisode = match.series?.firstEpisode?.toLong(),
+                episodes = match.series?.episodes?.toLong(),
             )
         }
     }
@@ -50,9 +52,18 @@ class IntroTimesMatchRepositoryImpl(
         year: Long?,
         pickedByUser: Boolean,
         checkedAt: Long,
+        firstEpisode: Long?,
+        episodes: Long?,
     ): IntroTimesMatch {
         val series = if (anilistId != null && malId != null && title != null) {
-            IntroTimesSeries(anilistId = anilistId, malId = malId, title = title, year = year?.toInt())
+            IntroTimesSeries(
+                anilistId = anilistId,
+                malId = malId,
+                title = title,
+                year = year?.toInt(),
+                episodes = episodes?.toInt(),
+                firstEpisode = firstEpisode?.toInt() ?: 1,
+            )
         } else {
             null
         }

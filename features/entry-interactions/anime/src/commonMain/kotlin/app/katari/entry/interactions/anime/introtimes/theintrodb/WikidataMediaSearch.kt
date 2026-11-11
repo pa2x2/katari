@@ -80,8 +80,9 @@ private fun WikidataEntity.toCandidate(): TheIntroDbCandidate? {
     val imdbId = text(IMDB)
     if (tvdbId == null && tmdbId == null && imdbId == null) return null
     val names = (labels.values + aliases.values.flatten()).map { it.value }.distinct()
-    val shown =
-        labels[Locale.getDefault().language]?.value ?: labels[ENGLISH]?.value ?: names.firstOrNull() ?: return null
+    val shown = listOf(Locale.getDefault().language, ALL_LANGUAGES, ENGLISH).firstNotNullOfOrNull { labels[it]?.value }
+        ?: names.firstOrNull()
+        ?: return null
     return TheIntroDbCandidate(
         tvdbId = tvdbId,
         tmdbId = tmdbId,
@@ -113,6 +114,9 @@ private val MEDIA_ID_PROPERTIES = listOf(TVDB_SERIES, TVDB_MOVIE, TMDB_TV, TMDB_
 private const val STARTED = "P580"
 private const val PUBLISHED = "P577"
 private const val ENGLISH = "en"
+
+// The label Wikidata keeps once for every language that writes a name the same way, in place of one per language.
+private const val ALL_LANGUAGES = "mul"
 
 // Wikidata writes times as "+2013-04-07T00:00:00Z".
 private val TimeYear = Regex("^[+-](\\d{4})-")

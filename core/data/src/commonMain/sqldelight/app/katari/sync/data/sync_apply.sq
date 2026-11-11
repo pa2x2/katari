@@ -401,10 +401,12 @@ DELETE FROM entry_translation_languages
 WHERE entry_id = :entryId;
 
 upsertIntroTimesPick:
-INSERT INTO intro_times_matches(entry_id, group_key, anilist_id, mal_id, title, year, picked_by_user, checked_at)
+INSERT INTO intro_times_matches(
+    entry_id, group_key, anilist_id, mal_id, title, year, picked_by_user, checked_at, first_episode, episodes
+)
 VALUES (
     :entryId, :groupKey, :anilistId, :malId, :title, :year, 1,
-    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
+    CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER), :firstEpisode, :episodes
 )
 ON CONFLICT(entry_id, group_key) DO UPDATE SET
     anilist_id = excluded.anilist_id,
@@ -412,7 +414,9 @@ ON CONFLICT(entry_id, group_key) DO UPDATE SET
     title = excluded.title,
     year = excluded.year,
     picked_by_user = 1,
-    checked_at = excluded.checked_at;
+    checked_at = excluded.checked_at,
+    first_episode = excluded.first_episode,
+    episodes = excluded.episodes;
 
 -- An automatic match is this device's own and stays.
 deleteIntroTimesPick:

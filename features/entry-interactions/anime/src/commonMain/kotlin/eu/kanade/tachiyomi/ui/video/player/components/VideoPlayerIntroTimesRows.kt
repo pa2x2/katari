@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
+import app.katari.entry.interactions.anime.introtimes.IntroTimesAsked
 import app.katari.entry.interactions.anime.introtimes.IntroTimesResult
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
@@ -26,8 +27,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Where the playing episode's times stand with each service turned on, under the skip choice: a row per service with
- * the colour its spans take on the timeline, whether its times are in use, what it matched, and the action that fixes
- * it.
+ * the colour its spans take on the timeline, whether its times are in use, what it matched and which episode of that it
+ * asked for, and the action that fixes it.
  */
 @Composable
 internal fun VideoPlayerIntroTimesRows(
@@ -36,10 +37,12 @@ internal fun VideoPlayerIntroTimesRows(
     onRetry: (IntroTimesService) -> Unit,
 ) {
     state.aniSkip?.let { times ->
-        ServiceRow(IntroTimesService.ANISKIP, times, state.markers, { aniSkipMatch(it) }, onChange, onRetry)
+        val describe: @Composable (IntroTimesSeries) -> String = { matchedTo(it.title, it.year) }
+        ServiceRow(IntroTimesService.ANISKIP, times, state.markers, describe, onChange, onRetry)
     }
     state.theIntroDb?.let { times ->
-        ServiceRow(IntroTimesService.THEINTRODB, times, state.markers, { theIntroDbMatch(it) }, onChange, onRetry)
+        val describe: @Composable (TheIntroDbMedia) -> String = { matchedTo(it.title, it.year) }
+        ServiceRow(IntroTimesService.THEINTRODB, times, state.markers, describe, onChange, onRetry)
     }
 }
 
@@ -70,7 +73,14 @@ private fun <M> ServiceRow(
     SettingsRow(
         title = stringResource(service.label),
         subtitle = when (result) {
-            is IntroTimesResult.Found -> lines(foundLine(service, result.markers, used), describe(result.match))
+            is IntroTimesResult.Found -> lines(
+                foundLine(service, result.markers, used),
+                matchLine(describe(result.match), result.asked),
+            )
+            is IntroTimesResult.NoSuchEpisode -> lines(
+                stringResource(MR.strings.anime_intro_times_no_such_episode),
+                matchLine(describe(result.match), result.asked),
+            )
             is IntroTimesResult.Unnumbered -> lines(
                 stringResource(MR.strings.anime_intro_times_none_for_unnumbered),
                 describe(result.match),
@@ -98,6 +108,9 @@ private fun <M> ServiceRow(
             is IntroTimesResult.NoMatch -> {
                 { RowAction(stringResource(MR.strings.anime_intro_times_find)) { onChange(service) } }
             }
+            is IntroTimesResult.NoSuchEpisode -> {
+                { RowAction(stringResource(MR.strings.anime_intro_times_fix)) { onChange(service) } }
+            }
             IntroTimesResult.Unreachable -> {
                 { RowAction(stringResource(MR.strings.action_retry)) { onRetry(service) } }
             }
@@ -124,22 +137,24 @@ private fun foundLine(service: IntroTimesService, found: List<PlaybackMarker>, u
     }
 }
 
+/**
+ * What was matched and the episode that was asked for, with the season it fell in when that is a series of its own; a
+ * film is asked for whole, so [asked] is null.
+ */
 @Composable
-private fun aniSkipMatch(series: IntroTimesSeries): String = matchedTo(series.title, series.year)
-
-@Composable
-private fun theIntroDbMatch(media: TheIntroDbMedia): String {
-    val matched = matchedTo(media.title, media.year)
-    val placement = media.placement ?: return matched
-    return listOf(
-        matched,
-        stringResource(MR.strings.anime_intro_times_season_from, placement.season, placement.firstEpisode),
-    ).joinToString(" · ")
+private fun matchLine(matched: String, asked: IntroTimesAsked?): String {
+    val episode = when {
+        asked == null -> return matched
+        asked.season == null -> stringResource(MR.strings.anime_intro_times_episode_number, asked.episode)
+        else -> stringResource(MR.strings.anime_intro_times_asked_season_episode, asked.season, asked.episode)
+    }
+    return listOfNotNull(matched, asked.series, episode).joinToString(" · ")
 }
 
 @Composable
 private fun matchedTo(title: String, year: Int?): String =
-    year?.let { stringResource(MR.strings.anime_intro_times_matched, title, it) }
+    // A title that tells remakes apart by the year, as in "Fairy Tail (2018)", says it already.
+    year?.takeIf { it.toString() !in title }?.let { stringResource(MR.strings.anime_intro_times_matched, title, it) }
         ?: stringResource(MR.strings.anime_intro_times_matched_no_year, title)
 
 private fun lines(vararg lines: String): String = lines.joinToString("\n")
