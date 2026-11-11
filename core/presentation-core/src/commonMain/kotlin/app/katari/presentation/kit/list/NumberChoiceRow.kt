@@ -109,7 +109,11 @@ fun NumberChoiceRow(
                             imeAction = ImeAction.Done,
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = { typed.toIntOrNull()?.takeIf { it in numbers }?.let(onSelect) },
+                            onDone = {
+                                typed.toIntOrNull()?.takeIf { it in numbers }?.let(onSelect)
+                                // Puts an on-screen keyboard away, so what the choice brings shows.
+                                defaultKeyboardAction(ImeAction.Done)
+                            },
                         ),
                     )
                     IconButton(
