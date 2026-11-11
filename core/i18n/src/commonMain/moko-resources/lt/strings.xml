@@ -196,7 +196,6 @@
     <string name="pref_skip_filtered_chapters">Praleisti perfiltruotus skyrius</string>
     <string name="tapping_inverted_vertical">Vertikalus</string>
     <string name="pref_reader_actions">Veiksmai</string>
-    <string name="pref_read_with_long_tap">Parodyti ilgiau paspaudus</string>
     <string name="pref_create_folder_per_manga">Išsaugoti puslapius atskiruose aplankuose</string>
     <string name="pref_create_folder_per_manga_summary">Sukuria aplankus pagal įrašo pavadinimą</string>
     <string name="pref_reader_theme">Fono spalva</string>
@@ -222,7 +221,6 @@
     <string name="filter_mode_overlay">Perdanga</string>
     <string name="pref_reader_navigation">Navigacija</string>
     <string name="pref_read_with_volume_keys_inverted">Apkeisti garso mygtukus</string>
-    <string name="pref_read_with_tapping_inverted">Invertuoti paspaudimo zonas</string>
     <string name="black_background">Juoda</string>
     <string name="automatic_background">Automatinis</string>
     <string name="pref_viewer_type">Numatytas skaitymo rėžimas</string>
@@ -245,7 +243,6 @@
     <string name="tapping_inverted_horizontal">Horizontalus</string>
     <string name="tapping_inverted_both">Abu</string>
     <string name="pager_viewer">Puslapiai</string>
-    <string name="pref_viewer_nav">Paspaudimų išdėstymas</string>
     <string name="scale_type_smart_fit">Protingas pritaikymas</string>
     <string name="zoom_start_automatic">Automatinis</string>
     <string name="zoom_start_left">Kairiau</string>
@@ -261,10 +258,8 @@
     <string name="action_display_language_badge">Kalba</string>
     <string name="extension_api_error">Nepavyko gauti papildinių sąrašo</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instaliuoti ir paleisti Shizuku, kad galėtumėte naudoti Shizuku kaip papildinių instaliuotoją.</string>
-    <string name="pref_show_navigation_mode">Rodyti lietimui jautrias zonas</string>
     <string name="label_warning">Įspėjimas</string>
     <string name="update_72hour">Kas 3 dienas</string>
-    <string name="connected_to_wifi">Kai naudojamas Wi-Fi</string>
     <string name="ext_updates_pending">Yra naujinių</string>
     <string name="pref_category_reading">Skaitoma</string>
     <string name="ext_installer_legacy">Pasenusi</string>

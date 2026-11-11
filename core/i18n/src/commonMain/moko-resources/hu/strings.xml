@@ -266,7 +266,6 @@
     <string name="pref_dual_page_invert">Szétvágott oldalak elhelyezésének fordítása</string>
     <string name="pref_dual_page_split">Szétvágása a széles oldalaknak</string>
     <string name="pref_show_navigation_mode_summary">Pillanatnyilag megjelníti, amikor az olvasó meg van nyitva</string>
-    <string name="pref_show_navigation_mode">Érintési zónák átfedésének mutatása</string>
     <string name="ext_app_info">Alkalmazás információ</string>
     <string name="categorized_display_settings">Kategóriakénti beállítások rendezéshez</string>
     <string name="theme_tako">Polip</string>
@@ -327,17 +326,14 @@
     <string name="kindlish_nav">Kindle-féle</string>
     <string name="l_nav">L alakú</string>
     <string name="pref_image_scale_type">Skálázási típus</string>
-    <string name="pref_viewer_nav">Érintési zónák</string>
     <string name="pager_viewer">Lapozott</string>
     <string name="vertical_plus_viewer">Hosszú szalag lyukakkal</string>
     <string name="automatic_background">Automatikus</string>
     <string name="gray_background">Szürke</string>
     <string name="pref_create_folder_per_manga_summary">Mappák létrehozása elemek címe szerint</string>
     <string name="pref_create_folder_per_manga">Mentse a lapokat külön mappákba</string>
-    <string name="pref_read_with_long_tap">Cselekmények mutatása hosszú koppintáskor</string>
     <string name="pref_reader_actions">Műveletek</string>
     <string name="tapping_inverted_none">Egyik sem</string>
-    <string name="pref_read_with_tapping_inverted">Érintési zónák fordítása</string>
     <string name="pref_skip_filtered_chapters">Szűrt fejezetek kihagyása</string>
     <string name="pref_skip_read_chapters">Olvasottnak jelölt fejezetek átugrása</string>
     <string name="filter_mode_darken">Égetés / Sötétítés</string>
@@ -360,7 +356,6 @@
     <string name="ext_installer_shizuku_stopped">A Shizuku nem fut</string>
     <string name="ext_installer_legacy">Régi</string>
     <string name="update_72hour">3 naponta</string>
-    <string name="connected_to_wifi">Csak Wi-Fi-n keresztül</string>
     <string name="backup_info">A biztonsági mentésekről más helyeken is érdemes másolatokat tartani. A biztonsági mentések érzékeny adatokat tartalmazhatnak, beleértve a tárolt jelszavakat is; legyen óvatos a megosztáskor.</string>
     <string name="empty_backup_error">Nincs könyvtári elem, amit menteni lehetne</string>
     <string name="local_source">Helyi forrás</string>
@@ -571,7 +566,6 @@
     <string name="update_already_running">A frissités már folyamatban van</string>
     <string name="crash_screen_restart_application">Applikáció újrainditása</string>
     <string name="label_titles_in_global_update">Globális frissítésben</string>
-    <string name="pref_chapter_swipe_start">Fejezet balra húzásakor</string>
     <string name="pref_skip_dupe_chapters">Duplikált fejezetek átugrása</string>
     <string name="action_set_interval">Időköz állítása</string>
     <string name="action_filter_interval_custom">Egyedi frissítési időköz</string>
@@ -579,7 +573,6 @@
     <string name="pref_hide_in_library_items">Már könyvtári elemek elrejtése</string>
     <string name="delete_downloaded">Letöltött törlése</string>
     <string name="pref_page_rotate">Széles oldalak forgatása az illeszkedéshez</string>
-    <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
     <string name="pref_page_rotate_invert">Forgatott széles oldalak megfordítása</string>
     <string name="action_ok">Ok</string>
     <string name="pref_storage_location">Tárolási hely</string>
@@ -636,7 +629,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Háttérben lévő akkumulátor-használat</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Kerülje el a hosszan tartó könyvtárfrissítések, letöltések és biztonsági mentések helyreállításának megszakítását.</string>
     <string name="onboarding_permission_action_grant">Engedélyezés</string>
-    <string name="ext_permission_install_apps_warning">A bővítmények telepítéséhez engedélyek szükségesek. Az engedélyezéshez koppintson ide.</string>
     <string name="ext_revoke_trust">Megbízható ismeretlen kiterjesztések visszavonása</string>
     <string name="no_location_set">Nincs tárolási hely beállítva</string>
     <string name="action_create">Létrehoz</string>

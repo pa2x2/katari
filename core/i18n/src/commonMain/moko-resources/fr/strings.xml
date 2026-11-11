@@ -232,7 +232,6 @@
     <string name="transition_pages_error">Échec du chargement des pages : %1$s</string>
     <string name="migrate">Déplacer</string>
     <string name="copy">Copier</string>
-    <string name="pref_read_with_long_tap">Afficher les actions en appuyant longuement</string>
     <string name="action_open_in_web_view">Ouvrir dans WebView</string>
     <string name="pref_skip_read_chapters">Passer les chapitres marqués comme lus</string>
     <string name="filter_mode_multiply">Produit</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Vertical</string>
     <string name="tapping_inverted_horizontal">Horizontal</string>
     <string name="tapping_inverted_none">Non</string>
-    <string name="pref_read_with_tapping_inverted">Inverser les zones tactiles</string>
     <string name="unknown_status">Statut inconnu</string>
     <string name="unknown_author">Auteur inconnu</string>
     <string name="whats_new">Quoi de neuf</string>
@@ -380,7 +378,6 @@
     <string name="file_picker_error">L’application de sélection de fichier est introuvable</string>
     <string name="kindlish_nav">Style Kindle</string>
     <string name="pref_dump_crash_logs_summary">Enregistre les rapports de plantage dans un fichier pour les partager avec les développeurs</string>
-    <string name="pref_viewer_nav">Zones tactiles</string>
     <string name="edge_nav">Bord</string>
     <string name="l_nav">En forme de L</string>
     <string name="action_desc">Décroissant</string>
@@ -399,7 +396,6 @@
     <string name="nav_zone_left">Gauche</string>
     <string name="nav_zone_next">Suivant</string>
     <string name="pref_show_navigation_mode_summary">Affichage bref à l\'ouverture du lecteur</string>
-    <string name="pref_show_navigation_mode">Afficher les zones tactiles (superposition)</string>
     <string name="exclude">Exclure : %s</string>
     <string name="include">Inclure : %s</string>
     <string name="none">Aucun(e)</string>
@@ -474,7 +470,6 @@
     <string name="action_display_language_badge">Langue</string>
     <string name="label_warning">Avertissement</string>
     <string name="backup_info">Vous devez également conserver des copies des sauvegardes à d\'autres endroits.</string>
-    <string name="connected_to_wifi">Uniquement en Wi-Fi</string>
     <string name="update_72hour">Tous les 3 jours</string>
     <string name="ext_update_all">Tout mettre à jour</string>
     <string name="pref_auto_clear_chapter_cache">Vider le cache de chapitre au lancement de l\'application</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate_invert">Inverser l\'orientation des pages larges retournées</string>
     <string name="pref_page_rotate">Tourner les pages larges pour qu\'elles rentrent</string>
     <string name="pref_debug_info">Informations de débogage</string>
-    <string name="pref_chapter_swipe_start">Action de glisser à gauche</string>
-    <string name="pref_chapter_swipe_end">Action de glisser à droite</string>
     <string name="action_sort_next_updated">Prochaine mise à jour prévue</string>
     <string name="action_set_interval">Définir l\'intervalle</string>
     <string name="action_ok">Valider</string>
@@ -624,7 +617,6 @@
     <string name="pref_storage_usage">Utilisation du stockage</string>
     <string name="onboarding_action_next">Suivant</string>
     <string name="no_location_set">Aucun emplacement de stockage défini</string>
-    <string name="ext_permission_install_apps_warning">Des permissions sont nécessaires pour installer des extensions. Appuyer ici pour les accorder.</string>
     <string name="onboarding_permission_action_grant">Accorder</string>
     <string name="pref_relative_format">Durées relatives</string>
     <string name="onboarding_permission_notifications">Permission de notifications</string>

@@ -1,9 +1,11 @@
 package app.katari.platform.presentation
 
 import app.katari.icons.platformsymbols.PlatformSymbols
+import app.katari.icons.platformsymbols.rounded.MobileGear
 import app.katari.icons.platformsymbols.rounded.PhonelinkErase
 import app.katari.icons.platformsymbols.rounded.Smartphone
 import app.katari.icons.platformsymbols.rounded.TouchApp
+import app.katari.icons.platformsymbols.rounded.Wifi
 import tachiyomi.i18n.*
 
 actual val platformPresentation = PlatformPresentation(
@@ -24,7 +26,7 @@ actual val platformPresentation = PlatformPresentation(
     recapNotificationText = PlatformStrings.statistics_recap_notification_text,
     yearRecapNotificationText = PlatformStrings.statistics_year_recap_notification_text,
     cloudflareHelpLabel = PlatformStrings.information_cloudflare_help,
-    downloadOnlyOnUnmeteredLabel = MR.strings.connected_to_wifi,
+    downloadOnlyOnUnmeteredLabel = PlatformStrings.connected_to_wifi,
     downloadOnlyOnUnmeteredSummary = null,
     translateOnlyOnUnmeteredLabel = PlatformStrings.pref_translate_only_over_wifi,
     translateWaitsForUnmeteredLabel = PlatformStrings.translate_waiting_for_wifi,
@@ -42,4 +44,19 @@ actual val platformPresentation = PlatformPresentation(
     syncFailedHelp = PlatformStrings.sync_failed_help,
     securitySettingsSummary = PlatformStrings.pref_security_summary,
     monthlyRecapSummary = PlatformStrings.statistics_monthly_recap_summary,
+    pageZonesLabel = PlatformStrings.pref_viewer_nav,
+    invertPageZonesLabel = PlatformStrings.pref_read_with_tapping_inverted,
+    showPageZonesOverlayLabel = PlatformStrings.pref_show_navigation_mode,
+    pageActionsOnLongPressLabel = PlatformStrings.pref_read_with_long_tap,
+    chapterSwipeToStartLabel = PlatformStrings.pref_chapter_swipe_start,
+    chapterSwipeToEndLabel = PlatformStrings.pref_chapter_swipe_end,
+    browseLongPressPriorityLabel = PlatformStrings.pref_browse_long_press_action,
+    longPressActionsLabel = PlatformStrings.pref_browse_long_press_action_open_settings,
+    longPressActionsForSourceLabel = PlatformStrings.browse_feed_long_press_actions_for_source,
+    triStateChipHint = PlatformStrings.filter_tristate_chip_hint,
+    installPermissionWarning = PlatformStrings.ext_permission_install_apps_warning,
+    rememberBrightnessSummary = PlatformStrings.pref_anime_remember_brightness_summary,
+    wifiOnlyLabel = PlatformStrings.connected_to_wifi,
+    defaultReadingModeIcon = PlatformSymbols.Rounded.MobileGear,
+    unmeteredNetworkIcon = PlatformSymbols.Rounded.Wifi,
 )

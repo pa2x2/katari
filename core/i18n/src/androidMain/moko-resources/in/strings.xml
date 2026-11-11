@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Menghemat data seluler dengan hanya memuat halaman yang berdekatan dengan halaman yang sedang Anda baca</string>
     <string name="pref_dump_crash_logs">Bagikan log kerusakan</string>
     <string name="pref_security_summary">Kunci aplikasi, amankan layar</string>
+    <string name="pref_viewer_nav">Zona ketuk</string>
+    <string name="pref_read_with_tapping_inverted">Balikkan zona ketuk</string>
+    <string name="pref_show_navigation_mode">Tampilkan zona ketukan</string>
+    <string name="pref_read_with_long_tap">Tampilkan tindakan saat tekan lama</string>
+    <string name="pref_chapter_swipe_start">Bab tentang geser ke kiri</string>
+    <string name="pref_chapter_swipe_end">Bab tentang geser ke kanan</string>
+    <string name="ext_permission_install_apps_warning">Izin diperlukan untuk memasang ekstensi. Klik disini untuk memberi izin.</string>
+    <string name="connected_to_wifi">Hanya pada Wi-FI</string>
 </resources>

@@ -163,7 +163,6 @@
     <string name="gray_background">Бороҥ</string>
     <string name="white_background">Маҥан</string>
     <string name="pref_reader_theme">Кэнники өҥ</string>
-    <string name="pref_read_with_long_tap">Уһун баттааһыҥҥа - кэпсэтии</string>
     <string name="pref_read_with_volume_keys_inverted">Тыас талкыйдарын миэстэлэрин уларыт</string>
     <string name="pref_read_with_volume_keys">Тыас талкыйдара</string>
     <string name="pref_reader_navigation">Хамсыы</string>
@@ -348,7 +347,6 @@
     <string name="spen_previous_page">Иннинээҕи сирэй</string>
     <string name="file_picker_error">Билэни талар эбилик булуллубата</string>
     <string name="migration_help_guide">Төрүттэр көһөрүүтүн туһунан салалта</string>
-    <string name="pref_viewer_nav">Нэбигээссийэ бэлиэтэ</string>
     <string name="edge_nav">Кытыы</string>
     <string name="kindlish_nav">Kindle курдук</string>
     <string name="l_nav">L курдук</string>

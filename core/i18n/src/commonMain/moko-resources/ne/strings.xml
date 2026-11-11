@@ -178,7 +178,6 @@
     <string name="ext_install_service_notif">एक्सटेन्शन स्थापना गर्दै…</string>
     <string name="ext_installer_shizuku_stopped">Shizuku चलिरहेको छैन</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Shizuku लाई एक्सटेन्शन इंस्टलरको रूपमा प्रयोग गर्न Shizuku स्थापना गर्नुहोस् र सुरु गर्नुहोस्।</string>
-    <string name="pref_show_navigation_mode">नेभिगेसन लेआउट ओभरले देखाउनुहोस्</string>
     <string name="pref_dual_page_split">चौडा पृष्ठहरू विभाजित गर्नुहोस्</string>
     <string name="pref_dual_page_invert">विभाजित पृष्ठ प्लेसमेन्ट उल्टाउनुहोस्</string>
     <string name="pref_cutout_short">कटआउट क्षेत्रमा सामग्री देखाउनुहोस्</string>
@@ -192,7 +191,6 @@
     <string name="tapping_inverted_vertical">ठाडो</string>
     <string name="tapping_inverted_both">दुबै</string>
     <string name="pref_reader_actions">कार्यहरू</string>
-    <string name="pref_read_with_long_tap">लामो ट्यापमा कार्यहरू देखाउनुहोस्</string>
     <string name="pref_reader_theme">ब्याकग्राउण्ड रङ</string>
     <string name="gray_background">खैरो</string>
     <string name="black_background">कालो</string>
@@ -204,7 +202,6 @@
     <string name="filter_mode_overlay">ओभरले</string>
     <string name="pref_skip_filtered_chapters">फिल्टर गरिएका अध्यायहरू छोड्नुहोस्</string>
     <string name="pref_read_with_volume_keys_inverted">भोल्युम कीहरू उल्टाउनुहोस्</string>
-    <string name="pref_read_with_tapping_inverted">ट्याप क्षेत्रहरू उल्टाउनुहोस्</string>
     <string name="tapping_inverted_none">कुनै पनि हैन</string>
     <string name="tapping_inverted_horizontal">तेर्सो</string>
     <string name="ext_installer_legacy">विरासत</string>
@@ -237,7 +234,6 @@
     <string name="pref_inverted_colors">उल्टो</string>
     <string name="white_background">सेतो</string>
     <string name="pref_viewer_type">पूर्वनिर्धारित पढ्ने मोड</string>
-    <string name="connected_to_wifi">Wi-Fi मा मात्र</string>
     <string name="update_72hour">प्रत्येक ३ दिन</string>
     <string name="edge_nav">कुना</string>
     <string name="vertical_viewer">ठाडो</string>
@@ -331,7 +327,6 @@
     <string name="pref_zoom_start">जूम सुरु स्थिति</string>
     <string name="pref_auto_clear_chapter_cache">एप खोलेमा अध्याय cache खाली गर्नुहोस्</string>
     <string name="information_webview_outdated">राम्रो संगतताको लागि कृपया WebView एप अपडेट गर्नुहोस्</string>
-    <string name="pref_viewer_nav">ट्याप क्षेत्रहरू</string>
     <string name="pager_viewer">पृष्ठांकित</string>
     <string name="pref_image_scale_type">स्केल को प्रकार</string>
     <string name="scale_type_fit_screen">फिट स्क्रिन</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate">फिट गर्न चौडा पृष्ठहरू घुमाउनुहोस्</string>
     <string name="pref_page_rotate_invert">घुमाइएका चौडा पृष्ठहरूको अभिमुखीकरण फ्लिप गर्नुहोस्</string>
     <string name="pref_debug_info">Debug जानकारी</string>
-    <string name="pref_chapter_swipe_end">दायाँतिर स्वाइप गर्ने अध्याय</string>
-    <string name="pref_chapter_swipe_start">बायाँतिर स्वाइप गर्ने अध्याय</string>
     <string name="action_set_interval">अन्तराल सेट गर्नुहोस्</string>
     <string name="action_filter_interval_custom">कस्टम गरिएको अपडेट फ्रिक्वेन्सी</string>
     <string name="manga_display_modified_interval_title">प्रत्येक अपडेट गर्न सेट गर्नुहोस्</string>
@@ -640,7 +633,6 @@
     <string name="onboarding_permission_ignore_battery_opts_description">लामो समयदेखि चलिरहेको पुस्तकालय अपडेट्स, डाउनलोड्स, र ब्याकअप रिस्टोरमा अवरोधहरू बेवास्ता गर्नुहोस्।</string>
     <string name="onboarding_storage_help_info">पुरानो संस्करणबाट अपडेट गर्दै र के चयन गर्ने निश्चित छैन? थप जानकारीको लागि भण्डारण गाइड हेर्नुहोस्।</string>
     <string name="onboarding_permission_ignore_battery_opts">ब्याकग्राउण्ड ब्याट्री प्रयोग</string>
-    <string name="ext_permission_install_apps_warning">एक्सटेन्शनहरू स्थापना गर्न अनुमति आवश्यक छ। प्रदान गर्न यहाँ ट्याप गर्नुहोस्।</string>
     <string name="ext_revoke_trust">विश्वसनीय अज्ञात एक्सटेन्शनहरू रद्द गर्नुहोस्</string>
     <string name="action_apply">अप्लाई</string>
     <string name="pref_storage_location">भण्डारण स्थान</string>

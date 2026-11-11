@@ -2,4 +2,5 @@
 <resources>
     <string name="action_show_errors">Tryk for at se detaljer</string>
     <string name="information_empty_category">Du har ikke nogen kategorier. Tryk på plusset for at oprette en og organisere dit bibliotek.</string>
+    <string name="connected_to_wifi">Kun på WiFi</string>
 </resources>

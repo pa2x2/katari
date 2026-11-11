@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Animationshastighet för dubbelklick</string>
     <string name="pref_dump_crash_logs">Dela kraschloggar</string>
     <string name="pref_security_summary">Applikationslås, säkerhetsskärm</string>
+    <string name="pref_viewer_nav">Tryckzoner</string>
+    <string name="pref_read_with_tapping_inverted">Invertera tryckzoner</string>
+    <string name="pref_show_navigation_mode">Visa överlägg för tryckzoner</string>
+    <string name="pref_read_with_long_tap">Visa åtgärder vid lång tryckning</string>
+    <string name="pref_chapter_swipe_start">Vänstersvep på kapitel</string>
+    <string name="pref_chapter_swipe_end">Högersvep på kapitel</string>
+    <string name="ext_permission_install_apps_warning">Behörigheter krävs för att installera tillägg. Tryck här för att bevilja.</string>
+    <string name="connected_to_wifi">Bara över Wi-Fi</string>
 </resources>

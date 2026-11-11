@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Velocidad de animación de doble toque</string>
     <string name="pref_dump_crash_logs">Compartir los registros de fallos</string>
     <string name="pref_security_summary">Pantalla segura y desbloqueo biométrico</string>
+    <string name="pref_viewer_nav">Zonas de toque</string>
+    <string name="pref_read_with_tapping_inverted">Invertir zonas de toque</string>
+    <string name="pref_show_navigation_mode">Ver superposición con zonas de toque</string>
+    <string name="pref_read_with_long_tap">Menú de pulsación prolongada</string>
+    <string name="pref_chapter_swipe_start">Al deslizar a la izquierda en un capítulo</string>
+    <string name="pref_chapter_swipe_end">Al deslizar a la derecha en un capítulo</string>
+    <string name="ext_permission_install_apps_warning">Toca aquí para conceder los permisos necesarios para instalar extensiones.</string>
+    <string name="connected_to_wifi">Solo con Wi-Fi</string>
 </resources>

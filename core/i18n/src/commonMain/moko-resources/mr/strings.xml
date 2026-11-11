@@ -150,7 +150,6 @@
     <string name="gray_background">फिक्का काडा</string>
     <string name="white_background">पांढरा</string>
     <string name="pref_reader_theme">बॅकग्राऊंड रंग</string>
-    <string name="pref_read_with_long_tap">दीर्घ टॅप संवाद</string>
     <string name="pref_read_with_volume_keys_inverted">व्हॉल्यूम की उलटा करा</string>
     <string name="pref_read_with_volume_keys">व्हॉल्यूम की</string>
     <string name="pref_reader_navigation">नॅव्हिगेशन</string>
@@ -175,7 +174,6 @@
     <string name="pref_category_display">दाखवा</string>
     <string name="hide_notification_content">सूचना सामग्री लपवा</string>
     <string name="double_tap_anim_speed_normal">सामान्य</string>
-    <string name="pref_viewer_nav">नैविगेशन माध्य</string>
     <string name="nav_zone_right">उजवी</string>
     <string name="nav_zone_left">डावी</string>
     <string name="nav_zone_next">पुढचं</string>

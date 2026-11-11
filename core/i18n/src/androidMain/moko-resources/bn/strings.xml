@@ -8,4 +8,12 @@
     <string name="pref_double_tap_anim_speed">দুই টোকার এনিমেশনের গতি</string>
     <string name="pref_dump_crash_logs">ক্র্যাশ লগ শেয়ার</string>
     <string name="pref_security_summary">অ্যাপ লক,নিরাপদ পর্দা</string>
+    <string name="pref_viewer_nav">ন্যাভিগেশন নকশা</string>
+    <string name="pref_read_with_tapping_inverted">উল্টানো ট্যাপিং</string>
+    <string name="pref_show_navigation_mode">নেভিগেশন বিন্যাস ওভারলে দেখান</string>
+    <string name="pref_read_with_long_tap">দীর্ঘ ট্যাপে দেখান</string>
+    <string name="pref_chapter_swipe_start">অধ্যায় বামে সোয়াইপ করলে</string>
+    <string name="pref_chapter_swipe_end">অধ্যায় ডানে সোয়াইপ করলে</string>
+    <string name="ext_permission_install_apps_warning">এক্সটেনশন ইনস্টল করতে অনুমতি লাগবে। অনুমতি দিতে এখানে ট্যাপ করুন।</string>
+    <string name="connected_to_wifi">সুধু মাত্র ওয়িফি তে</string>
 </resources>

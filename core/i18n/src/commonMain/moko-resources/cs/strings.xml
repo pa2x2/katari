@@ -234,7 +234,6 @@
     <string name="channel_common">Běžný</string>
     <string name="label_help">Nápověda</string>
     <string name="action_open_in_web_view">Otevřít ve WebView</string>
-    <string name="pref_read_with_long_tap">Zobrazit akce dlouhým stisknutím</string>
     <string name="pref_skip_read_chapters">Přeskakovat přečtené kapitoly</string>
     <string name="pref_color_filter_mode">Režim mísení filtru barev</string>
     <string name="filter_mode_overlay">Překrytí</string>
@@ -316,7 +315,6 @@
     <string name="pref_remove_bookmarked_chapters">Povolení mazání kapitol se záložkami</string>
     <string name="pref_category_delete_chapters">Smazat kapitoly</string>
     <string name="pref_category_reading_mode">Režim čtení</string>
-    <string name="pref_viewer_nav">Oblasti dotyku</string>
     <string name="nav_zone_next">Další</string>
     <string name="right_and_left_nav">Vpravo a Vlevo</string>
     <string name="l_nav">Ve tvaru písmene L</string>
@@ -389,7 +387,6 @@
     <string name="pref_cutout_short">Zobrazovat obsah v oblasti výřezu displeje</string>
     <string name="pref_dual_page_invert_summary">Pokud umístění rozdělených širokých stránek neodpovídá směru čtení</string>
     <string name="pref_dual_page_invert">Invertovat umístění rozdělené stránky</string>
-    <string name="pref_show_navigation_mode">Zobrazit překrytí oblastí dotyku</string>
     <string name="exclude">Vynechat: %s</string>
     <string name="include">Zahrnout: %s</string>
     <string name="none">Žádné</string>
@@ -398,7 +395,6 @@
     <string name="clipboard_copy_error">Kopírování do schránky se nezdařilo</string>
     <string name="vertical_plus_viewer">Dlouhý pruh s mezerami</string>
     <string name="edge_nav">Okraj</string>
-    <string name="pref_read_with_tapping_inverted">Invertovat oblasti dotyku</string>
     <string name="pref_dual_page_split">Rozdělit široké stránky</string>
     <string name="pref_show_navigation_mode_summary">Krátce zobrazit, když je čtečka otevřena</string>
     <string name="theme_system">Systém</string>
@@ -473,7 +469,6 @@
     <string name="action_select_inverse">Vybrat obráceně</string>
     <string name="action_display_language_badge">Jazyk</string>
     <string name="update_72hour">Každé 3 dny</string>
-    <string name="connected_to_wifi">Jen na Wi-Fi</string>
     <string name="pref_verbose_logging">Podrobné protokolování</string>
     <string name="ext_update_all">Aktualizovat vše</string>
     <string name="pref_verbose_logging_summary">Vypisovat podrobné informace do systémového protokolu (sníží výkon aplikace)</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate_invert">Překlopení orientace otočených širokých stránek</string>
     <string name="pref_page_rotate">Otočení širokých stránek tak, aby se vešly</string>
     <string name="pref_debug_info">Ladící informace</string>
-    <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
-    <string name="pref_chapter_swipe_start">Kapitola po přejetí doleva</string>
     <string name="action_filter_interval_custom">Přizpůsobený interval aktualizace</string>
     <string name="action_sort_next_updated">Další očekávaná aktualizace</string>
     <string name="manga_display_interval_title">Odhadovat každý</string>
@@ -643,7 +636,6 @@
     <string name="action_bar_up_description">Navigovat nahoru</string>
     <string name="no_location_set">Není nastaveno umístění úložiště</string>
     <string name="onboarding_permission_notifications_description">Buďte upozorněni na aktualizaci knihovny atd.</string>
-    <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
     <string name="private_settings">Zahrnout citlivé nastavení (např. přihlašovací tokeny)</string>
     <string name="onboarding_permission_action_grant">Udělit</string>
     <string name="onboarding_storage_folder_info">Vyberte složku, kde %1$s bude ukládat stahování kapitol, zálohy a další. \n \nJe doporučena vyhrazená složka.</string>

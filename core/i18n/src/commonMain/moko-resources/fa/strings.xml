@@ -162,7 +162,6 @@
     <string name="gray_background">خاکستری</string>
     <string name="white_background">سفید</string>
     <string name="pref_reader_theme">رنگ پس زمینه</string>
-    <string name="pref_read_with_long_tap">با لمس طولانی نشان بده</string>
     <string name="pref_read_with_volume_keys">دکمه‌های صدا</string>
     <string name="pref_read_with_volume_keys_inverted">معکوس کردن دکمه‌های صدا</string>
     <string name="pref_reader_navigation">نوار ناوبری Navigation</string>
@@ -371,7 +370,6 @@
     <string name="tapping_inverted_vertical">عمودی</string>
     <string name="tapping_inverted_horizontal">افقی</string>
     <string name="tapping_inverted_none">هیچ کدام</string>
-    <string name="pref_read_with_tapping_inverted">منطقه‌های لمس را معکوس کن</string>
     <string name="chapter_settings_updated">تنظیمات پیش فرض چپتر به روز شد</string>
     <string name="share_page_info">%1$s: %2$s, صفحه %3$d</string>
     <string name="chapter_settings">تنظیمات قسمت ها</string>
@@ -428,7 +426,6 @@
     <string name="restrictions">محدودیت‌ها: %s</string>
     <string name="relative_time_today">امروز</string>
     <string name="update_72hour">هر 3 روز</string>
-    <string name="connected_to_wifi">فقط روی Wi-Fi</string>
     <string name="categorized_display_settings">تنظیمات بر اساس دسته‌بندی برای ترتیب و نمایش</string>
     <string name="ext_app_info">اطلاعات برنامه</string>
     <string name="pref_dual_page_invert">معکوس کردن جای دو صفحه‌ی تقسیم شده</string>
@@ -456,11 +453,9 @@
     <string name="pref_low">پایین</string>
     <string name="action_display_cover_only_grid">الگوی فقط جلد</string>
     <string name="pref_lowest">پایین‌ترین</string>
-    <string name="pref_viewer_nav">مناطق قابل لمس</string>
     <string name="on">روشن</string>
     <string name="theme_tako">تاکو</string>
     <string name="off">خاموش</string>
-    <string name="pref_show_navigation_mode">مناطق قابل لمس را نشان بده</string>
     <string name="ext_installer_shizuku_unavailable_dialog">برای استفاده از Shizuku به عنوان یک نصب‌کننده‌ی افزونه، آن را نصب و اجرا کنید.</string>
     <string name="disabled_nav">غیر فعال</string>
     <string name="nav_zone_prev">قبلی</string>
@@ -524,9 +519,7 @@
     <string name="pref_relative_format_summary">\"%1$s\" به جای \"%2$s\"</string>
     <string name="pref_page_rotate">صفحات عریض را بچرخان تا جا شوند</string>
     <string name="popular">محبوب</string>
-    <string name="pref_chapter_swipe_end">چپتر مربوط به کشیدن به راست</string>
     <string name="pref_flash_page">در هنگام عوض شدن صفحه فلاش سفید بزن</string>
-    <string name="pref_chapter_swipe_start">چپتر مربوط به کشیدن به چپ</string>
     <string name="updates_last_update_info">آخرین به روز رسانی کتابخانه: %s</string>
     <string name="action_filter_interval_custom">تناوب به روز رسانی شخسی سازی شده</string>
     <string name="onboarding_action_next">بعدی</string>
@@ -544,7 +537,6 @@
     <string name="pref_storage_location">محل زخیره سازی</string>
     <string name="onboarding_action_finish">شروع کنید</string>
     <string name="onboarding_action_skip">پرش</string>
-    <string name="ext_permission_install_apps_warning">مجوز برای نصب افزونه ها لازم است. به اینجا ضربه بزنید تا اعطا کنید.</string>
     <string name="pref_flash_page_summ">مقدار رد باقی مانده در نمایش گر های E-ink کاهش میابد</string>
     <string name="onboarding_storage_action_select">انتخاب یک پوشه</string>
     <string name="onboarding_storage_selection_required">یک پوشه باید انتخاب شود</string>

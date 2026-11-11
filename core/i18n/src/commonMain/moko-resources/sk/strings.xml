@@ -108,7 +108,6 @@
     <string name="pref_reader_navigation">Navigácia</string>
     <string name="pref_read_with_volume_keys">Tlačidlá hlasitosti</string>
     <string name="pref_read_with_volume_keys_inverted">Invertovať tlačidlá hlasitosti</string>
-    <string name="pref_read_with_long_tap">Zobrazenie pri dlhom podržaní</string>
     <string name="pref_reader_theme">Farba pozadia</string>
     <string name="white_background">Biela</string>
     <string name="black_background">Čierna</string>
@@ -320,7 +319,6 @@
     <string name="lock_always">Vždy</string>
     <string name="lock_never">Nikdy</string>
     <string name="relative_time_today">Dnes</string>
-    <string name="connected_to_wifi">Iba na Wi-Fi</string>
     <string name="restrictions">Obmedzenia: %s</string>
     <string name="pref_library_update_refresh_metadata">Automatický obnoviť metadata</string>
     <string name="pref_library_update_refresh_metadata_summary">Pri aktualizácii knižnice skontrolujte nový obal a podrobnosti</string>
@@ -332,7 +330,6 @@
     <string name="label_data">Dáta</string>
     <string name="sort_by_upload_date">Podľa dátumu nahratia</string>
     <string name="spen_previous_page">Predchádzajúca strana</string>
-    <string name="pref_show_navigation_mode">Zobraziť prekrytie oblastí dotyku</string>
     <string name="nav_zone_next">Ďalší</string>
     <string name="restoring_backup_error">Obnovenie zálohy zlyhalo</string>
     <string name="restoring_backup_canceled">Obnovenie bolo zrušené</string>
@@ -415,7 +412,6 @@
     <string name="pref_dual_page_invert">Prevrátiť rozdelenie na dve strany</string>
     <string name="nav_zone_right">Vpravo</string>
     <string name="vertical_plus_viewer">Nepretržité vertikálne</string>
-    <string name="pref_viewer_nav">Dotykové zóny</string>
     <string name="pref_landscape_zoom">Priblížiť obrázok na šírku</string>
     <string name="pref_category_reading">Čítanie</string>
     <string name="pref_category_for_this_series">Pre túto sériu</string>
@@ -445,7 +441,6 @@
     <string name="ext_update_all">Aktualizovať všetko</string>
     <string name="extension_api_error">Nepodarilo sa získať zoznam rozšírení</string>
     <string name="ext_install_service_notif">Inštaluje sa rozšírenie…</string>
-    <string name="pref_read_with_tapping_inverted">Invertovať oblasti dotyku</string>
     <string name="pref_create_folder_per_manga">Uloženie stránok do samostatných priečinkov</string>
     <string name="gray_background">Šedivá</string>
     <string name="rotation_landscape">Na šírku</string>
@@ -612,8 +607,6 @@
     <string name="telemetry_summary">Posielaním záznamov v prípade zlyhania aplikácie a analytických údajov nám umožníte identifikovať a opraviť chyby, zlepšiť rýchlost aplikácie a urobiť aplikáciu viac relevantnejšiu pre vaše potreby</string>
     <string name="pref_library_update_show_tab_badge">Zobraziť počet neprečítaných na ikone Aktualizácii</string>
     <string name="pref_behavior">Správanie</string>
-    <string name="pref_chapter_swipe_end">Kapitola po potiahnutí prstom doprava</string>
-    <string name="pref_chapter_swipe_start">Kapitola po potiahnutí prstom doľava</string>
     <string name="pref_mark_duplicate_read_chapter_read">Označiť duplikátne kapitoly ako prečítané</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Po prečítaní kapitoly</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Po získaní novej kapitoly</string>
@@ -621,7 +614,6 @@
     <string name="pref_disallow_non_ascii_filenames">Zakázať názvy súborov, ktoré nie sú v kódovaní ASCII</string>
     <string name="pref_disallow_non_ascii_filenames_details">Zaručí kompatibilitu s niektorými úložiskami, ktoré nepodporujú kódovanie Unicode. Keď je táto možnosť zvolená, budete musieť manuálne premenovať priečinky zdrojov a mangy tak, že nahradíte znaky, ktoré nie sú podporované v kódovaní ASCII, ich malými hexadecimálnymi reprezentáciami. Súbory kapitol netreba premenovávať.</string>
     <string name="ext_remove">Odstrániť</string>
-    <string name="ext_permission_install_apps_warning">Na inštaláciu rozšírení sú potrebné povolenia. Ťuknite sem, aby ste ich udelili.</string>
     <string name="ext_revoke_trust">Odstrániť status \"dôveryhodné\" z neznámych rozšírení</string>
     <string name="pref_page_rotate">Otočiť široké strany, aby sa zmestili</string>
     <string name="pref_page_rotate_invert">Preklopiť orientáciu otočených širokých strán</string>

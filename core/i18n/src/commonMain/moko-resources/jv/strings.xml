@@ -178,7 +178,6 @@
     <string name="hide_notification_content">Umpetake konten notifikasi</string>
     <string name="secure_screen">Amanaken layar</string>
     <string name="update_72hour">Saben 3 dinten</string>
-    <string name="connected_to_wifi">Namung ing Wi-Fi</string>
     <string name="ext_untrusted">Ora kapracaya</string>
     <string name="pref_library_update_refresh_metadata_summary">periksa sampul lan rinci anyar wektu memerbarui pustaka</string>
     <string name="default_category">kategori gawan</string>
@@ -224,7 +223,6 @@
     <string name="pref_app_language">Bohoso aplikasi</string>
     <string name="untrusted_extension_message">Ekstensi iki ditandatangani nganggo sertifikat sing ora dipercaya lan ora diaktifake.\n\nEkstensi angkoro bisa maca kredensial login sing disimpen ing Katari utawa nglakokake kode sewenang-wenang. Kanthi percaya karo sertifikat iki, sampeyan nampa risiko kasebut.</string>
     <string name="ext_downloading">Ndownload</string>
-    <string name="pref_show_navigation_mode">Tampilake overlay zona tutul</string>
     <string name="none">Ora ono</string>
     <string name="ext_pending">Ketunda</string>
     <string name="ext_info_version">Versine</string>
@@ -246,7 +244,6 @@
     <string name="off">Seda</string>
     <string name="pref_custom_brightness">Padhang khusus</string>
     <string name="pref_page_transitions">Animasi transisi kaca</string>
-    <string name="pref_read_with_tapping_inverted">Walik zona tutul</string>
     <string name="tapping_inverted_horizontal">Horisontal</string>
     <string name="pref_create_folder_per_manga_summary">Nggawe folder miturut judhul manga</string>
     <string name="filter_mode_overlay">Numpuki</string>
@@ -268,7 +265,6 @@
     <string name="pref_color_filter_mode">Mode campuran filter warna</string>
     <string name="pref_keep_screen_on">Layar urip terus</string>
     <string name="pref_reader_actions">Aksi</string>
-    <string name="pref_read_with_long_tap">Tampilake ing tunyuk dawa</string>
     <string name="pref_create_folder_per_manga">Simpen kaca menyang folder sing kapisah</string>
     <string name="label_stats">Statistik</string>
     <string name="label_local">Lokal</string>

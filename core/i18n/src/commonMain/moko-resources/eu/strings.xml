@@ -216,7 +216,6 @@
     <string name="zoom_start_automatic">Automatikoa</string>
     <string name="automatic_background">Automatikoa</string>
     <string name="nav_zone_prev">Aurrekoa</string>
-    <string name="pref_viewer_nav">Nabigazio-diseinua</string>
     <string name="scale_type_stretch">Luzatu</string>
     <string name="scale_type_smart_fit">Smart doiketa</string>
     <string name="zoom_start_center">Erdian</string>
@@ -381,7 +380,6 @@
     <string name="lock_never">Inoiz ere ez</string>
     <string name="pref_crop_borders">Moztu ertzak</string>
     <string name="pref_read_with_volume_keys_inverted">Alderantzikatu bolumen-teklak</string>
-    <string name="pref_read_with_tapping_inverted">Sakatzea alderantzikatu</string>
     <string name="tapping_inverted_none">Ezer ez</string>
     <string name="tapping_inverted_horizontal">Horizontala</string>
     <string name="tapping_inverted_vertical">Bertikala</string>
@@ -441,13 +439,11 @@
     <string name="ext_trust">Fidagarritzat jo</string>
     <string name="tapping_inverted_both">Biak</string>
     <string name="pref_reader_actions">Ekintzak</string>
-    <string name="pref_read_with_long_tap">Erakutsi sakaketa luzean</string>
     <string name="username">Erabiltzaile-izena</string>
     <string name="password">Pasahitza</string>
     <string name="action_global_search_query">Bilatu \"%1$s\" toki guztietan</string>
     <string name="update_72hour">3 egunean behin</string>
     <string name="update_weekly">Astero</string>
-    <string name="connected_to_wifi">Wi-Fi bidez bakarrik</string>
     <string name="restrictions">Mugaketak: %s</string>
     <string name="pref_library_update_refresh_metadata">Freskatu metadatuak automatikoki</string>
     <string name="invalid_backup_file_missing_manga">Babeskopiak ez du mangarik.</string>
@@ -478,7 +474,6 @@
     <string name="on_hiatus">Etenaldian</string>
     <string name="action_display_local_badge">Manga lokala</string>
     <string name="notification_chapters_single_and_more">%1$s kapitulua eta %2$d gehiago</string>
-    <string name="pref_show_navigation_mode">Nabigazio-diseinuaren geruza erakutsi</string>
     <string name="pref_show_navigation_mode_summary">Erakutsi ukipen-zonak irakurgailua irekitzen denean</string>
     <string name="pref_clear_database_summary">Ezabatu zure liburutegian gordeta ez dauden mangen historia</string>
     <string name="publishing_finished">Argitarapena amaitua</string>

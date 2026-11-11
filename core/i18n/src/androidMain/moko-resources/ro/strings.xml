@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Viteza de animație pentru apăsare dublă</string>
     <string name="pref_dump_crash_logs">Aruncați jurnalele de erori fatale</string>
     <string name="pref_security_summary">Blocarea aplicației, securizarea ecranului</string>
+    <string name="pref_viewer_nav">Zone de atingere</string>
+    <string name="pref_read_with_tapping_inverted">Inversați zonele de atingere</string>
+    <string name="pref_show_navigation_mode">Afișați suprapunerea zonelor de atingere</string>
+    <string name="pref_read_with_long_tap">Afișare la atingerea lungă</string>
+    <string name="pref_chapter_swipe_start">Glisare către stânga a unui capitol</string>
+    <string name="pref_chapter_swipe_end">Glisare către dreapta a unui capitol</string>
+    <string name="ext_permission_install_apps_warning">Sunt necesare permisiuni pentru instalarea de extensii. Atingeți aici pentru a permite.</string>
+    <string name="connected_to_wifi">Doar prin Wi Fi</string>
 </resources>

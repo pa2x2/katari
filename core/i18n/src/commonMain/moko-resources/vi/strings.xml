@@ -232,7 +232,6 @@
     <string name="migrate">Chuyển nguồn</string>
     <string name="copy">Sao chép</string>
     <string name="channel_common">Thường gặp</string>
-    <string name="pref_read_with_long_tap">Hiện mục hành động khi nhấn giữ</string>
     <string name="action_open_in_web_view">Mở bằng WebView</string>
     <string name="pref_skip_read_chapters">Bỏ qua Chương đã đọc</string>
     <string name="pref_color_filter_mode">Chế độ hòa trộn bộ lọc màu</string>
@@ -318,7 +317,6 @@
     <string name="edge_nav">Dạng góc cạnh</string>
     <string name="kindlish_nav">Dạng giống Kindle</string>
     <string name="l_nav">Dạng chữ L</string>
-    <string name="pref_viewer_nav">Khu vực nhấn</string>
     <string name="clear_history_completed">Lịch sử đã được xoá</string>
     <string name="pref_clear_history">Xoá lịch sử</string>
     <string name="pref_incognito_mode">Chế độ ẩn danh</string>
@@ -399,13 +397,11 @@
     <string name="tapping_inverted_vertical">Dọc</string>
     <string name="tapping_inverted_horizontal">Ngang</string>
     <string name="tapping_inverted_none">Không</string>
-    <string name="pref_read_with_tapping_inverted">Đảo ngược khu vực nhấn</string>
     <string name="pref_grayscale">Ảnh đen trắng</string>
     <string name="pref_dual_page_invert_summary">Nếu vị trí của phần tách trang rộng không khớp với hướng đọc</string>
     <string name="pref_dual_page_invert">Đảo ngược vị trí tách trang</string>
     <string name="pref_dual_page_split">Tách các trang đôi</string>
     <string name="pref_show_navigation_mode_summary">Hiển thị nhanh các vùng chạm khi trình đọc được mở</string>
-    <string name="pref_show_navigation_mode">Hiển thị khu vực nhấn</string>
     <string name="exclude">Loại trừ:%s</string>
     <string name="include">Bao gồm: %s</string>
     <string name="none">Không cái nào</string>
@@ -474,7 +470,6 @@
     <string name="pref_verbose_logging_summary">In các ghi chép chi tiết vào ghi chép hệ thống ( giảm hiệu suất ứng dụng )</string>
     <string name="ext_install_service_notif">Đang cài đặt tiện ích mở rộng…</string>
     <string name="update_72hour">Mỗi 3 ngày</string>
-    <string name="connected_to_wifi">Chỉ qua Wi-Fi</string>
     <string name="ext_update_all">Cập nhật tất cả</string>
     <string name="pref_auto_clear_chapter_cache">Xóa bộ nhớ chương đệm khi chạy ứng dụng</string>
     <string name="clear_database_source_item_count">%1$d truyện ngoài thư viện có trong cơ sở dữ liệu</string>
@@ -583,8 +578,6 @@
     <string name="pref_page_rotate_invert">Lật hướng của các trang rộng đã xoay</string>
     <string name="overlay_header">Phủ lên</string>
     <string name="not_applicable">N/A</string>
-    <string name="pref_chapter_swipe_end">Chương khi vuốt sang phải</string>
-    <string name="pref_chapter_swipe_start">Chương khi vuốt sang trái</string>
     <string name="pref_debug_info">Thông tin gỡ lỗi</string>
     <string name="create_backup_file_error">Không thể tạo tệp sao lưu</string>
     <string name="action_set_interval">Đặt khoảng thời gian</string>
@@ -647,7 +640,6 @@
     <string name="manga_interval_expected_update">Các chương mới được dự đoán sẽ phát hành trong khoảng %1$s, kiểm tra mỗi %2$s.</string>
     <string name="available_disk_space_info">Hiện có: %1$s / Tổng cộng: %2$s</string>
     <string name="invalid_backup_file_error">Mã lỗi đầy đủ:</string>
-    <string name="ext_permission_install_apps_warning">Cần phải cấp phép để cài đặt tiện ích mở rộng. Bấm đây để cấp.</string>
     <string name="private_settings">Bao gồm những cài đặt nhạy cảm (ví dụ như token đăng nhập)</string>
     <string name="action_add_anyway">Vẫn thêm</string>
     <string name="theme_nord">Phương bắc</string>

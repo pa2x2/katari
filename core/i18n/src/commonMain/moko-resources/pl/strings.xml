@@ -234,7 +234,6 @@
     <string name="transition_pages_error">Nie udało się załadować stron: %1$s</string>
     <string name="action_open_in_web_view">Otwórz używając WebView</string>
     <string name="pref_skip_read_chapters">Pomiń rozdziały ozn. jako przeczytane</string>
-    <string name="pref_read_with_long_tap">Pokaż akcje po przytrzymaniu</string>
     <string name="pref_color_filter_mode">Tryb mieszania kolorów</string>
     <string name="filter_mode_overlay">Nakładka</string>
     <string name="filter_mode_multiply">Pomnożenie</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Wertykalnie</string>
     <string name="tapping_inverted_horizontal">Horyzontalnie</string>
     <string name="tapping_inverted_none">Brak</string>
-    <string name="pref_read_with_tapping_inverted">Odwróć strefy kliknięcia</string>
     <string name="download_insufficient_space">Nie udało się pobrać rozdziałów z powodu braku miejsca na urządzeniu</string>
     <string name="unknown_status">Nieznany status</string>
     <string name="unknown_author">Nieznany autor</string>
@@ -379,7 +377,6 @@
     <string name="pref_category_delete_chapters">Usuń rozdziały</string>
     <string name="file_picker_error">Nie znaleziono aplikacji do przeglądania plików</string>
     <string name="pref_dump_crash_logs_summary">Zapisuje logi błędów do pliku do udostępnienia programistom</string>
-    <string name="pref_viewer_nav">Strefy kliknięcia</string>
     <string name="edge_nav">Przy krawędzi</string>
     <string name="kindlish_nav">Podobnie jak w czytniku Kindle</string>
     <string name="l_nav">W kształcie litery \"L\"</string>
@@ -399,7 +396,6 @@
     <string name="nav_zone_next">Następne</string>
     <string name="nav_zone_prev">Poprzednie</string>
     <string name="pref_show_navigation_mode_summary">Krótko pokazuj, kiedy czytnik zostaje otwarty</string>
-    <string name="pref_show_navigation_mode">Pokazuj nakładkę stref kliknięcia</string>
     <string name="exclude">Wyklucz: %s</string>
     <string name="include">Uwzględnij: %s</string>
     <string name="none">Brak</string>
@@ -474,7 +470,6 @@
     <string name="action_display_language_badge">Język</string>
     <string name="label_warning">Ostrzeżenie</string>
     <string name="update_72hour">Co 3 dni</string>
-    <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
     <string name="ext_update_all">Zaktualizuj wszystko</string>
     <string name="ext_installer_legacy">Przestarzały</string>
     <string name="pref_auto_clear_chapter_cache">Wyczyść cache rozdziałów przy uruchamianiu aplikacji</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate">Dopasuj szerokie strony</string>
     <string name="pref_page_rotate_invert">Zmień orientację obróconych obrazów</string>
     <string name="pref_debug_info">Informacje debugowania</string>
-    <string name="pref_chapter_swipe_end">Przesuń palcem w prawo</string>
-    <string name="pref_chapter_swipe_start">Przesuń palcem w lewo</string>
     <string name="action_set_interval">Ustaw interwał</string>
     <string name="action_sort_next_updated">Następna spodziewana aktualizacja</string>
     <string name="manga_display_modified_interval_title">Aktualizuj co</string>
@@ -638,7 +631,6 @@
     <string name="pref_relative_format">Użyj dat względnych</string>
     <string name="pref_relative_format_summary">\"%1$s\" zamiast \"%2$s\"</string>
     <string name="onboarding_storage_help_info">Aktualizujesz ze starszej wersji i nie jesteś pewien co wybrać? Zobacz na przewodnik po pamięci.</string>
-    <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
     <string name="onboarding_storage_folder_info">Wybierz folder gdzie %1$s będzie zapisywał pobrane rozdziały, kopie zapasowe i inne. \n \nZalecany jest dedykowany folder.</string>
     <string name="onboarding_storage_selected_folder">Wybrany folder:%s</string>
     <string name="ext_revoke_trust">Unieważnij zaufanie nieznanym rozszerzeniom</string>

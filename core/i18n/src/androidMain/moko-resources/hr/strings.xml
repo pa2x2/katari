@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Brzina animacije dvostrukim dodirom</string>
     <string name="pref_dump_crash_logs">Dijeli zapise prekida rada aplikacije</string>
     <string name="pref_security_summary">Zaključavanje aplikacije, siguran zaslon</string>
+    <string name="pref_viewer_nav">Područja dodira</string>
+    <string name="pref_read_with_tapping_inverted">Preokreni područja za dodirivanje</string>
+    <string name="pref_show_navigation_mode">Prikaži raspored navigacije</string>
+    <string name="pref_read_with_long_tap">Prikaži radnje pri dugom dodiru</string>
+    <string name="pref_chapter_swipe_start">Poglavlje pri povlačenju ulijevo</string>
+    <string name="pref_chapter_swipe_end">Poglavlje pri povlačenju udesno</string>
+    <string name="ext_permission_install_apps_warning">Za instaliranje proširenja su potrebne dozvole. Dodirni ovdje za odobrenje.</string>
+    <string name="connected_to_wifi">Samo putem Wi-Fi veze</string>
 </resources>

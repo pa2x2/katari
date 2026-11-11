@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Šetří mobilní data tím, že načítá pouze stránky v blízkosti té, kterou právě čtete</string>
     <string name="pref_dump_crash_logs">Sdílet protokoly o selhání</string>
     <string name="pref_security_summary">Zámek aplikace, zabezpečená obrazovka</string>
+    <string name="pref_viewer_nav">Oblasti dotyku</string>
+    <string name="pref_read_with_tapping_inverted">Invertovat oblasti dotyku</string>
+    <string name="pref_show_navigation_mode">Zobrazit překrytí oblastí dotyku</string>
+    <string name="pref_read_with_long_tap">Zobrazit akce dlouhým stisknutím</string>
+    <string name="pref_chapter_swipe_start">Kapitola po přejetí doleva</string>
+    <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
+    <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
+    <string name="connected_to_wifi">Jen na Wi-Fi</string>
 </resources>

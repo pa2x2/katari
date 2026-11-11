@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">僅載入您正在閱讀的頁面附近內容，以節省行動數據</string>
     <string name="pref_dump_crash_logs">分享當機記錄</string>
     <string name="pref_security_summary">上鎖應用程式、防窺畫面</string>
+    <string name="pref_viewer_nav">輕觸區域</string>
+    <string name="pref_read_with_tapping_inverted">反轉輕觸區域</string>
+    <string name="pref_show_navigation_mode">輕觸區域提示</string>
+    <string name="pref_read_with_long_tap">長按時彈出快顯選單</string>
+    <string name="pref_chapter_swipe_start">向左滑動章節</string>
+    <string name="pref_chapter_swipe_end">向右滑動章節</string>
+    <string name="ext_permission_install_apps_warning">缺少安裝擴充套件所需的權限，輕觸此處以授予</string>
+    <string name="connected_to_wifi">僅透過 Wi-Fi</string>
 </resources>

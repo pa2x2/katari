@@ -232,7 +232,6 @@
     <string name="transition_no_previous">Önceki bölüm yok</string>
     <string name="transition_pages_loading">Sayfalar yükleniyor…</string>
     <string name="transition_pages_error">Sayfalar yüklenemedi: %1$s</string>
-    <string name="pref_read_with_long_tap">Uzun dokununca eylemleri göster</string>
     <string name="action_open_in_web_view">WebView ile aç</string>
     <string name="pref_skip_read_chapters">Okundu olarak işaretlenmiş bölümleri atla</string>
     <string name="pref_color_filter_mode">Renk filtresi karışım modu</string>
@@ -341,7 +340,6 @@
     <string name="requires_app_restart">Etkili olması için uygulamanın yeniden başlatılmasını gerektirir</string>
     <string name="label_network">Ağ</string>
     <string name="tapping_inverted_none">Hiçbiri</string>
-    <string name="pref_read_with_tapping_inverted">Dokunma bölgelerini ters çevir</string>
     <string name="tapping_inverted_both">İkisi de</string>
     <string name="tapping_inverted_vertical">Dikey</string>
     <string name="tapping_inverted_horizontal">Yatay</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Önceki sayfa</string>
     <string name="migration_help_guide">Kaynak taşıma kılavuzu</string>
     <string name="file_picker_error">Dosya seçme uygulaması bulunamadı</string>
-    <string name="pref_viewer_nav">Dokunma bölgeleri</string>
     <string name="edge_nav">Kenar</string>
     <string name="kindlish_nav">Kindle gibi</string>
     <string name="l_nav">L şeklinde</string>
@@ -398,7 +395,6 @@
     <string name="nav_zone_next">Sonraki</string>
     <string name="nav_zone_prev">Önceki</string>
     <string name="pref_show_navigation_mode_summary">Okuyucu açıldığında kısaca göster</string>
-    <string name="pref_show_navigation_mode">Dokunma bölgelerini göster</string>
     <string name="pref_dns_over_https">HTTPS üzerinden DNS (DoH)</string>
     <string name="exclude">Hariç tut: %s</string>
     <string name="include">Dahil et: %s</string>
@@ -474,7 +470,6 @@
     <string name="backup_info">Yedeklerin kopyalarını başka yerlerde de tutmalısınız. Yedekler, şifreler dahil olmak üzere hassas verileri içerebilirler; paylaşıyorsanız dikkat edin.</string>
     <string name="pref_verbose_logging">Ayrıntılı günlük kaydı</string>
     <string name="pref_verbose_logging_summary">Ayrıntılı günlükleri sistem günlüğüne yaz (uygulama performansını düşürür)</string>
-    <string name="connected_to_wifi">Yalnızca kablosuz ağda</string>
     <string name="update_72hour">3 günde bir</string>
     <string name="ext_update_all">Tümünü güncelle</string>
     <string name="pref_auto_clear_chapter_cache">Uygulama başlatıldığında bölüm önbelleğini temizle</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate">Geniş sayfaları sığdırmak için döndür</string>
     <string name="pref_page_rotate_invert">Döndürülen geniş sayfaların yönünü ters çevir</string>
     <string name="pref_debug_info">Hata ayıklama bilgisi</string>
-    <string name="pref_chapter_swipe_end">Bölümü sağa kaydırma</string>
-    <string name="pref_chapter_swipe_start">Bölümü sola kaydırma</string>
     <string name="action_set_interval">Sıklığı ayarla</string>
     <string name="action_filter_interval_custom">Özel güncelleme sıklığı</string>
     <string name="intervals_header">Zaman aralıkları</string>
@@ -646,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">Kitaplık güncellemeleri ve daha fazlası için bildirim alın.</string>
     <string name="onboarding_permission_action_grant">İzin Ver</string>
     <string name="available_disk_space_info">Kullanılabilir: %1$s / Toplam: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Uzantıları yüklemek için izin gerekli. İzin vermek için buraya dokunun.</string>
     <string name="private_settings">Hassas ayarları dahil et (örn. oturum açma bilgileri)</string>
     <string name="manga_interval_expected_update">Sonraki bölümlerin %1$s içinde yayınlanacağı tahmin ediliyor, her %2$s içinde bir kontrol ediliyor.</string>
     <string name="invalid_backup_file_error">Tüm hata:</string>

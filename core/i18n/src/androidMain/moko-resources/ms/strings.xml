@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Kelajuan animasi ketik dua kali</string>
     <string name="pref_dump_crash_logs">Kongsi log kerosakan</string>
     <string name="pref_security_summary">Kekunci aplikasi, skrin keselamatan</string>
+    <string name="pref_viewer_nav">Zon ketik</string>
+    <string name="pref_read_with_tapping_inverted">Songsangkan zon ketik</string>
+    <string name="pref_show_navigation_mode">Tunjuk tindanan zon ketik</string>
+    <string name="pref_read_with_long_tap">Tunjuk tindakan bila menahan ketik</string>
+    <string name="pref_chapter_swipe_start">Bab mengenai leret ke kiri</string>
+    <string name="pref_chapter_swipe_end">Bab mengenai leret ke kanan</string>
+    <string name="ext_permission_install_apps_warning">Kebenaran diperlukan untuk memasang sambungan. Ketik di sini untuk membenarkan.</string>
+    <string name="connected_to_wifi">Hanya menggunakan Wi-Fi</string>
 </resources>

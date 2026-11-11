@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">سرعت انیمیشن دو بار ضربه زدن</string>
     <string name="pref_dump_crash_logs">اشتراک‌گذاری گزارش‌های خرابی</string>
     <string name="pref_security_summary">قفل برنامه، صفحه امن</string>
+    <string name="pref_viewer_nav">مناطق قابل لمس</string>
+    <string name="pref_read_with_tapping_inverted">منطقه‌های لمس را معکوس کن</string>
+    <string name="pref_show_navigation_mode">مناطق قابل لمس را نشان بده</string>
+    <string name="pref_read_with_long_tap">با لمس طولانی نشان بده</string>
+    <string name="pref_chapter_swipe_start">چپتر مربوط به کشیدن به چپ</string>
+    <string name="pref_chapter_swipe_end">چپتر مربوط به کشیدن به راست</string>
+    <string name="ext_permission_install_apps_warning">مجوز برای نصب افزونه ها لازم است. به اینجا ضربه بزنید تا اعطا کنید.</string>
+    <string name="connected_to_wifi">فقط روی Wi-Fi</string>
 </resources>

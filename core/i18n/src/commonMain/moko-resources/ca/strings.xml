@@ -240,7 +240,6 @@
     <string name="download_notifier_no_network">No hi ha cap connexió de xarxa disponible</string>
     <string name="download_notifier_download_paused">Baixades pausades</string>
     <string name="channel_common">General</string>
-    <string name="pref_read_with_long_tap">Mostra les accions amb un toc llarg</string>
     <string name="action_open_in_web_view">Obre en una WebView</string>
     <string name="pref_skip_read_chapters">Omet capítols marcats com a llegits</string>
     <string name="pref_color_filter_mode">Mode de mescla del filtre de color</string>
@@ -345,7 +344,6 @@
     <string name="tapping_inverted_vertical">En vertical</string>
     <string name="tapping_inverted_horizontal">En horitzontal</string>
     <string name="tapping_inverted_none">Cap</string>
-    <string name="pref_read_with_tapping_inverted">Inverteix les zones de toc</string>
     <string name="download_insufficient_space">No s’han pogut baixar els capítols perquè hi ha poc espai d’emmagatzematge</string>
     <string name="loader_not_implemented_error">No s’ha trobat la font</string>
     <string name="unknown_status">Estat desconegut</string>
@@ -387,7 +385,6 @@
     <string name="migration_help_guide">Guia de migració de fonts</string>
     <string name="file_picker_error">No s’ha trobat cap aplicació de selecció de fitxers</string>
     <string name="pref_dump_crash_logs_summary">Desa els registres d’errors en un fitxer perquè el pugueu compartir amb els desenvolupadors</string>
-    <string name="pref_viewer_nav">Zones de toc</string>
     <string name="edge_nav">Vora</string>
     <string name="kindlish_nav">Semblant al Kindle</string>
     <string name="l_nav">En forma d’L</string>
@@ -422,7 +419,6 @@
     <string name="pref_reader_actions">Accions</string>
     <string name="pref_grayscale">Escala de grisos</string>
     <string name="pref_show_navigation_mode_summary">Mostra breument les zones de toc en obrir el lector</string>
-    <string name="pref_show_navigation_mode">Mostra la superposició de les zones de toc</string>
     <string name="include">Inclou: %s</string>
     <string name="exclude">Exclou: %s</string>
     <string name="none">Cap</string>
@@ -466,7 +462,6 @@
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="pref_dark_theme_pure_black">Mode fosc negre pur</string>
     <string name="update_72hour">Cada 3 dies</string>
-    <string name="connected_to_wifi">Només amb Wi-Fi</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instal·leu i inicieu el Shizuku per a utilitzar-lo com a instal·lador d’extensions.</string>
     <string name="pref_hide_threshold">Sensibilitat a l’hora d’amagar el menú en desplaçar</string>
     <string name="pref_verbose_logging">Registre detallat</string>
@@ -595,8 +590,6 @@
     <string name="pref_hide_in_library_items">Amaga els elements que ja són a la biblioteca</string>
     <string name="action_copy_to_clipboard">Copia al porta-retalls</string>
     <string name="action_update_category">Actualitza la categoria</string>
-    <string name="pref_chapter_swipe_end">En lliscar cap a la dreta en un capítol</string>
-    <string name="pref_chapter_swipe_start">En lliscar cap a l’esquerra en un capítol</string>
     <string name="overlay_header">Superposició</string>
     <string name="pref_page_rotate_invert">Inverteix l’orientació de les pàgines amples rotades</string>
     <string name="pref_page_rotate">Rota les pàgines amples perquè s’ajustin a la pantalla</string>
@@ -662,7 +655,6 @@
     <string name="available_disk_space_info">Disponible: %1$s / Total: %2$s</string>
     <string name="manga_interval_expected_update">S’ha previst que se’n publicaran nous capítols d’aquí a %1$s, es comprova cada %2$s.</string>
     <string name="invalid_backup_file_error">Error complet:</string>
-    <string name="ext_permission_install_apps_warning">Calen permisos per a instal·lar extensions. Premeu aquí per a concedir-les.</string>
     <string name="private_settings">Inclou-hi configuració sensible (per exemple, testimonis d’autenticació)</string>
     <string name="onboarding_storage_help_action">Guia d’emmagatzematge</string>
     <string name="onboarding_storage_help_info">Heu actualitzat d’una versió més antiga i no sabeu què heu de seleccionar? Consulteu la guia d’emmagatzematge per a més informació.</string>

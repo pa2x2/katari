@@ -199,7 +199,6 @@
     <string name="right_to_left_viewer">Елсерен (сылтӑмран сулахайалла)</string>
     <string name="left_to_right_viewer">Елсерен (сулахайран сылтӑмалла)</string>
     <string name="gray_background">Сӑрӑ</string>
-    <string name="pref_read_with_long_tap">Пусса тӑннӑ чух кӑтарт</string>
     <string name="pref_read_with_volume_keys_inverted">Йанравлӑх пускӑчӗсене вырӑнсемпе улӑштар</string>
     <string name="pref_read_with_volume_keys">Йанравлӑх пускӑчӗсем</string>
     <string name="pref_reader_navigation">Куҫӑм</string>
@@ -221,7 +220,6 @@
     <string name="label_downloaded_only">Тиенӗсене ҫеҫ</string>
     <string name="dialog_with_checkbox_reset">Ҫак манкӑн пур сыпӑка тасат</string>
     <string name="pref_cutout_short">Каснӑ тӑрӑхра шалашне кӑтарт</string>
-    <string name="pref_read_with_tapping_inverted">Пусӑмсене вырӑнсемпе улӑштар</string>
     <string name="tapping_inverted_both">Иккӗш те</string>
     <string name="tapping_inverted_vertical">Урлӑ</string>
     <string name="tapping_inverted_horizontal">Тӑрӑх</string>
@@ -386,7 +384,6 @@
     <string name="action_order_by_chapter_number">Сыпӑк шучӗпе</string>
     <string name="action_order_by_upload_date">Тийесе илни вӑхӑчӗпе</string>
     <string name="pref_dump_crash_logs_summary">Файлсенчи йӑнӑшсен логсене хатерлевҫӗсем патне яма упрать</string>
-    <string name="pref_viewer_nav">Куҫӑм палли</string>
     <string name="right_and_left_nav">Сылтӑмран сулахаялла</string>
     <string name="pref_dual_page_invert_summary">Анлӑ елсене пайлани вулав майлӑ мар пулсан</string>
     <string name="pref_dual_page_invert">Анлӑ елсене тепӗр майлӑ пайлани</string>
@@ -438,7 +435,6 @@
     <string name="action_open_random_manga">Ӑнсӑрт хайлав уҫ</string>
     <string name="theme_strawberrydaiquiri">Ҫӗр ҫырли тайккирийӗ</string>
     <string name="theme_midnightdusk">Ҫур ҫӗр ӗнтрӗкӗ</string>
-    <string name="connected_to_wifi">Wi-Fi урлӑ ҫеҫ</string>
     <string name="action_display_show_continue_reading_button">«Малалла вула» пускӑч</string>
     <string name="restrictions">Чарусем: %s</string>
     <string name="label_started">Пуҫланӑ</string>
@@ -478,8 +474,6 @@
     <string name="ext_info_version">Верҫҫи</string>
     <string name="ext_update_all">Пурне те ҫӗнет</string>
     <string name="delete_downloaded">Тийесе илнисене катерт</string>
-    <string name="pref_chapter_swipe_end">Сылтӑмалла туртсан сыпӑк</string>
-    <string name="pref_chapter_swipe_start">Сулахайалла туртсан сыпӑк</string>
     <string name="ext_installer_pref">Ларткӑч</string>
     <string name="ext_installer_shizuku_stopped">Shizuku ӗҫлемест</string>
     <string name="action_sort_next_updated">Тепӗр кӗтӗнекен ҫӗнетӳпе</string>
@@ -544,7 +538,6 @@
     <string name="ext_remove">Катерт</string>
     <string name="ext_confirm_remove">Хушмана катертмелле</string>
     <string name="remove_private_extension_message">«%s» хушмана катертесшӗн-и?</string>
-    <string name="ext_permission_install_apps_warning">Хушмасене лартма ирӗксем кирлӗ. Ирӗксене пама кунта пус.</string>
     <string name="ext_revoke_trust">Шанчӑклӑ мар хушмасенчен шанчӑк туртса илмелле</string>
     <string name="pref_flash_duration_summary">%1$s мҫ</string>
     <string name="pref_flash_style_black">Хура</string>

@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Брзина анимације двоклика</string>
     <string name="pref_dump_crash_logs">Дели извештаје о паду</string>
     <string name="pref_security_summary">Закључавање апликације, сигуран екран</string>
+    <string name="pref_viewer_nav">Начин навигације</string>
+    <string name="pref_read_with_tapping_inverted">Обрни додире</string>
+    <string name="pref_show_navigation_mode">Прикажи начин навигације</string>
+    <string name="pref_read_with_long_tap">Прикажи радње при дугом додиру</string>
+    <string name="pref_chapter_swipe_start">Превуци улево</string>
+    <string name="pref_chapter_swipe_end">Превуци удесно</string>
+    <string name="ext_permission_install_apps_warning">За инсталацију додатака потребне су дозволе. Додирни овде за одобрење</string>
+    <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
 </resources>

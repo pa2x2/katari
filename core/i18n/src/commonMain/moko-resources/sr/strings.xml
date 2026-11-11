@@ -188,7 +188,6 @@
     <string name="chapter_paused">Паузирано</string>
     <string name="show_title">Наслов извора</string>
     <string name="show_chapter_number">Број поглавља</string>
-    <string name="pref_read_with_long_tap">Прикажи радње при дугом додиру</string>
     <string name="sort_by_source">Према извору</string>
     <string name="sort_by_number">Према броју поглавља</string>
     <string name="manga_download">Преузми</string>
@@ -412,14 +411,12 @@
     <string name="ext_installer_shizuku_unavailable_dialog">Инсталирајте и покрените Shizuku да би користили Shizuku као инсталер додатака.</string>
     <string name="filter_mode_lighten">Посветли (Dodge)</string>
     <string name="pref_hide_threshold">Осетљивост за сакривање менија при померању</string>
-    <string name="pref_show_navigation_mode">Прикажи начин навигације</string>
     <string name="automatic_background">Аутоматски</string>
     <string name="licenses">Лиценце отвореног кода</string>
     <string name="error_no_match">Ништа није пронађено</string>
     <string name="pref_dual_page_split">Раздели широке странице</string>
     <string name="none">Ништа</string>
     <string name="date">Датум</string>
-    <string name="pref_viewer_nav">Начин навигације</string>
     <string name="unknown_author">Непознат аутор</string>
     <string name="file_picker_error">Није пронађен програм за бирање датотека</string>
     <string name="channel_errors">Грешке</string>
@@ -429,7 +426,6 @@
     <string name="information_empty_category_dialog">Још немате категорија.</string>
     <string name="ext_app_info">Информације о апликацији</string>
     <string name="update_72hour">Свака 3 дана</string>
-    <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
     <string name="restrictions">Ограничења: %s</string>
     <string name="categorized_display_settings">Поставке за сортирање одвојено за сваку категорију</string>
     <string name="include">Укључи: %s</string>
@@ -445,7 +441,6 @@
     <string name="pref_grayscale">Црно-бело</string>
     <string name="pref_inverted_colors">Инвертовано</string>
     <string name="filter_mode_overlay">Прекривање</string>
-    <string name="pref_read_with_tapping_inverted">Обрни додире</string>
     <string name="tapping_inverted_none">Ништа</string>
     <string name="tapping_inverted_horizontal">Хоризонтално</string>
     <string name="tapping_inverted_vertical">Вертикално</string>
@@ -582,8 +577,6 @@
     <string name="action_update_category">Ажурирај категорију</string>
     <string name="pref_hide_in_library_items">Сакри уносе који се већ налазе у колекцији</string>
     <string name="overlay_header">Прекривање</string>
-    <string name="pref_chapter_swipe_end">Превуци удесно</string>
-    <string name="pref_chapter_swipe_start">Превуци улево</string>
     <string name="action_copy_to_clipboard">Копирај</string>
     <string name="pref_page_rotate_invert">Окрени положај широких страница</string>
     <string name="pref_page_rotate">Прилагоди широке странице ротирањем</string>
@@ -638,7 +631,6 @@
     <string name="theme_nord">Норд</string>
     <string name="onboarding_storage_help_info">Ажурураш са старије верзије и не знаш шта да изабереш? Потражи информације у водичу складиштења.</string>
     <string name="onboarding_storage_help_action">Водич складиштења</string>
-    <string name="ext_permission_install_apps_warning">За инсталацију додатака потребне су дозволе. Додирни овде за одобрење</string>
     <string name="invalid_backup_file_error">Грешка:</string>
     <string name="manga_interval_custom_amount">Прилагођена учесталост ажурирања:</string>
     <string name="not_selected">Није одабрано</string>

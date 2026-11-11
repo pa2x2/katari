@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">डबल टैप एनीमेशन गति</string>
     <string name="pref_dump_crash_logs">क्रैश लॉग शेयर करें</string>
     <string name="pref_security_summary">ऐप लॉक, सुरक्षित स्क्रीन</string>
+    <string name="pref_viewer_nav">टैप ज़ोन</string>
+    <string name="pref_read_with_tapping_inverted">टैप ज़ोन उलटें</string>
+    <string name="pref_show_navigation_mode">टैप ज़ोन ओवरले दिखाएं</string>
+    <string name="pref_read_with_long_tap">लंबे टैप पर क्रियाएँ दिखाएँ</string>
+    <string name="pref_chapter_swipe_start">अध्यााय: बाएँ स्वाइप करें</string>
+    <string name="pref_chapter_swipe_end">अध्यााय: दाएँ स्वाइप करें</string>
+    <string name="ext_permission_install_apps_warning">एक्सटेंशन स्थापित करने के लिए अनुमतियाँ आवश्यक हैं। अनुमति देने के लिए यहाँ टैप करें।</string>
+    <string name="connected_to_wifi">केवल वाई-फ़ाई पर</string>
 </resources>

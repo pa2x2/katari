@@ -47,7 +47,7 @@ internal fun MangaPageTranslationIssueRow(
 }
 
 @Composable
-internal fun mangaPageTranslationIssueMessage(issue: MangaPageTranslationIssue): String = when (issue) {
+private fun mangaPageTranslationIssueMessage(issue: MangaPageTranslationIssue): String = when (issue) {
     is MangaPageTranslationIssue.SameLanguage ->
         stringResource(MR.strings.reader_text_translation_same_language, issue.language.displayName())
     MangaPageTranslationIssue.TargetRequired -> stringResource(MR.strings.reader_text_translation_target_required)

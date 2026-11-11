@@ -2,4 +2,8 @@
 <resources>
     <string name="action_show_errors">အသေးစိတ် ကြည့်ရန် နှိပ်ပါ</string>
     <string name="pref_security_summary">လုံခြုံရေးအနှစ်ချုပ်</string>
+    <string name="pref_chapter_swipe_start">ဘယ်ဘက်သို့ ပွတ်ဆွဲရန်</string>
+    <string name="pref_chapter_swipe_end">ညာဘက်သို့ ပွတ်ဆွဲ</string>
+    <string name="ext_permission_install_apps_warning">ထည့်သွင်းရန် ခွင့်ပြုချက်လိုအပ်သည်။</string>
+    <string name="connected_to_wifi">Wi-Fi ဖြင့်သာ</string>
 </resources>

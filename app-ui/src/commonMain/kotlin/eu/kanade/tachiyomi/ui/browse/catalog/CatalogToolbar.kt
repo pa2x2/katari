@@ -139,7 +139,7 @@ internal fun CatalogToolbar(
                     }
                     add(
                         AppBar.OverflowAction(
-                            title = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
+                            title = stringResource(platformPresentation.longPressActionsLabel),
                             onClick = onLongPressActionsClick,
                             icon = platformPresentation.pointerIcon,
                         ),

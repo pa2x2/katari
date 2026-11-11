@@ -11,7 +11,6 @@ import app.katari.icons.materialsymbols.rounded.CloudUpload
 import app.katari.icons.materialsymbols.rounded.Sync
 import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
-import app.katari.icons.materialsymbols.rounded.Wifi
 import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.run.SyncStep
@@ -157,11 +156,12 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
         SyncStep.Kind.UPLOADING_RECORDS, SyncStep.Kind.UPLOADING_FILES -> MaterialSymbols.Rounded.CloudUpload
         SyncStep.Kind.DOWNLOADING_FILES, SyncStep.Kind.DOWNLOADING_CHANGES -> MaterialSymbols.Rounded.CloudDownload
     }
-    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi -> MaterialSymbols.Rounded.Wifi
+    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi ->
+        platformPresentation.unmeteredNetworkIcon
     is SyncHeadline.Paused -> MaterialSymbols.Rounded.SyncDisabled
     SyncHeadline.Syncing -> MaterialSymbols.Rounded.Sync
     is SyncHeadline.UpToDate -> if (files is SyncHeadline.FilesNote.WaitingForWifi) {
-        MaterialSymbols.Rounded.Wifi
+        platformPresentation.unmeteredNetworkIcon
     } else {
         MaterialSymbols.Rounded.CloudDone
     }

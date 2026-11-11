@@ -133,7 +133,6 @@
     <string name="pref_reader_navigation">Navigointi</string>
     <string name="pref_read_with_volume_keys">Äänenvoimakkuus näppäimet</string>
     <string name="pref_read_with_volume_keys_inverted">Käännä äänenvoimakkuus näppäimet</string>
-    <string name="pref_read_with_long_tap">Näytä pitkällä napautuksella</string>
     <string name="pref_reader_theme">Taustan väri</string>
     <string name="white_background">Valkoinen</string>
     <string name="black_background">Musta</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Pystysuora</string>
     <string name="tapping_inverted_horizontal">Vaakasuora</string>
     <string name="tapping_inverted_none">Ei mitään</string>
-    <string name="pref_read_with_tapping_inverted">Käännä näpäyttäminen</string>
     <string name="unknown_status">Tuntematon tila</string>
     <string name="unknown_author">Tuntematon tekijä</string>
     <string name="whats_new">Mitä uutta</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Edellinen sivu</string>
     <string name="migration_help_guide">Lähteen siirto-opas</string>
     <string name="file_picker_error">Tiedostonvalitsinsovellusta ei löytynyt</string>
-    <string name="pref_viewer_nav">Navigointiasettelu</string>
     <string name="edge_nav">Reuna</string>
     <string name="kindlish_nav">Kindle tyylinen</string>
     <string name="l_nav">L-muotoinen</string>
@@ -398,7 +395,6 @@
     <string name="nav_zone_next">Seuraava</string>
     <string name="nav_zone_prev">Edellinen</string>
     <string name="pref_show_navigation_mode_summary">Näytä napautusalueet, kun lukija avataan</string>
-    <string name="pref_show_navigation_mode">Näytä navigointiasettelun peittokuva</string>
     <string name="pref_dns_over_https">DNS HTTPS:n kautta</string>
     <string name="exclude">Lukuun ottamatta: %s</string>
     <string name="include">Sisällytä: %s</string>
@@ -450,7 +446,6 @@
     <string name="action_move_to_top_all_for_series">Siirrä sarja päällimmäiseksi</string>
     <string name="theme_tako">Tako</string>
     <string name="update_72hour">Joka 3. Päivä</string>
-    <string name="connected_to_wifi">Ainoastaan WiFillä</string>
     <string name="pref_inverted_colors">Käänteisväri</string>
     <string name="ext_app_info">Sovelluksen tiedot</string>
     <string name="ext_installer_legacy">Perinteinen</string>
@@ -559,7 +554,6 @@
     <string name="theme_nord">Pohjoismainen</string>
     <string name="pref_relative_format">Suhteelliset aikaleimat</string>
     <string name="pref_relative_format_summary">Käytä muotoa \"%1$s\", kuin muotoa \"%2$s\"</string>
-    <string name="ext_permission_install_apps_warning">Laajennosten asentamiseen tarvitaan lupia. Napauta tästä myöntääksesi luvat.</string>
     <string name="pref_page_rotate_invert">Peilaa käännetyt leveät sivut</string>
     <string name="pref_flash_page_summ">Vähentää haamujälkiä e-paperi näytöillä</string>
     <string name="pref_skip_dupe_chapters">Ohita kaksoisluvut</string>

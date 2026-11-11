@@ -6,4 +6,9 @@
     <string name="information_empty_category">तव वर्गाः एव न सन्ति। नूतनं निर्माणं कृत्वा व्यवस्थापयितुम् अधिकचिह्नं नोदयतु॥</string>
     <string name="pref_double_tap_anim_speed">द्विवारनोदनं सञ्जीवनवेगः</string>
     <string name="pref_dump_crash_logs">ध्वंसेतिवृत्तानि पातयतु</string>
+    <string name="pref_viewer_nav">मार्गणविन्यासः</string>
+    <string name="pref_read_with_tapping_inverted">विलोमं स्पर्शनम्</string>
+    <string name="pref_show_navigation_mode">मार्गणविन्यासस्य उपरिस्तरं दर्शयतु</string>
+    <string name="pref_read_with_long_tap">दीर्घस्पर्शने दर्शयतु</string>
+    <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
 </resources>

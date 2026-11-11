@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">سرعة مؤثر النقر المزدوج</string>
     <string name="pref_dump_crash_logs">شارك سجلَّات الاعطال</string>
     <string name="pref_security_summary">قفل التطبيق، شاشة آمنة</string>
+    <string name="pref_viewer_nav">مناطق اللمس</string>
+    <string name="pref_read_with_tapping_inverted">عكس مناطق اللمس</string>
+    <string name="pref_show_navigation_mode">إظهار مناطق اللمس</string>
+    <string name="pref_read_with_long_tap">أظهر الإجراءات عند الضغط المطوَّل</string>
+    <string name="pref_chapter_swipe_start">إجراء التمرير الى اليسار</string>
+    <string name="pref_chapter_swipe_end">إجراء التمرير الى اليمين</string>
+    <string name="ext_permission_install_apps_warning">تثبيت الإضافات يتطلب أذونات. انقر هنا لمنحها.</string>
+    <string name="connected_to_wifi">فقط على شبكة Wi-Fi</string>
 </resources>

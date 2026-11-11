@@ -213,7 +213,6 @@
     <string name="exclude">Istisno qilish: %s</string>
     <string name="ext_installer_legacy">Standart</string>
     <string name="pref_show_navigation_mode_summary">O\'qish boshlanishida birozga ko\'rsatish</string>
-    <string name="pref_show_navigation_mode">Teginish hududlari</string>
     <string name="ext_installer_pref">O\'rnatuvchi</string>
     <string name="pref_page_transitions">Sahifalar o\'tishini animatsiyalash</string>
     <string name="default_category">Asosiy toifalar</string>
@@ -222,7 +221,6 @@
     <string name="ext_install">O\'rnatish</string>
     <string name="ext_app_info">Ilova haqida</string>
     <string name="pref_inverted_colors">Teskari ranglar</string>
-    <string name="connected_to_wifi">Faqat Wi-Fi orqali</string>
     <string name="ext_info_language">Til</string>
     <string name="update_24hour">Har kun</string>
     <string name="pref_library_update_interval">Avtomatik yangilanish</string>
@@ -247,9 +245,7 @@
     <string name="tapping_inverted_vertical">Vertikal</string>
     <string name="tapping_inverted_both">Ikkala taraf</string>
     <string name="pref_reader_actions">Amallar</string>
-    <string name="pref_read_with_long_tap">Uzoq teginishda ko\'rsatiladigan variantlar</string>
     <string name="webtoon_viewer">Vebtun</string>
-    <string name="pref_viewer_nav">Tegish qismlari</string>
     <string name="nav_zone_left">Chap</string>
     <string name="nav_zone_right">O\'ng</string>
     <string name="right_to_left_viewer">O\'ngdan chapga</string>

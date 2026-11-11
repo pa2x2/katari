@@ -3,4 +3,6 @@
     <string name="action_show_errors">Сыһааһыннары көрдөр</string>
     <string name="information_empty_category">Эйиэхэ бөлөхтөр суохтар. Эбэр бэлиэни батта, бэбэлэтиэкэҕэ саҥа бөлөҕү оҥорорго.</string>
     <string name="pref_double_tap_anim_speed">Иккитэ баттыырга хамсааһын түргэнэ</string>
+    <string name="pref_viewer_nav">Нэбигээссийэ бэлиэтэ</string>
+    <string name="pref_read_with_long_tap">Уһун баттааһыҥҥа - кэпсэтии</string>
 </resources>

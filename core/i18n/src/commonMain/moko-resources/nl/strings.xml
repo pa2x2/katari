@@ -213,7 +213,6 @@
     <string name="ext_uninstall">Verwijderen</string>
     <string name="untrusted_extension">Niet vertrouwde extensie</string>
     <string name="untrusted_extension_message">Kwaadaardige extensies kunnen alle opgeslagen inloggegevens uitlezen of arbitraire code uitvoeren. \n \nDoor deze extensie te vertrouwen accepteer je deze risico\'s.</string>
-    <string name="pref_read_with_long_tap">Weergeven bij lang tikken</string>
     <string name="pager_viewer">Gepagineerd</string>
     <string name="double_tap_anim_speed_0">Geen animatie</string>
     <string name="double_tap_anim_speed_normal">Normaal</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Verticaal</string>
     <string name="tapping_inverted_horizontal">Horizontaal</string>
     <string name="tapping_inverted_none">Niet omkeren</string>
-    <string name="pref_read_with_tapping_inverted">Tikken omkeren</string>
     <string name="unknown_status">Onbekende status</string>
     <string name="unknown_author">Onbekende auteur</string>
     <string name="download_insufficient_space">Kon hoofdstukken niet downloaden omdat er te weinig opslagruimte is</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Vorige pagina</string>
     <string name="migration_help_guide">Bronmigratiegids</string>
     <string name="file_picker_error">Geen bestandskiezer-app gevonden</string>
-    <string name="pref_viewer_nav">Tikzones</string>
     <string name="edge_nav">Rand</string>
     <string name="kindlish_nav">Kindle-achtig</string>
     <string name="l_nav">L-vormig</string>
@@ -398,7 +395,6 @@
     <string name="pref_dual_page_invert_summary">Als de paginasplitsing in de breedte niet overeenkomt met de leesrichting</string>
     <string name="pref_dual_page_invert">paginasplitsing omkeren</string>
     <string name="pref_show_navigation_mode_summary">Laat de tikzones zien als de lezer wordt geopend</string>
-    <string name="pref_show_navigation_mode">Navigatielayout als overlay laten zien</string>
     <string name="pref_dns_over_https">DNS over HTTPS (DoH)</string>
     <string name="pref_download_new_categories_details">Items in uitgezonderde categorieën worden niet gedownload, zelfs niet als ze onder opgenomen categorieën vallen.</string>
     <string name="pref_category_auto_download">Automatisch downloaden</string>
@@ -470,7 +466,6 @@
     <string name="ext_installer_shizuku_stopped">Shizuku wordt niet uitgevoerd</string>
     <string name="ext_installer_pref">Installatieprogramma</string>
     <string name="backup_info">Je zou kopies van back-ups ook in andere plaatsen moeten hebben. Back-ups kunnen gevoelige data zoals opgeslagen wachtwoorden bevatten; let op met delen.</string>
-    <string name="connected_to_wifi">Alleen via Wi-Fi</string>
     <string name="pref_verbose_logging">Uitgebreide logging</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Installeer en start Shizuku om deze als extensie-installatieprogramma te gebruiken.</string>
     <string name="action_sort_count">Totaal aantal items</string>
@@ -578,10 +573,8 @@
     <string name="download_cache_invalidated">Downloadindex hermaken</string>
     <string name="pref_invalidate_download_cache">Herindexeer downloads</string>
     <string name="action_ok">OK</string>
-    <string name="pref_chapter_swipe_start">Hoofdstuk bij links vegen</string>
     <string name="intervals_header">Intervallen</string>
     <string name="unlock_app_title">Ontgrendel %s</string>
-    <string name="pref_chapter_swipe_end">Hoofdstuk bij rechts vegen</string>
     <string name="pref_page_rotate">Roteer brede pagina\'s zodat ze passen</string>
     <string name="create_backup_file_error">Kon een backup-bestand niet creëren</string>
     <string name="library_sync_complete">Bibliotheeksynchronisatie beëindigd</string>
@@ -649,7 +642,6 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Vermijd onderbrekingen van langlopende bibliotheekupdates, downloads en back-upherstellen.</string>
     <string name="onboarding_permission_install_apps_description">Om bronextensies te installeren.</string>
     <string name="onboarding_permission_notifications_description">Ontvang meldingen over bibliotheekupdates en meer.</string>
-    <string name="ext_permission_install_apps_warning">Er zijn rechten nodig om extensies te installeren. Tik hier om deze toe te staan.</string>
     <string name="no_location_set">Geen opslaglocatie ingesteld</string>
     <string name="action_add_anyway">Toch toevoegen</string>
     <string name="pref_flash_duration_summary">%1$s ms</string>

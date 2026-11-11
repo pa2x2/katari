@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Dubbeltik animatiesnelheid</string>
     <string name="pref_dump_crash_logs">Crashlogboeken opslaan</string>
     <string name="pref_security_summary">App-vergrendeling, schermbeveiliging</string>
+    <string name="pref_viewer_nav">Tikzones</string>
+    <string name="pref_read_with_tapping_inverted">Tikken omkeren</string>
+    <string name="pref_show_navigation_mode">Navigatielayout als overlay laten zien</string>
+    <string name="pref_read_with_long_tap">Weergeven bij lang tikken</string>
+    <string name="pref_chapter_swipe_start">Hoofdstuk bij links vegen</string>
+    <string name="pref_chapter_swipe_end">Hoofdstuk bij rechts vegen</string>
+    <string name="ext_permission_install_apps_warning">Er zijn rechten nodig om extensies te installeren. Tik hier om deze toe te staan.</string>
+    <string name="connected_to_wifi">Alleen via Wi-Fi</string>
 </resources>

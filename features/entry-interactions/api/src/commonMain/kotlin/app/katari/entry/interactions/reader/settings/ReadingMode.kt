@@ -8,7 +8,7 @@ import app.katari.icons.custommaterialsymbols.rounded.ReaderLongStripGaps
 import app.katari.icons.custommaterialsymbols.rounded.ReaderRightToLeft
 import app.katari.icons.custommaterialsymbols.rounded.ReaderVertical
 import app.katari.icons.materialsymbols.MaterialSymbols
-import app.katari.icons.materialsymbols.rounded.MobileGear
+import app.katari.platform.presentation.platformPresentation
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 
@@ -19,7 +19,7 @@ enum class ReadingMode(
     val direction: Direction? = null,
     val type: ViewerType? = null,
 ) {
-    DEFAULT(MR.strings.label_default, MaterialSymbols.Rounded.MobileGear, 0x00000000),
+    DEFAULT(MR.strings.label_default, platformPresentation.defaultReadingModeIcon, 0x00000000),
     LEFT_TO_RIGHT(
         MR.strings.left_to_right_viewer,
         CustomMaterialSymbols.Rounded.ReaderLeftToRight,

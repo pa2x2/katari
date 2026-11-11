@@ -151,7 +151,6 @@
     <string name="update_12hour">प्रतिद्वादशघण्टा</string>
     <string name="update_weekly">प्रतिसप्ताहिकम्</string>
     <string name="pref_library_update_restriction">स्वयङ्कृतनवीकरणनाम् उपकरणनिर्बन्धाः</string>
-    <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
     <string name="pref_library_update_refresh_metadata_summary">ग्रन्थालयनवीकरणे सति नूतनमुखचित्राय विवरणाय च मार्गतु</string>
     <string name="default_category">प्राथमिकवर्गः</string>
     <string name="default_category_summary">सदा पृच्छतु</string>
@@ -182,7 +181,6 @@
     <string name="ext_installer_shizuku_stopped">शिज़ुकुः न चलति</string>
     <string name="ext_installer_pref">प्रतिष्ठापनसहायकम्</string>
     <string name="ext_installer_shizuku_unavailable_dialog">शिजुकुं विस्तारप्रतिष्ठापनसहायकम् इव उपयोगं कर्तुं शिजुकुं प्रतिष्ठापयित्वा आरभताम्।</string>
-    <string name="pref_show_navigation_mode">मार्गणविन्यासस्य उपरिस्तरं दर्शयतु</string>
     <string name="pref_dual_page_invert">द्विपुटविभाजनस्य स्थापनं व्यत्यासं कुरु</string>
     <string name="pref_dual_page_split">द्विपुटविभाजनम्</string>
     <string name="pref_cutout_short">खण्डितक्षेत्रे वस्तु दर्शयतु</string>
@@ -213,7 +211,6 @@
     <string name="tapping_inverted_horizontal">अनुप्रस्थम्</string>
     <string name="tapping_inverted_vertical">ऊर्ध्वम्</string>
     <string name="pref_reader_actions">कार्याणि</string>
-    <string name="pref_read_with_long_tap">दीर्घस्पर्शने दर्शयतु</string>
     <string name="pref_create_folder_per_manga">पुटानि भिन्नसञ्चयेषु रक्षतु</string>
     <string name="pref_reader_theme">पृष्ठभूमिवर्णः</string>
     <string name="white_background">श्वेतः</string>
@@ -232,10 +229,8 @@
     <string name="right_to_left_viewer">वामेतरात् वामतः</string>
     <string name="vertical_viewer">ऊर्ध्वम्</string>
     <string name="webtoon_viewer">वेब्-टून्</string>
-    <string name="pref_viewer_nav">मार्गणविन्यासः</string>
     <string name="pref_viewer_type">प्राथमिकपठनदशा</string>
     <string name="vertical_plus_viewer">सततम् ऊर्ध्वम्</string>
-    <string name="pref_read_with_tapping_inverted">विलोमं स्पर्शनम्</string>
     <string name="pref_skip_read_chapters">पठितम् इति चिह्नितान् अध्यायान् लङ्घयतु</string>
     <string name="filter_mode_lighten">प्रकाशयति</string>
     <string name="tapping_inverted_both">द्वयम्</string>

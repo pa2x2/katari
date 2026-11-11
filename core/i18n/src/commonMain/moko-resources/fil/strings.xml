@@ -148,7 +148,6 @@
     <string name="gray_background">Abo</string>
     <string name="white_background">Puti</string>
     <string name="pref_reader_theme">Kulay ng background</string>
-    <string name="pref_read_with_long_tap">Ipakita ang mga aksyon sa mahabang tap</string>
     <string name="pref_read_with_volume_keys_inverted">Baligtarin ang pindutan ng volume</string>
     <string name="pref_read_with_volume_keys">Pindutan ng volume</string>
     <string name="pref_reader_navigation">Nabigasyon</string>
@@ -209,7 +208,6 @@
     <string name="hide_notification_content">Itago ang laman ng abiso</string>
     <string name="secure_screen_summary">Tinatago ng seguridad sa screen ang laman ng app habang nagpapalit ng app at hinaharangan din nito ang mga screenshot</string>
     <string name="secure_screen">Bantayan ang screen</string>
-    <string name="pref_read_with_tapping_inverted">Baligtarin ang mga tap zone</string>
     <string name="backup_restore_missing_sources">Nawawalang mga source:</string>
     <string name="invalid_backup_file_missing_manga">Hindi naglalaman ang backup ng kahit anong mga entry sa aklatan.</string>
     <string name="invalid_backup_file">Di-wastong backup file:</string>
@@ -387,7 +385,6 @@
     <string name="spen_previous_page">Balik</string>
     <string name="file_picker_error">Walang nakitang file picker app</string>
     <string name="pref_dump_crash_logs_summary">Sine-save ang mga error log sa isang file para maibahagi sa mga developer</string>
-    <string name="pref_viewer_nav">Mga tap zone</string>
     <string name="edge_nav">Sulok</string>
     <string name="kindlish_nav">Mala-Kindle</string>
     <string name="l_nav">Hugis-L</string>
@@ -409,7 +406,6 @@
     <string name="nav_zone_next">Susunod</string>
     <string name="nav_zone_prev">Nakaraan</string>
     <string name="pref_show_navigation_mode_summary">Mabilis na ipakita ang lugar na ita-tap kapag nakabukas ang reader</string>
-    <string name="pref_show_navigation_mode">Ipakita ang mga overlay ng tap zone</string>
     <string name="exclude">Na-ibukod: %s</string>
     <string name="include">Kasali ang: %s</string>
     <string name="none">Wala</string>
@@ -482,7 +478,6 @@
     <string name="action_display_language_badge">Wika</string>
     <string name="label_warning">Babala</string>
     <string name="backup_info">Dapat nagtatabi rin kayo ng mga kopya ng backup sa ibang mga lugar. Ang mga backup ay naglalaman ng sensitibong data tulad ng nakaimbak na password; mag-ingat kung ibahagi ito.</string>
-    <string name="connected_to_wifi">Sa Wi-Fi lang</string>
     <string name="update_72hour">Kada 3 araw</string>
     <string name="ext_update_all">I-update lahat</string>
     <string name="clear_database_source_item_count">%1$d na entry sa database na wala sa aklatan</string>
@@ -603,8 +598,6 @@
     <string name="pref_page_rotate_invert">I-flip ang oryentasyon ng mga pinaikot na malalawak na pahina</string>
     <string name="overlay_header">Nakapatong (Overlay)</string>
     <string name="pref_debug_info">Impormasyon sa pag-debug</string>
-    <string name="pref_chapter_swipe_start">Kabanata sa pag-swipe pakaliwa</string>
-    <string name="pref_chapter_swipe_end">Kabanata sa pag-swipe pakanan</string>
     <string name="action_set_interval">Itakda ang pagitan</string>
     <string name="action_filter_interval_custom">Ma-customize na dalas ng pag-update</string>
     <string name="action_sort_next_updated">Susunod na inaasahang update</string>
@@ -666,7 +659,6 @@
     <string name="available_disk_space_info">Na magagamit: %1$s / Kabuuan: %2$s</string>
     <string name="manga_interval_expected_update">Mga bagong kabanata na nahulaang ilalabas sa loob ng %1$s, na tumitingin bawat %2$s.</string>
     <string name="invalid_backup_file_error">Buong error:</string>
-    <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
     <string name="private_settings">Kasali ang mga sensitibong setting (hal., mga login token)</string>
     <string name="onboarding_storage_help_info">Nag-a-update mula sa isang mas lumang bersyon at hindi sigurado kung ano ang pipiliin? Sumangguni sa gabay sa storage para sa higit pang impormasyon.</string>
     <string name="onboarding_storage_help_action">Gabay sa storage</string>

@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">읽고 있는 페이지 근처의 페이지만 불러와 모바일 데이터를 절약합니다</string>
     <string name="pref_dump_crash_logs">오류 로그 공유</string>
     <string name="pref_security_summary">앱 잠금, 화면 보안</string>
+    <string name="pref_viewer_nav">탭 존</string>
+    <string name="pref_read_with_tapping_inverted">탭 영역 반전</string>
+    <string name="pref_show_navigation_mode">탭 영역 오버레이 표시</string>
+    <string name="pref_read_with_long_tap">길게 탭하여 액션 표시</string>
+    <string name="pref_chapter_swipe_start">왼쪽으로 스와이프하는 챕터</string>
+    <string name="pref_chapter_swipe_end">오른쪽으로 스와이프하는 챕터</string>
+    <string name="ext_permission_install_apps_warning">확장 앱을 설치하려면 권한이 필요합니다. 부가하려면 여기를 탭하세요.</string>
+    <string name="connected_to_wifi">Wi-Fi 에서만</string>
 </resources>

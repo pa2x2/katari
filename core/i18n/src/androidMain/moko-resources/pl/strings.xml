@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Szybkość animacji podwójnego dotknięcia</string>
     <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
     <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
+    <string name="pref_viewer_nav">Strefy kliknięcia</string>
+    <string name="pref_read_with_tapping_inverted">Odwróć strefy kliknięcia</string>
+    <string name="pref_show_navigation_mode">Pokazuj nakładkę stref kliknięcia</string>
+    <string name="pref_read_with_long_tap">Pokaż akcje po przytrzymaniu</string>
+    <string name="pref_chapter_swipe_start">Przesuń palcem w lewo</string>
+    <string name="pref_chapter_swipe_end">Przesuń palcem w prawo</string>
+    <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
+    <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
 </resources>

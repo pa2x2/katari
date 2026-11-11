@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Animasjonshastighet ved dobbelklikk</string>
     <string name="pref_dump_crash_logs">Del krasjlogger</string>
     <string name="pref_security_summary">Applås, sikker skjerm</string>
+    <string name="pref_viewer_nav">Navigasjonsoppsett</string>
+    <string name="pref_read_with_tapping_inverted">Inverter trykk</string>
+    <string name="pref_show_navigation_mode">Vis overlay for navigasjonsoppsett</string>
+    <string name="pref_read_with_long_tap">Vis handlinger ved langt trykk</string>
+    <string name="pref_chapter_swipe_start">Sveip til venstre handling</string>
+    <string name="pref_chapter_swipe_end">Sveip til høyre handling</string>
+    <string name="ext_permission_install_apps_warning">Tillatelse er nødvendig for å installere utvidelser. Trykk her for å tillate.</string>
+    <string name="connected_to_wifi">Bare på Wi-Fi</string>
 </resources>

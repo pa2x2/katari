@@ -182,7 +182,7 @@ class SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     Preference.PreferenceItem.SwitchPreference(
                         preference = devicePreferences.rememberBrightness,
                         title = stringResource(MR.strings.pref_anime_remember_brightness),
-                        subtitle = stringResource(MR.strings.pref_anime_remember_brightness_summary),
+                        subtitle = platformPresentation.rememberBrightnessSummary?.let { stringResource(it) },
                     ),
                 ),
             ),

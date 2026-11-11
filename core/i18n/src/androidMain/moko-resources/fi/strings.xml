@@ -7,4 +7,10 @@
     <string name="pref_double_tap_anim_speed">Tuplanäpäytyksen animaation nopeus</string>
     <string name="pref_dump_crash_logs">Poista kaatumislokit</string>
     <string name="pref_security_summary">Applikaation lukko, turvallinen ruutu</string>
+    <string name="pref_viewer_nav">Navigointiasettelu</string>
+    <string name="pref_read_with_tapping_inverted">Käännä näpäyttäminen</string>
+    <string name="pref_show_navigation_mode">Näytä navigointiasettelun peittokuva</string>
+    <string name="pref_read_with_long_tap">Näytä pitkällä napautuksella</string>
+    <string name="ext_permission_install_apps_warning">Laajennosten asentamiseen tarvitaan lupia. Napauta tästä myöntääksesi luvat.</string>
+    <string name="connected_to_wifi">Ainoastaan WiFillä</string>
 </resources>

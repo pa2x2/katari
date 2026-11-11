@@ -240,7 +240,6 @@
     <string name="transition_no_previous">Предыдущей главы нет</string>
     <string name="transition_pages_loading">Идёт загрузка страниц…</string>
     <string name="transition_pages_error">Не удалось загрузить страницы: %1$s</string>
-    <string name="pref_read_with_long_tap">Показать действия при долгом нажатии</string>
     <string name="action_open_in_web_view">Открыть в WebView</string>
     <string name="pref_skip_read_chapters">Пропускать прочитанные главы</string>
     <string name="pref_color_filter_mode">Режим светофильтра</string>
@@ -352,7 +351,6 @@
     <string name="tapping_inverted_vertical">Вертикально</string>
     <string name="tapping_inverted_horizontal">Горизонтально</string>
     <string name="tapping_inverted_none">Нет</string>
-    <string name="pref_read_with_tapping_inverted">Зоны касания наоборот</string>
     <string name="unknown_status">Неизвестный статус</string>
     <string name="unknown_author">Неизвестный автор</string>
     <string name="whats_new">Что нового</string>
@@ -386,7 +384,6 @@
     <string name="spen_previous_page">Предыдущая страница</string>
     <string name="migration_help_guide">Руководство по переносу источников</string>
     <string name="file_picker_error">Приложение для выбора файлов не найдено</string>
-    <string name="pref_viewer_nav">Зоны касания</string>
     <string name="edge_nav">По краям</string>
     <string name="kindlish_nav">Kindle-подобная</string>
     <string name="l_nav">L-образная</string>
@@ -406,7 +403,6 @@
     <string name="nav_zone_next">Следующая</string>
     <string name="nav_zone_prev">Предыдущая</string>
     <string name="pref_show_navigation_mode_summary">Ненадолго показать при начале чтения</string>
-    <string name="pref_show_navigation_mode">Наложение зон касания</string>
     <string name="pref_dns_over_https">DNS по HTTPS (DoH)</string>
     <string name="none">Нет</string>
     <string name="exclude">Исключать: %s</string>
@@ -482,7 +478,6 @@
     <string name="action_display_language_badge">Язык</string>
     <string name="label_warning">Предупреждение</string>
     <string name="backup_info">Настоятельно рекомендуется хранить резервные копии в других местах или сервисах. Резервные копии могут содержать конфиденциальную информацию, как, например, пароли. Будьте осторожны при их отправке.</string>
-    <string name="connected_to_wifi">Только по Wi-Fi</string>
     <string name="update_72hour">Каждые 3 дня</string>
     <string name="ext_update_all">Обновить все</string>
     <string name="pref_auto_clear_chapter_cache">Очищать кэш глав при запуске приложения</string>
@@ -599,8 +594,6 @@
     <string name="pref_page_rotate">Развернуть широкие страницы под размер экрана</string>
     <string name="pref_page_rotate_invert">Отразить ориентацию развёрнутых широких страниц</string>
     <string name="pref_debug_info">Отладочная информация</string>
-    <string name="pref_chapter_swipe_end">Глава при смахивании вправо</string>
-    <string name="pref_chapter_swipe_start">Глава при смахивании влево</string>
     <string name="action_filter_interval_custom">Настраиваемая частота обновления</string>
     <string name="intervals_header">Интервалы</string>
     <string name="manga_display_interval_title">Оценивать каждые</string>
@@ -660,7 +653,6 @@
     <string name="onboarding_permission_notifications_description">Получать уведомления об обновлениях библиотеки и т.д.</string>
     <string name="onboarding_permission_action_grant">Предоставить</string>
     <string name="available_disk_space_info">Доступно: %1$s / Всего: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Нужны разрешения для установки расширений. Нажмите сюда, чтобы их предоставить.</string>
     <string name="private_settings">Включать конфиденциальные настройки (например, токены для входа)</string>
     <string name="invalid_backup_file_error">Полная ошибка:</string>
     <string name="manga_interval_expected_update">Выход новых глав ожидается примерно через %1$s, следующая проверка будет через %2$s.</string>

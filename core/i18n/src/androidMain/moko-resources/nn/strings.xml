@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="action_show_errors">Trykk for å sjå detaljar</string>
+    <string name="connected_to_wifi">Berre på Wi-Fi</string>
 </resources>

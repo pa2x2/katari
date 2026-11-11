@@ -232,7 +232,6 @@
     <string name="download_notifier_no_network">Δεν υπάρχει διαθέσιμη σύνδεση δικτύου</string>
     <string name="download_notifier_download_paused">Λήψεις σε παύση</string>
     <string name="channel_common">Κοινό</string>
-    <string name="pref_read_with_long_tap">Εμφάνιση ενεργειών με παρατεταμένο πάτημα</string>
     <string name="action_open_in_web_view">Άνοιγμα στο WebView</string>
     <string name="pref_skip_read_chapters">Προσπέραση διαβασμένων κεφαλαίων</string>
     <string name="filter_mode_overlay">Επικάλυψη</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Κάθετα</string>
     <string name="tapping_inverted_horizontal">Οριζόντια</string>
     <string name="tapping_inverted_none">Κανένα</string>
-    <string name="pref_read_with_tapping_inverted">Αντιστροφή ζωνών πατήματος</string>
     <string name="unknown_status">Άγνωστη κατάσταση</string>
     <string name="unknown_author">Άγνωστος συγγραφέας</string>
     <string name="whats_new">Τι νέο υπάρχει</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Προηγούμενη σελίδα</string>
     <string name="migration_help_guide">Οδηγός μεταφοράς πηγής</string>
     <string name="file_picker_error">Δεν βρέθηκε εφαρμογή επιλογής αρχείων</string>
-    <string name="pref_viewer_nav">Ζώνες πατήματος</string>
     <string name="edge_nav">Άκρη</string>
     <string name="kindlish_nav">Σαν Kindle</string>
     <string name="l_nav">Σχήματος L</string>
@@ -394,7 +391,6 @@
     <string name="pref_dual_page_invert">Αντιστροφή τοποθέτησης διαχωρισμένης σελίδας</string>
     <string name="backup_restore_content_full">Ενδέχεται να χρειαστεί στη συνέχεια να εγκαταστήσετε τυχόν επεκτάσεις που λείπουν για να τις χρησιμοποιήσετε.</string>
     <string name="pref_show_navigation_mode_summary">Εμφάνιση εν συντομία κατά το άνοιγμα του προγράμματος ανάγνωσης</string>
-    <string name="pref_show_navigation_mode">Εμφάνιση επικάλυψης ζωνών πατήματος</string>
     <string name="nav_zone_right">Δεξιά</string>
     <string name="nav_zone_left">Αριστερά</string>
     <string name="nav_zone_next">Επόμενο</string>
@@ -474,7 +470,6 @@
     <string name="action_display_language_badge">Γλώσσα</string>
     <string name="label_warning">Προειδοποίηση</string>
     <string name="backup_info">Θα πρέπει να κρατάτε αντίγραφα αντιγράφων ασφαλείας και σε άλλα μέρη. Τα αντίγραφα ασφαλείας ενδέχεται να περιέχουν ευαίσθητα δεδομένα, συμπεριλαμβανομένων τυχόν αποθηκευμένων κωδικών πρόσβασης, να είστε προσεκτικοί αν τα μοιράζεστε.</string>
-    <string name="connected_to_wifi">Μόνο σε Wi-Fi</string>
     <string name="update_72hour">Κάθε 3 ημέρες</string>
     <string name="ext_update_all">Ενημέρωση όλων</string>
     <string name="pref_auto_clear_chapter_cache">Εκκαθάριση της προσωρινής μνήμης κεφαλαίων κατά την εκκίνηση της εφαρμογής</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate">Περιστροφή πλατιών σελίδων για να χωρέσουν</string>
     <string name="pref_page_rotate_invert">Αναστροφή του προσανατολισμού των πλατιών σελίδων που έχουν περιστραφεί</string>
     <string name="pref_debug_info">Πληροφορίες εντοπισμού σφαλμάτων</string>
-    <string name="pref_chapter_swipe_start">Κεφάλαιο με σύρσιμο προς τα αριστερά</string>
-    <string name="pref_chapter_swipe_end">Κεφάλαιο με σύρσιμο προς τα δεξιά</string>
     <string name="action_set_interval">Ορισμός χρονικού διαστήματος</string>
     <string name="action_filter_interval_custom">Προσαρμοσμένη συχνότητα ενημέρωσης</string>
     <string name="intervals_header">Διαστήματα</string>
@@ -646,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">Ειδοποιηθείτε για ενημερώσεις της βιβλιοθήκης και άλλων.</string>
     <string name="onboarding_permission_action_grant">Παραχώρηση</string>
     <string name="available_disk_space_info">Διαθέσιμο: %1$s / Σύνολο: %2$s</string>
-    <string name="ext_permission_install_apps_warning">Απαιτούνται δικαιώματα για την εγκατάσταση επεκτάσεων. Πατήστε εδώ για παραχώρηση.</string>
     <string name="private_settings">Συμπεριλάβετε ευαίσθητες ρυθμίσεις (π.χ. διακριτικά σύνδεσης)</string>
     <string name="invalid_backup_file_error">Πλήρες σφάλμα:</string>
     <string name="onboarding_storage_help_info">Ενημερώνετε από μια παλαιότερη έκδοση και δεν είστε σίγουροι τι να επιλέξετε; Ανατρέξτε στον οδηγό αποθήκευσης για περισσότερες πληροφορίες.</string>

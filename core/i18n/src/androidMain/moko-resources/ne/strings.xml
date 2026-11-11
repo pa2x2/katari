@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">एनिमेसनको गति डबल ट्याप गर्नुहोस्</string>
     <string name="pref_dump_crash_logs">Crash logs साझा गर्नुहोस्</string>
     <string name="pref_security_summary">एप लक, सुरक्षित स्क्रिन</string>
+    <string name="pref_viewer_nav">ट्याप क्षेत्रहरू</string>
+    <string name="pref_read_with_tapping_inverted">ट्याप क्षेत्रहरू उल्टाउनुहोस्</string>
+    <string name="pref_show_navigation_mode">नेभिगेसन लेआउट ओभरले देखाउनुहोस्</string>
+    <string name="pref_read_with_long_tap">लामो ट्यापमा कार्यहरू देखाउनुहोस्</string>
+    <string name="pref_chapter_swipe_start">बायाँतिर स्वाइप गर्ने अध्याय</string>
+    <string name="pref_chapter_swipe_end">दायाँतिर स्वाइप गर्ने अध्याय</string>
+    <string name="ext_permission_install_apps_warning">एक्सटेन्शनहरू स्थापना गर्न अनुमति आवश्यक छ। प्रदान गर्न यहाँ ट्याप गर्नुहोस्।</string>
+    <string name="connected_to_wifi">Wi-Fi मा मात्र</string>
 </resources>

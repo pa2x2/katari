@@ -99,7 +99,6 @@
     <string name="pref_skip_read_chapters">Hopp over kapitler markert som lest</string>
     <string name="pref_read_with_volume_keys">Lydstyrkejusteringstaster</string>
     <string name="pref_read_with_volume_keys_inverted">Inverter lydstyrketaster</string>
-    <string name="pref_read_with_long_tap">Vis handlinger ved langt trykk</string>
     <string name="pref_reader_theme">Bakgrunnsfarge</string>
     <string name="white_background">Hvit</string>
     <string name="black_background">Svart</string>
@@ -328,7 +327,6 @@
     <string name="action_disable_all">deaktiver alle</string>
     <string name="action_enable_all">aktiver alle</string>
     <string name="action_sort_latest_chapter">Siste kapittel</string>
-    <string name="pref_read_with_tapping_inverted">Inverter trykk</string>
     <string name="restoring_backup_error">Gjenoppretting av sikkerhetskopi mislyktes</string>
     <string name="backup_in_progress">Sikkerhetskopiering allerede underveis</string>
     <string name="invalid_backup_file">Ugyldig sikkerhetskopieringsfil:</string>
@@ -379,7 +377,6 @@
     <string name="pref_incognito_mode_summary">Setter lesehistorikken på pause</string>
     <string name="pref_incognito_mode">Inkognitomodus</string>
     <string name="pref_dump_crash_logs_summary">Lagrer feillogger i en fil som kan sendes til utviklerne</string>
-    <string name="pref_viewer_nav">Navigasjonsoppsett</string>
     <string name="edge_nav">Kant</string>
     <string name="kindlish_nav">Kindle-basert</string>
     <string name="l_nav">L-formet</string>
@@ -390,7 +387,6 @@
     <string name="pref_dual_page_invert_summary">Hvis plasseringen av sideoppsettet for delte brede sider ikke samsvarer med leseretningen</string>
     <string name="pref_dual_page_invert">Invertert sideoppsett for delte sider</string>
     <string name="pref_dual_page_split">Del brede sider</string>
-    <string name="pref_show_navigation_mode">Vis overlay for navigasjonsoppsett</string>
     <string name="backup_restore_content_full">Du vil måtte installere manglende utvidelser etterpå for å bruke dem.</string>
     <string name="pref_show_navigation_mode_summary">Vis tap-bare områder når leseren åpnes</string>
     <string name="none">Ingen</string>
@@ -475,7 +471,6 @@
     <string name="label_warning">Advarsel</string>
     <string name="backup_info">Du bør oppbevare ekstra kopier av sikkershetskopier andre steder også. Sikkerhetskopier kan inneholde sensitiv data, inkludert eventuelle lagrede passord. Vær forsiktig ved deling.</string>
     <string name="update_72hour">Hver 3. dag</string>
-    <string name="connected_to_wifi">Bare på Wi-Fi</string>
     <string name="action_show_manga">Vis oppføring</string>
     <string name="privacy_policy">Personvernerklæring</string>
     <string name="publishing_finished">Ferdig publisert</string>
@@ -589,11 +584,9 @@
     <string name="action_set_interval">Sett intervall</string>
     <string name="action_filter_interval_custom">Egendefinert oppdateringsintervall</string>
     <string name="action_sort_next_updated">Neste forventede oppdatering</string>
-    <string name="pref_chapter_swipe_end">Sveip til høyre handling</string>
     <string name="intervals_header">Intervaller</string>
     <string name="manga_display_interval_title">Anslå hver</string>
     <string name="delete_downloaded">Slett nedlastede</string>
-    <string name="pref_chapter_swipe_start">Sveip til venstre handling</string>
     <string name="action_ok">OK</string>
     <string name="has_results">Har resultater</string>
     <string name="syncing_library">Synkroniserer biblioteket</string>
@@ -648,7 +641,6 @@
     <string name="onboarding_permission_ignore_battery_opts">Batteribruk i bakgrunnen</string>
     <string name="onboarding_permission_install_apps_description">For å installere kildeutvidelser.</string>
     <string name="onboarding_permission_notifications_description">Få varsler for oppdateringer i biblioteket og mer.</string>
-    <string name="ext_permission_install_apps_warning">Tillatelse er nødvendig for å installere utvidelser. Trykk her for å tillate.</string>
     <string name="private_settings">Inkluder sensitive innstillinger (f.eks., innloggingstoken)</string>
     <string name="onboarding_permission_action_grant">Tillat</string>
     <string name="onboarding_storage_help_info">Oppdaterer du fra en eldre versjon og er usikker på hva du skal velge? Sjekk lagringsguiden for mer informasjon.</string>

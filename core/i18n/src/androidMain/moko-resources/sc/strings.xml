@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
     <string name="pref_dump_crash_logs">Cumpartzi sos registros de sos arrestos anòmalos</string>
     <string name="pref_security_summary">Blocu de s\'aplicatzione, ischermu seguru</string>
+    <string name="pref_viewer_nav">Zonas de tocu</string>
+    <string name="pref_read_with_tapping_inverted">Fùrria sas zonas de tocu</string>
+    <string name="pref_show_navigation_mode">Ammustra sa subrapositzione de sas zonas de tocu</string>
+    <string name="pref_read_with_long_tap">Ammustra sas atziones cun su tocu longu</string>
+    <string name="pref_chapter_swipe_start">Capìtulu iscurrende a manca</string>
+    <string name="pref_chapter_swipe_end">Capìtulu iscurrende a destra</string>
+    <string name="ext_permission_install_apps_warning">B\'at bisòngiu de sos permissos pro installare estensiones. Toca inoghe pro los frunire.</string>
+    <string name="connected_to_wifi">Petzi cun su Wi-Fi</string>
 </resources>

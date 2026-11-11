@@ -72,7 +72,6 @@
     <string name="update_72hour">Әр 3 күн сайын</string>
     <string name="update_weekly">Апта сайын</string>
     <string name="pref_library_update_restriction">Автоматты жаңартуларға құрылғы шектеулері</string>
-    <string name="connected_to_wifi">Тек Wi-Fi болғанда</string>
     <string name="charging">Қуаттандыру кездінде</string>
     <string name="restrictions">Шектеулер: %s</string>
     <string name="secure_screen_summary">Қауіпсіз экран қолданбаларды ауыстырған кезде қолданба мазмұнын жасырады және скриншот жасауды бұғаттайды</string>
@@ -199,7 +198,6 @@
     <string name="ext_trust">Сенім</string>
     <string name="ext_untrusted">Сенімсіз</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Shizuku-ны кеңейту орнатушысы ретінде пайдалану үшін Shizuku-ны орнатып іске қосыңыз.</string>
-    <string name="pref_show_navigation_mode">Түрту аймақтарының қабаттасуын көрсету</string>
     <string name="pref_show_navigation_mode_summary">Оқыма ашылғаннан кейін қысқаша көрсету</string>
     <string name="pref_dual_page_split">Қең беттерді бөлу</string>
     <string name="pref_show_page_number">Бет нөмірін көрсету</string>
@@ -254,7 +252,6 @@
     <string name="black_background">Қара</string>
     <string name="automatic_background">Автоматты</string>
     <string name="pref_reader_actions">Әрекеттер</string>
-    <string name="pref_read_with_long_tap">Ұзақ түртуде көрсету</string>
     <string name="gray_background">Сұр</string>
     <string name="pref_viewer_type">Әдепкі оқу режимі</string>
     <string name="pref_highest">Ең жоғары</string>
@@ -313,7 +310,6 @@
     <string name="theme_tidalwave">Көтерілу Толқыны</string>
     <string name="filter_mode_lighten">Жарық қылу</string>
     <string name="filter_mode_darken">Қараңғы қылу</string>
-    <string name="pref_read_with_tapping_inverted">Басу аймағын терістету</string>
     <string name="tapping_inverted_vertical">Тік</string>
     <string name="kindlish_nav">Kindle тәріздес</string>
     <string name="download_ahead_info">Кітапханадағы жазбаларда ғана жұмыс істейді, сондай-ақ ағымдағы және келесі тарау әлдеқашан жүктелген болса</string>
@@ -327,7 +323,6 @@
     <string name="pref_hide_threshold">Айналдырғандағы мәзірді жасыру сезгіштігі</string>
     <string name="pref_image_scale_type">Масштабтау</string>
     <string name="vertical_plus_viewer">Тоқтаусыз тік</string>
-    <string name="pref_viewer_nav">Басу аймағы</string>
     <string name="pref_read_with_volume_keys_inverted">Теріс дыбыс пернелері</string>
     <string name="tapping_inverted_none">Жоқ</string>
     <string name="pager_viewer">Беттеп</string>

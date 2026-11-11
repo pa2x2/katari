@@ -86,13 +86,9 @@ internal fun MangaReaderTextToolbar(
                 if (progress.isWorking) {
                     LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall))
                 }
-                // Once pages are ready the languages say everything the hint would; page translation problems get a row
-                // of their own below.
-                val showsProgress = progress != MangaReaderTextProgress.Ready &&
-                    progress !is MangaReaderTextProgress.TranslationUnavailable
-                if (showsProgress) {
+                progressText(progress, observeModels)?.let {
                     TranslationDirectionText(
-                        text = progressText(progress, observeModels),
+                        text = it,
                         role = TextRole.Body,
                         modifier = Modifier.weight(1f, fill = false).padding(vertical = KatariTheme.spacing.m),
                     )
@@ -191,16 +187,19 @@ internal fun MangaReaderTextToolbar(
     }
 }
 
+/**
+ * What the toolbar says about [progress]. Null once pages are ready, when the languages say everything a hint would,
+ * and for a page translation problem, which gets a row of its own below.
+ */
 @Composable
 private fun progressText(
     progress: MangaReaderTextProgress,
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<List<ModelArtifactState>>,
-): String = when (progress) {
+): String? = when (progress) {
     MangaReaderTextProgress.Waiting -> stringResource(MR.strings.reader_text_waiting)
     MangaReaderTextProgress.Recognizing -> stringResource(MR.strings.reader_text_recognizing)
     MangaReaderTextProgress.Translating -> stringResource(MR.strings.reader_text_translating)
-    is MangaReaderTextProgress.TranslationUnavailable -> mangaPageTranslationIssueMessage(progress.issue)
-    MangaReaderTextProgress.Ready -> stringResource(MR.strings.reader_text_ready)
+    is MangaReaderTextProgress.TranslationUnavailable, MangaReaderTextProgress.Ready -> null
     MangaReaderTextProgress.NoText -> stringResource(MR.strings.reader_text_no_text)
     is MangaReaderTextProgress.Failed -> stringResource(MR.strings.reader_text_failed, progress.message.orEmpty())
     is MangaReaderTextProgress.Blocked -> when (val blocker = progress.blocker) {

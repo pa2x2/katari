@@ -215,7 +215,6 @@
     <string name="untrusted_extension">Sambungan tak dipercayai</string>
     <string name="untrusted_extension_message">Sambungan yang berniat jahat boleh membaca sebarang maklumat log masuk yang disimpan atau menjalankan kod secara sesuka hati. \n \nDengan mempercayai sambungan ini, anda menerima risiko tersebut.</string>
     <string name="pref_skip_read_chapters">Langkau bab yang sudah dibaca</string>
-    <string name="pref_read_with_long_tap">Tunjuk tindakan bila menahan ketik</string>
     <string name="pager_viewer">Muka surat</string>
     <string name="double_tap_anim_speed_0">Tiada animasi</string>
     <string name="double_tap_anim_speed_normal">Biasa</string>
@@ -344,7 +343,6 @@
     <string name="tapping_inverted_vertical">Mod atas bawah</string>
     <string name="tapping_inverted_horizontal">Mod kanan kiri</string>
     <string name="tapping_inverted_none">Tidak aktif</string>
-    <string name="pref_read_with_tapping_inverted">Songsangkan zon ketik</string>
     <string name="unknown_status">Status tidak diketahui</string>
     <string name="unknown_author">Pengarang tidak diketahui</string>
     <string name="whats_new">Apa yang terbaharu</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Muka surat terdahulu</string>
     <string name="migration_help_guide">Panduan memindahkan sumber</string>
     <string name="file_picker_error">Tiada aplikasi memilih fail</string>
-    <string name="pref_viewer_nav">Zon ketik</string>
     <string name="edge_nav">Sisi</string>
     <string name="kindlish_nav">Serupa Kindle</string>
     <string name="l_nav">Bentuk L</string>
@@ -397,7 +394,6 @@
     <string name="pref_show_navigation_mode_summary">Tunjukkan seketika apabila pembaca dibuka</string>
     <string name="nav_zone_right">Kanan</string>
     <string name="nav_zone_left">Kiri</string>
-    <string name="pref_show_navigation_mode">Tunjuk tindanan zon ketik</string>
     <string name="nav_zone_next">Seterusnya</string>
     <string name="pref_dns_over_https">DNS melalui HTTPS (DoH)</string>
     <string name="action_sort_chapter_fetch_date">Tarikh bab diambil</string>
@@ -474,7 +470,6 @@
     <string name="label_warning">Amaran</string>
     <string name="action_display_language_badge">Bahasa</string>
     <string name="backup_info">Anda patut simpan salinan sandaran di tempat lain juga. Sandaran mungkin mengandungi data sulit termasuk kata laluan tersimpan; hati-hati jika berkongsi.</string>
-    <string name="connected_to_wifi">Hanya menggunakan Wi-Fi</string>
     <string name="update_72hour">Setiap 3 hari</string>
     <string name="ext_update_all">Kemas kini semua</string>
     <string name="pref_auto_clear_chapter_cache">Hapus cache bab ketika membuka apl</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate_invert">Terbalikkan orientasi muka surat lebar yang diputarkan</string>
     <string name="pref_page_rotate">Putar muka surat lebar agar muat</string>
     <string name="pref_debug_info">Maklumat nyahpepijat</string>
-    <string name="pref_chapter_swipe_end">Bab mengenai leret ke kanan</string>
-    <string name="pref_chapter_swipe_start">Bab mengenai leret ke kiri</string>
     <string name="action_set_interval">Tetapkan jarak masa</string>
     <string name="action_filter_interval_custom">Kekerapan kemaskini tersuai</string>
     <string name="action_sort_next_updated">Kemas kini seterusnya dijangka</string>
@@ -641,7 +634,6 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Elak gangguan pada kemas kini yang panjang, muat turun, dan pemulihan sandaran.</string>
     <string name="onboarding_permission_action_grant">Benarkan</string>
     <string name="onboarding_permission_notifications_description">Dapatkan pemberitahuan untuk kemas kini pustaka dan banyak lagi.</string>
-    <string name="ext_permission_install_apps_warning">Kebenaran diperlukan untuk memasang sambungan. Ketik di sini untuk membenarkan.</string>
     <string name="ext_revoke_trust">Batalkan sambungan dipercayakan yang tidak diketahui</string>
     <string name="manga_interval_expected_update_soon">Tidak lama lagi</string>
     <string name="scanlator">Scanlator</string>

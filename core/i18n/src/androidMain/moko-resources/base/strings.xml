@@ -37,4 +37,17 @@
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>
     <string name="pref_security_summary">App lock, secure screen</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
+    <string name="pref_viewer_nav">Tap zones</string>
+    <string name="pref_read_with_tapping_inverted">Invert tap zones</string>
+    <string name="pref_show_navigation_mode">Show tap zones overlay</string>
+    <string name="pref_read_with_long_tap">Show actions on long tap</string>
+    <string name="pref_chapter_swipe_start">Swipe left</string>
+    <string name="pref_chapter_swipe_end">Swipe right</string>
+    <string name="pref_browse_long_press_action">Browse and Feeds long-press priority</string>
+    <string name="pref_browse_long_press_action_open_settings">Long-press actions</string>
+    <string name="browse_feed_long_press_actions_for_source">Long-press actions for %1$s</string>
+    <string name="filter_tristate_chip_hint">Tap to include, tap again to exclude. Long-press to exclude.</string>
+    <string name="ext_permission_install_apps_warning">Permissions are needed to install extensions. Tap here to grant.</string>
+    <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
+    <string name="connected_to_wifi">Only on Wi-Fi</string>
 </resources>

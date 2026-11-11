@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">அனிமேசன் விரைவு இரட்டை தட்டவும்</string>
     <string name="pref_dump_crash_logs">செயலிழப்பு பதிவுகளைப் பகிரவும்</string>
     <string name="pref_security_summary">பயன்பாட்டு பூட்டு, பாதுகாப்பான திரை</string>
+    <string name="pref_viewer_nav">மண்டலங்களைத் தட்டவும்</string>
+    <string name="pref_read_with_tapping_inverted">தட்டல் மண்டலங்களைத் தலைகீழ்</string>
+    <string name="pref_show_navigation_mode">குழாய் மண்டலங்கள் மேலடுக்கைக் காட்டு</string>
+    <string name="pref_read_with_long_tap">நீண்ட தட்டில் செயல்களைக் காட்டு</string>
+    <string name="pref_chapter_swipe_start">இடதுபுறமாக ச்வைப் பற்றிய அத்தியாயம்</string>
+    <string name="pref_chapter_swipe_end">ச்விப் டு ரைட் பற்றிய அத்தியாயம்</string>
+    <string name="ext_permission_install_apps_warning">நீட்டிப்புகளை நிறுவ அனுமதிகள் தேவை. வழங்க இங்கே தட்டவும்.</string>
+    <string name="connected_to_wifi">வைஃபை மட்டுமே</string>
 </resources>

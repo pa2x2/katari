@@ -34,6 +34,7 @@ kotlin {
 
                 implementation(projects.core.icons.customMaterialSymbols)
                 implementation(projects.core.icons.materialSymbols)
+                implementation(projects.core.platformPresentation)
             }
         }
         commonTest {

@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Dupla koppintás animációjának sebessége</string>
     <string name="pref_dump_crash_logs">Hibaüzenetetek törlése</string>
     <string name="pref_security_summary">Alkalmazás zárolás, képernyő zár</string>
+    <string name="pref_viewer_nav">Érintési zónák</string>
+    <string name="pref_read_with_tapping_inverted">Érintési zónák fordítása</string>
+    <string name="pref_show_navigation_mode">Érintési zónák átfedésének mutatása</string>
+    <string name="pref_read_with_long_tap">Cselekmények mutatása hosszú koppintáskor</string>
+    <string name="pref_chapter_swipe_start">Fejezet balra húzásakor</string>
+    <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
+    <string name="ext_permission_install_apps_warning">A bővítmények telepítéséhez engedélyek szükségesek. Az engedélyezéshez koppintson ide.</string>
+    <string name="connected_to_wifi">Csak Wi-Fi-n keresztül</string>
 </resources>

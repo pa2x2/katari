@@ -157,7 +157,6 @@
     <string name="gray_background">ಬೂದು</string>
     <string name="white_background">ಬಿಳಿ</string>
     <string name="pref_reader_theme">ಹಿನ್ನೆಲೆ ಬಣ್ಣ</string>
-    <string name="pref_read_with_long_tap">ಲಾಂಗ್ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ತೋರಿಸಿ</string>
     <string name="pref_read_with_volume_keys_inverted">ಧ್ವನಿ ಕೀಲಿಗಳನ್ನು ಬದಲಿಮಾಡಿ</string>
     <string name="pref_read_with_volume_keys">ಧ್ವನಿ ಕೀಲಿಗಳು</string>
     <string name="pref_reader_navigation">ನ್ಯಾವಿಗೇಷನ್</string>
@@ -342,7 +341,6 @@
     <string name="tapping_inverted_vertical">ಉದ್ದದ</string>
     <string name="tapping_inverted_horizontal">ಅಡ್ಡ</string>
     <string name="tapping_inverted_none">ಯಾವುದು ಅಲ್ಲ</string>
-    <string name="pref_read_with_tapping_inverted">ಟ್ಯಾಪಿಂಗ ಅನ್ನು ತಿರುಗಿಸಿ</string>
     <string name="download_insufficient_space">ಕಡಿಮೆ ಶೇಖರಣಾ ಸ್ಥಳದ ಕಾರಣ ಅಧ್ಯಾಯಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</string>
     <string name="unknown_status">ಅಜ್ಞಾತ ಸ್ಥಿತಿ</string>
     <string name="unknown_author">ಅಜ್ಞಾತ ಲೇಖಕ</string>
@@ -389,7 +387,6 @@
     <string name="backup_restore_content_full">ಬ್ಯಾಕಪ್ ಫೈಲ್‌ನಿಂದ ಡೇಟಾವನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗುತ್ತದೆ. \n \nಕಾಣೆಯಾದ ಯಾವುದೇ ವಿಸ್ತರಣೆಗಳನ್ನು ಬಳಸಲು ನೀವು ಅವುಗಳನ್ನು ಪುನಃ ಸ್ಥಾಪಿಸಬೇಕಾಗುತ್ತದೆ.</string>
     <string name="pref_download_new_categories_details">ಹೊರಗಿಡಲಾದ ವಿಭಾಗಗಳಲ್ಲಿ ಮಾಂಗಾವನ್ನು ಸೇರಿಸಿದ ವಿಭಾಗಗಳಲ್ಲಿದ್ದರೂ ಅವುಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ.</string>
     <string name="pref_category_auto_download">ಸ್ವಯಂ ಡೌನ್‌ಲೋಡ್</string>
-    <string name="pref_viewer_nav">ನ್ಯಾವಿಗೇಶನ್ ಲೇಔಟ್</string>
     <string name="nav_zone_right">ಬಲಕ್ಕೆ</string>
     <string name="nav_zone_left">ಎಡಕ್ಕೆ</string>
     <string name="nav_zone_next">ಮುಂದಿನ</string>
@@ -402,7 +399,6 @@
     <string name="pref_dual_page_invert">ಡ್ಯುಯಲ್ ಪೇಜ್ ಸ್ಪ್ಲಿಟ್ ಪ್ಲೇಸ್‌ಮೆಂಟ್ ಅನ್ನು ತಿರುಗಿಸಿ</string>
     <string name="pref_dual_page_split">ಡ್ಯುಯಲ್ ಪುಟ ವಿಭಜನೆ</string>
     <string name="pref_show_navigation_mode_summary">ರೀಡರ್ ತೆರೆದಾಗ ಟ್ಯಾಪ್ ವಲಯಗಳನ್ನು ತೋರಿಸಿ</string>
-    <string name="pref_show_navigation_mode">ನ್ಯಾವಿಗೇಶನ್ ಲೇಔಟ್ ಓವರ್ ಲೇ ತೋರಿಸಿ</string>
     <string name="exclude">ಹೊರಗಿಡಿ: %s</string>
     <string name="include">ಸೇರಿಸಿ: %s</string>
     <string name="none">ಯಾವುದು ಅಲ್ಲ</string>

@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Makatitipid sa mobile data sa pag-load lang ng mga pahinang malapit sa kasalukuyan mong binabasa</string>
     <string name="pref_dump_crash_logs">Magbahagi ng mga crash log</string>
     <string name="pref_security_summary">Pag-lock sa app, bantayan ang screen</string>
+    <string name="pref_viewer_nav">Mga tap zone</string>
+    <string name="pref_read_with_tapping_inverted">Baligtarin ang mga tap zone</string>
+    <string name="pref_show_navigation_mode">Ipakita ang mga overlay ng tap zone</string>
+    <string name="pref_read_with_long_tap">Ipakita ang mga aksyon sa mahabang tap</string>
+    <string name="pref_chapter_swipe_start">Kabanata sa pag-swipe pakaliwa</string>
+    <string name="pref_chapter_swipe_end">Kabanata sa pag-swipe pakanan</string>
+    <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
+    <string name="connected_to_wifi">Sa Wi-Fi lang</string>
 </resources>

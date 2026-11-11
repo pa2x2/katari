@@ -137,7 +137,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                 add(
                     AppBar.OverflowAction(
                         title = stringResource(
-                            MR.strings.browse_feed_long_press_actions_for_source,
+                            platformPresentation.longPressActionsForSourceLabel,
                             activeFeedSource.name,
                         ),
                         onClick = { navigator.push(BrowseLongPressActionsScreen(activeFeedSource.id)) },

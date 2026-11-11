@@ -7,4 +7,9 @@
     <string name="pref_double_tap_anim_speed">Dvigubo paspaudimo animacijos greitis</string>
     <string name="pref_dump_crash_logs">Išmeskite strigčių žurnalus</string>
     <string name="pref_security_summary">Programos užraktas, saugus ekranas</string>
+    <string name="pref_viewer_nav">Paspaudimų išdėstymas</string>
+    <string name="pref_read_with_tapping_inverted">Invertuoti paspaudimo zonas</string>
+    <string name="pref_show_navigation_mode">Rodyti lietimui jautrias zonas</string>
+    <string name="pref_read_with_long_tap">Parodyti ilgiau paspaudus</string>
+    <string name="connected_to_wifi">Kai naudojamas Wi-Fi</string>
 </resources>

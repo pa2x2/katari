@@ -59,6 +59,32 @@ data class PlatformPresentation(
     val syncFailedHelp: StringResource,
     val securitySettingsSummary: StringResource,
     val monthlyRecapSummary: StringResource,
+    /** Names the parts of a page that turn it or show the menu when pressed. */
+    val pageZonesLabel: StringResource,
+    val invertPageZonesLabel: StringResource,
+    val showPageZonesOverlayLabel: StringResource,
+    val pageActionsOnLongPressLabel: StringResource,
+    /**
+     * Names the chapter row action a swipe towards the start runs. A mouse has nothing to swipe with, so there the
+     * two actions are named as the buttons the row shows under the pointer, in their order.
+     */
+    val chapterSwipeToStartLabel: StringResource,
+    val chapterSwipeToEndLabel: StringResource,
+    val browseLongPressPriorityLabel: StringResource,
+    val longPressActionsLabel: StringResource,
+    /** Takes the source's name. */
+    val longPressActionsForSourceLabel: StringResource,
+    val triStateChipHint: StringResource,
+    /** Null where the platform asks no permission to install extensions. */
+    val installPermissionWarning: StringResource?,
+    /** Null where the player doesn't set the screen's brightness. */
+    val rememberBrightnessSummary: StringResource?,
+    /** Null where the platform can't tell Wi-Fi from other networks. */
+    val wifiOnlyLabel: StringResource?,
+    /** Pictures the reading mode that follows the reader's default. */
+    val defaultReadingModeIcon: ImageVector,
+    /** Pictures the network that work kept off costly connections waits for. */
+    val unmeteredNetworkIcon: ImageVector,
 )
 
 expect val platformPresentation: PlatformPresentation

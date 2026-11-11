@@ -140,7 +140,6 @@
     <string name="update_72hour">រាល់៣ថ្ងៃម្ដង</string>
     <string name="update_weekly">រាល់សប្ដាហ៍</string>
     <string name="pref_library_update_restriction">ធ្វើប្ចុប្បន្នភាពdevice restrictionsដោយស្វ័យប្រវត្ត</string>
-    <string name="connected_to_wifi">នៅពេលបើកWi-Fiប៉ុណ្ណោះ</string>
     <string name="action_webview_forward">ទៅមុខ</string>
     <string name="action_webview_refresh">រីហ្វ្រេស</string>
     <string name="pref_category_general">ទូទៅ</string>

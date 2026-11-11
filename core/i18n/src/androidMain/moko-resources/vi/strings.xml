@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">Tốc độ nhấn đúp hình ảnh động</string>
     <string name="pref_dump_crash_logs">Chia sẻ ghi chép sự cố</string>
     <string name="pref_security_summary">Khoá ứng dụng, màn hình bảo vệ</string>
+    <string name="pref_viewer_nav">Khu vực nhấn</string>
+    <string name="pref_read_with_tapping_inverted">Đảo ngược khu vực nhấn</string>
+    <string name="pref_show_navigation_mode">Hiển thị khu vực nhấn</string>
+    <string name="pref_read_with_long_tap">Hiện mục hành động khi nhấn giữ</string>
+    <string name="pref_chapter_swipe_start">Chương khi vuốt sang trái</string>
+    <string name="pref_chapter_swipe_end">Chương khi vuốt sang phải</string>
+    <string name="ext_permission_install_apps_warning">Cần phải cấp phép để cài đặt tiện ích mở rộng. Bấm đây để cấp.</string>
+    <string name="connected_to_wifi">Chỉ qua Wi-Fi</string>
 </resources>

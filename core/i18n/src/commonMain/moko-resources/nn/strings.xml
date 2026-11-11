@@ -102,7 +102,6 @@
     <string name="update_24hour">Dagleg</string>
     <string name="update_48hour">Annankvar dag</string>
     <string name="update_weekly">Kvar veke</string>
-    <string name="connected_to_wifi">Berre på Wi-Fi</string>
     <string name="restrictions">Avgrensingar: %s</string>
     <string name="pref_library_update_refresh_metadata_summary">Sjå etter nye omslag og detaljar ved oppdatering av bibliotek</string>
     <string name="default_category">Standard kategori</string>

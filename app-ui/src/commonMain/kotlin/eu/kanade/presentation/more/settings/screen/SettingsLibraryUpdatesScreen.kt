@@ -14,6 +14,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Tune
 import app.katari.library.update.planning.LibraryUpdateSettings
 import app.katari.library.update.planning.LibraryUpdateSkipRule
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.control.Switch
 import app.katari.presentation.kit.theme.ContentTone
@@ -126,11 +127,11 @@ class SettingsLibraryUpdatesScreen : SearchableSettings() {
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = libraryPreferences.autoUpdateDeviceRestrictions,
-                    entries = mapOf(
-                        DEVICE_ONLY_ON_WIFI to stringResource(MR.strings.connected_to_wifi),
+                    entries = listOfNotNull(
+                        platformPresentation.wifiOnlyLabel?.let { DEVICE_ONLY_ON_WIFI to stringResource(it) },
                         DEVICE_NETWORK_NOT_METERED to stringResource(MR.strings.network_not_metered),
                         DEVICE_CHARGING to stringResource(MR.strings.charging),
-                    ),
+                    ).toMap(),
                     title = stringResource(MR.strings.pref_library_update_restriction),
                     subtitle = stringResource(MR.strings.restrictions),
                     onValueChanged = {

@@ -145,7 +145,6 @@
     <string name="pref_reader_navigation">導覽</string>
     <string name="pref_read_with_volume_keys">音量按鈕</string>
     <string name="pref_read_with_volume_keys_inverted">反轉音量按鈕</string>
-    <string name="pref_read_with_long_tap">長按時彈出快顯選單</string>
     <string name="pref_reader_theme">背景顏色</string>
     <string name="white_background">白色</string>
     <string name="black_background">黑色</string>
@@ -333,7 +332,6 @@
     <string name="tapping_inverted_both">全部</string>
     <string name="tapping_inverted_vertical">垂直</string>
     <string name="tapping_inverted_horizontal">水平</string>
-    <string name="pref_read_with_tapping_inverted">反轉輕觸區域</string>
     <string name="vertical_plus_viewer">捲動(留空)</string>
     <string name="tapping_inverted_none">無</string>
     <string name="restore_duration">%1$02d 分， %2$02d 秒</string>
@@ -380,7 +378,6 @@
     <string name="kindlish_nav">Kindle 式</string>
     <string name="l_nav">L 式</string>
     <string name="pref_dump_crash_logs_summary">產生錯誤記錄檔以便分享予開發人員</string>
-    <string name="pref_viewer_nav">輕觸區域</string>
     <string name="right_and_left_nav">左右式</string>
     <string name="action_order_by_upload_date">依上傳日期</string>
     <string name="action_desc">遞減</string>
@@ -412,7 +409,6 @@
     <string name="pref_create_folder_per_manga">儲存頁面至個別資料夾</string>
     <string name="pref_create_folder_per_manga_summary">根據作品標題建立資料夾</string>
     <string name="pref_show_navigation_mode_summary">開始閱讀時，短暫浮現輕觸區域</string>
-    <string name="pref_show_navigation_mode">輕觸區域提示</string>
     <string name="cancel_all_for_series">取消此作品</string>
     <string name="automatic_background">自動</string>
     <string name="pref_grayscale">灰階</string>
@@ -474,7 +470,6 @@
     <string name="pref_verbose_logging">錄製詳細記錄</string>
     <string name="backup_info">你應該在多處儲存備份副本，備份檔可能含有敏感資料 (包括任何已儲存的密碼)，分享時請留意</string>
     <string name="pref_verbose_logging_summary">傾印詳細記錄至系統日誌 (將降低應用程式效能)</string>
-    <string name="connected_to_wifi">僅透過 Wi-Fi</string>
     <string name="update_72hour">每 3 天</string>
     <string name="ext_update_all">全部更新</string>
     <string name="pref_auto_clear_chapter_cache">啟動應用程式時清除章節快取</string>
@@ -585,8 +580,6 @@
     <string name="pref_page_rotate">旋轉寬頁以符合螢幕</string>
     <string name="pref_page_rotate_invert">調換旋轉寬頁方向</string>
     <string name="pref_debug_info">偵錯資訊</string>
-    <string name="pref_chapter_swipe_start">向左滑動章節</string>
-    <string name="pref_chapter_swipe_end">向右滑動章節</string>
     <string name="action_ok">確定</string>
     <string name="delete_downloaded">刪除舊有下載章節</string>
     <string name="action_filter_interval_custom">已自訂更新頻率</string>
@@ -646,7 +639,6 @@
     <string name="onboarding_permission_notifications_description">用以傳送書櫃更新等通知</string>
     <string name="onboarding_permission_action_grant">授予</string>
     <string name="available_disk_space_info">可用：%1$s / 總計：%2$s</string>
-    <string name="ext_permission_install_apps_warning">缺少安裝擴充套件所需的權限，輕觸此處以授予</string>
     <string name="private_settings">包含敏感設定 (如：登入權杖)</string>
     <string name="manga_interval_expected_update">預計 %1$s後更新，每 %2$s檢查一次</string>
     <string name="invalid_backup_file_error">完整錯誤訊息：</string>

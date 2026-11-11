@@ -61,4 +61,14 @@
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Save crash logs in Settings › Advanced to report it.</string>
     <string name="pref_security_summary">App lock</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap</string>
+    <string name="pref_viewer_nav">Click zones</string>
+    <string name="pref_read_with_tapping_inverted">Invert click zones</string>
+    <string name="pref_show_navigation_mode">Show click zones overlay</string>
+    <string name="pref_read_with_long_tap">Show actions on press and hold</string>
+    <string name="pref_chapter_swipe_start">Second row button</string>
+    <string name="pref_chapter_swipe_end">First row button</string>
+    <string name="pref_browse_long_press_action">Browse and Feeds press-and-hold priority</string>
+    <string name="pref_browse_long_press_action_open_settings">Press-and-hold actions</string>
+    <string name="browse_feed_long_press_actions_for_source">Press-and-hold actions for %1$s</string>
+    <string name="filter_tristate_chip_hint">Click to include, click again to exclude. Press and hold to exclude.</string>
 </resources>

@@ -68,7 +68,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     settingBinder,
                     settings.display.showNavigationOverlayOnStart,
                 ),
-                title = stringResource(MR.strings.pref_show_navigation_mode),
+                title = stringResource(platformPresentation.showPageZonesOverlayLabel),
                 subtitle = stringResource(MR.strings.pref_show_navigation_mode_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
@@ -259,13 +259,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
-                    title = stringResource(MR.strings.pref_viewer_nav),
+                    title = stringResource(platformPresentation.pageZonesLabel),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = settings.profilePreference(settingBinder, settings.pager.navigationInverted),
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
-                    title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                    title = stringResource(platformPresentation.invertPageZonesLabel),
                     visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.ListPreference(
@@ -355,13 +355,13 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     entries = MangaReaderSettings.TapZones
                         .mapIndexed { index, it -> index to stringResource(it) }
                         .toMap(),
-                    title = stringResource(MR.strings.pref_viewer_nav),
+                    title = stringResource(platformPresentation.pageZonesLabel),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = settings.profilePreference(settingBinder, settings.webtoon.navigationInverted),
                     entries = MangaReaderSettings.TappingInvertMode.entries
                         .associateWith { stringResource(it.titleRes) },
-                    title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                    title = stringResource(platformPresentation.invertPageZonesLabel),
                     visible = navMode != 5,
                 ),
                 Preference.PreferenceItem.SliderPreference(
@@ -552,7 +552,7 @@ class SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
             preferenceItems = listOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.reading.readWithLongTap),
-                    title = stringResource(MR.strings.pref_read_with_long_tap),
+                    title = stringResource(platformPresentation.pageActionsOnLongPressLabel),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = settings.profilePreference(settingBinder, settings.reading.folderPerManga),

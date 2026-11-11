@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Yalnızca okuduğunuz sayfaya yakın olan sayfaları yükleyerek mobil veri tasarruf sağlar</string>
     <string name="pref_dump_crash_logs">Çökme günlüklerini paylaş</string>
     <string name="pref_security_summary">Uygulama kilidi, güvenli ekran</string>
+    <string name="pref_viewer_nav">Dokunma bölgeleri</string>
+    <string name="pref_read_with_tapping_inverted">Dokunma bölgelerini ters çevir</string>
+    <string name="pref_show_navigation_mode">Dokunma bölgelerini göster</string>
+    <string name="pref_read_with_long_tap">Uzun dokununca eylemleri göster</string>
+    <string name="pref_chapter_swipe_start">Bölümü sola kaydırma</string>
+    <string name="pref_chapter_swipe_end">Bölümü sağa kaydırma</string>
+    <string name="ext_permission_install_apps_warning">Uzantıları yüklemek için izin gerekli. İzin vermek için buraya dokunun.</string>
+    <string name="connected_to_wifi">Yalnızca kablosuz ağda</string>
 </resources>

@@ -19,6 +19,7 @@ import app.katari.entry.interactions.reader.settings.systemNameRes
 import app.katari.entry.viewer.chrome.ui.tap.readerTapInversionLabels
 import app.katari.entry.viewer.chrome.ui.tap.readerTapZoneLabels
 import app.katari.entry.viewer.settings.asProfilePreference
+import app.katari.platform.presentation.platformPresentation
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -122,13 +123,13 @@ class SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection(
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapZones,
-                        title = stringResource(MR.strings.pref_viewer_nav),
+                        title = stringResource(platformPresentation.pageZonesLabel),
                         entries = readerTapZoneLabels
                             .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapInversion,
-                        title = stringResource(MR.strings.pref_read_with_tapping_inverted),
+                        title = stringResource(platformPresentation.invertPageZonesLabel),
                         entries = readerTapInversionLabels
                             .mapIndexed { index, label -> index to stringResource(label) }.toMap(),
                     ),

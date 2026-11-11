@@ -48,7 +48,6 @@
     <string name="update_12hour">Çdo 12 orë</string>
     <string name="update_24hour">Ditore</string>
     <string name="update_weekly">Javore</string>
-    <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
     <string name="network_not_metered">Vetëm në rrjet pa matje</string>
     <string name="charging">Gjatë karikimit</string>
     <string name="pref_library_update_refresh_metadata_summary">Kontrolloni për kopertinë dhe detaje të reja kur përditësoni bibliotekën</string>
@@ -222,7 +221,6 @@
     <string name="ext_info_version">Versioni</string>
     <string name="ext_install_service_notif">Po instalon shtesën…</string>
     <string name="ext_installer_pref">Instalues</string>
-    <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
     <string name="pref_show_navigation_mode_summary">Trego shkurtimisht kur hapet lexuesi</string>
     <string name="pref_dual_page_split">Ndani faqet e gjera</string>
     <string name="pref_dual_page_invert">Inverto vendosjen e faqeve të ndara</string>
@@ -240,11 +238,9 @@
     <string name="pref_skip_filtered_chapters">Kapërceni kapitujt e filtruar</string>
     <string name="pref_reader_navigation">Navigimi</string>
     <string name="pref_read_with_volume_keys_inverted">Inverto tastet e volumit</string>
-    <string name="pref_read_with_tapping_inverted">Inverto zonat e trokitjes</string>
     <string name="tapping_inverted_none">Asnje</string>
     <string name="tapping_inverted_vertical">Vertikale</string>
     <string name="pref_reader_actions">Veprimet</string>
-    <string name="pref_read_with_long_tap">Shfaq në trokitje të gjatë</string>
     <string name="pref_crop_borders">Kufijtë e prerjeve</string>
     <string name="filter_mode_multiply">Shumohen</string>
     <string name="filter_mode_screen">Ekrani</string>
@@ -277,7 +273,6 @@
     <string name="right_to_left_viewer">Nga e djathta në të majtë</string>
     <string name="vertical_plus_viewer">Vertikale e vazhdueshme</string>
     <string name="pager_viewer">Faqe</string>
-    <string name="pref_viewer_nav">Prekni zonat</string>
     <string name="pref_image_scale_type">Lloji i shkallës</string>
     <string name="scale_type_stretch">Shtrirje</string>
     <string name="scale_type_fit_height">Lartësia e përshtatshme</string>

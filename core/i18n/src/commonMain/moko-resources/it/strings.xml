@@ -235,7 +235,6 @@
     <string name="action_open_in_web_view">Apri in WebView</string>
     <string name="pref_skip_read_chapters">Salta i capitoli segnati come letti</string>
     <string name="filter_mode_screen">Schermo</string>
-    <string name="pref_read_with_long_tap">Mostra azioni con un tocco prolungato</string>
     <string name="pref_color_filter_mode">Modalità di fusione del filtro colore</string>
     <string name="filter_mode_overlay">Sovrimpressione</string>
     <string name="filter_mode_multiply">Moltiplica</string>
@@ -337,7 +336,6 @@
     <string name="tapping_inverted_vertical">Verticale</string>
     <string name="tapping_inverted_horizontal">Orizzontale</string>
     <string name="tapping_inverted_none">Nessuno</string>
-    <string name="pref_read_with_tapping_inverted">Inverti le zone di tocco</string>
     <string name="loader_not_implemented_error">Fonte non trovata</string>
     <string name="unknown_status">Stato sconosciuto</string>
     <string name="unknown_author">Autore sconosciuto</string>
@@ -378,7 +376,6 @@
     <string name="spen_previous_page">Pagina precedente</string>
     <string name="migration_help_guide">Guida alla migrazione delle fonti</string>
     <string name="file_picker_error">Nessuna app per la selezione dei file trovata</string>
-    <string name="pref_viewer_nav">Zone di tocco</string>
     <string name="edge_nav">Bordo</string>
     <string name="kindlish_nav">Stile Kindle</string>
     <string name="l_nav">A forma di L</string>
@@ -404,7 +401,6 @@
     <string name="nav_zone_right">Destra</string>
     <string name="nav_zone_left">Sinistra</string>
     <string name="pref_dns_over_https">DNS su HTTPS (DoH)</string>
-    <string name="pref_show_navigation_mode">Mostra sovrapposizione con zone di tocco</string>
     <string name="pref_show_navigation_mode_summary">Mostra brevemente quando il lettore viene aperto</string>
     <string name="clipboard_copy_error">Impossibile copiare negli appunti</string>
     <string name="rotation_type">Rotazione</string>
@@ -474,7 +470,6 @@
     <string name="action_display_language_badge">Lingua</string>
     <string name="label_warning">Attenzione</string>
     <string name="backup_info">Dovresti tenere delle copie dei backup anche in altri posti. I backup possono contenere dati sensibili comprese le password memorizzate; fate attenzione al condividerli.</string>
-    <string name="connected_to_wifi">Solo su Wi-Fi</string>
     <string name="update_72hour">Ogni 3 giorni</string>
     <string name="ext_update_all">Aggiorna tutto</string>
     <string name="pref_auto_clear_chapter_cache">Cancella la cache capitoli all\'avvio dell\'app</string>
@@ -591,8 +586,6 @@
     <string name="pref_page_rotate">Ruota le pagine larghe per adattarle allo schermo</string>
     <string name="pref_page_rotate_invert">Capovolgi l\'orientamento delle pagine larghe ruotate</string>
     <string name="pref_debug_info">Informazioni di debug</string>
-    <string name="pref_chapter_swipe_end">Capitoli allo scorrimento a destra</string>
-    <string name="pref_chapter_swipe_start">Capitoli allo scorrimento a sinistra</string>
     <string name="action_set_interval">Imposta intervallo</string>
     <string name="intervals_header">Intervalli</string>
     <string name="manga_display_interval_title">Stima ogni</string>
@@ -635,7 +628,6 @@
     <string name="onboarding_permission_install_apps_description">Per installare le estensioni delle fonti.</string>
     <string name="action_bar_up_description">Navigare su</string>
     <string name="onboarding_permission_notifications_description">Ricevi notifiche per aggiornamenti della libreria e altro.</string>
-    <string name="ext_permission_install_apps_warning">È necessaria l\'autorizzazione per installare le estensioni. Tocca qui per concederla.</string>
     <string name="onboarding_storage_folder_info">Selezione una cartella dove %1$s salverà i capitoli scaricati, i backup e altro. \n \nÈ raccomandato usare una cartella dedicata.</string>
     <string name="onboarding_storage_selected_folder">Cartella selezionata: %s</string>
     <string name="pref_storage_location">Posizione di archiviazione</string>

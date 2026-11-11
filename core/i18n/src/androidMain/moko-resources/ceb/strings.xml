@@ -4,4 +4,9 @@
     <string name="information_empty_category">Wala kay mga kategorya. i-tap ang plus button aron makahimo og usa para sa pag-organisar sa imong library.</string>
     <string name="pref_double_tap_anim_speed">Doble nga pag-tap sa katulin sa animation</string>
     <string name="pref_dump_crash_logs">Dump crash logs</string>
+    <string name="pref_viewer_nav">Pag-tap sa mga zone</string>
+    <string name="pref_read_with_tapping_inverted">Balika ang mga tap zone</string>
+    <string name="pref_show_navigation_mode">Ipakita ang mga tap zone nga overlay</string>
+    <string name="pref_read_with_long_tap">Ipakita sa taas nga gripo</string>
+    <string name="connected_to_wifi">Sa Wi-Fi lang</string>
 </resources>

@@ -232,7 +232,6 @@
     <string name="transition_no_previous">Няма предишна глава</string>
     <string name="transition_pages_loading">Зареждане на страниците…</string>
     <string name="transition_pages_error">Не бяха заредени успешно: %1$s страници</string>
-    <string name="pref_read_with_long_tap">Покажи при задържане върху екрана</string>
     <string name="action_open_in_web_view">Отвори в WebView</string>
     <string name="pref_skip_read_chapters">Пропускай прочетените глави</string>
     <string name="pref_color_filter_mode">Режим на цветовия филтър</string>
@@ -390,7 +389,6 @@
     <string name="kindlish_nav">Kindle-подобно</string>
     <string name="pref_create_folder_per_manga_summary">Създава папки според заглавието на мангата</string>
     <string name="automatic_background">Автоматично</string>
-    <string name="pref_viewer_nav">Схема на навигацията</string>
     <string name="nav_zone_prev">Преди</string>
     <string name="nav_zone_next">След</string>
     <string name="nav_zone_left">Ляво</string>
@@ -424,11 +422,9 @@
     <string name="exclude">Изключва: %s</string>
     <string name="ext_installer_shizuku_stopped">Shizuku не работи</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Инсталирайте и стартирайте Shizuku, за да използвате Shizuku като инсталатор на разширения.</string>
-    <string name="pref_show_navigation_mode">Покажи оформлението на навигацията</string>
     <string name="pref_dual_page_split">Разделяне на широки страници</string>
     <string name="pref_dual_page_invert_summary">Ако позицията на разделението на широката страница не съвпада с посоката на четене</string>
     <string name="pref_grayscale">Черно-бяло</string>
-    <string name="pref_read_with_tapping_inverted">Инвертирай докосване</string>
     <string name="pref_reader_actions">Действия</string>
     <string name="pref_create_folder_per_manga">Запазвай страниците в отделни папки</string>
     <string name="right_and_left_nav">Дясно и Ляво</string>
@@ -481,7 +477,6 @@
     <string name="ext_update_all">Обнови всички</string>
     <string name="extension_api_error">Неуспешно получаване на списък с разширения</string>
     <string name="update_72hour">На всеки 3 дена</string>
-    <string name="connected_to_wifi">Само през Wi-Fi</string>
     <string name="action_show_manga">Покажи манга</string>
     <string name="action_display_cover_only_grid">Решетка само с корици</string>
     <string name="delete_category_confirmation">Искате ли да изтриете категорията \"%s\"?</string>
@@ -546,7 +541,6 @@
     <string name="pref_navigate_pan">Увеличи широките изображения при натискане</string>
     <string name="publishing_finished">Приключено издаване</string>
     <string name="manga_interval_expected_update_soon">Скоро</string>
-    <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>
     <string name="selected">Избрано</string>
     <string name="action_display_show_continue_reading_button">Продължи да четеш</string>
     <string name="action_copy_link">Копирай връзка</string>
@@ -624,7 +618,6 @@
     <string name="action_move_to_bottom_all_for_series">Премести най-долу</string>
     <string name="label_started">Започнати</string>
     <string name="author">Автор</string>
-    <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
     <string name="pref_flash_style_black">Черно</string>
     <string name="invalid_location">Невалидно местоположение: %s</string>
     <string name="exception_unknown_host">Не можа да достигне %s</string>

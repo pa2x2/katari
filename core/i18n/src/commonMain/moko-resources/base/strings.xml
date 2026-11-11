@@ -604,7 +604,6 @@
     <!-- Manga reader text -->
     <string name="reader_text_translate">Translate text</string>
     <string name="reader_text_recognizing">Recognizing text…</string>
-    <string name="reader_text_ready">Tap a speech bubble to translate it</string>
     <string name="reader_text_no_text">No text found on this page</string>
     <string name="reader_text_saved_languages">Saved · %1$s</string>
     <string name="action_delete_translation">Delete translation</string>
@@ -1178,7 +1177,6 @@
     <string name="update_72hour">Every 3 days</string>
     <string name="update_weekly">Weekly</string>
     <string name="pref_library_update_restriction">Automatic updates device restrictions</string>
-    <string name="connected_to_wifi">Only on Wi-Fi</string>
     <string name="network_not_metered">Only on unmetered network</string>
     <string name="charging">When charging</string>
     <string name="restrictions">Restrictions: %s</string>
@@ -1200,9 +1198,7 @@
     <!-- Settings › Library heading for how a title's chapter or episode list behaves -->
     <string name="pref_chapter_lists">Chapters and episodes</string>
     <!-- This should be to the left for RTL locales -->
-    <string name="pref_chapter_swipe_end">Swipe right</string>
     <!-- This should be to the right for RTL locales -->
-    <string name="pref_chapter_swipe_start">Swipe left</string>
     <string name="pref_mark_duplicate_read_chapter_read">Mark duplicates as seen</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">After you finish one</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">When a seen one is fetched again</string>
@@ -1361,7 +1357,6 @@
     <string name="ext_content_warning_mixed_description">Sources from this extension might contain both safe and 18+ content.</string>
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
     <string name="ext_content_warning_not_rated_description">Its store doesn\'t say whether its sources have 18+ content.</string>
-    <string name="ext_permission_install_apps_warning">Permissions are needed to install extensions. Tap here to grant.</string>
     <string name="ext_install_service_notif">Installing extension…</string>
     <string name="ext_installer_pref">Installer</string>
     <string name="ext_installer_legacy">Legacy</string>
@@ -1398,7 +1393,6 @@
     <string name="extensionStoresScreen.deleteStore.body">Do you wish to remove the extension store \"%1$s\" (%2$s)?</string>
 
       <!-- Reader section -->
-    <string name="pref_show_navigation_mode">Show tap zones overlay</string>
     <string name="pref_show_navigation_mode_summary">Briefly show when reader is opened</string>
     <string name="pref_dual_page_split">Split wide pages</string>
     <string name="pref_dual_page_invert">Invert split page placement</string>
@@ -1446,13 +1440,11 @@
     <string name="pref_reader_navigation">Navigation</string>
     <string name="pref_read_with_volume_keys">Volume keys</string>
     <string name="pref_read_with_volume_keys_inverted">Invert volume keys</string>
-    <string name="pref_read_with_tapping_inverted">Invert tap zones</string>
     <string name="tapping_inverted_none">None</string>
     <string name="tapping_inverted_horizontal">Horizontal</string>
     <string name="tapping_inverted_vertical">Vertical</string>
     <string name="tapping_inverted_both">Both</string>
     <string name="pref_reader_actions">Actions</string>
-    <string name="pref_read_with_long_tap">Show actions on long tap</string>
     <string name="pref_create_folder_per_manga">Save pages into separate folders</string>
     <string name="pref_create_folder_per_manga_summary">Creates folders according to entries\' title</string>
     <string name="pref_reader_theme">Background color</string>
@@ -1499,7 +1491,6 @@
     <string name="webtoon_viewer">Long strip</string>
     <string name="vertical_plus_viewer">Long strip with gaps</string>
     <string name="pager_viewer">Paged</string>
-    <string name="pref_viewer_nav">Tap zones</string>
     <string name="pref_image_scale_type">Scale type</string>
     <string name="scale_type_fit_screen">Fit screen</string>
     <string name="scale_type_stretch">Stretch</string>
@@ -1683,7 +1674,7 @@
     <string name="battery_optimization_disabled">Battery optimization is already disabled</string>
     <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
     <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
-    <string name="pref_tablet_ui_mode">Tablet UI</string>
+    <string name="pref_tablet_ui_mode">Wide layouts</string>
     <string name="pref_interface_size">Interface size</string>
     <string name="pref_interface_size_summary">On top of the desktop’s scale</string>
     <string name="action_edit_interface_size">Edit interface size</string>
@@ -1770,7 +1761,6 @@
     <string name="auto_scroll_speed_slow">Slow</string>
     <string name="auto_scroll_speed_faster">Faster</string>
     <string name="auto_scroll_speed_fastest">Fastest</string>
-    <string name="pref_browse_long_press_action">Browse and Feeds long-press priority</string>
     <string name="pref_browse_long_press_action_library_action">Add/remove from library</string>
     <string name="pref_browse_long_press_action_preview">Preview</string>
     <string name="pref_browse_long_press_action_immersive">Start immersive view</string>
@@ -1789,7 +1779,6 @@
     <string name="pref_browse_long_press_action_immersive_supported">Available for this source</string>
     <string name="pref_browse_long_press_action_immersive_unsupported">Currently skipped — this source has no manga or anime</string>
     <string name="pref_browse_long_press_action_select_source">Select a source</string>
-    <string name="pref_browse_long_press_action_open_settings">Long-press actions</string>
     <string name="pref_manga_preview">Manga preview</string>
     <string name="pref_enable_manga_preview">Show manga preview</string>
     <string name="pref_enable_manga_preview_summary">Display preview pages on the manga screen</string>
@@ -2127,7 +2116,6 @@
     <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
     <string name="pref_anime_gestures">Gestures</string>
     <string name="pref_anime_remember_brightness">Remember brightness</string>
-    <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
     <string name="pref_anime_preferred_quality">Preferred quality</string>
     <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
     <string name="anime_quality_highest">Highest</string>
@@ -2203,7 +2191,6 @@
     <string name="browse_feed_rename_title">Rename feed</string>
     <string name="browse_feed_rename_hint">Leave empty to use the preset name (%1$s)</string>
     <string name="browse_feed_removed">Feed removed</string>
-    <string name="browse_feed_long_press_actions_for_source">Long-press actions for %1$s</string>
     <string name="browse_feed_regular_mode">Regular feed view</string>
     <string name="browse_feed_immersive_mode">Immersive feed view</string>
     <string name="browse_feed_playback_mode">Playback feed view</string>
@@ -3163,7 +3150,6 @@
     <string name="filter_group_actions">More actions for %1$s</string>
     <string name="filter_search_group">Search %1$s</string>
     <string name="filter_exclude">Exclude</string>
-    <string name="filter_tristate_chip_hint">Tap to include, tap again to exclude. Long-press to exclude.</string>
     <string name="filter_updating">Updating selections…</string>
     <string name="filter_status_changed">%1$d changed</string>
     <string name="filter_status_defaults">Source defaults</string>

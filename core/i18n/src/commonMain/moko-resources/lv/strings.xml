@@ -85,7 +85,6 @@
     <string name="tapping_inverted_vertical">Vertikāls</string>
     <string name="tapping_inverted_horizontal">Horizontāls</string>
     <string name="tapping_inverted_none">Nav</string>
-    <string name="pref_read_with_tapping_inverted">Invertētas skāriena zonas</string>
     <string name="channel_ext_updates">Paplašinājumu atjauninājumi</string>
     <string name="download_notifier_download_paused">Lejupielādes pauzētas</string>
     <string name="information_no_downloads">Nav lejuplāžu</string>
@@ -197,7 +196,6 @@
     <string name="untrusted_extension_message">Šis paplašinājums tika parakstīts ar neuzticamu sertifikātu, un tas netika aktivizēts. \n \nĻaunprātīgs paplašinājums var nolasīt visus saglabātos pieteikšanās akreditācijas datus vai izpildīt patvaļīgu kodu. \n \nUzticoties šim sertifikātam, jūs piekrītat šiem riskiem.</string>
     <string name="ext_installer_legacy">Mantots</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instalējiet un startējiet Shizuku, lai izmantotu Shizuku kā paplašinājuma instalētāju.</string>
-    <string name="pref_show_navigation_mode">Rādīt skāriena zonu pārklājumu</string>
     <string name="pref_dual_page_invert_summary">Ja sadalīto plato lapu izvietojums neatbilst lasīšanas virzienam</string>
     <string name="pref_page_transitions">Animēt lappušu pārejas</string>
     <string name="pref_show_page_number">Rādīt lappušu numuru</string>
@@ -241,7 +239,6 @@
     <string name="update_24hour">Katru dienu</string>
     <string name="update_48hour">Ik pēc 2 dienam</string>
     <string name="update_72hour">Ik pēc 3 dienām</string>
-    <string name="connected_to_wifi">Tikai uz Wi-Fi</string>
     <string name="automatic_background">Auto</string>
     <string name="pref_keep_screen_on">Turēt ekrānu ieslēgtu</string>
     <string name="zoom_start_center">Centrs</string>
@@ -288,7 +285,6 @@
     <string name="nav_zone_right">Pa labi</string>
     <string name="left_to_right_viewer">Lapaspuses (no kreisās puses uz labo)</string>
     <string name="webtoon_viewer">Garā strīpā</string>
-    <string name="pref_viewer_nav">Skāriena zonas</string>
     <string name="scale_type_stretch">Izstiept</string>
     <string name="scale_type_fit_width">Ietilpt platumā</string>
     <string name="scale_type_fit_height">Ietilpt augstumā</string>
@@ -312,7 +308,6 @@
     <string name="pref_skip_filtered_chapters">Izlaist filtrētās nodaļas</string>
     <string name="pref_reader_navigation">Navigācija</string>
     <string name="pref_read_with_volume_keys_inverted">Invertēt skaļuma regulēšanas taustiņus</string>
-    <string name="pref_read_with_long_tap">Rādīt darbīūbas ar ilgu pieskārienu</string>
     <string name="pref_create_folder_per_manga_summary">Izveido mapes atbilstoši ieraksta nosaukumam</string>
     <string name="pref_reader_theme">Fona krāsa</string>
     <string name="pref_image_scale_type">Mēroga tips</string>
@@ -589,10 +584,8 @@
     <string name="label_total_chapters">Kopā</string>
     <string name="create_backup_file_error">Nevarēja izveidot dublējuma failu</string>
     <string name="download_cache_invalidated">Lejupielādes indeks ir nederīgs</string>
-    <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>
     <string name="pref_debug_info">Atkļūdošanas informācija</string>
     <string name="has_results">Ir rezultāti</string>
-    <string name="pref_chapter_swipe_start">Vilkt uz kreisās puses darbību</string>
     <string name="manga_display_interval_title">Novērtēt katru</string>
     <string name="action_set_interval">Iestatīt intervālu</string>
     <string name="action_filter_interval_custom">Pielāgots datu iegūšanas intervāls</string>

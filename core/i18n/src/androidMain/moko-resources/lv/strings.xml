@@ -9,4 +9,11 @@
     <string name="pref_double_tap_anim_speed">Dubultpieskāriena animācijas ātrums</string>
     <string name="pref_dump_crash_logs">Dalīties ar avārijas žurnālu</string>
     <string name="pref_security_summary">Aplikācijas slēdzis, ekrāna aizsargāšana</string>
+    <string name="pref_viewer_nav">Skāriena zonas</string>
+    <string name="pref_read_with_tapping_inverted">Invertētas skāriena zonas</string>
+    <string name="pref_show_navigation_mode">Rādīt skāriena zonu pārklājumu</string>
+    <string name="pref_read_with_long_tap">Rādīt darbīūbas ar ilgu pieskārienu</string>
+    <string name="pref_chapter_swipe_start">Vilkt uz kreisās puses darbību</string>
+    <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>
+    <string name="connected_to_wifi">Tikai uz Wi-Fi</string>
 </resources>

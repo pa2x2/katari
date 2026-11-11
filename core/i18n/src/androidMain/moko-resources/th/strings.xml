@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">ความเร็วแอนิเมชั่นเมื่อแตะ 2 ครั้ง</string>
     <string name="pref_dump_crash_logs">แบ่งปันบันทึกข้อขัดข้อง</string>
     <string name="pref_security_summary">การล็อกแอป, หน้าจอความปลอดภัย</string>
+    <string name="pref_viewer_nav">โซนการแตะ</string>
+    <string name="pref_read_with_tapping_inverted">กลับด้านโซนการแตะ</string>
+    <string name="pref_show_navigation_mode">แสดงตำแหน่งโซนการแตะ</string>
+    <string name="pref_read_with_long_tap">แสดงการกระทำเมื่อแตะค้าง</string>
+    <string name="pref_chapter_swipe_start">เปิดตอนเมื่อปัดไปทางซ้าย</string>
+    <string name="pref_chapter_swipe_end">เปิดตอนเมื่อปัดไปทางขวา</string>
+    <string name="ext_permission_install_apps_warning">จำเป็นต้องมีสิทธิ์ในการติดตั้งส่วนขยาย แตะที่นี่เพื่อให้สิทธิ์</string>
+    <string name="connected_to_wifi">เฉพาะขณะเชื่อมต่อ Wi-Fi</string>
 </resources>

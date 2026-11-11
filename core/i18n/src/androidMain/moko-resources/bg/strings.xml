@@ -9,4 +9,11 @@
     <string name="pref_double_tap_anim_speed">Скорост на анимацията</string>
     <string name="pref_dump_crash_logs">Разтовари записите от сривовете</string>
     <string name="pref_security_summary">Заключване на приложението, екран за сигурност</string>
+    <string name="pref_viewer_nav">Схема на навигацията</string>
+    <string name="pref_read_with_tapping_inverted">Инвертирай докосване</string>
+    <string name="pref_show_navigation_mode">Покажи оформлението на навигацията</string>
+    <string name="pref_read_with_long_tap">Покажи при задържане върху екрана</string>
+    <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>
+    <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
+    <string name="connected_to_wifi">Само през Wi-Fi</string>
 </resources>

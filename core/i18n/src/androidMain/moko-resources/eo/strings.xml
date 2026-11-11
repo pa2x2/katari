@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Ŝparas poŝtelefonretajn datumojn per ŝargado de nur la paĝoj proksimaj al tiu, kiun vi legas</string>
     <string name="pref_dump_crash_logs">Konigi prikolapsajn protokolojn</string>
     <string name="pref_security_summary">Apa ŝloso, sekura ekrano</string>
+    <string name="pref_viewer_nav">Tuŝetzonoj</string>
+    <string name="pref_read_with_tapping_inverted">Inversigi tuŝetzonojn</string>
+    <string name="pref_show_navigation_mode">Montri plustavolon kun tuŝetzonoj</string>
+    <string name="pref_read_with_long_tap">Montri agojn post longa tuŝeto</string>
+    <string name="pref_chapter_swipe_start">Ĉapitro je ŝovumo maldekstren</string>
+    <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
+    <string name="ext_permission_install_apps_warning">Permesoj bezonatas por instali etendaĵojn. Tuŝetu ĉi tie por permesi.</string>
+    <string name="connected_to_wifi">Nur per vifio</string>
 </resources>

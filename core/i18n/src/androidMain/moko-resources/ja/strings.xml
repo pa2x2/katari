@@ -9,4 +9,12 @@
     <string name="pref_double_tap_anim_speed">ダブルタップアニメーション速度</string>
     <string name="pref_dump_crash_logs">クラッシュログを共有</string>
     <string name="pref_security_summary">アプリロック、セキュア画面</string>
+    <string name="pref_viewer_nav">タップ可能なゾーン</string>
+    <string name="pref_read_with_tapping_inverted">タップでのページめくりを反転</string>
+    <string name="pref_show_navigation_mode">タップ可能なゾーンを表示</string>
+    <string name="pref_read_with_long_tap">長押しでアクションを表示</string>
+    <string name="pref_chapter_swipe_start">左にスワイプする章</string>
+    <string name="pref_chapter_swipe_end">右にスワイプする章</string>
+    <string name="ext_permission_install_apps_warning">拡張機能をインストールするためには権限が必要です。タップで許可してください。</string>
+    <string name="connected_to_wifi">Wi-Fi 接続時のみ</string>
 </resources>

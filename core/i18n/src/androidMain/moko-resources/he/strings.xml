@@ -9,4 +9,11 @@
     <string name="pref_double_tap_anim_speed">מהירות הנפשה בהקשה כפולה</string>
     <string name="pref_dump_crash_logs">שתף יומני קריסה</string>
     <string name="pref_security_summary">נעילת אפליקציה, מסך מוגן</string>
+    <string name="pref_viewer_nav">איזורי נגיעה</string>
+    <string name="pref_read_with_tapping_inverted">לחיצה הופכית</string>
+    <string name="pref_show_navigation_mode">הראה את פרישת מיקומי הלחיצה</string>
+    <string name="pref_read_with_long_tap">הצג פעולות בלחיצה ארוכה</string>
+    <string name="pref_chapter_swipe_start">פרק בהחלקה שמאלה</string>
+    <string name="pref_chapter_swipe_end">פרק בהחלקה ימינה</string>
+    <string name="connected_to_wifi">רק ב Wi-Fi</string>
 </resources>

@@ -166,11 +166,9 @@
     <string name="pref_dual_page_invert">Інвертаваць размяшчэнне палоў падзеленай старонкі</string>
     <string name="pref_dual_page_split">Падзяляць шырокія старонкі напалову</string>
     <string name="pref_show_navigation_mode_summary">Кароткачасова паказваць пры адкрыцці чытанкі</string>
-    <string name="pref_show_navigation_mode">Паказваць накладанне зон дотыку</string>
     <string name="obsolete_extension_message">Гэта пашырэнне больш недаступнае. Яно можа працаваць некарэктна і выклікаць праблемы ў праграме. Рэкамендуецца яго дэінсталяваць.</string>
     <string name="untrusted_extension_message">Шкодныя пашырэнні могуць счытваць любыя захаваныя ўліковыя даныя або выконваць адвольны код.\n\nДавяраючы гэтаму пашырэнню, вы прымаеце гэтыя рызыкі.</string>
     <string name="untrusted_extension">Ненадзейнае пашырэнне</string>
-    <string name="pref_viewer_nav">Зоны дотыку</string>
     <string name="pager_viewer">Пастаронкава</string>
     <string name="vertical_plus_viewer">Рулон з прамежкамі</string>
     <string name="webtoon_viewer">Рулон</string>
@@ -193,13 +191,11 @@
     <string name="pref_reader_theme">Колер фону</string>
     <string name="pref_create_folder_per_manga_summary">Ствараць тэчкі ў адпаведнасці з назвай твора</string>
     <string name="pref_create_folder_per_manga">Захоўваць старонкі ў асобныя тэчкі</string>
-    <string name="pref_read_with_long_tap">Паказваць дзеянні пры доўгім дотыку</string>
     <string name="pref_reader_actions">Дзеянні</string>
     <string name="tapping_inverted_both">Па абедзвум</string>
     <string name="tapping_inverted_vertical">Вертыкальна</string>
     <string name="tapping_inverted_horizontal">Гарызантальна</string>
     <string name="tapping_inverted_none">Няма</string>
-    <string name="pref_read_with_tapping_inverted">Інвертаваць зоны дотыку</string>
     <string name="pref_read_with_volume_keys_inverted">Інвертаваць клавішы гучнасці</string>
     <string name="pref_read_with_volume_keys">Клавішы гучнасці</string>
     <string name="pref_reader_navigation">Навігацыя</string>
@@ -302,7 +298,6 @@
     <string name="ext_installer_legacy">Састарэлы</string>
     <string name="action_remove_everything">Прыбраць усё</string>
     <string name="update_72hour">Кожныя 3 дні</string>
-    <string name="connected_to_wifi">Толькі праз Wi-Fi</string>
     <string name="not_selected">Не выбрана</string>
     <string name="action_bar_up_description">Перайсці ўверх</string>
     <string name="unlock_app_title">Разблакаваць %s</string>
@@ -375,8 +370,6 @@
     <string name="telemetry_summary">Адпраўка журналаў збояў і аналітыкі дазволіць нам выяўляць і выпраўляць памылкі, паляпшаць прадукцыйнасць і развіваць праграму з улікам вашых патрэб</string>
     <string name="pref_library_update_show_tab_badge">Паказваць колькасць непрачытаных на значку «Абнаўленні»</string>
     <string name="pref_behavior">Паводзіны</string>
-    <string name="pref_chapter_swipe_end">Раздзел пры змахванні ўправа</string>
-    <string name="pref_chapter_swipe_start">Раздзел пры змахванні ўлева</string>
     <string name="pref_mark_duplicate_read_chapter_read">Пазначаць прачытаны дублікат раздзела як «прачытаны»</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Пасля прачытання раздзела</string>
     <string name="pref_mark_duplicate_read_chapter_read_new">Пасля атрымання новага раздзела</string>
@@ -387,7 +380,6 @@
     <string name="ext_remove">Прыбраць</string>
     <string name="ext_confirm_remove">Прыбраць пашырэнне?</string>
     <string name="remove_private_extension_message">Вы сапраўды хочаце прыбраць пашырэнне «%s»?</string>
-    <string name="ext_permission_install_apps_warning">Для ўсталёўкі пашырэнняў патрабуюцца дазволы. Націсніце сюды, каб даць іх.</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Усталюйце і запусціце Shizuku, каб выкарыстоўваць яго як усталёўнік пашырэнняў.</string>
     <string name="ext_revoke_trust">Адклікаць давер да ненадзейных пашырэнняў</string>
     <string name="pref_page_rotate">Паварочваць шырокія старонкі пад памер экрана</string>

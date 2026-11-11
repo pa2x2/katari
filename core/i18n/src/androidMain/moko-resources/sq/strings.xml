@@ -7,4 +7,9 @@
     <string name="pref_double_tap_anim_speed">Prekni dy herë shpejtësia e animacionit</string>
     <string name="pref_dump_crash_logs">Hidh regjistrat e aksidenteve</string>
     <string name="pref_security_summary">Kyçja e aplikacionit, ekran i sigurt</string>
+    <string name="pref_viewer_nav">Prekni zonat</string>
+    <string name="pref_read_with_tapping_inverted">Inverto zonat e trokitjes</string>
+    <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
+    <string name="pref_read_with_long_tap">Shfaq në trokitje të gjatë</string>
+    <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
 </resources>

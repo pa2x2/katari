@@ -1,6 +1,7 @@
 package app.katari.entry.viewer.chrome.ui.tap
 
 import androidx.compose.runtime.Composable
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.chip.FilterChip
 import app.katari.presentation.kit.list.ChipsRow
 import tachiyomi.i18n.*
@@ -9,13 +10,13 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** Shared tap-zone controls for manga and BOOK, with storage owned by each settings provider. */
 @Composable
 fun ReaderTapZoneSettings(selected: Int, onSelect: (Int) -> Unit, inversion: Int, onInvert: (Int) -> Unit) {
-    ChipsRow(stringResource(MR.strings.pref_viewer_nav)) {
+    ChipsRow(stringResource(platformPresentation.pageZonesLabel)) {
         readerTapZoneLabels.forEachIndexed { index, label ->
             FilterChip(label = stringResource(label), selected = selected == index, onClick = { onSelect(index) })
         }
     }
     if (selected != 5) {
-        ChipsRow(stringResource(MR.strings.pref_read_with_tapping_inverted)) {
+        ChipsRow(stringResource(platformPresentation.invertPageZonesLabel)) {
             readerTapInversionLabels.forEachIndexed { index, label ->
                 FilterChip(label = stringResource(label), selected = inversion == index, onClick = { onInvert(index) })
             }

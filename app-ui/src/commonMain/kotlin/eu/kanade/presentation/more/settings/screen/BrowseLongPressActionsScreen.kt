@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import app.katari.core.common.CustomPreferences
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.Scaffold
 import app.katari.ui.di.LocalAppUiGraph
@@ -40,7 +41,7 @@ data class BrowseLongPressActionsScreen(
         }
         val selectedSource = sourceId?.let { id -> catalogueSources.firstOrNull { it.id == id } }
         val title = if (sourceId == null) {
-            stringResource(MR.strings.pref_browse_long_press_action)
+            stringResource(platformPresentation.browseLongPressPriorityLabel)
         } else {
             selectedSource?.name ?: sourceManager.getDisplayInfo(sourceId).name
         }

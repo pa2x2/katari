@@ -2,4 +2,6 @@
 <resources>
     <string name="information_empty_category">तुम्ही श्रेण्या बनविल्या नाही आहेत, प्लस वर दाबून तुम्ही श्रेणी बनवू शकता.</string>
     <string name="pref_double_tap_anim_speed">दोनदा टॅप साठी अ‍ॅनिमेशन गती</string>
+    <string name="pref_viewer_nav">नैविगेशन माध्य</string>
+    <string name="pref_read_with_long_tap">दीर्घ टॅप संवाद</string>
 </resources>

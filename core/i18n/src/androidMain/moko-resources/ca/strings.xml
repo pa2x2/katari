@@ -11,4 +11,12 @@
     <string name="pref_load_ahead_only_over_wifi_summary">Estalvia dades mòbils carregant només les pàgines pròximes a la que esteu llegint</string>
     <string name="pref_dump_crash_logs">Comparteix el registre d’errors</string>
     <string name="pref_security_summary">Blocatge de l’aplicació i mode discret</string>
+    <string name="pref_viewer_nav">Zones de toc</string>
+    <string name="pref_read_with_tapping_inverted">Inverteix les zones de toc</string>
+    <string name="pref_show_navigation_mode">Mostra la superposició de les zones de toc</string>
+    <string name="pref_read_with_long_tap">Mostra les accions amb un toc llarg</string>
+    <string name="pref_chapter_swipe_start">En lliscar cap a l’esquerra en un capítol</string>
+    <string name="pref_chapter_swipe_end">En lliscar cap a la dreta en un capítol</string>
+    <string name="ext_permission_install_apps_warning">Calen permisos per a instal·lar extensions. Premeu aquí per a concedir-les.</string>
+    <string name="connected_to_wifi">Només amb Wi-Fi</string>
 </resources>

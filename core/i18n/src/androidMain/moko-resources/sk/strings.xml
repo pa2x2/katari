@@ -8,4 +8,12 @@
     <string name="pref_double_tap_anim_speed">Rýchlosť animácie pre dvojité ťuknutie</string>
     <string name="pref_dump_crash_logs">Výpis logu o zlyhaní</string>
     <string name="pref_security_summary">Zamknutie aplikácie, bezpečná obrazovka</string>
+    <string name="pref_viewer_nav">Dotykové zóny</string>
+    <string name="pref_read_with_tapping_inverted">Invertovať oblasti dotyku</string>
+    <string name="pref_show_navigation_mode">Zobraziť prekrytie oblastí dotyku</string>
+    <string name="pref_read_with_long_tap">Zobrazenie pri dlhom podržaní</string>
+    <string name="pref_chapter_swipe_start">Kapitola po potiahnutí prstom doľava</string>
+    <string name="pref_chapter_swipe_end">Kapitola po potiahnutí prstom doprava</string>
+    <string name="ext_permission_install_apps_warning">Na inštaláciu rozšírení sú potrebné povolenia. Ťuknite sem, aby ste ich udelili.</string>
+    <string name="connected_to_wifi">Iba na Wi-Fi</string>
 </resources>

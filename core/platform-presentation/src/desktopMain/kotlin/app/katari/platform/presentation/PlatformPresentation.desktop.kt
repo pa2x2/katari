@@ -1,8 +1,11 @@
 package app.katari.platform.presentation
 
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Public
 import app.katari.icons.platformsymbols.PlatformSymbols
 import app.katari.icons.platformsymbols.rounded.Computer
 import app.katari.icons.platformsymbols.rounded.ComputerCancel
+import app.katari.icons.platformsymbols.rounded.DisplaySettings
 import app.katari.icons.platformsymbols.rounded.Mouse
 import tachiyomi.i18n.*
 
@@ -42,4 +45,19 @@ actual val platformPresentation = PlatformPresentation(
     syncFailedHelp = PlatformStrings.sync_failed_help,
     securitySettingsSummary = PlatformStrings.pref_security_summary,
     monthlyRecapSummary = PlatformStrings.statistics_monthly_recap_summary,
+    pageZonesLabel = PlatformStrings.pref_viewer_nav,
+    invertPageZonesLabel = PlatformStrings.pref_read_with_tapping_inverted,
+    showPageZonesOverlayLabel = PlatformStrings.pref_show_navigation_mode,
+    pageActionsOnLongPressLabel = PlatformStrings.pref_read_with_long_tap,
+    chapterSwipeToStartLabel = PlatformStrings.pref_chapter_swipe_start,
+    chapterSwipeToEndLabel = PlatformStrings.pref_chapter_swipe_end,
+    browseLongPressPriorityLabel = PlatformStrings.pref_browse_long_press_action,
+    longPressActionsLabel = PlatformStrings.pref_browse_long_press_action_open_settings,
+    longPressActionsForSourceLabel = PlatformStrings.browse_feed_long_press_actions_for_source,
+    triStateChipHint = PlatformStrings.filter_tristate_chip_hint,
+    installPermissionWarning = null,
+    rememberBrightnessSummary = null,
+    wifiOnlyLabel = null,
+    defaultReadingModeIcon = PlatformSymbols.Rounded.DisplaySettings,
+    unmeteredNetworkIcon = MaterialSymbols.Rounded.Public,
 )
