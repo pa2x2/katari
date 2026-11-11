@@ -83,7 +83,6 @@
     <string name="information_no_recent_manga">सद्यः किमपि न पठितम्</string>
     <string name="information_empty_library">तव ग्रन्थालयः रिक्तम् अस्ति</string>
     <string name="information_no_recent">सद्यः नवीकरणानि न सन्ति</string>
-    <string name="information_empty_category">तव वर्गाः एव न सन्ति। नूतनं निर्माणं कृत्वा व्यवस्थापयितुम् अधिकचिह्नं नोदयतु॥</string>
     <string name="action_display_mode">प्रदर्शनस्य अवस्था</string>
     <string name="action_display_comfortable_grid">सुसुखा ग्रिड्-शैली</string>
     <string name="action_display_language_badge">भाषा</string>
@@ -100,7 +99,6 @@
     <string name="action_save">रक्षतु</string>
     <string name="action_reset">पुनःस्थापयतु</string>
     <string name="action_undo">अपाकरोतु</string>
-    <string name="action_show_errors">विवरणानि द्रष्टुं स्पृशतु</string>
     <string name="action_restore">समाददातु</string>
     <string name="action_webview_refresh">नवीकरोतु</string>
     <string name="action_start_downloading_now">अवारोपणम् अधुना आरभताम्</string>
@@ -190,7 +188,6 @@
     <string name="pref_cutout_short">खण्डितक्षेत्रे वस्तु दर्शयतु</string>
     <string name="pref_show_navigation_mode_summary">प्रदर्शकस्य उद्घाटने नोदनमण्डलानि दर्शयतु</string>
     <string name="pref_page_transitions">पुटसङ्क्रमान् जीवयतु</string>
-    <string name="pref_double_tap_anim_speed">द्विवारनोदनं सञ्जीवनवेगः</string>
     <string name="pref_dual_page_invert_summary">यदि द्विपुटविभजनस्य स्थापना पठनदिशा समः न भवति</string>
     <string name="pref_show_page_number">पुटसङ्ख्यां दर्शयतु</string>
     <string name="pref_show_reading_mode">पठनदशां दर्शयतु</string>
@@ -477,7 +474,6 @@
     <string name="downloaded_only_summary">तव ग्रन्थालये सर्वाः माङ्गाः शोधनीकरोति</string>
     <string name="pref_clear_database_summary">तव ग्रन्थालये न रक्षितानां माङ्गानां चरित्रं नाशय</string>
     <string name="confirm_delete_chapters">त्वं निश्चितरूपेण सङ्गृहीतान् अध्यायान् नाशयितुम् इच्छसि किम् ?</string>
-    <string name="download_queue_size_warning">पूर्वसूचना -- महद्भाराणि अवारोपणानि कुर्यात् मूलानि मन्दानि। अपि च %s निवारयेत्॥</string>
     <string name="pref_dump_crash_logs_summary">व्युत्पादकेभ्यः प्रसारयितुं दोषदत्तम् एकस्यां सञ्चिकायां रक्षति</string>
     <string name="confirm_set_chapter_settings">इमानि समायोजनानि प्राथमिकानि इव रक्षितुं त्वं निश्चितं किम्</string>
     <string name="pref_acra_summary">स्खलितानां परिहरणे साहाय्यं करिष्यति। संवेदनशीलदत्तांशाः न प्रेषिष्यते॥</string>
@@ -493,7 +489,6 @@
     <string name="dialog_with_checkbox_reset">अस्यै माङ्गायै सर्वान् अध्यायान् पुनःस्थापयति</string>
     <string name="download_queue_error">अध्यायानाम् अवारोपणं न अशक्नोत्। त्वया अवारोपितानि नाम्नः विभागे पुनः यतितुं शक्यते</string>
     <string name="migration_selection_prompt">यस्मात् स्थानान्तरगमनं करणीयं तत् चिनोतु</string>
-    <string name="notification_size_warning">पूर्वसूचना -- मूलेभ्यः महद्नवीकरणानि हानिकारकाणि भवन्ति तस्मात् नवीकरणानि मन्दानि भवेयुः अपि च विद्युत्कोषोपयोगः अधिकं भवेत्</string>
     <string name="learn_more">अधिकं जानातु</string>
     <string name="action_move_to_top_all_for_series">धारावाहिकम् अग्रस्थानं चालयतु</string>
     <string name="rotation_reverse_portrait">विपरीतं लम्बदर्शनम्</string>

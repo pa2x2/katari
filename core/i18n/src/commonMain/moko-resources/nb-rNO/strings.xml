@@ -223,7 +223,6 @@
     <string name="label_help">Hjelp</string>
     <string name="action_display_download_badge">Last ned kapitler</string>
     <string name="untrusted_extension_message">Skadelige utvidelser kan lese alle lagrede innloggingsdetaljer eller kjøre vilkårlig kode. \n \nVed å godta denne utvidelsen, aksepterer du disse risikoene.</string>
-    <string name="pref_double_tap_anim_speed">Animasjonshastighet ved dobbelklikk</string>
     <string name="pager_viewer">Sider</string>
     <string name="confirm_set_image_as_cover">Bruk dette bildet som omslag?</string>
     <string name="download_queue_error">Kunne ikke laste ned kapitler. Du kan prøve igjen i nedlastingsdelen</string>
@@ -233,7 +232,6 @@
     <string name="information_no_recent">Ingen nylige oppdateringer</string>
     <string name="information_no_recent_manga">Ingenting lest nylig</string>
     <string name="information_empty_library">Biblioteket ditt er tomt</string>
-    <string name="information_empty_category">Du har ingen kategorier. Trykk på pluss-knappen for å lage en for å organisere biblioteket ditt.</string>
     <string name="download_notifier_downloader_title">Nedlaster</string>
     <string name="download_notifier_title_error">Feil</string>
     <string name="download_notifier_unknown_error">Kunne ikke laste ned kapittel grunnet uventet feil</string>
@@ -410,7 +408,6 @@
     <string name="action_sort_chapter_fetch_date">Dato hentet</string>
     <string name="pref_download_new_categories_details">Oppføringer i utelukkede kategorier vil ikke bli nedlastet selv om de også er i inkluderte kategorier.</string>
     <string name="pref_category_auto_download">Last ned automatisk</string>
-    <string name="action_show_errors">Trykk for å se detaljer</string>
     <string name="clipboard_copy_error">Kunne ikke kopiere til utklippstavlen</string>
     <string name="rotation_landscape">Liggende</string>
     <string name="rotation_portrait">Stående</string>
@@ -478,7 +475,6 @@
     <string name="pref_verbose_logging">Sirlig loggføring</string>
     <string name="pref_verbose_logging_summary">Skriv utfyllende logg til systemloggen (reduserer programytelse)</string>
     <string name="label_warning">Advarsel</string>
-    <string name="notification_size_warning">Store oppdateringer skader kilder og kan føre til tregere oppdateringer samt økt batteribruk. Trykk for å lære mer.</string>
     <string name="backup_info">Du bør oppbevare ekstra kopier av sikkershetskopier andre steder også. Sikkerhetskopier kan inneholde sensitiv data, inkludert eventuelle lagrede passord. Vær forsiktig ved deling.</string>
     <string name="update_72hour">Hver 3. dag</string>
     <string name="connected_to_wifi">Bare på Wi-Fi</string>
@@ -490,7 +486,6 @@
     <string name="save_chapter_as_cbz">Lagre som CBZ-arkiv</string>
     <string name="ext_update_all">Oppdater alle</string>
     <string name="database_clean">Ingenting å fjerne</string>
-    <string name="download_queue_size_warning">Advarsel: store bulknedlastinger kan føre til at kilder blir tregere og/eller blokkerer %s. Trykk for å lære mer.</string>
     <string name="action_display_cover_only_grid">Kun omslags-rutenett</string>
     <string name="pref_landscape_zoom">Zoom automatisk inn for brede bilder</string>
     <string name="pref_navigate_pan">Panorer brede bilder</string>
@@ -604,13 +599,11 @@
     <string name="intervals_header">Intervaller</string>
     <string name="manga_display_interval_title">Anslå hver</string>
     <string name="delete_downloaded">Slett nedlastede</string>
-    <string name="pref_double_tap_zoom">Dobbelttrykk for å zoome</string>
     <string name="pref_chapter_swipe_start">Sveip til venstre handling</string>
     <string name="action_ok">OK</string>
     <string name="has_results">Har resultater</string>
     <string name="syncing_library">Synkroniserer biblioteket</string>
     <string name="library_sync_complete">Biblioteksynkronisering fullført</string>
-    <string name="information_cloudflare_help">Trykk her for å få hjelp med Cloudflare</string>
     <string name="download_cache_invalidated">Nedlastingsindeksen er ugyldiggjort</string>
     <string name="create_backup_file_error">Kunne ikke opprette en backup-fil</string>
     <string name="unlock_app_title">Lås opp %s</string>

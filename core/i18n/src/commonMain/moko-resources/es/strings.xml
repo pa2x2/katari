@@ -201,7 +201,6 @@
     <string name="latest">Recientes</string>
     <string name="browse">Explorar</string>
     <string name="channel_common">Comunes</string>
-    <string name="information_empty_category">No hay categorías. Pulsa el botón «+» para crear una y organizar tu biblioteca.</string>
     <string name="label_migration">Migrar</string>
     <string name="label_extensions">Extensiones</string>
     <string name="label_extension_info">Información de la extensión</string>
@@ -234,7 +233,6 @@
     <string name="transition_pages_loading">Cargando páginas…</string>
     <string name="transition_pages_error">Error al cargar páginas: %1$s</string>
     <string name="migration_dialog_what_to_include">Elige qué datos incluir</string>
-    <string name="pref_double_tap_anim_speed">Velocidad de animación de doble toque</string>
     <string name="pager_viewer">Por páginas</string>
     <string name="pref_read_with_long_tap">Menú de pulsación prolongada</string>
     <string name="action_open_in_web_view">Abrir en WebView</string>
@@ -411,7 +409,6 @@
     <string name="exclude">Excluir: %s</string>
     <string name="include">Incluir: %s</string>
     <string name="none">Ninguna</string>
-    <string name="action_show_errors">Toca para ver los detalles</string>
     <string name="action_display_show_number_of_items">Mostrar el número de elementos</string>
     <string name="action_sort_chapter_fetch_date">Por fecha de obtención del capítulo</string>
     <string name="rotation_type">Tipo de rotación</string>
@@ -477,12 +474,10 @@
     <string name="pref_verbose_logging">Registro detallado</string>
     <string name="pref_verbose_logging_summary">Mostrar registros detallados en el registro del sistema (reduce el rendimiento de la aplicación)</string>
     <string name="label_warning">Advertencia</string>
-    <string name="notification_size_warning">Las actualizaciones grandes pueden implicar un mayor uso de la batería y que los distintos servicios bloqueen o ralenticen el acceso a tu dispositivo. Toca aquí para más información.</string>
     <string name="action_display_language_badge">Idioma</string>
     <string name="backup_info">Es una buena idea tener copias de respaldo fuera de tu dispositivo. Ten en cuenta que incluyen contraseñas y otros datos privados que seguramente no quieras compartir.</string>
     <string name="connected_to_wifi">Solo con Wi-Fi</string>
     <string name="update_72hour">Cada 3 días</string>
-    <string name="download_queue_size_warning">Advertencia: Las descargas grandes pueden llevar a que las fuentes se vuelvan cada vez más lentas y en casos extremos que los servidores limiten o impidan el acceso a %s. Toca aquí para más información.</string>
     <string name="ext_update_all">Actualizar todas</string>
     <string name="pref_auto_clear_chapter_cache">Limpiar la caché de capítulos al abrir la aplicación</string>
     <string name="database_clean">Base de datos limpia</string>
@@ -598,7 +593,6 @@
     <string name="pref_debug_info">Información de depuración</string>
     <string name="pref_chapter_swipe_start">Al deslizar a la izquierda en un capítulo</string>
     <string name="pref_chapter_swipe_end">Al deslizar a la derecha en un capítulo</string>
-    <string name="pref_double_tap_zoom">Ampliar tocando dos veces la pantalla</string>
     <string name="action_sort_next_updated">Próxima actualización prevista</string>
     <string name="intervals_header">Intervalos</string>
     <string name="manga_display_interval_title">Estimar cada</string>
@@ -610,7 +604,6 @@
     <string name="has_results">Con resultados</string>
     <string name="library_sync_complete">La biblioteca se ha sincronizado correctamente</string>
     <string name="syncing_library">Sincronizando la biblioteca</string>
-    <string name="information_cloudflare_help">Toca aquí para solucionar problemas de acceso con Cloudflare</string>
     <string name="download_cache_invalidated">Reconstruyendo el índice de descargas</string>
     <string name="create_backup_file_error">No se ha podido crear un archivo de respaldo</string>
     <string name="exception_unknown_host">«%s» no parece estar disponible</string>

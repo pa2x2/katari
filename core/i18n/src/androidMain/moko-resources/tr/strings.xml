@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Cloudflare ile ilgili yardım için buraya dokunun</string>
+    <string name="action_show_errors">Ayrıntıları görmek için dokun</string>
+    <string name="notification_size_warning">Büyük güncellemeler kaynaklara zarar verir ve daha yavaş güncellemelere ve ayrıca pil kullanımının artmasına neden olabilir. Daha fazla bilgi için dokunun.</string>
+    <string name="download_queue_size_warning">Uyarı: Büyük toplu indirmeler kaynakların yavaşlamasına ve/veya %s\'u engellemesine neden olabilir. Daha fazla bilgi için dokunun.</string>
+    <string name="information_empty_category">Kategoriniz yok. Kitaplığınızı düzenlemek için artı düğmesine basarak bir tane oluşturun.</string>
+    <string name="pref_double_tap_zoom">Yakınlaştırmak için iki kez dokun</string>
+    <string name="pref_double_tap_anim_speed">Çift dokunma animasyon hızı</string>
+</resources>

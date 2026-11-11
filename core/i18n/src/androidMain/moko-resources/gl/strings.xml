@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Preme aquí para obter axuda con Cloudflare</string>
+    <string name="action_show_errors">Preme para ver os detalles do erro</string>
+    <string name="notification_size_warning">As actualizacións grandes perxudican ás fontes e poden supoñer actualizacións máis lentas e un maior uso da batería. Preme para saber máis.</string>
+    <string name="download_queue_size_warning">Advertencia: As descargas pesadas poden facer que as fontes se volvan máis lentas e/ou bloqueen %s. Preme para saber máis.</string>
+    <string name="information_empty_category">Non tes categorías. Toca o botón cun máis para crear unha e organizar a túa biblioteca.</string>
+    <string name="pref_double_tap_zoom">Amplía dando dous toques na pantalla</string>
+    <string name="pref_double_tap_anim_speed">Velocidade da animación de doble toque</string>
+</resources>

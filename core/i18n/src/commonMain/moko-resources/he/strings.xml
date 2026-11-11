@@ -9,7 +9,6 @@
     <string name="download_notifier_title_error">שגיאה</string>
     <string name="information_webview_outdated">אנא עדכן את אפליקציית WebView לקבלת תאימות טובה יותר</string>
     <string name="information_cloudflare_bypass_failure">עקיפה של Cloudflare נכשלה</string>
-    <string name="information_empty_category">אין לך קטגוריות. לחץ על כפתור הפלוס כדי ליצור אחד לארגון הספרייה שלך.</string>
     <string name="information_empty_library">הספרייה שלך ריקה</string>
     <string name="information_no_downloads">אין הורדות</string>
     <string name="file_select_cover">בחר תמונת כריכה</string>
@@ -226,7 +225,6 @@
     <string name="pref_custom_brightness">בהירות מותאמת אישית</string>
     <string name="pref_crop_borders">חתוך גבולות</string>
     <string name="pref_show_page_number">הצג מספר עמוד</string>
-    <string name="pref_double_tap_anim_speed">מהירות הנפשה בהקשה כפולה</string>
     <string name="pref_page_transitions">הנפשת מעברי דפים</string>
     <string name="pref_cutout_short">הצג תוכן באזור החתוך</string>
     <string name="untrusted_extension">תוסף לא מאומת</string>
@@ -310,7 +308,6 @@
     <string name="theme_strawberrydaiquiri">תות דאיקירי</string>
     <string name="theme_yinyang">יין ויאנג</string>
     <string name="theme_yotsuba">ארבעה עלים</string>
-    <string name="action_show_errors">לחץ כדי לראות פרטים</string>
     <string name="pref_category_appearance">מראה</string>
     <string name="theme_midnightdusk">דמדומי חצות</string>
     <string name="theme_tako">טאקו</string>
@@ -452,7 +449,6 @@
     <string name="pref_reset_viewer_flags_success">כל הגדרות מצב הקריאה אופסו</string>
     <string name="exclude">החרגה: %s</string>
     <string name="source_filter_empty_screen">לא נמצאו מקורות מותקנים</string>
-    <string name="notification_size_warning">הורדות גדולות פוגעות במקורות ויכולות לגרום לעדכונים איטיים יותר וגם לשימוש מוגבר בסוללה. לחץ כדי ללמוד עוד.</string>
     <string name="information_empty_category_dialog">עדיין אין קטגוריות.</string>
     <string name="learn_more">לחץ כדי ללמוד עוד</string>
     <string name="pref_clear_history">נקה היסטוריה</string>
@@ -475,7 +471,6 @@
     <string name="clear_history_confirmation">אתה בטוח? כל ההיסטוריה תמחק.</string>
     <string name="migration_help_guide">מדריך נדידת מקורות</string>
     <string name="download_insufficient_space">לא ניתן להוריד פרקים כי אין מספיק מקום אחסון</string>
-    <string name="download_queue_size_warning">אזהרה: הורדות גדולות עלולות לגרום להאטה במקורות ו/או לחסימת %s. לחץ כדי ללמוד עוד.</string>
     <string name="local_invalid_format">פורמט פרק לא תקין</string>
     <string name="on_hiatus">בהפסקה</string>
     <string name="delete_category_confirmation">האם למחוק את הקטגוריה \"%s\"?</string>
@@ -524,7 +519,6 @@
     <string name="delete_downloaded">מחיקת פרקים שהורדו</string>
     <string name="action_sort_next_updated">העדכון הצפוי הבא</string>
     <string name="theme_lavender">לבנדר</string>
-    <string name="information_cloudflare_help">לחץ כאן לעזרה עם Cloudflare</string>
     <string name="download_notifier_split_page_not_found">עמוד %d לא נמצא בעת פיצול</string>
     <string name="appwidget_updates_description">צפה בפריטי הספריה העדכניים ביותר</string>
     <string name="download_notifier_split_page_path_not_found">נכשל במציאת כתובת עמוד %d</string>
@@ -591,7 +585,6 @@
     <string name="intervals_header">מרווחי זמן</string>
     <string name="cant_open_last_read_chapter">לא מסוגל לפתוח את הפרק שנקרא לאחרונה</string>
     <string name="pref_chapter_swipe_start">פרק בהחלקה שמאלה</string>
-    <string name="pref_double_tap_zoom">לחיצה כפולה לקירוב (זום)</string>
     <string name="label_total_chapters">בסך הכל</string>
     <string name="download_ahead_info">עובד רק אם הפרק הנוכחי והפרק הבא כבר הורדו.</string>
     <string name="pref_skip_dupe_chapters">דלג על פרקים כפולים</string>

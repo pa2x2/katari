@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">แตะที่นี่เพื่อขอความช่วยเหลือเกี่ยวกับ Cloudflare</string>
+    <string name="action_show_errors">แตะเพื่อดูรายละเอียด</string>
+    <string name="notification_size_warning">การอัปเดตจำนวนมากเป็นอันตรายต่อแหล่งที่มาและอาจทำให้การอัปเดตช้าลงและใช้งานแบตเตอรี่เพิ่มขึ้น แตะเพื่อเรียนรู้เพิ่มเติม</string>
+    <string name="download_queue_size_warning">คำเตือน: การดาวน์โหลดจำนวนมากอาจทำให้แหล่งที่มาทำงานช้าลงและ/หรือปิดกั้น %s แตะเพื่อเรียนรู้เพิ่มเติม</string>
+    <string name="information_empty_category">ไม่มีหมวดหมู่ แตะปุ่มบวกเพื่อสร้างปุ่มสำหรับจัดระเบียบคลัง</string>
+    <string name="pref_double_tap_zoom">แตะสองครั้งเพื่อซูม</string>
+    <string name="pref_double_tap_anim_speed">ความเร็วแอนิเมชั่นเมื่อแตะ 2 ครั้ง</string>
+</resources>

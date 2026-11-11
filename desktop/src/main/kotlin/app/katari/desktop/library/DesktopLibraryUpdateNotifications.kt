@@ -30,6 +30,7 @@ import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.service.MetadataUpdateRunner
 import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.PlatformStrings
 import tachiyomi.i18n.action_cancel
 import tachiyomi.i18n.action_learn_more
 import tachiyomi.i18n.action_show_errors
@@ -175,9 +176,9 @@ class DesktopLibraryUpdateNotifications(
             linkOpener.open(context, LibraryUpdateNotifications.LARGE_UPDATE_HELP_URL)
         }
         val text = if (rulesProfileId != null) {
-            MR.strings.notification_large_update_warning
+            PlatformStrings.notification_large_update_warning
         } else {
-            MR.strings.notification_size_warning
+            PlatformStrings.notification_size_warning
         }
         notifications.show(
             WARNING,
@@ -205,7 +206,7 @@ class DesktopLibraryUpdateNotifications(
             DesktopNotification(
                 kind = AppNotificationKind.LIBRARY_ERRORS,
                 title = pluralStringResource(MR.plurals.notification_update_error, failed, failed),
-                body = lines(profile.label, stringResource(MR.strings.action_show_errors)),
+                body = lines(profile.label, stringResource(PlatformStrings.action_show_errors)),
                 urgency = NotificationUrgency.Low,
                 onClick = NotificationResponse.Open(HomeDestination.LibraryUpdateReport(profile.id)),
             ),

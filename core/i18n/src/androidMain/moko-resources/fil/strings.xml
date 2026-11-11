@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">I-tap dito para sa tulong sa Cloudflare</string>
+    <string name="action_show_errors">I-tap para makita ang detalye</string>
+    <string name="notification_size_warning">Babala: Nakasasama ang mga malalaking update sa source at maaaring humantong sa mabagal na update at pagtaas ng paggamit sa baterya. I-tap para matuto pa.</string>
+    <string name="download_queue_size_warning">Babala: maaaring humantong sa pagbagal at/o pagharang ng mga source sa %s ang maramihang pag-download. I-tap para matuto pa.</string>
+    <string name="information_empty_category">Wala ka pang kategorya. Pindutin ang plus button para gumawa ng isa para sa pag-aayos ng iyong aklatan.</string>
+    <string name="pref_double_tap_zoom">I-double tap para mag-zoom</string>
+    <string name="pref_double_tap_anim_speed">Bilis ng animasyon sa pagdoble-pindot</string>
+</resources>

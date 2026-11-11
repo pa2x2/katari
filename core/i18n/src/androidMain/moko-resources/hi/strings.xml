@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Cloudflare सहायता के लिए यहां टैप करें</string>
+    <string name="action_show_errors">विवरण देखने के लिए टैप करें</string>
+    <string name="notification_size_warning">बड़े अपडेट स्रोतों को नुकसान पहुंचाते हैं और इससे धीमे अपडेट हो सकते हैं, और बैटरी का उपयोग भी बढ़ सकता है। अधिक जानने के लिए टैप करें ।</string>
+    <string name="download_queue_size_warning">चेतावनी: बड़े पैमाने पर डाउनलोड से स्रोत धीमे हो सकते हैं और/या %s को ब्लॉक कर सकते हैं। अधिक जानने के लिए टैप करें।</string>
+    <string name="information_empty_category">आपके पास कोई श्रेणियां नहीं हैं। अपने पुस्तकालय के आयोजन के लिए एक बनाने के लिए प्लस बटन को दबाएं।</string>
+    <string name="pref_double_tap_zoom">दुबारा टैप करके ज़ूम करें</string>
+    <string name="pref_double_tap_anim_speed">डबल टैप एनीमेशन गति</string>
+</resources>

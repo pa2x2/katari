@@ -141,7 +141,6 @@
     <string name="color_filter_a_value">Alfa</string>
     <string name="pref_remove_after_marked_as_read">Després de marcar com a llegit de manera manual</string>
     <string name="pref_remove_after_read">Suprimeix automàticament després de llegir</string>
-    <string name="pref_double_tap_anim_speed">Velocitat de l’animació del doble toc</string>
     <string name="disabled">Desactivat</string>
     <string name="last_read_chapter">Darrer capítol llegit</string>
     <string name="second_to_last">Penúltim capítol llegit</string>
@@ -235,7 +234,6 @@
     <string name="information_no_recent">No hi ha actualitzacions recents</string>
     <string name="information_no_recent_manga">No heu llegit res recentment</string>
     <string name="information_empty_library">La vostra biblioteca és buida</string>
-    <string name="information_empty_category">No teniu categories. Premeu el botó més per a crear-ne una i organitzar la vostra biblioteca.</string>
     <string name="download_notifier_downloader_title">Baixades</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">No s’ha pogut baixar el capítol a causa d’un error inesperat</string>
@@ -430,7 +428,6 @@
     <string name="include">Inclou: %s</string>
     <string name="exclude">Exclou: %s</string>
     <string name="none">Cap</string>
-    <string name="action_show_errors">Premeu per a veure’n els detalls</string>
     <string name="cancel_all_for_series">Cancel·la-ho tot per a aquesta sèrie</string>
     <string name="action_sort_chapter_fetch_date">Data d’obtenció dels capítols</string>
     <string name="date">Data</string>
@@ -499,8 +496,6 @@
     <string name="publishing_finished">Publicació finalitzada</string>
     <string name="on_hiatus">En pausa</string>
     <string name="ext_app_info">Informació de l’aplicació</string>
-    <string name="download_queue_size_warning">Advertència: Les baixades massa grosses poden fer que les fonts es tornin més lentes i/o bloquin el %s. Premeu per a obtenir-ne més informació.</string>
-    <string name="notification_size_warning">Les actualitzacions grosses perjudiquen les fonts i poden implicar actualitzacions més lentes i un augment en l’ús de bateria. Premeu per a obtenir-ne més informació.</string>
     <string name="pref_landscape_zoom">Amplia automàticament les imatges amples</string>
     <string name="action_show_manga">Mostra l’element</string>
     <string name="pref_navigate_pan">Fes panoràmiques les imatges amples</string>
@@ -608,7 +603,6 @@
     <string name="action_update_category">Actualitza la categoria</string>
     <string name="pref_chapter_swipe_end">En lliscar cap a la dreta en un capítol</string>
     <string name="pref_chapter_swipe_start">En lliscar cap a l’esquerra en un capítol</string>
-    <string name="pref_double_tap_zoom">Toca dues vegades per a ampliar</string>
     <string name="overlay_header">Superposició</string>
     <string name="pref_page_rotate_invert">Inverteix l’orientació de les pàgines amples rotades</string>
     <string name="pref_page_rotate">Rota les pàgines amples perquè s’ajustin a la pantalla</string>
@@ -626,7 +620,6 @@
     <string name="library_sync_complete">S’ha completat la sincronització de la biblioteca</string>
     <string name="create_backup_file_error">No s’ha pogut crear un fitxer de còpia de seguretat</string>
     <string name="download_cache_invalidated">S’està recreant l’índex de baixades</string>
-    <string name="information_cloudflare_help">Premeu aquí per a obtenir ajuda amb el Cloudflare</string>
     <string name="unlock_app_title">Desbloca %s</string>
     <string name="exception_offline">No hi ha connexió a Internet</string>
     <string name="exception_http">HTTP %d, comproveu el lloc web en una WebView</string>

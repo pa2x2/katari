@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Ťuknutím zobrazíte podrobnosti</string>
+    <string name="notification_size_warning">Veľké aktualizácie poškodzujú zdroje a môžu viesť k pomalším aktualizáciám a tiež k zvýšeniu spotreby batérie. Klepnutím sa dozviete viac.</string>
+    <string name="download_queue_size_warning">Upozornenie: Veľké hromadné sťahovanie môže viesť k spomaleniu zdrojov a/alebo blokovaniu %s. Klepnutím sa dozviete viac.</string>
+    <string name="information_empty_category">Nemáte žiadne kategórie. Ťuknutím na tlačidlo plus si ju vytvorte a usporiadajte knižnicu.</string>
+    <string name="pref_double_tap_zoom">Dvojťuk pre priblíženie</string>
+    <string name="pref_double_tap_anim_speed">Rýchlosť animácie pre dvojité ťuknutie</string>
+</resources>

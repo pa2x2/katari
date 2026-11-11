@@ -35,23 +35,23 @@ internal fun BookReaderInputGuide(preferences: BookDocumentReaderPreferences) {
         hints = listOf(
             InputGuideHint(
                 icon = platformPresentation.pointerIcon,
-                title = stringResource(MR.strings.reader_guide_click),
+                title = stringResource(PlatformStrings.reader_guide_click),
                 details = listOf(
-                    stringResource(MR.strings.book_reader_guide_drag),
-                    stringResource(MR.strings.book_reader_guide_right_click),
+                    stringResource(PlatformStrings.book_reader_guide_drag),
+                    stringResource(PlatformStrings.book_reader_guide_right_click),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.reader_guide_scroll),
-                details = listOf(stringResource(MR.strings.book_reader_guide_scroll_text_size)),
+                title = stringResource(PlatformStrings.reader_guide_scroll),
+                details = listOf(stringResource(PlatformStrings.book_reader_guide_scroll_text_size)),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,
-                title = stringResource(MR.strings.reader_guide_keys_turn),
+                title = stringResource(PlatformStrings.reader_guide_keys_turn),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_keys_chapter),
-                    stringResource(MR.strings.reader_guide_keys_list),
+                    stringResource(PlatformStrings.reader_guide_keys_chapter),
+                    stringResource(PlatformStrings.reader_guide_keys_list),
                 ),
             ),
         ),

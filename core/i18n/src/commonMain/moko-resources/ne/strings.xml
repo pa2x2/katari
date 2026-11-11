@@ -84,7 +84,6 @@
     <string name="chapters">अध्याय</string>
     <string name="manga">पुस्तकालयका इन्ट्रीहरू</string>
     <string name="categories">वर्गहरू</string>
-    <string name="information_empty_category">तपाईंसँग कुनै वर्गहरू छैन। वर्ग बनाएर पुस्तकालय व्यवस्थित गर्न प्लस बटन थिच्नुहोस्।</string>
     <string name="information_empty_library">तपाईंको पुस्तकालय खाली छ</string>
     <string name="information_no_recent_manga">हालै केहि पढेको छैन</string>
     <string name="information_no_recent">हालैका कुनै अपडेट छैन</string>
@@ -145,7 +144,6 @@
     <string name="theme_system">सिस्टम पालना गर्नुहोस्</string>
     <string name="pref_category_appearance">रूप</string>
     <string name="action_start_downloading_now">अहिले डाउनलोड गर्न सुरु गर्नुहोस्</string>
-    <string name="action_show_errors">विवरणहरू हेर्न ट्याप गर्नुहोस्</string>
     <string name="action_sort">क्रमबद्ध</string>
     <string name="cancel_all_for_series">यी श्रृङ्खलाका सबै रद्द गर्नुहोस्</string>
     <string name="action_display_local_badge">लोकल स्रोत</string>
@@ -185,7 +183,6 @@
     <string name="pref_dual_page_invert">विभाजित पृष्ठ प्लेसमेन्ट उल्टाउनुहोस्</string>
     <string name="pref_cutout_short">कटआउट क्षेत्रमा सामग्री देखाउनुहोस्</string>
     <string name="pref_page_transitions">पृष्ठ ट्रान्जिसन एनिमेट गर्नुहोस्</string>
-    <string name="pref_double_tap_anim_speed">एनिमेसनको गति डबल ट्याप गर्नुहोस्</string>
     <string name="pref_show_reading_mode_summary">रिडर खोल्दा छोटकरीमा हालको मोड देखाउनुहोस्</string>
     <string name="on">अन</string>
     <string name="pref_custom_brightness">कस्टम चमक</string>
@@ -481,7 +478,6 @@
     <string name="manga_download">डाउनलोड</string>
     <string name="transition_no_previous">अघिल्लो अध्याय छैन</string>
     <string name="download_insufficient_space">थोरै जम्मा गर्ने ठाउँ भएको कारणले अध्याय डाउनलोड हुन सकिँदएन</string>
-    <string name="download_queue_size_warning">सावधान: ठूलो हिस्सामा डाउनलोड गर्नाले स्रोत ढिलो चल्न अनि/वा %s लाई अवरुद्घ गर्न सक्नेछ। थप जान्नको लागि यहाँ थिच्नुहोस्।।</string>
     <string name="file_picker_error">कुनै फाइल पिकर एप फेला परेन</string>
     <string name="learn_more">थप जान्नका लागि ट्याप गर्नुहोस्</string>
     <string name="information_empty_category_dialog">तपाईंसँग अहिलेसम्म कुनै पनि वर्गहरू छैन।</string>
@@ -490,7 +486,6 @@
     <string name="channel_progress">प्रगति</string>
     <string name="channel_complete">पूरा</string>
     <string name="channel_errors">त्रुटिहरू</string>
-    <string name="notification_size_warning">ठूला अपडेटले स्रोतहरूलाई हानि पुर्‍याउँछ र यसले ढिलो अपडेट्स निम्त्याउन सक्छ र ब्याट्रीको प्रयोग पनि बढाउँछ। थप जान्न ट्याप गर्नुहोस्।</string>
     <string name="information_webview_required">एप काम गर्नका लागि WebView आवश्यक छ</string>
     <string name="action_move_to_top_all_for_series">श्रृङ्खलालाई शीर्षमा सर्नुहोस्</string>
     <string name="rotation_reverse_portrait">पोर्ट्रेट उल्ट्याउनु</string>
@@ -598,7 +593,6 @@
     <string name="pref_debug_info">Debug जानकारी</string>
     <string name="pref_chapter_swipe_end">दायाँतिर स्वाइप गर्ने अध्याय</string>
     <string name="pref_chapter_swipe_start">बायाँतिर स्वाइप गर्ने अध्याय</string>
-    <string name="pref_double_tap_zoom">जूम गर्न डबल ट्याप गर्नुहोस्</string>
     <string name="action_set_interval">अन्तराल सेट गर्नुहोस्</string>
     <string name="action_filter_interval_custom">कस्टम गरिएको अपडेट फ्रिक्वेन्सी</string>
     <string name="manga_display_modified_interval_title">प्रत्येक अपडेट गर्न सेट गर्नुहोस्</string>
@@ -611,7 +605,6 @@
     <string name="library_sync_complete">पुस्तकालय सिंक सम्पन्न भयो</string>
     <string name="syncing_library">पुस्तकालय सिंक गर्दै</string>
     <string name="download_cache_invalidated">डाउनलोड इन्डेक्स अवैध भयो</string>
-    <string name="information_cloudflare_help">Cloudflare सम्बन्धित मद्दतको लागि यहाँ ट्याप गर्नुहोस्</string>
     <string name="create_backup_file_error">ब्याकअप फाइल सिर्जना गर्न असफल भयो</string>
     <string name="exception_offline">इन्टरनेट जडान छैन</string>
     <string name="exception_unknown_host">%s मा पुग्न सकिएन</string>

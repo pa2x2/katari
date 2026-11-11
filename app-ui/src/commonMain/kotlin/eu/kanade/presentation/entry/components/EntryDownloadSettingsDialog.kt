@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.download.EntryDownloadOptionGroup
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.dialog.DialogAction
 import app.katari.presentation.kit.list.ChoiceRow
@@ -56,7 +57,10 @@ fun EntryDownloadSettingsDialog(
                     )
                 }
                 if (choices?.reload?.failed == true) {
-                    RowGroupNote(stringResource(MR.strings.download_options_failed), tone = ContentTone.Error)
+                    RowGroupNote(
+                        stringResource(platformPresentation.downloadOptionsFailedLabel),
+                        tone = ContentTone.Error,
+                    )
                 } else if (choices == null || choices.reload != null) {
                     LoadingIndicator(
                         modifier = Modifier

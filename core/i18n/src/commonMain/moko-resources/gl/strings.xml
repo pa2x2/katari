@@ -70,7 +70,6 @@
     <string name="pref_show_reading_mode_summary">Amosar brevemente o modo actual cando se abre o lector</string>
     <string name="pref_show_reading_mode">Amosar modo de lectura</string>
     <string name="pref_show_page_number">Amosar número de páxina</string>
-    <string name="pref_double_tap_anim_speed">Velocidade da animación de doble toque</string>
     <string name="pref_page_transitions">Animar transición de páxinas</string>
     <string name="pref_cutout_short">Mostrar contido na área recortada</string>
     <string name="obsolete_extension_message">Esta extensión xa non está dispoñible. Pode que non funcione ben e cause problemas na aplicación. Recoméndase desinstalala.</string>
@@ -199,7 +198,6 @@
     <string name="history">Historial</string>
     <string name="chapters">Capítulos</string>
     <string name="categories">Categorías</string>
-    <string name="information_empty_category">Non tes categorías. Toca o botón cun máis para crear unha e organizar a túa biblioteca.</string>
     <string name="information_empty_library">A túa biblioteca está vacía</string>
     <string name="browse">Explorar</string>
     <string name="information_no_recent_manga">Non se leu nada recentemente</string>
@@ -428,7 +426,6 @@
     <string name="action_display_show_number_of_items">Mostrar o número de elementos</string>
     <string name="cancel_all_for_series">Cancelar todo para esta serie</string>
     <string name="action_order_by_upload_date">Por data de subida</string>
-    <string name="action_show_errors">Preme para ver os detalles do erro</string>
     <string name="restrictions">Restricións: %s</string>
     <string name="categorized_display_settings">Opcións de ordenación e visualización por categoría</string>
     <string name="pref_dual_page_split">Separar as páxinas anchas</string>
@@ -491,7 +488,6 @@
     <string name="pref_category_for_this_series">Para esta serie</string>
     <string name="label_completed_titles">Elementos rematados</string>
     <string name="not_applicable">Non dispoñible</string>
-    <string name="notification_size_warning">As actualizacións grandes perxudican ás fontes e poden supoñer actualizacións máis lentas e un maior uso da batería. Preme para saber máis.</string>
     <string name="notification_first_add_to_library">Engade o elemento a túa biblioteca antes de facer isto</string>
     <string name="download_notifier_unknown_error">Non se puido descargar o capítulo por un erro inesperado</string>
     <string name="sort_by_source">Por fonte</string>
@@ -511,7 +507,6 @@
     <string name="download_notifier_text_only_wifi">Non hai ningunha conexión Wi-Fi dispoñible</string>
     <string name="crash_screen_restart_application">Reinicia a aplicación</string>
     <string name="source_filter_empty_screen">Non se atopou ninguna fonte instalada</string>
-    <string name="download_queue_size_warning">Advertencia: As descargas pesadas poden facer que as fontes se volvan máis lentas e/ou bloqueen %s. Preme para saber máis.</string>
     <string name="update_check_open">Abrir no GitHub</string>
     <string name="download_notifier_downloader_title">Xestor de descargas</string>
     <string name="download_notifier_title_error">Erro</string>
@@ -596,7 +591,6 @@
     <string name="pref_page_rotate_invert">Voltear a orientación das páxinas anchas xiradas</string>
     <string name="overlay_header">Superposición</string>
     <string name="pref_chapter_swipe_start">Acción de arrastrar á esquerda</string>
-    <string name="pref_double_tap_zoom">Amplía dando dous toques na pantalla</string>
     <string name="pref_chapter_swipe_end">Acción de arrastrar á dereita</string>
     <string name="pref_debug_info">Información de depuración</string>
     <string name="selected">Seleccionado</string>
@@ -676,7 +670,6 @@
     <string name="upcoming_guide">Guía dos próximos lanzamenos</string>
     <string name="upcoming_calendar_next">Mes seguinte</string>
     <string name="upcoming_calendar_prev">Mes anterior</string>
-    <string name="information_cloudflare_help">Preme aquí para obter axuda con Cloudflare</string>
     <string name="action_copy_link">Copiar ligazón</string>
     <string name="pref_flash_style_white">Branco</string>
     <string name="pref_flash_style_white_black">Branco e negro</string>

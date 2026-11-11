@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reader_guide_click">Click to turn pages or show the menu</string>
+    <string name="reader_guide_double_click">Double-click to zoom</string>
+    <string name="reader_guide_right_click">Right-click for page actions</string>
+    <string name="reader_guide_scroll">Scroll to move through pages</string>
+    <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
+    <string name="reader_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
+    <string name="reader_guide_keys_turn">← and → turn pages</string>
+    <string name="reader_guide_keys_chapter">N and P change chapter</string>
+    <string name="reader_guide_keys_list">? lists every key</string>
+    <string name="book_reader_guide_drag">Drag to select text</string>
+    <string name="book_reader_guide_right_click">Right-click a selection to copy or translate</string>
+    <string name="book_reader_guide_scroll_text_size">Ctrl and scroll change the text size</string>
+    <string name="anime_guide_click">Click to play or pause</string>
+    <string name="anime_guide_double_click">Double-click for full screen</string>
+    <string name="anime_guide_right_click">Right-click for settings</string>
+    <string name="anime_guide_scroll_volume">Scroll for volume</string>
+    <string name="anime_guide_scroll_seek">Scroll sideways to seek</string>
+    <string name="anime_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
+    <string name="anime_guide_keys_play">Space to play or pause</string>
+    <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>
+    <string name="anime_guide_keys_list">? lists every key</string>
+    <string name="information_cloudflare_help">Click here for help with Cloudflare</string>
+    <string name="action_show_errors">Click to see details</string>
+    <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Click to choose what updates check.</string>
+    <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Click to learn more.</string>
+    <string name="backup_profile_locked">Locked, asks to unlock when you click Create</string>
+    <string name="book_document_image_unavailable">Image unavailable. Click to retry.</string>
+    <string name="download_options_failed">Couldn\'t load the options for this choice. Click it to try again, or pick another.</string>
+    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking %s. Click to learn more.</string>
+    <string name="information_empty_category">You have no categories. Click the plus button to create one for organizing your library.</string>
+    <string name="pref_double_tap_zoom">Double-click to zoom</string>
+    <string name="pref_double_tap_anim_speed">Double-click animation speed</string>
+    <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only clicked text</string>
+    <string name="pref_retry_merge_maintenance_summary">%1$d pending, %2$d failed. Click to retry.</string>
+    <string name="statistics_recap_notification_text">%s. Click to see your recap.</string>
+    <string name="statistics_year_recap_notification_text">%s. Click to watch your year.</string>
+    <string name="statistics_recap_tap_to_start">Click to start</string>
+    <string name="pref_anime_seek_step_summary">%s · seek buttons and arrow keys</string>
+</resources>

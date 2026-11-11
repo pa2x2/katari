@@ -22,27 +22,27 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
         hints = listOf(
             InputGuideHint(
                 icon = platformPresentation.pointerIcon,
-                title = stringResource(MR.strings.anime_guide_click),
+                title = stringResource(PlatformStrings.anime_guide_click),
                 details = listOf(
-                    stringResource(MR.strings.anime_guide_double_click),
+                    stringResource(PlatformStrings.anime_guide_double_click),
                     stringResource(MR.strings.anime_guide_hold),
-                    stringResource(MR.strings.anime_guide_right_click),
+                    stringResource(PlatformStrings.anime_guide_right_click),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.anime_guide_scroll_volume),
+                title = stringResource(PlatformStrings.anime_guide_scroll_volume),
                 details = listOf(
-                    stringResource(MR.strings.anime_guide_scroll_seek),
-                    stringResource(MR.strings.anime_guide_scroll_zoom),
+                    stringResource(PlatformStrings.anime_guide_scroll_seek),
+                    stringResource(PlatformStrings.anime_guide_scroll_zoom),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,
-                title = stringResource(MR.strings.anime_guide_keys_play),
+                title = stringResource(PlatformStrings.anime_guide_keys_play),
                 details = listOf(
-                    stringResource(MR.strings.anime_guide_keys_seek, seekStepSeconds),
-                    stringResource(MR.strings.anime_guide_keys_list),
+                    stringResource(PlatformStrings.anime_guide_keys_seek, seekStepSeconds),
+                    stringResource(PlatformStrings.anime_guide_keys_list),
                 ),
             ),
         ),

@@ -91,7 +91,6 @@
     <string name="untrusted_extension_message">Extensiile rău intenționate pot citi orice credențiale de autentificare stocate sau pot executa cod arbitrar. \n \nAcordând încredere acestei extensii, acceptați aceste riscuri.</string>
     <string name="pref_page_transitions">Animați tranzițiile de pagini</string>
     <string name="action_display_download_badge">Capitole descărcate</string>
-    <string name="pref_double_tap_anim_speed">Viteza de animație pentru apăsare dublă</string>
     <string name="pref_show_page_number">Arată numărul paginii</string>
     <string name="pref_crop_borders">Taie marginile</string>
     <string name="pref_custom_brightness">Luminozitate personalizată</string>
@@ -227,7 +226,6 @@
     <string name="information_no_recent">Nu există actualizări recente</string>
     <string name="information_no_recent_manga">Nimic citit recent</string>
     <string name="information_empty_library">Biblioteca este goală</string>
-    <string name="information_empty_category">Nu aveți categorii. Apăsați butonul plus pentru a crea una pentru a vă organiza biblioteca.</string>
     <string name="download_notifier_downloader_title">Client de descărcare</string>
     <string name="download_notifier_title_error">Eroare</string>
     <string name="download_notifier_unknown_error">Nu s-a putut descărca capitolul din cauza unei erori neașteptate</string>
@@ -391,7 +389,6 @@
     <string name="action_order_by_upload_date">După data postării</string>
     <string name="exclude">Excludeți: %s</string>
     <string name="include">Includeți: %s</string>
-    <string name="action_show_errors">Atingeți pentru a vedea detaliile</string>
     <string name="action_display_show_number_of_items">Afișare număr de elemente</string>
     <string name="none">Nici unul</string>
     <string name="pref_dns_over_https">DNS prin HTTPS (DoH)</string>
@@ -439,7 +436,6 @@
     <string name="cancelled">Anulat</string>
     <string name="on_hiatus">În hiatus</string>
     <string name="local_invalid_format">Format de capitol invalid</string>
-    <string name="download_queue_size_warning">Atenție : actualizarile mari în masă vor face sursele mai incete și/sau vor bloca %s. Apăsați pentru mai multe informatii.</string>
     <string name="getting_started_guide">Ghidul de inceput</string>
     <string name="empty_backup_error">Nu există intrări în bibliotecă pentru a face backupuri</string>
     <string name="delete_category">Ștergeți categoria</string>
@@ -519,7 +515,6 @@
     <string name="pref_reset_viewer_flags_summary">Resetați modul de citire si orientare pentru toate seriile</string>
     <string name="download_ahead">Descarcă înainte</string>
     <string name="multi_lang">Multiple</string>
-    <string name="notification_size_warning">Actualizări mari dăunează surselor și pot duce la actualizări mai lente și creșterea nivelului de utilizare a bateriei. Apasă pentru a afla mai multe.</string>
     <string name="label_background_activity">Activități în fundal</string>
     <string name="update_check_open">Deschide pe GitHub</string>
     <string name="not_installed">Nu este instalat</string>
@@ -597,7 +592,6 @@
     <string name="action_sort_next_updated">Următoarea actualizare așteptată</string>
     <string name="action_filter_interval_custom">Frecvență de actualizare personalizată</string>
     <string name="pref_storage_location">Locație de stocare</string>
-    <string name="information_cloudflare_help">Atinge aici pentru ajutor cu Cloudflare</string>
     <string name="action_create">Creați</string>
     <string name="relative_time_span_never">Niciodată</string>
     <string name="pref_flash_page_summ">Reduceți imaginile fantomă pe ecranele e-ink</string>
@@ -631,7 +625,6 @@
     <string name="pref_chapter_swipe_start">Glisare către stânga a unui capitol</string>
     <string name="has_results">Au fost găsite rezultate</string>
     <string name="action_ok">Ok</string>
-    <string name="pref_double_tap_zoom">Atingeți de două ori pentru a mări</string>
     <string name="pref_hide_in_library_items">Ascundeți înregistrările care se află deja în bibliotecă</string>
     <string name="pref_relative_format">Marcaje de timp relative</string>
     <string name="exception_http">HTTP %d, verificați site-ul in modul WebView</string>

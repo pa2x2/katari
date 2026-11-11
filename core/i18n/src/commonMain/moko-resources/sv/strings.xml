@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Opålitligt tillägg</string>
     <string name="untrusted_extension_message">Ett skadligt tillägg kan läsa lagrade inloggningsuppgifter eller köra arbiträr kod. \n \nGenom att lita på detta tillägg accepterar du dessa risker.</string>
     <string name="pref_page_transitions">Animera sidändringar</string>
-    <string name="pref_double_tap_anim_speed">Animationshastighet för dubbelklick</string>
     <string name="pref_show_page_number">Visa sidnummer</string>
     <string name="pref_crop_borders">Beskär kanter</string>
     <string name="pref_custom_brightness">Anpassad ljusstyrka</string>
@@ -227,7 +226,6 @@
     <string name="information_no_recent">Inga nya uppdateringar</string>
     <string name="information_no_recent_manga">Inget nyligen läst</string>
     <string name="information_empty_library">Ditt bibliotek är tomt</string>
-    <string name="information_empty_category">Du har inga kategorier. Tryck på plusknappen för att skapa en för att organisera ditt bibliotek.</string>
     <string name="download_notifier_downloader_title">Nedladdare</string>
     <string name="download_notifier_title_error">Fel</string>
     <string name="download_notifier_unknown_error">Kunde inte ladda ned kapitel på grund av ett oförväntat fel</string>
@@ -410,7 +408,6 @@
     <string name="action_sort_chapter_fetch_date">Datum för hämtning av kapitel</string>
     <string name="pref_download_new_categories_details">Artiklar i uteslutna kategorier laddas inte ner även om de också ingår i inkluderade kategorier.</string>
     <string name="pref_category_auto_download">Ladda ned automatiskt</string>
-    <string name="action_show_errors">Tryck för att se detaljer</string>
     <string name="clipboard_copy_error">Kunde inte kopiera till urklipp</string>
     <string name="rotation_landscape">Liggande</string>
     <string name="rotation_portrait">Porträtt</string>
@@ -480,8 +477,6 @@
     <string name="label_warning">Varning</string>
     <string name="action_display_language_badge">Språk</string>
     <string name="connected_to_wifi">Bara över Wi-Fi</string>
-    <string name="notification_size_warning">Stora uppdateringar skadar källor och kan leda till långsammare uppdateringar samt en ökad batterianvändning. Tryck för att få veta mer.</string>
-    <string name="download_queue_size_warning">Varning: stora massnerladdningar kan leda till att källor blir långsamma och/eller blockerar %s. Tryck för att få veta mer.</string>
     <string name="update_72hour">Var 3:e dag</string>
     <string name="ext_update_all">Uppdatera alla</string>
     <string name="pref_auto_clear_chapter_cache">Rensa kapitelcache när appen startas</string>
@@ -593,7 +588,6 @@
     <string name="action_filter_interval_custom">Anpassat uppdateringsintervall</string>
     <string name="action_sort_next_updated">Nästa förväntade uppdatering</string>
     <string name="day_short">%dd</string>
-    <string name="pref_double_tap_zoom">Dubbeltryck för att zooma</string>
     <string name="information_no_manga_category">Kategorin är tom</string>
     <string name="hour_short">%dt</string>
     <string name="syncing_library">Synkronisering av bibliotek</string>
@@ -609,7 +603,6 @@
     <string name="pref_chapter_swipe_end">Högersvep på kapitel</string>
     <string name="pref_chapter_swipe_start">Vänstersvep på kapitel</string>
     <string name="label_read_duration">Lästid</string>
-    <string name="information_cloudflare_help">Klicka här för hjälp med Cloudflare</string>
     <string name="action_ok">OK</string>
     <string name="intervals_header">Intervaller</string>
     <string name="create_backup_file_error">Kunde inte skapa en backup-fil</string>

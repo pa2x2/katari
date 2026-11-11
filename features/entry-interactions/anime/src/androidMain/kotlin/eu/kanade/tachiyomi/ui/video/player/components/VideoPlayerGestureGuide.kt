@@ -24,21 +24,21 @@ internal fun VideoPlayerGestureGuide(
         hints = listOf(
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.anime_guide_brightness),
-                details = listOf(stringResource(MR.strings.anime_guide_double_tap_back, seekStepSeconds)),
+                title = stringResource(PlatformStrings.anime_guide_brightness),
+                details = listOf(stringResource(PlatformStrings.anime_guide_double_tap_back, seekStepSeconds)),
             ),
             InputGuideHint(
                 icon = platformPresentation.pointerIcon,
                 title = stringResource(MR.strings.anime_guide_hold),
                 details = listOf(
-                    stringResource(MR.strings.anime_guide_swipe_seek),
-                    stringResource(MR.strings.anime_guide_tap),
+                    stringResource(PlatformStrings.anime_guide_swipe_seek),
+                    stringResource(PlatformStrings.anime_guide_tap),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.anime_guide_volume),
-                details = listOf(stringResource(MR.strings.anime_guide_double_tap_forward, seekStepSeconds)),
+                title = stringResource(PlatformStrings.anime_guide_volume),
+                details = listOf(stringResource(PlatformStrings.anime_guide_double_tap_forward, seekStepSeconds)),
             ),
         ),
         onDismiss = onDismiss,

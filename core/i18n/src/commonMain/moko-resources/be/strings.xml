@@ -151,7 +151,6 @@
     <string name="action_webview_forward">Наперад</string>
     <string name="action_webview_back">Назад</string>
     <string name="action_restore">Аднавіць</string>
-    <string name="action_show_errors">Націсніце для падрабязнасцей</string>
     <string name="action_open_log">Адкрыць журнал</string>
     <string name="action_undo">Адмяніць</string>
     <string name="action_reset">Скінуць</string>
@@ -222,7 +221,6 @@
     <string name="pref_show_reading_mode_summary">Ненадоўга паказваць бягучы рэжым пры адкрыцці чытанкі</string>
     <string name="pref_show_reading_mode">Паказваць рэжым чытання</string>
     <string name="pref_show_page_number">Паказваць нумар старонкі</string>
-    <string name="pref_double_tap_anim_speed">Хуткасць анімацыі пры падвойным дотыку</string>
     <string name="double_tap_anim_speed_fast">Хуткая</string>
     <string name="double_tap_anim_speed_normal">Звычайная</string>
     <string name="double_tap_anim_speed_0">Без анімацыі</string>
@@ -244,7 +242,6 @@
     <string name="pref_category_appearance">Выгляд</string>
     <string name="confirm_lock_change">Аўтэнтыфікуйцеся, каб падтвердзіць змену</string>
     <string name="label_default">Па змаўчанні</string>
-    <string name="information_empty_category">У вас няма катэгорый. Націсніце «плюс», каб стварыць іх і ўпарадкаваць бібліятэку.</string>
     <string name="information_empty_library">Ваша бібліятэка пустая</string>
     <string name="information_no_recent_manga">Нядаўна прачытанага няма</string>
     <string name="pref_download_new_categories_details">Творы з выключаных катэгорый не будуць спампоўвацца, нават калі яны ёсць у іншых катэгорыях.</string>
@@ -397,7 +394,6 @@
     <string name="ext_revoke_trust">Адклікаць давер да ненадзейных пашырэнняў</string>
     <string name="pref_page_rotate">Паварочваць шырокія старонкі пад памер экрана</string>
     <string name="pref_page_rotate_invert">Адлюстроўваць арыентацыю павернутых шырокіх старонак</string>
-    <string name="pref_double_tap_zoom">Падвойны дотык для павелічэння</string>
     <string name="pref_flash_page">Мігаць пры змене старонкі</string>
     <string name="pref_flash_page_summ">Змяншае дваенне выявы на экранах e-ink</string>
     <string name="pref_flash_duration">Час мігацення</string>
@@ -696,9 +692,7 @@
     <string name="seconds_short">%dс</string>
     <string name="download_queue_error">Не ўдалося спампаваць раздзелы. Паспрабуйце яшчэ раз у раздзеле спамповак</string>
     <string name="download_insufficient_space">Не ўдалося спампаваць праз недахоп месца ў сховішчы</string>
-    <string name="download_queue_size_warning">Папярэджанне: вялікая колькасць спамповак можа прывесці да запавольвання працы крыніц і/або блакіроўкі %s. Націсніце, каб даведацца больш.</string>
     <string name="notification_updating_progress">Абнаўленне бібліятэкі… (%s)</string>
-    <string name="notification_size_warning">Вялікія абнаўленні шкодзяць крыніцам і могуць прывесці да іх запавольвання і павялічанага расходу батарэі. Націсніце, каб даведацца больш.</string>
     <string name="notification_chapters_single">Раздзел %1$s</string>
     <string name="notification_chapters_single_and_more">Раздзел %1$s ды яшчэ %2$d</string>
     <string name="notification_chapters_multiple">Раздзелы %1$s</string>
@@ -714,7 +708,6 @@
     <string name="information_no_entries_found">У гэтай катэгорыі твораў не знойдзена</string>
     <string name="information_empty_category_dialog">У вас яшчэ няма катэгорый.</string>
     <string name="information_cloudflare_bypass_failure">Не ўдалося прайсці Cloudflare</string>
-    <string name="information_cloudflare_help">Націсніце тут, каб атрымаць дапамогу з Cloudflare</string>
     <string name="information_webview_required">WebView неабходны для працы праграмы</string>
     <string name="information_webview_outdated">Калі ласка, абнавіце WebView для лепшай сумяшчальнасці</string>
     <string name="chapter_settings_updated">Стандартныя параметры раздзелаў абноўлены</string>

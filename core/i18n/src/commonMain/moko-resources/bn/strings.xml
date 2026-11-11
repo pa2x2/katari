@@ -193,7 +193,6 @@
     <string name="information_no_recent">কোন নতুন হালনাগাদ নেই</string>
     <string name="information_no_recent_manga">সম্প্রতি কিছু পড়া হয়নি</string>
     <string name="information_empty_library">আপনার সংগ্রহশালা খালি</string>
-    <string name="information_empty_category">আপনার কোন বিভাগ নেই। আপনার সংগ্রহশালা সাজাতে যোগ চিহ্ন বাটনে চেপে একটি বিভাগ তৈরী করুন।</string>
     <string name="download_notifier_downloader_title">ডাউনলোডার</string>
     <string name="download_notifier_title_error">ত্রুটি</string>
     <string name="download_notifier_unknown_error">অপ্রত্যাশিত ত্রুটির কারণে অধ্যায় ডাউনলোড করা যায়নি</string>
@@ -215,7 +214,6 @@
     <string name="ext_uninstall">আন ইন্সটল</string>
     <string name="untrusted_extension">অনির্ভর‍যোগ্য এক্সটেনশন</string>
     <string name="untrusted_extension_message">ক্ষতিকর এক্সটেনশন সংরক্ষিত লগইন তথ্য পড়তে পারে বা ইচ্ছেমতো কোড চালাতে পারে।\n\nএই এক্সটেনশনটিকে বিশ্বাস করলে আপনি এসব ঝুঁকি মেনে নিচ্ছেন।</string>
-    <string name="pref_double_tap_anim_speed">দুই টোকার এনিমেশনের গতি</string>
     <string name="double_tap_anim_speed_0">এনিমেশন নেই</string>
     <string name="double_tap_anim_speed_normal">সাধারণ</string>
     <string name="double_tap_anim_speed_fast">দ্রুত</string>
@@ -456,7 +454,6 @@
     <string name="pref_app_theme">অ্যাপ থিম</string>
     <string name="pref_category_appearance">দৃশ্য</string>
     <string name="action_start_downloading_now">এখনই ডাউনলোড শুরু করুন</string>
-    <string name="action_show_errors">সকল ত্রুটি দেখুন</string>
     <string name="cancel_all_for_series">এই সিরিজের সব বাতিল করুন</string>
     <string name="action_display_local_badge">লোকাল সোর্স</string>
     <string name="information_empty_category_dialog">আপনার এখনও কোন বিভাগ নেই |</string>
@@ -482,8 +479,6 @@
     <string name="action_display_language_badge">ভাষা</string>
     <string name="update_72hour">প্রতি ৩ দিন</string>
     <string name="connected_to_wifi">সুধু মাত্র ওয়িফি তে</string>
-    <string name="notification_size_warning">বেশি আপডেট সোর্সের ক্ষতি করতে পারে এবং আপডেট ধীর করে দিতে পারে, পাশাপাশি ব্যাটারি ব্যবহারের পরিমাণও বাড়াতে পারে। আরও জানতে ট্যাপ করুন।</string>
-    <string name="download_queue_size_warning">সতর্কতা: বড় আকারের ডাউনলোডের ফলে উৎসগুলি মন্থর হয়ে যেতে পারে এবং/অথবা %s ব্লক হয়ে যেতে পারে। আরও জানতে এখানে ট্যাপ করুন।</string>
     <string name="pref_auto_clear_chapter_cache">অ্যাপ বন্দ্ধ করার সময় অধ্যায়ের ক্যাশে পরিষ্কার করুন</string>
     <string name="database_clean">তথ্যশালা পরিষ্কার</string>
     <string name="clear_database_source_item_count">তথ্যশালায় %1$d টি মাঙ্গা যেগুলি লাইব্রেরীতে নেই</string>
@@ -625,7 +620,6 @@
     <string name="ext_revoke_trust">অজানা এক্সটেনশনের ট্রাস্ট বাতিল</string>
     <string name="pref_page_rotate">চওড়া পেজ রোটেট করে ফিট হবে</string>
     <string name="pref_page_rotate_invert">রোটেট করা চওড়া পেজের অরিয়েন্টেশন উল্টানো হবে</string>
-    <string name="pref_double_tap_zoom">জুম করতে ডাবল ট্যাপ</string>
     <string name="pref_flash_page">পেজ পরিবর্তনে ফ্ল্যাশ</string>
     <string name="pref_flash_page_summ">ই‑ইঙ্ক ডিসপ্লেতে ঘোস্টিং কমায়</string>
     <string name="pref_flash_duration">ফ্ল্যাশ সময়কাল</string>

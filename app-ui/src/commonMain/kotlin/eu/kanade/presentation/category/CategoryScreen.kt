@@ -11,6 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
@@ -55,7 +56,7 @@ fun CategoryScreen(
     ) { paddingValues ->
         if (state.isEmpty) {
             EmptyScreen(
-                stringRes = MR.strings.information_empty_category,
+                stringRes = platformPresentation.emptyCategoriesLabel,
                 modifier = Modifier.padding(paddingValues),
             )
             return@Scaffold

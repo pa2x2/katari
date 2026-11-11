@@ -5,7 +5,6 @@
     <string name="action_move_category">Kategoriyalar õrnatish</string>
     <string name="action_edit_categories">Kategoriyalarni õzgartirish</string>
     <string name="action_add_category">Kategoriya qõshish</string>
-    <string name="information_empty_category">Kutubxonada toifalar yo\'q. Toifalar yaratish uchun «Qo\'shish» tugmasini bosing.</string>
     <string name="action_add">Qõshish</string>
     <string name="action_edit">Õzgartirish</string>
     <string name="action_disable_all">Hammasini õchirish</string>
@@ -160,7 +159,6 @@
     <string name="action_display_cover_only_grid">Nomsiz ko\'rinish</string>
     <string name="action_display_download_badge">Yuklab olingan boblar</string>
     <string name="action_open_log">Logni ochish</string>
-    <string name="action_show_errors">Tafsilotlarni ko\'rish uchun bosing</string>
     <string name="theme_tako">Tako</string>
     <string name="pref_category_advanced">Qo\'shimcha</string>
     <string name="pref_library_summary">Toifalar, global yangilanish</string>
@@ -236,7 +234,6 @@
     <string name="pref_keep_screen_on">Ekranni o\'chirmaslik</string>
     <string name="ext_installed">O\'rnatildi</string>
     <string name="ext_info_version">Versiya</string>
-    <string name="pref_double_tap_anim_speed">Ikki marta bosilganda animatsiya tezligi</string>
     <string name="pref_custom_brightness">Foydalanuvchi tanlagan yoruqlik</string>
     <string name="network_not_metered">Faqat cheksiz tarmoq orqali</string>
     <string name="include">O\'z ichiga oladi: %s</string>

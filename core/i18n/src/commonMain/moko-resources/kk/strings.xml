@@ -36,7 +36,6 @@
     <string name="nav_zone_left">Сол</string>
     <string name="nav_zone_right">Оң</string>
     <string name="left_to_right_viewer">Бет (солдан оңға қарай)</string>
-    <string name="information_empty_category">Санаттарыңыз жоқ. Жаңа санат жасау үшін және кітапханаңызды ұйымдастыру үшін қосу батырмасын басыңыз.</string>
     <string name="nav_zone_next">Келесі</string>
     <string name="action_sort_last_manga_update">Соңғы жаңартпа тексеруі</string>
     <string name="action_sort_unread_count">Оқылмаған тарауы</string>
@@ -146,7 +145,6 @@
     <string name="action_reset">Қалпына келтіру</string>
     <string name="action_undo">Болдырмау</string>
     <string name="action_open_log">Тіркеуді ашу</string>
-    <string name="action_show_errors">Толық ақпарат алу үшін басыңыз</string>
     <string name="action_restore">Қалпына келтіру</string>
     <string name="action_webview_back">Артқа</string>
     <string name="action_webview_forward">Алға</string>
@@ -222,7 +220,6 @@
     <string name="untrusted_extension_message">Бұл кеңейту сенімсіз сертификатпен қол қойылған және іске қосылмаған. \n \nЗиянды кеңейту Katari-де сақталған кез келген кіру тіркелгі деректерін оқуы немесе еркін кодты орындауы мүмкін. \n \nОсы сертификатқа сену арқылы сіз осы қауіп-қатерді қабылдайсыз.</string>
     <string name="ext_install_service_notif">Кеңейту орнатылуда…</string>
     <string name="pref_page_transitions">Беттің ауысуын анимациялау</string>
-    <string name="pref_double_tap_anim_speed">Қосарлы түрту анимация жылдамдығы</string>
     <string name="in_library">Кітапханада</string>
     <string name="completed">Аяқталған</string>
     <string name="remove_from_library">Кітапханадан жою</string>
@@ -543,9 +540,7 @@
     <string name="download_notifier_download_paused">Жүктеулер тоқтатылды</string>
     <string name="appwidget_unavailable_locked">Биометриялық бұғаттау қосылып тұрғанда виджет қолжетімді емес</string>
     <string name="custom_filter">Жеке сүзгі</string>
-    <string name="notification_size_warning">Көп жаңалтулар саны дереккөздер жұмысын баяулата және батарея жұмысын өтімін көбейте алады. Көбірек білу үшін басыңыз.</string>
     <string name="notification_chapters_single">%1$s-Тарау</string>
-    <string name="download_queue_size_warning">Ескерту: Көп жүктеулер саны дереккөздер жұмысын баяулата алады және/немесе %s бұғатталына алады. Толығырақ оқу үшін басыңыз.</string>
     <string name="pref_downloads_summary">Автоматты жүктеу, алдын ала жүктеу</string>
     <string name="manga_info_expand">Көбірек</string>
     <string name="delete_downloads_for_manga">Жүктелген тарауларды жоямыз ба?</string>

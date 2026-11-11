@@ -125,7 +125,6 @@
     <string name="chapters">ምዕራፎች</string>
     <string name="manga">ማንጋ</string>
     <string name="categories">ምድቦች</string>
-    <string name="information_empty_category">ምንም ምድቦች የሉዎትም። ቤተ-መጽሐፍትዎን ለማደራጀት አንድ ለመፍጠር የመደመር አዝራሩን መታ ያድርጉ።</string>
     <string name="information_empty_library">ቤተ-መጽሐፍትዎ ባዶ ነው ተከታታዮችን ከአሰሳ ወደ ቤተ-መጽሐፍትዎ ያክሉ።</string>
     <string name="information_no_recent_manga">በቅርቡ የተነበበ ነገር የለም</string>
     <string name="information_no_recent">የቅርብ ጊዜ ዝመናዎች የሉም</string>
@@ -198,7 +197,6 @@
     <string name="pref_show_reading_mode_summary">አንባቢ ሲከፈት የአሁኑን ሁነታ በአጭሩ ያሳዩ</string>
     <string name="pref_show_reading_mode">የንባብ ሁነታን አሳይ</string>
     <string name="pref_show_page_number">የገጽ ቁጥርን አሳይ</string>
-    <string name="pref_double_tap_anim_speed">ሁለቴ መታ የአኒሜሽን ፍጥነት</string>
     <string name="pref_page_transitions">የገጽ ሽግግሮች</string>
     <string name="pref_cutout_short">በመቁረጥ አካባቢ ውስጥ ይዘትን አሳይ</string>
     <string name="action_sort_alpha">በፊደል ደርድር</string>

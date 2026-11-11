@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Cloudflare सम्बन्धित मद्दतको लागि यहाँ ट्याप गर्नुहोस्</string>
+    <string name="action_show_errors">विवरणहरू हेर्न ट्याप गर्नुहोस्</string>
+    <string name="notification_size_warning">ठूला अपडेटले स्रोतहरूलाई हानि पुर्‍याउँछ र यसले ढिलो अपडेट्स निम्त्याउन सक्छ र ब्याट्रीको प्रयोग पनि बढाउँछ। थप जान्न ट्याप गर्नुहोस्।</string>
+    <string name="download_queue_size_warning">सावधान: ठूलो हिस्सामा डाउनलोड गर्नाले स्रोत ढिलो चल्न अनि/वा %s लाई अवरुद्घ गर्न सक्नेछ। थप जान्नको लागि यहाँ थिच्नुहोस्।।</string>
+    <string name="information_empty_category">तपाईंसँग कुनै वर्गहरू छैन। वर्ग बनाएर पुस्तकालय व्यवस्थित गर्न प्लस बटन थिच्नुहोस्।</string>
+    <string name="pref_double_tap_zoom">जूम गर्न डबल ट्याप गर्नुहोस्</string>
+    <string name="pref_double_tap_anim_speed">एनिमेसनको गति डबल ट्याप गर्नुहोस्</string>
+</resources>

@@ -31,7 +31,6 @@
     <string name="chapters">Түһүмэхтэр</string>
     <string name="manga">Маанга</string>
     <string name="categories">Бөлөхтөр</string>
-    <string name="information_empty_category">Эйиэхэ бөлөхтөр суохтар. Эбэр бэлиэни батта, бэбэлэтиэкэҕэ саҥа бөлөҕү оҥорорго.</string>
     <string name="information_empty_library">Эн бэбэлэтиэкэн кураанах. Бэбэлэтиэкэҕэ айымньыыларыы көрдөөһүнтэн эп.</string>
     <string name="information_no_recent_manga">Бүтэһик кэмҥэ тугу да аахпатын</string>
     <string name="information_no_recent">Саҥардыылар суохтар</string>
@@ -183,7 +182,6 @@
     <string name="pref_custom_brightness">Туттааччы сырдыга</string>
     <string name="pref_crop_borders">Быһыллы кыраныыссата</string>
     <string name="pref_show_page_number">Сирэй нүөмэрин көрдөр</string>
-    <string name="pref_double_tap_anim_speed">Иккитэ баттыырга хамсааһын түргэнэ</string>
     <string name="pref_page_transitions">Хамсааһыннах, сирэй арыйыыта</string>
     <string name="pref_cutout_short">Быһыллыбыт хонууга баары көрдөр</string>
     <string name="obsolete_extension_message">Бу кэҥэтии кыаллыбат буолла.</string>
@@ -357,7 +355,6 @@
     <string name="exclude">Киллэримэ: %s</string>
     <string name="include">Киллэр: %s</string>
     <string name="none">Суох</string>
-    <string name="action_show_errors">Сыһааһыннары көрдөр</string>
     <string name="action_desc">Кыччыытынан</string>
     <string name="action_asc">Улаатыытынан</string>
     <string name="action_order_by_chapter_number">Түһүмэх нүөмэринэн</string>

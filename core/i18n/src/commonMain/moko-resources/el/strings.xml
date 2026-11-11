@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Μη αξιόπιστη επέκταση</string>
     <string name="untrusted_extension_message">Οι κακόβουλες επεκτάσεις μπορούν να διαβάσουν τυχόν αποθηκευμένα διαπιστευτήρια σύνδεσης ή να εκτελέσουν αυθαίρετο κώδικα. \n \nΜε την εμπιστοσύνη αυτής της επέκτασης, αποδέχεστε αυτούς τους κινδύνους.</string>
     <string name="pref_page_transitions">Ζωντανή μετάβαση σελίδας</string>
-    <string name="pref_double_tap_anim_speed">Ταχύτητα κίνησης διπλού αγγίγματος</string>
     <string name="pref_show_page_number">Εμφάνιση αριθμού σελίδας</string>
     <string name="pref_crop_borders">Περικοπή άκρων</string>
     <string name="pref_custom_brightness">Προσαρμοσμένη φωτεινότητα</string>
@@ -227,7 +226,6 @@
     <string name="information_no_recent">Δεν υπάρχουν πρόσφατες ενημερώσεις</string>
     <string name="information_no_recent_manga">Τίποτα δεν διαβάστηκε πρόσφατα</string>
     <string name="information_empty_library">Η βιβλιοθήκη σας είναι κενή</string>
-    <string name="information_empty_category">Δεν έχετε κατηγορίες. Πατήστε το κουμπί συν για να δημιουργήσετε μία για την οργάνωση της βιβλιοθήκης σας.</string>
     <string name="download_notifier_downloader_title">Πρόγραμμα λήψης</string>
     <string name="download_notifier_title_error">Σφάλμα</string>
     <string name="download_notifier_unknown_error">Το κεφάλαιο δεν μπορούσε να ληφθεί λόγο μη αναμενόμενου σφάλματος</string>
@@ -410,7 +408,6 @@
     <string name="action_sort_chapter_fetch_date">Ημερομηνία ανάκτησης κεφαλαίου</string>
     <string name="pref_download_new_categories_details">Οι καταχωρήσεις σε εξαιρούμενες κατηγορίες δε θα ληφθούν ακόμη και αν βρίσκονται επίσης σε κατηγορίες που περιλαμβάνονται.</string>
     <string name="pref_category_auto_download">Αυτόματη λήψη</string>
-    <string name="action_show_errors">Πατήστε για να δείτε λεπτομέρειες</string>
     <string name="clipboard_copy_error">Απέτυχε η αντιγραφή στο πρόχειρο</string>
     <string name="rotation_landscape">Οριζόντια</string>
     <string name="rotation_portrait">Κατακόρυφα</string>
@@ -479,10 +476,8 @@
     <string name="action_display_language_badge">Γλώσσα</string>
     <string name="label_warning">Προειδοποίηση</string>
     <string name="backup_info">Θα πρέπει να κρατάτε αντίγραφα αντιγράφων ασφαλείας και σε άλλα μέρη. Τα αντίγραφα ασφαλείας ενδέχεται να περιέχουν ευαίσθητα δεδομένα, συμπεριλαμβανομένων τυχόν αποθηκευμένων κωδικών πρόσβασης, να είστε προσεκτικοί αν τα μοιράζεστε.</string>
-    <string name="notification_size_warning">Οι μεγάλες ενημερώσεις βλάπτουν τις πηγές και μπορεί να οδηγήσουν σε πιο αργές ενημερώσεις και σε αυξημένη χρήση της μπαταρίας. Πατήστε για να μάθετε περισσότερα.</string>
     <string name="connected_to_wifi">Μόνο σε Wi-Fi</string>
     <string name="update_72hour">Κάθε 3 ημέρες</string>
-    <string name="download_queue_size_warning">Προειδοποίηση: οι μαζικές λήψεις ενδέχεται να οδηγήσουν σε επιβράδυνση των πηγών ή/και αποκλεισμό του %s. Πατήστε για να μάθετε περισσότερα.</string>
     <string name="ext_update_all">Ενημέρωση όλων</string>
     <string name="pref_auto_clear_chapter_cache">Εκκαθάριση της προσωρινής μνήμης κεφαλαίων κατά την εκκίνηση της εφαρμογής</string>
     <string name="clear_database_source_item_count">%1$d καταχωρήσεις εκτός βιβλιοθήκης στη βάση δεδομένων</string>
@@ -596,7 +591,6 @@
     <string name="pref_page_rotate">Περιστροφή πλατιών σελίδων για να χωρέσουν</string>
     <string name="pref_page_rotate_invert">Αναστροφή του προσανατολισμού των πλατιών σελίδων που έχουν περιστραφεί</string>
     <string name="pref_debug_info">Πληροφορίες εντοπισμού σφαλμάτων</string>
-    <string name="pref_double_tap_zoom">Διπλό πάτημα για ζουμ</string>
     <string name="pref_chapter_swipe_start">Κεφάλαιο με σύρσιμο προς τα αριστερά</string>
     <string name="pref_chapter_swipe_end">Κεφάλαιο με σύρσιμο προς τα δεξιά</string>
     <string name="action_set_interval">Ορισμός χρονικού διαστήματος</string>
@@ -610,7 +604,6 @@
     <string name="has_results">Έχει αποτελέσματα</string>
     <string name="syncing_library">Συγχρονισμός βιβλιοθήκης</string>
     <string name="library_sync_complete">Ο συγχρονισμός βιβλιοθήκης ολοκληρώθηκε</string>
-    <string name="information_cloudflare_help">Πατήστε εδώ για βοήθεια με το Cloudflare</string>
     <string name="download_cache_invalidated">Αναδημιουργία ευρετηρίου λήψεων</string>
     <string name="create_backup_file_error">Δεν ήταν δυνατή η δημιουργία αντιγράφου ασφαλείας</string>
     <string name="exception_unknown_host">Δεν ήταν δυνατή η πρόσβαση στο %s</string>

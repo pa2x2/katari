@@ -109,7 +109,6 @@
     <string name="action_filter_bookmarked">Diwenehi tandha</string>
     <string name="action_menu">Menu</string>
     <string name="chapters">Bab</string>
-    <string name="information_empty_category">Sampeyan ora duwe kategori. Dhemok tombol tambah kanggo nggawe siji kategori kanggo ngatur perpustakaane sampeyan.</string>
     <string name="information_empty_library">Koleksine sampeyan kosong</string>
     <string name="pref_category_about">Babagan</string>
     <string name="pref_category_advanced">Majeng</string>
@@ -123,7 +122,6 @@
     <string name="action_webview_refresh">Segerke</string>
     <string name="action_webview_forward">Maju</string>
     <string name="action_restore">Pulihke</string>
-    <string name="action_show_errors">Klik gae Inpo luwih lanjut</string>
     <string name="action_undo">Baleni</string>
     <string name="action_reset">Balekke</string>
     <string name="action_share">Bagi</string>
@@ -248,7 +246,6 @@
     <string name="off">Seda</string>
     <string name="pref_custom_brightness">Padhang khusus</string>
     <string name="pref_page_transitions">Animasi transisi kaca</string>
-    <string name="pref_double_tap_anim_speed">Kacepetan animasi tutul kaping pindho</string>
     <string name="pref_read_with_tapping_inverted">Walik zona tutul</string>
     <string name="tapping_inverted_horizontal">Horisontal</string>
     <string name="pref_create_folder_per_manga_summary">Nggawe folder miturut judhul manga</string>

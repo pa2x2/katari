@@ -200,7 +200,6 @@
     <string name="browse">Търсене</string>
     <string name="channel_common">Общи</string>
     <string name="action_display_download_badge">Изтеглени глави</string>
-    <string name="information_empty_category">Нямате категории. Натиснете плюса, за да създадете такава и да организирате библиотеката си.</string>
     <string name="label_migration">Мигриране</string>
     <string name="label_extensions">Разширения</string>
     <string name="label_extension_info">Информация</string>
@@ -215,7 +214,6 @@
     <string name="ext_uninstall">Деинсталирай</string>
     <string name="untrusted_extension">Непотвърдено разширение</string>
     <string name="untrusted_extension_message">Следното разширение имаше непотвърден сертификат и не беше активирано. \n \nЗлонамереното разширение може да види всичката информация за вход в системата на Katari или да компилира неблагонадежден код. \n \nПотвърждавайки този сертификат, вие приемате тези рискове.</string>
-    <string name="pref_double_tap_anim_speed">Скорост на анимацията</string>
     <string name="double_tap_anim_speed_0">Без анимация</string>
     <string name="double_tap_anim_speed_normal">Нормална</string>
     <string name="double_tap_anim_speed_fast">Бързо</string>
@@ -412,7 +410,6 @@
     <string name="label_warning">Предупреждение</string>
     <string name="confirm_lock_change">Удостоверете, за да потвърдите промяната</string>
     <string name="cancel_all_for_series">Премахни всичко от тази серия</string>
-    <string name="action_show_errors">Вижте пълните подробности за грешката</string>
     <string name="pref_app_theme">Тема</string>
     <string name="theme_monet">Динамично</string>
     <string name="theme_greenapple">Зелена ябълка</string>
@@ -458,7 +455,6 @@
     <string name="clear_history_completed">Историята изтрита</string>
     <string name="clear_history_confirmation">Напълно ли сте сигурен? Всичката ви история ще бъде загубена.</string>
     <string name="migration_help_guide">Наръчник за мигриране между източници</string>
-    <string name="notification_size_warning">Предупреждение: големите актуализации вредят на източниците и могат да доведат до по-бавни актуализации, както и до повишено използване на батерията. Натиснете тук, за да научите повече.</string>
     <string name="file_picker_error">Не бе намерено приложение за подбор на файлове</string>
     <string name="getting_started_guide">Първи стъпки</string>
     <string name="chapter_settings_updated">Стандартните настройки на главите бяха обновени</string>
@@ -488,7 +484,6 @@
     <string name="extension_api_error">Неуспешно получаване на списък с разширения</string>
     <string name="update_72hour">На всеки 3 дена</string>
     <string name="connected_to_wifi">Само през Wi-Fi</string>
-    <string name="download_queue_size_warning">Предупреждение: големите масови изтегляния могат да доведат до забавяне на източниците и/или блокиране на %s. Натиснете тук, за да научите повече.</string>
     <string name="action_show_manga">Покажи манга</string>
     <string name="action_display_cover_only_grid">Решетка само с корици</string>
     <string name="delete_category_confirmation">Искате ли да изтриете категорията \"%s\"?</string>
@@ -593,7 +588,6 @@
     <string name="label_read_chapters">Прочетено</string>
     <string name="hour_short">%dч</string>
     <string name="notification_updating_progress">Обновяване на библиотеката... (%s)</string>
-    <string name="information_cloudflare_help">Натисни тук за помощ с Cloudflare</string>
     <string name="day_short">%dд</string>
     <string name="pref_download_new_unread_chapters_only">Пропусни изтегляне на дублиращи се прочетени глави</string>
     <string name="intervals_header">Интервали</string>
@@ -637,7 +631,6 @@
     <string name="label_started">Започнати</string>
     <string name="author">Автор</string>
     <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
-    <string name="pref_double_tap_zoom">Натисни два пъти за увеличение</string>
     <string name="pref_flash_style_black">Черно</string>
     <string name="invalid_location">Невалидно местоположение: %s</string>
     <string name="exception_unknown_host">Не можа да достигне %s</string>

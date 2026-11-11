@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.katari.core.platform.currentPlatformContext
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.presentation.kit.files.DocumentAccess
@@ -115,7 +116,9 @@ class CreateBackupScreen : Screen() {
                                         checked = profile.id in state.selectedProfileIds,
                                         onCheckedChange = { model.toggleProfile(profile.id, it) },
                                         subtitle = when {
-                                            profile.isLocked -> stringResource(MR.strings.backup_profile_locked)
+                                            profile.isLocked -> stringResource(
+                                                platformPresentation.backupLockedProfileLabel,
+                                            )
                                             profile.isArchived -> stringResource(MR.strings.profiles_archived)
                                             else -> null
                                         },

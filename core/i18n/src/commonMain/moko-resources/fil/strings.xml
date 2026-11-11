@@ -72,7 +72,6 @@
     <string name="chapters">Mga Kabanata</string>
     <string name="manga">Mga nilalaman ng aklatan</string>
     <string name="categories">Kategorya</string>
-    <string name="information_empty_category">Wala ka pang kategorya. Pindutin ang plus button para gumawa ng isa para sa pag-aayos ng iyong aklatan.</string>
     <string name="information_empty_library">Walang laman ang iyong aklatan</string>
     <string name="information_no_recent_manga">Walang binasa kamakailan</string>
     <string name="information_no_recent">Walang kamakailang update</string>
@@ -168,7 +167,6 @@
     <string name="pref_show_reading_mode_summary">Mabilis na ipakita ang kasalukuyang ginagamit kapag nakabukas ang reader</string>
     <string name="pref_show_reading_mode">Ipakita ang paraan ng pagbasa</string>
     <string name="pref_show_page_number">Ipakita ang bilang ng pahina</string>
-    <string name="pref_double_tap_anim_speed">Bilis ng animasyon sa pagdoble-pindot</string>
     <string name="pref_page_transitions">I-animate ang paglipat-pahina</string>
     <string name="pref_cutout_short">Ipakita ang laman sa cutout area</string>
     <string name="obsolete_extension_message">Ang extension na ito ay walang kaugnayan sa anumang store. Hindi ito makatatanggap ng mga update, maaaring hindi gumana nang maayos, at pwedeng magdulot ng problema sa app. Inirerekomendang i-uninstall ito.</string>
@@ -418,7 +416,6 @@
     <string name="include">Kasali ang: %s</string>
     <string name="none">Wala</string>
     <string name="action_sort_chapter_fetch_date">Petsa ng pagkuha ng kabanata</string>
-    <string name="action_show_errors">I-tap para makita ang detalye</string>
     <string name="clipboard_copy_error">Bigong makopya sa clipboard</string>
     <string name="rotation_landscape">Pahiga</string>
     <string name="rotation_portrait">Patayo</string>
@@ -484,13 +481,11 @@
     <string name="action_sort_count">Dami ng entry</string>
     <string name="pref_verbose_logging">Verbose na pagla-log</string>
     <string name="pref_verbose_logging_summary">I-print ang detalyadong mga log sa system log (nakakabawas sa performance ng app)</string>
-    <string name="notification_size_warning">Babala: Nakasasama ang mga malalaking update sa source at maaaring humantong sa mabagal na update at pagtaas ng paggamit sa baterya. I-tap para matuto pa.</string>
     <string name="action_display_language_badge">Wika</string>
     <string name="label_warning">Babala</string>
     <string name="backup_info">Dapat nagtatabi rin kayo ng mga kopya ng backup sa ibang mga lugar. Ang mga backup ay naglalaman ng sensitibong data tulad ng nakaimbak na password; mag-ingat kung ibahagi ito.</string>
     <string name="connected_to_wifi">Sa Wi-Fi lang</string>
     <string name="update_72hour">Kada 3 araw</string>
-    <string name="download_queue_size_warning">Babala: maaaring humantong sa pagbagal at/o pagharang ng mga source sa %s ang maramihang pag-download. I-tap para matuto pa.</string>
     <string name="ext_update_all">I-update lahat</string>
     <string name="clear_database_source_item_count">%1$d na entry sa database na wala sa aklatan</string>
     <string name="pref_auto_clear_chapter_cache">Linisin ang cache ng kabanata sa paglulunsad ng app</string>
@@ -617,7 +612,6 @@
     <string name="overlay_header">Nakapatong (Overlay)</string>
     <string name="pref_debug_info">Impormasyon sa pag-debug</string>
     <string name="pref_chapter_swipe_start">Kabanata sa pag-swipe pakaliwa</string>
-    <string name="pref_double_tap_zoom">I-double tap para mag-zoom</string>
     <string name="pref_chapter_swipe_end">Kabanata sa pag-swipe pakanan</string>
     <string name="action_set_interval">Itakda ang pagitan</string>
     <string name="action_filter_interval_custom">Ma-customize na dalas ng pag-update</string>
@@ -630,7 +624,6 @@
     <string name="action_ok">OK</string>
     <string name="syncing_library">Nagsi-sync ang aklatan</string>
     <string name="library_sync_complete">Natapos na ang pag-sync ng aklatan</string>
-    <string name="information_cloudflare_help">I-tap dito para sa tulong sa Cloudflare</string>
     <string name="download_cache_invalidated">Ginagawa muli ang download index</string>
     <string name="create_backup_file_error">Hindi makalikha ng backup file</string>
     <string name="unlock_app_title">I-unlock ang %s</string>

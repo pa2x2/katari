@@ -200,7 +200,6 @@
     <string name="browse">Explorer</string>
     <string name="action_display_download_badge">Chapitres téléchargés</string>
     <string name="channel_common">Général</string>
-    <string name="information_empty_category">Vous n\'avez aucune catégorie. Appuyez sur le bouton « + » pour en créer une afin d\'organiser votre bibliothèque.</string>
     <string name="label_extensions">Extensions</string>
     <string name="ext_update">Mettre à jour</string>
     <string name="ext_install">Installer</string>
@@ -211,7 +210,6 @@
     <string name="ext_uninstall">Désinstaller</string>
     <string name="untrusted_extension">Extension non reconnue</string>
     <string name="untrusted_extension_message">Une extension malveillante pourrait lire n\'importe quel identifiant de connexion stocké ou exécuter un code arbitraire. \n \nEn faisant confiance à cette extension, vous acceptez ces risques.</string>
-    <string name="pref_double_tap_anim_speed">Vitesse d\'animation du double-clic</string>
     <string name="double_tap_anim_speed_0">Sans animation</string>
     <string name="double_tap_anim_speed_normal">Normale</string>
     <string name="double_tap_anim_speed_fast">Rapide</string>
@@ -410,7 +408,6 @@
     <string name="action_sort_chapter_fetch_date">Date de récupération du chapitre</string>
     <string name="pref_download_new_categories_details">Les séries des catégories exclues ne seront pas mis à jour même si elles appartiennent également à des catégories incluses.</string>
     <string name="pref_category_auto_download">Téléchargement automatique</string>
-    <string name="action_show_errors">Appuyez pour voir les détails</string>
     <string name="clipboard_copy_error">Échec de la copie dans le presse-papiers</string>
     <string name="rotation_landscape">Paysage</string>
     <string name="rotation_portrait">Portrait</string>
@@ -478,11 +475,9 @@
     <string name="pref_verbose_logging_summary">Inclut des rapports détaillés dans les traces systèmes (réduit les performances de l\'application)</string>
     <string name="action_display_language_badge">Langue</string>
     <string name="label_warning">Avertissement</string>
-    <string name="notification_size_warning">Les mises à jour importantes nuisent aux sources et peuvent entraîner un ralentissement des mises à jour ainsi qu\'une augmentation de l\'utilisation de la batterie. Appuyez pour en savoir plus.</string>
     <string name="backup_info">Vous devez également conserver des copies des sauvegardes à d\'autres endroits.</string>
     <string name="connected_to_wifi">Uniquement en Wi-Fi</string>
     <string name="update_72hour">Tous les 3 jours</string>
-    <string name="download_queue_size_warning">Attention : les téléchargements massifs peuvent entraîner un ralentissement des sources ou le blocage de %s. Appuyez pour en savoir plus.</string>
     <string name="ext_update_all">Tout mettre à jour</string>
     <string name="pref_auto_clear_chapter_cache">Vider le cache de chapitre au lancement de l\'application</string>
     <string name="clear_database_source_item_count">%1$d séries hors de la bibliothèque dans la base de données</string>
@@ -598,12 +593,10 @@
     <string name="pref_debug_info">Informations de débogage</string>
     <string name="pref_chapter_swipe_start">Action de glisser à gauche</string>
     <string name="pref_chapter_swipe_end">Action de glisser à droite</string>
-    <string name="pref_double_tap_zoom">Appuyez deux fois pour zoomer</string>
     <string name="action_sort_next_updated">Prochaine mise à jour prévue</string>
     <string name="action_set_interval">Définir l\'intervalle</string>
     <string name="action_ok">Valider</string>
     <string name="action_filter_interval_custom">Fréquence de mise à jour personnalisée</string>
-    <string name="information_cloudflare_help">Appuyez ici pour de l\'aide sur Cloudflare</string>
     <string name="unlock_app_title">Débloquer %s</string>
     <string name="syncing_library">Synchronisation de la bibliothèque</string>
     <string name="intervals_header">Intervalles</string>

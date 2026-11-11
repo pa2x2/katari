@@ -149,7 +149,6 @@
     <string name="action_webview_forward">ရှေ့သို့</string>
     <string name="action_webview_refresh">Refresh</string>
     <string name="action_open_log">မှတ်တမ်းဖွင့်မည်</string>
-    <string name="action_show_errors">အသေးစိတ် ကြည့်ရန် နှိပ်ပါ</string>
     <string name="action_restore">ပြန်ထားမည်</string>
     <string name="action_webview_back">နောက်သို့</string>
     <string name="action_start_downloading_now">ခုပဲ ဒေါင်းလုဒ်လုပ်မည်</string>

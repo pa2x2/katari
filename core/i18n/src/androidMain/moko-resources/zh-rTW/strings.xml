@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">查看 Cloudflare 相關說明</string>
+    <string name="action_show_errors">輕觸以檢視詳細資訊</string>
+    <string name="notification_size_warning">大量更新會損害來源，並可能導致更新速度緩慢、電池用量增加，輕觸以瞭解詳情</string>
+    <string name="download_queue_size_warning">警告：大量批次下載可能壅塞來源，甚至使其封鎖 %s，輕觸以瞭解詳情</string>
+    <string name="information_empty_category">尚無任何類別，輕觸新增按鈕即可建立類別以組織你的書櫃</string>
+    <string name="pref_double_tap_zoom">輕觸兩下以縮放</string>
+    <string name="pref_double_tap_anim_speed">輕觸兩下動畫速度</string>
+</resources>

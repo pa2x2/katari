@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Tuŝetu ĉi tie por helpo kun Cloudflare</string>
+    <string name="action_show_errors">Tuŝeti pro vidi detalojn</string>
+    <string name="notification_size_warning">Grandaj ĝisdatigoj povas damaĝi fontojn kaj konduki al pli malrapidaj ĝisdatigoj kaj pliigan baterian uzadon. Tuŝetu por ekscii pli.</string>
+    <string name="download_queue_size_warning">Averto: grandaj amasaj elŝutoj povas igi fontojn fariĝi pli malrapidaj kaj/aŭ bloki %s. Tuŝetu por ekscii pli.</string>
+    <string name="information_empty_category">Vi havas neniun kategorion. Tuŝeti la butonon kun plus, por krei ian kaj organizi vian bibliotekon.</string>
+    <string name="pref_double_tap_zoom">Duoble tuŝeti por zomi</string>
+    <string name="pref_double_tap_anim_speed">Animacia rapido de duobla tuŝeto</string>
+</resources>

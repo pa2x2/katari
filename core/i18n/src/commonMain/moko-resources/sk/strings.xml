@@ -93,7 +93,6 @@
     <string name="untrusted_extension">Nedôveryhodné rozšírenie</string>
     <string name="untrusted_extension_message">Toto rozšírenie bolo podpísané nedôveryhodným certifikátom a nebolo aktivované. \n \nŠkodlivé rozšírenie môže čítať všetky prihlasovacie údaje uložené v Katari alebo spúšťať ľubovoľný kód. \n \nDôverovaním tohto certifikátu akceptujete tieto riziká.</string>
     <string name="pref_page_transitions">Animácia prechodov strán</string>
-    <string name="pref_double_tap_anim_speed">Rýchlosť animácie pre dvojité ťuknutie</string>
     <string name="pref_show_page_number">Zobraziť číslo strany</string>
     <string name="pref_crop_borders">Orezať okraje</string>
     <string name="pref_custom_brightness">Vlastný jas</string>
@@ -243,7 +242,6 @@
     <string name="information_no_recent">Žiadne nedávne aktualizácie</string>
     <string name="information_no_recent_manga">Nič nedávno čítané</string>
     <string name="information_empty_library">Vaša knižnica je prázdna</string>
-    <string name="information_empty_category">Nemáte žiadne kategórie. Ťuknutím na tlačidlo plus si ju vytvorte a usporiadajte knižnicu.</string>
     <string name="download_notifier_downloader_title">Preberanie</string>
     <string name="download_notifier_title_error">Chyba</string>
     <string name="download_notifier_unknown_error">Kapitolu sa nepodarilo stiahnuť z dôvodu neočakávanej chyby</string>
@@ -279,7 +277,6 @@
     <string name="notification_chapters_single_and_more">Kapitola %1$s a %2$d ďalšie</string>
     <string name="notification_chapters_single">Kapitola %1$s</string>
     <string name="secure_screen">Zabezpečená obrazovka</string>
-    <string name="action_show_errors">Ťuknutím zobrazíte podrobnosti</string>
     <string name="theme_system">Podľa systému</string>
     <string name="theme_tako">Tako</string>
     <string name="action_show_manga">Zobraziť záznam</string>
@@ -529,8 +526,6 @@
     <string name="pref_clear_webview_data">Vymazanie údajov WebView</string>
     <string name="webview_data_deleted">Údaje WebView boli vymazané</string>
     <string name="manga_info_expand">Viac</string>
-    <string name="download_queue_size_warning">Upozornenie: Veľké hromadné sťahovanie môže viesť k spomaleniu zdrojov a/alebo blokovaniu %s. Klepnutím sa dozviete viac.</string>
-    <string name="notification_size_warning">Veľké aktualizácie poškodzujú zdroje a môžu viesť k pomalším aktualizáciám a tiež k zvýšeniu spotreby batérie. Klepnutím sa dozviete viac.</string>
     <string name="creating_backup_error">Zálohovanie zlyhalo</string>
     <string name="website">Webová stránka</string>
     <string name="pref_reader_actions">Akcie</string>
@@ -635,7 +630,6 @@
     <string name="ext_revoke_trust">Odstrániť status \"dôveryhodné\" z neznámych rozšírení</string>
     <string name="pref_page_rotate">Otočiť široké strany, aby sa zmestili</string>
     <string name="pref_page_rotate_invert">Preklopiť orientáciu otočených širokých strán</string>
-    <string name="pref_double_tap_zoom">Dvojťuk pre priblíženie</string>
     <string name="pref_flash_page">Prebliknúť pri zmene strany</string>
     <string name="pref_flash_page_summ">Znižuje ghosting na e-ink displejoch</string>
     <string name="pref_flash_duration">Trvanie prebliknutia</string>

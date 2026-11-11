@@ -83,7 +83,6 @@
     <string name="ext_uninstall">アンインストール</string>
     <string name="untrusted_extension">信頼できない拡張機能</string>
     <string name="pref_page_transitions">ページ遷移エフェクトを表示</string>
-    <string name="pref_double_tap_anim_speed">ダブルタップアニメーション速度</string>
     <string name="pref_crop_borders">クロップボーダー</string>
     <string name="pref_custom_brightness">カスタムの明るさ</string>
     <string name="pref_custom_color_filter">カスタムカラーフィルター</string>
@@ -218,7 +217,6 @@
     <string name="information_no_recent">最近の更新はありません</string>
     <string name="information_no_recent_manga">最近は何も読んでいません</string>
     <string name="information_empty_library">ライブラリは空です</string>
-    <string name="information_empty_category">カテゴリーがありません。「+」をタップしてカテゴリーを追加し、ライブラリを整理できます。</string>
     <string name="download_notifier_downloader_title">ダウンロード</string>
     <string name="download_notifier_title_error">エラー</string>
     <string name="download_notifier_unknown_error">予期せぬエラーが発生したため、ダウンロードは失敗しました</string>
@@ -409,7 +407,6 @@
     <string name="exclude">下記を除外: %s</string>
     <string name="include">下記を含む: %s</string>
     <string name="none">なし</string>
-    <string name="action_show_errors">タップで詳細を表示</string>
     <string name="action_sort_chapter_fetch_date">章の取得された日付順</string>
     <string name="information_empty_category_dialog">まだカテゴリーを登録していません。</string>
     <string name="error_no_match">結果が見つかりませんでした</string>
@@ -476,11 +473,9 @@
     <string name="ext_install_service_notif">拡張機能をインストール中…</string>
     <string name="backup_info">バックアップのコピーは、他の場所にも保管しておくことをお勧めします。バックアップには、保存されたパスワードなど、機密情報が含まれている場合がありますので、共有する際は十分注意してください。</string>
     <string name="pref_verbose_logging_summary">詳細なログをシステムログに出力します（アプリのパフォーマンスが低下します）</string>
-    <string name="notification_size_warning">大規模なアップデートはリソースに負荷をかけ、アップデート速度の低下やバッテリー消費量の増加につながる可能性があります。詳細についてはタップしてご確認ください。</string>
     <string name="action_display_language_badge">言語</string>
     <string name="label_warning">警告</string>
     <string name="pref_verbose_logging">詳細ログ</string>
-    <string name="download_queue_size_warning">警告：大量のダウンロードは、ソースの速度低下や %s のブロックにつながる可能性があります。詳細を確認するにはタップしてください。</string>
     <string name="update_72hour">3 日ごと</string>
     <string name="connected_to_wifi">Wi-Fi 接続時のみ</string>
     <string name="ext_update_all">すべて更新</string>
@@ -598,7 +593,6 @@
     <string name="pref_debug_info">デバッグ情報</string>
     <string name="pref_chapter_swipe_start">左にスワイプする章</string>
     <string name="pref_chapter_swipe_end">右にスワイプする章</string>
-    <string name="pref_double_tap_zoom">ダブルタップでズーム</string>
     <string name="action_set_interval">間隔を設定</string>
     <string name="action_filter_interval_custom">カスタマイズした更新頻度</string>
     <string name="action_sort_next_updated">次の更新予定</string>
@@ -610,7 +604,6 @@
     <string name="action_ok">OK</string>
     <string name="syncing_library">ライブラリを同期しています</string>
     <string name="library_sync_complete">ライブラリを同期しました</string>
-    <string name="information_cloudflare_help">Cloudflare に関するヘルプはこちらをタップしてください</string>
     <string name="download_cache_invalidated">ダウンロードインデックスを再作成中</string>
     <string name="create_backup_file_error">バックアップ ファイルを作成できませんでした</string>
     <string name="exception_http">HTTP %d、WebView でウェブサイトを確認してください</string>

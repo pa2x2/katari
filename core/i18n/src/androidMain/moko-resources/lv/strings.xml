@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Pieskarieties šeit, lai iegūtu palīdzību ar Cloudflare</string>
+    <string name="action_show_errors">Pieskarieties, lai skatītu detalizētu informāciju</string>
+    <string name="notification_size_warning">Daudz atjauninājumi kaitē avotiem un var izraisīt lēnākus atjauninājumus un arī lielāku akumulatora lietojumu. Pieskarieties, lai uzzinātu vairāk.</string>
+    <string name="download_queue_size_warning">Brīdinājums: liela apjoma lejupielāde var izraisīt to, ka avoti kļūst lēnāki un/vai bloķē %s. Pieskarieties, lai uzzinātu vairāk.</string>
+    <string name="information_empty_category">Jums nav nevienas kategorijas. Pieskarieties plus pogai, lai izveidotu kategoriju savas bibliotēkas organizēšanai.</string>
+    <string name="pref_double_tap_zoom">Dubult-pieskarieties, lai tuvinātu</string>
+    <string name="pref_double_tap_anim_speed">Dubultpieskāriena animācijas ātrums</string>
+</resources>

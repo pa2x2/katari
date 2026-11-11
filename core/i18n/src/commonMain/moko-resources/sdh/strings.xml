@@ -45,7 +45,6 @@
     <string name="action_sort_date_added">بەرواری بەردەست بوون</string>
     <string name="action_search">گەڕان</string>
     <string name="action_download">داونلۆد</string>
-    <string name="information_empty_category">هیچ کاتیگۆرییەکت نییە. دەست بنێ بە دوگمەی زیادە تا کاتیگۆرییەک بۆ ڕێکخستنی تۆماری ڕابردووت درووست بکەیت.</string>
     <string name="action_delete">سڕینەوە</string>
     <string name="information_no_recent">هێج نوێکارییەک نییە لەم دواییانەدا</string>
     <string name="label_sources">سەرچاوەکان</string>
@@ -83,7 +82,6 @@
     <string name="action_webview_forward">بەرەو پێشەوە</string>
     <string name="action_webview_refresh">فرێشکردنەوە</string>
     <string name="action_start_downloading_now">ئێستا دەست بکە بە داونلۆد کردن</string>
-    <string name="action_show_errors">وردەکاری هەموو ئیرۆرەکان ببینە</string>
     <string name="action_desc">بە پلە نزم بوونەوە</string>
     <string name="action_move_category">دیاریکردنی کاتیگۆرییەکان</string>
     <string name="action_edit_cover">گۆڕینی وێنەی بەرگەکە</string>

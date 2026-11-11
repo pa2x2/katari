@@ -200,7 +200,6 @@
     <string name="browse">Stöbern</string>
     <string name="channel_common">Allgemein</string>
     <string name="action_display_download_badge">Heruntergelade Kapitel</string>
-    <string name="information_empty_category">Keine Kategorien vorhanden. Tippe auf die Plus-Schaltfläche, um eine Kategorie zum Sortieren deiner Bibliothek zu erstellen.</string>
     <string name="label_migration">Migrieren</string>
     <string name="label_extensions">Erweiterungen</string>
     <string name="label_extension_info">Erweiterungsinformationen</string>
@@ -245,7 +244,6 @@
     <string name="ext_malformed_message">Dieser Erweiterung fehlen Daten, welche die App benötigt, um sie zu laden.</string>
     <string name="ext_load_failed_message">Diese Erweiterung konnte wegen eines Fehlers nicht geladen werden, weswegen keine ihrer Quellen zur Verfügung stehen.</string>
     <string name="untrusted_extension">Nicht vertrauenswürdige Erweiterung</string>
-    <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
     <string name="migration_dialog_what_to_include">Wähle zu beinhaltende Daten</string>
     <string name="pager_viewer">Seiten</string>
     <string name="source_not_installed">Quelle nicht installiert: %1$s</string>
@@ -432,7 +430,6 @@
     <string name="action_sort_chapter_fetch_date">Abrufdatum des Kapitels</string>
     <string name="pref_download_new_categories_details">Einträge in ausgeschlossenen Kategorien werden nicht heruntergeladen, auch wenn sie in eingeschlossenen Kategorien vorhanden sind.</string>
     <string name="pref_category_auto_download">Automatisches Herunterladen</string>
-    <string name="action_show_errors">Tippe, um Details anzuzeigen</string>
     <string name="clipboard_copy_error">Kopieren in die Zwischenablage fehlgeschlagen</string>
     <string name="rotation_landscape">Querformat</string>
     <string name="rotation_portrait">Hochformat</string>
@@ -500,11 +497,9 @@
     <string name="pref_verbose_logging_summary">Ausführliche Protokolle im Systemprotokoll ausgeben (verringert die App-Leistung)</string>
     <string name="action_display_language_badge">Sprache</string>
     <string name="label_warning">Warnung</string>
-    <string name="notification_size_warning">Große Aktualisierungen schaden Quellen und könnten zu langsameren Aktualisierungen sowie höherem Akkuverbrauch führen. Tippe, um mehr zu erfahren.</string>
     <string name="backup_info">Du solltest Kopien der Datensicherungen auch an anderen Orten aufbewahren. Datensicherungen beinhalten möglicherweise sensible Daten, einschließlich gespeicherter Passwörter. Sei vorsichtig beim Teilen.</string>
     <string name="connected_to_wifi">Nur über WLAN</string>
     <string name="update_72hour">Alle 3 Tage</string>
-    <string name="download_queue_size_warning">Achtung: Große Downloads könnten dazu führen, dass Quellen langsamer werden und/oder %s blockieren. Tippe um mehr zu erfahren.</string>
     <string name="ext_update_all">Alle aktualisieren</string>
     <string name="pref_auto_clear_chapter_cache">Kapitel-Zwischenspeicher beim Öffnen der App löschen</string>
     <string name="clear_database_source_item_count">%1$d Nicht-Bibliothekseinträge in der Datenbank</string>
@@ -622,7 +617,6 @@
     <string name="pref_debug_info">Debug-Info</string>
     <string name="pref_chapter_swipe_end">Kapitel beim Streichen nach rechts</string>
     <string name="pref_chapter_swipe_start">Kapitel beim Streichen nach links</string>
-    <string name="pref_double_tap_zoom">Zum Zoomen doppeltippen</string>
     <string name="intervals_header">Intervalle</string>
     <string name="action_filter_interval_custom">Benutzerdefiniertes Aktualisierungsintervall</string>
     <string name="action_set_interval">Intervall einstellen</string>
@@ -634,7 +628,6 @@
     <string name="has_results">Hat Ergebnisse</string>
     <string name="syncing_library">Bibliothek wird synchronisiert</string>
     <string name="library_sync_complete">Bibliothekssynchronisierung abgeschlossen</string>
-    <string name="information_cloudflare_help">Tippe hier, um Hilfe zu Cloudflare zu erhalten</string>
     <string name="download_cache_invalidated">Downloads werden neu indexiert</string>
     <string name="create_backup_file_error">Sicherungsdatei konnte nicht erstellt werden</string>
     <string name="exception_http">HTTP %d, überprüfe die Webseite in WebView</string>

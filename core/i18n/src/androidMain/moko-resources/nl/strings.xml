@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Tik hier voor hulp met Cloudflare</string>
+    <string name="action_show_errors">Tik om details weer te geven</string>
+    <string name="notification_size_warning">Waarschuwing: grote updates beschadigen bronnen en kunnen leiden tot tragere updates en verhoogd batterijgebruik. Tik om meer te leren.</string>
+    <string name="download_queue_size_warning">Waarschuwing: grote bulk downloads kunnen leiden tot bronnen die trager werken en/of %s blokkeren. Tik om meer te leren.</string>
+    <string name="information_empty_category">Er zijn nog geen categorieën. Druk op de plus-knop om er een aan te maken.</string>
+    <string name="pref_double_tap_zoom">Dubbeltik om te zoomen</string>
+    <string name="pref_double_tap_anim_speed">Dubbeltik animatiesnelheid</string>
+</resources>

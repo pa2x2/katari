@@ -182,7 +182,6 @@
     <string name="action_undo">செயல்தவிர்</string>
     <string name="action_close">மூடு</string>
     <string name="action_open_log">பதிவு திற</string>
-    <string name="action_show_errors">விவரங்களைக் காண தட்டவும்</string>
     <string name="action_restore">மீட்டமை</string>
     <string name="action_webview_back">பின்</string>
     <string name="action_webview_forward">முன்னோக்கி</string>
@@ -322,7 +321,6 @@
     <string name="pref_dual_page_invert_summary">பிளவு அகலமான பக்கங்களின் இடம் வாசிப்பு திசையுடன் பொருந்தவில்லை என்றால்</string>
     <string name="pref_page_rotate">பொருத்தமாக பரந்த பக்கங்களை சுழற்றுங்கள்</string>
     <string name="pref_page_rotate_invert">சுழற்றப்பட்ட அகலமான பக்கங்களின் புரட்டல் நோக்குநிலை</string>
-    <string name="pref_double_tap_zoom">பெரிதாக்க இரட்டை தட்டவும்</string>
     <string name="pref_cutout_short">கட்அவுட் பகுதியில் உள்ளடக்கத்தைக் காட்டு</string>
     <string name="pref_page_transitions">பக்க மாற்றங்களை உயிரூட்டவும்</string>
     <string name="pref_flash_page">பக்க மாற்றத்தில் ஃபிளாச்</string>
@@ -336,7 +334,6 @@
     <string name="pref_flash_style_black">கருப்பு</string>
     <string name="pref_flash_style_white">வெள்ளை</string>
     <string name="pref_flash_style_white_black">வெள்ளை மற்றும் கருப்பு</string>
-    <string name="pref_double_tap_anim_speed">அனிமேசன் விரைவு இரட்டை தட்டவும்</string>
     <string name="pref_show_page_number">பக்க எண்ணைக் காட்டு</string>
     <string name="pref_show_reading_mode">வாசிப்பு பயன்முறையைக் காட்டு</string>
     <string name="pref_show_reading_mode_summary">வாசகர் திறக்கப்படும்போது தற்போதைய பயன்முறையை சுருக்கமாகக் காட்டு</string>
@@ -653,7 +650,6 @@
     <string name="label_read_chapters">படிக்க</string>
     <string name="label_used">பயன்படுத்தப்பட்டது</string>
     <string name="download_insufficient_space">குறைந்த சேமிப்பு இடம் காரணமாக அத்தியாயங்களை பதிவிறக்கம் செய்ய முடியவில்லை</string>
-    <string name="download_queue_size_warning">எச்சரிக்கை: பெரிய மொத்தப் பதிவிறக்கங்கள் மூலங்கள் மெதுவாக மாறுவதற்கும்/அல்லது %sஐத் தடுப்பதற்கும் வழிவகுக்கும். மேலும் அறிய தட்டவும்.</string>
     <string name="not_applicable">இதற்கில்லை</string>
     <string name="day_short">%d.டி.</string>
     <string name="notification_updating_progress">நூலகத்தைப் புதுப்பித்தல்… (%s)</string>
@@ -661,7 +657,6 @@
     <string name="minute_short">%d.எம்</string>
     <string name="seconds_short">%d.எச்</string>
     <string name="download_queue_error">அத்தியாயங்களை பதிவிறக்கம் செய்ய முடியவில்லை. பதிவிறக்கங்கள் பிரிவில் நீங்கள் மீண்டும் முயற்சி செய்யலாம்</string>
-    <string name="notification_size_warning">பெரிய புதுப்பிப்புகள் ஆதாரங்களுக்கு தீங்கு விளைவிக்கும் மற்றும் மெதுவான புதுப்பிப்புகளுக்கு வழிவகுக்கும் மற்றும் பேட்டரி பயன்பாட்டையும் அதிகரிக்கும். மேலும் அறிய தட்டவும்.</string>
     <string name="notification_chapters_single">அத்தியாயம் %1$s</string>
     <string name="notification_chapters_single_and_more">அத்தியாயம் %1$s மற்றும் %2$d மேலும்</string>
     <string name="notification_chapters_multiple">அத்தியாயங்கள் %1$s</string>
@@ -680,10 +675,8 @@
     <string name="information_no_manga_category">வகை காலியாக உள்ளது</string>
     <string name="information_no_entries_found">இந்த பிரிவில் உள்ளீடுகள் எதுவும் காணப்படவில்லை</string>
     <string name="getting_started_guide">தொடங்குதல் வழிகாட்டி</string>
-    <string name="information_empty_category">உங்களிடம் வகைகள் இல்லை. உங்கள் நூலகத்தை ஒழுங்கமைக்க ஒன்றை உருவாக்க பிளச் பொத்தானைத் தட்டவும்.</string>
     <string name="information_empty_category_dialog">உங்களிடம் இதுவரை எந்த வகைகளும் இல்லை.</string>
     <string name="information_cloudflare_bypass_failure">கிளவுட்ஃப்ளேரைத் தவிர்ப்பதில் தோல்வி</string>
-    <string name="information_cloudflare_help">கிளவுட்ஃப்ளேர் உதவிக்கு இங்கே தட்டவும்</string>
     <string name="information_webview_required">பயன்பாடு செயல்பட வெப்வியூ தேவை</string>
     <string name="information_webview_outdated">சிறந்த இணக்கத்தன்மைக்கு வெப்வியூ பயன்பாட்டைப் புதுப்பிக்கவும்</string>
     <string name="chapter_settings_updated">புதுப்பிக்கப்பட்ட இயல்புநிலை அத்தியாய அமைப்புகள்</string>

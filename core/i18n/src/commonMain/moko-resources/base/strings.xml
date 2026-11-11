@@ -238,7 +238,6 @@
     <string name="action_close">Close</string>
     <string name="action_details">Details</string>
     <string name="action_open_log">Open log</string>
-    <string name="action_show_errors">Tap to see details</string>
     <string name="action_restore">Restore</string>
     <string name="action_webview_back">Back</string>
     <string name="action_webview_forward">Forward</string>
@@ -696,7 +695,6 @@
     <string name="reader_text_translate_downloads_offer_title">Translate downloaded chapters?</string>
     <string name="pref_page_text_translation">Page translation</string>
     <string name="pref_page_text_translation_overlay">Show translations on the page</string>
-    <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>
     <string name="pref_page_text_process_ahead_unmetered">Translate upcoming pages only on unmetered networks</string>
     <string name="pref_page_text_process_ahead_unmetered_summary">Pages you are looking at are always translated</string>
     <string name="pref_page_text_process_ahead_charging">Translate upcoming pages only while charging</string>
@@ -913,7 +911,6 @@
     <string name="book_document_incompatible">The prepared chapter is not a semantic document.</string>
     <string name="book_document_chapter_unavailable">Chapter unavailable</string>
     <string name="book_document_image_loading">Loading image…</string>
-    <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
     <string name="book_document_image_description_unavailable">Image description unavailable</string>
     <string name="book_document_anchor_missing">The linked section could not be found.</string>
     <string name="book_document_reference_title">Note</string>
@@ -1420,7 +1417,6 @@
     <string name="pref_dual_page_invert_summary">If the placement of the split wide pages don\'t match reading direction</string>
     <string name="pref_page_rotate">Rotate wide pages to fit</string>
     <string name="pref_page_rotate_invert">Flip orientation of rotated wide pages</string>
-    <string name="pref_double_tap_zoom">Double tap to zoom</string>
     <string name="pref_cutout_short">Show content in cutout area</string>
     <string name="pref_page_transitions">Animate page transitions</string>
     <string name="pref_load_ahead_only_over_wifi">Load ahead only on Wi-Fi</string>
@@ -1434,7 +1430,6 @@
     <string name="pref_flash_style_black">Black</string>
     <string name="pref_flash_style_white">White</string>
     <string name="pref_flash_style_white_black">White and Black</string>
-    <string name="pref_double_tap_anim_speed">Double tap animation speed</string>
     <string name="pref_show_page_number">Show page number</string>
     <string name="pref_vertical_navigator">Use vertical chapter navigator in</string>
     <string name="pref_vertical_navigator_height">Vertical navigator height</string>
@@ -1503,15 +1498,6 @@
     <string name="reader_shortcut_zoom_in">Zoom in</string>
     <string name="reader_shortcut_zoom_out">Zoom out</string>
     <string name="reader_shortcut_zoom_fit">Fit the page</string>
-    <string name="reader_guide_click">Click to turn pages or show the menu</string>
-    <string name="reader_guide_double_click">Double-click to zoom</string>
-    <string name="reader_guide_right_click">Right-click for page actions</string>
-    <string name="reader_guide_scroll">Scroll to move through pages</string>
-    <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
-    <string name="reader_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
-    <string name="reader_guide_keys_turn">← and → turn pages</string>
-    <string name="reader_guide_keys_chapter">N and P change chapter</string>
-    <string name="reader_guide_keys_list">? lists every key</string>
     <string name="book_reader_shortcut_scroll_down">Scroll down</string>
     <string name="book_reader_shortcut_scroll_up">Scroll up</string>
     <string name="book_reader_shortcut_screen_down">Scroll down a screen</string>
@@ -1521,9 +1507,6 @@
     <string name="book_reader_shortcut_text_reset">Reset text size</string>
     <string name="book_reader_text_size_value">Text size %1$d%%</string>
     <string name="book_reader_open_picture">Open picture</string>
-    <string name="book_reader_guide_drag">Drag to select text</string>
-    <string name="book_reader_guide_right_click">Right-click a selection to copy or translate</string>
-    <string name="book_reader_guide_scroll_text_size">Ctrl and scroll change the text size</string>
     <string name="left_to_right_viewer">Paged (left to right)</string>
     <string name="right_to_left_viewer">Paged (right to left)</string>
     <string name="vertical_viewer">Paged (vertical)</string>
@@ -1637,7 +1620,6 @@
     <string name="restore_profile_new">New on this device</string>
     <string name="restore_profile_merge">Merges into this device\'s profile</string>
     <string name="restore_profile_locked">Locked on this device, asks to unlock</string>
-    <string name="backup_profile_locked">Locked, asks to unlock when you tap Create</string>
     <string name="restore_duration">%1$02d min, %2$02d sec</string>
     <string name="backup_in_progress">Backup is already in progress</string>
     <string name="backup_choice">What do you want to backup?</string>
@@ -1694,7 +1676,6 @@
     <string name="pref_invalidate_download_cache_summary">Force app to recheck downloads</string>
     <string name="pref_retry_merge_maintenance">Merge maintenance</string>
     <string name="pref_retry_merge_maintenance_idle">No pending maintenance</string>
-    <string name="pref_retry_merge_maintenance_summary">%1$d pending, %2$d failed. Tap to retry.</string>
     <string name="download_cache_invalidated">Recreating download index</string>
     <string name="pref_clear_database">Clear database</string>
     <string name="pref_clear_database_summary">Delete history for entries that are not saved in your library</string>
@@ -1891,7 +1872,6 @@
     <string name="anime_playback_audio_track">Track %d</string>
     <string name="download_apply_to_selected">Apply to all %1$d selected items</string>
     <string name="download_storage_warning">Downloading many items can use significant storage</string>
-    <string name="download_options_failed">Couldn\'t load the options for this choice. Tap it to try again, or pick another.</string>
     <string name="anime_download_quality">Quality</string>
     <string name="anime_download_quality_best">Best quality</string>
     <string name="anime_download_quality_balanced">Balanced</string>
@@ -1960,22 +1940,7 @@
     <string name="anime_playback_episode_opening">Opening</string>
     <string name="anime_playback_source_waits_for_episode">Dub, server and quality come back once %s plays</string>
     <string name="anime_playback_details">Details</string>
-    <string name="anime_guide_brightness">Swipe for brightness</string>
-    <string name="anime_guide_volume">Swipe for volume</string>
     <string name="anime_guide_hold">Hold for 2× speed</string>
-    <string name="anime_guide_swipe_seek">Swipe sideways to seek</string>
-    <string name="anime_guide_tap">Tap to show controls</string>
-    <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
-    <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
-    <string name="anime_guide_click">Click to play or pause</string>
-    <string name="anime_guide_double_click">Double-click for full screen</string>
-    <string name="anime_guide_right_click">Right-click for settings</string>
-    <string name="anime_guide_scroll_volume">Scroll for volume</string>
-    <string name="anime_guide_scroll_seek">Scroll sideways to seek</string>
-    <string name="anime_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
-    <string name="anime_guide_keys_play">Space to play or pause</string>
-    <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>
-    <string name="anime_guide_keys_list">? lists every key</string>
     <string name="action_got_it">Got it</string>
     <string name="anime_playback_change_dub">Change dub</string>
     <string name="anime_playback_change_quality">Change quality</string>
@@ -2165,7 +2130,6 @@
     <string name="pref_enable_anime_seek_preview">Seek preview</string>
     <string name="pref_enable_anime_seek_preview_summary">Show timeline preview images while seeking. This may use extra media requests.</string>
     <string name="pref_anime_seek_step">Seek step</string>
-    <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
     <string name="pref_anime_orientation">Orientation</string>
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="pref_anime_marker_skip_summary">%s · where they\'re marked</string>
@@ -2674,7 +2638,6 @@
     <!-- Downloads activity and service -->
     <string name="download_queue_error">Couldn\'t download items. You can try again in the downloads section</string>
     <string name="download_insufficient_space">Couldn\'t download items due to low storage space</string>
-    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking %s. Tap to learn more.</string>
     <string name="download_state_queued">Queued</string>
     <string name="download_state_resolving">Preparing…</string>
     <string name="download_state_downloading">Downloading…</string>
@@ -2685,8 +2648,6 @@
     <!-- Library update service notifications -->
     <string name="notification_updating_progress">Updating library… (%s)</string>
     <string name="notification_library_update_next">Next: %s</string>
-    <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
-    <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to choose what updates check.</string>
     <string name="notification_new_items">New items found</string>
     <string name="notification_chapters_single">Chapter %1$s</string>
     <string name="notification_chapters_single_and_more">Chapter %1$s and %2$d more</string>
@@ -2784,10 +2745,8 @@
     <string name="information_no_manga_group">Group is empty</string>
     <string name="information_no_entries_found">No entries found in this group</string>
     <string name="getting_started_guide">Getting started guide</string>
-    <string name="information_empty_category">You have no categories. Tap the plus button to create one for organizing your library.</string>
     <string name="information_empty_category_dialog">You don\'t have any categories yet.</string>
     <string name="information_cloudflare_bypass_failure">Failed to bypass Cloudflare</string>
-    <string name="information_cloudflare_help">Tap here for help with Cloudflare</string>
     <!-- Do not translate "WebView" -->
     <string name="information_webview_required">WebView is required for the app to function</string>
     <!-- Do not translate "WebView" -->
@@ -2815,7 +2774,6 @@
     <string name="webview_engine_remove_summary">Frees %1$s. WebView asks to download it again when it is next needed.</string>
     <string name="webview_engine_remove_confirm">Open WebView pages close, and sources that need WebView stop working until Chromium is downloaded again.</string>
     <string name="webview_engine_info">Katari runs WebView on Chromium, which it downloads once. A Katari update can need a new download.</string>
-    <string name="information_cloudflare_help_click">Click here for help with Cloudflare</string>
     <string name="webview_setup_updating">Updating Chromium for WebView (%1$s)</string>
     <!-- The title of a dialog a web page opens; %1$s is the page's origin, such as https://example.com -->
     <string name="webview_js_dialog_title">%1$s says</string>
@@ -3085,11 +3043,9 @@
     <string name="statistics_monthly_recap">Monthly recap</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
     <string name="statistics_recap_notification_title">Your %1$s: %2$s</string>
-    <string name="statistics_recap_notification_text">%s. Tap to see and share your recap.</string>
     <string name="statistics_yearly_recap">Yearly recap</string>
     <string name="statistics_yearly_recap_summary">A notification on December 1 with your year so far, and on January 1 with the whole year</string>
     <string name="statistics_year_recap_notification_title">Your %s in Katari is ready</string>
-    <string name="statistics_year_recap_notification_text">%s. Tap to watch your year.</string>
     <string name="statistics_recap_banner_title">Your %s in Katari</string>
     <string name="statistics_recap_banner_text">See what your year looked like</string>
     <string name="statistics_recap_new">New recap</string>
@@ -3103,7 +3059,6 @@
     <string name="statistics_recap_episode_range">episodes %1$s to %2$s</string>
     <string name="statistics_recap_year_so_far">%s so far</string>
     <string name="statistics_recap_year_title">Your year in Katari</string>
-    <string name="statistics_recap_tap_to_start">Tap to start</string>
     <string name="statistics_recap_spent_in">In %s you spent</string>
     <string name="statistics_recap_less_than">&lt;%s</string>
     <string name="statistics_recap_less_than_minute">Less than a minute</string>

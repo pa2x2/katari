@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Ненадійне розширення</string>
     <string name="untrusted_extension_message">Шкідливе розширення може зчитувати будь-які збережені облікові дані для входу або виконати довільний код. \n \nДовіряючи цьому розширенню, ви приймаєте ці ризики.</string>
     <string name="pref_page_transitions">Анімація переходів сторінки</string>
-    <string name="pref_double_tap_anim_speed">Швидкість анімації при подвійному натиснені</string>
     <string name="pref_show_page_number">Показувати номер сторінки</string>
     <string name="pref_crop_borders">Обрізати поля</string>
     <string name="pref_custom_brightness">Користувацька яскравість</string>
@@ -227,7 +226,6 @@
     <string name="information_no_recent">Без оновлень</string>
     <string name="information_no_recent_manga">Останнім часом нічого не прочитано</string>
     <string name="information_empty_library">Ваша бібліотека порожня</string>
-    <string name="information_empty_category">У вас немає категорій. Тицьніть кнопку плюс, для початку облаштування вашої бібліотеки.</string>
     <string name="download_notifier_downloader_title">Завантажувач</string>
     <string name="download_notifier_title_error">Помилка</string>
     <string name="download_notifier_unknown_error">Невідома помилка при завантаженні розділу</string>
@@ -410,7 +408,6 @@
     <string name="include">Включати: %s</string>
     <string name="none">Немає</string>
     <string name="action_sort_chapter_fetch_date">Дата отримання розділу</string>
-    <string name="action_show_errors">Тицьніть для перегляду подробиць</string>
     <string name="clipboard_copy_error">Не вдалось скопіювати до буферу обміну</string>
     <string name="rotation_landscape">Альбомна</string>
     <string name="rotation_portrait">Портретна</string>
@@ -476,8 +473,6 @@
     <string name="ext_installer_shizuku_unavailable_dialog">Встановіть і запустіть Shizuku, щоб використовувати Shizuku як інсталятор розширення.</string>
     <string name="pref_verbose_logging">Докладне журналювання</string>
     <string name="pref_verbose_logging_summary">Записувати докладні журнали до системного журналу (знижує продуктивність застосунку)</string>
-    <string name="notification_size_warning">Попередження: великі оновлення можуть призвести до сповільнення джерел або збільшити використання батареї. Тицьніть задля подробиць.</string>
-    <string name="download_queue_size_warning">Попередження: великий об\'єм завантажень може призвести до сповільнення роботи джерел та/або блокуванню %s.</string>
     <string name="ext_update_all">Оновити все</string>
     <string name="backup_info">Ви повинні зберігати декілька резервних копій в інших місцях. Резервні копії можуть містити конфіденційні дані, включно зі збереженими паролями; будьте обережні, якщо ділитеся ними.</string>
     <string name="label_warning">Попередження</string>
@@ -598,7 +593,6 @@
     <string name="pref_debug_info">Інформація для відлагодження</string>
     <string name="pref_chapter_swipe_end">Розділ при проведені пальцем вправоруч</string>
     <string name="pref_chapter_swipe_start">Розділ при проведені пальцем ліворуч</string>
-    <string name="pref_double_tap_zoom">Двічі торкніться, щоб збільшити</string>
     <string name="action_set_interval">Встановити інтервал</string>
     <string name="manga_display_interval_title">Оцініть кожну</string>
     <string name="action_filter_interval_custom">Налаштувати інтервал оновленнь</string>
@@ -611,7 +605,6 @@
     <string name="library_sync_complete">Синхронізацію бібліотеки завершено</string>
     <string name="syncing_library">Синхронізація бібліотеки</string>
     <string name="download_cache_invalidated">Індекс завантажень недійсний</string>
-    <string name="information_cloudflare_help">Натисніть тут, щоб отримати допомогу з Cloudflare</string>
     <string name="create_backup_file_error">Не вдалося створити файл резервної копії</string>
     <string name="unlock_app_title">Розблокувати %s</string>
     <string name="action_move_to_bottom_all_for_series">Перемістити серію вниз</string>

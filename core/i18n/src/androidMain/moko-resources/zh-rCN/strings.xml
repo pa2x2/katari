@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">点击这里查看 Cloudflare 帮助</string>
+    <string name="action_show_errors">点击查看详情</string>
+    <string name="notification_size_warning">大量更新会损害图源，并可能导致更新变慢、耗电增加。点击了解详情。</string>
+    <string name="download_queue_size_warning">警告：批量下载可能导致图源变慢，甚至会使得它们屏蔽 %s 。点击了解详情。</string>
+    <string name="information_empty_category">尚无分类，点击加号按钮创建分类用来管理书架。</string>
+    <string name="pref_double_tap_zoom">双击放大</string>
+    <string name="pref_double_tap_anim_speed">双击动画速度</string>
+</resources>

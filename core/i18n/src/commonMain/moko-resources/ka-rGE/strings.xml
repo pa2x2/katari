@@ -308,7 +308,6 @@
     <string name="ext_untrusted">არასანდო</string>
     <string name="untrusted_extension">არასანდო დამატება</string>
     <string name="obsolete_extension_message">დამატება ხელმისაწვდომი აღარაა. მან შეიძლება არასწორად იმუშაოს და აპლიკაციას პრობლემები შეუქმნას. გირჩევთ, წაშალოთ ის.</string>
-    <string name="pref_double_tap_anim_speed">ორჯერ დაჭერისას ანიმაციის სისწრაფე</string>
     <string name="pref_custom_brightness">გამოიყენე პერსონალიზებული სიკაშკაშე</string>
     <string name="pref_custom_color_filter">გამოიყენე პერსონალიზებული ფერთა ფილტრი</string>
     <string name="pref_color_filter_mode">ფერთა ფილტრის შეხამების რეჟიმი</string>
@@ -326,7 +325,6 @@
     <string name="cover_updated">ყდა განახლდა</string>
     <string name="confirm_set_image_as_cover">გამოვიყენოთ ეს სურათი ყდის ნახატად?</string>
     <string name="information_no_recent_manga">ბოლო ხანებში არაფერი არ არის წაკითხული</string>
-    <string name="information_empty_category">შენ არ გაქვს კატეგორიები, აირჩიე \"+\" ღილაკი რათა შექმნა ერთი, შენი ბიბლიოთეკის დასაორგანიზებლად.</string>
     <string name="information_webview_required">WebView არის აუცილებელი Katari-ს სამუშაოდ</string>
     <string name="information_webview_outdated">გთხოვთ განაახლოთ WebView აპლიკაცია უკეთესი თავსებდობისთვის</string>
     <string name="download_notifier_downloader_title">გადმომწერი</string>
@@ -370,6 +368,5 @@
     <string name="confirm_lock_change">აუთენტიკაცია ცვლილების დასადასტურებლად</string>
     <string name="pref_category_appearance">გარეგნობა</string>
     <string name="label_default">ნაგულისხმევი</string>
-    <string name="action_show_errors">დააჭირე დეტალების სანახავად</string>
     <string name="unread">წაუკითხავი</string>
 </resources>

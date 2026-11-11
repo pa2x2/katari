@@ -35,26 +35,26 @@ internal fun MangaReaderInputGuide(preferences: MangaReaderPreferences) {
         hints = listOf(
             InputGuideHint(
                 icon = platformPresentation.pointerIcon,
-                title = stringResource(MR.strings.reader_guide_click),
+                title = stringResource(PlatformStrings.reader_guide_click),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_double_click),
-                    stringResource(MR.strings.reader_guide_right_click),
+                    stringResource(PlatformStrings.reader_guide_double_click),
+                    stringResource(PlatformStrings.reader_guide_right_click),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
-                title = stringResource(MR.strings.reader_guide_scroll),
+                title = stringResource(PlatformStrings.reader_guide_scroll),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_scroll_zoomed),
-                    stringResource(MR.strings.reader_guide_scroll_zoom),
+                    stringResource(PlatformStrings.reader_guide_scroll_zoomed),
+                    stringResource(PlatformStrings.reader_guide_scroll_zoom),
                 ),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,
-                title = stringResource(MR.strings.reader_guide_keys_turn),
+                title = stringResource(PlatformStrings.reader_guide_keys_turn),
                 details = listOf(
-                    stringResource(MR.strings.reader_guide_keys_chapter),
-                    stringResource(MR.strings.reader_guide_keys_list),
+                    stringResource(PlatformStrings.reader_guide_keys_chapter),
+                    stringResource(PlatformStrings.reader_guide_keys_list),
                 ),
             ),
         ),

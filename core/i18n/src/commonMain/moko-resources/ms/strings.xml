@@ -215,7 +215,6 @@
     <string name="ext_uninstall">Nyahpasang</string>
     <string name="untrusted_extension">Sambungan tak dipercayai</string>
     <string name="untrusted_extension_message">Sambungan yang berniat jahat boleh membaca sebarang maklumat log masuk yang disimpan atau menjalankan kod secara sesuka hati. \n \nDengan mempercayai sambungan ini, anda menerima risiko tersebut.</string>
-    <string name="pref_double_tap_anim_speed">Kelajuan animasi ketik dua kali</string>
     <string name="pref_skip_read_chapters">Langkau bab yang sudah dibaca</string>
     <string name="pref_read_with_long_tap">Tunjuk tindakan bila menahan ketik</string>
     <string name="pager_viewer">Muka surat</string>
@@ -237,7 +236,6 @@
     <string name="migration_dialog_what_to_include">Pilih data untuk disertakan</string>
     <string name="migrate">Beralih</string>
     <string name="copy">Salin</string>
-    <string name="information_empty_category">Anda tidak mempunyai kategori. Ketik butang tambah untuk membuat satu untuk mengatur pustaka anda.</string>
     <string name="pref_color_filter_mode">Mod turas warna campuran</string>
     <string name="label_help">Bantuan</string>
     <string name="filter_mode_overlay">Lapisan atas</string>
@@ -410,7 +408,6 @@
     <string name="none">Tiada</string>
     <string name="pref_download_new_categories_details">Entri di dalam kategori yang dikecualikan tidak akan dimuat turun walaupun ianya ada di dalam kategori yang disertakan.</string>
     <string name="pref_category_auto_download">Muat turun automatik</string>
-    <string name="action_show_errors">Ketik untuk lihat butiran</string>
     <string name="clipboard_copy_error">Gagal menyalin ke papan keratan</string>
     <string name="rotation_landscape">Landskap</string>
     <string name="rotation_portrait">Potret</string>
@@ -479,10 +476,8 @@
     <string name="label_warning">Amaran</string>
     <string name="action_display_language_badge">Bahasa</string>
     <string name="backup_info">Anda patut simpan salinan sandaran di tempat lain juga. Sandaran mungkin mengandungi data sulit termasuk kata laluan tersimpan; hati-hati jika berkongsi.</string>
-    <string name="notification_size_warning">Kemas kini besar membahayakan sumber dan boleh menjadikan kemas kini lebih perlahan serta meningkatkan penggunaan bateri. Ketik untuk maklumat lanjut.</string>
     <string name="connected_to_wifi">Hanya menggunakan Wi-Fi</string>
     <string name="update_72hour">Setiap 3 hari</string>
-    <string name="download_queue_size_warning">Amaran: muat turun pukal secara besar-besaran boleh menyebabkan sumber menjadi lebih perlahan dan/atau menyekat %s. Ketik untuk maklumat lanjut.</string>
     <string name="ext_update_all">Kemas kini semua</string>
     <string name="pref_auto_clear_chapter_cache">Hapus cache bab ketika membuka apl</string>
     <string name="database_clean">Tiada apa untuk dibersihkan</string>
@@ -597,7 +592,6 @@
     <string name="pref_page_rotate">Putar muka surat lebar agar muat</string>
     <string name="pref_debug_info">Maklumat nyahpepijat</string>
     <string name="pref_chapter_swipe_end">Bab mengenai leret ke kanan</string>
-    <string name="pref_double_tap_zoom">Ketik dua kali untuk zum</string>
     <string name="pref_chapter_swipe_start">Bab mengenai leret ke kiri</string>
     <string name="action_set_interval">Tetapkan jarak masa</string>
     <string name="action_filter_interval_custom">Kekerapan kemaskini tersuai</string>
@@ -614,7 +608,6 @@
     <string name="library_sync_complete">Pustaka selesai diselaraskan</string>
     <string name="exception_offline">Tiada sambungan Internet</string>
     <string name="download_cache_invalidated">Membuat semula indeks muat turun</string>
-    <string name="information_cloudflare_help">Ketik di sini untuk bantuan berkenaan Cloudflare</string>
     <string name="exception_http">HTTP %d, semak laman web dalam WebView</string>
     <string name="unlock_app_title">Buka kunci %s</string>
     <string name="action_move_to_bottom_all_for_series">Gerak siri ke bawah</string>

@@ -153,7 +153,6 @@
     <string name="charging">Při nabíjení</string>
     <string name="default_category">Výchozí kategorie</string>
     <string name="default_category_summary">Vždy se zeptat</string>
-    <string name="pref_double_tap_anim_speed">Rychlost animace při dvojkliku</string>
     <string name="pref_crop_borders">Oříznout okraje</string>
     <string name="pref_custom_brightness">Vlastní jas</string>
     <string name="pref_custom_color_filter">Vlastní barevný filtr</string>
@@ -232,7 +231,6 @@
     <string name="file_select_cover">Vybrat obrázek obalu</string>
     <string name="information_no_downloads">Žádné stahování</string>
     <string name="information_empty_library">Vaše knihovna je prázdná</string>
-    <string name="information_empty_category">Nemáte žádné kategorie. Klikněte na tlačítko plus a vytvořte nějakou pro zorganizování vaší knihovny.</string>
     <string name="download_notifier_downloader_title">Stahovač</string>
     <string name="channel_common">Běžný</string>
     <string name="label_help">Nápověda</string>
@@ -406,7 +404,6 @@
     <string name="pref_dual_page_split">Rozdělit široké stránky</string>
     <string name="pref_show_navigation_mode_summary">Krátce zobrazit, když je čtečka otevřena</string>
     <string name="theme_system">Systém</string>
-    <string name="action_show_errors">Klepněte pro zobrazení podrobností</string>
     <string name="action_sort_chapter_fetch_date">Datum načtení kapitoly</string>
     <string name="rotation_landscape">Na šířku</string>
     <string name="rotation_portrait">Na výšku</string>
@@ -480,10 +477,8 @@
     <string name="update_72hour">Každé 3 dny</string>
     <string name="connected_to_wifi">Jen na Wi-Fi</string>
     <string name="pref_verbose_logging">Podrobné protokolování</string>
-    <string name="download_queue_size_warning">Varování: hromadné stahování může vést k tomu, že zdroje zpomalí a/nebo zablokují %s. Klepnutím se dozvíte více.</string>
     <string name="ext_update_all">Aktualizovat vše</string>
     <string name="pref_verbose_logging_summary">Vypisovat podrobné informace do systémového protokolu (sníží výkon aplikace)</string>
-    <string name="notification_size_warning">Varování: velké aktualizace poškozují zdroje a můžou vést k pomalejším aktualizacím a zvýšenému využití baterie. Klepnutím se dozvíte více.</string>
     <string name="pref_auto_clear_chapter_cache">Vymazat mezipaměť kapitol při spuštění aplikace</string>
     <string name="extension_api_error">Chyba v získání seznamu rozšíření</string>
     <string name="privacy_policy">Zásady ochrany osobních údajů</string>
@@ -598,7 +593,6 @@
     <string name="pref_debug_info">Ladící informace</string>
     <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
     <string name="pref_chapter_swipe_start">Kapitola po přejetí doleva</string>
-    <string name="pref_double_tap_zoom">Přiblížení dvojitým klepnutím</string>
     <string name="action_filter_interval_custom">Přizpůsobený interval aktualizace</string>
     <string name="action_sort_next_updated">Další očekávaná aktualizace</string>
     <string name="manga_display_interval_title">Odhadovat každý</string>
@@ -610,7 +604,6 @@
     <string name="has_results">Má výsledky</string>
     <string name="syncing_library">Synchronizace knihovny</string>
     <string name="library_sync_complete">Synchronizace knihovny dokončena</string>
-    <string name="information_cloudflare_help">Klepněte zde pro pomoc s Cloudflare</string>
     <string name="download_cache_invalidated">Obnovování indexu stažených</string>
     <string name="create_backup_file_error">Nelze vytvořit soubor zálohy</string>
     <string name="exception_offline">Bez připojení k internetu</string>

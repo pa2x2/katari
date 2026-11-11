@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Toca aquí para solucionar problemas de acceso con Cloudflare</string>
+    <string name="action_show_errors">Toca para ver los detalles</string>
+    <string name="notification_size_warning">Las actualizaciones grandes pueden implicar un mayor uso de la batería y que los distintos servicios bloqueen o ralenticen el acceso a tu dispositivo. Toca aquí para más información.</string>
+    <string name="download_queue_size_warning">Advertencia: Las descargas grandes pueden llevar a que las fuentes se vuelvan cada vez más lentas y en casos extremos que los servidores limiten o impidan el acceso a %s. Toca aquí para más información.</string>
+    <string name="information_empty_category">No hay categorías. Pulsa el botón «+» para crear una y organizar tu biblioteca.</string>
+    <string name="pref_double_tap_zoom">Ampliar tocando dos veces la pantalla</string>
+    <string name="pref_double_tap_anim_speed">Velocidad de animación de doble toque</string>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="anime_guide_brightness">Swipe for brightness</string>
+    <string name="anime_guide_volume">Swipe for volume</string>
+    <string name="anime_guide_swipe_seek">Swipe sideways to seek</string>
+    <string name="anime_guide_tap">Tap to show controls</string>
+    <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
+    <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
+    <string name="information_cloudflare_help">Tap here for help with Cloudflare</string>
+    <string name="action_show_errors">Tap to see details</string>
+    <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to choose what updates check.</string>
+    <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
+    <string name="backup_profile_locked">Locked, asks to unlock when you tap Create</string>
+    <string name="book_document_image_unavailable">Image unavailable. Tap to retry.</string>
+    <string name="download_options_failed">Couldn\'t load the options for this choice. Tap it to try again, or pick another.</string>
+    <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking %s. Tap to learn more.</string>
+    <string name="information_empty_category">You have no categories. Tap the plus button to create one for organizing your library.</string>
+    <string name="pref_double_tap_zoom">Double tap to zoom</string>
+    <string name="pref_double_tap_anim_speed">Double tap animation speed</string>
+    <string name="pref_page_text_translation_overlay_summary">Translate every recognized text while translate mode is on, instead of only tapped text</string>
+    <string name="pref_retry_merge_maintenance_summary">%1$d pending, %2$d failed. Tap to retry.</string>
+    <string name="statistics_recap_notification_text">%s. Tap to see and share your recap.</string>
+    <string name="statistics_year_recap_notification_text">%s. Tap to watch your year.</string>
+    <string name="statistics_recap_tap_to_start">Tap to start</string>
+    <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
+</resources>

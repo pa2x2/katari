@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Сыһааһыннары көрдөр</string>
+    <string name="information_empty_category">Эйиэхэ бөлөхтөр суохтар. Эбэр бэлиэни батта, бэбэлэтиэкэҕэ саҥа бөлөҕү оҥорорго.</string>
+    <string name="pref_double_tap_anim_speed">Иккитэ баттыырга хамсааһын түргэнэ</string>
+</resources>

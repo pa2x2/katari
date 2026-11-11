@@ -28,7 +28,6 @@
     <string name="action_filter_bookmarked">बुकमार्क आहे</string>
     <string name="manga">लायब्ररी इंत्रिज</string>
     <string name="categories">श्रेण्या</string>
-    <string name="information_empty_category">तुम्ही श्रेण्या बनविल्या नाही आहेत, प्लस वर दाबून तुम्ही श्रेणी बनवू शकता.</string>
     <string name="information_empty_library">तुमची संग्रहालय खाली आहे</string>
     <string name="information_no_recent_manga">अलीकडे काहीही वाचले नाही</string>
     <string name="information_no_recent">कोणतेही अलीकडील अद्यतने नाही</string>
@@ -107,7 +106,6 @@
     <string name="action_webview_back">मागे जा</string>
     <string name="pref_crop_borders">सीमानां कापा</string>
     <string name="pref_show_page_number">पृष्ठ क्रमांक दर्शवा</string>
-    <string name="pref_double_tap_anim_speed">दोनदा टॅप साठी अ‍ॅनिमेशन गती</string>
     <string name="pref_page_transitions">पृष्ठ संक्रमण संजीवित करा</string>
     <string name="pref_cutout_short">कटआउट क्षेत्रात सामग्री दर्शवा</string>
     <string name="obsolete_extension_message">हे एक्सटेन्शन उपलब्ध नाही.</string>

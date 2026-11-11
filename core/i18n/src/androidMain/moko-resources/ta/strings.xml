@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">கிளவுட்ஃப்ளேர் உதவிக்கு இங்கே தட்டவும்</string>
+    <string name="action_show_errors">விவரங்களைக் காண தட்டவும்</string>
+    <string name="notification_size_warning">பெரிய புதுப்பிப்புகள் ஆதாரங்களுக்கு தீங்கு விளைவிக்கும் மற்றும் மெதுவான புதுப்பிப்புகளுக்கு வழிவகுக்கும் மற்றும் பேட்டரி பயன்பாட்டையும் அதிகரிக்கும். மேலும் அறிய தட்டவும்.</string>
+    <string name="download_queue_size_warning">எச்சரிக்கை: பெரிய மொத்தப் பதிவிறக்கங்கள் மூலங்கள் மெதுவாக மாறுவதற்கும்/அல்லது %sஐத் தடுப்பதற்கும் வழிவகுக்கும். மேலும் அறிய தட்டவும்.</string>
+    <string name="information_empty_category">உங்களிடம் வகைகள் இல்லை. உங்கள் நூலகத்தை ஒழுங்கமைக்க ஒன்றை உருவாக்க பிளச் பொத்தானைத் தட்டவும்.</string>
+    <string name="pref_double_tap_zoom">பெரிதாக்க இரட்டை தட்டவும்</string>
+    <string name="pref_double_tap_anim_speed">அனிமேசன் விரைவு இரட்டை தட்டவும்</string>
+</resources>

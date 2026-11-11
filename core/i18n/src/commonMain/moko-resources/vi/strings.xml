@@ -195,7 +195,6 @@
     <string name="ext_uninstall">Gỡ cài đặt</string>
     <string name="untrusted_extension">Tiện ích mở rộng không tin cậy</string>
     <string name="untrusted_extension_message">Các tiện ích mở rộng độc hại có thể đọc các thông tin đăng nhập được lưu trữ hoặc thực thi phần mềm tùy ý. \n \nBằng việc tin tưởng tiện ích mở rộng này, bạn chấp nhận những rủi ro trên.</string>
-    <string name="pref_double_tap_anim_speed">Tốc độ nhấn đúp hình ảnh động</string>
     <string name="pref_crop_borders">Cắt viền</string>
     <string name="pref_read_with_volume_keys_inverted">Đảo ngược phím âm lượng</string>
     <string name="pager_viewer">Trang</string>
@@ -233,7 +232,6 @@
     <string name="migration_dialog_what_to_include">Chọn dữ liệu để bao gồm</string>
     <string name="migrate">Chuyển nguồn</string>
     <string name="copy">Sao chép</string>
-    <string name="information_empty_category">Không có danh mục. Nhấn vào dấu cộng để tạo một danh mục cho thư viện.</string>
     <string name="channel_common">Thường gặp</string>
     <string name="pref_read_with_long_tap">Hiện mục hành động khi nhấn giữ</string>
     <string name="action_open_in_web_view">Mở bằng WebView</string>
@@ -414,7 +412,6 @@
     <string name="include">Bao gồm: %s</string>
     <string name="none">Không cái nào</string>
     <string name="action_display_show_number_of_items">Hiện số truyện</string>
-    <string name="action_show_errors">Chạm để xem toàn bộ chi tiết</string>
     <string name="action_desc">Giảm dần</string>
     <string name="action_asc">Tăng dần</string>
     <string name="action_order_by_chapter_number">Theo số chương</string>
@@ -477,11 +474,9 @@
     <string name="action_display_language_badge">Ngôn ngữ</string>
     <string name="backup_info">Bạn nên giữ lại nhiều bản sao của sao lưu ở các nơi khác nữa. Bản sao lưu có thể chứa các thông tin nhạy cảm như mật khẩu đã lưu; hãy cẩn thận khi chia sẻ với người khác.</string>
     <string name="pref_verbose_logging_summary">In các ghi chép chi tiết vào ghi chép hệ thống ( giảm hiệu suất ứng dụng )</string>
-    <string name="notification_size_warning">Các bản cập nhật lớn sẽ gây hại cho các nguồn và có thể dẫn đến các bản cập nhật chậm hơn và cũng làm tăng mức sử dụng pin. Nhấn vào để tìm hiểu thêm.</string>
     <string name="ext_install_service_notif">Đang cài đặt tiện ích mở rộng…</string>
     <string name="update_72hour">Mỗi 3 ngày</string>
     <string name="connected_to_wifi">Chỉ qua Wi-Fi</string>
-    <string name="download_queue_size_warning">Cảnh báo: tải xuống hàng loạt cỡ lớn có thể dẫn đến các nguồn trở nên chậm hơn và / hoặc chặn %s. Nhấn vào để tìm hiểu thêm.</string>
     <string name="ext_update_all">Cập nhật tất cả</string>
     <string name="pref_auto_clear_chapter_cache">Xóa bộ nhớ chương đệm khi chạy ứng dụng</string>
     <string name="clear_database_source_item_count">%1$d truyện ngoài thư viện có trong cơ sở dữ liệu</string>
@@ -594,7 +589,6 @@
     <string name="pref_page_rotate_invert">Lật hướng của các trang rộng đã xoay</string>
     <string name="overlay_header">Phủ lên</string>
     <string name="not_applicable">N/A</string>
-    <string name="pref_double_tap_zoom">Nhấn đúp để phóng to</string>
     <string name="pref_chapter_swipe_end">Chương khi vuốt sang phải</string>
     <string name="pref_chapter_swipe_start">Chương khi vuốt sang trái</string>
     <string name="pref_debug_info">Thông tin gỡ lỗi</string>
@@ -606,7 +600,6 @@
     <string name="delete_downloaded">Xóa các chương đã tải xuống</string>
     <string name="action_filter_interval_custom">Khoảng thời gian cập nhật tùy chỉnh</string>
     <string name="action_sort_next_updated">Cập nhật dự kiến tiếp theo</string>
-    <string name="information_cloudflare_help">Nhấn vào đây để được trợ giúp về Cloudflare</string>
     <string name="unlock_app_title">Mở khoá %s</string>
     <string name="source_settings">Cài đặt nguồn</string>
     <string name="app_settings">Cài đặt ứng dụng</string>

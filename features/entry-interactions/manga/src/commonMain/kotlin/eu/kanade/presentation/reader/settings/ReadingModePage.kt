@@ -12,6 +12,7 @@ import app.katari.entry.interactions.reader.settings.ReaderPageLayout
 import app.katari.entry.interactions.reader.settings.ReadingMode
 import app.katari.entry.viewer.settings.ui.device.ViewerDeviceControls
 import app.katari.entry.viewer.settings.updateEntry
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.chip.FilterChip
 import app.katari.presentation.kit.list.ChipsRow
 import app.katari.presentation.kit.list.RowGroup
@@ -177,7 +178,7 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
                 )
             }
         }
-        row { BindingToggleRow(stringResource(MR.strings.pref_double_tap_zoom), settings.webtoonDoubleTapZoom) }
+        row { BindingToggleRow(stringResource(platformPresentation.doubleTapZoomLabel), settings.webtoonDoubleTapZoom) }
         row {
             BindingToggleRow(stringResource(MR.strings.pref_webtoon_disable_zoom_out), settings.webtoonDisableZoomOut)
         }

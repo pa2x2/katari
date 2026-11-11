@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Πατήστε εδώ για βοήθεια με το Cloudflare</string>
+    <string name="action_show_errors">Πατήστε για να δείτε λεπτομέρειες</string>
+    <string name="notification_size_warning">Οι μεγάλες ενημερώσεις βλάπτουν τις πηγές και μπορεί να οδηγήσουν σε πιο αργές ενημερώσεις και σε αυξημένη χρήση της μπαταρίας. Πατήστε για να μάθετε περισσότερα.</string>
+    <string name="download_queue_size_warning">Προειδοποίηση: οι μαζικές λήψεις ενδέχεται να οδηγήσουν σε επιβράδυνση των πηγών ή/και αποκλεισμό του %s. Πατήστε για να μάθετε περισσότερα.</string>
+    <string name="information_empty_category">Δεν έχετε κατηγορίες. Πατήστε το κουμπί συν για να δημιουργήσετε μία για την οργάνωση της βιβλιοθήκης σας.</string>
+    <string name="pref_double_tap_zoom">Διπλό πάτημα για ζουμ</string>
+    <string name="pref_double_tap_anim_speed">Ταχύτητα κίνησης διπλού αγγίγματος</string>
+</resources>

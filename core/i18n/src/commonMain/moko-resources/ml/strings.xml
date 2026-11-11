@@ -133,7 +133,6 @@
     <string name="onboarding_permission_notifications">നോട്ടിഫിക്കേഷൻ കാണിക്കാനുള്ള അനുവാദം</string>
     <string name="loading">ലോഡിങ്ങ്…</string>
     <string name="onboarding_storage_selection_required">ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കണം</string>
-    <string name="action_show_errors">വിശദാംശങ്ങൾ കാണാൻ തട്ടുക</string>
     <string name="action_close">അടയ്ക്കുക</string>
     <string name="action_display_show_number_of_items">ഇനങ്ങളുടെ എണ്ണം കാണിക്കുക</string>
     <string name="action_revert_to_default">സ്ഥിരസ്ഥിതിയിലേക്ക് മടങ്ങുക</string>

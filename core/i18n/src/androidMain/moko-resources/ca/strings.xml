@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Premeu aquí per a obtenir ajuda amb el Cloudflare</string>
+    <string name="action_show_errors">Premeu per a veure’n els detalls</string>
+    <string name="notification_size_warning">Les actualitzacions grosses perjudiquen les fonts i poden implicar actualitzacions més lentes i un augment en l’ús de bateria. Premeu per a obtenir-ne més informació.</string>
+    <string name="download_queue_size_warning">Advertència: Les baixades massa grosses poden fer que les fonts es tornin més lentes i/o bloquin el %s. Premeu per a obtenir-ne més informació.</string>
+    <string name="information_empty_category">No teniu categories. Premeu el botó més per a crear-ne una i organitzar la vostra biblioteca.</string>
+    <string name="pref_double_tap_zoom">Toca dues vegades per a ampliar</string>
+    <string name="pref_double_tap_anim_speed">Velocitat de l’animació del doble toc</string>
+</resources>

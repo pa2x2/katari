@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Ketuk di sini untuk bantuan dengan Cloudflare</string>
+    <string name="action_show_errors">Ketuk untuk melihat detail</string>
+    <string name="notification_size_warning">Pembaruan berskala besar membahayakan sumber, dapat membuat pembaruan lambat dan meningkatkan penggunaan baterai. Ketuk untuk mempelajari lebih lanjut.</string>
+    <string name="download_queue_size_warning">Peringatan: mengunduh dalam jumlah besar bisa menyebabkan sumber menjadi lambat dan/atau memblokir %s. Ketuk untuk mempelajari lebih lanjut.</string>
+    <string name="information_empty_category">Anda belum memiliki kategori. Tekan tombol tambah untuk menambahkan kategori baru untuk mengatur pustaka Anda.</string>
+    <string name="pref_double_tap_zoom">Ketuk dua kali untuk memperbesar</string>
+    <string name="pref_double_tap_anim_speed">Kecepatan animasi ketukan dua kali</string>
+</resources>

@@ -106,7 +106,6 @@
     <string name="action_sort_date_added">Pievienošanas datums</string>
     <string name="action_sort_latest_chapter">Jaunākā nodaļa</string>
     <string name="action_menu">Izvēlne</string>
-    <string name="information_empty_category">Jums nav nevienas kategorijas. Pieskarieties plus pogai, lai izveidotu kategoriju savas bibliotēkas organizēšanai.</string>
     <string name="information_empty_library">Jūsu bibliotēka ir tukša</string>
     <string name="information_no_recent_manga">Nekas nesen lasīts</string>
     <string name="information_no_recent">Nekas nesen lasīts</string>
@@ -237,9 +236,7 @@
     <string name="pref_dual_page_split">Sadalīt platas lapas</string>
     <string name="pref_dual_page_invert">Apvērst dalītās lapas izvietojumu</string>
     <string name="pref_cutout_short">Rādīt saturu izgriezuma apgabalā</string>
-    <string name="pref_double_tap_anim_speed">Dubultpieskāriena animācijas ātrums</string>
     <string name="pref_crop_borders">Apgriezt apmales</string>
-    <string name="action_show_errors">Pieskarieties, lai skatītu detalizētu informāciju</string>
     <string name="update_6hour">Ik pēc 6 stundām</string>
     <string name="update_12hour">Ik pēc 12 stundām</string>
     <string name="update_24hour">Katru dienu</string>
@@ -453,7 +450,6 @@
     <string name="decode_image_error">Attēlu nevarēja ielādēt</string>
     <string name="confirm_set_image_as_cover">Vai izmantot šo attēlu kā vāku?</string>
     <string name="pref_category_for_this_series">Priekš šīs sērijas</string>
-    <string name="download_queue_size_warning">Brīdinājums: liela apjoma lejupielāde var izraisīt to, ka avoti kļūst lēnāki un/vai bloķē %s. Pieskarieties, lai uzzinātu vairāk.</string>
     <string name="file_select_cover">Atlasiet vāka attēlu</string>
     <string name="spen_previous_page">Iepriekšējā lapa</string>
     <string name="copy">Kopēt</string>
@@ -478,7 +474,6 @@
     <string name="error_saving_picture">Kļūda, saglabājot attēlu</string>
     <string name="cover_updated">Vāks atjaunināts</string>
     <string name="not_installed">Nav instalēts</string>
-    <string name="notification_size_warning">Daudz atjauninājumi kaitē avotiem un var izraisīt lēnākus atjauninājumus un arī lielāku akumulatora lietojumu. Pieskarieties, lai uzzinātu vairāk.</string>
     <string name="source_not_installed">Avots nav instalēts: %1$s</string>
     <string name="copied_to_clipboard">Kopēts uz starpliktuvi: \n%1$s</string>
     <string name="error_saving_cover">Kļūda saglabājot vāku</string>
@@ -602,7 +597,6 @@
     <string name="download_cache_invalidated">Lejupielādes indeks ir nederīgs</string>
     <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>
     <string name="pref_debug_info">Atkļūdošanas informācija</string>
-    <string name="information_cloudflare_help">Pieskarieties šeit, lai iegūtu palīdzību ar Cloudflare</string>
     <string name="has_results">Ir rezultāti</string>
     <string name="pref_chapter_swipe_start">Vilkt uz kreisās puses darbību</string>
     <string name="manga_display_interval_title">Novērtēt katru</string>
@@ -614,7 +608,6 @@
     <string name="intervals_header">Intervāli</string>
     <string name="delete_downloaded">Izdzēst lejupielādētos</string>
     <string name="action_ok">OK</string>
-    <string name="pref_double_tap_zoom">Dubult-pieskarieties, lai tuvinātu</string>
     <string name="unlock_app_title">Atbloķēt %s</string>
     <string name="manga_display_modified_interval_title">Atjaunināt katru</string>
     <string name="exception_http">HTTP %d, pārbaudiet vietni iekš WebView</string>

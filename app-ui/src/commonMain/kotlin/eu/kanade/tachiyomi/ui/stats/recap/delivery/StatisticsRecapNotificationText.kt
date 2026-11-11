@@ -1,15 +1,14 @@
 package eu.kanade.tachiyomi.ui.stats.recap.delivery
 
 import app.katari.core.platform.PlatformContext
+import app.katari.platform.presentation.platformPresentation
 import eu.kanade.presentation.more.stats.components.statisticsDurationFormatter
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.platform.pluralStringResource
 import tachiyomi.i18n.platform.stringResource
 import tachiyomi.i18n.statistics_active_day_count
-import tachiyomi.i18n.statistics_recap_notification_text
 import tachiyomi.i18n.statistics_recap_notification_title
 import tachiyomi.i18n.statistics_recap_year_so_far
-import tachiyomi.i18n.statistics_year_recap_notification_text
 import tachiyomi.i18n.statistics_year_recap_notification_title
 import java.time.format.TextStyle
 import java.util.Locale
@@ -29,7 +28,7 @@ fun DueStatisticsRecap.notificationText(context: PlatformContext): StatisticsRec
             )
             StatisticsRecapNotificationText(
                 title = context.stringResource(MR.strings.statistics_recap_notification_title, monthName, duration),
-                text = context.stringResource(MR.strings.statistics_recap_notification_text, activeDays),
+                text = context.stringResource(platformPresentation.recapNotificationText, activeDays),
             )
         }
         is DueStatisticsRecap.Year -> {
@@ -40,7 +39,7 @@ fun DueStatisticsRecap.notificationText(context: PlatformContext): StatisticsRec
             }
             StatisticsRecapNotificationText(
                 title = context.stringResource(MR.strings.statistics_year_recap_notification_title, label),
-                text = context.stringResource(MR.strings.statistics_year_recap_notification_text, duration),
+                text = context.stringResource(platformPresentation.yearRecapNotificationText, duration),
             )
         }
     }

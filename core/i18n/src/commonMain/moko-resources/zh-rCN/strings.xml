@@ -99,7 +99,6 @@
     <string name="untrusted_extension">插件未受信任</string>
     <string name="untrusted_extension_message">恶意插件可能会读取所有登录的账号或执行任意代码。 \n \n信任此插件即代表你愿意承担上述风险。</string>
     <string name="pref_page_transitions">翻页动画</string>
-    <string name="pref_double_tap_anim_speed">双击动画速度</string>
     <string name="pref_show_page_number">显示页码</string>
     <string name="pref_crop_borders">裁剪边缘</string>
     <string name="pref_custom_brightness">自定义亮度</string>
@@ -235,7 +234,6 @@
     <string name="information_no_recent">最近没有更新</string>
     <string name="information_no_recent_manga">最近没有阅读</string>
     <string name="information_empty_library">书架为空</string>
-    <string name="information_empty_category">尚无分类，点击加号按钮创建分类用来管理书架。</string>
     <string name="download_notifier_downloader_title">下载</string>
     <string name="download_notifier_title_error">出错</string>
     <string name="download_notifier_unknown_error">下载时发生意外错误</string>
@@ -418,7 +416,6 @@
     <string name="action_sort_chapter_fetch_date">章节获取时间</string>
     <string name="pref_download_new_categories_details">排除优先于包含，同时属于包含和排除分类的作品不会自动下载。</string>
     <string name="pref_category_auto_download">自动下载</string>
-    <string name="action_show_errors">点击查看详情</string>
     <string name="clipboard_copy_error">复制到剪贴板失败</string>
     <string name="rotation_landscape">横屏</string>
     <string name="rotation_portrait">竖屏</string>
@@ -487,10 +484,8 @@
     <string name="label_warning">警告</string>
     <string name="action_display_language_badge">语言</string>
     <string name="backup_info">你应该将备份数据保存到多个地方。备份可能含有敏感数据（例如储存的密码），分享时请留意。</string>
-    <string name="notification_size_warning">大量更新会损害图源，并可能导致更新变慢、耗电增加。点击了解详情。</string>
     <string name="connected_to_wifi">仅连接 Wi-Fi 时</string>
     <string name="update_72hour">每 3 天</string>
-    <string name="download_queue_size_warning">警告：批量下载可能导致图源变慢，甚至会使得它们屏蔽 %s 。点击了解详情。</string>
     <string name="ext_update_all">全部更新</string>
     <string name="pref_auto_clear_chapter_cache">启动时清除章节缓存</string>
     <string name="database_clean">无需清理</string>
@@ -612,7 +607,6 @@
     <string name="pref_debug_info">调试信息</string>
     <string name="pref_chapter_swipe_end">向右滑动章节</string>
     <string name="pref_chapter_swipe_start">向左滑动章节</string>
-    <string name="pref_double_tap_zoom">双击放大</string>
     <string name="action_ok">确定</string>
     <string name="delete_downloaded">删除已下载章节</string>
     <string name="action_filter_interval_custom">自定义更新频率</string>
@@ -624,7 +618,6 @@
     <string name="has_results">有结果</string>
     <string name="syncing_library">正在同步书架</string>
     <string name="library_sync_complete">书架同步完成</string>
-    <string name="information_cloudflare_help">点击这里查看 Cloudflare 帮助</string>
     <string name="download_cache_invalidated">重建下载索引</string>
     <string name="create_backup_file_error">创建备份文件失败</string>
     <string name="exception_offline">未连接网络</string>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Klik gae Inpo luwih lanjut</string>
+    <string name="information_empty_category">Sampeyan ora duwe kategori. Dhemok tombol tambah kanggo nggawe siji kategori kanggo ngatur perpustakaane sampeyan.</string>
+    <string name="pref_double_tap_anim_speed">Kacepetan animasi tutul kaping pindho</string>
+</resources>

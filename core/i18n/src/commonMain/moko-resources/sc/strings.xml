@@ -91,7 +91,6 @@
     <string name="untrusted_extension">Estensione non afidàbile</string>
     <string name="untrusted_extension_message">Un\'estensione mala diat pòdere lèghere totu sas informatziones de atzessu sarvadas o fàghere esecutare còdighe arbitràriu. \n \nPonende fide in custa estensione atzetas custos arriscos.</string>
     <string name="pref_page_transitions">Ànima sas transitziones de sas pàginas</string>
-    <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
     <string name="pref_show_page_number">Ammustra su nùmeru de sa pàgina</string>
     <string name="pref_crop_borders">Sega sos oros</string>
     <string name="pref_custom_brightness">Luminosidade personalizada</string>
@@ -228,7 +227,6 @@
     <string name="information_no_recent">Perunu agiornamentu reghente</string>
     <string name="information_no_recent_manga">Nudda de lèghidu dae pagu</string>
     <string name="information_empty_library">Sa biblioteca tua est bòida</string>
-    <string name="information_empty_category">Non tenes categorias. Incarca su butone de su \"prus\" pro nde creare una pro organizare sa biblioteca tua.</string>
     <string name="download_notifier_downloader_title">Iscarrigadore</string>
     <string name="download_notifier_title_error">Errore</string>
     <string name="download_notifier_unknown_error">Iscarrigamentu de su capìtulu fallidu pro more de un\'errore imprevistu</string>
@@ -410,7 +408,6 @@
     <string name="action_sort_chapter_fetch_date">Data de recùperu de su capìtulu</string>
     <string name="pref_download_new_categories_details">Sos elementos in sas categorias esclùdidas non s\'ant a iscarrigare nemmancu si sunt fintzas in categorias inclùdidas.</string>
     <string name="pref_category_auto_download">Iscarrigamentu automàticu</string>
-    <string name="action_show_errors">Toca pro bìdere sos detàllios</string>
     <string name="clipboard_copy_error">Còpia in punta de billete fallida</string>
     <string name="rotation_landscape">Orizontale</string>
     <string name="rotation_portrait">Verticale</string>
@@ -479,10 +476,8 @@
     <string name="label_warning">Dae cara</string>
     <string name="action_display_language_badge">Limba</string>
     <string name="backup_info">Dias dèpere tènnere còpias de seguresa fintzas in àteros logos.</string>
-    <string name="notification_size_warning">Sos agiornamentos mannos diant pòdere fàghere dannu a sas fontes e causare agiornamentos prus lentos e fintzas un\'impreu de sa bateria prus mannu. Toca pro nde ischire de prus.</string>
     <string name="update_72hour">Cada 3 dies</string>
     <string name="connected_to_wifi">Petzi cun su Wi-Fi</string>
-    <string name="download_queue_size_warning">Dae cara: sos iscarrigamentos de massa mannos diant pòdere rallentare sas fontes e/o blocare %s. Toca pro nde ischire de prus.</string>
     <string name="ext_update_all">Agiorna totu</string>
     <string name="clear_database_source_item_count">%1$d elementos chi non sunt in sa biblioteca in sa base de datos</string>
     <string name="extension_api_error">Recùperu de sa lista de sas estensiones fallidu</string>
@@ -595,7 +590,6 @@
     <string name="overlay_header">Istratu superiore</string>
     <string name="pref_page_rotate">Gira sas pàginas largas pro las adatare</string>
     <string name="pref_page_rotate_invert">Fùrria s\'orientamentu de sas pàginas largas giradas</string>
-    <string name="pref_double_tap_zoom">Tocu dòpiu pro ismanniare</string>
     <string name="pref_chapter_swipe_end">Capìtulu iscurrende a destra</string>
     <string name="pref_chapter_swipe_start">Capìtulu iscurrende a manca</string>
     <string name="pref_debug_info">Informatziones de depuratzione de còdighe</string>
@@ -607,7 +601,6 @@
     <string name="action_set_interval">Imposta s\'intervallu</string>
     <string name="action_ok">AB</string>
     <string name="delete_downloaded">Iscantzella sos iscarrigados</string>
-    <string name="information_cloudflare_help">Toca inoghe pro agiudu cun Cloudflare</string>
     <string name="unlock_app_title">Isbloca %s</string>
     <string name="syncing_library">Sincronizende sa biblioteca</string>
     <string name="create_backup_file_error">Non at s\'est pòdidu creare un\'archìviu de còpia de seguresa</string>

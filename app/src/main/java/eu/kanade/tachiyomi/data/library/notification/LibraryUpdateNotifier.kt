@@ -246,7 +246,7 @@ class LibraryUpdateNotifier(
             if (rulesProfileId != null) {
                 setStyle(
                     NotificationCompat.BigTextStyle().bigText(
-                        context.stringResource(MR.strings.notification_large_update_warning),
+                        context.stringResource(PlatformStrings.notification_large_update_warning),
                     ),
                 )
                 setContentIntent(
@@ -264,7 +264,7 @@ class LibraryUpdateNotifier(
             } else {
                 setStyle(
                     NotificationCompat.BigTextStyle().bigText(
-                        context.stringResource(MR.strings.notification_size_warning),
+                        context.stringResource(PlatformStrings.notification_size_warning),
                     ),
                 )
                 setContentIntent(helpIntent)
@@ -284,7 +284,7 @@ class LibraryUpdateNotifier(
             AppNotificationKind.LIBRARY_ERRORS.id,
         ) {
             setContentTitle(context.pluralStringResource(MR.plurals.notification_update_error, failed, failed))
-            setContentText(context.stringResource(MR.strings.action_show_errors))
+            setContentText(context.stringResource(PlatformStrings.action_show_errors))
             setSubText(profile.label)
             setSmallIcon(R.drawable.ic_katari)
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="information_cloudflare_help">Érints ide, ha Cloudflare segítségre van szükséged</string>
+    <string name="action_show_errors">Hibák mutatása</string>
+    <string name="notification_size_warning">A nagy frissítések kárt okoznak a forrásoknak, és lassabb frissítésekhez, valamint megnövekedett akkumulátorhasználathoz vezethetnek. Koppintson további információért.</string>
+    <string name="download_queue_size_warning">Figyelmeztetés: a tömeges letöltések a források lelassulásához és/vagy a %s leállásához vezethetnek. Koppintson további információért.</string>
+    <string name="information_empty_category">Nincsenek kategóriái. Érintse meg a plusz gombot, hogy létrehozzon egyet a könyvtára rendezéséhez.</string>
+    <string name="pref_double_tap_zoom">Dupla koppintás a nagyításhoz</string>
+    <string name="pref_double_tap_anim_speed">Dupla koppintás animációjának sebessége</string>
+</resources>

@@ -11,6 +11,7 @@ import app.katari.core.common.GlobalCustomPreferences
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.media.EntryViewerSettingsResetResult
 import app.katari.entry.interactions.merge.EntryMergeConsequenceStatus
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.presentation.kit.files.DocumentAccess
 import app.katari.presentation.kit.files.DocumentPickerRequest
@@ -186,7 +187,7 @@ class SettingsAdvancedScreen : SearchableSettings() {
                         buildString {
                             append(
                                 stringResource(
-                                    MR.strings.pref_retry_merge_maintenance_summary,
+                                    platformPresentation.retryMergeMaintenanceSummary,
                                     mergeStatus.pendingCount,
                                     mergeStatus.failedCount,
                                 ),

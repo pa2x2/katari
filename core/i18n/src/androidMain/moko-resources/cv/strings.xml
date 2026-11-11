@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Йӑнӑшсене кӑтарт</string>
+    <string name="information_empty_category">Санӑн пухмӑшсем ҫук. Хӑвӑн вулавӑша пухмӑшсем туса йӗркелеме «Хуш» пускӑч ҫине пус.</string>
+    <string name="pref_double_tap_zoom">Пысӑклатма икӗ хут пусмалла</string>
+    <string name="pref_double_tap_anim_speed">Икӗ хут пуссан эним хӑвӑртлӑхӗ</string>
+</resources>

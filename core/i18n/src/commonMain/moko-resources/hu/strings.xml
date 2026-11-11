@@ -179,7 +179,6 @@
     <string name="pref_category_reading">Olvasás</string>
     <string name="label_data">Adat</string>
     <string name="backup_created">Biztonsági mentés létrehozva</string>
-    <string name="information_empty_category">Nincsenek kategóriái. Érintse meg a plusz gombot, hogy létrehozzon egyet a könyvtára rendezéséhez.</string>
     <string name="pinned_sources">Kitűzött</string>
     <string name="other_source">Egyéb</string>
     <string name="copied_to_clipboard">Vágólapra másolva: \n%1$s</string>
@@ -248,7 +247,6 @@
     <string name="secure_screen">Biztonságos képernyő</string>
     <string name="lock_when_idle">Zárás tétlen állapotban</string>
     <string name="lock_with_biometrics">Biometrikus zár</string>
-    <string name="action_show_errors">Hibák mutatása</string>
     <string name="browse">Böngészés</string>
     <string name="action_desc">Csökkenő</string>
     <string name="action_asc">Növekvő</string>
@@ -353,7 +351,6 @@
     <string name="pref_grayscale">Szürkeárnyalatos</string>
     <string name="off">Ki</string>
     <string name="on">Be</string>
-    <string name="pref_double_tap_anim_speed">Dupla koppintás animációjának sebessége</string>
     <string name="ext_installer_pref">Telepítő</string>
     <string name="ext_install_service_notif">Bővítmény telepítése…</string>
     <string name="action_sort_count">Összes elem</string>
@@ -450,7 +447,6 @@
     <string name="database_clean">Adatbázis törlése</string>
     <string name="backup_in_progress">Biztonsági mentés már folyamatban van</string>
     <string name="not_installed">Nincs telepítve</string>
-    <string name="download_queue_size_warning">Figyelmeztetés: a tömeges letöltések a források lelassulásához és/vagy a %s leállásához vezethetnek. Koppintson további információért.</string>
     <string name="learn_more">Koppintson további információért</string>
     <string name="notification_cover_update_failed">Nem sikerült a fedlap frissítése</string>
     <string name="notification_first_add_to_library">Először adja az elemet a könyvtárhoz</string>
@@ -479,7 +475,6 @@
     <string name="transition_finished">Befejezve:</string>
     <string name="transition_current">Jelenlegi:</string>
     <string name="empty_screen">Hát, ez kínos</string>
-    <string name="notification_size_warning">A nagy frissítések kárt okoznak a forrásoknak, és lassabb frissítésekhez, valamint megnövekedett akkumulátorhasználathoz vezethetnek. Koppintson további információért.</string>
     <string name="pref_incognito_mode">Inkognitó mód</string>
     <string name="notification_incognito_text">Inkognitó mód kikapcsolása</string>
     <string name="downloaded_only_summary">Szűri a könyvtár összes tartalmát</string>
@@ -587,7 +582,6 @@
     <string name="action_set_interval">Időköz állítása</string>
     <string name="action_filter_interval_custom">Egyedi frissítési időköz</string>
     <string name="action_sort_next_updated">Következő várt frissítés</string>
-    <string name="pref_double_tap_zoom">Dupla koppintás a nagyításhoz</string>
     <string name="pref_hide_in_library_items">Már könyvtári elemek elrejtése</string>
     <string name="delete_downloaded">Letöltött törlése</string>
     <string name="pref_page_rotate">Széles oldalak forgatása az illeszkedéshez</string>
@@ -595,7 +589,6 @@
     <string name="pref_page_rotate_invert">Forgatott széles oldalak megfordítása</string>
     <string name="action_ok">Ok</string>
     <string name="pref_storage_location">Tárolási hely</string>
-    <string name="information_cloudflare_help">Érints ide, ha Cloudflare segítségre van szükséged</string>
     <string name="relative_time_span_never">Soha</string>
     <string name="pref_flash_page_summ">E-ink képernyőkön csökkenti a visszamaradó képet</string>
     <string name="unlock_app_title">%s feloldása</string>

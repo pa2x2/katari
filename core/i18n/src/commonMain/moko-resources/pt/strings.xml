@@ -189,7 +189,6 @@
     <string name="label_migration">Migrar</string>
     <string name="action_reset">Reiniciar</string>
     <string name="action_open_log">Abrir registo</string>
-    <string name="pref_double_tap_anim_speed">Velocidade de animação de toque duplo</string>
     <string name="pager_viewer">Paginação</string>
     <string name="color_filter_r_value">Vermelho</string>
     <string name="backup_created">Cópia de segurança criada</string>
@@ -233,7 +232,6 @@
     <string name="migrate">Migrar</string>
     <string name="copy">Copiar</string>
     <string name="notification_cover_update_failed">Falha ao atualizar a capa</string>
-    <string name="information_empty_category">Não tem nenhuma categoria. Toque no botão (+) para criar uma e organizar a sua biblioteca.</string>
     <string name="download_notifier_downloader_title">Gestor de transferências</string>
     <string name="download_notifier_no_network">A ligação à rede está indisponível</string>
     <string name="download_notifier_download_paused">Transferências em pausa</string>
@@ -410,7 +408,6 @@
     <string name="pref_download_new_categories_details">Os itens nas categorias excluídas não serão disponibilizados offline mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="exclude">Excluir: %s</string>
     <string name="include">Incluir: %s</string>
-    <string name="action_show_errors">Toque para ver detalhes</string>
     <string name="action_sort_chapter_fetch_date">Data de procura do capítulo</string>
     <string name="rotation_landscape">Horizontal</string>
     <string name="rotation_portrait">Vertical</string>
@@ -469,8 +466,6 @@
     <string name="save_chapter_as_cbz">Guardar como ficheiro CBZ</string>
     <string name="clear_database_source_item_count">%1$d itens que não estão na biblioteca no banco de dados</string>
     <string name="database_clean">Nada para limpar</string>
-    <string name="download_queue_size_warning">Aviso: downloads grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
-    <string name="notification_size_warning">Grandes atualizações prejudicam as fontes e podem levar a atualizações lentas e ainda ao aumento do uso da bateria. Toque para saber mais.</string>
     <string name="pref_auto_clear_chapter_cache">Limpar a cache de capítulos ao fechar a app</string>
     <string name="pref_hide_threshold">Sensibilidade para ocultar menu ao deslocar</string>
     <string name="pref_high">Alta</string>
@@ -596,7 +591,6 @@
     <string name="pref_page_rotate">Girar páginas largas para caber</string>
     <string name="pref_page_rotate_invert">Virar a orientação de páginas largas giradas</string>
     <string name="pref_chapter_swipe_start">Capítulo ao deslizar para a esquerda</string>
-    <string name="pref_double_tap_zoom">Toque duplo para aproximar</string>
     <string name="action_set_interval">Definir intervalo</string>
     <string name="pref_debug_info">Informações de depuração</string>
     <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
@@ -618,7 +612,6 @@
     <string name="exception_unknown_host">Não foi possível resolver %s</string>
     <string name="manga_interval_custom_amount">Frequência de atualização personalizada:</string>
     <string name="file_null_uri_error">Nenhum ficheiro selecionado</string>
-    <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
     <string name="action_add_anyway">Adicionar de qualquer maneira</string>
     <string name="onboarding_permission_notifications_description">Seja notificado para atualizações da biblioteca e mais.</string>
     <string name="pref_relative_format">Datas relativas</string>

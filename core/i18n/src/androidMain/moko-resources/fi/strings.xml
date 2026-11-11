@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_show_errors">Näytä lisätiedot</string>
+    <string name="download_queue_size_warning">Varoitus: massalataukset voivat johtaa siihen, että lähteet muuttuvat hitaammiksi käyttää ja/tai ne estävät %sin käytön. Napauta saadaksesi lisätietoja.</string>
+    <string name="information_empty_category">Sinulla ei ole kategorioita. Napauta pluspainiketta, jos haluat luoda sellaisen kirjaston järjestämistä varten.</string>
+    <string name="pref_double_tap_zoom">Tuplanapauta lähentääksesi</string>
+    <string name="pref_double_tap_anim_speed">Tuplanäpäytyksen animaation nopeus</string>
+</resources>

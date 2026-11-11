@@ -200,7 +200,6 @@
     <string name="browse">Navegar</string>
     <string name="channel_common">Comum</string>
     <string name="action_display_download_badge">Capítulos disponíveis offline</string>
-    <string name="information_empty_category">Você ainda não tem nenhuma categoria. Toque no botão Adicionar para criar uma e organizar a sua biblioteca.</string>
     <string name="label_migration">Migrar</string>
     <string name="label_extensions">Extensões</string>
     <string name="label_extension_info">Informações da extensão</string>
@@ -223,7 +222,6 @@
     <string name="ext_uninstall">Desinstalar</string>
     <string name="untrusted_extension">Extensão não confiável</string>
     <string name="untrusted_extension_message">Extensões maliciosas podem ler quaisquer credenciais de login armazenadas ou executar códigos arbitrários. \n \nAo confiar nessa extensão, você estará aceitando estes riscos.</string>
-    <string name="pref_double_tap_anim_speed">Velocidade da animação do toque duplo</string>
     <string name="double_tap_anim_speed_0">Sem animação</string>
     <string name="double_tap_anim_speed_normal">Normal</string>
     <string name="double_tap_anim_speed_fast">Rápida</string>
@@ -418,7 +416,6 @@
     <string name="action_sort_chapter_fetch_date">Data de busca do capítulo</string>
     <string name="pref_download_new_categories_details">Os itens nas categorias excluídas não serão disponibilizados offline mesmo que eles também estejam nas categorias incluídas.</string>
     <string name="pref_category_auto_download">Download automático</string>
-    <string name="action_show_errors">Toque para ver os detalhes</string>
     <string name="clipboard_copy_error">Erro ao copiar para a área de transferência</string>
     <string name="rotation_landscape">Paisagem</string>
     <string name="rotation_portrait">Retrato</string>
@@ -485,12 +482,10 @@
     <string name="pref_verbose_logging_summary">Imprime registros detalhados no registro de eventos do sistema (reduz o desempenho do aplicativo)</string>
     <string name="pref_verbose_logging">Registro de eventos detalhado</string>
     <string name="action_display_language_badge">Idioma</string>
-    <string name="notification_size_warning">Atualizações com muitos itens prejudicam as fontes e podem deixar as atualizações lentas e aumentar o uso da bateria. Toque para saber mais.</string>
     <string name="label_warning">Aviso</string>
     <string name="backup_info">Você deve manter cópias em outros locais também. Backups podem ter informações sensíveis incluindo senhas salvas; tenha cuidado se compartilhar.</string>
     <string name="connected_to_wifi">Somente no Wi-Fi</string>
     <string name="update_72hour">A cada 3 dias</string>
-    <string name="download_queue_size_warning">Aviso: grandes downloads em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o %s. Toque para saber mais.</string>
     <string name="ext_update_all">Atualizar tudo</string>
     <string name="pref_auto_clear_chapter_cache">Limpar o cache de capítulos ao abrir o aplicativo</string>
     <string name="clear_database_source_item_count">%1$d itens que não estão na biblioteca no banco de dados</string>
@@ -621,7 +616,6 @@
     <string name="pref_debug_info">Informações de depuração</string>
     <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
     <string name="pref_chapter_swipe_start">Ação de deslizar para a esquerda</string>
-    <string name="pref_double_tap_zoom">Toque duplo para dar zoom</string>
     <string name="action_sort_next_updated">Próxima atualização esperada</string>
     <string name="action_set_interval">Definir intervalo</string>
     <string name="action_filter_interval_custom">Personalizar a frequência de atualizações</string>
@@ -633,7 +627,6 @@
     <string name="has_results">Há resultados</string>
     <string name="syncing_library">Sincronizando a biblioteca</string>
     <string name="library_sync_complete">Sincronização da biblioteca finalizada</string>
-    <string name="information_cloudflare_help">Toque aqui para obter ajuda com o Cloudflare</string>
     <string name="download_cache_invalidated">Recriando índice de downloads</string>
     <string name="create_backup_file_error">Não foi possível criar o arquivo do backup</string>
     <string name="exception_http">HTTP %d, verifique o site na WebView</string>

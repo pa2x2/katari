@@ -49,7 +49,6 @@
     <string name="categorized_display_settings">Matag-kategorya nga mga setting alang sa paghan-ay ug pagpakita</string>
     <string name="information_no_downloads">Walay mga pag-download</string>
     <string name="information_no_recent_manga">Walay nabasa bag-o lang</string>
-    <string name="information_empty_category">Wala kay mga kategorya. i-tap ang plus button aron makahimo og usa para sa pag-organisar sa imong library.</string>
     <string name="information_empty_library">Walay sulod ang imong library</string>
     <string name="action_bookmark">Bookmark nga kapitulo</string>
     <string name="action_remove_bookmark">Unbookmark nga kapitulo</string>
@@ -143,7 +142,6 @@
     <string name="action_oldest">Kinatigulangan</string>
     <string name="action_move_to_top">Ibalhin sa ibabaw</string>
     <string name="action_move_to_top_all_for_series">Ibalhin ang serye sa ibabaw</string>
-    <string name="action_show_errors">I-tap aron makita ang mga detalye</string>
     <string name="action_asc">Pagsaka</string>
     <string name="action_share">Ipaambit</string>
     <string name="action_open_log">Bukas nga log</string>
@@ -186,7 +184,6 @@
     <string name="pref_dual_page_split">Duha ka panid nga bahin</string>
     <string name="pref_dual_page_invert">Balita ang duha ka panid nga pagbahin sa pagbutang</string>
     <string name="pref_dual_page_invert_summary">Kung ang pagbutang sa doble nga panid sa panid dili motakdo sa direksyon sa pagbasa</string>
-    <string name="pref_double_tap_anim_speed">Doble nga pag-tap sa katulin sa animation</string>
     <string name="pref_show_page_number">Ipakita ang numero sa panid</string>
     <string name="pref_show_reading_mode">Ipakita ang mode sa pagbasa</string>
     <string name="pref_show_reading_mode_summary">Sa daklit ipakita ang kasamtangan nga mode kung giablihan ang magbabasa</string>
