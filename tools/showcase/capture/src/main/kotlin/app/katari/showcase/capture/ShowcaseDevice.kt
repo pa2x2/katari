@@ -124,9 +124,8 @@ internal object ShowcaseDevice {
         val match = find(selector)
         val list = generateSequence(match.parent) { it.parent }.lastOrNull { it.isScrollable } ?: match
         val bounds = list.visibleBounds
-        val density = instrumentation.context.resources.displayMetrics.density
-        val safeTop = (TOP_SYSTEM_GESTURES_DP * density).toInt()
-        val safeBottom = device.displayHeight - (BOTTOM_SYSTEM_GESTURES_DP * density).toInt()
+        val safeTop = px(TOP_SYSTEM_GESTURES_DP)
+        val safeBottom = device.displayHeight - px(BOTTOM_SYSTEM_GESTURES_DP)
         val horizontal = (bounds.width() * DEFAULT_GESTURE_MARGIN).toInt()
         val vertical = (bounds.height() * DEFAULT_GESTURE_MARGIN).toInt()
         val top = maxOf(vertical, safeTop - bounds.top)
@@ -278,28 +277,50 @@ internal object ShowcaseDevice {
 
     fun tap(view: UiObject2) {
         var bounds = steadyBounds(view)
-        if (revealAboveDock(view, bounds)) bounds = steadyBounds(view)
+        if (revealAboveBottomEdge(view, bounds)) bounds = steadyBounds(view)
         tapPoint(bounds.centerX().toFloat(), bounds.centerY().toFloat())
     }
 
     /**
-     * Scrolls [view] up from under the home dock if a tap at its centre would land on the dock, since screens scroll
-     * on under it. The dock covers such a view only partly, as it does a row wider than itself, whose bounds take in
-     * the ends on both sides. Whether it is in the way depends on how long the screen's list is and how wide the dock,
-     * which change with the UI, so no scene has to know. Returns whether it scrolled.
+     * Scrolls [view] up if a tap at its centre would land on what covers the bottom of the screen, since screens scroll
+     * on under it. Whether something is in the way depends on how long the screen's list is, how wide the dock and
+     * where the last scroll came to rest, which change with the UI and from run to run, so no scene has to know.
+     * Returns whether it scrolled.
      */
-    private fun revealAboveDock(view: UiObject2, at: Rect): Boolean {
+    private fun revealAboveBottomEdge(view: UiObject2, at: Rect): Boolean {
         var bounds = at
         var scrolled = false
         repeat(REVEAL_ATTEMPTS) {
-            val dock = device.findObject(By.res(FLOATING_DOCK))?.visibleBounds ?: return scrolled
-            if (dock.contains(bounds) || !dock.contains(bounds.centerX(), bounds.centerY())) return scrolled
-            dragUpBy(bounds.bottom - dock.top + dock.height())
+            val cover = bottomCover(bounds) ?: return scrolled
+            dragUpBy(bounds.bottom - cover.top + cover.height())
             scrolled = true
             bounds = view.visibleBounds
         }
         return scrolled
     }
+
+    /**
+     * What a tap at the centre of [bounds] would land on in place of the view drawn there, or null if nothing.
+     *
+     * A touch that starts in gesture navigation's band goes to the launcher as the start of a swipe home, which on a
+     * slow device can bring the home screen up seconds after the app has answered the tap. A scroll that [scrollTo]
+     * ends with a row's top just showing above the edge leaves the row's centre in that band. With the navigation bar
+     * hidden, as the readers hide it, a touch there reaches the app.
+     *
+     * The home dock covers a view only partly when it is in the way, as it does a row wider than itself, whose bounds
+     * take in the ends on both sides; one it holds whole is on the dock.
+     */
+    private fun bottomCover(bounds: Rect): Rect? {
+        val x = bounds.centerX()
+        val y = bounds.centerY()
+        val gestures =
+            Rect(0, device.displayHeight - px(NAVIGATION_GESTURES_DP), device.displayWidth, device.displayHeight)
+        if (gestures.contains(x, y) && navigationBarShown()) return gestures
+        val dock = device.findObject(By.res(FLOATING_DOCK))?.visibleBounds ?: return null
+        return dock.takeIf { !it.contains(bounds) && it.contains(x, y) }
+    }
+
+    private fun px(dp: Int): Int = (dp * instrumentation.context.resources.displayMetrics.density).toInt()
 
     /**
      * Where [view] comes to rest. Kit lists animate their rows into place, and a sheet resizes to a filtered list, so a
@@ -513,10 +534,14 @@ internal object ShowcaseDevice {
     private const val SCROLL_STEPS = 50
     private val ANY_TEXT = Pattern.compile(".+", Pattern.DOTALL)
 
-    // The status bar's band, whose swipes pull the notification shade, and gesture navigation's 32 dp band with room
-    // for the slop the system allows a swipe.
+    // Gesture navigation's band along the bottom edge, the system's mandatory gesture inset there.
+    private const val NAVIGATION_GESTURES_DP = 32
+    private const val SWIPE_SLOP_DP = 16
+
+    // The status bar's band, whose swipes pull the notification shade, and gesture navigation's band with room for the
+    // slop the system allows a swipe.
     private const val TOP_SYSTEM_GESTURES_DP = 72
-    private const val BOTTOM_SYSTEM_GESTURES_DP = 48
+    private const val BOTTOM_SYSTEM_GESTURES_DP = NAVIGATION_GESTURES_DP + SWIPE_SLOP_DP
     private const val DEFAULT_GESTURE_MARGIN = 0.1f
     private const val MIN_GESTURE_HEIGHT_PX = 100
     private const val TAP_ATTEMPT_MS = 2_000L
