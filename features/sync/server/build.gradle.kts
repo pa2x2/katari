@@ -14,6 +14,13 @@ version = "1.0.0"
 application {
     applicationName = "katari-sync-server"
     mainClass = "app.katari.sync.server.MainKt"
+    // The SQLite driver loads its native library itself, which Java warns about and will block without this grant.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.test {
+    // The tests start the server's code as its start script does.
+    jvmArgs(application.applicationDefaultJvmArgs)
 }
 
 tasks.jar {
