@@ -9,6 +9,7 @@
     <string name="library_selected_count">%1$d selected</string>
     <string name="action_back">Back</string>
     <string name="action_next">Next</string>
+    <string name="action_previous">Previous</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>
     <string name="action_bar_up_description">Navigate up</string>
