@@ -48,12 +48,12 @@ internal fun Modifier.videoPlayerWheel(
                     true
                 }
             },
-            onMove = { _, distance ->
+            onMove = { _, travel ->
                 if (swipeSeeks) {
-                    target.seekSwipeBy((distance.toDp().value * SEEK_MS_PER_SWIPE_DP).roundToLong())
+                    target.seekSwipeBy((travel.toDp().value * SEEK_MS_PER_SWIPE_DP).roundToLong())
                     target.registerControllerInteraction(showControls = true)
                 } else {
-                    val level = swipeVolumeFrom + mediaVolumeLevelsSwiped(distance)
+                    val level = swipeVolumeFrom + mediaVolumeLevelsSwiped(travel)
                     target.applySideGestureLevel(VideoPlayerSideGestureType.Volume, level)
                 }
             },

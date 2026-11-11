@@ -1,5 +1,7 @@
 package app.katari.desktop.display.scroll
 
+import app.katari.desktop.display.scroll.natural.DisplayTouchpads
+
 /**
  * A step of scrolling over a window as the display itself reports it, finer than the whole wheel notches the window
  * toolkit makes of it, and telling a touchpad's fingers from a wheel.
@@ -11,9 +13,10 @@ internal sealed interface ScrollMotion {
     data class Wheel(override val at: ScrollPoint, val horizontal: Double, val vertical: Double) : ScrollMotion
 
     /**
-     * A touchpad's two fingers travelled [horizontal] and [vertical], down and right positive, in the pixels libinput
-     * reports a touchpad's scrolling in, which the session's own windows scroll by several times over. [starts] is
-     * set for the first step after the fingers came down.
+     * A touchpad's two fingers scrolled by [horizontal] and [vertical], down and right positive, in the pixels libinput
+     * reports a touchpad's scrolling in, which the session's own windows scroll by several times over. That is the way
+     * the fingers went, or the opposite way where the system scrolls naturally ([DisplayTouchpads]). [starts] is set
+     * for the first step after the fingers came down.
      */
     data class Fingers(
         override val at: ScrollPoint,

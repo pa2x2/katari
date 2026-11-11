@@ -7,7 +7,8 @@ import kotlin.math.abs
 /**
  * A touchpad's two-finger swipes read as drags of a control that a scroll sets rather than moves, as a player's volume
  * or seek: the control follows how far the fingers go along one axis and is done when they lift, as under a finger on
- * a touch screen, rather than taking the distance content would scroll and the glide content runs on with.
+ * a touch screen, rather than taking the distance content would scroll, which natural scrolling turns against the
+ * fingers, and the glide content runs on with.
  *
  * A swipe keeps to the axis its fingers first go along by more than [slop] pixels, as a slanted one would otherwise
  * set two things at once. [onStart] is asked whether the control takes a swipe along that axis; [onMove] then gets the
@@ -17,7 +18,7 @@ import kotlin.math.abs
 class TouchpadSwipes(
     private val slop: Float,
     private val onStart: (axis: Orientation) -> Boolean,
-    private val onMove: (axis: Orientation, distance: Float) -> Unit,
+    private val onMove: (axis: Orientation, travel: Float) -> Unit,
     private val onEnd: () -> Unit = {},
 ) {
     private var swipe: Int? = null
@@ -38,7 +39,7 @@ class TouchpadSwipes(
             state = if (scroll.stage == TouchpadScrollStage.Fingers) SwipeState.Undecided else SwipeState.Refused
         }
         when (scroll.stage) {
-            TouchpadScrollStage.Fingers -> move(scroll.distance)
+            TouchpadScrollStage.Fingers -> move(scroll.fingerTravel)
             TouchpadScrollStage.Lifted -> end()
             TouchpadScrollStage.Gliding -> Unit
         }
@@ -51,8 +52,8 @@ class TouchpadSwipes(
         if (state != SwipeState.Refused) state = SwipeState.Over
     }
 
-    private fun move(distance: Offset) {
-        travel += distance
+    private fun move(step: Offset) {
+        travel += step
         if (state == SwipeState.Undecided) {
             if (travel.getDistance() <= slop) return
             axis = if (abs(travel.y) >= abs(travel.x)) Orientation.Vertical else Orientation.Horizontal

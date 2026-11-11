@@ -27,13 +27,18 @@ import kotlin.math.sqrt
  * times the travel the display reports for them, [sessionScale] screen pixels for each of the session's, or the
  * toolkit's own scale where that is null, and a flick leaves it gliding once they lift, until the next scroll, a
  * click, a key or the pointer moving off. Their lifting comes as a step of its own that scrolls by nothing, for what
- * follows the fingers and stops with them.
+ * follows the fingers and stops with them. Each swipe's steps say whether content moves with the fingers, from
+ * [systemNatural] as it is when the swipe starts, so what follows the fingers knows which way they go.
  *
  * Compose scrolls a wheel's turn by a distance that grows with the root of the scrolling content's size, which the
  * window can't know for the content under the pointer, so that distance is exact for content that takes most of the
  * window, as a screen's list does, and falls short in smaller content. Used by the event dispatch thread.
  */
-internal class PreciseScrolling(private val window: Window, private val sessionScale: Float?) : AutoCloseable {
+internal class PreciseScrolling(
+    private val window: Window,
+    private val sessionScale: Float?,
+    private val systemNatural: () -> Boolean?,
+) : AutoCloseable {
     private val velocity = FingerVelocity()
     private val vertical = FingerTravel()
     private val horizontal = FingerTravel()
@@ -42,6 +47,7 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
 
     // Numbers the fingers' scrolls, for what counts them
     private var swipe = 0
+    private var contentFollowsFingers = false
 
     // What turns a time on the display's clock into AWT's, the system's
     private var clockOffset: Long? = null
@@ -79,6 +85,8 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
             is ScrollMotion.Fingers -> {
                 if (motion.starts) {
                     swipe++
+                    // A system that can't be read is taken to scroll as libinput does by default, the way the fingers go
+                    contentFollowsFingers = systemNatural() ?: false
                     vertical.reset()
                     horizontal.reset()
                     velocity.start()
@@ -159,7 +167,7 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
             xOnScreen = place.xOnScreen,
             yOnScreen = place.yOnScreen,
             rotation = pixels / pixelsPerRotation,
-            scroll = TouchpadScroll(swipe, stage, distance),
+            scroll = TouchpadScroll(swipe, stage, distance, contentFollowsFingers),
         )
     }
 

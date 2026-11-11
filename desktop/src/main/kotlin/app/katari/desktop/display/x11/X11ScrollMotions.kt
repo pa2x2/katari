@@ -2,6 +2,7 @@ package app.katari.desktop.display.x11
 
 import app.katari.desktop.display.scroll.ScrollMotion
 import app.katari.desktop.display.scroll.ScrollPoint
+import app.katari.desktop.display.scroll.natural.DisplayTouchpads
 import com.sun.jna.Memory
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
@@ -40,14 +41,20 @@ internal object X11ScrollMotions {
 
     /**
      * Reads the scrolling over [window], a window of AWT's X11 toolkit with its X11 window made, into [onMotion],
-     * which the reading thread calls, until closed. [pointerOver] says whether the pointer is over the window now,
-     * which the display only reports as it changes. Null where Xlib or XInput 2 doesn't load or the display has no
-     * scroll axes.
+     * which the reading thread calls, until closed, and whether the touchpads scroll naturally into [onTouchpads], on
+     * that thread too, now and whenever the pointer comes back. [pointerOver] says whether the pointer is over the
+     * window now, which the display only reports as it changes. Null where Xlib or XInput 2 doesn't load or the
+     * display has no scroll axes.
      */
-    fun over(window: Window, pointerOver: Boolean, onMotion: (ScrollMotion) -> Unit): AutoCloseable? {
+    fun over(
+        window: Window,
+        pointerOver: Boolean,
+        onTouchpads: (DisplayTouchpads) -> Unit,
+        onMotion: (ScrollMotion) -> Unit,
+    ): AutoCloseable? {
         val xlib = xlib ?: return null
         val xInput = xInput ?: return null
-        val listener = ScrollListener.open(xlib, xInput, window) ?: return null
+        val listener = ScrollListener.open(xlib, xInput, window, onTouchpads) ?: return null
         if (pointerOver) read += window
         thread(name = "X11 scroll motions", isDaemon = true) {
             try {
@@ -158,7 +165,12 @@ internal object X11ScrollMotions {
              * Asks for the pointer's motions over [window] on a new connection; null when the window has no X11 id or
              * the display has no XInput 2.1, the first version with scroll axes.
              */
-            fun open(xlib: Xlib, xInput: XInput, window: Window): ScrollListener? {
+            fun open(
+                xlib: Xlib,
+                xInput: XInput,
+                window: Window,
+                onTouchpads: (DisplayTouchpads) -> Unit,
+            ): ScrollListener? {
                 val windowId = NativeLong(X11Windows.idOf(window) ?: return null)
                 val display = xlib.openDisplay(null) ?: return null
                 val opcode = IntByReference()
@@ -180,7 +192,7 @@ internal object X11ScrollMotions {
                 // Raw events are the root window's to ask for
                 val root = xlib.defaultRootWindow(display)
                 xInput.selectEvents(display, root, xiEventMask(XI_ALL_MASTER_DEVICES, listOf(XI_RAW_BUTTON_PRESS)), 1)
-                val devices = X11ScrollDevices(xlib, xInput, display).apply { refresh() }
+                val devices = X11ScrollDevices(xlib, xInput, display, onTouchpads).apply { refresh() }
                 val wakeWindow = X11WakeWindow(xlib, display)
                 xlib.flush(display)
                 return ScrollListener(xlib, display, opcode.value, window, xInput, root, devices, wakeWindow)

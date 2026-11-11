@@ -152,7 +152,7 @@ private fun Modifier.volumeWheel(wheelStep: Int, level: () -> Int, onLevelChange
                 swipeFrom = level()
                 axis == Orientation.Vertical
             },
-            onMove = { _, distance -> onLevelChange(swipeFrom + mediaVolumeLevelsSwiped(distance)) },
+            onMove = { _, travel -> onLevelChange(swipeFrom + mediaVolumeLevelsSwiped(travel)) },
         )
         awaitPointerEventScope {
             while (true) {
