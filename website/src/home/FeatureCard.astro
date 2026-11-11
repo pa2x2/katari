@@ -1,0 +1,95 @@
+---
+import { isUpright } from "../media/devices.ts";
+import Still from "../media/Shot.astro";
+import type { CardFeature } from "./chapters.ts";
+import DocsLinks from "./DocsLinks.astro";
+
+interface Props {
+  feature: CardFeature;
+}
+
+const { feature } = Astro.props;
+---
+
+<article id={feature.id} class="card">
+  <div class="shots" data-zoom-group>
+    {
+      feature.shots.map(
+        (shot) =>
+          shot.kind === "still" &&
+          isUpright(shot.device ?? "phone") && <Still image={shot.image} alt={shot.alt} caption={shot.caption} sizes="7rem" />,
+      )
+    }
+  </div>
+  <div class="text">
+    <h3>{feature.title}</h3>
+    <p>{feature.text}</p>
+    <DocsLinks paths={feature.docs} />
+  </div>
+</article>
+
+<style>
+  .card {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    padding: 1.5rem 1.75rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--surface);
+  }
+
+  .shots {
+    display: flex;
+    flex: none;
+    gap: 0.75rem;
+    --shot-width: 7rem;
+  }
+
+  /* At this size a phone's frame is thinner and its corners tighter, and a caption under each would be a column of
+     single words; the viewer shows it instead. */
+  .shots :global(.frame) {
+    padding: 0.25rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 0 1px var(--device-edge);
+  }
+
+  .shots :global(img),
+  .shots :global(.planned) {
+    border-radius: 0.8rem;
+  }
+
+  .shots :global(figcaption) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+  }
+
+  .text :global(.docs) {
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  /* Beside three phones a narrow card leaves the text a column a few words wide, so the phones go on top. */
+  @container (width < 34rem) {
+    .card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.25rem;
+    }
+  }
+</style>

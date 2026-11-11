@@ -1,13 +1,17 @@
 ---
 import Band from "./Band.astro";
-import type { Chapter } from "./chapters.ts";
+import type { CardFeature, Chapter, FullFeature } from "./chapters.ts";
 import Feature from "./Feature.astro";
+import FeatureCard from "./FeatureCard.astro";
 
 interface Props {
   chapter: Chapter;
 }
 
 const { chapter } = Astro.props;
+// The full-size features come first, each a band or beside its shots; the chapter's other features follow as cards.
+const full = chapter.features.filter((feature): feature is FullFeature => !("card" in feature));
+const cards = chapter.features.filter((feature): feature is CardFeature => "card" in feature);
 // Features beside their text alternate sides; a band between them doesn't count.
 let beside = 0;
 ---
@@ -23,9 +27,16 @@ let beside = 0;
       <span class="word" lang="ja" aria-hidden="true" data-pagefind-ignore>{chapter.word}</span>
     </div>
   </header>
+  {full.map((feature) => (feature.band ? <Band feature={{ ...feature, band: feature.band }} /> : <Feature feature={feature} flip={beside++ % 2 === 1} />))}
   {
-    chapter.features.map((feature) =>
-      feature.band ? <Band feature={{ ...feature, band: feature.band }} /> : <Feature feature={feature} flip={beside++ % 2 === 1} />,
+    cards.length > 0 && (
+      <div class="cards">
+        {cards.map((feature) => (
+          <div class="slot">
+            <FeatureCard feature={feature} />
+          </div>
+        ))}
+      </div>
     )
   }
 </section>
@@ -85,6 +96,32 @@ let beside = 0;
     font-weight: 700;
     letter-spacing: 0.3em;
     writing-mode: vertical-rl;
+  }
+
+  /* Two cards to a row; one alone, or any in a narrow window, takes the row. Each slot is a container, so a card lays
+     itself out by the room it has. */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 1rem;
+  }
+
+  .slot {
+    display: grid;
+    container-type: inline-size;
+  }
+
+  .slot:only-child {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 70rem) {
+    .cards {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   @media (max-width: 44rem) {

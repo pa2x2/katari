@@ -1,11 +1,11 @@
 ---
-import type { Feature } from "./chapters.ts";
+import type { FullFeature } from "./chapters.ts";
 import DocsLinks from "./DocsLinks.astro";
 import Highlights from "./Highlights.astro";
 import ShotStack from "./ShotStack.astro";
 
 interface Props {
-  feature: Feature;
+  feature: FullFeature;
   /** Puts the screenshots on the left, so that consecutive features alternate sides. */
   flip: boolean;
 }
