@@ -8,11 +8,11 @@ import app.katari.icons.materialsymbols.rounded.CloudDownload
 import app.katari.icons.materialsymbols.rounded.CloudOff
 import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.icons.materialsymbols.rounded.CloudUpload
-import app.katari.icons.materialsymbols.rounded.PhonelinkErase
 import app.katari.icons.materialsymbols.rounded.Sync
 import app.katari.icons.materialsymbols.rounded.SyncDisabled
 import app.katari.icons.materialsymbols.rounded.SyncProblem
 import app.katari.icons.materialsymbols.rounded.Wifi
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.sync.client.run.SyncStep
 import dev.icerock.moko.resources.StringResource
@@ -139,7 +139,7 @@ fun SyncHeadline.stopsSync(): Boolean = when (this) {
 
 fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
-    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> MaterialSymbols.Rounded.PhonelinkErase
+    is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> platformPresentation.thisDeviceRemovedIcon
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
     SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
     is SyncHeadline.Failed,

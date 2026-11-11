@@ -36,8 +36,8 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import app.katari.entry.interactions.media.EntryImmersiveSourceAvailability
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Add
-import app.katari.icons.materialsymbols.rounded.TouchApp
 import app.katari.icons.materialsymbols.rounded.Tune
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.LogoSize
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.EmptyScreen
@@ -141,7 +141,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                             activeFeedSource.name,
                         ),
                         onClick = { navigator.push(BrowseLongPressActionsScreen(activeFeedSource.id)) },
-                        icon = MaterialSymbols.Rounded.TouchApp,
+                        icon = platformPresentation.pointerIcon,
                     ),
                 )
             }

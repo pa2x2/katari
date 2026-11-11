@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Keyboard
-import app.katari.icons.materialsymbols.rounded.Mouse
 import app.katari.icons.materialsymbols.rounded.SwipeVertical
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.gesture.InputGuide
 import app.katari.presentation.kit.gesture.InputGuideHint
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
@@ -21,7 +21,7 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
     InputGuide(
         hints = listOf(
             InputGuideHint(
-                icon = MaterialSymbols.Rounded.Mouse,
+                icon = platformPresentation.pointerIcon,
                 title = stringResource(MR.strings.anime_guide_click),
                 details = listOf(
                     stringResource(MR.strings.anime_guide_double_click),

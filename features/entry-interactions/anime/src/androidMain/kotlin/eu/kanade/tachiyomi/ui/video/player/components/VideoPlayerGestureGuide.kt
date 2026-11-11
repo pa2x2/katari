@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.SwipeVertical
-import app.katari.icons.materialsymbols.rounded.TouchApp
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.gesture.InputGuide
 import app.katari.presentation.kit.gesture.InputGuideHint
 import tachiyomi.i18n.*
@@ -28,7 +28,7 @@ internal fun VideoPlayerGestureGuide(
                 details = listOf(stringResource(MR.strings.anime_guide_double_tap_back, seekStepSeconds)),
             ),
             InputGuideHint(
-                icon = MaterialSymbols.Rounded.TouchApp,
+                icon = platformPresentation.pointerIcon,
                 title = stringResource(MR.strings.anime_guide_hold),
                 details = listOf(
                     stringResource(MR.strings.anime_guide_swipe_seek),

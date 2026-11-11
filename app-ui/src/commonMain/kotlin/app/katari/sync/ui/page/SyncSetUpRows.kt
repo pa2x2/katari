@@ -6,9 +6,8 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.CheckCircle
 import app.katari.icons.materialsymbols.rounded.Dns
 import app.katari.icons.materialsymbols.rounded.Keyboard
-import app.katari.icons.materialsymbols.rounded.PhonelinkErase
 import app.katari.icons.materialsymbols.rounded.QrCodeScanner
-import app.katari.icons.materialsymbols.rounded.Smartphone
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.button.PageAction
 import app.katari.presentation.kit.button.PageActions
 import app.katari.presentation.kit.list.RowGroupGap
@@ -53,7 +52,7 @@ internal fun setUpPreferences(canKeepSignIn: Boolean, actions: SyncPageActions):
             TextPreferenceWidget(
                 title = stringResource(MR.strings.sync_what_stays_title),
                 subtitle = stringResource(MR.strings.sync_what_stays),
-                icon = MaterialSymbols.Rounded.Smartphone,
+                icon = platformPresentation.thisDeviceIcon,
                 onPreferenceClick = actions.openWhatSyncs,
             )
         },
@@ -89,7 +88,7 @@ internal fun endedPreferences(link: SyncStatus.Link.Ended, actions: SyncPageActi
                 },
             ),
             subtitle = stringResource(MR.strings.sync_ended_text, link.server?.host.orEmpty()),
-            icon = MaterialSymbols.Rounded.PhonelinkErase,
+            icon = platformPresentation.thisDeviceRemovedIcon,
             iconAlert = true,
         )
     },
