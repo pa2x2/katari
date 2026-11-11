@@ -1,5 +1,21 @@
 # Desktop Changelog
 
+## [1.0.0-beta.11] - 2026-11-11
+
+### ✨ Added
+
+- Pressing and holding the sync icon syncs at once.
+
+### 🧩 Improved
+
+- AniSkip and TheIntroDB find intro and credits times for later seasons, reading the season from the source's season groups or episode names.
+- You change a service's intro times match on one page that picks the series, season and episode and shows its times before you use them.
+- The player's episode list, the manga reader's chapter list and the book reader's table of contents open with the current item in the middle.
+
+### 🐛 Fixed
+
+- In the long strip, a page loading above the one you're reading no longer pushes it down, and a page you scroll back to keeps its height.
+
 ## [1.0.0-beta.10] - 2026-11-11
 
 ### 🔄 Changed
@@ -292,7 +308,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.10...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.11...HEAD
+[1.0.0-beta.11]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.11
 [1.0.0-beta.10]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.10
 [1.0.0-beta.9]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.9
 [1.0.0-beta.8]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.8
