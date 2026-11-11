@@ -4,10 +4,10 @@ import app.katari.gradle.chromium.AssembleChromiumArchiveTask
 import app.katari.gradle.chromium.CheckChromiumVersionTask
 import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
 import app.katari.gradle.extensions.katari
+import app.katari.gradle.javaruntime.provisionJavaRuntime
 import app.katari.gradle.jetbrainsruntime.JCEF_NATIVE_ACCESS
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntime
 import app.katari.gradle.jetbrainsruntime.jetBrainsRuntimeSdk
-import app.katari.gradle.jetbrainsruntime.provisionJetBrainsRuntime
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -54,9 +54,9 @@ fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile
     val application = (extensions.getByType<ComposeExtension>() as ExtensionAware).extensions
         .getByType<DesktopExtension>().application
     val runtime = jetBrainsRuntime()
-    val provisionRuntime = provisionJetBrainsRuntime(runtime)
+    val provisionRuntime = provisionJavaRuntime(runtime.pinned)
     val sdk = jetBrainsRuntimeSdk()
-    val provisionSdk = provisionJetBrainsRuntime(sdk)
+    val provisionSdk = provisionJavaRuntime(sdk.pinned)
     val tools = appImageTools()
     val provisionTools = provisionAppImageTools(tools)
     val jar = tasks.named<Jar>("jar")

@@ -1,6 +1,7 @@
 package app.katari.gradle.jetbrainsruntime
 
 import app.katari.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import app.katari.gradle.javaruntime.provisionJavaRuntime
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.Project
@@ -72,7 +73,7 @@ abstract class JcefApiVersionCheckTask : DefaultTask() {
  */
 fun Project.checkJcefApiMatchesJetBrainsRuntime() {
     val runtime = jetBrainsRuntime()
-    val provision = provisionJetBrainsRuntime(runtime)
+    val provision = provisionJavaRuntime(runtime.pinned)
     val api = configurations.named("compileClasspath").map { classpath ->
         classpath.incoming.artifactView {
             componentFilter { it is ModuleComponentIdentifier && it.group == JCEF_GROUP }
