@@ -85,7 +85,10 @@ data object UpdatesTab : Tab {
 
         val libraryUpdateStatus by viewModel.libraryUpdateStatus.collectAsStateWithLifecycle()
         // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
-        val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
+        val updateStarter = rememberLibraryUpdateStarter(
+            viewModel.snackbarHostState,
+            onViewRunning = { navigator.push(LibraryUpdateReportScreen()) },
+        )
 
         val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }
             .takeIf { libraryUpdateStatus?.hasReport == true }

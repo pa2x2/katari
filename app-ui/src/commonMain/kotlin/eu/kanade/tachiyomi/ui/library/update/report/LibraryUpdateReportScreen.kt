@@ -49,7 +49,7 @@ class LibraryUpdateReportScreen(private val thisDevice: Boolean = false) : Scree
         val openMessages = rememberEntryOpenMessages()
 
         // A started recheck shows up in this report as it runs, so only a queued or refused start needs a message.
-        val updateStarter = rememberLibraryUpdateStarter(snackbarHostState)
+        val updateStarter = rememberLibraryUpdateStarter(snackbarHostState, onViewRunning = null)
 
         Scaffold(
             topBar = {
