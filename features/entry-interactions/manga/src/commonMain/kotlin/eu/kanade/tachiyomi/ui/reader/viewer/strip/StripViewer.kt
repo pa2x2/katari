@@ -64,6 +64,10 @@ internal class StripViewer(
 
     val zoom = StripZoom()
 
+    internal val slotAnchor = StripSlotAnchor()
+
+    internal val pageSizes = StripPageSizes()
+
     /** The scope of Content's composition, which animated scrolls and auto scroll run in. */
     internal var composeScope: CoroutineScope? = null
 

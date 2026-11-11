@@ -150,17 +150,22 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Bo
         zoom.setViewport(width.toFloat(), inset.toFloat())
         val insetDp = with(density) { inset.toDp() }
         val pageWidth = width - 2 * with(density) { insetDp.roundToPx() }
-        val placeholderHeight = with(density) { constraints.maxHeight.toDp() }
+        val placeholderHeight = constraints.maxHeight
 
         PageStrip(
             state = state,
             sideInset = insetDp,
-            modifier = Modifier.paintedBehind(viewer).zoomedBy(zoom).nestedScroll(menuHider),
+            modifier = Modifier
+                .paintedBehind(viewer)
+                .zoomedBy(zoom)
+                .followedBy(slotAnchor, state)
+                .nestedScroll(menuHider),
         ) {
             items(items, key = { it.key }, contentType = { it::class }) { item ->
                 when (item) {
                     is ReaderViewerItem.Page -> StripPage(
                         page = item.page,
+                        slotKey = item.key,
                         viewer = viewer,
                         width = pageWidth,
                         placeholderHeight = placeholderHeight,
