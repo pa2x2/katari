@@ -326,6 +326,10 @@ internal fun VideoPlayerWatchScreen(
         visit.pendingPausedStartMs = null
         currentPlayer.setPlayWhenReady(false)
         currentPlayer.seekTo(positionMs)
+        if (!visit.controlsLocked) {
+            ui.controlsVisible = true
+            ui.controlsHeldAtInteraction = ui.controllerInteractionSequence
+        }
     }
 
     viewModel.introTimes.Effect(current.chapterId, introTimesServices) { ui.playbackSnapshot.durationMs }
