@@ -229,7 +229,6 @@
     <string name="download_notifier_downloader_title">Πρόγραμμα λήψης</string>
     <string name="download_notifier_title_error">Σφάλμα</string>
     <string name="download_notifier_unknown_error">Το κεφάλαιο δεν μπορούσε να ληφθεί λόγο μη αναμενόμενου σφάλματος</string>
-    <string name="download_notifier_text_only_wifi">Δεν υπάρχει διαθέσιμη σύνδεση Wi-Fi</string>
     <string name="download_notifier_no_network">Δεν υπάρχει διαθέσιμη σύνδεση δικτύου</string>
     <string name="download_notifier_download_paused">Λήψεις σε παύση</string>
     <string name="channel_common">Κοινό</string>
@@ -384,7 +383,6 @@
     <string name="kindlish_nav">Σαν Kindle</string>
     <string name="l_nav">Σχήματος L</string>
     <string name="pref_dump_crash_logs_summary">Αποθηκεύει αρχεία καταγραφής σφαλμάτων σε ένα αρχείο για κοινή χρήση με τους προγραμματιστές</string>
-    <string name="pref_dump_crash_logs">Κοινή χρήση αρχείων καταγραφής σφαλμάτων</string>
     <string name="action_desc">Φθίνουσα</string>
     <string name="action_asc">Αύξουσα</string>
     <string name="action_order_by_chapter_number">Κατά αριθμό κεφαλαίου</string>
@@ -492,7 +490,6 @@
     <string name="pref_landscape_zoom">Αυτόματο ζουμ σε ευρείες εικόνες</string>
     <string name="action_display_cover_only_grid">Πλέγμα μόνο με εξώφυλλα</string>
     <string name="pref_navigate_pan">Μετατόπιση πλατιών εικόνων</string>
-    <string name="learn_more">Πατήστε για να μάθετε περισσότερα</string>
     <string name="rotation_reverse_portrait">Αντίστροφο πορτρέτο</string>
     <string name="action_move_to_top_all_for_series">Μετακίνηση σειράς προς τα πάνω</string>
     <string name="disabled_nav">Απενεργοποιημένο</string>
@@ -540,15 +537,12 @@
     <string name="popular">Δημοφιλή</string>
     <string name="updates_last_update_info">Τελευταία ενημέρωση βιβλιοθήκης: %s</string>
     <string name="remove_manga">Πρόκειται να αφαιρέσετε το \"%s\" από τη βιβλιοθήκη σας</string>
-    <string name="missing_storage_permission">Δεν έχουν χορηγηθεί δικαιώματα αποθήκευσης</string>
     <string name="action_search_hint">Αναζήτηση…</string>
     <string name="pref_browse_summary">Πηγές, επεκτάσεις, καθολική αναζήτηση</string>
     <string name="crash_screen_title">Ουπς!</string>
     <string name="pref_appearance_summary">Θέμα, μορφή ημερομηνίας και ώρας</string>
-    <string name="pref_library_summary">Κατηγορίες, καθολική ενημέρωση, σύρσιμο κεφαλαίου</string>
     <string name="pref_reader_summary">Λειτουργία ανάγνωσης, οθόνη, πλοήγηση</string>
     <string name="pref_backup_summary">Χειροκίνητα &amp; αυτόματα αντίγραφα ασφαλείας, χώρος αποθήκευσης</string>
-    <string name="pref_security_summary">Κλείδωμα εφαρμογής, ασφαλής οθόνη</string>
     <string name="crash_screen_restart_application">Επανεκκίνηση της εφαρμογής</string>
     <string name="pref_downloads_summary">Αυτόματη λήψη, λήψη εκ των προτέρων</string>
     <string name="unknown_title">Άγνωστος τίτλος</string>

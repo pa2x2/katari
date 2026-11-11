@@ -237,7 +237,6 @@
     <string name="download_notifier_downloader_title">下载</string>
     <string name="download_notifier_title_error">出错</string>
     <string name="download_notifier_unknown_error">下载时发生意外错误</string>
-    <string name="download_notifier_text_only_wifi">未连接 Wi-Fi</string>
     <string name="download_notifier_no_network">未连接网络</string>
     <string name="download_notifier_download_paused">下载已暂停</string>
     <string name="channel_common">通用</string>
@@ -392,7 +391,6 @@
     <string name="kindlish_nav">Kindle</string>
     <string name="l_nav">L 形</string>
     <string name="pref_dump_crash_logs_summary">将错误日志保存到文件中，以便提供给开发者</string>
-    <string name="pref_dump_crash_logs">导出崩溃日志</string>
     <string name="action_desc">降序</string>
     <string name="action_asc">升序</string>
     <string name="action_order_by_chapter_number">按章节编号</string>
@@ -500,7 +498,6 @@
     <string name="action_display_cover_only_grid">封面网格</string>
     <string name="pref_landscape_zoom">自动放大横向图片</string>
     <string name="pref_navigate_pan">图片放大时先平移再翻页</string>
-    <string name="learn_more">点击了解详情</string>
     <string name="rotation_reverse_portrait">反向竖屏</string>
     <string name="action_move_to_top_all_for_series">将作品移到顶部</string>
     <string name="disabled_nav">关闭</string>
@@ -554,15 +551,12 @@
     <string name="updates_last_update_info">书架更新时间：%s</string>
     <string name="remove_manga">即将从书架中删除 \"%s\"</string>
     <string name="popular">热门</string>
-    <string name="missing_storage_permission">未授予存储权限</string>
     <string name="action_search_hint">搜索…</string>
     <string name="crash_screen_title">哦豁！</string>
     <string name="crash_screen_restart_application">重启应用</string>
     <string name="pref_appearance_summary">主题 • 日期格式</string>
-    <string name="pref_library_summary">分类 • 全局更新 • 目录左右滑动</string>
     <string name="pref_downloads_summary">自动下载 • 预先下载</string>
     <string name="pref_backup_summary">手动备份 • 自动备份 • 存储空间</string>
-    <string name="pref_security_summary">应用锁 • 隐私界面</string>
     <string name="pref_browse_summary">图源 • 插件 • 全局搜索</string>
     <string name="pref_reader_summary">阅读模式 • 显示 • 翻页</string>
     <string name="unknown_title">未知标题</string>

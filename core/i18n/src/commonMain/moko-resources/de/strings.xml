@@ -189,7 +189,6 @@
     <string name="download_notifier_downloader_title">Downloader</string>
     <string name="download_notifier_title_error">Fehler</string>
     <string name="download_notifier_unknown_error">Kapitel konnte aufgrund eines unerwarteten Fehlers nicht heruntergeladen werden</string>
-    <string name="download_notifier_text_only_wifi">Keine WLAN-Verbindung verfügbar</string>
     <string name="download_notifier_no_network">Kein Netzwerk verfügbar</string>
     <string name="download_notifier_download_paused">Downloads pausiert</string>
     <string name="label_recent_updates">Neues</string>
@@ -404,7 +403,6 @@
     <string name="kindlish_nav">Kindle-Stil</string>
     <string name="l_nav">L-förmig</string>
     <string name="pref_dump_crash_logs_summary">Speichert Fehlerprotokolle in einer Datei, die dann mit den Entwicklern geteilt wird</string>
-    <string name="pref_dump_crash_logs">Absturzprotokolle teilen</string>
     <string name="action_desc">Absteigend</string>
     <string name="action_asc">Aufsteigend</string>
     <string name="action_order_by_chapter_number">Nach Kapitelnummer</string>
@@ -512,7 +510,6 @@
     <string name="action_display_cover_only_grid">Nur-Cover-Kacheln</string>
     <string name="pref_landscape_zoom">Bei breiten Bildern automatisch hineinzoomen</string>
     <string name="pref_navigate_pan">Innerhalb breiter Seiten navigieren</string>
-    <string name="learn_more">Antippen, um mehr zu erfahren</string>
     <string name="rotation_reverse_portrait">Umgekehrtes Hochformat</string>
     <string name="action_move_to_top_all_for_series">Serie nach oben verschieben</string>
     <string name="disabled_nav">Deaktiviert</string>
@@ -562,17 +559,14 @@
     <string name="multi_lang">Mehrere Sprachen</string>
     <string name="updates_last_update_info">Bibliothek zuletzt aktualisiert: %s</string>
     <string name="popular">Beliebt</string>
-    <string name="missing_storage_permission">Speicherberechtigungen nicht erteilt</string>
     <string name="action_search_hint">Suchen…</string>
     <string name="pref_appearance_summary">Thema, Datums- und Zeitformat</string>
     <string name="pref_reader_summary">Lesemodus, Anzeige, Navigation</string>
     <string name="pref_downloads_summary">Automatische Downloads, im Voraus herunterladen</string>
-    <string name="pref_library_summary">Kategorien, globale Aktualisierungen, Kapitelaktionen</string>
     <string name="crash_screen_restart_application">App neustarten</string>
     <string name="pref_browse_summary">Quellen, Erweiterungen, globale Suche</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="pref_backup_summary">Manuelle und automatische Datensicherungen, Speicherplatz</string>
-    <string name="pref_security_summary">App-Sperre, sicherer Bildschirm</string>
     <string name="unknown_title">Unbekannter Titel</string>
     <string name="invalid_location">Ungültiger Speicherort: %s</string>
     <string name="error_user_agent_string_invalid">Ungültiger User-Agent-Text</string>

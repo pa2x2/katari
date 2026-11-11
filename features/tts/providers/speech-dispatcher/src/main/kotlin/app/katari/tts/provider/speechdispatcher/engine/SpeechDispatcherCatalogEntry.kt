@@ -23,7 +23,7 @@ internal fun speechDispatcherCatalogEntry(): KnownTtsEngine = KnownTtsEngine(
     artwork = TtsEngineArtwork.Glyph(Res.drawable.ic_speech_dispatcher),
     details = TtsEngineDetails(
         description = stringResource(MR.strings.tts_speech_dispatcher_description),
-        processingDescription = stringResource(MR.strings.tts_speech_dispatcher_processing),
+        processingDescription = stringResource(PlatformStrings.tts_speech_dispatcher_processing),
         privacyDescription = stringResource(MR.strings.tts_speech_dispatcher_privacy),
     ),
     documentationUrl = SPEECH_DISPATCHER_DOCUMENTATION,

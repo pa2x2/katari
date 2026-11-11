@@ -132,7 +132,6 @@
     <string name="copy">副本</string>
     <string name="information_no_downloads">尚無下載作業</string>
     <string name="download_notifier_title_error">錯誤</string>
-    <string name="download_notifier_text_only_wifi">沒有可用的 Wi-Fi 連線</string>
     <string name="download_notifier_no_network">尚未連接至網路</string>
     <string name="download_notifier_download_paused">下載已暫停</string>
     <string name="pref_page_transitions">翻頁轉場動畫</string>
@@ -381,7 +380,6 @@
     <string name="kindlish_nav">Kindle 式</string>
     <string name="l_nav">L 式</string>
     <string name="pref_dump_crash_logs_summary">產生錯誤記錄檔以便分享予開發人員</string>
-    <string name="pref_dump_crash_logs">分享當機記錄</string>
     <string name="pref_viewer_nav">輕觸區域</string>
     <string name="right_and_left_nav">左右式</string>
     <string name="action_order_by_upload_date">依上傳日期</string>
@@ -493,7 +491,6 @@
     <string name="pref_navigate_pan">導覽寬頁時先平移後翻頁</string>
     <string name="action_display_cover_only_grid">純封面格狀</string>
     <string name="rotation_reverse_portrait">顛倒直向</string>
-    <string name="learn_more">瞭解詳情</string>
     <string name="action_move_to_top_all_for_series">置頂此作品</string>
     <string name="disabled_nav">停用</string>
     <string name="empty_backup_error">書櫃中尚無作品可供備份</string>
@@ -540,16 +537,13 @@
     <string name="remove_manga">即將從書櫃中移除《%s》</string>
     <string name="updates_last_update_info">書櫃更新於：%s</string>
     <string name="popular">熱門</string>
-    <string name="missing_storage_permission">未被授予儲存空間權限</string>
     <string name="action_search_hint">搜尋…</string>
     <string name="pref_reader_summary">閱讀模式、檢視、導覽</string>
     <string name="pref_appearance_summary">主題、日期格式</string>
     <string name="pref_downloads_summary">自動下載、預先下載</string>
     <string name="pref_backup_summary">手動與自動備份、儲存空間</string>
-    <string name="pref_security_summary">上鎖應用程式、防窺畫面</string>
     <string name="crash_screen_restart_application">重新啟動應用程式</string>
     <string name="crash_screen_title">哎呀！</string>
-    <string name="pref_library_summary">類別、全域更新、目錄滑動動作</string>
     <string name="pref_browse_summary">來源、擴充套件、全域搜尋</string>
     <string name="invalid_location">無效的位置：%s</string>
     <string name="unknown_title">未知的標題</string>

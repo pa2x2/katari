@@ -5,4 +5,6 @@
     <string name="information_empty_category">Sinulla ei ole kategorioita. Napauta pluspainiketta, jos haluat luoda sellaisen kirjaston järjestämistä varten.</string>
     <string name="pref_double_tap_zoom">Tuplanapauta lähentääksesi</string>
     <string name="pref_double_tap_anim_speed">Tuplanäpäytyksen animaation nopeus</string>
+    <string name="pref_dump_crash_logs">Poista kaatumislokit</string>
+    <string name="pref_security_summary">Applikaation lukko, turvallinen ruutu</string>
 </resources>

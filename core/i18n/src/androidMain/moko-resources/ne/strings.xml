@@ -7,4 +7,6 @@
     <string name="information_empty_category">तपाईंसँग कुनै वर्गहरू छैन। वर्ग बनाएर पुस्तकालय व्यवस्थित गर्न प्लस बटन थिच्नुहोस्।</string>
     <string name="pref_double_tap_zoom">जूम गर्न डबल ट्याप गर्नुहोस्</string>
     <string name="pref_double_tap_anim_speed">एनिमेसनको गति डबल ट्याप गर्नुहोस्</string>
+    <string name="pref_dump_crash_logs">Crash logs साझा गर्नुहोस्</string>
+    <string name="pref_security_summary">एप लक, सुरक्षित स्क्रिन</string>
 </resources>

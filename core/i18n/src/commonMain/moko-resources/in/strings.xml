@@ -188,7 +188,6 @@
     <string name="download_notifier_downloader_title">Pengunduh</string>
     <string name="download_notifier_title_error">Gagal</string>
     <string name="download_notifier_unknown_error">Terjadi kesalahan saat mengunduh bab</string>
-    <string name="download_notifier_text_only_wifi">Tidak terhubung dengan Wi-Fi</string>
     <string name="download_notifier_no_network">Tidak ada koneksi jaringan yang tersedia</string>
     <string name="download_notifier_download_paused">Unduhan dijeda</string>
     <string name="action_global_search">Pencarian Global</string>
@@ -383,7 +382,6 @@
     <string name="action_asc">Urutan naik</string>
     <string name="action_order_by_chapter_number">Menurut nomor bab</string>
     <string name="action_order_by_upload_date">Menurut tanggal unggahan</string>
-    <string name="pref_dump_crash_logs">Bagikan log kerusakan</string>
     <string name="pref_dump_crash_logs_summary">Simpan log kerusakan ke sebuah berkas untuk dibagikan dengan pengembang aplikasi</string>
     <string name="pref_viewer_nav">Zona ketuk</string>
     <string name="right_and_left_nav">Kanan dan Kiri</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">Grid sampul saja</string>
     <string name="pref_landscape_zoom">Secara otomatis melebarkan gambar</string>
     <string name="pref_navigate_pan">Geser gambar lebar</string>
-    <string name="learn_more">Pelajari lebih lanjut</string>
     <string name="rotation_reverse_portrait">Layar tegak terbalik</string>
     <string name="action_move_to_top_all_for_series">Pindahkan seri ke atas</string>
     <string name="disabled_nav">Dinonaktifkan</string>
@@ -540,14 +537,11 @@
     <string name="multi_lang">Semua</string>
     <string name="are_you_sure">Apa kamu yakin?</string>
     <string name="popular">Populer</string>
-    <string name="missing_storage_permission">Izin penyimpanan tidak diberikan</string>
     <string name="action_search_hint">Cari…</string>
     <string name="pref_browse_summary">Sumber, ekstensi, pencarian global</string>
     <string name="pref_reader_summary">Mode membaca, tampilan, navigasi</string>
     <string name="pref_downloads_summary">Unduh otomatis, unduh terlebih dahulu</string>
-    <string name="pref_security_summary">Kunci aplikasi, amankan layar</string>
     <string name="pref_appearance_summary">Tema, format tanggal &amp; waktu</string>
-    <string name="pref_library_summary">Kategori, pembaruan global, geser chapter</string>
     <string name="pref_backup_summary">Pencadangan manual &amp; otomatis, ruang penyimpanan</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="crash_screen_restart_application">Mulai ulang aplikasi</string>

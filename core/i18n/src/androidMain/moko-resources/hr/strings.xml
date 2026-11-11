@@ -7,4 +7,6 @@
     <string name="information_empty_category">Nemaš kategorija. Za stvaranje kategorije i organiziranje biblioteke dodirni gumb plus.</string>
     <string name="pref_double_tap_zoom">Dodirni dvaput za zumiranje</string>
     <string name="pref_double_tap_anim_speed">Brzina animacije dvostrukim dodirom</string>
+    <string name="pref_dump_crash_logs">Dijeli zapise prekida rada aplikacije</string>
+    <string name="pref_security_summary">Zaključavanje aplikacije, siguran zaslon</string>
 </resources>

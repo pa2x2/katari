@@ -221,7 +221,7 @@ private fun attentionRows(
             )
         }
         is SyncHeadline.Failed -> listOf(
-            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_failed_help)),
+            Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncFailedHelp)),
         )
         is SyncHeadline.ServerTooOld -> {
             val openGuide = rememberOpenSyncGuide()

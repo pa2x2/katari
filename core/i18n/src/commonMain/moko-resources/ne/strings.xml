@@ -313,7 +313,6 @@
     <string name="fourth_to_last">अन्तिम पढिएको अध्याय भन्दा ३ अध्याय अघि</string>
     <string name="pref_download_new">नयाँ अध्यायहरू डाउनलोड गर्नुहोस्</string>
     <string name="notification_chapters_multiple">अध्यायहरू %1$s</string>
-    <string name="download_notifier_text_only_wifi">कुनै Wi-Fi जडान उपलब्ध छैन</string>
     <string name="download_notifier_download_paused">डाउनलोड्स रोकियो</string>
     <string name="download_notifier_no_network">कुनै नेटवर्क जडान उपलब्ध छैन</string>
     <string name="backup_restore_missing_sources">छुटेको स्रोतहरू:</string>
@@ -375,7 +374,6 @@
     <string name="no_pinned_sources">तपाईंसँग पिन गरिएको स्रोतहरू छैनन्</string>
     <string name="local_invalid_format">अवैध अध्याय ढाँचा</string>
     <string name="downloaded_only_summary">तपाईंको पुस्तकालयमा सबै इन्ट्री फिल्टर गर्नेछ</string>
-    <string name="pref_dump_crash_logs">Crash logs साझा गर्नुहोस्</string>
     <string name="pref_disable_battery_optimization">ब्याट्री अप्टिमाइजेसन असक्षम पार्नुहोस्</string>
     <string name="unknown">अज्ञात</string>
     <string name="no_results_found">कुनै परिणाम फेला परेन</string>
@@ -479,7 +477,6 @@
     <string name="transition_no_previous">अघिल्लो अध्याय छैन</string>
     <string name="download_insufficient_space">थोरै जम्मा गर्ने ठाउँ भएको कारणले अध्याय डाउनलोड हुन सकिँदएन</string>
     <string name="file_picker_error">कुनै फाइल पिकर एप फेला परेन</string>
-    <string name="learn_more">थप जान्नका लागि ट्याप गर्नुहोस्</string>
     <string name="information_empty_category_dialog">तपाईंसँग अहिलेसम्म कुनै पनि वर्गहरू छैन।</string>
     <string name="chapter_settings_updated">पूर्वनिर्धारित अध्याय सेटिंग्स अपडेट गरियो</string>
     <string name="spen_next_page">अर्को पृष्ठ</string>
@@ -498,7 +495,6 @@
     <string name="disabled_nav">असक्षम</string>
     <string name="action_sort_unread_count">नपढिएको संख्या</string>
     <string name="action_close">बन्द गर्नुहोस्</string>
-    <string name="pref_library_summary">वर्गहरू, ग्लोबल अपडेट, अध्याय स्वाइप</string>
     <string name="action_sort_last_manga_update">पछिल्लो अपडेट जाँच</string>
     <string name="delete_category_confirmation">के तपाई \"%s\" वर्ग हटाउन चाहनु हुन्छ?</string>
     <string name="delete_category">वर्ग हटाउनुहोस्</string>
@@ -511,7 +507,6 @@
     <string name="pref_app_language">एप को भाषा</string>
     <string name="auto_download_while_reading">पढ्दा स्वत: डाउनलोड गर्नुहोस्</string>
     <string name="pref_backup_summary">म्यानुअल र स्वचालित ब्याकअप, भण्डारण स्पेस</string>
-    <string name="pref_security_summary">एप लक, सुरक्षित स्क्रिन</string>
     <string name="multi_lang">थुप्रै</string>
     <string name="pref_library_update_show_tab_badge">अपडेट्स आइकनमा नपढिएको गणना देखाउनुहोस्</string>
     <string name="pref_skip_dupe_chapters">डुप्लिकेट अध्यायहरू छोड्नुहोस्</string>
@@ -544,7 +539,6 @@
     <string name="information_no_entries_found">यस वर्गमा कुनै इन्ट्रीहरू फेला परेनन्</string>
     <string name="unknown_title">अज्ञात शीर्षक</string>
     <string name="invalid_location">अवैध स्थान: %s</string>
-    <string name="missing_storage_permission">भण्डारण अनुमतिहरू प्रदान गरिएको छैन</string>
     <string name="pref_clear_webview_data">WebView डेटा खाली गर्नुहोस्</string>
     <string name="fdroid_warning">F-Droid निर्माणहरू आधिकारिक रूपमा समर्थित छैनन्। \nथप जान्न ट्याप गर्नुहोस्।</string>
     <string name="crash_screen_title">उफ्!</string>

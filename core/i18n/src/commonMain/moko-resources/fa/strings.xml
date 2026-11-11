@@ -124,7 +124,6 @@
     <string name="channel_common">عمومی</string>
     <string name="download_notifier_download_paused">دانلود متوقف شد</string>
     <string name="download_notifier_no_network">اتصال شبکه در دسترس نیست</string>
-    <string name="download_notifier_text_only_wifi">اتصال وای فای در دسترس نیست</string>
     <string name="download_notifier_unknown_error">به علت خطای غیرمنتظره بارگیری این چپتر، ممکن نیست</string>
     <string name="download_notifier_title_error">خطا</string>
     <string name="download_notifier_downloader_title">سیستم دانلود کننده</string>
@@ -475,14 +474,12 @@
     <string name="publishing_finished">انتشار به پایان رسید</string>
     <string name="local_invalid_format">قالب فصل نامعتبر است</string>
     <string name="cancelled">لغو شد</string>
-    <string name="pref_security_summary">قفل برنامه، صفحه امن</string>
     <string name="theme_lavender">ارغوانی</string>
     <string name="theme_tidalwave">تم جزر و مدی</string>
     <string name="pref_app_language">زبان برنامه</string>
     <string name="invalid_location">مکان نامعتبر: %s</string>
     <string name="pref_download_new_categories_details">ورودی ها در دسته بندی های حذف شده حتی اگر در دسته بندی های در نظر گرفته شده نیز باشند، دانلود نخواهند شد.</string>
     <string name="pref_appearance_summary">قالب تم، تاریخ و زمان</string>
-    <string name="pref_library_summary">دسته‌ها، به روز رسانی سراسری</string>
     <string name="pref_reader_summary">حالت خواندن، نمایش، نوار وضعیت</string>
     <string name="multi_lang">چند</string>
     <string name="delete_category_confirmation">آیا می خواهید دسته \"%s\" را حذف کنید؟</string>
@@ -504,7 +501,6 @@
     <string name="action_not_now">الان نه</string>
     <string name="action_display_show_continue_reading_button">نمایش دکمه ادامه خواندن</string>
     <string name="download_ahead_info">اگر قسمت فعلی و بعدی دانلود شده باشند، تنها برای ورودی‌های کتابخانه کار می‌کند.</string>
-    <string name="missing_storage_permission">اجازه دسترسی به حافظه داده نشد</string>
     <string name="backup_restore_content_full">ممکن است لازم باشد پس از آن افزونه‌های موجود نبودن را برای استفاده از آن‌ها نصب کنید.</string>
     <string name="pref_skip_dupe_chapters">چپتر های تکراری را رد کن</string>
     <string name="empty_backup_error">هیچ داده کتابخانه ای نیست که پشتیبانی شود</string>
@@ -623,7 +619,6 @@
     <string name="migrationListScreen.latestChapterLabel">جدیدترین‌ها: %1$s</string>
     <string name="pref_incognito_mode_extension_summary">توقف ثبت تاریخچه مطالعه برای افزونه</string>
     <string name="pref_hide_missing_chapter_indicators">پنهان‌سازی نشانگرهای چپترهای مفقود</string>
-    <string name="learn_more">برای کسب اطلاعات بیشتر ضربه بزنید</string>
     <string name="onboarding_permission_crash_reports_description">گزارش‌های خرابیِ ناشناس‌سازی‌شده را برای توسعه‌دهندگان ارسال کنید.</string>
     <string name="intervals_header">فواصل</string>
     <string name="day_short">%dروز</string>
@@ -658,7 +653,6 @@
     <string name="pref_flash_style_black">مشکی</string>
     <string name="action_copy_link">رونوشت پیوند</string>
     <string name="cover_saved">جلد ذخیره شد</string>
-    <string name="pref_dump_crash_logs">اشتراک‌گذاری گزارش‌های خرابی</string>
     <string name="label_total_chapters">مجموع</string>
     <string name="pref_reset_viewer_flags_summary">حالت مطالعه و جهت‌گیری تمام سری‌ها را بازنشانی می‌کند</string>
     <string name="manga_interval_custom_amount">بسامد به‌روزرسانی سفارشی:</string>

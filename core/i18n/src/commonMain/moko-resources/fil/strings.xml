@@ -234,7 +234,6 @@
     <string name="channel_common">Pangkaraniwan</string>
     <string name="download_notifier_download_paused">Naka-pause ang mga download</string>
     <string name="download_notifier_no_network">Walang koneksyon sa Internet</string>
-    <string name="download_notifier_text_only_wifi">Walang koneksyon sa Wifi</string>
     <string name="download_notifier_unknown_error">Di ma-download ang kabanata dahil sa isang di-inaasahang error</string>
     <string name="download_notifier_title_error">Nagka-error</string>
     <string name="download_notifier_downloader_title">Taga-download</string>
@@ -387,7 +386,6 @@
     <string name="spen_next_page">Susunod na pahina</string>
     <string name="spen_previous_page">Balik</string>
     <string name="file_picker_error">Walang nakitang file picker app</string>
-    <string name="pref_dump_crash_logs">Magbahagi ng mga crash log</string>
     <string name="pref_dump_crash_logs_summary">Sine-save ang mga error log sa isang file para maibahagi sa mga developer</string>
     <string name="pref_viewer_nav">Mga tap zone</string>
     <string name="edge_nav">Sulok</string>
@@ -500,7 +498,6 @@
     <string name="action_display_cover_only_grid">Pabalat lamang na grid</string>
     <string name="pref_landscape_zoom">Awtomatikong mag-zoom sa mga malalawak na larawan</string>
     <string name="pref_navigate_pan">I-pan ang mga malalapad na larawan</string>
-    <string name="learn_more">Matuto pa</string>
     <string name="rotation_reverse_portrait">Baligtad na patayo</string>
     <string name="action_move_to_top_all_for_series">Ilagay sa taas ang serye</string>
     <string name="disabled_nav">Nakasara</string>
@@ -558,14 +555,11 @@
     <string name="remove_manga">Tatanggalin mo na ang \"%s\" mula sa iyong aklatan</string>
     <string name="updates_last_update_info">Huling update sa aklatan: %s</string>
     <string name="popular">Sikat</string>
-    <string name="missing_storage_permission">Hindi binigay ang mga permiso sa storage</string>
     <string name="action_search_hint">Maghanap…</string>
     <string name="pref_reader_summary">Paraan ng pagbasa, pagpapakita, nabigasyon</string>
     <string name="pref_downloads_summary">Awtomatikong pag-download, i-download nang maaga</string>
     <string name="pref_appearance_summary">Tema, ayos ng petsa &amp; oras</string>
     <string name="pref_backup_summary">Mano-mano at awtomatikong pag-backup, espasyo sa storage</string>
-    <string name="pref_security_summary">Pag-lock sa app, bantayan ang screen</string>
-    <string name="pref_library_summary">Mga kategorya, panlahatang update, pag-swipe ng kabanata</string>
     <string name="pref_browse_summary">Mga source, extension, panlahatang paghanap</string>
     <string name="crash_screen_title">Ay Naku!</string>
     <string name="crash_screen_restart_application">Buksan muli ang app</string>

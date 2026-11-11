@@ -122,7 +122,6 @@
     <string name="information_no_recent_manga">Nic nedávno čtené</string>
     <string name="download_notifier_title_error">Chyba</string>
     <string name="download_notifier_unknown_error">Při stahování kapitoly došlo k neznámé chybě</string>
-    <string name="download_notifier_text_only_wifi">WiFi připojení není dostupné</string>
     <string name="download_notifier_no_network">Síťové připojení není dostupné</string>
     <string name="download_notifier_download_paused">Stahování pozastaveno</string>
     <string name="label_download_queue">Stahovací fronta</string>
@@ -299,7 +298,6 @@
     <string name="pref_disable_battery_optimization_summary">Pomáhá s aktualizacemi knihovny a záloh na pozadí</string>
     <string name="pref_disable_battery_optimization">Vypnout optimalizaci baterie</string>
     <string name="pref_dump_crash_logs_summary">Uloží chybové protokoly do souboru pro sdílení s vývojáři</string>
-    <string name="pref_dump_crash_logs">Sdílet protokoly o selhání</string>
     <string name="pref_refresh_library_covers">Obnovit přebaly v knihovně</string>
     <string name="label_data">Data</string>
     <string name="requires_app_restart">Pro projevení je nutný restart aplikace</string>
@@ -491,7 +489,6 @@
     <string name="action_display_cover_only_grid">Mřížka jen s přebaly</string>
     <string name="on_hiatus">Má pauzu</string>
     <string name="action_move_to_top_all_for_series">Přesunout sérii na začátek</string>
-    <string name="learn_more">Klepnutím se dozvíte více</string>
     <string name="disabled_nav">Zakázáno</string>
     <string name="empty_backup_error">Žádné záznamy v knihovně k zálohování</string>
     <string name="source_empty_screen">Žádný zdroj nenalezen</string>
@@ -540,14 +537,11 @@
     <string name="multi_lang">Více</string>
     <string name="updates_last_update_info">Poslední aktualizace knihovny: %s</string>
     <string name="popular">Populární</string>
-    <string name="missing_storage_permission">Nebyla udělena oprávnění k úložišti</string>
     <string name="action_search_hint">Vyhledat…</string>
     <string name="pref_reader_summary">Režim čtení, displej, navigace</string>
     <string name="pref_appearance_summary">Téma, formát data a času</string>
-    <string name="pref_library_summary">Kategorie, globální aktualizace, přejetí po kapitole</string>
     <string name="pref_downloads_summary">Automatické stahování, stahování dopředu</string>
     <string name="pref_browse_summary">Zdroje, rozšíření, globální vyhledávání</string>
-    <string name="pref_security_summary">Zámek aplikace, zabezpečená obrazovka</string>
     <string name="crash_screen_restart_application">Restartujte aplikaci</string>
     <string name="pref_backup_summary">Ruční a automatické zálohování, místo v úložišti</string>
     <string name="crash_screen_title">Ups!</string>

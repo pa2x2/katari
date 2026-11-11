@@ -7,4 +7,6 @@
     <string name="information_empty_category">尚无分类，点击加号按钮创建分类用来管理书架。</string>
     <string name="pref_double_tap_zoom">双击放大</string>
     <string name="pref_double_tap_anim_speed">双击动画速度</string>
+    <string name="pref_dump_crash_logs">导出崩溃日志</string>
+    <string name="pref_security_summary">应用锁 • 隐私界面</string>
 </resources>

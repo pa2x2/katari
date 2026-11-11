@@ -3,6 +3,7 @@ package eu.kanade.presentation.crash
 import androidx.compose.runtime.Composable
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.BugReport
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.feedback.InfoScreen
 import app.katari.presentation.kit.list.ControlRow
@@ -24,7 +25,7 @@ fun CrashScreen(
         icon = MaterialSymbols.Rounded.BugReport,
         headingText = stringResource(MR.strings.crash_screen_title),
         subtitleText = stringResource(MR.strings.crash_screen_report_description, stringResource(MR.strings.app_name)),
-        acceptText = stringResource(MR.strings.pref_dump_crash_logs),
+        acceptText = stringResource(platformPresentation.dumpCrashLogsLabel),
         onAcceptClick = dumpLogs,
         rejectText = stringResource(MR.strings.crash_screen_restart_application),
         onRejectClick = onRestartClick,

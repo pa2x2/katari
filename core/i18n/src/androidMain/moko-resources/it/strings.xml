@@ -7,4 +7,6 @@
     <string name="information_empty_category">Non hai categorie. Tocca il pulsante più per crearne una e organizzare la tua libreria.</string>
     <string name="pref_double_tap_zoom">Doppio tocco per ingrandire</string>
     <string name="pref_double_tap_anim_speed">Velocità animazioni doppio tocco</string>
+    <string name="pref_dump_crash_logs">Condividi il registro dei crash</string>
+    <string name="pref_security_summary">Blocco app, schermo protetto</string>
 </resources>

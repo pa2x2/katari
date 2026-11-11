@@ -336,7 +336,6 @@
     <string name="invalid_backup_file">Сақтық көшірмесінің қате файлы</string>
     <string name="restore_completed">Қалпына келтіру дайын</string>
     <string name="pref_user_agent_string">Әдепкі қалпы бойынша user agent</string>
-    <string name="missing_storage_permission">Жадыға рұқсаттар берілмеді</string>
     <string name="downloaded_chapters">Жүктелген тараулар</string>
     <string name="pinned_sources">Бекітілген</string>
     <string name="invalid_backup_file_missing_manga">Сақтық көшірмеде кітапхана жазбалары жоқ.</string>
@@ -356,7 +355,6 @@
     <string name="cancelled">Күші жойылған</string>
     <string name="publishing_finished">Басылымы яқталды</string>
     <string name="add_to_library">Кітапханаға қосу</string>
-    <string name="pref_dump_crash_logs">Қателер тіркеулерімен бөлісу</string>
     <string name="clear_database_completed">Жазбалар жойылды</string>
     <string name="database_clean">Тазалайтын түк жоқ</string>
     <string name="pref_refresh_library_covers">Туындылар мұқабасын жаңарту</string>
@@ -459,7 +457,6 @@
     <string name="channel_complete">Аяқталды</string>
     <string name="pref_reader_summary">Оқу түрі, көрсету, навигация</string>
     <string name="pref_browse_summary">Дереккөздер, кеңейтулер, ауқымды іздеу</string>
-    <string name="pref_security_summary">Қолданбаны бұғаттау, экранды қорғау</string>
     <string name="manga_info_collapse">Азырақ</string>
     <string name="manga_added_library">Кітапханаға қосылды</string>
     <string name="description_placeholder">Сипаттамасыз</string>
@@ -471,7 +468,6 @@
     <string name="error_sharing_cover">Мұқаба жіберілмеді</string>
     <string name="cover_saved">Мұқаба сақталды</string>
     <string name="confirm_set_chapter_settings">Бұл баптауды әдепкі қылып сақтағыңыз келеді ме?</string>
-    <string name="learn_more">Көбірек білу үшін басу</string>
     <string name="channel_common">Ортақ</string>
     <string name="channel_progress">Прогресс</string>
     <string name="also_set_chapter_settings_for_library">Сонымен қоса кітапханадағы жазбаларға қолдану</string>
@@ -482,7 +478,6 @@
     <string name="not_installed">Орнатылмады</string>
     <string name="notification_chapters_multiple">%1$s Тарау</string>
     <string name="pref_appearance_summary">Кейіп, күні мен уақыт пішімі</string>
-    <string name="pref_library_summary">Санаттар, ауқымды жаңарту</string>
     <string name="pref_backup_summary">Қолмен және автоматты сақтық көшірмелері</string>
     <string name="manga_removed_library">Кітапханадан жойылды</string>
     <string name="chapter_downloading_progress">(%1$d/%2$d) жүктелуде</string>
@@ -536,7 +531,6 @@
     <string name="sort_by_source">Дереккөз бойынша</string>
     <string name="confirm_delete_chapters">Таңдалған тараулардың жойылуын қалайсыз ба?</string>
     <string name="migration_help_guide">Дереккөздерді тасымалдау нұсқаулары</string>
-    <string name="download_notifier_text_only_wifi">Wi-Fi байланысы жоқ</string>
     <string name="download_notifier_download_paused">Жүктеулер тоқтатылды</string>
     <string name="appwidget_unavailable_locked">Биометриялық бұғаттау қосылып тұрғанда виджет қолжетімді емес</string>
     <string name="custom_filter">Жеке сүзгі</string>

@@ -54,6 +54,11 @@ data class PlatformPresentation(
     /** Follows a count of unsent changes. */
     val syncUnsentWaitingNote: StringResource,
     val syncFilesWaitingPlural: PluralsResource,
+    /** Names the action that hands over the crash logs: sharing them, or saving them to a file. */
+    val dumpCrashLogsLabel: StringResource,
+    val syncFailedHelp: StringResource,
+    val securitySettingsSummary: StringResource,
+    val monthlyRecapSummary: StringResource,
 )
 
 expect val platformPresentation: PlatformPresentation

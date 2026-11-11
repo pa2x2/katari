@@ -23,9 +23,9 @@ class DesktopProfileUnlock(
     override fun isAvailable(context: PlatformContext): Boolean = signIn.isAvailable
 
     override val lockSettingsWording = ProfileLockWording(
-        requireUnlock = MR.strings.lock_with_sign_in_summary,
-        lockWhenIdle = MR.strings.lock_when_idle_desktop_summary,
-        unavailable = MR.strings.profile_lock_unavailable_summary,
+        requireUnlock = PlatformStrings.lock_with_sign_in_summary,
+        lockWhenIdle = PlatformStrings.lock_when_idle_desktop_summary,
+        unavailable = PlatformStrings.profile_lock_unavailable_summary,
     )
 
     override suspend fun unlock(context: PlatformContext, profileNames: List<String>): Boolean {
@@ -47,7 +47,7 @@ class DesktopProfileUnlock(
 
     private suspend fun ask(context: PlatformContext, names: String, title: String, detail: String?): Boolean {
         if (!signIn.isAvailable) {
-            messages.show(context.stringResource(MR.strings.profile_locked_cant_check, names))
+            messages.show(context.stringResource(PlatformStrings.profile_locked_cant_check, names))
             return false
         }
         return prompts.ask(title, detail, confirmLabel = context.stringResource(MR.strings.action_unlock))

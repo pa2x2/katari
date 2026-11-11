@@ -7,4 +7,6 @@
     <string name="information_empty_category">Du har ingen kategorier. Trykk på pluss-knappen for å lage en for å organisere biblioteket ditt.</string>
     <string name="pref_double_tap_zoom">Dobbelttrykk for å zoome</string>
     <string name="pref_double_tap_anim_speed">Animasjonshastighet ved dobbelklikk</string>
+    <string name="pref_dump_crash_logs">Del krasjlogger</string>
+    <string name="pref_security_summary">Applås, sikker skjerm</string>
 </resources>

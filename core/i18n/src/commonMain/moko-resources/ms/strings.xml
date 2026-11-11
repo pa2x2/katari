@@ -196,7 +196,6 @@
     <string name="download_notifier_downloader_title">Pemuat turun</string>
     <string name="download_notifier_title_error">Ralat</string>
     <string name="download_notifier_unknown_error">Ralat tidak diketahui ketika memuat turun bab</string>
-    <string name="download_notifier_text_only_wifi">Tiada sambungan Wi-Fi yang tersedia</string>
     <string name="download_notifier_no_network">Tiada sambungan rangkaian tersedia</string>
     <string name="download_notifier_download_paused">Muat turun dijeda</string>
     <string name="channel_common">Biasa</string>
@@ -388,7 +387,6 @@
     <string name="action_order_by_chapter_number">Mengikut nombor bab</string>
     <string name="action_order_by_upload_date">Mengikut tarikh muat naik</string>
     <string name="pref_dump_crash_logs_summary">Simpan log ralat untuk dikongsi dengan pembangunan aplikasi</string>
-    <string name="pref_dump_crash_logs">Kongsi log kerosakan</string>
     <string name="action_display_show_number_of_items">Tunjuk jumlah bilangan</string>
     <string name="right_and_left_nav">Kanan dan kiri</string>
     <string name="pref_dual_page_split">Memisah muka surat lebar</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">Cuma grid muka hadapan</string>
     <string name="pref_landscape_zoom">Zum secara automatik pada imej lebar</string>
     <string name="pref_navigate_pan">Panorama imej lebar</string>
-    <string name="learn_more">Ketik untuk ketahui selebihnya</string>
     <string name="rotation_reverse_portrait">Potret terbalik</string>
     <string name="action_move_to_top_all_for_series">Alih siri ke atas</string>
     <string name="disabled_nav">Dilumpuhkan</string>
@@ -540,14 +537,11 @@
     <string name="updates_last_update_info">Terakhir pustaka dikemas kini: %s</string>
     <string name="remove_manga">Anda akan membuang \"%s\" ini daripada pustaka anda</string>
     <string name="popular">Popular</string>
-    <string name="missing_storage_permission">Kebenaran storan tidak diberikan</string>
     <string name="action_search_hint">Cari…</string>
     <string name="pref_appearance_summary">Tema, format tarikh &amp; masa</string>
-    <string name="pref_library_summary">Kategori, Kemas kini keseluruhan, leret bab</string>
     <string name="pref_reader_summary">Mod membaca, paparan, navigasi</string>
     <string name="pref_downloads_summary">Muat turun automatik, muat turun maju</string>
     <string name="pref_backup_summary">Sandaran manual &amp; automatik, ruang storan</string>
-    <string name="pref_security_summary">Kekunci aplikasi, skrin keselamatan</string>
     <string name="crash_screen_title">Aduhai!</string>
     <string name="crash_screen_restart_application">Mulakan semula aplikasi</string>
     <string name="pref_browse_summary">Sumber, sambungan, carian keseluruhan</string>

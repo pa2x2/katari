@@ -3,4 +3,5 @@
     <string name="action_show_errors">I-tap aron makita ang mga detalye</string>
     <string name="information_empty_category">Wala kay mga kategorya. i-tap ang plus button aron makahimo og usa para sa pag-organisar sa imong library.</string>
     <string name="pref_double_tap_anim_speed">Doble nga pag-tap sa katulin sa animation</string>
+    <string name="pref_dump_crash_logs">Dump crash logs</string>
 </resources>

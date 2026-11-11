@@ -5,4 +5,6 @@
     <string name="download_queue_size_warning">Paralajmërim: shkarkimet e mëdha me shumicë mund të çojnë në ngadalësimin e burimeve dhe/ose bllokimin e %s. Trokit për të mësuar më shumë.</string>
     <string name="information_empty_category">Nuk ke kategori. Prekni butonin plus për të krijuar një për organizimin e bibliotekës tuaj.</string>
     <string name="pref_double_tap_anim_speed">Prekni dy herë shpejtësia e animacionit</string>
+    <string name="pref_dump_crash_logs">Hidh regjistrat e aksidenteve</string>
+    <string name="pref_security_summary">Kyçja e aplikacionit, ekran i sigurt</string>
 </resources>

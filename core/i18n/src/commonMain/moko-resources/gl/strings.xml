@@ -261,7 +261,6 @@
     <string name="restore_completed">Restauración completada</string>
     <string name="restore_duration">%1$02d min, %2$02d seg</string>
     <string name="backup_choice">De que queres facer unha copia de seguridade?</string>
-    <string name="missing_storage_permission">Non se concederon os permisos de almacenamento</string>
     <string name="empty_backup_error">Ningún elemento na biblioteca co que facer a copia de seguridade</string>
     <string name="backup_info">Deberías gardar duplicados das copias de seguridade fora do teu dispositivo.</string>
     <string name="pref_clear_cookies">Limpar cookies</string>
@@ -296,11 +295,9 @@
     <string name="pref_download_new_categories_details">Os elementos das categorías excluídas non se descargarán, aínda se están en categorías incluídas.</string>
     <string name="pref_low">Baixa</string>
     <string name="creating_backup">Creando a copia de seguridade</string>
-    <string name="pref_library_summary">Categorías, actualización global, accións ao arrastrar</string>
     <string name="pref_reader_summary">Modo de lectura, aparencia e navegación</string>
     <string name="pref_downloads_summary">Baixadas automáticas e por adiantado</string>
     <string name="pref_backup_summary">Copias de seguridade manuais e automáticas</string>
-    <string name="pref_security_summary">Bloqueo da aplicación e modo discreto</string>
     <string name="ext_update_all">Actualizar todo</string>
     <string name="clear_database_source_item_count">Hai %1$d elementos na base de datos que non están na biblioteca</string>
     <string name="version">Versión</string>
@@ -323,7 +320,6 @@
     <string name="password">Contrasinal</string>
     <string name="fdroid_warning">As versións de F-Droid non teñen soporte oficial. \nPreme para saber máis.</string>
     <string name="backup_in_progress">Xa se está facendo unha copia de seguridade</string>
-    <string name="pref_dump_crash_logs">Compartir os rexistros de erros</string>
     <string name="error_sharing_cover">Error ao compartir a portada</string>
     <string name="cache_delete_error">Produciuse un erro ao borrar</string>
     <string name="multi_lang">Varios idiomas</string>
@@ -504,7 +500,6 @@
     <string name="hour_short">%dh</string>
     <string name="channel_ext_updates">Actualizacións das extensións</string>
     <string name="local_source">Fonte local</string>
-    <string name="download_notifier_text_only_wifi">Non hai ningunha conexión Wi-Fi dispoñible</string>
     <string name="crash_screen_restart_application">Reinicia a aplicación</string>
     <string name="source_filter_empty_screen">Non se atopou ninguna fonte instalada</string>
     <string name="update_check_open">Abrir no GitHub</string>
@@ -530,7 +525,6 @@
     <string name="transition_finished">Rematado:</string>
     <string name="chapter_progress">Páxina: %1$d</string>
     <string name="error_saving_picture">Produciuse un erro ao gardar a imaxe</string>
-    <string name="learn_more">Preme para saber máis</string>
     <string name="notification_cover_update_failed">Erro ao actualizar a portada</string>
     <string name="show_chapter_number">Número do capítulo</string>
     <string name="download_notifier_split_page_path_not_found">Non se atopou a ruta do ficheiro da páxina %d</string>

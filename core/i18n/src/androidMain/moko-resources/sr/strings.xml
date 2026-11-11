@@ -7,4 +7,6 @@
     <string name="information_empty_category">Немате категорија. Додирните дугме плус да бисте направили нову категорију за организовање колекције.</string>
     <string name="pref_double_tap_zoom">Додирни двапут за зумирање</string>
     <string name="pref_double_tap_anim_speed">Брзина анимације двоклика</string>
+    <string name="pref_dump_crash_logs">Дели извештаје о паду</string>
+    <string name="pref_security_summary">Закључавање апликације, сигуран екран</string>
 </resources>

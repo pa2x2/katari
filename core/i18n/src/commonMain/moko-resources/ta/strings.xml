@@ -214,12 +214,10 @@
     <string name="onboarding_permission_install_apps_description">மூல நீட்டிப்புகளை நிறுவ.</string>
     <string name="onboarding_permission_action_grant">மானியம்</string>
     <string name="pref_appearance_summary">கருப்பொருள், தேதி மற்றும் நேர வடிவம்</string>
-    <string name="pref_library_summary">வகைகள், உலகளாவிய புதுப்பிப்பு, அத்தியாயம் ச்வைப்</string>
     <string name="pref_reader_summary">படித்தல் பயன்முறை, காட்சி, வழிசெலுத்தல்</string>
     <string name="pref_downloads_summary">தானியங்கி பதிவிறக்க, முன்னால் பதிவிறக்குங்கள்</string>
     <string name="pref_browse_summary">ஆதாரங்கள், நீட்டிப்புகள், உலகளாவிய தேடல்</string>
     <string name="pref_backup_summary">கையேடு மற்றும் தானியங்கி காப்புப்பிரதிகள், சேமிப்பு இடம்</string>
-    <string name="pref_security_summary">பயன்பாட்டு பூட்டு, பாதுகாப்பான திரை</string>
     <string name="pref_category_theme">கருப்பொருள்</string>
     <string name="pref_app_theme">பயன்பாட்டு கருப்பொருள்</string>
     <string name="theme_system">மண்டலம்</string>
@@ -460,7 +458,6 @@
     <string name="backup_choice">நீங்கள் என்ன காப்புப் பிரதி எடுக்க விரும்புகிறீர்கள்?</string>
     <string name="app_settings">பயன்பாட்டு அமைப்புகள்</string>
     <string name="source_settings">மூல அமைப்புகள்</string>
-    <string name="missing_storage_permission">சேமிப்பக அனுமதிகள் வழங்கப்படவில்லை</string>
     <string name="empty_backup_error">காப்புப் பிரதி எடுக்க நூலக உள்ளீடுகள் இல்லை</string>
     <string name="create_backup_file_error">காப்புப்பிரதி கோப்பை உருவாக்க முடியவில்லை</string>
     <string name="restore_miui_warning">MIUI உகப்பாக்கம் முடக்கப்பட்டிருந்தால் காப்புப்பிரதி/மீட்டமை சரியாக செயல்படாது.</string>
@@ -499,7 +496,6 @@
     <string name="pref_reset_viewer_flags_summary">அனைத்து தொடர்களின் வாசிப்பு முறை மற்றும் நோக்குநிலையை மீட்டமைக்கிறது</string>
     <string name="pref_reset_viewer_flags_success">அனைத்து வாசகர் அமைப்புகளும் மீட்டமைக்கப்படுகின்றன</string>
     <string name="pref_reset_viewer_flags_error">வாசகர் அமைப்புகளை மீட்டமைக்க முடியவில்லை</string>
-    <string name="pref_dump_crash_logs">செயலிழப்பு பதிவுகளைப் பகிரவும்</string>
     <string name="pref_dump_crash_logs_summary">டெவலப்பர்களுடன் பகிர்வதற்காக பிழை பதிவுகளை ஒரு கோப்பில் சேமிக்கிறது</string>
     <string name="label_background_activity">பின்னணி செயல்பாடு</string>
     <string name="pref_disable_battery_optimization">பேட்டரி தேர்வுமுறை முடக்கு</string>
@@ -660,7 +656,6 @@
     <string name="notification_chapters_single">அத்தியாயம் %1$s</string>
     <string name="notification_chapters_single_and_more">அத்தியாயம் %1$s மற்றும் %2$d மேலும்</string>
     <string name="notification_chapters_multiple">அத்தியாயங்கள் %1$s</string>
-    <string name="learn_more">மேலும் அறிய தட்டவும்</string>
     <string name="notification_cover_update_failed">அட்டையைப் புதுப்பிக்கத் தவறிவிட்டது</string>
     <string name="notification_first_add_to_library">இதைச் செய்வதற்கு முன் உங்கள் நூலகத்தில் உள்ளீட்டைச் சேர்க்கவும்</string>
     <string name="file_select_cover">கவர் படத்தைத் தேர்ந்தெடுக்கவும்</string>
@@ -683,7 +678,6 @@
     <string name="download_notifier_downloader_title">பதிவிறக்குபவர்</string>
     <string name="download_notifier_title_error">பிழை</string>
     <string name="download_notifier_unknown_error">எதிர்பாராத பிழை காரணமாக அத்தியாயத்தைப் பதிவிறக்க முடியவில்லை</string>
-    <string name="download_notifier_text_only_wifi">வைஃபை இணைப்பு எதுவும் கிடைக்கவில்லை</string>
     <string name="download_notifier_no_network">பிணைய இணைப்பு எதுவும் கிடைக்கவில்லை</string>
     <string name="download_notifier_download_paused">பதிவிறக்கங்கள் இடைநிறுத்தப்பட்டன</string>
     <string name="download_notifier_split_page_path_not_found">பக்கம் %d இன் கோப்பு பாதையை கண்டுபிடிக்க முடியவில்லை</string>

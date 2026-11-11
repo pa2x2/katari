@@ -155,7 +155,6 @@
     <string name="information_empty_library">Votre bibliothèque est vide</string>
     <string name="download_notifier_downloader_title">Téléchargement</string>
     <string name="download_notifier_title_error">Erreur</string>
-    <string name="download_notifier_text_only_wifi">Aucune connexion disponible</string>
     <string name="download_notifier_no_network">Aucune connexion disponible</string>
     <string name="confirm_delete_chapters">Supprimer les chapitres sélectionnés ?</string>
     <string name="download_notifier_unknown_error">Impossible de télécharger le chapitre en raison d\'une erreur inattendue</string>
@@ -380,7 +379,6 @@
     <string name="migration_help_guide">Guide de migration des sources</string>
     <string name="file_picker_error">L’application de sélection de fichier est introuvable</string>
     <string name="kindlish_nav">Style Kindle</string>
-    <string name="pref_dump_crash_logs">Partager les rapports de plantage</string>
     <string name="pref_dump_crash_logs_summary">Enregistre les rapports de plantage dans un fichier pour les partager avec les développeurs</string>
     <string name="pref_viewer_nav">Zones tactiles</string>
     <string name="edge_nav">Bord</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">Grille avec seulement la couverture</string>
     <string name="pref_navigate_pan">Panoramique des images larges</string>
     <string name="pref_landscape_zoom">Zoom automatique dans les images larges</string>
-    <string name="learn_more">Appuyez pour en savoir plus</string>
     <string name="rotation_reverse_portrait">Portrait inversé</string>
     <string name="action_move_to_top_all_for_series">Déplacer la série vers le haut</string>
     <string name="disabled_nav">Désactivé</string>
@@ -540,7 +537,6 @@
     <string name="multi_lang">Multiple</string>
     <string name="updates_last_update_info">Dernière mise à jour de la bibliothèque le : %s</string>
     <string name="remove_manga">Vous êtes sur le point de retirer « %s » de votre bibliothèque</string>
-    <string name="missing_storage_permission">Autorisations de stockage non accordées</string>
     <string name="action_search_hint">Recherche…</string>
     <string name="crash_screen_title">Oups !</string>
     <string name="pref_appearance_summary">Thème, format de la date et de l\'heure</string>
@@ -548,9 +544,7 @@
     <string name="pref_backup_summary">Sauvegardes manuelles et automatiques</string>
     <string name="crash_screen_restart_application">Redémarrer l\'application</string>
     <string name="pref_browse_summary">Sources, extensions, recherche globale</string>
-    <string name="pref_library_summary">Catégories, mise à jour globale, faire glisser le chapitre</string>
     <string name="pref_reader_summary">Mode de lecture, affichage, navigation</string>
-    <string name="pref_security_summary">Verrouillage des applications, écran sécurisé</string>
     <string name="invalid_location">Emplacement invalide : %s</string>
     <string name="error_user_agent_string_invalid">Chaîne d\'agent utilisateur invalide</string>
     <string name="unknown_title">Titre inconnu</string>

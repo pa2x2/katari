@@ -7,4 +7,6 @@
     <string name="information_empty_category">Er zijn nog geen categorieën. Druk op de plus-knop om er een aan te maken.</string>
     <string name="pref_double_tap_zoom">Dubbeltik om te zoomen</string>
     <string name="pref_double_tap_anim_speed">Dubbeltik animatiesnelheid</string>
+    <string name="pref_dump_crash_logs">Crashlogboeken opslaan</string>
+    <string name="pref_security_summary">App-vergrendeling, schermbeveiliging</string>
 </resources>

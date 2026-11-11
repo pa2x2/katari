@@ -63,7 +63,6 @@
     <string name="pref_category_about">Par programmu</string>
     <string name="channel_common">Biežs</string>
     <string name="download_notifier_no_network">Tīkla savienojums nav pieejams</string>
-    <string name="download_notifier_text_only_wifi">Nav pieejams Wi-Fi savienojums</string>
     <string name="download_notifier_unknown_error">Nevarēja lejupielādēt nodaļu neparedzētas kļūdas dēļ</string>
     <string name="download_notifier_title_error">Kļūda</string>
     <string name="download_notifier_downloader_title">Lejupielādētājs</string>
@@ -336,7 +335,6 @@
     <string name="pref_disable_battery_optimization_summary">Palīdz ar fona bibliotēku atjauninājumiem un dublējumiem</string>
     <string name="battery_optimization_disabled">Akumulatora optimizācija jau ir atspējota</string>
     <string name="pref_verbose_logging_summary">Drukāt verbose žurnālus sistēmas žurnālā (samazina programmas veiktspēju)</string>
-    <string name="pref_dump_crash_logs">Dalīties ar avārijas žurnālu</string>
     <string name="pref_dump_crash_logs_summary">Saglabā kļūdu žurnālus failā priekš koplietošanas ar izstrādātājiem</string>
     <string name="pref_clear_chapter_cache">Notīrīt nodaļas kešatmiņu</string>
     <string name="pref_refresh_library_covers">Atsvaidzināt bibliotēkas vākus</string>
@@ -483,7 +481,6 @@
     <string name="notification_first_add_to_library">Lūdzu, pievienojiet ierakstu savai bibliotēkai, pirms to darāt</string>
     <string name="notification_chapters_single">Nodaļa %1$s</string>
     <string name="download_notifier_split_page_not_found">Sadalīšanas laikā netika atrasta lapa %d</string>
-    <string name="learn_more">Pieskarieties, lai uzzinātu vairāk</string>
     <string name="chapter_settings_updated">Atjaunināti noklusējuma nodaļu iestatījumi</string>
     <string name="pref_landscape_zoom">Automātiski tuvināt ainavas attēlus</string>
     <string name="spen_next_page">Nākošā lapa</string>
@@ -554,16 +551,13 @@
     <string name="action_remove_everything">Noņemt visu</string>
     <string name="action_display_show_continue_reading_button">Turpināt lasīt poga</string>
     <string name="auto_download_while_reading">Automātiska lejupielāde lasīšanas laikā</string>
-    <string name="missing_storage_permission">Krātuves atļaujas nav piešķirtas</string>
     <string name="copied_to_clipboard_plain">Kopēts starpliktuvē</string>
     <string name="updates_last_update_info">Bibliotēka pēdējo reizi atjaunināta: %s</string>
     <string name="overlay_header">Pārklājums</string>
-    <string name="pref_security_summary">Aplikācijas slēdzis, ekrāna aizsargāšana</string>
     <string name="action_copy_to_clipboard">Kopēt starpliktuvē</string>
     <string name="pref_downloads_summary">Automātiskā lejupielāde, lejupielādes rinda</string>
     <string name="pref_browse_summary">Avoti, paplašinājumi, globālā meklēšana</string>
     <string name="pref_appearance_summary">Tēma, datuma un laika formāti</string>
-    <string name="pref_library_summary">Kategorijas, globāli atjauninājumi, nodaļu vilkšana</string>
     <string name="pref_library_update_show_tab_badge">Rādīt nelasīto skaitu uz atjauninājumu ikonas</string>
     <string name="appwidget_unavailable_locked">Logrīks nav pieejams, ja ir iespējota lietotņu bloķēšana</string>
     <string name="hour_short">%dh</string>

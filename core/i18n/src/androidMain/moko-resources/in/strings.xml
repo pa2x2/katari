@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Kecepatan animasi ketukan dua kali</string>
     <string name="pref_load_ahead_only_over_wifi">Muat data lebih awal hanya melalui Wi-Fi</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Menghemat data seluler dengan hanya memuat halaman yang berdekatan dengan halaman yang sedang Anda baca</string>
+    <string name="pref_dump_crash_logs">Bagikan log kerusakan</string>
+    <string name="pref_security_summary">Kunci aplikasi, amankan layar</string>
 </resources>

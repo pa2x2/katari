@@ -129,7 +129,6 @@
     <string name="information_empty_library">Tu biblioteca está vacía</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">No se ha podido descargar el capítulo debido a un error inesperado</string>
-    <string name="download_notifier_text_only_wifi">No estás conectado a ninguna red Wi-Fi</string>
     <string name="categories">Categorías</string>
     <string name="manga">Contenido de la biblioteca</string>
     <string name="history">Historial</string>
@@ -381,7 +380,6 @@
     <string name="file_picker_error">No se ha encontrado ninguna aplicación con la que elegir archivos</string>
     <string name="kindlish_nav">Estilo Kindle</string>
     <string name="pref_dump_crash_logs_summary">Guarda los registros de errores en un archivo para compartirlos con los desarrolladores</string>
-    <string name="pref_dump_crash_logs">Compartir los registros de fallos</string>
     <string name="pref_viewer_nav">Zonas de toque</string>
     <string name="edge_nav">Borde</string>
     <string name="l_nav">En forma de L</string>
@@ -492,7 +490,6 @@
     <string name="pref_navigate_pan">Desplazarse por el resto de la página antes de cambiar</string>
     <string name="action_display_cover_only_grid">Cuadrícula sólo de portadas</string>
     <string name="pref_landscape_zoom">Acercar la vista en horizontal</string>
-    <string name="learn_more">Ver más detalles</string>
     <string name="rotation_reverse_portrait">En vertical, al revés</string>
     <string name="action_move_to_top_all_for_series">Mover al primer puesto</string>
     <string name="disabled_nav">Desactivado</string>
@@ -540,13 +537,10 @@
     <string name="remove_manga">Estás a punto de borrar «%s» de tu biblioteca</string>
     <string name="popular">Populares</string>
     <string name="multi_lang">Varios idiomas</string>
-    <string name="missing_storage_permission">No se han concedido los permisos de almacenamiento</string>
     <string name="action_search_hint">Buscar…</string>
     <string name="pref_downloads_summary">Descargas automáticas y por adelantado</string>
-    <string name="pref_library_summary">Categorías, actualizaciones generales y acciones al deslizar el dedo</string>
     <string name="pref_reader_summary">Modos de lectura, apariencia y navegación</string>
     <string name="pref_appearance_summary">Colores de la interfaz y formatos de fecha</string>
-    <string name="pref_security_summary">Pantalla segura y desbloqueo biométrico</string>
     <string name="pref_backup_summary">Copias de seguridad manuales y automáticas, almacenamiento</string>
     <string name="pref_browse_summary">Fuentes, extensiones y búsqueda global</string>
     <string name="crash_screen_title">¡Vaya!</string>

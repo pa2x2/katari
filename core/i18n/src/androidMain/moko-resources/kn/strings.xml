@@ -3,4 +3,5 @@
     <string name="action_show_errors">ದೋಷಗಳನ್ನು ತೋರಿಸು</string>
     <string name="information_empty_category">ನೀವು ವರ್ಗಗಳನ್ನು ಹೊಂದಿಲ್ಲ. ನಿಮ್ಮ ಗ್ರಂಥಾಲಯದಲ್ಲಿ ವರ್ಗ ಒಂದನ್ನು ರಚಿಸಲು ಪ್ಲಸ್ ಬಟನ್ ಒತ್ತಿರಿ.</string>
     <string name="pref_double_tap_anim_speed">ಡಬಲ್ ಟ್ಯಾಪ್ ಅನಿಮೇಷನ್ ವೇಗ</string>
+    <string name="pref_dump_crash_logs">ಕ್ರ್ಯಾಶ್ ಲಾಗ್‌ಗಳನ್ನು ಡಂಪ್ ಮಾಡಿ</string>
 </resources>

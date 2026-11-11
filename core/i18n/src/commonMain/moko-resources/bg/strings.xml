@@ -165,7 +165,6 @@
     <string name="download_notifier_downloader_title">Изтегли</string>
     <string name="download_notifier_title_error">Грешка</string>
     <string name="download_notifier_unknown_error">Получи се неочаквана грешка при изтеглянето на главата</string>
-    <string name="download_notifier_text_only_wifi">Няма налична Wi-Fi връзка</string>
     <string name="download_notifier_no_network">Няма налична мрежова връзка</string>
     <string name="categories">Категории</string>
     <string name="manga">Манга</string>
@@ -381,7 +380,6 @@
     <string name="ext_install_service_notif">Инсталиране на разширение…</string>
     <string name="ext_installer_legacy">Стара версия</string>
     <string name="ext_installer_pref">Инсталатор</string>
-    <string name="pref_dump_crash_logs">Разтовари записите от сривовете</string>
     <string name="off">Не</string>
     <string name="rotation_landscape">Пейзаж</string>
     <string name="label_background_activity">Работа на заден план</string>
@@ -536,20 +534,16 @@
     <string name="custom_cover">Корица по избор</string>
     <string name="action_search_hint">Търсене…</string>
     <string name="disabled_nav">Деактивирано</string>
-    <string name="learn_more">Натисни, за да научиш повече</string>
     <string name="remove_manga">Искате да премахнете \"%s\" от библиотеката си</string>
     <string name="action_close">Затвори</string>
     <string name="pref_reset_viewer_flags_success">Всички настройки на четеца нулирани</string>
     <string name="pref_appearance_summary">Тема, формат на датата и времето</string>
-    <string name="pref_library_summary">Категории, глобални обновления</string>
     <string name="pref_reader_summary">Режим на четене, показване, навигация</string>
     <string name="pref_downloads_summary">Автоматични изтегляния, предстоящи изтегляния</string>
     <string name="pref_browse_summary">Източници, разширения, глобално търсене</string>
     <string name="pref_backup_summary">Ръчно и автоматично създаване на бекъп</string>
-    <string name="pref_security_summary">Заключване на приложението, екран за сигурност</string>
     <string name="multi_lang">Мулти</string>
     <string name="pref_navigate_pan">Увеличи широките изображения при натискане</string>
-    <string name="missing_storage_permission">Не е дадено разрешение за съхранение</string>
     <string name="publishing_finished">Приключено издаване</string>
     <string name="manga_interval_expected_update_soon">Скоро</string>
     <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>

@@ -7,4 +7,6 @@
     <string name="information_empty_category">カテゴリーがありません。「+」をタップしてカテゴリーを追加し、ライブラリを整理できます。</string>
     <string name="pref_double_tap_zoom">ダブルタップでズーム</string>
     <string name="pref_double_tap_anim_speed">ダブルタップアニメーション速度</string>
+    <string name="pref_dump_crash_logs">クラッシュログを共有</string>
+    <string name="pref_security_summary">アプリロック、セキュア画面</string>
 </resources>

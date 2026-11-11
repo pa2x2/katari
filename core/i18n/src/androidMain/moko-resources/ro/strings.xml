@@ -7,4 +7,6 @@
     <string name="information_empty_category">Nu aveți categorii. Apăsați butonul plus pentru a crea una pentru a vă organiza biblioteca.</string>
     <string name="pref_double_tap_zoom">Atingeți de două ori pentru a mări</string>
     <string name="pref_double_tap_anim_speed">Viteza de animație pentru apăsare dublă</string>
+    <string name="pref_dump_crash_logs">Aruncați jurnalele de erori fatale</string>
+    <string name="pref_security_summary">Blocarea aplicației, securizarea ecranului</string>
 </resources>

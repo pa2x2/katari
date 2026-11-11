@@ -95,7 +95,6 @@
     <string name="theme_light">O\'chiq</string>
     <string name="theme_greenapple">Yashil olma</string>
     <string name="pref_category_theme">Mavzu</string>
-    <string name="pref_security_summary">Ilova qulflanishi, ekran himoyasi</string>
     <string name="pref_manage_notifications">Bildirishnomalarni boshqarish</string>
     <string name="delete_category">Toifani o\'chirish</string>
     <string name="action_remove">O\'chirish</string>
@@ -161,7 +160,6 @@
     <string name="action_open_log">Logni ochish</string>
     <string name="theme_tako">Tako</string>
     <string name="pref_category_advanced">Qo\'shimcha</string>
-    <string name="pref_library_summary">Toifalar, global yangilanish</string>
     <string name="lock_when_idle">Ishlamayotganda qulflash</string>
     <string name="lock_always">Doim</string>
     <string name="hide_notification_content">Bildirishnoma mazmunini yashirish</string>

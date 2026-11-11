@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="action_show_errors">Ji bo hûrgulîyan bitikîne</string>
+    <string name="pref_security_summary">Kilîta sepanê, ekrana ewle</string>
 </resources>

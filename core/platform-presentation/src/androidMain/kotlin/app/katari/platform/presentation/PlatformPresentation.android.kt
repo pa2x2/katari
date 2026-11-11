@@ -38,4 +38,8 @@ actual val platformPresentation = PlatformPresentation(
     syncChangesWaitLabel = PlatformStrings.sync_status_changes_wifi,
     syncUnsentWaitingNote = PlatformStrings.sync_unsent_waiting_for_wifi,
     syncFilesWaitingPlural = PlatformPlurals.sync_files_waiting_for_wifi,
+    dumpCrashLogsLabel = PlatformStrings.pref_dump_crash_logs,
+    syncFailedHelp = PlatformStrings.sync_failed_help,
+    securitySettingsSummary = PlatformStrings.pref_security_summary,
+    monthlyRecapSummary = PlatformStrings.statistics_monthly_recap_summary,
 )

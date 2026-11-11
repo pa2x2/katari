@@ -7,4 +7,6 @@
     <string name="information_empty_category">Vous n\'avez aucune catégorie. Appuyez sur le bouton « + » pour en créer une afin d\'organiser votre bibliothèque.</string>
     <string name="pref_double_tap_zoom">Appuyez deux fois pour zoomer</string>
     <string name="pref_double_tap_anim_speed">Vitesse d\'animation du double-clic</string>
+    <string name="pref_dump_crash_logs">Partager les rapports de plantage</string>
+    <string name="pref_security_summary">Verrouillage des applications, écran sécurisé</string>
 </resources>

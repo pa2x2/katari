@@ -7,4 +7,6 @@
     <string name="information_empty_category">У вас немає категорій. Тицьніть кнопку плюс, для початку облаштування вашої бібліотеки.</string>
     <string name="pref_double_tap_zoom">Двічі торкніться, щоб збільшити</string>
     <string name="pref_double_tap_anim_speed">Швидкість анімації при подвійному натиснені</string>
+    <string name="pref_dump_crash_logs">Поділіться журналами збоїв</string>
+    <string name="pref_security_summary">Блокування застосунку, захист екрану</string>
 </resources>

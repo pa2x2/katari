@@ -7,4 +7,6 @@
     <string name="information_empty_category">আপোনাৰ কোনো শ্ৰেণী নাই। আপোনাৰ পুথিভঁৰাল সংগঠিত কৰিবলৈ এটা সৃষ্টি কৰিবলৈ প্লাছ বুটামত টাপ কৰক।</string>
     <string name="pref_double_tap_zoom">জুম কৰিবলৈ দ্বৈত টাপ কৰক</string>
     <string name="pref_double_tap_anim_speed">দ্বৈত টাপ এনিমেচন গতি</string>
+    <string name="pref_dump_crash_logs">ক্ৰেশ লগ শ্বেয়াৰ কৰক</string>
+    <string name="pref_security_summary">এপ লক, সুৰক্ষিত স্ক্ৰীন</string>
 </resources>

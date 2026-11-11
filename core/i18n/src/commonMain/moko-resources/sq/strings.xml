@@ -64,7 +64,6 @@
     <string name="download_notifier_split_page_path_not_found">Nuk mund të gjendej shtegu i skedarit të faqes %d</string>
     <string name="information_no_recent_manga">Asgjë e lexuar kohët e fundit</string>
     <string name="download_notifier_title_error">Gabim</string>
-    <string name="download_notifier_text_only_wifi">Nuk ofrohet lidhje Wi-Fi</string>
     <string name="information_empty_library">Biblioteka juaj është bosh</string>
     <string name="getting_started_guide">Udhëzues për fillimin</string>
     <string name="information_no_entries_found">Nuk u gjet asnjë element në këtë kategori</string>
@@ -126,11 +125,9 @@
     <string name="action_webview_back">Mbrapa</string>
     <string name="action_start_downloading_now">Fillo shkarkimin tani</string>
     <string name="internal_error">Gabim i brendshëm: Kontrolloni regjistrat e përplasjeve për informacione të mëtejshme</string>
-    <string name="pref_security_summary">Kyçja e aplikacionit, ekran i sigurt</string>
     <string name="theme_tealturquoise">Blu në Jeshile</string>
     <string name="pref_category_general">të përgjithshme</string>
     <string name="pref_category_appearance">Paraqitja</string>
-    <string name="pref_library_summary">Kategoritë, përditësimi global</string>
     <string name="pref_category_library">Biblioteka</string>
     <string name="pref_category_reader">Lexues</string>
     <string name="pref_category_downloads">Shkarkimet</string>
@@ -436,7 +433,6 @@
     <string name="backup_choice">Çfarë dëshironi të bëni rezervë?</string>
     <string name="creating_backup">Duke krijuar rezervë</string>
     <string name="creating_backup_error">Rezervimi dështoi</string>
-    <string name="missing_storage_permission">Lejet e ruajtjes nuk janë dhënë</string>
     <string name="empty_backup_error">Nuk ka element në bibliotekë për të rezervuar</string>
     <string name="restore_in_progress">Rivendosja është tashmë në proces</string>
     <string name="restoring_backup">Rivendosja e rezervës</string>
@@ -459,7 +455,6 @@
     <string name="pref_reset_viewer_flags">Rivendos cilësimet e lexuesit për seri</string>
     <string name="pref_reset_viewer_flags_summary">Rivendos modalitetin e leximit dhe orientimin e të gjitha serive</string>
     <string name="pref_reset_viewer_flags_error">Cilësimet e lexuesit nuk mund të rivendoseshin</string>
-    <string name="pref_dump_crash_logs">Hidh regjistrat e aksidenteve</string>
     <string name="label_background_activity">Aktiviteti në sfond</string>
     <string name="pref_disable_battery_optimization_summary">Ndihmon me përditësimet dhe kopjet rezervë të bibliotekës në sfond</string>
     <string name="pref_dump_crash_logs_summary">Ruan regjistrat e gabimeve në një skedar për t\'i ndarë me zhvilluesit</string>
@@ -534,7 +529,6 @@
     <string name="migrate">Migroni</string>
     <string name="crash_screen_restart_application">Rinisni aplikacionin</string>
     <string name="download_insufficient_space">Kapitujt nuk mund të shkarkoheshin për shkak të hapësirës së ulët të ruajtjes</string>
-    <string name="learn_more">Trokit për të mësuar më shumë</string>
     <string name="notification_cover_update_failed">Përditësimi i kopertinës dështoi</string>
     <string name="chapter_settings_updated">Cilësimet e kapitullit të parazgjedhur të përditësuara</string>
     <string name="theme_midnightdusk">Perëndim Mesnate</string>

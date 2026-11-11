@@ -74,7 +74,7 @@ class SettingsAdvancedScreen : SearchableSettings() {
 
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
-                title = stringResource(MR.strings.pref_dump_crash_logs),
+                title = stringResource(platformPresentation.dumpCrashLogsLabel),
                 subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
                 onClick = dumpLogs,
             ),

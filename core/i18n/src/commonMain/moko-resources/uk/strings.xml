@@ -229,7 +229,6 @@
     <string name="download_notifier_downloader_title">Завантажувач</string>
     <string name="download_notifier_title_error">Помилка</string>
     <string name="download_notifier_unknown_error">Невідома помилка при завантаженні розділу</string>
-    <string name="download_notifier_text_only_wifi">Немає Wi-Fi підключення</string>
     <string name="download_notifier_no_network">Немає мережевого з`єднання</string>
     <string name="download_notifier_download_paused">Завантаження призупинено</string>
     <string name="channel_common">Звичайний</string>
@@ -380,7 +379,6 @@
     <string name="migration_help_guide">Гайд по міграції джерел</string>
     <string name="file_picker_error">Застосунок вибору файлів не знайдено</string>
     <string name="pref_dump_crash_logs_summary">Зберігає логи помилок до файлу для надсилання розробникам</string>
-    <string name="pref_dump_crash_logs">Поділіться журналами збоїв</string>
     <string name="pref_viewer_nav">Зони тицяння</string>
     <string name="edge_nav">Межа</string>
     <string name="kindlish_nav">Kindle-подібна</string>
@@ -511,7 +509,6 @@
     <string name="source_filter_empty_screen">Встановлених джерел не знайдено</string>
     <string name="source_empty_screen">Джерел не знайдено</string>
     <string name="disabled_nav">Вимкнено</string>
-    <string name="learn_more">Тицьніть задля подробиць</string>
     <string name="cant_open_last_read_chapter">Не вдається відкрити останній прочитаний розділ</string>
     <string name="pref_app_language">Мова застосунку</string>
     <string name="ext_info_version">Версія</string>
@@ -531,7 +528,6 @@
     <string name="pref_reset_user_agent_string">Скинути типовий user agent</string>
     <string name="multi_lang">Багатомовне</string>
     <string name="updates_last_update_info">Останнє оновлення бібліотеки: %s</string>
-    <string name="missing_storage_permission">Доступ до файлової системи не надано</string>
     <string name="download_ahead">Завантажувати наперед</string>
     <string name="download_ahead_info">Працює, якщо поточний розділ + наступний вже завантажені.</string>
     <string name="remove_manga">Ви збираєтесь видалити \"%s\" з вашої бібліотеки</string>
@@ -542,12 +538,10 @@
     <string name="popular">Популярне</string>
     <string name="auto_download_while_reading">Автоматичне завантаження під час читання</string>
     <string name="pref_appearance_summary">Тема, формат дати та часу</string>
-    <string name="pref_library_summary">Категорії, глобальне оновлення, гортання розділів</string>
     <string name="pref_reader_summary">Режим читання, відображення, навігація</string>
     <string name="pref_downloads_summary">Автоматичне завантаження, завантаження наперед</string>
     <string name="pref_browse_summary">Джерела, розширення, глобальний пошук</string>
     <string name="pref_backup_summary">Ручне та автоматичне резервування, сховище</string>
-    <string name="pref_security_summary">Блокування застосунку, захист екрану</string>
     <string name="crash_screen_title">Ой!</string>
     <string name="crash_screen_restart_application">Перезапустити застосунок</string>
     <string name="action_search_hint">Шукати…</string>

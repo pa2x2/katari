@@ -238,7 +238,6 @@
     <string name="download_notifier_downloader_title">ตัวดาวน์โหลด</string>
     <string name="download_notifier_title_error">เกิดข้อผิดพลาด</string>
     <string name="download_notifier_unknown_error">ไม่สามารถดาวน์โหลดตอนได้เนื่องจากข้อผิดพลาดที่ไม่คาดคิด</string>
-    <string name="download_notifier_text_only_wifi">ไม่มีการเชื่อมต่อ Wi-Fi</string>
     <string name="download_notifier_no_network">ไม่มีการเชื่อมต่อเครือข่าย</string>
     <string name="download_notifier_download_paused">การดาวน์โหลดหยุดชั่วคราว</string>
     <string name="channel_common">ทั่วไป</string>
@@ -386,7 +385,6 @@
     <string name="pref_disable_battery_optimization_summary">ช่วยในการอัปเดตและสำรองข้อมูลคลังในพื้นหลัง</string>
     <string name="pref_disable_battery_optimization">ปิดการใช้งานการเพิ่มประสิทธิภาพแบตเตอรี่</string>
     <string name="pref_dump_crash_logs_summary">บันทึกบันทึกข้อผิดพลาดลงในแฟ้มเพื่อแบ่งปันกับผู้พัฒนา</string>
-    <string name="pref_dump_crash_logs">แบ่งปันบันทึกข้อขัดข้อง</string>
     <string name="pref_refresh_library_covers">โหลดปกในคลังใหม่</string>
     <string name="label_data">ข้อมูล</string>
     <string name="requires_app_restart">ต้องรีสตาร์ทแอปจึงจะมีผล</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">ตารางแสดงแค่หน้าปก</string>
     <string name="pref_landscape_zoom">ซูมภาพกว้างโดยอัตโนมัติ</string>
     <string name="action_show_manga">แสดงรายการ</string>
-    <string name="learn_more">แตะเพื่อเรียนรู้เพิ่มเติม</string>
     <string name="rotation_reverse_portrait">แนวตั้งแบบกลับด้าน</string>
     <string name="action_move_to_top_all_for_series">ย้ายเรื่องไปด้านบน</string>
     <string name="disabled_nav">ปิดใช้งาน</string>
@@ -540,15 +537,12 @@
     <string name="updates_last_update_info">อัปเดตคลังล่าสุด: %s</string>
     <string name="remove_manga">คุณกำลังจะนำ \"%s\" ออกจากคลัง</string>
     <string name="popular">ยอดนิยม</string>
-    <string name="missing_storage_permission">ไม่ได้รับการอนุญาตให้ใช้งานที่จัดเก็บ</string>
     <string name="action_search_hint">ค้นหา…</string>
     <string name="pref_appearance_summary">ธีม, รูปแบบวันที่และเวลา</string>
-    <string name="pref_library_summary">หมวดหมู่, การอัปเดตคลัง, การปัดรายการตอน</string>
     <string name="pref_reader_summary">โหมดการอ่าน, การแสดงผล, การนำทาง</string>
     <string name="pref_downloads_summary">การดาวน์โหลดอัตโนมัติ, การดาวน์โหลดล่วงหน้า</string>
     <string name="pref_browse_summary">แหล่งที่มา, ส่วนขยาย, การค้นหาทั้งหมด</string>
     <string name="pref_backup_summary">การสำรองข้อมูลและพื้นที่เก็บข้อมูลด้วยตนเองและอัตโนมัติ</string>
-    <string name="pref_security_summary">การล็อกแอป, หน้าจอความปลอดภัย</string>
     <string name="crash_screen_title">เกิดความผิดพลาด!</string>
     <string name="invalid_location">ตำแหน่งไม่ถูกต้อง: %s</string>
     <string name="unknown_title">ไม่ทราบชื่อเรื่อง</string>

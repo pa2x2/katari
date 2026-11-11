@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Animacia rapido de duobla tuŝeto</string>
     <string name="pref_load_ahead_only_over_wifi">Antaŭŝargi nur per vifio</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Ŝparas poŝtelefonretajn datumojn per ŝargado de nur la paĝoj proksimaj al tiu, kiun vi legas</string>
+    <string name="pref_dump_crash_logs">Konigi prikolapsajn protokolojn</string>
+    <string name="pref_security_summary">Apa ŝloso, sekura ekrano</string>
 </resources>

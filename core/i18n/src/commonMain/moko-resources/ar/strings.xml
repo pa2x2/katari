@@ -195,7 +195,6 @@
     <string name="download_notifier_downloader_title">مدير التنزيل</string>
     <string name="download_notifier_title_error">خطأ</string>
     <string name="download_notifier_unknown_error">فشل تنزيل الفصل بسبب حدوث خطأ غير متوقع</string>
-    <string name="download_notifier_text_only_wifi">لا يتوفر اتصال واي فاي</string>
     <string name="download_notifier_no_network">لا يتوفر اتصال بالشبكة</string>
     <string name="download_notifier_download_paused">توقفت التنزيلات</string>
     <string name="channel_common">عام</string>
@@ -385,7 +384,6 @@
     <string name="kindlish_nav">كأنه كِندِل</string>
     <string name="action_display_show_number_of_items">إظهار عدد العناصر</string>
     <string name="pref_dump_crash_logs_summary">يحفظ سجلات الأخطاء في ملف للمشاركة مع المطورين</string>
-    <string name="pref_dump_crash_logs">شارك سجلَّات الاعطال</string>
     <string name="right_and_left_nav">يميناً ويساراً</string>
     <string name="pref_dual_page_invert_summary">إذا كان موضع تقسيم الصفحات العريضة لا يتطابق مع اتجاه القراءة</string>
     <string name="pref_dual_page_invert">عكس موضع تقسيم الصفحة</string>
@@ -495,7 +493,6 @@
     <string name="error_saving_picture">خطأ أثناء حفظ الصورة</string>
     <string name="disabled_nav">معطل</string>
     <string name="rotation_reverse_portrait">رأسي بالعكس</string>
-    <string name="learn_more">اضغط لمعرفة المزيد</string>
     <string name="action_move_to_top_all_for_series">نقل السلسلة للأعلى</string>
     <string name="empty_backup_error">لا توجد مدخلات في المكتبة لإجراء نسخة احتياطي‮‮ة</string>
     <string name="action_close">إغلاق</string>
@@ -540,17 +537,14 @@
     <string name="error_user_agent_string_blank">سلسلة وكيل المستخدم لا يمكن أن تكون فارغة</string>
     <string name="popular">شائع</string>
     <string name="remove_manga">أنت على وشك أن تحذف \"%s\" من مكتبتك</string>
-    <string name="missing_storage_permission">لم يتم منح أذن التخزين</string>
     <string name="action_search_hint">بحث…</string>
     <string name="crash_screen_title">عفوًا!</string>
     <string name="crash_screen_restart_application">أعد تشغيل التطبيق</string>
     <string name="pref_appearance_summary">مظهر، التاريخ والوقت</string>
-    <string name="pref_library_summary">الفئات، التحديث الشامل، تمرير الفصول</string>
     <string name="pref_reader_summary">وضع القراءة، العرض، التنقل</string>
     <string name="pref_downloads_summary">التحميل التلقائي، التحميل مقدما</string>
     <string name="pref_browse_summary">المصادر، الامتدادات، البحث العالمي</string>
     <string name="pref_backup_summary">النسخ الاحتياطي اليدوي والآلي وحيِّز التخزين</string>
-    <string name="pref_security_summary">قفل التطبيق، شاشة آمنة</string>
     <string name="fdroid_warning">لا يتم دعم إصدارات F-Droid رسميا. \nانقر لمعرفة المزيد.</string>
     <string name="invalid_location">موقع غير صالح: %s</string>
     <string name="pref_invalidate_download_cache_summary">فرض التطبيق على إعادة التحقق من الفصول التي تم تنزيلها</string>

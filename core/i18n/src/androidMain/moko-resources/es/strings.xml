@@ -7,4 +7,6 @@
     <string name="information_empty_category">No hay categorías. Pulsa el botón «+» para crear una y organizar tu biblioteca.</string>
     <string name="pref_double_tap_zoom">Ampliar tocando dos veces la pantalla</string>
     <string name="pref_double_tap_anim_speed">Velocidad de animación de doble toque</string>
+    <string name="pref_dump_crash_logs">Compartir los registros de fallos</string>
+    <string name="pref_security_summary">Pantalla segura y desbloqueo biométrico</string>
 </resources>

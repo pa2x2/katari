@@ -4,7 +4,6 @@
     <string name="channel_common">נפוץ</string>
     <string name="download_notifier_download_paused">ההורדות מושהות</string>
     <string name="download_notifier_no_network">אין חיבור רשת זמין</string>
-    <string name="download_notifier_text_only_wifi">אין חיבור Wi-Fi זמין</string>
     <string name="download_notifier_unknown_error">לא ניתן להוריד את הפרק בגלל שגיאה בלתי צפויה</string>
     <string name="download_notifier_title_error">שגיאה</string>
     <string name="information_webview_outdated">אנא עדכן את אפליקציית WebView לקבלת תאימות טובה יותר</string>
@@ -450,7 +449,6 @@
     <string name="exclude">החרגה: %s</string>
     <string name="source_filter_empty_screen">לא נמצאו מקורות מותקנים</string>
     <string name="information_empty_category_dialog">עדיין אין קטגוריות.</string>
-    <string name="learn_more">לחץ כדי ללמוד עוד</string>
     <string name="pref_clear_history">נקה היסטוריה</string>
     <string name="pref_reset_viewer_flags_error">נכשל איפוס הגדרות מצב הקריאה</string>
     <string name="action_sort_last_manga_update">נבדקו לעדכונים לאחרונה</string>
@@ -496,7 +494,6 @@
     <string name="label_stats">סטטיסטיקות</string>
     <string name="label_local">מקומי</string>
     <string name="internal_error">שגיאה פנימית: בדוק ביומני קריסה למידע נוסף</string>
-    <string name="pref_security_summary">נעילת אפליקציה, מסך מוגן</string>
     <string name="remove_manga">פעולה זו תסיר את \"%s\" מהספרייה</string>
     <string name="label_started">הותחלו</string>
     <string name="label_downloaded">בהורדות</string>
@@ -524,14 +521,12 @@
     <string name="download_notifier_split_page_path_not_found">נכשל במציאת כתובת עמוד %d</string>
     <string name="pref_downloads_summary">הורדה אוטומטית, הורד את הבאים</string>
     <string name="pref_appearance_summary">ערכת נושא, תצורת תאריך ושעה</string>
-    <string name="pref_library_summary">קטגוריות, עדכון כללי, החלקת פרק</string>
     <string name="pref_backup_summary">מדריך וגיבויים אוטומטיים</string>
     <string name="information_no_entries_found">לא נמצאו פריטים בקטגוריה זו</string>
     <string name="action_ok">בסדר</string>
     <string name="updates_last_update_info">ספריה עודכנה לאחרונה ב: %s</string>
     <string name="pref_navigate_pan">שטח תמונה רחבה</string>
     <string name="pref_hide_in_library_items">הסתר פריטים שכבר בספרייה</string>
-    <string name="missing_storage_permission">הרשאות אחסון לא ניתנו</string>
     <string name="empty_backup_error">אין פרטי ספרייה לגיבוי</string>
     <string name="create_backup_file_error">נכשל ביצירת קובץ גיבוי</string>
     <string name="error_user_agent_string_invalid">מחרוזת משתמש לא תקינה</string>
@@ -577,7 +572,6 @@
     <string name="fdroid_warning">F-Droid builds לא נתמכים באופן רשמי. \nלחץ כדי ללמוד עוד.</string>
     <string name="also_set_chapter_settings_for_library">קבע גם עבור כל הפריטים בספריה</string>
     <string name="network_not_metered">רק ברשת בלתי מוגבלת</string>
-    <string name="pref_dump_crash_logs">שתף יומני קריסה</string>
     <string name="multi_lang">רבים</string>
     <string name="filter_mode_lighten">להתחמק / להאיר</string>
     <string name="pref_webtoon_side_padding">רפד בצדדים</string>

@@ -51,7 +51,6 @@
     <string name="download_notifier_downloader_title">Lataaja</string>
     <string name="download_notifier_title_error">Virhe</string>
     <string name="download_notifier_unknown_error">Lukua ei voitu ladata odottamattoman virheen vuoksi</string>
-    <string name="download_notifier_text_only_wifi">Ei Wi-Fi yhteyttä saatavilla</string>
     <string name="download_notifier_no_network">Ei verkkoyhteyttä</string>
     <string name="download_notifier_download_paused">Lataus pysäytetty</string>
     <string name="channel_common">Tavallinen</string>
@@ -383,7 +382,6 @@
     <string name="edge_nav">Reuna</string>
     <string name="kindlish_nav">Kindle tyylinen</string>
     <string name="l_nav">L-muotoinen</string>
-    <string name="pref_dump_crash_logs">Poista kaatumislokit</string>
     <string name="pref_dump_crash_logs_summary">Tallentaa virhelokit tiedostoon jaettavaksi kehittäjien kanssa</string>
     <string name="action_desc">Laskeva</string>
     <string name="action_asc">Nouseva</string>
@@ -497,7 +495,6 @@
     <string name="description_placeholder">Ei kuvausta</string>
     <string name="are_you_sure">Oletko varma?</string>
     <string name="source_empty_screen">Lähdettä ei löydetty</string>
-    <string name="missing_storage_permission">Tallennusoikeuksia ei myönnetty</string>
     <string name="webview_data_deleted">WebView-tiedot tyhjennetty</string>
     <string name="pref_tablet_ui_mode">Tabletti käyttöliittymä</string>
     <string name="error_saving_picture">Virhe tallentaessa kuvaa</string>
@@ -521,7 +518,6 @@
     <string name="local_filter_order_by">Järjestä</string>
     <string name="manga_cover">Kansikuva</string>
     <string name="error_sharing_cover">Virhe jakaessa kansikuvaa</string>
-    <string name="learn_more">Napauta saadaksesi lisätietoja</string>
     <string name="pref_reset_viewer_flags_success">Kaikki lukijan asetukset poistettu</string>
     <string name="pref_verbose_logging">Yksityiskohtainen kirjaaminen</string>
     <string name="cover_saved">Kansikuva tallennettu</string>
@@ -560,7 +556,6 @@
     <string name="pref_reader_summary">Lukutila, näyttö, navigointi</string>
     <string name="pref_browse_summary">Lähteet, laajennokset, globaali haku</string>
     <string name="pref_backup_summary">Manuaaliset ja automaattiset varmuuskopiot, tallennustila</string>
-    <string name="pref_security_summary">Applikaation lukko, turvallinen ruutu</string>
     <string name="theme_nord">Pohjoismainen</string>
     <string name="pref_relative_format">Suhteelliset aikaleimat</string>
     <string name="pref_relative_format_summary">Käytä muotoa \"%1$s\", kuin muotoa \"%2$s\"</string>
@@ -577,6 +572,5 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Vältä keskeytyksiä pitkään jatkuvissa toimenpiteissä, kuten kirjaston päivitys, lataukset, ja varmuuskopion palautukset.</string>
     <string name="pref_appearance_summary">Teema, ajan ja päivämäärän formaatti</string>
     <string name="pref_downloads_summary">Automaattinen lataus, ennakkolataus</string>
-    <string name="pref_library_summary">Kategoriat, globaalit päivitykset, luvun pyyhkäisy</string>
     <string name="action_bar_up_description">Navigoi ylös</string>
 </resources>

@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Animationsgeschwindigkeit beim Doppeltippen</string>
     <string name="pref_load_ahead_only_over_wifi">Nur über WLAN im Voraus herunterladen</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Spart mobile Daten, indem nur Seiten um die aktuelle Seite herum geladen werden</string>
+    <string name="pref_dump_crash_logs">Absturzprotokolle teilen</string>
+    <string name="pref_security_summary">App-Sperre, sicherer Bildschirm</string>
 </resources>

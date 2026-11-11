@@ -59,7 +59,6 @@
     <string name="pref_category_advanced">မြင့်မားသော</string>
     <string name="pref_category_about">အကြောင်း</string>
     <string name="pref_appearance_summary">ပုံစံအနှစ်ချုပ်</string>
-    <string name="pref_library_summary">စာကြည့်တိုက်အနှစ်ချုပ်</string>
     <string name="theme_dark">အမှောင်</string>
     <string name="action_filter_empty">စစ်ထုတ်မှု ဖယ်သည်။</string>
     <string name="action_filter_unread">မဖတ်ရသေးသော</string>
@@ -179,7 +178,6 @@
     <string name="pref_downloads_summary">ဒေါင်းလုဒ်များအနှစ်ချုပ်</string>
     <string name="pref_browse_summary">လမ်းညွှန်ရှာဖွေရေးအနှစ်ချုပ်</string>
     <string name="pref_backup_summary">အပေါ်မှာလမ်းညွှန်မှတ်သား</string>
-    <string name="pref_security_summary">လုံခြုံရေးအနှစ်ချုပ်</string>
     <string name="pref_category_theme">ပုံစံအဆင့်</string>
     <string name="pref_app_theme">အက်ပလီကေးရှင်းပုံစံ</string>
     <string name="theme_system">စနစ်ပုံစံ</string>

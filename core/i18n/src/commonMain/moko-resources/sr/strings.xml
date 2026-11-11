@@ -372,7 +372,6 @@
     <string name="label_network">Мрежа</string>
     <string name="backup_restore_content_full">Подаци из датотеке резервне копије ће бити враћени. \n \nМораћете после тога да инсталирате све додатке које недостају да бисте их користили.</string>
     <string name="help_translate">Помозите у превођењу</string>
-    <string name="pref_dump_crash_logs">Дели извештаје о паду</string>
     <string name="pref_verbose_logging_summary">Исписуј детаљне извештаје у системски дневник (смањује перформансе апликације)</string>
     <string name="battery_optimization_setting_activity_not_found">Није могуће отворити подешавања уређаја</string>
     <string name="pref_refresh_library_covers">Освежи омоте у колекцији</string>
@@ -402,7 +401,6 @@
     <string name="getting_started_guide">Почетни водич</string>
     <string name="chapter_settings_updated">Ажурирана су подразумевана подешаваља поглавља</string>
     <string name="download_notifier_unknown_error">Није могуће преузети поглавље због неочекиване грешке</string>
-    <string name="download_notifier_text_only_wifi">Нема доступне Wi-Fi везе</string>
     <string name="channel_common">Опште</string>
     <string name="download_notifier_no_network">Нема доступне интернет везе</string>
     <string name="download_notifier_download_paused">Преузимања су заустављена</string>
@@ -489,7 +487,6 @@
     <string name="on_hiatus">На паузи</string>
     <string name="action_show_manga">Прикажи наслов</string>
     <string name="action_move_to_top_all_for_series">Помакни наслов на врх</string>
-    <string name="learn_more">Додирните да сазнате више</string>
     <string name="action_display_cover_only_grid">Мрежа насловница</string>
     <string name="pref_navigate_pan">Померај широке слике</string>
     <string name="pref_landscape_zoom">Аутоматски зумирај слике у пејзажном облику</string>
@@ -503,7 +500,6 @@
     <string name="action_close">Затвори</string>
     <string name="pref_clear_webview_data">Обриши податке WebView-a</string>
     <string name="webview_data_deleted">Подаци WebView-a су обрисани</string>
-    <string name="pref_library_summary">Категорије, глобално ажурирање, листање поглавља</string>
     <string name="pref_reader_summary">Режим читања, дисплеј, навигација</string>
     <string name="pref_downloads_summary">Аутоматско преузимање, преузимање унапред</string>
     <string name="pref_browse_summary">Извори, додаци, глобална претрага</string>
@@ -551,7 +547,6 @@
     <string name="popular">Популарно</string>
     <string name="label_completed_titles">Завршени наслови</string>
     <string name="network_not_metered">Само на мрежи без ограничења</string>
-    <string name="missing_storage_permission">Дозвола за меморијски простор није одобрена</string>
     <string name="error_user_agent_string_invalid">Неважећи низ корисничког агента</string>
     <string name="pref_reset_viewer_flags_error">Није могуће ресетовати подешавања читача</string>
     <string name="remove_manga">Управо ћете уклонити \"%s\" из своје колекције</string>
@@ -572,7 +567,6 @@
     <string name="download_notifier_cache_renewal">Провера преузимања</string>
     <string name="action_not_now">Не сада</string>
     <string name="pref_appearance_summary">Формат теме, датума и времена</string>
-    <string name="pref_security_summary">Закључавање апликације, сигуран екран</string>
     <string name="action_open_random_manga">Отвори насумични наслов</string>
     <string name="download_ahead_info">Ради само ако је тренутно и следеће поглавље већ преузето.</string>
     <string name="information_no_entries_found">Нема наслова у овој категорији</string>

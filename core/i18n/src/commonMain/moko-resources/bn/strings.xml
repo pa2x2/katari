@@ -196,7 +196,6 @@
     <string name="download_notifier_downloader_title">ডাউনলোডার</string>
     <string name="download_notifier_title_error">ত্রুটি</string>
     <string name="download_notifier_unknown_error">অপ্রত্যাশিত ত্রুটির কারণে অধ্যায় ডাউনলোড করা যায়নি</string>
-    <string name="download_notifier_text_only_wifi">কোন ওয়াই-ফাই সংযোগ খুঁজে পাওয়া যায়নি</string>
     <string name="download_notifier_no_network">কোন নেটওয়ার্ক সংযোগ খুঁজে পাওয়া যায়নি</string>
     <string name="download_notifier_download_paused">ডাউনলোড বিরতি</string>
     <string name="channel_common">সাধারণ</string>
@@ -405,7 +404,6 @@
     <string name="notification_incognito_text">ছদ্মবেশী মোড নিষ্ক্রিয় করুন</string>
     <string name="about_dont_kill_my_app">কিছু নির্মাতাদের অতিরিক্ত অ্যাপ সীমাবদ্ধতা রয়েছে যা ব্যাকগ্রাউন্ড পরিষেবাগুলিকে হত্যা করে। এই ওয়েবসাইটে কিভাবে এটি ঠিক করা যায় সে সম্পর্কে আরও তথ্য রয়েছে।</string>
     <string name="label_background_activity">পটভূমি কার্যকলাপ</string>
-    <string name="pref_dump_crash_logs">ক্র্যাশ লগ শেয়ার</string>
     <string name="pref_dns_over_https">এইচটিটিপিএস এর উপর ডিএনএস</string>
     <string name="restore_miui_warning">এমআইইউআই অপ্টিমাইজেশন নিষ্ক্রিয় থাকলে ব্যাকআপ/রিস্টোর সঠিকভাবে কাজ নাও করতে পারে।</string>
     <string name="backup_restore_content_full">এগুলো ব্যবহার করতে সম্ভবত পরে অনুপস্থিত এক্সটেনশন ইনস্টল করতে হবে।</string>
@@ -504,12 +502,10 @@
     <string name="webview_data_deleted">ওয়েবভিউ ডাটা মুছা হয়েছে</string>
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
     <string name="multi_lang">বহু</string>
-    <string name="pref_library_summary">বিভাগসমূহ, সার্বজনীন হালনাগাদ</string>
     <string name="pref_app_language">অ্যাপ ভাষা</string>
     <string name="pref_appearance_summary">থিম,সময় ও তারিখের ধরন</string>
     <string name="pref_reader_summary">পঠনের ধরন, ডিসপ্লে,নেভিগেশন</string>
     <string name="pref_backup_summary">ম্যানুয়াল ও সয়ংক্রিয় ব্যাকআপ</string>
-    <string name="pref_security_summary">অ্যাপ লক,নিরাপদ পর্দা</string>
     <string name="label_local">লোকাল</string>
     <string name="action_copy_to_clipboard">ক্লিপবোর্ডে কপি করুন</string>
     <string name="pref_reset_viewer_flags_success">সমস্ত পাঠক সেটিংস আবার</string>
@@ -671,7 +667,6 @@
     <string name="source_settings">সোর্স সেটিংস</string>
     <string name="private_settings">সংবেদনশীল সেটিংস অন্তর্ভুক্ত করুন (যেমন, লগইন টোকেন)</string>
     <string name="non_library_settings">সব পড়া এন্ট্রি</string>
-    <string name="missing_storage_permission">স্টোরেজ অনুমতি দেওয়া হয়নি</string>
     <string name="empty_backup_error">ব্যাকআপ করার মতো কোন এন্ট্রি নেই</string>
     <string name="create_backup_file_error">ব্যাকআপ ফাইল তৈরি করা যায়নি</string>
     <string name="last_auto_backup_info">শেষবার স্বয়ংক্রিয়ভাবে ব্যাকআপ নেওয়া হয়েছে: %s</string>

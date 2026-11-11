@@ -5,4 +5,5 @@
     <string name="download_queue_size_warning">पूर्वसूचना -- महद्भाराणि अवारोपणानि कुर्यात् मूलानि मन्दानि। अपि च %s निवारयेत्॥</string>
     <string name="information_empty_category">तव वर्गाः एव न सन्ति। नूतनं निर्माणं कृत्वा व्यवस्थापयितुम् अधिकचिह्नं नोदयतु॥</string>
     <string name="pref_double_tap_anim_speed">द्विवारनोदनं सञ्जीवनवेगः</string>
+    <string name="pref_dump_crash_logs">ध्वंसेतिवृत्तानि पातयतु</string>
 </resources>

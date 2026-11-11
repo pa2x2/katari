@@ -119,7 +119,6 @@
     <string name="label_download_queue">Тийев черечӗ</string>
     <string name="name">Йат</string>
     <string name="download_notifier_no_network">Тетел ҫыхӑну ҫук</string>
-    <string name="download_notifier_text_only_wifi">Wi-Fi ҫыхӑну ҫук</string>
     <string name="download_notifier_title_error">Йӑнӑш</string>
     <string name="notification_chapters_single">%1$s-мӗш сыпӑк</string>
     <string name="information_no_recent_manga">Йулашки вӑхӑтра нимӗн те вуламан</string>
@@ -387,7 +386,6 @@
     <string name="action_order_by_chapter_number">Сыпӑк шучӗпе</string>
     <string name="action_order_by_upload_date">Тийесе илни вӑхӑчӗпе</string>
     <string name="pref_dump_crash_logs_summary">Файлсенчи йӑнӑшсен логсене хатерлевҫӗсем патне яма упрать</string>
-    <string name="pref_dump_crash_logs">Йӑнӑш кӗнекине тийесе йар</string>
     <string name="pref_viewer_nav">Куҫӑм палли</string>
     <string name="right_and_left_nav">Сылтӑмран сулахаялла</string>
     <string name="pref_dual_page_invert_summary">Анлӑ елсене пайлани вулав майлӑ мар пулсан</string>
@@ -435,7 +433,6 @@
     <string name="on">Ҫутнӑ</string>
     <string name="off">Сӳнтернӗ</string>
     <string name="pref_appearance_summary">Темӗ, кун тата вӑхӑт тытӑмӗ</string>
-    <string name="pref_library_summary">Пухмӑшсем, пӗтӗмӗшле ҫӗнетӳ, сыпӑксене туртни</string>
     <string name="pref_reader_summary">Вулав тытӑмӗ, кӑтартӑнни, куҫӑм</string>
     <string name="label_default">Йаланхилле</string>
     <string name="action_open_random_manga">Ӑнсӑрт хайлав уҫ</string>
@@ -443,7 +440,6 @@
     <string name="theme_midnightdusk">Ҫур ҫӗр ӗнтрӗкӗ</string>
     <string name="connected_to_wifi">Wi-Fi урлӑ ҫеҫ</string>
     <string name="action_display_show_continue_reading_button">«Малалла вула» пускӑч</string>
-    <string name="pref_security_summary">Апа ҫаклатни, ыкран хӳтӗлевӗ</string>
     <string name="restrictions">Чарусем: %s</string>
     <string name="label_started">Пуҫланӑ</string>
     <string name="label_local">Вырӑнти</string>
@@ -479,7 +475,6 @@
     <string name="error_user_agent_string_blank">User agent пушӑ пулмалла мар</string>
     <string name="ext_info_language">Чӗлхе</string>
     <string name="pref_navigate_pan">Пуснӑ чухне анлӑ сӑнсене сарӑмлатни</string>
-    <string name="missing_storage_permission">Управ ирӗкӗсене паман</string>
     <string name="ext_info_version">Верҫҫи</string>
     <string name="ext_update_all">Пурне те ҫӗнет</string>
     <string name="delete_downloaded">Тийесе илнисене катерт</string>

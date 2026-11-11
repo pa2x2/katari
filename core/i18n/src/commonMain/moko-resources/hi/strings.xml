@@ -196,7 +196,6 @@
     <string name="download_notifier_downloader_title">डाउनलोडर</string>
     <string name="download_notifier_title_error">त्रुटि</string>
     <string name="download_notifier_unknown_error">अनपेक्षित त्रुटि के कारण अध्याय डाउनलोड नहीं किया जा सका</string>
-    <string name="download_notifier_text_only_wifi">कोई वाई-फ़ाई कनेक्शन उपलब्ध नहीं है</string>
     <string name="download_notifier_no_network">कोई नेटवर्क कनेक्शन उपलब्ध नहीं है</string>
     <string name="download_notifier_download_paused">डाउनलोड रोक दिया है</string>
     <string name="channel_common">सामान्य</string>
@@ -380,7 +379,6 @@
     <string name="migration_help_guide">स्रोत माइग्रेशन गाइड</string>
     <string name="file_picker_error">कोई फ़ाइल पिकर ऐप नहीं मिला</string>
     <string name="pref_dump_crash_logs_summary">डेवलपर्स के साथ साझा करने के लिए फ़ाइल में त्रुटि लॉग सहेजता है</string>
-    <string name="pref_dump_crash_logs">क्रैश लॉग शेयर करें</string>
     <string name="pref_viewer_nav">टैप ज़ोन</string>
     <string name="right_and_left_nav">दाएं और बाएं</string>
     <string name="edge_nav">धार</string>
@@ -488,7 +486,6 @@
     <string name="cancelled">रद्द किया गया</string>
     <string name="on_hiatus">अंतराल पर है</string>
     <string name="publishing_finished">प्रकाशन समाप्त</string>
-    <string name="learn_more">अधिक जानकारी के लिए दबाए</string>
     <string name="action_show_manga">प्रविष्टि दिखाएँ</string>
     <string name="action_display_cover_only_grid">केवल कवर ग्रिड</string>
     <string name="disabled_nav">अक्षम</string>
@@ -557,10 +554,8 @@
     <string name="pref_downloads_summary">स्वचालित डाउनलोड, आगे डाउनलोड करें</string>
     <string name="pref_library_update_show_tab_badge">नए अपडेट आइकन पर अपठित संख्या दिखाएं</string>
     <string name="pref_hide_in_library_items">पुस्तकालय में पहले से ही रही आइटम को छिपाएँ</string>
-    <string name="pref_library_summary">श्रेणियाँ, वैश्विक अपडेट, अध्याय स्वाइप</string>
     <string name="pref_page_rotate">फिट होने के लिए चौड़े पृष्ठों को घुमाएं</string>
     <string name="pref_backup_summary">मैनुअल और स्वचालित बैकअप</string>
-    <string name="pref_security_summary">ऐप लॉक, सुरक्षित स्क्रीन</string>
     <string name="action_set_interval">अंतराल निर्धारित करें</string>
     <string name="action_filter_interval_custom">अनुकूलित लाने का अंतराल</string>
     <string name="intervals_header">अंतराल</string>
@@ -660,7 +655,6 @@
     <string name="source_settings">स्रोत सेटिंग्स</string>
     <string name="private_settings">संवेदनशील सेटिंग्स शामिल करें (जैसे, लॉगिन टोकन)</string>
     <string name="non_library_settings">सभी पढ़ी गई प्रविष्टियाँ</string>
-    <string name="missing_storage_permission">स्टोरेज अनुमति नहीं मिली है</string>
     <string name="create_backup_file_error">बैकअप फ़ाइल बनाने में असमर्थ</string>
     <string name="last_auto_backup_info">अंतिम स्वचालित बैकअप: %s</string>
     <string name="pref_storage_usage">स्टोरेज उपयोग</string>

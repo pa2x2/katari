@@ -206,7 +206,6 @@
     <string name="channel_common">ಸಾಮಾನ್ಯ</string>
     <string name="download_notifier_download_paused">ಡೌನ್‌ಲೋಡ್ ವಿರಾಮಗೊಳಿಸಲಾಗಿದೆ</string>
     <string name="download_notifier_no_network">ಯಾವುದೇ ನೆಟ್‌ವರ್ಕ್ ಸಂಪರ್ಕ ಲಭ್ಯವಿಲ್ಲ</string>
-    <string name="download_notifier_text_only_wifi">ಯಾವುದೇ ವೈ-ಫೈ ಸಂಪರ್ಕ ಲಭ್ಯವಿಲ್ಲ</string>
     <string name="download_notifier_unknown_error">ಅನಿರೀಕ್ಷಿತ ದೋಷದಿಂದಾಗಿ ಅಧ್ಯಾಯವನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ</string>
     <string name="download_notifier_title_error">ದೋಷ</string>
     <string name="download_notifier_downloader_title">ಡೌನ್‌ಲೋಡರ್</string>
@@ -386,7 +385,6 @@
     <string name="action_display_show_number_of_items">ವಸ್ತುಗಳ ಸಂಖ್ಯೆಯನ್ನು ತೋರಿಸಿ</string>
     <string name="action_sort_chapter_fetch_date">ಸಿಕ್ಕ ಮಾಹಿತಿ</string>
     <string name="pref_dump_crash_logs_summary">ಡೆವಲಪರ್‌ಗಳೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲು ದೋಷದೆ ಲಾಗ್‌ಗಳನ್ನು ಫೈಲ್‌ಗೆ ಸೇರಿಸಿ</string>
-    <string name="pref_dump_crash_logs">ಕ್ರ್ಯಾಶ್ ಲಾಗ್‌ಗಳನ್ನು ಡಂಪ್ ಮಾಡಿ</string>
     <string name="pref_dns_over_https">HTTPS ಮೇಲೆ DNS ಬಳಸಿ</string>
     <string name="backup_restore_content_full">ಬ್ಯಾಕಪ್ ಫೈಲ್‌ನಿಂದ ಡೇಟಾವನ್ನು ಮರುಸ್ಥಾಪಿಸಲಾಗುತ್ತದೆ. \n \nಕಾಣೆಯಾದ ಯಾವುದೇ ವಿಸ್ತರಣೆಗಳನ್ನು ಬಳಸಲು ನೀವು ಅವುಗಳನ್ನು ಪುನಃ ಸ್ಥಾಪಿಸಬೇಕಾಗುತ್ತದೆ.</string>
     <string name="pref_download_new_categories_details">ಹೊರಗಿಡಲಾದ ವಿಭಾಗಗಳಲ್ಲಿ ಮಾಂಗಾವನ್ನು ಸೇರಿಸಿದ ವಿಭಾಗಗಳಲ್ಲಿದ್ದರೂ ಅವುಗಳನ್ನು ಡೌನ್‌ಲೋಡ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ.</string>

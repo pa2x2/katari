@@ -38,4 +38,8 @@ actual val platformPresentation = PlatformPresentation(
     syncChangesWaitLabel = PlatformStrings.sync_status_changes_unmetered,
     syncUnsentWaitingNote = PlatformStrings.sync_unsent_waiting_for_unmetered,
     syncFilesWaitingPlural = PlatformPlurals.sync_files_waiting_for_unmetered,
+    dumpCrashLogsLabel = PlatformStrings.pref_dump_crash_logs,
+    syncFailedHelp = PlatformStrings.sync_failed_help,
+    securitySettingsSummary = PlatformStrings.pref_security_summary,
+    monthlyRecapSummary = PlatformStrings.statistics_monthly_recap_summary,
 )

@@ -190,7 +190,6 @@
     <string name="download_notifier_downloader_title">Gerenciador de downloads</string>
     <string name="download_notifier_title_error">Erro</string>
     <string name="download_notifier_unknown_error">Não foi possível realizar o download do capítulo devido a um erro inesperado</string>
-    <string name="download_notifier_text_only_wifi">Conexão Wi-Fi indisponível</string>
     <string name="download_notifier_no_network">Conexão à rede indisponível</string>
     <string name="download_notifier_download_paused">Downloads pausados</string>
     <string name="action_global_search">Pesquisa global</string>
@@ -392,7 +391,6 @@
     <string name="l_nav">Em forma de L</string>
     <string name="pref_viewer_nav">Zonas de toque</string>
     <string name="pref_dump_crash_logs_summary">Salva os registros de erro em um arquivo para o compartilhamento com os desenvolvedores</string>
-    <string name="pref_dump_crash_logs">Compartilhar os registros de travamentos</string>
     <string name="action_desc">Decrescente</string>
     <string name="action_asc">Crescente</string>
     <string name="action_order_by_chapter_number">Pelo número do capítulo</string>
@@ -500,7 +498,6 @@
     <string name="pref_navigate_pan">Navegar imagens longas</string>
     <string name="pref_landscape_zoom">Dar zoom automaticamente em imagens largas</string>
     <string name="action_display_cover_only_grid">Grade somente com capas</string>
-    <string name="learn_more">Toque para saber mais</string>
     <string name="rotation_reverse_portrait">Retrato invertido</string>
     <string name="action_move_to_top_all_for_series">Mover série para o começo</string>
     <string name="disabled_nav">Desativado</string>
@@ -563,15 +560,12 @@
     <string name="updates_last_update_info">Última atualização da biblioteca: %s</string>
     <string name="remove_manga">Você está prestes a remover \"%s\" de sua biblioteca</string>
     <string name="popular">Popular</string>
-    <string name="missing_storage_permission">Permissões de armazenamento não concedidas</string>
     <string name="action_search_hint">Pesquisar…</string>
     <string name="pref_appearance_summary">Tema, formato de data e hora</string>
-    <string name="pref_library_summary">Categorias, atualização global, ações do capítulo</string>
     <string name="pref_reader_summary">Modo de leitura, exibição, navegação</string>
     <string name="pref_downloads_summary">Download automático, download a frente</string>
     <string name="pref_browse_summary">Fontes, extensões, pesquisa global</string>
     <string name="pref_backup_summary">Backups manuais e automáticos, espaço de armazenamento</string>
-    <string name="pref_security_summary">Bloqueio do aplicativo, tela segura</string>
     <string name="crash_screen_title">Ooops!</string>
     <string name="crash_screen_restart_application">Reiniciar o aplicativo</string>
     <string name="unknown_title">Título desconhecido</string>

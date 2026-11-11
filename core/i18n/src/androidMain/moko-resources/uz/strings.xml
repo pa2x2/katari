@@ -3,4 +3,5 @@
     <string name="action_show_errors">Tafsilotlarni ko\'rish uchun bosing</string>
     <string name="information_empty_category">Kutubxonada toifalar yo\'q. Toifalar yaratish uchun «Qo\'shish» tugmasini bosing.</string>
     <string name="pref_double_tap_anim_speed">Ikki marta bosilganda animatsiya tezligi</string>
+    <string name="pref_security_summary">Ilova qulflanishi, ekran himoyasi</string>
 </resources>

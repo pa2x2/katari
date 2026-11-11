@@ -408,7 +408,6 @@
     <string name="translation_engine_missing_id">Stored engine ID: %s</string>
     <string name="translation_engine_missing_explanation">Katari did not replace it. Choose another available engine to continue.</string>
     <string name="translation_settings_checking_provider">Checking availability…</string>
-    <string name="translation_settings_provider_not_installed">Provider app is not installed</string>
     <string name="translation_settings_configure_provider">Configure</string>
     <string name="translation_settings_missing_engine_no_fallback">Katari will not switch engines automatically. Choose an available engine to continue.</string>
 
@@ -508,7 +507,6 @@
     <string name="tts_settings_provider_failed">The speech engine could not play the preview.</string>
     <!-- Speech Dispatcher, the speech service of Linux desktops; its name and package names stay untranslated -->
     <string name="tts_speech_dispatcher_description">Speech through Speech Dispatcher, the speech service of Linux desktops, in the voices installed for it.</string>
-    <string name="tts_speech_dispatcher_processing">Speech Dispatcher\'s voices run on this computer.</string>
     <string name="tts_speech_dispatcher_privacy">Text you listen to is passed only to Speech Dispatcher and the voice it reads with.</string>
     <string name="tts_speech_dispatcher_not_installed">Speech Dispatcher isn\'t installed. Install the speech-dispatcher package and a voice such as espeak-ng to hear text read aloud.</string>
     <string name="tts_speech_dispatcher_start_failed">Speech Dispatcher couldn\'t start.</string>
@@ -983,7 +981,6 @@
     <string name="pref_category_about">About</string>
 
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
-    <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
     <string name="pref_library_summary_unified">Categories, display, cover badges, chapters</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
@@ -991,7 +988,6 @@
     <string name="pref_downloads_summary">Automatic download, download ahead, auto-translate</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
     <string name="pref_backup_summary">Manual &amp; automatic backups, storage space</string>
-    <string name="pref_security_summary">App lock, secure screen</string>
     <string name="pref_advanced_logs_network_summary">Crash logs, network, extensions</string>
 
       <!-- General section -->
@@ -1047,20 +1043,13 @@
     <string name="secure_screen">Secure screen</string>
     <string name="secure_screen_summary">Secure screen hides app contents when switching apps and block screenshots</string>
     <string name="telemetry_summary">Sending crash logs and analytics will allow us to identify and fix issues, improve performance, and make future updates more relevant to your needs</string>
-    <string name="sign_in_check_line">Enter the password you use to sign in to this computer as %1$s.</string>
     <string name="sign_in_check_waiting">You can type your password once the reader stops waiting.</string>
-    <string name="sign_in_check_refused">Wrong password. Too many wrong tries can lock your account on this computer for a while.</string>
-    <string name="sign_in_check_failed">Katari couldn\'t check your sign-in on this computer.</string>
     <string name="sign_in_check_checking">Checking…</string>
     <string name="sign_in_check_fingerprint_waiting">You can also touch the fingerprint reader.</string>
     <string name="sign_in_check_fingerprint_not_recognized">Fingerprint not recognized. Touch the reader again.</string>
     <string name="sign_in_check_fingerprint_read_again">The reader couldn\'t read your finger. Touch it again.</string>
     <string name="sign_in_check_fingerprint_too_many_tries">Too many tries with your fingerprint. Enter your password instead.</string>
-    <string name="lock_with_sign_in_summary">Asks for the password you sign in to this computer with</string>
-    <string name="lock_when_idle_desktop_summary">%1$s · Counts while Katari is minimized or the screen is locked</string>
     <string name="profile_lock_unavailable">Profile lock isn\'t available</string>
-    <string name="profile_lock_unavailable_summary">Katari can\'t check your sign-in on this computer.</string>
-    <string name="profile_locked_cant_check">%1$s is locked, and Katari can\'t check your sign-in on this computer.</string>
 
     <string name="pref_category_extensions">Extensions</string>
     <string name="pref_allowed_content_warnings">Allowed content warnings</string>
@@ -1627,7 +1616,6 @@
     <string name="creating_backup_entries_progress">Backing up entries %1$d/%2$d</string>
     <string name="creating_backup_saving">Saving backup file</string>
     <string name="creating_backup_error">Backup failed</string>
-    <string name="missing_storage_permission">Storage permissions not granted</string>
     <string name="empty_backup_error">No library entries to back up</string>
     <string name="create_backup_file_error">Couldn\'t create a backup file</string>
     <string name="restore_miui_warning">Backup/restore may not function properly if MIUI Optimization is disabled.</string>
@@ -1688,7 +1676,6 @@
     <string name="pref_reset_viewer_flags_summary">Resets reading mode and orientation of all series</string>
     <string name="pref_reset_viewer_flags_success">All reader settings reset</string>
     <string name="pref_reset_viewer_flags_error">Couldn\'t reset reader settings</string>
-    <string name="pref_dump_crash_logs">Share crash logs</string>
     <string name="pref_dump_crash_logs_summary">Saves error logs to a file for sharing with the developers</string>
     <string name="label_background_activity">Background activity</string>
     <string name="pref_disable_battery_optimization">Disable battery optimization</string>
@@ -2654,7 +2641,6 @@
     <string name="notification_items_single">Item %1$s</string>
     <string name="notification_items_single_and_more">Item %1$s and %2$d more</string>
     <string name="notification_items_multiple">Items %1$s</string>
-    <string name="learn_more">Tap to learn more</string>
     <string name="notification_cover_update_failed">Failed to update cover</string>
     <string name="notification_first_add_to_library">Please add the entry to your library before doing this</string>
 
@@ -2785,7 +2771,6 @@
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
     <string name="download_notifier_unknown_error_cause">Could not download item due to unexpected error: %1$s</string>
-    <string name="download_notifier_text_only_wifi">No Wi-Fi connection available</string>
     <string name="download_notifier_no_network">No network connection available</string>
     <string name="download_notifier_download_paused">Downloads paused</string>
     <string name="download_notifier_source_not_available">Source not available</string>
@@ -3036,7 +3021,6 @@
     <string name="statistics_share_recap">Share recap</string>
     <string name="statistics_recap_share_failed">Couldn\'t share the recap</string>
     <string name="statistics_monthly_recap">Monthly recap</string>
-    <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
     <string name="statistics_recap_notification_title">Your %1$s: %2$s</string>
     <string name="statistics_yearly_recap">Yearly recap</string>
     <string name="statistics_yearly_recap_summary">A notification on December 1 with your year so far, and on January 1 with the whole year</string>
@@ -3247,7 +3231,6 @@
     <string name="sync_status_failed">Sync failed on this device</string>
     <!-- %1$s says when it last synced, such as "2 minutes ago" -->
     <string name="sync_status_failed_at">Sync failed · last synced %1$s</string>
-    <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>
     <string name="sync_status_choices">Choose how this device joins your account</string>
     <string name="sync_status_removed">This device was removed from the account · Sign in again</string>
     <!-- %1$s is the server's address -->

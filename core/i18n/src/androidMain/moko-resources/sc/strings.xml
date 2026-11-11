@@ -7,4 +7,6 @@
     <string name="information_empty_category">Non tenes categorias. Incarca su butone de su \"prus\" pro nde creare una pro organizare sa biblioteca tua.</string>
     <string name="pref_double_tap_zoom">Tocu dòpiu pro ismanniare</string>
     <string name="pref_double_tap_anim_speed">Lestresa de s\'animatzione de su tocu dòpiu</string>
+    <string name="pref_dump_crash_logs">Cumpartzi sos registros de sos arrestos anòmalos</string>
+    <string name="pref_security_summary">Blocu de s\'aplicatzione, ischermu seguru</string>
 </resources>

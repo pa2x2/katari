@@ -7,4 +7,6 @@
     <string name="information_empty_category">உங்களிடம் வகைகள் இல்லை. உங்கள் நூலகத்தை ஒழுங்கமைக்க ஒன்றை உருவாக்க பிளச் பொத்தானைத் தட்டவும்.</string>
     <string name="pref_double_tap_zoom">பெரிதாக்க இரட்டை தட்டவும்</string>
     <string name="pref_double_tap_anim_speed">அனிமேசன் விரைவு இரட்டை தட்டவும்</string>
+    <string name="pref_dump_crash_logs">செயலிழப்பு பதிவுகளைப் பகிரவும்</string>
+    <string name="pref_security_summary">பயன்பாட்டு பூட்டு, பாதுகாப்பான திரை</string>
 </resources>

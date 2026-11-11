@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Velocitat de l’animació del doble toc</string>
     <string name="pref_load_ahead_only_over_wifi">Precarrega només amb Wi-Fi</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Estalvia dades mòbils carregant només les pàgines pròximes a la que esteu llegint</string>
+    <string name="pref_dump_crash_logs">Comparteix el registre d’errors</string>
+    <string name="pref_security_summary">Blocatge de l’aplicació i mode discret</string>
 </resources>

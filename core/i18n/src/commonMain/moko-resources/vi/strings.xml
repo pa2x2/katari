@@ -166,7 +166,6 @@
     <string name="download_notifier_downloader_title">Trình tải xuống</string>
     <string name="download_notifier_title_error">Lỗi</string>
     <string name="download_notifier_unknown_error">Đã xảy ra lỗi khi tải xuống chương này</string>
-    <string name="download_notifier_text_only_wifi">Không có kết nối Wi-fi</string>
     <string name="download_notifier_no_network">Không có kết nối mạng</string>
     <string name="download_notifier_download_paused">Tải xuống đã tạm dừng</string>
     <string name="categories">Hạng mục</string>
@@ -324,7 +323,6 @@
     <string name="pref_clear_history">Xoá lịch sử</string>
     <string name="pref_incognito_mode">Chế độ ẩn danh</string>
     <string name="pref_refresh_library_covers">Làm mới ảnh bìa trong thư viện</string>
-    <string name="pref_dump_crash_logs">Chia sẻ ghi chép sự cố</string>
     <string name="pref_dump_crash_logs_summary">Lưu ghi chép lỗi vào file để chia sẻ với nhà phát triển</string>
     <string name="pref_incognito_mode_summary">Dừng lưu giữ lịch sử đọc</string>
     <string name="file_picker_error">Không tìm thấy ứng dụng chọn tệp</string>
@@ -487,7 +485,6 @@
     <string name="cancelled">Đã hủy</string>
     <string name="on_hiatus">Đang tạm ngưng</string>
     <string name="save_chapter_as_cbz">Lưu dưới dạng lưu trữ CBZ</string>
-    <string name="learn_more">Nhấn để tìm hiểu thêm</string>
     <string name="pref_landscape_zoom">Tự động phóng ảnh rộng</string>
     <string name="action_show_manga">Hiển thị truyện</string>
     <string name="pref_navigate_pan">Xoay ảnh rộng</string>
@@ -532,7 +529,6 @@
     <string name="theme_tidalwave">Sóng Thủy Triều</string>
     <string name="error_user_agent_string_blank">Chuỗi đại diện người dùng không thể bỏ trống</string>
     <string name="auto_download_while_reading">Tự động tải khi đang đọc</string>
-    <string name="missing_storage_permission">Chưa được cho phép quyền truy cập lưu trữ</string>
     <string name="popular">Đang nổi</string>
     <string name="are_you_sure">Bạn chắc chứ?</string>
     <string name="remove_manga">Bạn sẽ xóa bỏ \"%s\" này ra khỏi thư viện của bạn</string>
@@ -542,11 +538,9 @@
     <string name="multi_lang">Đa Ngôn Ngữ</string>
     <string name="action_search_hint">Tìm kiếm…</string>
     <string name="pref_appearance_summary">Chủ đề, kiểu hiển thị ngày &amp; giờ</string>
-    <string name="pref_library_summary">Danh mục, cập nhật toàn bộ, vuốt chương</string>
     <string name="pref_reader_summary">Dạng đọc, hiển thị, điều hướng</string>
     <string name="pref_downloads_summary">Tự động tải xuống, tải xuống trước</string>
     <string name="pref_backup_summary">Sao lưu thủ công &amp; tự động, lưu trữ</string>
-    <string name="pref_security_summary">Khoá ứng dụng, màn hình bảo vệ</string>
     <string name="pref_browse_summary">Nguồn, tiện ích mở rộng, tìm kiếm toàn bộ</string>
     <string name="action_display_show_continue_reading_button">Nút tiếp tục đọc</string>
     <string name="action_open_random_manga">Mở một truyện ngẫu nhiên</string>

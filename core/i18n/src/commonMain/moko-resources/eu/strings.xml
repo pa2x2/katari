@@ -272,7 +272,6 @@
     <string name="transition_pages_loading">Orriak kargatzen…</string>
     <string name="channel_common">Arrunta</string>
     <string name="information_webview_required">WebView beharrezkoa da Katarirentzat</string>
-    <string name="download_notifier_text_only_wifi">Ez dago Wi-Fi konexiorik erabilgarri</string>
     <string name="label_default">Lehenetsia</string>
     <string name="action_display_mode">Bistaratze-modua</string>
     <string name="action_display">Bistaratu</string>
@@ -284,7 +283,6 @@
     <string name="action_display_show_tabs">Erakutsi kategorien fitxak</string>
     <string name="pref_category_about">Honi buruz</string>
     <string name="pref_category_theme">Gaia</string>
-    <string name="pref_dump_crash_logs">Sortu erroreen erregistroak</string>
     <string name="notification_chapters_single">%1$s Kapitulua</string>
     <string name="notification_chapters_multiple">%1$s Kapituluak</string>
     <string name="pref_keep_screen_on">Mantendu pantaila piztuta</string>

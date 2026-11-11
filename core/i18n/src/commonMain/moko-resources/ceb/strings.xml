@@ -343,7 +343,6 @@
     <string name="used_cache">Gigamit: %1$s</string>
     <string name="database_clean">Limpyo ang database</string>
     <string name="pref_refresh_library_covers">I-refresh ang mga hapin sa librarya</string>
-    <string name="pref_dump_crash_logs">Dump crash logs</string>
     <string name="pref_verbose_logging_summary">I-print ang verbose logs ngadto sa system log (gipamenos ang performance sa app)</string>
     <string name="about_dont_kill_my_app">Ang ubang mga tiggama adunay dugang nga mga pagdili sa app nga nagpatay sa mga serbisyo sa background. Kini nga website adunay dugang nga impormasyon kon unsaon kini pag-ayo.</string>
     <string name="pref_auto_clear_chapter_cache">Hawani ang cache sa kapitulo sa pagsira sa app</string>

@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Rychlost animace při dvojkliku</string>
     <string name="pref_load_ahead_only_over_wifi">Načíst dopředu pouze přes Wi-Fi</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Šetří mobilní data tím, že načítá pouze stránky v blízkosti té, kterou právě čtete</string>
+    <string name="pref_dump_crash_logs">Sdílet protokoly o selhání</string>
+    <string name="pref_security_summary">Zámek aplikace, zabezpečená obrazovka</string>
 </resources>

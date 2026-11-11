@@ -7,4 +7,6 @@
     <string name="information_empty_category">Não tem nenhuma categoria. Toque no botão (+) para criar uma e organizar a sua biblioteca.</string>
     <string name="pref_double_tap_zoom">Toque duplo para aproximar</string>
     <string name="pref_double_tap_anim_speed">Velocidade de animação de toque duplo</string>
+    <string name="pref_dump_crash_logs">Compartilhar registros de falha</string>
+    <string name="pref_security_summary">Bloqueio da app, ecrã seguro</string>
 </resources>

@@ -359,12 +359,10 @@
     <string name="onboarding_permission_analytics_description">Ананімна дасылаць даныя выкарыстання праграмы для паляпшэння яе функцый.</string>
     <string name="onboarding_permission_action_grant">Надаць</string>
     <string name="pref_appearance_summary">Тэма, фармат даты і часу</string>
-    <string name="pref_library_summary">Катэгорыі, глабальнае абнаўленне, гартанне раздзелаў</string>
     <string name="pref_reader_summary">Рэжым чытання, адлюстраванне, навігацыя</string>
     <string name="pref_downloads_summary">Аўтаматычнае спампоўванне, спампоўванне наперад</string>
     <string name="pref_browse_summary">Крыніцы, пашырэнні, глабальны пошук</string>
     <string name="pref_backup_summary">Ручныя і аўтаматычныя рэзервоўкі, сховішча</string>
-    <string name="pref_security_summary">Блакіроўка праграмы, абарона экрана</string>
     <string name="theme_catppuccin">Catppuccin</string>
     <string name="theme_monochrome">Манахром</string>
     <string name="theme_nord">Nord</string>
@@ -450,7 +448,6 @@
     <string name="non_library_settings">Усе прачытаныя творы</string>
     <string name="creating_backup">Зарэзерваванне</string>
     <string name="creating_backup_error">Памылка рэзервавання</string>
-    <string name="missing_storage_permission">Не нададзены дазволы на захаванне даных</string>
     <string name="empty_backup_error">У бібліятэцы няма твораў для рэзервавання</string>
     <string name="create_backup_file_error">Не ўдалося стварыць файл рэзервоўкі</string>
     <string name="restore_miui_warning">Рэзервоўка і аднаўленне могуць працаваць неналежным чынам, калі адключана «Аптымізацыя MIUI».</string>
@@ -500,7 +497,6 @@
     <string name="pref_reset_viewer_flags_summary">Скідае рэжым чытання і арыентацыю ўсіх серый</string>
     <string name="pref_reset_viewer_flags_success">Усе налады чытанкі скінуты</string>
     <string name="pref_reset_viewer_flags_error">Не ўдалося скінуць параметры чытанкі</string>
-    <string name="pref_dump_crash_logs">Падзяліцца журналам збояў</string>
     <string name="pref_dump_crash_logs_summary">Захоўвае журналы збояў у файл для адпраўкі распрацоўнікам</string>
     <string name="label_background_activity">Фонавая актыўнасць</string>
     <string name="pref_disable_battery_optimization">Адключыць аптымізацыю батарэі</string>
@@ -696,7 +692,6 @@
     <string name="notification_chapters_single">Раздзел %1$s</string>
     <string name="notification_chapters_single_and_more">Раздзел %1$s ды яшчэ %2$d</string>
     <string name="notification_chapters_multiple">Раздзелы %1$s</string>
-    <string name="learn_more">Націсніце, каб даведацца больш</string>
     <string name="notification_cover_update_failed">Не ўдалося абнавіць вокладку</string>
     <string name="notification_first_add_to_library">Калі ласка, дадайце твор у бібліятэку перад гэтым дзеяннем</string>
     <string name="file_select_cover">Абраць вокладку</string>
@@ -714,7 +709,6 @@
     <string name="download_notifier_downloader_title">Пампоўшчык</string>
     <string name="download_notifier_title_error">Памылка</string>
     <string name="download_notifier_unknown_error">Не ўдалося спампаваць раздзел праз непрадбачаную памылку</string>
-    <string name="download_notifier_text_only_wifi">Няма Wi-Fi злучэння</string>
     <string name="download_notifier_no_network">Няма злучэння з сеткай</string>
     <string name="download_notifier_download_paused">Спампоўванне прыпынена</string>
     <string name="download_notifier_split_page_path_not_found">Шлях да файлу старонкі %d не знойдзены</string>

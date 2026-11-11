@@ -7,4 +7,6 @@
     <string name="information_empty_category">ليست لديك أيّة فئات، اضغط زر اﻹضافة لإنشاء واحدة لتنظيم مكتبتك.</string>
     <string name="pref_double_tap_zoom">انقر مرتين لتكبِّر</string>
     <string name="pref_double_tap_anim_speed">سرعة مؤثر النقر المزدوج</string>
+    <string name="pref_dump_crash_logs">شارك سجلَّات الاعطال</string>
+    <string name="pref_security_summary">قفل التطبيق، شاشة آمنة</string>
 </resources>

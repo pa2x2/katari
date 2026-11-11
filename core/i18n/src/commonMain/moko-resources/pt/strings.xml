@@ -135,7 +135,6 @@
     <string name="information_empty_library">A sua biblioteca está vazia</string>
     <string name="download_notifier_title_error">Erro</string>
     <string name="download_notifier_unknown_error">Não foi possível transferir o capítulo devido a um erro inesperado</string>
-    <string name="download_notifier_text_only_wifi">A ligação Wi-Fi está indisponível</string>
     <string name="categories">Categorias</string>
     <string name="manga">Entradas da biblioteca</string>
     <string name="history">Histórico</string>
@@ -387,7 +386,6 @@
     <string name="action_order_by_chapter_number">Por número do capítulo</string>
     <string name="action_order_by_upload_date">Por data de envio</string>
     <string name="edge_nav">Borda</string>
-    <string name="pref_dump_crash_logs">Compartilhar registros de falha</string>
     <string name="pref_dump_crash_logs_summary">Guarda registos de erros num ficheiro para partilhar com os desenvolvedores</string>
     <string name="action_display_show_number_of_items">Mostrar número de itens</string>
     <string name="right_and_left_nav">Direita e Esquerda</string>
@@ -498,7 +496,6 @@
     <string name="webview_data_deleted">Dados do WebView limpos</string>
     <string name="rotation_reverse_portrait">Vertical invertido</string>
     <string name="source_filter_empty_screen">Nenhuma fonte instalada encontrada</string>
-    <string name="learn_more">Toque para saber mais</string>
     <string name="pref_navigate_pan">Imagens panorâmicas</string>
     <string name="pref_landscape_zoom">Ampliar imagem horizontal</string>
     <string name="update_check_open">Abrir no GitHub</string>
@@ -541,10 +538,8 @@
     <string name="theme_lavender">Lavanda</string>
     <string name="popular">Famoso</string>
     <string name="action_search_hint">Pesquisar…</string>
-    <string name="missing_storage_permission">Permissões de armazenamento não concedidas</string>
     <string name="action_display_show_continue_reading_button">Botão de continuar a ler</string>
     <string name="pref_appearance_summary">Tema, data e formato de hora</string>
-    <string name="pref_library_summary">Categorias, atualização global, trocar de capítulo</string>
     <string name="pref_reader_summary">Modo leitura, exibir, navegação</string>
     <string name="action_open_random_manga">Abrir entrada aleatória</string>
     <string name="label_stats">Estatísticas</string>
@@ -572,7 +567,6 @@
     <string name="invalid_location">Local inválido: %s</string>
     <string name="label_titles_section">Itens</string>
     <string name="label_read_duration">Duração de leitura</string>
-    <string name="pref_security_summary">Bloqueio da app, ecrã seguro</string>
     <string name="pref_invalidate_download_cache">Reindexar descargas</string>
     <string name="minute_short">%dm</string>
     <string name="action_not_now">Agora não</string>

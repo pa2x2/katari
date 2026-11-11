@@ -5,4 +5,6 @@
     <string name="download_queue_size_warning">Ескерту: Көп жүктеулер саны дереккөздер жұмысын баяулата алады және/немесе %s бұғатталына алады. Толығырақ оқу үшін басыңыз.</string>
     <string name="information_empty_category">Санаттарыңыз жоқ. Жаңа санат жасау үшін және кітапханаңызды ұйымдастыру үшін қосу батырмасын басыңыз.</string>
     <string name="pref_double_tap_anim_speed">Қосарлы түрту анимация жылдамдығы</string>
+    <string name="pref_dump_crash_logs">Қателер тіркеулерімен бөлісу</string>
+    <string name="pref_security_summary">Қолданбаны бұғаттау, экранды қорғау</string>
 </resources>

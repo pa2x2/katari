@@ -220,7 +220,6 @@
     <string name="download_notifier_downloader_title">ダウンロード</string>
     <string name="download_notifier_title_error">エラー</string>
     <string name="download_notifier_unknown_error">予期せぬエラーが発生したため、ダウンロードは失敗しました</string>
-    <string name="download_notifier_text_only_wifi">Wi-Fi 接続は利用できません</string>
     <string name="download_notifier_no_network">ネットワーク接続が利用できません</string>
     <string name="download_notifier_download_paused">ダウンロードが一時停止されました</string>
     <string name="channel_common">一般設定</string>
@@ -384,7 +383,6 @@
     <string name="action_order_by_chapter_number">章の番号順</string>
     <string name="action_order_by_upload_date">アップロードされた日付順</string>
     <string name="pref_dump_crash_logs_summary">エラーログをファイルに保存し、開発者と共有します</string>
-    <string name="pref_dump_crash_logs">クラッシュログを共有</string>
     <string name="pref_viewer_nav">タップ可能なゾーン</string>
     <string name="right_and_left_nav">右と左</string>
     <string name="kindlish_nav">Kindle スタイル</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">表紙グリッド</string>
     <string name="pref_landscape_zoom">横長の画像に自動でズームイン</string>
     <string name="pref_navigate_pan">幅広い画像を左右に移動</string>
-    <string name="learn_more">タップして詳細をご覧ください</string>
     <string name="rotation_reverse_portrait">縦向き（反転）</string>
     <string name="action_move_to_top_all_for_series">シリーズをトップに移動</string>
     <string name="disabled_nav">無効</string>
@@ -540,7 +537,6 @@
     <string name="updates_last_update_info">前回のライブラリ更新: %s</string>
     <string name="remove_manga">ライブラリから「%s」を削除しようとしています</string>
     <string name="popular">人気</string>
-    <string name="missing_storage_permission">ストレージ権限を持っていません</string>
     <string name="action_search_hint">検索…</string>
     <string name="invalid_location">無効な場所: %s</string>
     <string name="unknown_title">不明なタイトル</string>
@@ -552,9 +548,7 @@
     <string name="pref_downloads_summary">自動ダウンロード、事前ダウンロード</string>
     <string name="pref_browse_summary">ソース、拡張機能、グローバル検索</string>
     <string name="pref_backup_summary">手動・自動バックアップ、ストレージ領域</string>
-    <string name="pref_security_summary">アプリロック、セキュア画面</string>
     <string name="pref_appearance_summary">テーマ、日付と時刻の形式</string>
-    <string name="pref_library_summary">カテゴリー、グローバル アップデート、章間スワイプ</string>
     <string name="action_open_random_manga">おまかせ閲覧</string>
     <string name="information_no_entries_found">このカテゴリーには該当する項目が見つかりませんでした</string>
     <string name="download_notifier_cache_renewal">ダウンロード内容を検査しています</string>

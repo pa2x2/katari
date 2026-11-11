@@ -9,4 +9,6 @@
     <string name="pref_double_tap_anim_speed">Çift dokunma animasyon hızı</string>
     <string name="pref_load_ahead_only_over_wifi">Yalnızı Wi-Fi ile önden yükle</string>
     <string name="pref_load_ahead_only_over_wifi_summary">Yalnızca okuduğunuz sayfaya yakın olan sayfaları yükleyerek mobil veri tasarruf sağlar</string>
+    <string name="pref_dump_crash_logs">Çökme günlüklerini paylaş</string>
+    <string name="pref_security_summary">Uygulama kilidi, güvenli ekran</string>
 </resources>

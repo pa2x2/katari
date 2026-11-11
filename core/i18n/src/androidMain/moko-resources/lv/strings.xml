@@ -7,4 +7,6 @@
     <string name="information_empty_category">Jums nav nevienas kategorijas. Pieskarieties plus pogai, lai izveidotu kategoriju savas bibliotēkas organizēšanai.</string>
     <string name="pref_double_tap_zoom">Dubult-pieskarieties, lai tuvinātu</string>
     <string name="pref_double_tap_anim_speed">Dubultpieskāriena animācijas ātrums</string>
+    <string name="pref_dump_crash_logs">Dalīties ar avārijas žurnālu</string>
+    <string name="pref_security_summary">Aplikācijas slēdzis, ekrāna aizsargāšana</string>
 </resources>

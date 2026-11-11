@@ -7,4 +7,6 @@
     <string name="information_empty_category">आपके पास कोई श्रेणियां नहीं हैं। अपने पुस्तकालय के आयोजन के लिए एक बनाने के लिए प्लस बटन को दबाएं।</string>
     <string name="pref_double_tap_zoom">दुबारा टैप करके ज़ूम करें</string>
     <string name="pref_double_tap_anim_speed">डबल टैप एनीमेशन गति</string>
+    <string name="pref_dump_crash_logs">क्रैश लॉग शेयर करें</string>
+    <string name="pref_security_summary">ऐप लॉक, सुरक्षित स्क्रीन</string>
 </resources>

@@ -7,4 +7,6 @@
     <string name="information_empty_category">Anda tidak mempunyai kategori. Ketik butang tambah untuk membuat satu untuk mengatur pustaka anda.</string>
     <string name="pref_double_tap_zoom">Ketik dua kali untuk zum</string>
     <string name="pref_double_tap_anim_speed">Kelajuan animasi ketik dua kali</string>
+    <string name="pref_dump_crash_logs">Kongsi log kerosakan</string>
+    <string name="pref_security_summary">Kekunci aplikasi, skrin keselamatan</string>
 </resources>

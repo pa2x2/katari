@@ -168,11 +168,9 @@
     <string name="action_display_show_tabs">Baskên koman nîşan bide</string>
     <string name="action_add_category">Koma nû</string>
     <string name="action_move_category">Koman saz bike</string>
-    <string name="pref_library_summary">Kom, nûkirina giştî, beş kişandin</string>
     <string name="pref_reader_summary">Şêwaza xwendinê, dîmen, gerìn</string>
     <string name="pref_downloads_summary">Daxistina xwekar, peşwext daxistin</string>
     <string name="pref_browse_summary">Çavkanî, pêvek, gera giştî</string>
-    <string name="pref_security_summary">Kilîta sepanê, ekrana ewle</string>
     <string name="pref_category_theme">Tema</string>
     <string name="pref_app_theme">Temaya sepanê</string>
     <string name="theme_system">Pergal</string>

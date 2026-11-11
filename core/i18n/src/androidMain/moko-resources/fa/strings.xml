@@ -7,4 +7,6 @@
     <string name="information_empty_category">هیچ دسته بندی وجود ندارد. با زدن دکمه به علاوه دسته بندی جدیدی بسازید.</string>
     <string name="pref_double_tap_zoom">برای بزرگ نمایی دوبار ضربه بزنید</string>
     <string name="pref_double_tap_anim_speed">سرعت انیمیشن دو بار ضربه زدن</string>
+    <string name="pref_dump_crash_logs">اشتراک‌گذاری گزارش‌های خرابی</string>
+    <string name="pref_security_summary">قفل برنامه، صفحه امن</string>
 </resources>

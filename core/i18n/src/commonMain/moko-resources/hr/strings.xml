@@ -314,7 +314,6 @@
     <string name="channel_common">Opće</string>
     <string name="download_notifier_download_paused">Preuzimanje zaustavljeno</string>
     <string name="download_notifier_no_network">Nema mrežne veze</string>
-    <string name="download_notifier_text_only_wifi">Nema Wi-Fi veze</string>
     <string name="download_notifier_unknown_error">Poglavlje nije moguće preuzeti zbog neočekivane pogreške</string>
     <string name="download_notifier_title_error">Greška</string>
     <string name="download_notifier_downloader_title">Preuzimanja</string>
@@ -380,7 +379,6 @@
     <string name="migration_help_guide">Vodič za migraciju izvora</string>
     <string name="file_picker_error">Nije pronađena nijedna aplikacija za biranje datoteka</string>
     <string name="pref_dump_crash_logs_summary">Sprema zapise grešaka u datoteku za dijeljenje podataka s programerima</string>
-    <string name="pref_dump_crash_logs">Dijeli zapise prekida rada aplikacije</string>
     <string name="pref_viewer_nav">Područja dodira</string>
     <string name="edge_nav">Rub</string>
     <string name="kindlish_nav">Kao Kindle</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">Samo naslovnice</string>
     <string name="pref_navigate_pan">Panoramski prikaz širokih slika</string>
     <string name="pref_landscape_zoom">Automatski zumiraj u široke slike</string>
-    <string name="learn_more">Dodirni za daljnje informacije</string>
     <string name="rotation_reverse_portrait">Preokreni uspravni format</string>
     <string name="action_move_to_top_all_for_series">Premjesti seriju na vrh</string>
     <string name="disabled_nav">Deaktivirano</string>
@@ -516,13 +513,11 @@
     <string name="popular">Popularni</string>
     <string name="download_ahead">Preuzmi unaprijed</string>
     <string name="multi_lang">Višejezičnost</string>
-    <string name="missing_storage_permission">Dozvole za spremište nisu odobrena</string>
     <string name="theme_tidalwave">Tsunami</string>
     <string name="invalid_location">Nevažeće mjesto: %s</string>
     <string name="label_started">Započeto</string>
     <string name="label_local">Lokalno</string>
     <string name="action_search_hint">Traži …</string>
-    <string name="pref_library_summary">Kategorije, globalno aktualiziranje, prelistavanje poglavlja</string>
     <string name="pref_backup_summary">Ručne i automatske sigurnosne kopije, količina spremišta</string>
     <string name="label_stats">Statistike</string>
     <string name="label_downloaded">Preuzeto</string>
@@ -531,7 +526,6 @@
     <string name="pref_browse_summary">Izvori, ekstenzije, globalno pretraživanje</string>
     <string name="pref_reader_summary">Modus čitanja, prikaz, navigacija</string>
     <string name="pref_downloads_summary">Automatsko preuzimanje, preuzimanje unaprijed</string>
-    <string name="pref_security_summary">Zaključavanje aplikacije, siguran zaslon</string>
     <string name="action_open_random_manga">Otvori nasumični unos</string>
     <string name="pref_reset_user_agent_string">Obnovi standardni izraz korisničkog agenta</string>
     <string name="error_user_agent_string_invalid">Nevažeći niz korisničkog agenta</string>

@@ -245,7 +245,6 @@
     <string name="download_notifier_downloader_title">Preberanie</string>
     <string name="download_notifier_title_error">Chyba</string>
     <string name="download_notifier_unknown_error">Kapitolu sa nepodarilo stiahnuť z dôvodu neočakávanej chyby</string>
-    <string name="download_notifier_text_only_wifi">WiFi pripojenie nie je dostupné</string>
     <string name="download_notifier_no_network">Sieťové pripojenie nie je dostupné</string>
     <string name="download_notifier_download_paused">Sťahovanie bolo pozastavené</string>
     <string name="channel_common">Bežný</string>
@@ -490,7 +489,6 @@
     <string name="invalid_backup_file_missing_manga">Záloha neobsahuje žiadnu mangu.</string>
     <string name="l_nav">V tvare písmena L</string>
     <string name="backup_info">Dôrazne sa odporúča automatické zálohovanie. Kópie by ste si mali uchovávať aj na iných miestach.</string>
-    <string name="pref_dump_crash_logs">Výpis logu o zlyhaní</string>
     <string name="pref_reset_user_agent_string">Obnoviť predvolený reťazec User-Agent</string>
     <string name="action_global_search_query">Globálne vyhľadať \"%1$s\"</string>
     <string name="description_placeholder">Bez popisu</string>
@@ -499,7 +497,6 @@
     <string name="source_filter_empty_screen">Nenašiel sa žiadny nainštalovaný zdroj</string>
     <string name="pref_navigate_pan">Prejsť na posúvanie</string>
     <string name="cant_open_last_read_chapter">Nie je možné otvoriť poslednú prečítanú kapitolu</string>
-    <string name="learn_more">Klepnutím sa dozviete viac</string>
     <string name="downloaded_chapters">Stiahnuté kapitoly</string>
     <string name="migration_help_guide">Príručka k migrácií zdrojov</string>
     <string name="pref_reset_viewer_flags_success">Všetky nastavenia čítačky sa obnovia</string>
@@ -603,12 +600,10 @@
     <string name="pref_appearance_summary">Téma, dátum a formát času</string>
     <string name="upcoming_guide">Príručka pre nadchádzajúce</string>
     <string name="private_settings">Zahrnúť citlivé nastavenia (napr. prihlasovacie údaje)</string>
-    <string name="pref_library_summary">Kategórie, globálna aktualizácia, prechádzanie kapitolami</string>
     <string name="pref_reader_summary">Režim čítania, displej, navigácia</string>
     <string name="pref_downloads_summary">Automatické sťahovanie, sťahovanie dopredu</string>
     <string name="pref_browse_summary">Zdroje, rozšírenia, globálne vyhľadávanie</string>
     <string name="pref_backup_summary">Manuálne &amp; automatické zálohy, miesto v úložisku</string>
-    <string name="pref_security_summary">Zamknutie aplikácie, bezpečná obrazovka</string>
     <string name="theme_monochrome">Monochromatická</string>
     <string name="pref_relative_format">Relatívne časové značky</string>
     <string name="pref_relative_format_summary">\"%1$s\" namiesto \"%2$s\"</string>

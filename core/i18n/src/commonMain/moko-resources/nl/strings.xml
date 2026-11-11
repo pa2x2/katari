@@ -153,7 +153,6 @@
     <string name="information_empty_library">Je bibliotheek is leeg</string>
     <string name="download_notifier_downloader_title">Downloader</string>
     <string name="download_notifier_title_error">Fout</string>
-    <string name="download_notifier_text_only_wifi">Geen Wi-Fi-verbinding beschikbaar</string>
     <string name="download_notifier_no_network">Geen netwerkverbinding beschikbaar</string>
     <string name="download_notifier_download_paused">Download gepauzeerd</string>
     <string name="label_recent_updates">Updates</string>
@@ -384,7 +383,6 @@
     <string name="kindlish_nav">Kindle-achtig</string>
     <string name="l_nav">L-vormig</string>
     <string name="pref_dump_crash_logs_summary">Slaat foutmeldingslogboeken op in een bestand om te delen met de ontwikkelaars</string>
-    <string name="pref_dump_crash_logs">Crashlogboeken opslaan</string>
     <string name="action_desc">Aflopend</string>
     <string name="action_asc">Oplopend</string>
     <string name="action_order_by_chapter_number">Op hoofdstuknummer</string>
@@ -488,7 +486,6 @@
     <string name="publishing_finished">Uitgave voltooid</string>
     <string name="cancelled">Geannuleerd</string>
     <string name="on_hiatus">Gepauzeerd</string>
-    <string name="learn_more">Tik om meer te leren</string>
     <string name="pref_landscape_zoom">Zoom liggende afbeelding</string>
     <string name="pref_navigate_pan">Tik om door brede afbeeldingen te scrollen</string>
     <string name="action_show_manga">Laat item zien</string>
@@ -518,7 +515,6 @@
     <string name="download_ahead_info">Werkt alleen als het huidige hoofdstuk en het volgende alreeds gedownload zijn.</string>
     <string name="pref_user_agent_string">Standaard \'user-agent-string\'</string>
     <string name="action_search_hint">Zoek…</string>
-    <string name="missing_storage_permission">Opslagrechten niet verleend</string>
     <string name="action_display_show_continue_reading_button">Knop om lezen te hervatten weergeven</string>
     <string name="label_stats">Statistieken</string>
     <string name="label_started">Gestart</string>
@@ -527,12 +523,10 @@
     <string name="action_not_now">Niet nu</string>
     <string name="action_open_random_manga">Willekeurige openen</string>
     <string name="pref_appearance_summary">Thema, datum- en tijdnotatie</string>
-    <string name="pref_library_summary">Categorieën, globaal bijwerken</string>
     <string name="pref_reader_summary">Leesmodus, weergave, navigatie</string>
     <string name="pref_downloads_summary">Automatische downloads, vooraf downloaden</string>
     <string name="pref_browse_summary">Bronnen, extensies, globaal zoeken</string>
     <string name="pref_backup_summary">Handmatige &amp; automatische back-ups, opslagruimte</string>
-    <string name="pref_security_summary">App-vergrendeling, schermbeveiliging</string>
     <string name="pref_reset_viewer_flags_success">Alle leesinstellingen teruggezet naar de standaardwaarden</string>
     <string name="pref_reset_viewer_flags_error">Kon leesinstellingen niet terugzetten naar standaardwaarden</string>
     <string name="popular">Populair</string>

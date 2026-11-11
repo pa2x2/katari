@@ -7,4 +7,6 @@
     <string name="information_empty_category">אין לך קטגוריות. לחץ על כפתור הפלוס כדי ליצור אחד לארגון הספרייה שלך.</string>
     <string name="pref_double_tap_zoom">לחיצה כפולה לקירוב (זום)</string>
     <string name="pref_double_tap_anim_speed">מהירות הנפשה בהקשה כפולה</string>
+    <string name="pref_dump_crash_logs">שתף יומני קריסה</string>
+    <string name="pref_security_summary">נעילת אפליקציה, מסך מוגן</string>
 </resources>

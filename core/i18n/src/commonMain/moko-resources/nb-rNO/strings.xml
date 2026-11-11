@@ -235,7 +235,6 @@
     <string name="download_notifier_downloader_title">Nedlaster</string>
     <string name="download_notifier_title_error">Feil</string>
     <string name="download_notifier_unknown_error">Kunne ikke laste ned kapittel grunnet uventet feil</string>
-    <string name="download_notifier_text_only_wifi">Ingen trådløstilkobling tilgjengelig</string>
     <string name="download_notifier_no_network">Ingen nettverkstilkobling tilgjengelig</string>
     <string name="download_notifier_download_paused">Nedlastinger pauset</string>
     <string name="pref_color_filter_mode">Blandingsmodus for fargefilter</string>
@@ -379,7 +378,6 @@
     <string name="manga_from_library">Fra biblioteket</string>
     <string name="pref_incognito_mode_summary">Setter lesehistorikken på pause</string>
     <string name="pref_incognito_mode">Inkognitomodus</string>
-    <string name="pref_dump_crash_logs">Del krasjlogger</string>
     <string name="pref_dump_crash_logs_summary">Lagrer feillogger i en fil som kan sendes til utviklerne</string>
     <string name="pref_viewer_nav">Navigasjonsoppsett</string>
     <string name="edge_nav">Kant</string>
@@ -494,7 +492,6 @@
     <string name="extension_api_error">Klarte ikke å hente tilgjengelige utvidelser</string>
     <string name="rotation_reverse_portrait">Omvendt portrett</string>
     <string name="pref_auto_clear_chapter_cache">Tøm kapittel hurtigbufferen ved oppstart av appen</string>
-    <string name="learn_more">Trykk for å finne ut mer</string>
     <string name="disabled_nav">Deaktivert</string>
     <string name="empty_backup_error">Ingen bibliotekoppføringer å sikkerhetskopiere</string>
     <string name="error_saving_picture">Feil ved lagring av bilde</string>
@@ -514,8 +511,6 @@
     <string name="download_ahead_info">Fungerer kun hvis det nåværende kapittelet + det neste allerede er lastet ned.</string>
     <string name="crash_screen_restart_application">Start applikasjonen på nytt</string>
     <string name="download_notifier_split_page_path_not_found">Kunne ikke finne filbanen til side %d</string>
-    <string name="pref_security_summary">Applås, sikker skjerm</string>
-    <string name="missing_storage_permission">Lagringstilgang er ikke gitt</string>
     <string name="error_user_agent_string_invalid">Ugyldig streng for brukeragent</string>
     <string name="pref_reset_viewer_flags">Tilbakestill leserinnstillinger per serie</string>
     <string name="theme_tidalwave">Tidevannsbølge</string>
@@ -545,7 +540,6 @@
     <string name="appwidget_unavailable_locked">Moduler er ikke tilgjengelig når applås er aktivert</string>
     <string name="pref_user_agent_string">Standard streng for brukeragent</string>
     <string name="pref_appearance_summary">Tema, dato- og klokkeslettformat</string>
-    <string name="pref_library_summary">Kategorier, global oppdatering, kapittelsveip</string>
     <string name="pref_downloads_summary">Automatisk nedlasting, last ned i forkant</string>
     <string name="pref_reader_summary">Lesemodus, skjerm, navigasjon</string>
     <string name="update_already_running">En oppdatering kjører allerede</string>

@@ -6,4 +6,6 @@
     <string name="information_empty_category">আপনার কোন বিভাগ নেই। আপনার সংগ্রহশালা সাজাতে যোগ চিহ্ন বাটনে চেপে একটি বিভাগ তৈরী করুন।</string>
     <string name="pref_double_tap_zoom">জুম করতে ডাবল ট্যাপ</string>
     <string name="pref_double_tap_anim_speed">দুই টোকার এনিমেশনের গতি</string>
+    <string name="pref_dump_crash_logs">ক্র্যাশ লগ শেয়ার</string>
+    <string name="pref_security_summary">অ্যাপ লক,নিরাপদ পর্দা</string>
 </resources>

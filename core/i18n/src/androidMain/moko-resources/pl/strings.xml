@@ -7,4 +7,6 @@
     <string name="information_empty_category">Nie masz żadnych kategorii. Dotknij plusa, aby je utworzyć i zorganizować swoją bibliotekę.</string>
     <string name="pref_double_tap_zoom">Dotknij dwukrotnie, aby powiększyć</string>
     <string name="pref_double_tap_anim_speed">Szybkość animacji podwójnego dotknięcia</string>
+    <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
+    <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
 </resources>

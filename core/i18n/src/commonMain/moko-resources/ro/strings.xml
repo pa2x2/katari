@@ -229,7 +229,6 @@
     <string name="download_notifier_downloader_title">Client de descărcare</string>
     <string name="download_notifier_title_error">Eroare</string>
     <string name="download_notifier_unknown_error">Nu s-a putut descărca capitolul din cauza unei erori neașteptate</string>
-    <string name="download_notifier_text_only_wifi">Nu este disponibilă nicio conexiune Wi Fi</string>
     <string name="download_notifier_no_network">Nici o conexiune la internet valabilă</string>
     <string name="download_notifier_download_paused">Descărcare întreruptă</string>
     <string name="channel_common">General</string>
@@ -392,7 +391,6 @@
     <string name="action_display_show_number_of_items">Afișare număr de elemente</string>
     <string name="none">Nici unul</string>
     <string name="pref_dns_over_https">DNS prin HTTPS (DoH)</string>
-    <string name="pref_dump_crash_logs">Aruncați jurnalele de erori fatale</string>
     <string name="pref_dump_crash_logs_summary">Salvează jurnalele de erori într-un fișier pentru partajarea cu dezvoltatorii</string>
     <string name="pref_viewer_nav">Zone de atingere</string>
     <string name="edge_nav">Margine</string>
@@ -508,7 +506,6 @@
     <string name="download_ahead_info">Funcționează numai dacă capitolul curent + următorul sunt deja descărcate.</string>
     <string name="pref_grayscale">Alb-negru</string>
     <string name="rotation_landscape">Peisaj</string>
-    <string name="learn_more">Apasă pentru a afla mai multe</string>
     <string name="pref_landscape_zoom">Măriți imaginea în format peisaj</string>
     <string name="pref_reset_viewer_flags">Resetați setările de cititor per serie</string>
     <string name="pref_tablet_ui_mode">Interfață de tabletă</string>
@@ -523,7 +520,6 @@
     <string name="theme_tidalwave">Tsunami</string>
     <string name="ext_installer_legacy">Versiune veche</string>
     <string name="rotation_reverse_portrait">Format portret întors</string>
-    <string name="missing_storage_permission">Permisiunile de stocare nu au fost acceptate</string>
     <string name="pref_reset_viewer_flags_success">Toate setările de citire au fost resetate</string>
     <string name="popular">Populare</string>
     <string name="error_no_match">Nimic asemănător nu a fost găsit</string>
@@ -544,12 +540,10 @@
     <string name="pref_verbose_logging">Consemnare verbală</string>
     <string name="appwidget_unavailable_locked">Widgetul nu este disponibil atunci când este activată blocarea aplicației</string>
     <string name="pref_appearance_summary">Tema, formatul datei și al orei</string>
-    <string name="pref_library_summary">Categorii, actualizări globale</string>
     <string name="pref_reader_summary">Modul de citire, afișare, navigare</string>
     <string name="pref_downloads_summary">Descărcare automată, descărcare anticipată</string>
     <string name="pref_browse_summary">Surse, extensii, căutare globală</string>
     <string name="pref_backup_summary">Copii de rezervă manuale și automate</string>
-    <string name="pref_security_summary">Blocarea aplicației, securizarea ecranului</string>
     <string name="pref_user_agent_string">Șirul implicit de agent al utilizatorului</string>
     <string name="error_user_agent_string_blank">Șirul agentului de utilizator nu poate fi gol</string>
     <string name="crash_screen_title">Ups!</string>

@@ -231,7 +231,6 @@
     <string name="second_to_last">ሁለተኛ እስከ መጨረሻው ምዕራፍ</string>
     <string name="last_read_chapter">ለመጨረሻ ጊዜ የተነበበው ምዕራፍ</string>
     <string name="disabled">ተሰናክሏል</string>
-    <string name="download_notifier_text_only_wifi">ምንም የ ዋይ-ፋይ ግንኙነት የለም</string>
     <string name="download_notifier_unknown_error">ባልተጠበቀ ስህተት ምክንያት ምዕራፍ ማውረድ አልተቻለም</string>
     <string name="download_notifier_title_error">ስህተት</string>
     <string name="download_notifier_downloader_title">አውራጅ</string>

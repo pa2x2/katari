@@ -191,7 +191,6 @@
     <string name="information_no_recent">Brak ostatnio zaktualizowanych</string>
     <string name="information_no_recent_manga">Nic ostatnio nie czytano</string>
     <string name="download_notifier_downloader_title">Pobieranie</string>
-    <string name="download_notifier_text_only_wifi">Brak połączenia Wi-Fi</string>
     <string name="download_notifier_no_network">Brak połączenia z internetem</string>
     <string name="action_global_search">Wyszukiwanie globalne</string>
     <string name="other_source">Inne</string>
@@ -380,7 +379,6 @@
     <string name="pref_category_delete_chapters">Usuń rozdziały</string>
     <string name="file_picker_error">Nie znaleziono aplikacji do przeglądania plików</string>
     <string name="pref_dump_crash_logs_summary">Zapisuje logi błędów do pliku do udostępnienia programistom</string>
-    <string name="pref_dump_crash_logs">Udostępnij logi crasha</string>
     <string name="pref_viewer_nav">Strefy kliknięcia</string>
     <string name="edge_nav">Przy krawędzi</string>
     <string name="kindlish_nav">Podobnie jak w czytniku Kindle</string>
@@ -495,7 +493,6 @@
     <string name="action_close">Zamknij</string>
     <string name="action_move_to_top_all_for_series">Przenieś serię na górę</string>
     <string name="action_sort_unread_count">Ilość nieprzeczytanych</string>
-    <string name="learn_more">Kliknij, by dowiedzieć się więcej</string>
     <string name="update_check_open">Otwórz na GitHubie</string>
     <string name="pref_reset_viewer_flags_success">Reset wszystkich ustawień czytnika</string>
     <string name="ext_info_version">Wersja</string>
@@ -549,9 +546,7 @@
     <string name="invalid_location">Nieprawidłowa lokalizacja: %s</string>
     <string name="action_display_show_continue_reading_button">Przycisk wznów czytanie</string>
     <string name="pref_browse_summary">Źródła, rozszerzenia, globalne wyszukiwanie</string>
-    <string name="pref_security_summary">Blokada aplikacji, bezpieczny ekran</string>
     <string name="pref_appearance_summary">Tło, data &amp; format czasu</string>
-    <string name="missing_storage_permission">Nie przyznano uprawnień do przechowywania</string>
     <string name="pref_backup_summary">Manualna &amp; automatyczna kopia</string>
     <string name="label_read_duration">Czas odczytu</string>
     <string name="label_titles_section">Wpisy</string>
@@ -567,7 +562,6 @@
     <string name="label_total_chapters">Razem</string>
     <string name="action_search_hint">Szukaj…</string>
     <string name="action_open_random_manga">Otwórz losową pozycję</string>
-    <string name="pref_library_summary">Kategorie, aktualizacja globalna, przesunięcie rozdziału</string>
     <string name="pref_invalidate_download_cache">Odbuduj indeks pobierania</string>
     <string name="fdroid_warning">Kompilacje F-Droid nie są oficjalnie obsługiwane. \nNaciśnij, aby dowiedzieć się więcej.</string>
     <string name="label_read_chapters">Przeczytane</string>

@@ -7,4 +7,6 @@
     <string name="information_empty_category">ไม่มีหมวดหมู่ แตะปุ่มบวกเพื่อสร้างปุ่มสำหรับจัดระเบียบคลัง</string>
     <string name="pref_double_tap_zoom">แตะสองครั้งเพื่อซูม</string>
     <string name="pref_double_tap_anim_speed">ความเร็วแอนิเมชั่นเมื่อแตะ 2 ครั้ง</string>
+    <string name="pref_dump_crash_logs">แบ่งปันบันทึกข้อขัดข้อง</string>
+    <string name="pref_security_summary">การล็อกแอป, หน้าจอความปลอดภัย</string>
 </resources>

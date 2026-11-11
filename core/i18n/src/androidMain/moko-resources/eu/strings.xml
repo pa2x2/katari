@@ -5,4 +5,5 @@
     <string name="download_queue_size_warning">Abisua: deskarga handiek iturriak motelagoak izatea eta/edo %s blokeatzea ekar dezakete.</string>
     <string name="information_empty_category">Ez daukazu kategoriarik. Sakatu gehiketa botoia zure liburutegia antolatzeko bat sortzeko.</string>
     <string name="pref_double_tap_anim_speed">Sakaketa bikoitzaren animazioaren abiadura</string>
+    <string name="pref_dump_crash_logs">Sortu erroreen erregistroak</string>
 </resources>

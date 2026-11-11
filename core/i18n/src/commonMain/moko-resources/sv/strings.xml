@@ -229,7 +229,6 @@
     <string name="download_notifier_downloader_title">Nedladdare</string>
     <string name="download_notifier_title_error">Fel</string>
     <string name="download_notifier_unknown_error">Kunde inte ladda ned kapitel på grund av ett oförväntat fel</string>
-    <string name="download_notifier_text_only_wifi">Ingen WiFi-anslutning tillgänglig</string>
     <string name="download_notifier_no_network">Ingen nätverksanslutning tillgänglig</string>
     <string name="download_notifier_download_paused">Nedladdningar pausade</string>
     <string name="channel_common">Vanlig</string>
@@ -380,7 +379,6 @@
     <string name="migration_help_guide">Migreringsguide för källor</string>
     <string name="file_picker_error">Ingen filväljare-app hittades</string>
     <string name="pref_dump_crash_logs_summary">Sparar felloggar till en fil för delning med utvecklarna</string>
-    <string name="pref_dump_crash_logs">Dela kraschloggar</string>
     <string name="action_desc">Fallande</string>
     <string name="action_order_by_chapter_number">Efter kapitelnummer</string>
     <string name="action_order_by_upload_date">Efter uppladdningsdatum</string>
@@ -492,7 +490,6 @@
     <string name="action_display_cover_only_grid">Endast omslags-rutnät</string>
     <string name="pref_navigate_pan">Panorera breda sidor</string>
     <string name="pref_landscape_zoom">Förstora automatiskt breda bilder</string>
-    <string name="learn_more">Tryck på för att få veta mer</string>
     <string name="rotation_reverse_portrait">Omvänt porträtt</string>
     <string name="action_move_to_top_all_for_series">Flytta serien till toppen</string>
     <string name="disabled_nav">Inaktiverad</string>
@@ -540,7 +537,6 @@
     <string name="theme_tidalwave">Tidvattenvåg</string>
     <string name="download_ahead_info">Fungerar endast om det aktuella kapitlet + nästa redan har laddats ner.</string>
     <string name="auto_download_while_reading">Automatisk nedladdning under läsning</string>
-    <string name="pref_library_summary">Kategorier, global uppdatering, kapitel svepning</string>
     <string name="pref_reader_summary">Läsläge, skärmvisning, navigering</string>
     <string name="error_user_agent_string_invalid">Ogiltig sträng för användaragent</string>
     <string name="unknown_title">Okänd titel</string>
@@ -549,12 +545,10 @@
     <string name="pref_downloads_summary">Automatisk nedladdning, ladda ned i förväg</string>
     <string name="pref_backup_summary">Manuell och automatisk säkerhetskopiering, lagringsutrymme</string>
     <string name="invalid_location">Ogiltig plats: %s</string>
-    <string name="missing_storage_permission">Lagrings rättigheter inte tillagda</string>
     <string name="pref_appearance_summary">Tema, datum och tidsformat</string>
     <string name="pref_browse_summary">Källor, tillägg, global sökning</string>
     <string name="crash_screen_restart_application">Starta om applikationen</string>
     <string name="crash_screen_title">Hoppsan!</string>
-    <string name="pref_security_summary">Applikationslås, säkerhetsskärm</string>
     <string name="label_stats">Statistik</string>
     <string name="label_started">Påbörjade</string>
     <string name="label_local">Lokala</string>

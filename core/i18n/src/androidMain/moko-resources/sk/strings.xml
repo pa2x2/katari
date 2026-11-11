@@ -6,4 +6,6 @@
     <string name="information_empty_category">Nemáte žiadne kategórie. Ťuknutím na tlačidlo plus si ju vytvorte a usporiadajte knižnicu.</string>
     <string name="pref_double_tap_zoom">Dvojťuk pre priblíženie</string>
     <string name="pref_double_tap_anim_speed">Rýchlosť animácie pre dvojité ťuknutie</string>
+    <string name="pref_dump_crash_logs">Výpis logu o zlyhaní</string>
+    <string name="pref_security_summary">Zamknutie aplikácie, bezpečná obrazovka</string>
 </resources>

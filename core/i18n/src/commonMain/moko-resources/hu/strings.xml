@@ -140,7 +140,6 @@
     <string name="channel_ext_updates">Bővítményfrissítések</string>
     <string name="channel_common">Gyakori</string>
     <string name="download_notifier_download_paused">Letöltés szüneteltetve</string>
-    <string name="download_notifier_text_only_wifi">Nincs Wi-Fi kapcsolat</string>
     <string name="download_notifier_unknown_error">Egy váratlan hiba miatt nem sikerült letölteni a fejezetet</string>
     <string name="download_notifier_title_error">Hiba</string>
     <string name="information_webview_outdated">A jobb kompatibilitás érdekében kérlek, frissítsd a WebView alkalmazást</string>
@@ -409,7 +408,6 @@
     <string name="restore_duration">%1$02d perc, %2$02d mp.</string>
     <string name="backup_restore_content_full">Előfordulhat, hogy később telepítenie kell a hiányzó bővítményeket a használatukhoz.</string>
     <string name="pref_refresh_library_covers">Könyvtár fedők frissítése</string>
-    <string name="pref_dump_crash_logs">Hibaüzenetetek törlése</string>
     <string name="pref_reset_viewer_flags">Sorozat beállításainak visszaállítása</string>
     <string name="about_dont_kill_my_app">Néhány gyártónak extra korlátozása van arra, hogy kikapcsolja a háttér folyamatokat. Ezen a web oldalon több információt találsz, hogy hogyan oldható meg.</string>
     <string name="pref_incognito_mode_summary">Olvasási előzmények rögzítésének szüneteltetése</string>
@@ -447,7 +445,6 @@
     <string name="database_clean">Adatbázis törlése</string>
     <string name="backup_in_progress">Biztonsági mentés már folyamatban van</string>
     <string name="not_installed">Nincs telepítve</string>
-    <string name="learn_more">Koppintson további információért</string>
     <string name="notification_cover_update_failed">Nem sikerült a fedlap frissítése</string>
     <string name="notification_first_add_to_library">Először adja az elemet a könyvtárhoz</string>
     <string name="update_check_open">Megnyitás GitHub-on</string>
@@ -545,8 +542,6 @@
     <string name="updates_last_update_info">Könyvtár utoljára frissítve: %s</string>
     <string name="pref_library_update_show_tab_badge">Az olvasatlanok számának megjelenítése a Frissítések ikonon</string>
     <string name="action_display_show_continue_reading_button">Olvasás folytatása gomb</string>
-    <string name="pref_library_summary">Kategóriák, globális frissítés, fejezet csúsztatás</string>
-    <string name="pref_security_summary">Alkalmazás zárolás, képernyő zár</string>
     <string name="invalid_location">Hibás hely: %s</string>
     <string name="download_ahead_info">Csak akkor működik, ha az aktuális és a következő fejezet már letöltött.</string>
     <string name="download_ahead">Letöltés előre</string>
@@ -563,7 +558,6 @@
     <string name="fdroid_warning">F-Droid csomagok nem hivatalosan támogatottak. \nKattincs további információért.</string>
     <string name="label_completed_titles">Befejezett olvasmányok</string>
     <string name="crash_screen_title">Hoppá!</string>
-    <string name="missing_storage_permission">Tárhely engedély nincs megadva</string>
     <string name="label_used">Használt</string>
     <string name="are_you_sure">Biztos vagy benne?</string>
     <string name="information_no_manga_category">Kategória üres</string>
