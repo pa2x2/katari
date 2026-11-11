@@ -31,8 +31,9 @@ import kotlin.math.roundToInt
 
 /**
  * One page of the long strip in the slot [slotKey], [width] pixels wide: as tall as the page once its size is known,
- * or was known when it showed before, and [placeholderHeight] pixels tall until then, with its download progress a
- * quarter of the way down; the progressive preview while it arrives; the page itself; or why it failed with a retry.
+ * or was known when it showed before, and [placeholderHeight] pixels, a screen, tall until then. It shows the
+ * progressive preview while the page arrives, the page itself, or why it failed with a retry. Its download progress and
+ * why it failed show in the screen of it the reader reaches first: its start, or its end when it grows upward.
  */
 @Composable
 internal fun StripPage(
@@ -108,18 +109,30 @@ internal fun StripPage(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            content is PageContent.Loading -> CombinedCircularProgressIndicator(
+        }
+        val growsUpward = viewer.slotAnchor.growsUpward(slotKey)
+        val inset = with(density) { (placeholderHeight / 4).toDp() }
+        // A preview draws the page from its start, which stands in for the progress there; the end of a page growing
+        // upward stays empty until the page has arrived
+        if (content is PageContent.Loading && (previewImage == null || growsUpward)) {
+            CombinedCircularProgressIndicator(
                 progress = { (contentState.content as? PageContent.Loading)?.progress ?: 0f },
+                modifier = if (growsUpward) {
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = inset)
+                } else {
+                    Modifier.align(Alignment.TopCenter).padding(top = inset)
+                },
+            )
+        }
+        if (content is PageContent.Failed && previewImage == null) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = with(density) { (placeholderHeight / 4).toDp() }),
-            )
-            content is PageContent.Failed -> PageProblem(
-                page = page,
-                error = content.error,
-                onOpenInWebView = viewer.pageWebView(page),
-                modifier = Modifier.align(Alignment.Center),
-            )
+                    .align(if (growsUpward) Alignment.BottomCenter else Alignment.TopCenter)
+                    .height(with(density) { placeholderHeight.toDp() }),
+                contentAlignment = Alignment.Center,
+            ) {
+                PageProblem(page = page, error = content.error, onOpenInWebView = viewer.pageWebView(page))
+            }
         }
     }
 }

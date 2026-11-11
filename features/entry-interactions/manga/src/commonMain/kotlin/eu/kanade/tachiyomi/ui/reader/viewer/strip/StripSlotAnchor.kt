@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.ui.reader.viewer.strip
 
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
@@ -18,6 +21,15 @@ internal class StripSlotAnchor {
     private val enteredFromBelow = mutableSetOf<Any>()
     private var firstKey: Any? = null
 
+    // The first slot on screen when it came in from below: the one slot that grows upward
+    private var upwardKey by mutableStateOf<Any?>(null)
+
+    /**
+     * Whether the slot [key] grows upward, so what the reader sees of it is its end. Read in composition, it changes as
+     * the slot becomes or stops being the first on screen.
+     */
+    fun growsUpward(key: Any): Boolean = key == upwardKey
+
     /**
      * Follows a measure of the strip. A slot came in from below when it shows above the slot that was first on screen
      * the measure before, which is still on screen; a move to a page shows none of the slots shown before.
@@ -28,6 +40,7 @@ internal class StripSlotAnchor {
         enteredFromBelow.retainAll { key -> visible.any { it.key == key } }
         for (index in 0 until previousFirst) enteredFromBelow += visible[index].key
         firstKey = visible.firstOrNull()?.key
+        upwardKey = firstKey?.takeIf { it in enteredFromBelow }
     }
 
     /**
@@ -36,7 +49,7 @@ internal class StripSlotAnchor {
      * height show in the same frame.
      */
     fun onSlotResized(key: Any, delta: Int, state: LazyListState) {
-        if (key !in enteredFromBelow) return
+        if (key != upwardKey) return
         val info = state.layoutInfo
         val first = info.visibleItemsInfo.firstOrNull()?.takeIf { it.key == key } ?: return
         val scrolledInto = info.viewportStartOffset - first.offset
