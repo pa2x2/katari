@@ -8,6 +8,7 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import app.katari.presentation.kit.pager.WheelTurns
+import app.katari.presentation.kit.pointer.TouchpadScroll
 import app.katari.presentation.kit.pointer.touchpadScroll
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import kotlin.math.abs
@@ -36,7 +37,7 @@ internal fun Modifier.pagerWheel(
             val zoom = target?.let { viewer.zoomOf(it.first) }
             val ctrl = event.keyboardModifiers.isCtrlPressed
             val focus = change.position - (target?.second?.topLeft ?: Offset.Zero)
-            if (zoom != null && zoom.takeWheel(delta, focus, ctrl, viewer::onPageZoomed)) {
+            if (zoom != null && zoom.takeWheel(delta, event.touchpadScroll, focus, ctrl, viewer::onPageZoomed)) {
                 turns.reset()
                 continue
             }
@@ -46,20 +47,28 @@ internal fun Modifier.pagerWheel(
 }
 
 /**
- * Uses a scroll of [delta] notches over this page, at [focus] in its slot: with [ctrl] held it zooms about [focus],
- * telling [onZoomed]; otherwise it scrolls the page while it doesn't fit its slot and can move that way. Returns whether
- * the page took the scroll, which then turns no page.
+ * Uses a scroll of [delta] notches over this page, a step of [touchpad]'s scroll where it is one, at [focus] in its
+ * slot: with [ctrl] held it zooms about [focus], telling [onZoomed]; otherwise it scrolls the page while it doesn't fit
+ * its slot and can move that way, by a share of the slot a wheel's notch and as far as content scrolls under a
+ * touchpad. Returns whether the page took the scroll, which then turns no page.
  */
-internal fun PagerPageZoom.takeWheel(delta: Offset, focus: Offset, ctrl: Boolean, onZoomed: () -> Unit): Boolean {
+internal fun PagerPageZoom.takeWheel(
+    delta: Offset,
+    touchpad: TouchpadScroll?,
+    focus: Offset,
+    ctrl: Boolean,
+    onZoomed: () -> Unit,
+): Boolean {
     if (ctrl) {
-        if (delta.y == 0f) return true
+        // The fingers zoom as far as they go, not on with the glide they leave
+        if (delta.y == 0f || touchpad?.fingersMoving == false) return true
         zoomBy(ZOOM_STEP.pow(-delta.y), focus)
         onZoomed()
         return true
     }
     val step = minOf(slotSize.width, slotSize.height) * PAN_SHARE
-    val pan = Offset(-delta.x * step, -delta.y * step)
-    if (!canPan(pan)) return false
+    val pan = touchpad?.let { -it.distance } ?: Offset(-delta.x * step, -delta.y * step)
+    if (pan == Offset.Zero || !canPan(pan)) return false
     panBy(pan)
     return true
 }
@@ -84,6 +93,6 @@ private fun PagedViewer.turnBy(notches: Offset): Offset {
     return if (vertical) Offset(0f, whole.toFloat()) else Offset(whole.toFloat(), 0f)
 }
 
-// The share of the slot's shorter side a notch scrolls a page that doesn't fit
+// The share of the slot's shorter side a wheel's notch scrolls a page that doesn't fit
 private const val PAN_SHARE = 0.15f
 private const val ZOOM_STEP = 1.1f
