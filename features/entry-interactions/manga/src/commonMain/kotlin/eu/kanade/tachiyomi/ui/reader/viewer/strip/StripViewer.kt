@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
 import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadItemAtAnchor
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
+import eu.kanade.tachiyomi.ui.reader.viewer.key
 import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
 import eu.kanade.tachiyomi.ui.reader.viewer.page.pageWebViewAction
@@ -58,9 +59,8 @@ internal class StripViewer(
     var items by mutableStateOf<List<ReaderViewerItem>>(emptyList())
         private set
 
-    /** Replaced once, when the first chapter is set, by one that starts at the page reading starts from. */
-    var listState by mutableStateOf(newListState(0))
-        private set
+    /** Moved once, when the first chapter is set, to the page reading starts from. */
+    val listState = LazyListState()
 
     val zoom = StripZoom()
 
@@ -105,7 +105,10 @@ internal class StripViewer(
         val pages = chapters.current.pages ?: return
         laidOut = true
         val start = items.indexOf(ReaderViewerItem.Page(pages[min(chapters.current.requestedPage, pages.lastIndex)]))
-        listState = newListState(start.coerceAtLeast(0))
+        // Moved along with the slots rather than replaced by a state that starts there: a new state reaches the list
+        // only when Content recomposes, and a layout can come first (Android lays out between frames for content
+        // capture and accessibility), which would lay the old state out at the chapter's top and read it there
+        listState.requestScrollToItem(start.coerceAtLeast(0))
     }
 
     override fun moveToPage(page: ReaderPage) {
@@ -120,6 +123,9 @@ internal class StripViewer(
     /** Called by Content each time the strip lays out, to follow the page reached and load chapters it nears. */
     internal fun onLayout(info: LazyListLayoutInfo) {
         if (info.visibleItemsInfo.isEmpty()) return
+        // A layout of the slots as they were before they last changed, as when a chapter's pages were just put in
+        // front, would read other slots at its positions; the layout of the new slots follows
+        if (info.visibleItemsInfo.any { items.getOrNull(it.index)?.key != it.key }) return
         val reached = info.lastItemEndingOnScreen()?.let { items.getOrNull(it) }
         loadChapterNearAnchor(info, reached)
         if (reached != null && reached != currentItem) {
@@ -147,8 +153,8 @@ internal class StripViewer(
             centeredItem = centred?.let { items.getOrNull(it.index) },
             firstVisibleItem = items.getOrNull(info.visibleItemsInfo.first().index),
             lastVisibleItem = reached,
-            canScrollBackward = listState.canScrollBackward,
-            canScrollForward = listState.canScrollForward,
+            canScrollBackward = info.canScrollBackward,
+            canScrollForward = info.canScrollForward,
         )
         if (anchor == anchoredItem) return
         anchoredItem = anchor
@@ -308,7 +314,12 @@ private fun LazyListLayoutInfo.lastItemEndingOnScreen(): Int? = visibleItemsInfo
     it.offset + it.size <= viewportEndOffset || it.offset < viewportStartOffset
 }?.index
 
-private fun newListState(firstItem: Int) = LazyListState(firstVisibleItemIndex = firstItem)
+// Of this layout rather than the list's latest, which may have moved on before the layout is read
+private val LazyListLayoutInfo.canScrollBackward: Boolean
+    get() = visibleItemsInfo.first().let { it.index > 0 || it.offset < viewportStartOffset }
+
+private val LazyListLayoutInfo.canScrollForward: Boolean
+    get() = visibleItemsInfo.last().let { it.index < totalItemsCount - 1 || it.offset + it.size > viewportEndOffset }
 
 private const val SCREEN_SCROLL_SHARE = 0.75f
 private const val NANOS_PER_SECOND = 1_000_000_000.0
