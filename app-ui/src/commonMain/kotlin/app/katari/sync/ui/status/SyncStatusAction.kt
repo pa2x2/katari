@@ -1,6 +1,9 @@
 package app.katari.sync.ui.status
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import app.katari.icons.custommaterialsymbols.CustomMaterialSymbols
 import app.katari.icons.custommaterialsymbols.rounded.CloudSyncArrows
 import app.katari.icons.materialsymbols.MaterialSymbols
@@ -14,20 +17,37 @@ import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Spin
 import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.theme.ContentTone
+import app.katari.sync.ui.SyncUiGraph
+import app.katari.ui.di.LocalAppUiGraph
+import kotlinx.coroutines.launch
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Sync's status icon (D028, D055), in an app bar or at the foot of the side dock wherever the home destinations place it
  * ([eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction]): a cloud whose arrows turn while it syncs, so it
  * doesn't read as library update's refresh beside it; a count while changes wait to be sent, a warning when it needs the
- * person, a check mark when up to date. It opens the Sync page. A standalone device shows none: there the Sync row in
- * More is sync's only trace (D028).
+ * person, a check mark when up to date. It opens the Sync page, and a long press syncs at once, as the page's Sync now
+ * does, wherever the icon shows. A standalone device shows none: there the Sync row in More is sync's only trace (D028).
  */
 @Composable
-fun rememberSyncStatusAction(onClick: () -> Unit): AppBar.Action? {
+fun rememberSyncStatusAction(graph: SyncUiGraph = LocalAppUiGraph.current, onClick: () -> Unit): AppBar.Action? {
+    val status = rememberSyncStatus(graph)
     val headline = rememberSyncHeadline() ?: return null
     if (headline == SyncHeadline.NotSetUp) return null
     val title = syncHeadlineText(headline)
-    return when {
+    val scope = rememberCoroutineScope()
+    val current by rememberUpdatedState(status)
+    // Kept while syncing is on, so the run a press starts doesn't take the long press from under the finger; a press
+    // while a run can't start, such as during one, does nothing, as the page's Sync now is disabled then
+    val syncNow = AppBar.LongPress(stringResource(MR.strings.sync_action_sync_now)) {
+        if (current?.canSyncNow == true) scope.launch { graph.syncAccount.syncNow() }
+    }
+    return statusAction(headline, title, onClick).copy(longPress = syncNow.takeIf { status?.isOn == true })
+}
+
+private fun statusAction(headline: SyncHeadline, title: String, onClick: () -> Unit): AppBar.Action =
+    when {
         headline.needsAttention -> AppBar.Action(
             title = title,
             icon = MaterialSymbols.Rounded.SyncProblem,
@@ -57,4 +77,3 @@ fun rememberSyncStatusAction(onClick: () -> Unit): AppBar.Action? {
             AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudOff, onClick = onClick)
         else -> AppBar.Action(title = title, icon = MaterialSymbols.Rounded.CloudDone, onClick = onClick)
     }
-}

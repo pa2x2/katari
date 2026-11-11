@@ -72,10 +72,13 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
     }
 }
 
-/** [action] as an icon button with a tooltip naming it and its shortcut, wherever it shows: an app bar or the dock. */
+/**
+ * [action] as an icon button with a tooltip naming it and its shortcut, wherever it shows: an app bar or the dock. An
+ * action with a long press of its own shows the tooltip only on hover, since a touch long press would show it too.
+ */
 @Composable
 internal fun ActionButton(action: AppBar.Action) {
-    Tooltip(action.title, shortcut = action.shortcut) {
+    val button: @Composable () -> Unit = {
         IconButton(
             icon = action.icon,
             contentDescription = action.title,
@@ -83,10 +86,14 @@ internal fun ActionButton(action: AppBar.Action) {
             tone = action.tone,
             enabled = action.enabled,
             badgeCount = action.badgeCount,
+            shortcut = action.shortcut,
             spin = action.spin,
             arrows = action.arrows,
+            onLongClick = action.longPress?.onLongClick,
+            onLongClickLabel = action.longPress?.label,
         )
     }
+    if (action.longPress != null) button() else Tooltip(action.title, shortcut = action.shortcut, content = button)
 }
 
 /**
@@ -112,7 +119,14 @@ sealed interface AppBar {
         /** A dropdown anchored to this action's button; the caller owns its expanded state. */
         val menu: (@Composable () -> Unit)? = null,
         val shortcut: KeyboardShortcut? = null,
+        val longPress: LongPress? = null,
     ) : AppBarAction
+
+    /**
+     * What a long press of an [Action]'s button does besides its tap, such as sync's status icon syncing at once;
+     * [label] names it to accessibility services.
+     */
+    data class LongPress(val label: String, val onLongClick: () -> Unit)
 
     /**
      * An action in the app bar's overflow menu. Consecutive actions with the same [group] sit together, and a break
