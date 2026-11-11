@@ -137,3 +137,99 @@ jobs:
         with:
           name: desktop-release-${{ github.sha }}
           path: desktop/build/appimage/*.AppImage
+
+  # The image is otherwise only built when a server release is published, so a base image that breaks it, as one
+  # without the health check's tools would, has to show here.
+  sync_server_image:
+    name: Sync server image
+    runs-on: 'ubuntu-26.04'
+    env:
+      IMAGE: katari-sync-server:check
+      CONTAINER: katari-sync-server-check
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Gradle
+        uses: ./.github/actions/setup-gradle
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Build the server
+        run: ./gradlew :features:sync:server:installDist
+
+      # The runner's own architecture: the image's one RUN step is the same for both, and the published image uses the
+      # same multi-platform base.
+      - name: Build the image
+        run: docker build -t "$IMAGE" -f features/sync/server/Dockerfile features/sync/server/build/install/katari-sync-server
+
+      # The server's tests run on the pinned runtime, so they only cover the image while it ships that one.
+      - name: Check the image's Java is the server's pinned runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pinned="$(sed -n 's/^sync-server-runtime = "\(.*\)"$/\1/p' gradle/katari.versions.toml)"
+          shipped="$(docker image inspect --format '{{range .Config.Env}}{{println .}}{{end}}' "$IMAGE" \
+            | sed -n 's/^JAVA_VERSION=jdk-//p')"
+          if [[ -z "$pinned" || "$shipped" != "$pinned" ]]; then
+            echo "::error::The image ships Java ${shipped:-of no known version}, but sync-server-runtime in gradle/katari.versions.toml pins ${pinned:-nothing}. Move the pin and its SHA-256 sums to the image's Java."
+            exit 1
+          fi
+          echo "The image ships the pinned Java $pinned"
+
+      - name: Start the image and wait until it is healthy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker run -d --name "$CONTAINER" "$IMAGE"
+          deadline=$((SECONDS + 120))
+          while true; do
+            state="$(docker inspect --format '{{.State.Status}} {{.State.Health.Status}}' "$CONTAINER")"
+            case "$state" in
+              "running healthy") break ;;
+              "running starting") ;;
+              *) echo "::error::The container is $state, not healthy"; exit 1 ;;
+            esac
+            if (( SECONDS > deadline )); then
+              echo "::error::The container was still starting after 120 seconds"
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Healthy after ${SECONDS}s"
+
+      # Recovery opens the database beside the serving server, as an admin locked out of a running server would.
+      - name: Run the recovery command
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          status=0
+          output="$(docker exec "$CONTAINER" katari-sync-server reset-password image-check 2>&1)" || status=$?
+          echo "$output"
+          if [[ "$status" != 2 || "$output" != "No account is named image-check" ]]; then
+            echo "::error::The recovery command exited $status instead of reporting the missing account alone"
+            exit 1
+          fi
+
+      # The JVM's warnings, such as code it will stop allowing, are the first sign of a runtime the server won't run on.
+      - name: Check the server logged no warnings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if docker logs "$CONTAINER" 2>&1 | grep 'WARNING'; then
+            echo "::error::The server logged warnings"
+            exit 1
+          fi
+
+      - name: Show the container
+        if: always()
+        shell: bash
+        run: |
+          docker inspect --format '{{json .State.Health}}' "$CONTAINER" || true
+          docker logs "$CONTAINER" || true
+          docker rm -f "$CONTAINER" || true
