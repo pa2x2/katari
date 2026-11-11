@@ -16,6 +16,7 @@ import app.katari.entry.interactions.book.document.reader.settings.setBookTextSi
 import app.katari.entry.interactions.reader.settings.BookDocumentReaderSettings
 import app.katari.entry.viewer.settings.ViewerSettingBinding
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.pointer.isFingerOrWheelScroll
 import app.katari.presentation.kit.surface.OverlayPill
 import app.katari.presentation.kit.surface.OverlayStyle
 import app.katari.presentation.kit.theme.KatariTheme
@@ -87,6 +88,8 @@ internal fun Modifier.textSizeWheel(zoom: BookDocumentTextSizeZoom): Modifier = 
             }
             val change = event.changes.firstOrNull() ?: continue
             change.consume()
+            // The fingers step the size as far as they go, not on with the glide they leave
+            if (!event.isFingerOrWheelScroll) continue
             // A touchpad scrolls in fractions of a notch; whole ones make a step, the wheel turned away grows the text
             notches -= change.scrollDelta.y
             val whole = notches.toInt()

@@ -24,11 +24,16 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isCtrlPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import app.katari.presentation.kit.pointer.TouchpadPinch
+import app.katari.presentation.kit.pointer.isFingerOrWheelScroll
+import app.katari.presentation.kit.pointer.touchpadPinch
+import app.katari.presentation.kit.pointer.touchpadScroll
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
@@ -37,9 +42,9 @@ import coil3.size.Size as ImageSize
 
 /**
  * The image [model] names, fitted inside [contentPadding], that zooms in and out around the pointer with the mouse
- * wheel or a pinch and in or back out with a double click or tap, and pans with a drag while zoomed. At its fitted
- * size a drag is left to the container, such as a pager. A single click or tap calls [onClick]. The image loads at its
- * full size, so it stays sharp zoomed in.
+ * wheel or a pinch and in or back out with a double click or tap, and pans with a drag or a touchpad's swipe while
+ * zoomed. At its fitted size a drag or a swipe is left to the container, such as a pager. A single click or tap calls
+ * [onClick]. The image loads at its full size, so it stays sharp zoomed in.
  */
 @Composable
 fun ZoomableImage(
@@ -63,12 +68,23 @@ fun ZoomableImage(
         modifier = modifier
             .fillMaxSize()
             .onSizeChanged { zoom.size = it }
+            .touchpadPinch { pinch, pointer -> zoom.pinch(pinch, pointer) }
             .pointerInput(zoom) {
                 awaitPointerEventScope {
                     while (true) {
                         val event = awaitPointerEvent()
                         if (event.type != PointerEventType.Scroll) continue
                         val change = event.changes.first()
+                        val touchpad = event.touchpadScroll
+                        if (touchpad != null && !event.keyboardModifiers.isCtrlPressed) {
+                            // Fingers move a zoomed image as they would a page; at its fitted size, the container
+                            if (zoom.scale > 1f) {
+                                zoom.panBy(-touchpad.distance)
+                                change.consume()
+                            }
+                            continue
+                        }
+                        if (!event.isFingerOrWheelScroll) continue
                         // A wheel notch scrolls by 1, a touchpad by fractions of it
                         zoom.zoomTo(zoom.scale * WHEEL_ZOOM_PER_NOTCH.pow(-change.scrollDelta.y), change.position)
                         change.consume()
@@ -150,6 +166,26 @@ private class ZoomState {
 
     fun panBy(pan: Offset) {
         offset = clamped(offset + pan, scale)
+    }
+
+    // The scale and the pan a touchpad pinch under way started from, as its steps are counted from its start
+    private var pinchFrom = 1f
+    private var pinchPan = Offset.Zero
+
+    /** Follows a step of a touchpad [pinch], zooming about [pointer] and moving with the fingers as they slide. */
+    fun pinch(pinch: TouchpadPinch, pointer: Offset) {
+        when (pinch) {
+            TouchpadPinch.Start -> {
+                pinchFrom = scale
+                pinchPan = Offset.Zero
+            }
+            is TouchpadPinch.Move -> {
+                zoomTo(pinchFrom * pinch.scale, pointer)
+                panBy(pinch.pan - pinchPan)
+                pinchPan = pinch.pan
+            }
+            TouchpadPinch.End -> Unit
+        }
     }
 
     fun reset() {

@@ -2,6 +2,7 @@ package app.katari.presentation.kit.pager
 
 import androidx.compose.ui.geometry.Offset
 import app.katari.presentation.kit.pointer.TouchpadScroll
+import app.katari.presentation.kit.pointer.TouchpadScrollStage
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
@@ -45,9 +46,11 @@ class WheelTurnsTest {
     @Test
     fun `a touchpad's swipe turns one page whatever follows it, and the next swipe the next, even into its glide`() {
         fun fingers(swipe: Int, steps: Int, notches: Float = 0.6f) =
-            repeat(steps) { scroll(8, notches, TouchpadScroll(swipe, gliding = false)) }
+            repeat(steps) { scroll(8, notches, TouchpadScroll(swipe, TouchpadScrollStage.Fingers, Offset.Zero)) }
 
-        fun glide(swipe: Int) = repeat(25) { scroll(8, notches = 0.3f, TouchpadScroll(swipe, gliding = true)) }
+        fun glide(swipe: Int) = repeat(25) {
+            scroll(8, notches = 0.3f, TouchpadScroll(swipe, TouchpadScrollStage.Gliding, Offset.Zero))
+        }
 
         fingers(swipe = 1, steps = 5)
         glide(swipe = 1)

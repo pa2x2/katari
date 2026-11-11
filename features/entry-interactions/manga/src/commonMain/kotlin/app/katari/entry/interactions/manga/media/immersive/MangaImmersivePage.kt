@@ -30,6 +30,7 @@ import app.katari.entry.interactions.manga.reader.image.tiles.TiledPageImage
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadOverlay
 import app.katari.entry.viewer.chrome.ui.loading.ReaderMediaLoadState
 import app.katari.entry.viewer.chrome.ui.loading.nextTitleSkip
+import app.katari.presentation.kit.pointer.touchpadScroll
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
@@ -105,7 +106,10 @@ internal fun MangaImmersivePage(
                         if (event.type != PointerEventType.Scroll) continue
                         val change = event.changes.firstOrNull() ?: continue
                         val ctrl = event.keyboardModifiers.isCtrlPressed
-                        if (zoom.takeWheel(change.scrollDelta, change.position, ctrl, onZoomed = {})) change.consume()
+                        val touchpad = event.touchpadScroll
+                        if (zoom.takeWheel(change.scrollDelta, touchpad, change.position, ctrl, onZoomed = {})) {
+                            change.consume()
+                        }
                     }
                 }
             }

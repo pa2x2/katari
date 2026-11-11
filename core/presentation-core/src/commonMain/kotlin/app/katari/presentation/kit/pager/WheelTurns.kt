@@ -46,7 +46,7 @@ class WheelTurns {
         touchpad: TouchpadScroll?,
         turn: (notches: Offset) -> Offset,
     ) {
-        if (touchpad?.gliding == true) return
+        if (touchpad?.fingersMoving == false) return
         val gap = lastStepAt?.let { uptimeMillis - it }
         lastStepAt = uptimeMillis
         when {
