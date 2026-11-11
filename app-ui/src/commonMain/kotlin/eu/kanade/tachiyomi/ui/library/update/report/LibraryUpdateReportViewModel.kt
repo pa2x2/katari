@@ -155,9 +155,10 @@ class LibraryUpdateReportViewModel(
      */
     private suspend fun newChaptersOf(items: List<LibraryUpdateReport.Item>): Map<Long, List<EntryChapter>> {
         val decidedAt = items.associate { it.entry.id to it.status.decidedAt }
-        return entryChapterRepository.getChaptersByEntryIdsAwait(decidedAt.keys)
-            .filter { chapter -> decidedAt[chapter.entryId]?.let { chapter.dateFetch >= it } == true }
-            .sortedBy { it.sourceOrder }
+        val since = decidedAt.values.minOrNull() ?: return emptyMap()
+        // A partial update folded into the report decided about its entries later than the run it joined
+        return entryChapterRepository.getChaptersFetchedSince(decidedAt.keys, since)
+            .filter { chapter -> chapter.dateFetch >= decidedAt.getValue(chapter.entryId) }
             .groupBy { it.entryId }
     }
 

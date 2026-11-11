@@ -2,7 +2,7 @@ package tachiyomi.domain.library.update.model
 
 data class LibraryUpdateRun(
     val startedAt: Long,
-    /** Null while the update runs, or when it was stopped before finishing. */
+    /** Null while the update runs, or when the app quit before the update ended. */
     val finishedAt: Long?,
     val trigger: LibraryUpdateTrigger,
     val librarySize: Int,
