@@ -1144,9 +1144,14 @@
     <string name="library_update_pause_pick">Pick a date and time…</string>
     <string name="library_update_pause_until_title">Pause until</string>
     <string name="library_update_report_retry">Retry</string>
+    <string name="library_update_report_retry_all">Retry all</string>
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
     <string name="library_update_report_with_rechecked">%s · rechecked</string>
+    <string name="library_update_report_took">took %s</string>
+    <string name="library_update_report_checked_of">%1$d of %2$d checked</string>
+    <string name="library_update_report_checking">Checking %1$d of %2$d</string>
+    <string name="library_update_report_checking_now">Now: %s</string>
     <string name="library_update_on_device">%1$s on %2$s</string>
     <string name="library_update_on_other_device">%s on another device</string>
     <string name="library_update_report_from_device">Updated on %s. Each entry\'s result stays on that device.</string>
@@ -2494,6 +2499,7 @@
     <!-- Updates -->
     <string name="updating_library">Updating library</string>
     <string name="update_already_running">An update is already running</string>
+    <string name="library_update_view_running">View</string>
     <string name="library_update_queued">Update queued. It starts when %s\'s update finishes.</string>
     <string name="library_update_waiting">Waiting for %s\'s update</string>
     <string name="library_update_progress">%1$s · %2$d / %3$d</string>

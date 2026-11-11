@@ -9,4 +9,8 @@ data class LibraryUpdateProgress(
     val total: Int,
     /** Entries in scope that the skip rules left out. */
     val skipped: Int,
+    /** When the update started; the update report records this update's results under it. */
+    val startedAt: Long,
+    /** Titles of the entries being checked now. */
+    val checking: List<String>,
 )

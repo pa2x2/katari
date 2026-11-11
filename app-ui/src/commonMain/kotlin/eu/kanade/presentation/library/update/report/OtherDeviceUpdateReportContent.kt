@@ -49,7 +49,7 @@ fun OtherDeviceUpdateReportContent(
             }
         }
         item(key = "header") {
-            ReportRunNote(summary.run)
+            ReportRunNote(summary.run, summary.checked)
         }
         item(key = "device") {
             val deviceName = report.update.deviceName

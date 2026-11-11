@@ -68,6 +68,7 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.HideHomeNavigation
 import eu.kanade.tachiyomi.ui.home.navigation.rememberBarSyncAction
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -116,7 +117,10 @@ data object LibraryTab : Tab {
         var showMissingExtensions by rememberSaveable { mutableStateOf(false) }
 
         // A started update also reports its progress on the library's progress strip.
-        val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
+        val updateStarter = rememberReportingLibraryUpdateStarter(
+            snackbarHostState,
+            onViewRunning = { navigator.push(LibraryUpdateReportScreen()) },
+        ) {
             updateQueue.startSkippedOfLatest()
         }
 

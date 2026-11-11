@@ -22,8 +22,8 @@ interface LibraryUpdateNotifications {
      */
     suspend fun showQueueSizeWarningIfNeeded(profileId: Long, items: List<LibraryItem>, rulesProfileId: Long?)
 
-    /** Called from several update coroutines at once. [entries] are the ones being checked. */
-    suspend fun showProgress(profileId: Long, entries: List<Entry>, progress: LibraryUpdateProgress)
+    /** Called from several update coroutines at once. */
+    suspend fun showProgress(profileId: Long, progress: LibraryUpdateProgress)
 
     /** [nextProfileId] is the profile whose update starts after this one, or null when none waits. */
     suspend fun showNextInQueue(profileId: Long, nextProfileId: Long?)

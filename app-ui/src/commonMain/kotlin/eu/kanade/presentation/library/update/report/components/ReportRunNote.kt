@@ -2,21 +2,34 @@ package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.runtime.Composable
 import app.katari.presentation.kit.list.RowGroupNote
+import eu.kanade.presentation.more.stats.components.StatisticsDurationPrecision
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.relativeTimeSpanString
 import tachiyomi.domain.library.update.model.LibraryUpdateRun
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** "2 hours ago · Automatic · 412 entries considered", heading a report. */
+/**
+ * "2 days ago · took 3 min · Automatic · 30 of 412 checked", heading a report; "Running now · …" while the update
+ * runs. [checked] counts the entries the update checked out of all it considered.
+ */
 @Composable
-internal fun ReportRunNote(run: LibraryUpdateRun) {
+internal fun ReportRunNote(run: LibraryUpdateRun, checked: Int) {
+    val formatDuration = rememberStatisticsDurationFormatter(StatisticsDurationPrecision.SECONDS)
+    val finishedAt = run.finishedAt
     RowGroupNote(
-        text = listOf(
-            relativeTimeSpanString(run.startedAt),
+        text = listOfNotNull(
+            if (finishedAt != null) {
+                relativeTimeSpanString(finishedAt)
+            } else {
+                stringResource(MR.strings.library_updates_running)
+            },
+            finishedAt?.let {
+                stringResource(MR.strings.library_update_report_took, formatDuration(it - run.startedAt))
+            },
             stringResource(run.trigger.labelRes),
-            pluralStringResource(MR.plurals.library_update_report_considered, run.librarySize, run.librarySize),
+            stringResource(MR.strings.library_update_report_checked_of, checked, run.librarySize),
         )
             .joinToString(" · "),
     )

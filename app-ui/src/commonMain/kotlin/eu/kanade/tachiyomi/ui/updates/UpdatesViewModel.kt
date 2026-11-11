@@ -39,11 +39,11 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.TranslatableChapter
+import eu.kanade.presentation.updates.UpdatesLibraryUpdateStatus
 import eu.kanade.presentation.updates.UpdatesSelectionState
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.toUpdatesUiModels
@@ -53,6 +53,7 @@ import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSetupHost
+import eu.kanade.tachiyomi.ui.library.update.activeProfileState
 import eu.kanade.tachiyomi.ui.library.update.report.NewerOtherDeviceUpdate
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
@@ -66,6 +67,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.merge
@@ -93,9 +95,12 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.update.model.LibraryUpdateResultsSoFar
 import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
 import tachiyomi.domain.library.update.model.LibraryUpdateStart
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.domain.library.update.model.subscribeLatestSummary
+import tachiyomi.domain.library.update.model.subscribeResultsSince
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -181,21 +186,78 @@ class UpdatesViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    val lastUpdated by libraryPreferences.lastUpdatedTimestamp.asState(viewModelScope)
-
-    val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
+    // Each source starts from a value of its own, so the header shows even while one of them, such as another device's
+    // update over sync, hasn't answered yet.
+    private val libraryUpdate: StateFlow<LibraryUpdateState?> = libraryUpdateQueue.activeProfileState(
+        activeProfileProvider,
+    )
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val otherDeviceUpdate: StateFlow<OtherDeviceLibraryUpdate?> = newerOtherDeviceUpdate.subscribe()
+    private val resultsSoFar: StateFlow<LibraryUpdateResultsSoFar?> = libraryUpdate
+        .map { (it as? LibraryUpdateState.Running)?.progress?.startedAt }
+        .distinctUntilChanged()
+        .flatMapLatest { startedAt -> startedAt?.let(reportRepository::subscribeResultsSince) ?: flowOf(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
+    private val lastUpdated: StateFlow<Long> = combine(
+        libraryPreferences.lastUpdateFinishedAt.changes(),
+        libraryPreferences.lastUpdatedTimestamp.changes(),
+        ::lastUpdatedAt,
+    )
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            lastUpdatedAt(libraryPreferences.lastUpdateFinishedAt.get(), libraryPreferences.lastUpdatedTimestamp.get()),
+        )
+
+    private val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val otherDeviceUpdate: StateFlow<OtherDeviceLibraryUpdate?> = newerOtherDeviceUpdate.subscribe()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    private val pausedSourceNames: StateFlow<List<String>> = PausedLibrarySources(
         sourcePauses = LibrarySourcePauses(libraryPreferences),
         sourceRepository = sourceRepository,
         sourceManager = sourceManager,
     )
         .subscribe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val libraryUpdateStatus: StateFlow<UpdatesLibraryUpdateStatus> = combine(
+        libraryUpdate,
+        resultsSoFar,
+        lastUpdated,
+        combine(latestUpdateSummary, otherDeviceUpdate, ::Pair),
+        pausedSourceNames,
+    ) { update, results, updatedAt, (latest, otherDevice), pausedSources ->
+        UpdatesLibraryUpdateStatus(
+            update = update,
+            resultsSoFar = results,
+            lastUpdated = updatedAt,
+            failed = latest?.failed ?: 0,
+            otherDevice = otherDevice,
+            pausedSources = pausedSources,
+            hasReport = latest != null || otherDevice != null,
+        )
+    }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            UpdatesLibraryUpdateStatus(
+                update = null,
+                resultsSoFar = null,
+                lastUpdated = lastUpdated.value,
+                failed = 0,
+                otherDevice = null,
+                pausedSources = emptyList(),
+                hasReport = false,
+            ),
+        )
+
+    fun cancelLibraryUpdate() {
+        viewModelScope.launchIO { libraryUpdateQueue.stop() }
+    }
 
     private val selectionState = UpdatesSelectionState()
     private val selectedKeys: HashSet<LibraryItemKey> = HashSet()
@@ -783,3 +845,6 @@ private fun UpdateItem.EntryUpdate.consumptionStatus(): EntryConsumptionStatus {
 private fun UpdateItem.EntryUpdate.bookmarkStatus(): EntryBookmarkStatus {
     return EntryBookmarkStatus(bookmarked = update.bookmark)
 }
+
+// Updates written before the end of an update was recorded only know when they started.
+private fun lastUpdatedAt(finishedAt: Long, startedAt: Long): Long = finishedAt.takeIf { it > 0 } ?: startedAt

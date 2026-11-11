@@ -131,12 +131,11 @@ class LibraryUpdateRun(
             )
         }
         updateScopeName = (request as? LibraryUpdateRequest.FollowRules)?.let { scopeName(it) }
+        startedAt = Clock.System.now().toEpochMilliseconds()
+        libraryPreferences.lastUpdatedTimestamp.set(startedAt)
         publishProgress(completed = 0)
 
         onScoped()
-
-        startedAt = Clock.System.now().toEpochMilliseconds()
-        libraryPreferences.lastUpdatedTimestamp.set(startedAt)
 
         withIOContext {
             val nextInQueueNotification = launch {
@@ -153,7 +152,9 @@ class LibraryUpdateRun(
             } finally {
                 nextInQueueNotification.cancel()
                 withNonCancellableContext {
-                    reportRepository.finishRun(profileId, startedAt, Clock.System.now().toEpochMilliseconds())
+                    val finishedAt = Clock.System.now().toEpochMilliseconds()
+                    reportRepository.finishRun(profileId, startedAt, finishedAt)
+                    libraryPreferences.lastUpdateFinishedAt.set(finishedAt)
                 }
                 input.selectionName?.let(selectionFile::delete)
                 notifications.cancelProgress()
@@ -436,6 +437,7 @@ class LibraryUpdateRun(
         }
     }
 
+    /** Shows [entry] among the ones being checked while [block] checks it, and counts it as done afterwards. */
     private suspend fun withUpdateNotification(
         updatingEntry: CopyOnWriteArrayList<Entry>,
         completed: AtomicInt,
@@ -445,27 +447,32 @@ class LibraryUpdateRun(
         ensureActive()
 
         updatingEntry.add(entry)
-        notifications.showProgress(profileId, updatingEntry, progress(completed.load()))
+        showProgress(progress(completed.load(), updatingEntry))
 
         block()
 
         ensureActive()
 
         updatingEntry.remove(entry)
-        val completedCount = completed.incrementAndFetch()
-        notifications.showProgress(profileId, updatingEntry, progress(completedCount))
-        publishProgress(completedCount)
+        showProgress(progress(completed.incrementAndFetch(), updatingEntry))
     }
 
-    private fun progress(completed: Int) = LibraryUpdateProgress(
+    private suspend fun showProgress(progress: LibraryUpdateProgress) {
+        notifications.showProgress(profileId, progress)
+        onProgress(progress)
+    }
+
+    private suspend fun publishProgress(completed: Int) {
+        onProgress(progress(completed, checking = emptyList()))
+    }
+
+    private fun progress(completed: Int, checking: List<Entry>) = LibraryUpdateProgress(
         scope = updateScope,
         scopeName = updateScopeName,
         completed = completed,
         total = entriesToUpdate.size,
         skipped = skippedCount,
+        startedAt = startedAt,
+        checking = checking.map { it.title },
     )
-
-    private suspend fun publishProgress(completed: Int) {
-        onProgress(progress(completed))
-    }
 }

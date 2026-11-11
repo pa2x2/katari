@@ -12,7 +12,9 @@ import tachiyomi.domain.library.update.model.LibraryUpdateRun
  * Entries a later update of part of the library decided about again show that update's result.
  *
  * Failures that keep happening are separated from one-off ones because they need a fix rather than a retry. When most
- * of one source's checks failed with the same error, they are one problem with the source and are listed once.
+ * of one source's checks failed with the same error, they are one problem with the source and are listed once. When
+ * one error is behind most of the failures across several sources, such as the device being offline, the cause lies
+ * outside the sources, and those failures are listed once as the [sharedFailure].
  *
  * Entries left out because their source was paused are listed by source, so each source can be resumed from the report.
  * Entries of a still paused source that were checked after the run stay with it, so checking whether a source is back
@@ -20,6 +22,8 @@ import tachiyomi.domain.library.update.model.LibraryUpdateRun
  */
 data class LibraryUpdateReport(
     val run: LibraryUpdateRun,
+    /** Its entries are listed nowhere else. */
+    val sharedFailure: SharedFailure?,
     val failingSources: List<FailingSource>,
     val failingRepeatedly: List<Item>,
     val failed: List<Item>,
@@ -29,6 +33,8 @@ data class LibraryUpdateReport(
     val notChecked: Map<EntryUpdateDecisionReason, List<Item>>,
     /** Their entries are listed nowhere else. */
     val pausedSources: List<PausedSource>,
+    /** Entries the update checked, whatever came of it. */
+    val checked: Int,
 ) {
     val skippedCount: Int
         get() = skipped.values.sumOf { it.size }
@@ -40,6 +46,9 @@ data class LibraryUpdateReport(
         val isFailingRepeatedly: Boolean
             get() = items.all { it.status.isFailingRepeatedly }
     }
+
+    /** Failures of entries on [sources] different sources that all ended with [error]. */
+    data class SharedFailure(val error: String, val sources: Int, val items: List<Item>)
 
     data class PausedSource(val sourceId: Long, val items: List<Item>) {
         /** The entries checked after the run, such as by checking the source while it stays paused. */
@@ -60,12 +69,13 @@ data class LibraryUpdateReport(
             entries: Map<Long, Entry>,
             pausedSourceIds: Set<Long>,
         ): LibraryUpdateReport {
-            val (pausedItems, items) = statuses
+            val allItems = statuses
                 .filter { it.decidedAt >= run.startedAt }
                 .mapNotNull { status ->
                     entries[status.entryId]?.let { Item(it, status, isRechecked = status.decidedAt > run.startedAt) }
                 }
                 .sortedBy { it.entry.title.lowercase() }
+            val (pausedItems, items) = allItems
                 .partition { item ->
                     item.status.reason == EntryUpdateDecisionReason.SOURCE_OFF ||
                         (
@@ -80,22 +90,27 @@ data class LibraryUpdateReport(
                 .filter { it.status.outcome in CHECKED_OUTCOMES }
                 .groupingBy { it.entry.source }
                 .eachCount()
-            val failingSources = byOutcome[EntryUpdateOutcome.FAILED].orEmpty()
+            val allFailed = byOutcome[EntryUpdateOutcome.FAILED].orEmpty()
+            val sharedFailure = sharedFailureOf(allFailed)
+            val shared = sharedFailure?.items.orEmpty().mapTo(mutableSetOf()) { it.entry.id }
+            val failed = allFailed.filter { it.entry.id !in shared }
+            val failingSources = failed
                 .groupBy { it.entry.source to it.status.error }
                 .filter { (key, group) ->
                     group.size >= SOURCE_COLLAPSE_MINIMUM && group.size * 2 > (checkedPerSource[key.first] ?: 0)
                 }
                 .map { (key, group) -> FailingSource(sourceId = key.first, error = key.second, items = group) }
             val collapsed = failingSources.flatMap { it.items }.mapTo(mutableSetOf()) { it.entry.id }
-            val (failingRepeatedly, failed) = byOutcome[EntryUpdateOutcome.FAILED].orEmpty()
+            val (failingRepeatedly, failedOnce) = failed
                 .filter { it.entry.id !in collapsed }
                 .partition { it.status.isFailingRepeatedly }
 
             return LibraryUpdateReport(
                 run = run,
+                sharedFailure = sharedFailure,
                 failingSources = failingSources,
                 failingRepeatedly = failingRepeatedly,
-                failed = failed,
+                failed = failedOnce,
                 newChapters = byOutcome[EntryUpdateOutcome.NEW_CHAPTERS].orEmpty(),
                 noChanges = byOutcome[EntryUpdateOutcome.NO_CHANGES].orEmpty(),
                 skipped = byOutcome[EntryUpdateOutcome.SKIPPED].orEmpty().groupByReason(),
@@ -103,7 +118,19 @@ data class LibraryUpdateReport(
                 pausedSources = pausedItems
                     .groupBy { it.entry.source }
                     .map { (sourceId, group) -> PausedSource(sourceId, group) },
+                checked = allItems.count { it.status.outcome in CHECKED_OUTCOMES },
             )
+        }
+
+        private fun sharedFailureOf(failed: List<Item>): SharedFailure? {
+            val (error, items) = failed
+                .mapNotNull { item -> item.status.error?.let { it to item } }
+                .groupBy({ it.first }, { it.second })
+                .maxByOrNull { it.value.size }
+                ?: return null
+            val sources = items.distinctBy { it.entry.source }.size
+            val isShared = sources > 1 && items.size >= SOURCE_COLLAPSE_MINIMUM && items.size * 2 > failed.size
+            return SharedFailure(error, sources, items).takeIf { isShared }
         }
 
         private val CHECKED_OUTCOMES = setOf(

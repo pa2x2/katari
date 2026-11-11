@@ -58,20 +58,34 @@ class LibraryUpdateStarter internal constructor(
     }
 }
 
+/**
+ * @param onViewRunning opens the report of the update already running when one is refused for it; null where the
+ * report is open already.
+ */
 @Composable
-fun rememberLibraryUpdateStarter(snackbarHostState: SnackbarHostState): LibraryUpdateStarter =
-    rememberStarter(snackbarHostState, onStarted = {})
+fun rememberLibraryUpdateStarter(
+    snackbarHostState: SnackbarHostState,
+    onViewRunning: (() -> Unit)?,
+): LibraryUpdateStarter = rememberStarter(snackbarHostState, onStarted = {}, onViewRunning = onViewRunning)
 
-/** @param startSkippedOfLatest starts an update of the entries the latest one skipped. */
+/**
+ * @param onViewRunning opens the report of the update already running when one is refused for it.
+ * @param startSkippedOfLatest starts an update of the entries the latest one skipped.
+ */
 @Composable
 fun rememberReportingLibraryUpdateStarter(
     snackbarHostState: SnackbarHostState,
+    onViewRunning: () -> Unit,
     startSkippedOfLatest: suspend () -> LibraryUpdateStart,
 ): LibraryUpdateStarter {
     val scope = rememberCoroutineScope()
     // Only an update that began after the request counts, so an earlier run's result is never reported as this one's.
     var awaitedRequestedAt by rememberSaveable { mutableStateOf<Long?>(null) }
-    val starter = rememberStarter(snackbarHostState, onStarted = { awaitedRequestedAt = it })
+    val starter = rememberStarter(
+        snackbarHostState,
+        onStarted = { awaitedRequestedAt = it },
+        onViewRunning = onViewRunning,
+    )
     val currentStartSkippedOfLatest by rememberUpdatedState(startSkippedOfLatest)
     LibraryUpdateResultSnackbar(
         requestedAt = awaitedRequestedAt,
@@ -86,10 +100,12 @@ fun rememberReportingLibraryUpdateStarter(
 private fun rememberStarter(
     snackbarHostState: SnackbarHostState,
     onStarted: (requestedAt: Long) -> Unit,
+    onViewRunning: (() -> Unit)?,
 ): LibraryUpdateStarter {
     val context = currentPlatformContext()
     val scope = rememberCoroutineScope()
     val currentOnStarted by rememberUpdatedState(onStarted)
+    val currentOnViewRunning by rememberUpdatedState(onViewRunning)
     return remember(snackbarHostState) {
         LibraryUpdateStarter(
             onStarted = { currentOnStarted(it) },
@@ -102,7 +118,12 @@ private fun rememberStarter(
             },
             onRefused = {
                 scope.launch {
-                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))
+                    val view = currentOnViewRunning
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.stringResource(MR.strings.update_already_running),
+                        actionLabel = view?.let { context.stringResource(MR.strings.library_update_view_running) },
+                    )
+                    if (result == SnackbarResult.ActionPerformed) view?.invoke()
                 }
             },
         )

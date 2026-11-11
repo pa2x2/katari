@@ -68,6 +68,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
+import eu.kanade.tachiyomi.ui.library.update.activeProfileState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -173,8 +174,7 @@ class LibraryViewModel(
     val coverSize by libraryPreferences.coverSize.asState(viewModelScope)
 
     /** This profile's library update, whichever screen or schedule started it. */
-    val updateState: StateFlow<LibraryUpdateState?> = activeProfileProvider.activeProfileIdFlow
-        .flatMapLatest { libraryUpdateQueue.stateFlow(it) }
+    val updateState: StateFlow<LibraryUpdateState?> = libraryUpdateQueue.activeProfileState(activeProfileProvider)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
