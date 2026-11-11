@@ -14,12 +14,14 @@ internal const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 
 /**
  * Hides the controls once they have been left alone a while, playing or paused, and at once when the mouse leaves the
- * app. Nothing hides them while [controlsPinned], loading, at the episode's end, scrubbing, or under the settings, the
- * episode list or the startup overlay; a mouse resting on one of them holds off only the wait.
+ * app. Nothing hides them while [controlsPinned], after a paused start until they are next used, loading, at the
+ * episode's end, scrubbing, or under the settings, the episode list or the startup overlay; a mouse resting on one of
+ * them holds off only the wait.
  */
 @Composable
 internal fun VideoPlayerControlsAutoHide(ui: VideoPlayerWatchUiState, controlsPinned: Boolean) {
     val held = controlsPinned ||
+        ui.controlsHeldAtInteraction == ui.controllerInteractionSequence ||
         ui.playbackSnapshot.isLoading ||
         ui.playbackSnapshot.playbackEnded ||
         ui.isScrubbing ||

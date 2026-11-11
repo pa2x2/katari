@@ -45,6 +45,14 @@ internal class VideoPlayerWatchUiState(
 
     /** Bumped by every interaction with the controls, which restarts their auto-hide delay. */
     var controllerInteractionSequence by mutableStateOf(0L)
+
+    /**
+     * The [controllerInteractionSequence] a paused start showed the controls at. They stay up until the next interaction
+     * moves the sequence on, as the showcase captures them over the paused frame for longer than the auto-hide delay.
+     * Null without a paused start.
+     */
+    var controlsHeldAtInteraction by mutableStateOf<Long?>(null)
+
     var seekFeedbackState by mutableStateOf<VideoPlayerSeekFeedbackState?>(null)
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)

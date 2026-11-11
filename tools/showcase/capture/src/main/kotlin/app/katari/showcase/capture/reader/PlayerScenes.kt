@@ -23,7 +23,9 @@ import org.junit.runner.RunWith
 class PlayerScenes {
     /**
      * Sintel paused on the cliff at sunset. Neither a tap on the timeline nor a pause lands on the same frame twice, so
-     * the open player is sent the benchmark build's paused-start extra, which seeks it there exactly and pauses it.
+     * the open player is sent the benchmark build's paused-start extra, which seeks it there exactly and pauses it. The
+     * extra also keeps the controls up until they are next used, as they hide by themselves sooner than the still is
+     * taken.
      */
     @Test
     fun player() = onShot { capture("player") }
