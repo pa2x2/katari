@@ -159,7 +159,7 @@ WHERE entry_id = :entryId;
 
 -- Automatic matches are each device's own; only a pick the user made syncs.
 introTimesPickRow:
-SELECT entry_id, group_key, anilist_id, mal_id, title, year
+SELECT entry_id, group_key, anilist_id, mal_id, title, year, first_episode, episodes
 FROM intro_times_matches
 WHERE entry_id = :entryId
 AND group_key = :groupKey

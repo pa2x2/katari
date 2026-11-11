@@ -5,7 +5,6 @@ import app.katari.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
 import app.katari.entry.interactions.anime.introtimes.IntroTimesResult
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
-import app.katari.entry.interactions.anime.introtimes.aniskip.AniListSeries
 import app.katari.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
 import app.katari.entry.interactions.anime.introtimes.mergeIntroTimes
 import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
@@ -26,11 +25,12 @@ internal sealed interface VideoPlayerServiceTimes<out M> {
 }
 
 /**
- * The online intro and credits times of the playing episode. [episode] is null until the episode's scope is read, and a
- * service turned off in the settings is null.
+ * The online intro and credits times of the playing episode, whose cut is [lengthMs] long. [episode] is null until the
+ * episode's scope is read, and a service turned off in the settings is null.
  */
 internal data class VideoPlayerIntroTimesState(
     val chapterId: Long,
+    val lengthMs: Long,
     val episode: IntroTimesEpisode?,
     val aniSkip: VideoPlayerServiceTimes<IntroTimesSeries>?,
     val theIntroDb: VideoPlayerServiceTimes<TheIntroDbMedia>?,
@@ -81,7 +81,7 @@ internal class VideoPlayerIntroTimes(
     }
 
     /** Keeps [series] for the playing episode's scope on AniSkip, or None when null, and asks AniSkip again. */
-    fun pickAniSkipSeries(series: AniListSeries?) {
+    fun pickAniSkipSeries(series: IntroTimesSeries?) {
         val current = request ?: return
         val episode = mutableState.value?.episode ?: return
         launchLookup(IntroTimesService.ANISKIP, current, { copy(aniSkip = it) }) {
@@ -110,6 +110,7 @@ internal class VideoPlayerIntroTimes(
         val known = mutableState.value?.takeIf { it.chapterId == next.chapterId }?.episode
         mutableState.value = VideoPlayerIntroTimesState(
             chapterId = next.chapterId,
+            lengthMs = next.lengthMs,
             episode = known,
             aniSkip = VideoPlayerServiceTimes.Looking.takeIf { IntroTimesService.ANISKIP in next.services },
             theIntroDb = VideoPlayerServiceTimes.Looking.takeIf { IntroTimesService.THEINTRODB in next.services },

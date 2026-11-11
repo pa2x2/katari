@@ -19,9 +19,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.domain.entry.model.TheIntroDbMedia
 import kotlin.time.Duration.Companion.seconds
 
-/** An episode as TheIntroDB numbers it under the id it is asked with. */
-internal data class SeasonEpisode(val season: Int, val episode: Int)
-
 /** Asks TheIntroDB for the intro, recap, credits and preview times viewers submitted, without an account. */
 @Inject
 @SingleIn(AppScope::class)
@@ -36,23 +33,32 @@ internal class TheIntroDbTimes(networkHelper: NetworkHelper) {
      * The times for [episode] of the series [media], or for the film when [episode] is null, on a cut [lengthMs] long;
      * TheIntroDB answers for the release whose length is within 5 minutes of it. Empty when it has none.
      */
-    suspend fun fetch(media: TheIntroDbMedia, episode: SeasonEpisode?, lengthMs: Long): List<PlaybackMarker> {
+    suspend fun fetch(media: TheIntroDbMedia, episode: TheIntroDbEpisode?, lengthMs: Long): List<PlaybackMarker> {
         val url = ENDPOINT.toHttpUrl().newBuilder().apply {
             when {
                 media.tvdbId != null -> addQueryParameter("tvdb_id", media.tvdbId.toString())
                 media.tmdbId != null -> addQueryParameter("tmdb_id", media.tmdbId.toString())
                 else -> addQueryParameter("imdb_id", media.imdbId)
             }
-            if (episode != null) {
-                addQueryParameter("season", episode.season.toString())
-                addQueryParameter("episode", episode.episode.toString())
+            when (episode) {
+                is TheIntroDbEpisode.InSeason -> {
+                    addQueryParameter("season", episode.season.toString())
+                    addQueryParameter("episode", episode.episode.toString())
+                }
+                // A running number is given as an episode of season 1 in TVDB's absolute order.
+                is TheIntroDbEpisode.Running -> {
+                    addQueryParameter("season", "1")
+                    addQueryParameter("episode", episode.number.toString())
+                    addQueryParameter("mapping", "absolute")
+                }
+                null -> Unit
             }
             addQueryParameter("duration_ms", lengthMs.toString())
         }.build()
         return client.newCall(GET(url)).await().use { response ->
             when (response.code) {
                 // 404: nothing submitted for the episode yet, or TheIntroDB doesn't know it. 400: the series has no
-                // such season or episode, as when a picked season runs shorter than the source's numbering.
+                // such season or episode, or TVDB doesn't number it in the order asked.
                 HTTP_NOT_FOUND, HTTP_BAD_REQUEST -> emptyList()
                 else -> {
                     if (!response.isSuccessful) throw HttpException(response.code)

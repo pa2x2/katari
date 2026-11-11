@@ -129,4 +129,15 @@ data class SyncStatus(
     val needsAttention: Boolean
         get() = questions.isNotEmpty() || activity == Activity.WaitingForChoices || link is Link.Ended ||
             (link as? Link.Linked)?.stopped != null
+
+    /** Whether the device is linked and syncing isn't stopped. */
+    val isOn: Boolean
+        get() = link is Link.Linked && link.stopped == null
+
+    /**
+     * Whether a sync asked for now would run: syncing [isOn], no run is going, and the first-sync choices aren't
+     * waiting, which hold every run as a stop does.
+     */
+    val canSyncNow: Boolean
+        get() = isOn && activity !is Activity.Syncing && activity != Activity.WaitingForChoices
 }

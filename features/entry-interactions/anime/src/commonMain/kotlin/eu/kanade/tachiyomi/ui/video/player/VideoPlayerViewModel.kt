@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.katari.entry.interactions.anime.introtimes.IntroTimesEpisodeReader
 import app.katari.entry.interactions.anime.introtimes.aniskip.AniSkipLookup
+import app.katari.entry.interactions.anime.introtimes.aniskip.AniSkipMatchSource
 import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbLookup
+import app.katari.entry.interactions.anime.introtimes.theintrodb.TheIntroDbMatchSource
 import app.katari.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import app.katari.entry.interactions.anime.state.resumePositionMs
 import app.katari.entry.interactions.anime.stream.ResolvedStreamCache
@@ -33,9 +35,8 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
 import eu.kanade.tachiyomi.ui.video.player.handoff.VideoPlayerProgressOffers
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerAiredEpisodes
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
-import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerMatchSearch
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimesMatch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
 import eu.kanade.tachiyomi.ui.video.player.recovery.isUnofferedPick
@@ -144,9 +145,8 @@ internal class VideoPlayerViewModel(
     val state = mutableState.asStateFlow()
 
     val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesEpisodes, aniSkipLookup, theIntroDbLookup)
-    val seriesSearch = VideoPlayerMatchSearch(viewModelScope, aniSkipLookup::search)
-    val mediaSearch = VideoPlayerMatchSearch(viewModelScope, theIntroDbLookup::search)
-    val airedEpisodes = VideoPlayerAiredEpisodes(viewModelScope, theIntroDbLookup)
+    val aniSkipMatch = VideoPlayerIntroTimesMatch(viewModelScope, AniSkipMatchSource(aniSkipLookup))
+    val theIntroDbMatch = VideoPlayerIntroTimesMatch(viewModelScope, TheIntroDbMatchSource(theIntroDbLookup))
     val progressOffers = VideoPlayerProgressOffers(
         scope = viewModelScope,
         offers = progressOffers,

@@ -67,6 +67,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Options as icon-and-label tiles, such as reading modes | `IconChoiceGrid` | |
 | A choice of colour swatches | `ColorChoiceRow`, `ColorSwatches` | Swatches alone where tabs already name the colour |
 | A choice of one of nine places over a picture, three by three | `PositionChoiceRow` | Such as where subtitles rest; an action beside the title, such as putting them back |
+| A choice of one number in a run, such as which episode of a season is playing | `NumberChoiceRow` | A run over 60 numbers shows 30 at a time, with buttons stepping through the rest and a field that goes to a typed number |
 | A choice of fonts, each title drawn in its font | `FontChoiceRow` | |
 | A choice of app themes, each drawn as a small screen | `ThemeChoiceRow` | |
 | Sets a sheet's content to compact rows | `ProvideRowDensity` | Sheets set it; rows never pick density themselves |
@@ -237,6 +238,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row of tool buttons over media whose labels drop out when it runs short of room | `MediaToolbar`, `MediaToolbarButton`, `MediaToolbarPosition` | `Modifier.mediaToolbarSlot` puts a button at the end, orders its label's dropping or gives it only the leftover room; `MediaToolbarPosition` is the playback time, shortening to the position alone |
 | A playback position bar over video | `MediaTimeline` | `markedSpans` colour the parts a source marked, such as intro times from an online service |
 | The dot beside the name of a source whose marks a playback bar colours | `MediaMarkSwatch` | Its spans' colour on `MediaTimeline` |
+| A still bar of the parts of a video a source marked, before they are used | `MediaMarksLine` | The spans' colours as on `MediaTimeline` |
 | A player's volume among its controls | `MediaVolumeControl` | `MediaVolumeSlider.WhilePointed` opens the slider only while the mouse points at a lone button, such as a feed clip's; `wheelStep` lets the wheel over it change the level |
 | A level a gesture is changing, such as brightness | `MediaLevelIndicator` | |
 | What touch, mouse or keys do in a viewer, the first time it opens | `InputGuide` | |

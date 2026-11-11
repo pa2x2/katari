@@ -1,5 +1,26 @@
 # Changelog
 
+## [3.2.1] - 2026-11-11
+
+### ✨ Added
+
+- A long press on the sync icon syncs at once.
+
+### 🔄 Changed
+
+- The Tablet UI setting in Appearance is now called Wide layouts.
+
+### 🧩 Improved
+
+- AniSkip and TheIntroDB find intro and credits times for later seasons, reading the season from the source's season groups or episode names.
+- You change a service's intro times match on one page that picks the series, season and episode and shows its times before you use them.
+- The player's episode list, the manga reader's chapter list and the book reader's table of contents open with the current item in the middle.
+
+### 🐛 Fixed
+
+- In the long strip, a page loading above the one you're reading no longer pushes it down, and a page you scroll back to keeps its height.
+- Opening a chapter in the long strip no longer loads the previous chapter or switches to it.
+
 ## [3.2.0] - 2026-11-10
 
 ### ✨ Added
@@ -1200,7 +1221,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/pa2x2/katari/releases/tag/v3.2.1
 [3.2.0]: https://github.com/pa2x2/katari/releases/tag/v3.2.0
 [3.1.3]: https://github.com/pa2x2/katari/releases/tag/v3.1.3
 [3.1.2]: https://github.com/pa2x2/katari/releases/tag/v3.1.2

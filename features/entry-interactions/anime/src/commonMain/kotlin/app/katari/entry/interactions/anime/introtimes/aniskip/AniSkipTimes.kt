@@ -16,7 +16,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import kotlin.math.roundToLong
 
-/** Asks AniSkip for the intro, credits and recap times viewers submitted for an episode. */
+/** Asks AniSkip for the intro, credits and recap times viewers submitted for an episode, and how it numbers a show. */
 @Inject
 @SingleIn(AppScope::class)
 internal class AniSkipTimes(private val networkHelper: NetworkHelper) {
@@ -40,8 +40,19 @@ internal class AniSkipTimes(private val networkHelper: NetworkHelper) {
         }
     }
 
+    /** How AniSkip continues the episode numbers of the series [malId] into later seasons; empty when it doesn't. */
+    suspend fun numberings(malId: Long): List<AniSkipNumbering> =
+        networkHelper.client.newCall(GET("$RULES_ENDPOINT/$malId")).await().use { response ->
+            when {
+                response.code == HTTP_NOT_FOUND -> emptyList()
+                !response.isSuccessful -> throw HttpException(response.code)
+                else -> aniSkipNumberings(withContext(Dispatchers.IO) { response.body.string() })
+            }
+        }
+
     private companion object {
         const val ENDPOINT = "https://api.aniskip.com/v2/skip-times"
+        const val RULES_ENDPOINT = "https://api.aniskip.com/v2/relation-rules"
         const val HTTP_NOT_FOUND = 404
     }
 }

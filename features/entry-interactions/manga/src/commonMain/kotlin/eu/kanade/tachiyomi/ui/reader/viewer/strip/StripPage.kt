@@ -1,21 +1,18 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.strip
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
 import app.katari.core.image.progressive.rememberProgressivePreview
 import app.katari.entry.interactions.manga.reader.image.animation.AnimatedPageImage
@@ -30,22 +27,25 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageContent
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageProblem
 import eu.kanade.tachiyomi.ui.reader.viewer.page.rememberReaderPageContent
+import kotlin.math.roundToInt
 
 /**
- * One page of the long strip, [width] pixels wide: as tall as the page once its size is known, and as tall as
- * [placeholderHeight] before, with its download progress a quarter of the way down; the progressive preview while it
- * arrives; the page itself; or why it failed with a retry.
+ * One page of the long strip in the slot [slotKey], [width] pixels wide: as tall as the page once its size is known,
+ * or was known when it showed before, and [placeholderHeight] pixels, a screen, tall until then. It shows the
+ * progressive preview while the page arrives, the page itself, or why it failed with a retry. Its download progress and
+ * why it failed show in the screen of it the reader reaches first: its start, or its end when it grows upward.
  */
 @Composable
 internal fun StripPage(
     page: ReaderPage,
+    slotKey: String,
     viewer: StripViewer,
     width: Int,
-    placeholderHeight: Dp,
+    placeholderHeight: Int,
     modifier: Modifier = Modifier,
 ) {
-    val contentState =
-        rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest, viewer::onPageShown)
+    val settingsKey = viewer.imageSettingsKey()
+    val contentState = rememberReaderPageContent(page, settingsKey, viewer::pageRequest, viewer::onPageShown)
     val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
 
@@ -62,18 +62,23 @@ internal fun StripPage(
         previewImage != null && previewSize != null && previewLayout != null -> previewLayout.displayedSize(previewSize)
         shown != null -> shown.layout.displayedSize(shown.image.size)
         else -> null
-    }
-    // The height the page is laid out at, which its backdrop rows span; the aspect ratio rounds it to a whole pixel
-    var laidOutHeight by remember { mutableIntStateOf(0) }
-    viewer.FollowPageBackdrop(page, shown, laidOutHeight)
+    }?.takeIf { it.width > 0 && it.height > 0 }
+    val size = displayedSize ?: viewer.pageSizes[slotKey, settingsKey]
+    val height = size?.let { (width.toDouble() * it.height / it.width).roundToInt() } ?: placeholderHeight
+    viewer.FollowPageBackdrop(page, shown, height)
 
-    val sized = if (displayedSize != null && displayedSize.width > 0 && displayedSize.height > 0) {
-        Modifier.aspectRatio(displayedSize.width.toFloat() / displayedSize.height)
-    } else {
-        Modifier.height(placeholderHeight)
+    val composedHeight = remember { ComposedHeight(height) }
+    // The height changes only with state set between frames, so this runs in a frame's composition, before the strip
+    // measures this page at the new height
+    SideEffect {
+        if (displayedSize != null) viewer.pageSizes[slotKey, settingsKey] = displayedSize
+        val delta = height - composedHeight.pixels
+        composedHeight.pixels = height
+        if (delta != 0) viewer.slotAnchor.onSlotResized(slotKey, delta, viewer.listState)
     }
 
-    Box(modifier.then(sized).onSizeChanged { laidOutHeight = it.height }) {
+    val density = LocalDensity.current
+    Box(modifier.height(with(density) { height.toDp() })) {
         when {
             previewImage != null && previewSize != null && previewLayout != null ->
                 PageBitmap(previewImage, previewSize, previewLayout, Modifier.fillMaxSize())
@@ -104,16 +109,33 @@ internal fun StripPage(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            content is PageContent.Loading -> CombinedCircularProgressIndicator(
+        }
+        val growsUpward = viewer.slotAnchor.growsUpward(slotKey)
+        val inset = with(density) { (placeholderHeight / 4).toDp() }
+        // A preview draws the page from its start, which stands in for the progress there; the end of a page growing
+        // upward stays empty until the page has arrived
+        if (content is PageContent.Loading && (previewImage == null || growsUpward)) {
+            CombinedCircularProgressIndicator(
                 progress = { (contentState.content as? PageContent.Loading)?.progress ?: 0f },
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = placeholderHeight / 4),
+                modifier = if (growsUpward) {
+                    Modifier.align(Alignment.BottomCenter).padding(bottom = inset)
+                } else {
+                    Modifier.align(Alignment.TopCenter).padding(top = inset)
+                },
             )
-            content is PageContent.Failed -> PageProblem(
-                page = page,
-                error = content.error,
-                onOpenInWebView = viewer.pageWebView(page),
-                modifier = Modifier.align(Alignment.Center),
-            )
+        }
+        if (content is PageContent.Failed && previewImage == null) {
+            Box(
+                modifier = Modifier
+                    .align(if (growsUpward) Alignment.BottomCenter else Alignment.TopCenter)
+                    .height(with(density) { placeholderHeight.toDp() }),
+                contentAlignment = Alignment.Center,
+            ) {
+                PageProblem(page = page, error = content.error, onOpenInWebView = viewer.pageWebView(page))
+            }
         }
     }
 }
+
+/** The height a page was last composed at, in pixels. */
+private class ComposedHeight(var pixels: Int)

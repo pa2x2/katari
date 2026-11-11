@@ -148,7 +148,7 @@ class ChangeCaptureTest {
                 db.entry_translation_languagesQueries.upsert(1, "ja", "en", false, 0)
             }
             expect("intro times pick", "entry.intro-times-pick") {
-                db.intro_times_matchesQueries.upsert(1, "", 5, null, "Show", 2020, true, 0)
+                db.intro_times_matchesQueries.upsert(1, "", 5, null, "Show", 2020, true, 0, null, null)
             }
             expect("theintrodb pick", "entry.theintrodb-pick") {
                 db.theintrodb_matchesQueries.upsert(1, "", 5, null, null, "Show", 2020, 1, 1, true, 0)
