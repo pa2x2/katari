@@ -44,7 +44,6 @@ import app.katari.sync.client.trigger.SyncTriggers
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
@@ -173,8 +172,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     suspend fun sql(vararg statements: String) = local.sql(*statements)
 
     override fun close() {
-        // Joining starts a run of its own, which a test may not wait for; closing the database under it crashes SQLite
-        runBlocking { runs.running.first { !it } }
+        // Joining and changing a sync choice start runs a test may not wait for; closing the database under one fails
+        runBlocking { runs.awaitIdle() }
         local.close()
     }
 
