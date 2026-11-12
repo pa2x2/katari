@@ -3365,7 +3365,8 @@
     <string name="sync_options">Options</string>
     <string name="sync_in_background">Sync in the background</string>
     <string name="sync_in_background_summary">While the app is closed</string>
-    <string name="sync_background_interval">How often</string>
+    <string name="sync_mode">Sync mode</string>
+    <string name="sync_mode_instant">Instant</string>
     <string name="sync_pause">Pause syncing</string>
     <string name="sync_pause_summary">Changes wait on this device until you resume</string>
     <string name="sync_choices_title">What syncs</string>

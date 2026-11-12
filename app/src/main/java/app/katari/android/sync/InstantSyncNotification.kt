@@ -3,6 +3,7 @@ package app.katari.android.sync
 import android.app.Application
 import android.app.Notification
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import app.katari.core.platform.network.NetworkConnectivity
@@ -65,16 +66,18 @@ class InstantSyncNotification(
             addAction(0, application.stringResource(PlatformStrings.sync_instant_hide), channelSettings())
         }.build()
 
-    private fun channelSettings(): PendingIntent {
-        val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
-            .putExtra(Settings.EXTRA_APP_PACKAGE, application.packageName)
+    private fun channelSettings(): PendingIntent = PendingIntent.getActivity(
+        application,
+        Notifications.ID_SYNC_CONNECTION,
+        channelSettingsIntent(application),
+        PendingIntent.FLAG_IMMUTABLE,
+    )
+
+    companion object {
+        /** Android's settings of the notification's channel, where the person turns it off. */
+        fun channelSettingsIntent(context: Context): Intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             .putExtra(Settings.EXTRA_CHANNEL_ID, AppNotificationKind.SYNC_CONNECTION.id)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return PendingIntent.getActivity(
-            application,
-            Notifications.ID_SYNC_CONNECTION,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE,
-        )
     }
 }
