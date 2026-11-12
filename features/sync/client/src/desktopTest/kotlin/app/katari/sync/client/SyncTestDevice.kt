@@ -10,6 +10,7 @@ import app.katari.profiles.core.ProfileDatabase
 import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
+import app.katari.sync.client.capture.CaptureTriggers
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.file.capture.FileCapture
@@ -52,7 +53,7 @@ import java.util.Collections
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SyncTestDevice(file: File) : AutoCloseable {
-    val temporarySchema = TemporarySchema()
+    private val temporarySchema = TemporarySchema(CaptureTriggers.schemaPart().statements)
     val driver: SqlDriver = createSqlDriver(file, DatabaseRepositoryImpl(lazy { driver }), temporarySchema)
     val database = Database(
         driver = driver,
@@ -131,7 +132,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }
-        SyncCapture(handler, temporarySchema, settingsCapture, fileCapture).start()
+        SyncCapture(handler, settingsCapture, fileCapture).start()
     }
 
     suspend fun sql(vararg statements: String) {

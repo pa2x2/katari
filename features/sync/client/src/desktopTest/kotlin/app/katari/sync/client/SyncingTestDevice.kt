@@ -83,7 +83,7 @@ internal class SyncingTestDevice(
     val work = RecordedBackgroundWork()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
-    private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
+    private val capture = SyncCapture(local.handler, local.settingsCapture, local.fileCapture)
     val directory = DeviceDirectory(local.handler)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff, directory)

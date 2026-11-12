@@ -3,9 +3,10 @@ package app.katari.sync.client.capture
 import app.katari.sync.client.record.FieldStamps
 
 /**
- * A TEMP trigger that records edits of [table] into `sync_outbox` for one kind. [ref] are SQL expressions over the
- * row (`NEW.` or `OLD.` columns) that locate it, in the order the kind reads them. An update is recorded only when a
- * column of [fields] changed, with the payload fields it touched; inserts and deletes touch every field.
+ * A TEMP trigger that records edits of [table] into `sync_outbox` for one kind while sync is on. [ref] are SQL
+ * expressions over the row (`NEW.` or `OLD.` columns) that locate it, in the order the kind reads them. An update is
+ * recorded only when a column of [fields] changed, with the payload fields it touched; inserts and deletes touch every
+ * field.
  */
 internal class CaptureTrigger(
     val table: String,
@@ -58,7 +59,7 @@ internal class CaptureTrigger(
         }
     }
 
-    fun name(kind: String, index: Int): String =
+    private fun name(kind: String, index: Int): String =
         "sync_capture_${kind.replace(Regex("[^a-z]"), "_")}_${event.name.lowercase()}_$index"
 
     fun createStatement(kind: String, index: Int): String {
@@ -76,6 +77,8 @@ internal class CaptureTrigger(
             Event.INSERT, Event.DELETE -> ""
         }
         val conditions = listOfNotNull(
+            // Installed on every connection whether or not this device syncs (CaptureTriggers)
+            "EXISTS (SELECT 1 FROM main.sync_state WHERE id = 0 AND enabled)",
             "($changed) != 0".takeIf { event == Event.UPDATE },
             condition?.let { "($it)" },
             "EXISTS (SELECT 1 FROM main.sync_records WHERE kind = '$kind' AND local_ref = $localRef)"
@@ -97,7 +100,7 @@ internal class CaptureTrigger(
         return """
             CREATE TEMP TRIGGER ${name(kind, index)}
             AFTER ${event.name}$columns ON main.$table
-            FOR EACH ROW${if (conditions.isEmpty()) "" else " WHEN " + conditions.joinToString(" AND ")}
+            FOR EACH ROW WHEN ${conditions.joinToString(" AND ")}
             BEGIN
                 INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
                 SELECT '$kind', $localRef, $changed, $recordKey, $NOW_MILLIS, seen_physical, seen_counter

@@ -1,7 +1,6 @@
 package app.katari.sync.client.capture
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
-import app.katari.data.database.TemporarySchema
 import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.setting.capture.SettingsCapture
 import dev.zacsweers.metro.AppScope
@@ -10,21 +9,20 @@ import dev.zacsweers.metro.SingleIn
 import tachiyomi.data.DatabaseHandler
 
 /**
- * Turns change capture on and off with sync, of the database, of preferences ([SettingsCapture]) and of custom covers
- * and fonts ([FileCapture]). The state is kept in `sync_state`, and a process that starts with sync on captures again
- * from [resume].
+ * Turns change capture on and off with sync, of the database ([CaptureTriggers]), of preferences ([SettingsCapture])
+ * and of custom covers and fonts ([FileCapture]). The state is kept in `sync_state`, which the database's triggers
+ * read on every write; a process that starts with sync on captures preferences and files again from [resume].
  */
 @Inject
 @SingleIn(AppScope::class)
 class SyncCapture(
     private val handler: DatabaseHandler,
-    private val temporarySchema: TemporarySchema,
     private val settings: SettingsCapture,
     private val files: FileCapture,
 ) {
     /**
-     * Starts capturing. Edits made before now are not in the outbox, and rows a connection still wrote after the last
-     * [stop] are dropped: what the device holds when sync starts reaches the server with the first sync instead.
+     * Starts capturing. Edits made before now are not in the outbox: what the device holds when sync starts reaches
+     * the server with the first sync instead.
      */
     suspend fun start() {
         handler.await(inTransaction = true) {
@@ -32,18 +30,17 @@ class SyncCapture(
             sync_stateQueries.endRestore()
             sync_stateQueries.setEnabled(true)
         }
-        temporarySchema.publish(CaptureTriggers.install)
         settings.start()
         files.start()
     }
 
     /**
-     * Captures again after a process start when sync is on. It runs once the app's upgrade migrations are done, so
-     * their writes to the database and preferences are never edits; writes before it returns are not captured.
+     * Captures preferences and files again after a process start when sync is on. It runs once the app's upgrade
+     * migrations are done, so their writes to preferences are never edits; the database is captured from its first
+     * write, so upgrade migrations change its data only through schema migrations.
      */
     suspend fun resume() {
         if (!handler.await { sync_stateQueries.get().awaitAsOne().enabled }) return
-        temporarySchema.publish(CaptureTriggers.install)
         settings.start()
         files.start()
     }
@@ -52,7 +49,6 @@ class SyncCapture(
     suspend fun stop() {
         files.stop()
         settings.stop()
-        temporarySchema.publish(CaptureTriggers.remove)
         handler.await(inTransaction = true) {
             sync_stateQueries.setEnabled(false)
             sync_outboxQueries.clear()
