@@ -43,6 +43,16 @@ class AndroidSyncNotifications(private val application: Application) : SyncNotif
 
     override fun withdrawStopped() = application.cancelNotification(Notifications.ID_SYNC_STOPPED)
 
+    override fun showTestMessage(from: String?) {
+        val device = from ?: application.stringResource(MR.strings.sync_test_message_unknown_device)
+        notify(
+            id = Notifications.ID_SYNC_TEST_MESSAGE,
+            title = application.stringResource(MR.strings.sync_title),
+            text = application.stringResource(MR.strings.sync_test_message_received, device),
+            action = SyncNavigation.ACTION_OPEN_SYNC,
+        )
+    }
+
     private fun notify(id: Int, title: String, text: String?, action: String) {
         application.notify(id, AppNotificationKind.SYNC.id) {
             setSmallIcon(R.drawable.ic_katari)

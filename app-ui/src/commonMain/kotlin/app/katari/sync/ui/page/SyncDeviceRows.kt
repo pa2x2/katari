@@ -86,6 +86,15 @@ private fun DeviceRow(device: AccountDevice, actions: SyncPageActions) {
                         },
                     )
                 } else {
+                    actions.sendTestMessage?.let { send ->
+                        DropdownMenuItem(
+                            label = stringResource(MR.strings.sync_test_message_send),
+                            onClick = {
+                                close()
+                                send(device)
+                            },
+                        )
+                    }
                     DropdownMenuItem(
                         label = stringResource(MR.strings.action_remove),
                         onClick = {

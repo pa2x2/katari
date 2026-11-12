@@ -82,6 +82,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
             renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
+            sendTestMessage = if (model.sendsTestMessages) model::sendTestMessage else null,
             disconnect = { dialog = SyncPageDialog.Disconnect },
             changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
@@ -174,6 +175,8 @@ internal class SyncPageActions(
     val linkDevice: () -> Unit,
     val renameDevice: () -> Unit,
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
+    /** Null where the build sends no test messages. */
+    val sendTestMessage: ((app.katari.sync.client.account.AccountDevice) -> Unit)?,
     val disconnect: () -> Unit,
     val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,

@@ -19,6 +19,8 @@ import tachiyomi.i18n.sync_questions_waiting
 import tachiyomi.i18n.sync_removed_title
 import tachiyomi.i18n.sync_status_server_reset
 import tachiyomi.i18n.sync_status_sign_in_again
+import tachiyomi.i18n.sync_test_message_received
+import tachiyomi.i18n.sync_test_message_unknown_device
 import tachiyomi.i18n.sync_title
 
 @Inject
@@ -60,8 +62,22 @@ class DesktopSyncNotifications(private val notifications: DesktopNotifications) 
 
     override fun withdrawStopped() = notifications.withdraw(STOPPED)
 
+    override fun showTestMessage(from: String?) {
+        val device = from ?: stringResource(MR.strings.sync_test_message_unknown_device)
+        notifications.show(
+            TEST_MESSAGE,
+            DesktopNotification(
+                kind = AppNotificationKind.SYNC,
+                title = stringResource(MR.strings.sync_title),
+                body = stringResource(MR.strings.sync_test_message_received, device),
+                onClick = NotificationResponse.Open(HomeDestination.SyncPage),
+            ),
+        )
+    }
+
     private companion object {
         const val QUESTIONS = "sync-questions"
         const val STOPPED = "sync-stopped"
+        const val TEST_MESSAGE = "sync-test-message"
     }
 }

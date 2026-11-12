@@ -105,16 +105,18 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     val notes: MutableList<String> = Collections.synchronizedList(mutableListOf())
     private val messageInbox = MessageInbox(
         connection,
-        setOf(
-            object : MessageHandler {
-                override val kind = NOTE
+        lazyOf(
+            setOf(
+                object : MessageHandler {
+                    override val kind = NOTE
 
-                override val version = 1
+                    override val version = 1
 
-                override suspend fun handle(message: DeviceMessage) {
-                    notes += message.body.payload.decodeToString()
-                }
-            },
+                    override suspend fun handle(message: DeviceMessage) {
+                        notes += message.body.payload.decodeToString()
+                    }
+                },
+            ),
         ),
     )
     val runs = SyncRuns(

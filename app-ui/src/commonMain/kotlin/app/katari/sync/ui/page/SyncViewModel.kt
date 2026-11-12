@@ -16,6 +16,9 @@ import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncStatusState
+import app.katari.sync.ui.testmessage.TestMessages
+import app.katari.ui.buildinfo.AppBuild
+import app.katari.ui.buildinfo.AppBuildType
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -46,7 +49,12 @@ class SyncViewModel(
     private val choiceChanges: SyncChoiceChanges,
     profileStates: ProfileSyncStates,
     @AppCoroutineScope private val appScope: CoroutineScope,
+    private val testMessages: TestMessages,
+    build: AppBuild,
 ) : ViewModel() {
+    /** Debug builds send test messages to the account's other devices ([TestMessages]). */
+    val sendsTestMessages: Boolean = build.type == AppBuildType.Debug
+
     val status: StateFlow<SyncStatus?> = statusState.status
 
     val choices: StateFlow<ChoiceSet> =
@@ -106,6 +114,10 @@ class SyncViewModel(
 
     fun syncNow() {
         viewModelScope.launchIO { account.syncNow() }
+    }
+
+    fun sendTestMessage(device: AccountDevice) {
+        viewModelScope.launchIO { testMessages.send(device) }
     }
 
     fun removeDevice(device: AccountDevice) {
