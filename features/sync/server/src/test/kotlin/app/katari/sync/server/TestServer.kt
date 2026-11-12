@@ -5,6 +5,10 @@ import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileReference
+import app.katari.sync.protocol.message.MessageBody
+import app.katari.sync.protocol.message.MessagePage
+import app.katari.sync.protocol.message.SendMessageRequest
+import app.katari.sync.protocol.message.SendMessageResponse
 import app.katari.sync.protocol.pull.PullRequest
 import app.katari.sync.protocol.push.PushRequest
 import app.katari.sync.protocol.push.PushResponse
@@ -22,6 +26,7 @@ import java.security.MessageDigest
 import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
 /** The server's services over a real SQLite database in [dataDirectory], with a clock the test moves. */
@@ -69,6 +74,22 @@ class TestServer(dataDirectory: Path) : AutoCloseable {
 
         fun pull(after: Long, liveOnly: Boolean = false, afterChain: String = "", limit: Int = 0): PullOutcome =
             services.pull.pull(device, PullRequest(after, limit, liveOnly, afterChain))
+
+        fun send(text: String, to: LinkedTestDevice, replaces: String = ""): SendMessageResponse? =
+            send(text, to.device.id, replaces)
+
+        fun send(text: String, to: DeviceId? = null, replaces: String = ""): SendMessageResponse? =
+            services.messages.send(
+                device,
+                SendMessageRequest(
+                    to = to,
+                    body = MessageBody(kind = "note", kindVersion = 1, payload = text.encodeToByteArray()),
+                    lifetimeMillis = 1.hours.inWholeMilliseconds,
+                    replaces = replaces,
+                ),
+            )
+
+        fun fetch(after: Long): MessagePage = services.messages.fetch(device.id, after)
     }
 
     override fun close() = services.storage.close()

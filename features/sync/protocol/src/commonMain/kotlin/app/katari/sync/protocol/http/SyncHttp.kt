@@ -56,6 +56,17 @@ object SyncHttp {
     /** POST [app.katari.sync.protocol.pull.GroupRequest]: [app.katari.sync.protocol.pull.GroupRecords]. */
     const val GROUP: String = "/api/records/group"
 
+    /**
+     * POST [app.katari.sync.protocol.message.SendMessageRequest]:
+     * [app.katari.sync.protocol.message.SendMessageResponse].
+     */
+    const val SEND_MESSAGE: String = "/api/messages/send"
+
+    /**
+     * POST [app.katari.sync.protocol.message.FetchMessagesRequest]: [app.katari.sync.protocol.message.MessagePage].
+     */
+    const val FETCH_MESSAGES: String = "/api/messages/fetch"
+
     /** GET: [app.katari.sync.protocol.snapshot.SnapshotInfo]. */
     const val SNAPSHOT: String = "/api/snapshot"
 

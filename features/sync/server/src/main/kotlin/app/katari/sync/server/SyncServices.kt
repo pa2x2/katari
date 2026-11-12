@@ -15,6 +15,8 @@ import app.katari.sync.server.file.FileContentStore
 import app.katari.sync.server.file.FileTransfers
 import app.katari.sync.server.invite.Invites
 import app.katari.sync.server.live.AccountChanges
+import app.katari.sync.server.live.ConnectedDevices
+import app.katari.sync.server.message.DeviceMessages
 import app.katari.sync.server.record.GroupPull
 import app.katari.sync.server.record.RecordPull
 import app.katari.sync.server.record.RecordPush
@@ -36,6 +38,7 @@ class SyncServices(
 ) {
     val passwords = PasswordHasher(random = random)
     val changes = AccountChanges()
+    val connected = ConnectedDevices()
     val content = FileContentStore(config.dataDirectory)
     val attempts = AttemptLimiter(clock)
 
@@ -49,7 +52,8 @@ class SyncServices(
     val dataWipe = SyncedDataWipe(storage, passwordCheck, content, changes)
     val webSessions = WebSessions(storage, clock, random)
     val authentication = DeviceAuthentication(storage, clock)
-    val devices = AccountDevices(storage, changes, clock, random)
+    val devices = AccountDevices(storage, changes, connected, clock, random)
+    val messages = DeviceMessages(storage, changes, connected, clock)
     val push = RecordPush(storage, changes)
     val pull = RecordPull(storage, config.pullPageSize)
     val groups = GroupPull(storage)
@@ -61,5 +65,6 @@ class SyncServices(
         devices = devices,
         invites = invites,
         webSessions = webSessions,
+        messages = messages,
     )
 }
