@@ -3,6 +3,7 @@ package app.katari.sync.client.kind.chapter
 import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.common.extensions.EMPTY
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.apply.idOr
@@ -17,6 +18,7 @@ import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Chapters, keyed by their entry's key and URL. Local ref: `[chapters._id]`.
@@ -73,6 +75,16 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 dateFetch = row.date_fetch,
                 sourceOrder = row.source_order,
                 markedReadAt = read.at.takeIf { row.read && row.marked_read },
+                details = ChapterDetails(
+                    memo = row.memo,
+                    summary = row.summary,
+                    previewUrl = row.preview_url,
+                    kind = row.kind,
+                    group = row.group_key?.let { key ->
+                        ChapterGroup(key = key, title = row.group_title!!, position = row.group_position!!)
+                    },
+                    dateText = row.date_text,
+                ),
             )
         }
     }
@@ -89,16 +101,18 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             bookmark = latest(local.bookmark, incoming.bookmark),
             metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
             dateFetch = maxOf(local.dateFetch, incoming.dateFetch),
-            // A copy from a device that doesn't know the place never takes it away
+            // A copy from a device that doesn't know the place or the details never takes them away
             sourceOrder = fieldOfNewer(serializer, local, incoming) { it.sourceOrder }
                 ?: local.sourceOrder
                 ?: incoming.sourceOrder,
+            details = fieldOfNewer(serializer, local, incoming) { it.details } ?: local.details ?: incoming.details,
         )
     }
 
     /**
-     * Creates the row from the record's metadata when the entry wasn't refreshed here, where the record's device has it
-     * in the list; a refresh overrides all but when it was found, which every device takes from the record.
+     * Creates the row, and its group when this device lists none of that key, from the record's metadata and details
+     * when the entry wasn't refreshed here, where the record's device has it in the list; a refresh overrides all but
+     * when it was found, which every device takes from the record.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
@@ -110,6 +124,8 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             if (place != null && queries.chapterHoldsPlace(entryId, place).awaitAsOne()) {
                 queries.freeChapterPlace(entryId, place).await()
             }
+            val details = payload.details
+            details?.group?.let { queries.addChapterGroup(entryId, it.key, it.title, it.position) }
             queries.insertChapter(
                 entryId = entryId,
                 url = payload.url,
@@ -121,6 +137,12 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 dateUpload = metadata.dateUpload,
                 dateFetch = payload.dateFetch,
                 sourceOrder = place ?: queries.placeAfterChapters(entryId).awaitAsOne(),
+                memo = details?.memo ?: JsonObject.EMPTY,
+                summary = details?.summary,
+                previewUrl = details?.previewUrl,
+                kind = details?.kind ?: 0,
+                groupKey = details?.group?.key,
+                dateText = details?.dateText,
             ).awaitAsOne()
         } else {
             val wasRead = queries.chapterRead(existing).awaitAsOne()

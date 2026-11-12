@@ -2,6 +2,7 @@ package app.katari.sync.client.kind.entry
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.common.extensions.EMPTY
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.apply.idOr
@@ -23,6 +24,8 @@ import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileReference
+import kotlinx.serialization.json.JsonObject
+import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.model.StubSource
 
@@ -99,6 +102,10 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                     backgroundUrl = row.background_url,
                 ),
                 sourceName = row.source_name?.takeIf { StubSource.isKnownName(it) } ?: previous?.sourceName,
+                details = EntryDetails(
+                    memo = row.memo,
+                    updateStrategy = UpdateStrategyColumnAdapter.encode(row.update_strategy),
+                ),
             )
         }
     }
@@ -113,18 +120,19 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
         customCover = latest(local.customCover, incoming.customCover),
-        // A record from a device that doesn't know the name never takes it away
+        // A record from a device that doesn't know the name or the details never takes them away
         sourceName = fieldOfNewer(serializer, local, incoming) { it.sourceName }
             ?: local.sourceName
             ?: incoming.sourceName,
+        details = fieldOfNewer(serializer, local, incoming) { it.details } ?: local.details ?: incoming.details,
     )
 
     override fun files(payload: EntryPayload): List<FileReference> =
         listOfNotNull(payload.customCover.value?.reference(FileCategory.COVER))
 
     /**
-     * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
-     * keeps the metadata of its own refreshes. The source's name is stored for a source no extension here named. The
+     * Writes the person's fields, and the source's metadata and details only into a row it creates: a device that has the
+     * row keeps those of its own refreshes. The source's name is stored for a source no extension here named. The
      * custom cover is put in place after the transaction, fetched first when no file here holds it. An entry another
      * one replaced stays out of the library; its changes carry over to the replacement instead. An entry moved to
      * another profile has no row of its own any more, as after moving it here, so its record makes none. Local-source
@@ -162,6 +170,8 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                 libraryPinned = pinned,
                 viewer = payload.viewerFlags.value,
                 chapterFlags = payload.chapterFlags.value,
+                memo = payload.details?.memo ?: JsonObject.EMPTY,
+                updateStrategy = UpdateStrategyColumnAdapter.decode(payload.details?.updateStrategy ?: 0),
             ).awaitAsOne()
         } else {
             queries.updateEntry(

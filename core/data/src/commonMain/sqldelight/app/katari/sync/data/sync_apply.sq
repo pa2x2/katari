@@ -46,11 +46,13 @@ WHERE _id = :entryId;
 insertEntry:
 INSERT INTO entries(
     profile_id, source, url, type, title, author, artist, description, genre, status, thumbnail_url, background_url,
-    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, download_title
+    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, download_title, memo,
+    update_strategy
 )
 VALUES (
     :profileId, :source, :url, :type, :title, :author, :artist, :description, :genre, :status, :thumbnailUrl,
-    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :title
+    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :title, :memo,
+    :updateStrategy
 )
 RETURNING _id;
 
@@ -133,9 +135,12 @@ FROM chapters
 WHERE entry_id = :entryId;
 
 -- A record that doesn't say when the chapter was found dates it no later than its entry joined the Library, so it
--- isn't taken for a new release.
+-- isn't taken for a new release. Its group's place is copied from the group's row, which addChapterGroup writes first.
 insertChapter:
-INSERT INTO chapters(entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order)
+INSERT INTO chapters(
+    entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order, memo,
+    summary, preview_url, kind, group_key, group_position, date_text
+)
 VALUES (
     :entryId, :url, :name, :read, :bookmark, :chapterNumber, :scanlator, :dateUpload,
     CASE
@@ -149,9 +154,21 @@ VALUES (
             CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
         )
     END,
-    :sourceOrder
+    :sourceOrder,
+    :memo,
+    :summary,
+    :previewUrl,
+    :kind,
+    :groupKey,
+    (SELECT position FROM chapter_groups WHERE entry_id = :entryId AND group_key = :groupKey),
+    :dateText
 )
 RETURNING _id;
+
+-- A group this device lists already keeps its own title and place, which its chapters' copies follow.
+addChapterGroup:
+INSERT OR IGNORE INTO chapter_groups(entry_id, group_key, title, position)
+VALUES (:entryId, :groupKey, :title, :position);
 
 -- The time the chapter was found is the one every device agrees on, when the record has one.
 updateChapterMarks:

@@ -32,8 +32,9 @@ class OutboxDrainTest {
             )
             device.drainAll()
             val key = device.entryRecord().record_key
-            // Field 15 as a newer version would write it: a length-delimited value this version has no property for.
-            val newerField = Buffer().writeByte(15 shl 3 or 2).writeByte(5).writeUtf8("newer").readByteArray()
+            // Field 16 as a newer version would write it: a length-delimited value this version has no property for,
+            // after a tag (16 shl 3 or 2) that takes two varint bytes.
+            val newerField = Buffer().writeByte(0x82).writeByte(0x01).writeByte(5).writeUtf8("newer").readByteArray()
             device.handler.await {
                 sync_recordsQueries.storeLocalChange(
                     recordKey = key,
