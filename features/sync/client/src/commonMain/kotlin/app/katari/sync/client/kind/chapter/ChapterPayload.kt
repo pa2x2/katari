@@ -11,8 +11,8 @@ import kotlinx.serialization.protobuf.ProtoNumber
  * another device create the row in its place, as its own refresh would list it, and show it as read, or in Updates,
  * before it refreshes the entry; its next refresh overrides them, but not [dateFetch].
  *
- * [dateFetch], [sourceOrder], [markedReadAt] and [details] came after the first release with sync, so they are
- * top-level fields, which an older device keeps as they are when it rewrites the record
+ * [dateFetch], [sourceOrder], [markedReadAt], [details] and [renamedFrom] came after the first release with sync, so
+ * they are top-level fields, which an older device keeps as they are when it rewrites the record
  * ([app.katari.sync.client.payload.UnknownFields]).
  */
 @Serializable
@@ -36,6 +36,11 @@ data class ChapterPayload(
     @ProtoNumber(8) val markedReadAt: HybridTimestamp? = null,
     /** Null when the device that wrote the record carried none. */
     @ProtoNumber(9) val details: ChapterDetails? = null,
+    /**
+     * The URL a refresh found the chapter had before the source moved it to [url], so a device that still lists it
+     * there renames its row rather than adding the chapter again; null for a chapter no refresh renamed.
+     */
+    @ProtoNumber(10) val renamedFrom: String? = null,
 ) {
     val isMarkedRead: Boolean
         get() = read.value && markedReadAt == read.at

@@ -108,6 +108,7 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
             read = target.read,
             bookmark = target.bookmark,
             previousDetails = null,
+            renamedFrom = null,
         )
         carry.writes.change(ChapterKind, target.key, base.copy(read = read, bookmark = bookmark))
     }

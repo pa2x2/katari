@@ -31,7 +31,8 @@ import kotlinx.serialization.json.JsonObject
  * entry in the Library, which Updates shows, so every device shows it there without refreshing the entry first. A
  * refresh that lists a chapter holding stand-ins for the source's details (`chapters_placeholder_details`) has its
  * record read again, as no edit. A chapter the source dropped keeps its record, since a refresh never deletes anything
- * on other devices.
+ * on other devices. A chapter a refresh moved to another URL takes its record's marks to the record under its new
+ * key, which names the URL it had ([ChapterPayload.renamedFrom]).
  */
 object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPayload.serializer(), Absence.KEEP) {
     override val capture = listOf(
@@ -51,6 +52,16 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             listOf("NEW._id"),
             fields = listOf(Field(3, "read"), Field(4, "bookmark")),
         ),
+        // A refresh moved the chapter to another URL: a record of it follows it there ([renamedFrom]), while one never
+        // marked stays without one, as every device's refresh moves it alike
+        CaptureTrigger(
+            "chapters",
+            Event.UPDATE,
+            listOf("NEW._id"),
+            fields = listOf(Field(2, "url")),
+            condition = "EXISTS (SELECT 1 FROM main.sync_records " +
+                "WHERE kind = '${LocalReads.CHAPTER}' AND local_ref = json_array(NEW._id))",
+        ),
         // Marking a chapter read notes it right after writing the read, which a drain may already have taken
         CaptureTrigger("chapters_marked_read", Event.INSERT, listOf("NEW.chapter_id"), personsEdit = false),
         // The source listed a chapter that held stand-ins for its details, so devices that create it get the source's
@@ -69,18 +80,32 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         val row = reads.database.sync_local_rowsQueries.chapterRow(ref.long(0)).awaitAsOneOrNull()
             ?: return LocalRead.Missing
         val entryKey = reads.entryKey(row.entry_id) ?: return LocalRead.NotSynced
+        val key = reads.chapterKey(entryKey, row.url)
+        val renamed = renamedFrom(reads, ref, key, entryKey)
         return LocalRead.Found(
-            key = reads.chapterKey(entryKey, row.url),
+            key = key,
             parents = listOf(RecordRef(EntryKind, EntryKind.ref(row.entry_id))),
         ) { previous, stamps ->
+            val before = previous ?: renamed
             payload(
                 row = row,
                 entryKey = entryKey,
-                read = stamps.field(3, row.read, previous?.read),
-                bookmark = stamps.field(4, row.bookmark, previous?.bookmark),
-                previousDetails = previous?.details,
+                read = stamps.field(3, row.read, before?.read),
+                bookmark = stamps.field(4, row.bookmark, before?.bookmark),
+                previousDetails = before?.details,
+                renamedFrom = previous?.renamedFrom ?: renamed?.url,
             )
         }
+    }
+
+    /**
+     * The record that holds the row [ref] under another URL of the same entry, [key] being the row's now: a refresh
+     * moved the chapter there, so that record's marks, with the times they were made, are the chapter's.
+     */
+    private suspend fun renamedFrom(reads: LocalReads, ref: LocalRef, key: String, entryKey: String): ChapterPayload? {
+        val held = reads.database.sync_recordsQueries.getByLocalRef(name, ref.json).awaitAsOneOrNull()
+        if (held == null || held.deleted || held.record_key == key) return null
+        return decode(held.payload).takeIf { it.entryKey == entryKey }
     }
 
     /**
@@ -94,6 +119,7 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         read: Stamped<Boolean>,
         bookmark: Stamped<Boolean>,
         previousDetails: ChapterDetails?,
+        renamedFrom: String?,
     ) = ChapterPayload(
         entryKey = entryKey,
         url = row.url,
@@ -122,6 +148,7 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 dateText = row.date_text,
             )
         },
+        renamedFrom = renamedFrom,
     )
 
     /**
@@ -142,6 +169,9 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 ?: local.sourceOrder
                 ?: incoming.sourceOrder,
             details = fieldOfNewer(serializer, local, incoming) { it.details } ?: local.details ?: incoming.details,
+            renamedFrom = fieldOfNewer(serializer, local, incoming) { it.renamedFrom }
+                ?: local.renamedFrom
+                ?: incoming.renamedFrom,
         )
     }
 
@@ -149,7 +179,9 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
      * Creates the row, and its group when this device lists none of that key, from the record's metadata and details
      * when the entry wasn't refreshed here, where the record's device has it in the list; a refresh overrides all but
      * when it was found, which every device takes from the record. A row that holds stand-ins a record without details
-     * left (`chapters_placeholder_details`) takes the details of the first record that carries them.
+     * left (`chapters_placeholder_details`) takes the details of the first record that carries them. A row still at
+     * the URL the chapter was renamed from takes the new one, as this device's own refresh would give it, keeping
+     * what hangs off it here.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
@@ -157,6 +189,9 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         val metadata = payload.metadata
         val details = payload.details
         val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
+            ?: payload.renamedFrom
+                ?.let { queries.chapterId(entryId, it).awaitAsOneOrNull() }
+                ?.also { queries.renameChapter(url = payload.url, chapterId = it) }
         val written = details?.takeIf {
             existing == null || queries.chapterHoldsPlaceholderDetails(existing).awaitAsOne()
         }
