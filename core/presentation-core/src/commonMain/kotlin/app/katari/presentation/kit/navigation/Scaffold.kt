@@ -122,6 +122,7 @@ fun Scaffold(
     val remainingWindowInsets = remember { MutableWindowInsets() }
     androidx.compose.material3.Surface(
         modifier = Modifier
+            .appBarFollowsWheel(topBarScrollBehavior)
             .nestedScroll(topBarScrollBehavior.nestedScrollConnection)
             .onConsumedWindowInsetsChanged {
                 remainingWindowInsets.insets = contentWindowInsets.exclude(

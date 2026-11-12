@@ -66,6 +66,7 @@ import app.katari.presentation.kit.list.LocalRowGroupContainer
 import app.katari.presentation.kit.list.ProvideRowDensity
 import app.katari.presentation.kit.list.RowDensity
 import app.katari.presentation.kit.navigation.LocalDockOnScreen
+import app.katari.presentation.kit.pointer.onWheelScrollEnd
 import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
@@ -293,13 +294,15 @@ private fun SheetLayout(
                 modifier = formModifier
                     .then(
                         if (enableImplicitDismiss && edge == SheetEdge.Bottom) {
-                            Modifier.nestedScroll(
-                                remember(anchoredDraggableState) {
-                                    anchoredDraggableState.preUpPostDownNestedScrollConnection {
-                                        scope.launch { anchoredDraggableState.settle(sheetAnimationSpec) }
-                                    }
-                                },
-                            )
+                            Modifier
+                                .onWheelScrollEnd { anchoredDraggableState.settle(sheetAnimationSpec) }
+                                .nestedScroll(
+                                    remember(anchoredDraggableState) {
+                                        anchoredDraggableState.preUpPostDownNestedScrollConnection {
+                                            scope.launch { anchoredDraggableState.settle(sheetAnimationSpec) }
+                                        }
+                                    },
+                                )
                         } else {
                             Modifier
                         },
