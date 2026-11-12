@@ -36,7 +36,6 @@
     <string name="sync_instant_connected">Connected</string>
     <string name="sync_instant_connecting">Connecting…</string>
     <string name="sync_instant_waiting_for_network">Waiting for a network</string>
-    <string name="sync_instant_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="sync_instant_hide_hint">Sync keeps working with this notification hidden</string>
     <string name="sync_instant_hide">Hide notification</string>
     <string name="sync_instant_setup">Katari stays connected while closed, so changes and messages from your other devices arrive at once. Android shows a notification while it does, and Katari asks to run without battery optimization so the connection holds while the phone sleeps.</string>

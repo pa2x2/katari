@@ -29,6 +29,7 @@ import app.katari.sync.client.message.MessageHandler
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.part.SyncChoiceChanges
+import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
@@ -87,6 +88,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     val otherDeviceExtensions = OtherDeviceExtensions(local.handler, connection, directory, preferences)
     private val continuity = ServerContinuity(local.handler, connection)
     private val fileRule = FileTransferRule(network, preferences)
+    private val changeRule = ChangeTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
     val naming = DeviceNaming(
         object : ThisDevice {
@@ -138,6 +140,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             UngroupedRecords(local.handler),
             messageOutbox,
             messageInbox,
+            changeRule,
         ),
         steps,
     )
@@ -165,6 +168,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         handOff,
         preferences,
         messageInbox,
+        changeRule,
     )
     val triggers = SyncTriggers(
         runs,
@@ -176,7 +180,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.handler,
         local.preferences.profiles,
         handOff,
-        network,
+        changeRule,
     )
     val status = SyncStatusFlow(
         connection,

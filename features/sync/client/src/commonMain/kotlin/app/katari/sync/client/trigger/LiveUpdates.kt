@@ -8,6 +8,7 @@ import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.LiveChannel
@@ -55,7 +56,9 @@ import kotlin.time.Duration.Companion.seconds
  * again after the app was closed catches up on what came meanwhile without a run of its own.
  *
  * An announcement of a message from another device goes to the [MessageInbox] without a run. While the channel isn't
- * working, a fetch that the server holds open until a message comes takes its place for messages.
+ * working, a fetch that the server holds open until a message comes takes its place for messages. Messages come on any
+ * network, so the channel stays open where changes wait for Wi-Fi ([ChangeTransferRule]); announcements of changes
+ * start no run there, and the run Wi-Fi starts catches up.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -68,24 +71,21 @@ class LiveUpdates(
     private val handOff: EntryHandOff,
     private val preferences: SyncPreferences,
     private val inbox: MessageInbox,
+    private val changeRule: ChangeTransferRule,
 ) {
     private val state = MutableStateFlow(LiveUpdatesState.CLOSED)
 
     /** How the channel stands now, which the status shows. */
     val states: StateFlow<LiveUpdatesState> = state.asStateFlow()
 
-    /**
-     * Whether the channel should be open: the app is open ([appOpen]), the device syncs and isn't paused, and there is a
-     * network that changes may use.
-     */
+    /** Whether the channel should be open: the app is open ([appOpen]), the device syncs and isn't paused, and online. */
     fun wanted(appOpen: Flow<Boolean>): Flow<Boolean> = combine(
         appOpen,
         connection.states(),
         network.state(),
         preferences.paused.changes(),
-        preferences.changesOnMobileData.changes(),
-    ) { isAppOpen, state, network, paused, onMobileData ->
-        isAppOpen && state.listens() && network.hasNetwork && !paused && (onMobileData || network.countsAsWifi)
+    ) { isAppOpen, state, network, paused ->
+        isAppOpen && state.listens() && network.hasNetwork && !paused
     }
         .distinctUntilChanged()
 
@@ -108,7 +108,7 @@ class LiveUpdates(
                 // The announcement of this device's own push comes while that push's run is going, before its answer
                 // moves the device past it; once the run is over it has, and a pull would find nothing
                 runs.running.first { !it }
-                if (latest.get().isBehind(announced.get())) runs.request(SyncRequest())
+                if (latest.get().isBehind(announced.get()) && changeRule.allowsNow()) runs.request(SyncRequest())
             }
         }
         try {

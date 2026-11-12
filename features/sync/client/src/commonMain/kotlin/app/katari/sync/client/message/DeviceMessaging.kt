@@ -12,8 +12,8 @@ import kotlin.time.Duration
 /**
  * Sends messages to the account's other devices ([app.katari.sync.protocol.message.DeviceMessage]), where the
  * [MessageHandler] of their kind takes them. A message waits in the [MessageOutbox] until a run takes it to the
- * server, which sending asks for at once, so it goes as soon as syncing may: not while syncing is paused, nor on a
- * network changes don't use.
+ * server, which sending asks for at once; the run sends it before anything else, on any network, but not while
+ * syncing is paused.
  */
 @Inject
 class DeviceMessaging(
