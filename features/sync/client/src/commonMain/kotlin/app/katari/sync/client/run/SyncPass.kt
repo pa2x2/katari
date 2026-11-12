@@ -201,7 +201,7 @@ class SyncPass(
                     SyncStage.DOWNLOADING -> {
                         if (waitsForWifi(state)) return SyncOutcome.WAITING_FOR_WIFI
                         pull.pullAll(client, device, liveOnly = true)
-                        connection.setStage(SyncStage.SETTINGS)
+                        resync.finishDownload(state.downloadRestartedAs)
                     }
                     SyncStage.SETTINGS -> firstSync.recordSettings()
                     SyncStage.RESYNC, SyncStage.RESYNC_WITHOUT_DELETIONS -> {
@@ -211,15 +211,23 @@ class SyncPass(
                     SyncStage.READY -> return exchange(client, device, request)
                 }
             } catch (e: ResyncNeeded) {
-                // A first download that finds its server changed takes the new one's records from the start instead,
-                // and still goes on to the device's settings after. A resync after a lost or restored server stays one:
-                // resyncing without deletions deletes what the server doesn't send back, which is what it lost.
-                val stage = when (state.stage) {
-                    SyncStage.DOWNLOADING, SyncStage.RESYNC -> state.stage
-                    else -> e.stage
+                val server = e.server ?: client.snapshot().server
+                // A position refused by another instance means nothing there, whatever the refusal said
+                val reason = if (state.instanceId != null && server.instanceId != state.instanceId) {
+                    SyncStage.RESYNC
+                } else {
+                    e.stage
                 }
-                logcat(LogPriority.WARN) { "The sync server was lost or restored; resyncing in full ($stage)" }
-                resync.start(stage, e.server ?: client.snapshot().server)
+                logcat(LogPriority.WARN) { "The sync server can't continue from this device's position ($reason)" }
+                when (state.stage) {
+                    // A first download takes the server's records from the start instead, and still goes on to the
+                    // device's settings after
+                    SyncStage.DOWNLOADING -> resync.restartDownload(reason, server)
+                    // A resync after a lost or restored server stays one: resyncing without deletions deletes what the
+                    // server doesn't send back, which is what it lost
+                    SyncStage.RESYNC -> resync.start(SyncStage.RESYNC, server)
+                    else -> resync.start(reason, server)
+                }
             }
         }
         logcat(LogPriority.ERROR) { "Sync stages didn't settle" }

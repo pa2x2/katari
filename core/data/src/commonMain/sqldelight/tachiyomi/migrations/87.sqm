@@ -1,0 +1,2 @@
+-- How a first download that started over settles what it took before (app/katari/sync/data/sync_state.sq).
+ALTER TABLE sync_state ADD COLUMN download_restarted_as TEXT;

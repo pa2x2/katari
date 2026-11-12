@@ -1,6 +1,7 @@
 package app.katari.sync.client.resync
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.apply.SyncWriting
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.kind.SyncKinds
@@ -33,6 +34,10 @@ import tachiyomi.data.DatabaseHandler
  *   elsewhere, and is deleted here without pushing; one it changed since is pushed, the change outliving a deletion it
  *   can't be compared with; one never synced is pushed as it would have been.
  *
+ * A first download that starts over ([restartDownload]) settles the records it took before and doesn't get back the
+ * same way, as the resync it starts over for would ([finishDownload]). Neither touches the rows only this device held,
+ * which were never synced and wait to be pushed already.
+ *
  * Records of parts of the account this device doesn't sync wait to be pushed until it syncs them again.
  *
  * Pushes are of merged copies and carry change ids, so pushing a record again changes nothing on any device. Every
@@ -44,23 +49,53 @@ class FullResync(
     private val handler: DatabaseHandler,
     private val writing: SyncWriting,
 ) {
-    /** Starts over at [stage], a resync, or a first download that found its server changed under it. */
+    /** Starts a resync at [stage]. */
     suspend fun start(stage: SyncStage, server: ServerIdentity) {
-        require(stage.isDownloading) { "$stage takes nothing from the server" }
+        require(stage == SyncStage.RESYNC || stage == SyncStage.RESYNC_WITHOUT_DELETIONS) { "$stage is no resync" }
         handler.await(inTransaction = true) {
             sync_recordsQueries.forgetBases()
             sync_stateQueries.restartPosition(stage.stored, server.sequence, server.instanceId)
         }
     }
 
-    suspend fun finish(stage: SyncStage) {
+    /**
+     * Starts a first download over, for what a resync at [reason] starts for. A lost server outweighs an expired
+     * position when the download starts over again: the copies it lost may be among the records taken before, and
+     * can't be told apart from the deletions the expired position missed, so they are pushed, as a resync does.
+     */
+    suspend fun restartDownload(reason: SyncStage, server: ServerIdentity) {
+        handler.await(inTransaction = true) {
+            val before = sync_stateQueries.get().awaitAsOne().download_restarted_as?.let(SyncStage::of)
+            val restartedAs = if (before == SyncStage.RESYNC) before else reason
+            sync_recordsQueries.forgetBases()
+            sync_stateQueries.restartPosition(SyncStage.DOWNLOADING.stored, server.sequence, server.instanceId)
+            sync_stateQueries.setDownloadRestartedAs(restartedAs.stored)
+        }
+    }
+
+    /** Ends a resync at [stage]. */
+    suspend fun finish(stage: SyncStage) = settle(stage, next = SyncStage.READY)
+
+    /**
+     * Ends a first download, which goes on to the device's settings. One that started over settles the records it
+     * took before as a resync at [restartedAs] does.
+     */
+    suspend fun finishDownload(restartedAs: SyncStage?) {
+        if (restartedAs == null) {
+            handler.await { sync_stateQueries.setStage(SyncStage.SETTINGS.stored, 0) }
+        } else {
+            settle(restartedAs, next = SyncStage.SETTINGS)
+        }
+    }
+
+    private suspend fun settle(stage: SyncStage, next: SyncStage) {
         if (stage == SyncStage.RESYNC_WITHOUT_DELETIONS) deleteWhatWasDeletedElsewhere()
         writing.write { session ->
             sync_recordsQueries.pushUnseen()
             session.holdBackOffChanges()
             sync_filesQueries.queuePlaced()
             sync_filesQueries.forgetUnavailable()
-            sync_stateQueries.setStage(SyncStage.READY.stored, 0)
+            sync_stateQueries.setStage(next.stored, 0)
         }
     }
 

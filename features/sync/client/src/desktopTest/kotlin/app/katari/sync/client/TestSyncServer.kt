@@ -8,6 +8,7 @@ import app.katari.sync.server.retention.UnreferencedFileRetention
 import java.io.File
 import java.net.ServerSocket
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 /**
@@ -55,12 +56,15 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
     }
 
     /**
-     * Drops the deletion markers every device has pulled past, as the server's retention does, and returns the newest
-     * sequence dropped so far.
+     * Drops the deletion markers every device has pulled past, as the server's retention does [later] than now, when
+     * devices silent for longer hold none, and returns the newest sequence dropped so far.
      */
-    fun dropPassedDeletionMarkers(accountId: Long): Long {
+    fun dropPassedDeletionMarkers(accountId: Long, later: Duration = Duration.ZERO): Long {
         val services = running().services
-        DeletionMarkerRetention(services.storage, services.clock).sweep(accountId)
+        val clock = object : Clock {
+            override fun now(): Instant = services.clock.now() + later
+        }
+        DeletionMarkerRetention(services.storage, clock).sweep(accountId)
         return services.storage.records.markersDroppedThrough(accountId)
     }
 
