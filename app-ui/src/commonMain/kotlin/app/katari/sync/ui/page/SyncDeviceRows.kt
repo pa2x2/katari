@@ -60,10 +60,12 @@ internal fun devicesGroup(
 @Composable
 private fun DeviceRow(device: AccountDevice, actions: SyncPageActions) {
     val description = device.device.description
-    val lastSynced = device.device.lastSeenMillis
-        .takeIf { it > 0 }
-        ?.let { relativeTimeSpanString(it) }
-        ?: stringResource(MR.strings.sync_device_not_synced)
+    // Another device with its live channel open is reached at once, which says more than when it last synced
+    val lastSynced = when {
+        device.device.connected && !device.isThisDevice -> stringResource(MR.strings.sync_device_connected)
+        device.device.lastSeenMillis > 0 -> relativeTimeSpanString(device.device.lastSeenMillis)
+        else -> stringResource(MR.strings.sync_device_not_synced)
+    }
     val summary =
         stringResource(MR.strings.sync_device_summary, description.platform, description.appVersion, lastSynced)
     TextPreferenceWidget(

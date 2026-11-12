@@ -97,21 +97,27 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             actions = { GuideButton(page = SyncGuide.SYNC) },
             onBackPressed = backPress,
             itemsProvider = {
+                // Nothing until the status and the kept device list are read, so the page doesn't move as they come
+                val listed = devices
                 when (val link = status?.link) {
                     null -> emptyList()
                     SyncStatus.Link.NotSetUp -> setUpPreferences(canKeepSignIn != false, actions)
                     is SyncStatus.Link.Ended -> endedPreferences(link, actions)
-                    is SyncStatus.Link.Linked -> linkedPreferences(
-                        link = link,
-                        status = checkNotNull(status),
-                        headline = headline,
-                        devices = devices,
-                        preferences = model.preferences,
-                        choices = choices,
-                        profilesNotSynced = profilesNotSynced,
-                        missingExtensions = missingExtensions,
-                        actions = actions,
-                    )
+                    is SyncStatus.Link.Linked -> if (listed == null) {
+                        emptyList()
+                    } else {
+                        linkedPreferences(
+                            link = link,
+                            status = checkNotNull(status),
+                            headline = headline,
+                            devices = listed,
+                            preferences = model.preferences,
+                            choices = choices,
+                            profilesNotSynced = profilesNotSynced,
+                            missingExtensions = missingExtensions,
+                            actions = actions,
+                        )
+                    }
                 }
             },
         )

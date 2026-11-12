@@ -3367,6 +3367,7 @@
     <string name="sync_in_background_summary">While the app is closed</string>
     <string name="sync_mode">Sync mode</string>
     <string name="sync_mode_instant">Instant</string>
+    <string name="sync_device_connected">connected now</string>
     <string name="sync_test_message_send">Send a test message</string>
     <string name="sync_test_message_received">A test message came from %s</string>
     <string name="sync_test_message_unknown_device">another device</string>
