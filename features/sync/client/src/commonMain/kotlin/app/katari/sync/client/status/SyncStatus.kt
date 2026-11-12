@@ -81,6 +81,15 @@ data class SyncStatus(
         }
 
         /**
+         * The platform's store for secrets couldn't give the device's token, such as a locked keyring; runs try again,
+         * and syncing goes on once it can be read.
+         */
+        data object TokenUnreadable : Activity
+
+        /** The last run got through but left changes or files it could have moved, which a run tried again later sends. */
+        data object Unfinished : Activity
+
+        /**
          * The last run that had something to do failed on this device, not for want of an answer, such as on a
          * change that couldn't be applied; it last synced at [lastSyncedAtMillis], null before the first sync.
          */
@@ -94,6 +103,11 @@ data class SyncStatus(
     data class Files(
         /** Files this device holds that the server may lack; the records naming them wait with them. */
         val toUpload: Long,
+        /**
+         * Files this device holds that the server, or a proxy in front of it, refused as too large: their records went
+         * without them, and each is offered again a day later.
+         */
+        val refusedAsTooLarge: Long,
         /** Files the records here name that aren't on this device yet. */
         val toDownload: Long,
         /**
@@ -105,7 +119,13 @@ data class SyncStatus(
         val waitingForWifi: Boolean,
     ) {
         companion object {
-            val NONE = Files(toUpload = 0, toDownload = 0, missingOnServer = 0, waitingForWifi = false)
+            val NONE = Files(
+                toUpload = 0,
+                refusedAsTooLarge = 0,
+                toDownload = 0,
+                missingOnServer = 0,
+                waitingForWifi = false,
+            )
         }
     }
 
@@ -127,8 +147,8 @@ data class SyncStatus(
 
     /** Whether something waits for the person, which More marks with a dot (D028). */
     val needsAttention: Boolean
-        get() = questions.isNotEmpty() || activity == Activity.WaitingForChoices || link is Link.Ended ||
-            (link as? Link.Linked)?.stopped != null
+        get() = questions.isNotEmpty() || activity == Activity.WaitingForChoices ||
+            activity == Activity.TokenUnreadable || link is Link.Ended || (link as? Link.Linked)?.stopped != null
 
     /** Whether the device is linked and syncing isn't stopped. */
     val isOn: Boolean

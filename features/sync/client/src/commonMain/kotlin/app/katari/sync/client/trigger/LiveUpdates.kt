@@ -9,6 +9,7 @@ import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.ChangeTransferRule
+import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import app.katari.sync.client.server.LiveChannel
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
@@ -131,9 +133,16 @@ class LiveUpdates(
         var backoff = FIRST_BACKOFF
         var unheard = 0
         while (true) {
-            val server = latest.get().server
-            val token = connection.token()
-            if (server == null || token == null) return
+            val server = latest.get().server ?: return
+            val token = try {
+                connection.token() ?: return
+            } catch (e: IOException) {
+                // Runs keep trying to read it, a locked keyring asking the person each time; the channel waits for one
+                // that could rather than asking again itself
+                logcat(LogPriority.INFO, e) { "Live updates wait for the device token" }
+                runs.ends.first { it != SyncOutcome.TOKEN_UNREADABLE }
+                continue
+            }
             val ended = CompletableDeferred<Unit>()
             val heard = AtomicBoolean(false)
             val channel = clients.of(server, token).live(
@@ -196,9 +205,13 @@ class LiveUpdates(
         latest: AtomicReference<SyncConnectionState>,
         block: suspend (SyncServerClient) -> Unit,
     ): Boolean {
-        val server = latest.get().server
-        val token = connection.token()
-        if (server == null || token == null) return false
+        val server = latest.get().server ?: return false
+        val token = try {
+            connection.token() ?: return false
+        } catch (e: IOException) {
+            logcat(LogPriority.INFO, e) { "Messages wait for the device token" }
+            return false
+        }
         return try {
             block(clients.of(server, token))
             true

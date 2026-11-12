@@ -1,5 +1,14 @@
 # Sync Server Changelog
 
+## [1.1.1] - 2026-11-12
+
+> This version upgrades the database in `/data`, and 1.1.0 can't open it afterwards, so copy the volume before upgrading if you might go back.
+
+### 🐛 Fixed
+
+- A device downloading the account also gets what other devices delete while the download runs, so a deleted item no longer stays on the new device. A device in the middle of its download when you upgrade starts that download over.
+- When the server refuses a device's edit because another device changed or deleted the item first, it sends back its own copy. An edit to something deleted elsewhere is then no longer refused on every sync.
+
 ## [1.1.0] - 2026-11-12
 
 > This version upgrades the database in `/data`, and 1.0.x can't open it afterwards, so copy the volume before upgrading if you might go back.
@@ -23,7 +32,8 @@
 - All data lives in one volume at `/data`, and deleted records and unused files are cleaned up on their own.
 - `reset-password` gives a locked-out admin a new password from inside the container.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.1.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/sync-server-v1.1.1...HEAD
+[1.1.1]: https://github.com/pa2x2/katari/tree/sync-server-v1.1.1
 [1.1.0]: https://github.com/pa2x2/katari/tree/sync-server-v1.1.0
 [1.0.1]: https://github.com/pa2x2/katari/tree/sync-server-v1.0.1
 [1.0.0]: https://github.com/pa2x2/katari/tree/sync-server-v1.0.0

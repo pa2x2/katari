@@ -1,13 +1,16 @@
 package app.katari.sync.client.kind.entry
 
+import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.core.common.extensions.EMPTY
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.file.local.FileOwner
 import app.katari.sync.client.file.local.want
 import app.katari.sync.client.file.local.wanted
@@ -23,6 +26,8 @@ import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.protocol.file.FileCategory
 import app.katari.sync.protocol.file.FileReference
+import kotlinx.serialization.json.JsonObject
+import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.model.StubSource
 
@@ -30,8 +35,9 @@ import tachiyomi.domain.source.model.StubSource
  * Entries, keyed by profile uuid, source identity, URL and type ([LocalReads.entryKey]). Local ref: `[entries._id]`.
  *
  * Only the person's fields are captured, so a source refresh rewriting the title or description is no change; the
- * metadata travels with the next change the person makes. The custom cover is the file the person set
- * ([FileOwner.CustomCover]), captured from the app's file store rather than by a trigger
+ * metadata travels with the next change the person makes. A refresh that replaces stand-ins for the source's details
+ * (`entries_placeholder_details`) has the record read again at once, as no edit. The custom cover is the file the
+ * person set ([FileOwner.CustomCover]), captured from the app's file store rather than by a trigger
  * ([app.katari.sync.client.file.capture.FileCapture]). An entry joins sync when it is added to the library, or
  * when a record of it (a read chapter, history) needs it as a parent. Entries are never deleted as records: rows of
  * entries outside the library are removed as cache, and a move to another profile is an entry replacement record.
@@ -56,6 +62,14 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                 // A move to another profile gives the entry a new key, and so a new record.
                 Field(Field.EVERY, "profile_id"),
             ),
+        ),
+        // Its details were fetched where it held stand-ins for them, so devices that create it get the source's
+        CaptureTrigger(
+            "entries_placeholder_details",
+            Event.DELETE,
+            listOf("OLD.entry_id"),
+            owners = listOf(Owner.entry()),
+            personsEdit = false,
         ),
     )
 
@@ -99,6 +113,15 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                     backgroundUrl = row.background_url,
                 ),
                 sourceName = row.source_name?.takeIf { StubSource.isKnownName(it) } ?: previous?.sourceName,
+                // Stand-ins would replace the source's details on every device that creates the entry from the record
+                details = if (row.placeholder_details) {
+                    previous?.details
+                } else {
+                    EntryDetails(
+                        memo = row.memo,
+                        updateStrategy = UpdateStrategyColumnAdapter.encode(row.update_strategy),
+                    )
+                },
             )
         }
     }
@@ -113,18 +136,21 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         chapterFlags = latest(local.chapterFlags, incoming.chapterFlags),
         metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
         customCover = latest(local.customCover, incoming.customCover),
-        // A record from a device that doesn't know the name never takes it away
+        // A record from a device that doesn't know the name or the details, or holds only stand-ins for the details,
+        // never takes them away
         sourceName = fieldOfNewer(serializer, local, incoming) { it.sourceName }
             ?: local.sourceName
             ?: incoming.sourceName,
+        details = fieldOfNewer(serializer, local, incoming) { it.details } ?: local.details ?: incoming.details,
     )
 
     override fun files(payload: EntryPayload): List<FileReference> =
         listOfNotNull(payload.customCover.value?.reference(FileCategory.COVER))
 
     /**
-     * Writes the person's fields, and the source's metadata only into a row it creates: a device that has the row
-     * keeps the metadata of its own refreshes. The source's name is stored for a source no extension here named. The
+     * Writes the person's fields, and the source's metadata and details only into a row it creates: a device that has
+     * the row keeps those of its own refreshes, but takes the record's details in place of stand-ins a record without
+     * them left (`entries_placeholder_details`). The source's name is stored for a source no extension here named. The
      * custom cover is put in place after the transaction, fetched first when no file here holds it. An entry another
      * one replaced stays out of the library; its changes carry over to the replacement instead. An entry moved to
      * another profile has no row of its own any more, as after moving it here, so its record makes none. Local-source
@@ -140,6 +166,7 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
         val favorite = payload.favorite.value && writes.replacementOf(key) == null
         val pinned = payload.libraryPinned.value && favorite
         val existing = queries.entryId(profileId, source, payload.url, payload.type).awaitAsOneOrNull()
+        val details = payload.details
         val entryId = if (existing == null) {
             val metadata = payload.metadata
             queries.insertEntry(
@@ -162,8 +189,17 @@ object EntryKind : SyncedKind<EntryPayload>(LocalReads.ENTRY, 1, EntryPayload.se
                 libraryPinned = pinned,
                 viewer = payload.viewerFlags.value,
                 chapterFlags = payload.chapterFlags.value,
-            ).awaitAsOne()
+                memo = details?.memo ?: JsonObject.EMPTY,
+                updateStrategy = UpdateStrategyColumnAdapter.decode(details?.updateStrategy ?: 0),
+            ).awaitAsOne().also { if (details == null) queries.notePlaceholderEntryDetails(it) }
         } else {
+            if (details != null && queries.entryHoldsPlaceholderDetails(existing).awaitAsOne()) {
+                queries.fillEntryDetails(
+                    memo = details.memo,
+                    updateStrategy = UpdateStrategyColumnAdapter.decode(details.updateStrategy),
+                    entryId = existing,
+                ).await()
+            }
             queries.updateEntry(
                 favorite = favorite,
                 dateAdded = payload.dateAdded.value,

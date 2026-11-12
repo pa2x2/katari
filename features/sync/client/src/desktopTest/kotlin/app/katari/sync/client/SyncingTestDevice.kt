@@ -39,6 +39,7 @@ import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.UngroupedRecords
+import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
 import app.katari.sync.client.run.PushChanges
@@ -63,6 +64,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.IOException
 import java.util.Collections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -71,14 +73,17 @@ import kotlin.time.Duration.Companion.hours
  * A [SyncTestDevice] with sync's transport wired as the app wires it, talking to a real server over [http]: a test
  * passes a client of its own to cut calls short where a real network would.
  */
-internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()) : AutoCloseable {
+internal class SyncingTestDevice(
+    file: File,
+    http: OkHttpClient = OkHttpClient(),
+    private val tokens: MemoryTokens = MemoryTokens(),
+) : AutoCloseable {
     val local = SyncTestDevice(file)
-    private val tokens = MemoryTokens()
     val network = Network()
     val work = RecordedBackgroundWork()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
-    private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
+    private val capture = SyncCapture(local.handler, local.settingsCapture, local.fileCapture)
     val directory = DeviceDirectory(local.handler)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff, directory)
@@ -150,6 +155,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
                 continuity,
                 local.pending,
                 uploads,
+                local.incoming,
             ),
             local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,
@@ -161,10 +167,13 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             messageOutbox,
             messageInbox,
             changeRule,
+            fileRule,
             lazyOf(setOf(DownloadRequestRetry(downloadRequestInbox))),
         ),
         steps,
     )
+    val restoreStamping =
+        RestoreStamping(local.handler, local.writing, local.settingsCapture, local.preferences.reads, runs)
     val messaging = DeviceMessaging(connection, messageOutbox, runs)
     val downloadRequestSending = DownloadRequestSending(messaging, syncedEntries)
     val choiceChanges = SyncChoiceChanges(
@@ -264,13 +273,23 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         const val NOTE = "note"
     }
 
-    private class MemoryTokens : DeviceTokenStore {
+    /** The platform's store for the token, which outlives the app: a test hands one to the device it opens again. */
+    class MemoryTokens : DeviceTokenStore {
         @Volatile
         private var token: String? = null
 
+        /** Reads fail as a locked keyring's do. */
+        @Volatile
+        var unreadable = false
+
         override val isAvailable = true
 
-        override fun read() = token
+        override fun read(): String? {
+            if (unreadable) throw IOException("The keyring is locked")
+            return token
+        }
+
+        override fun allowAsking() = Unit
 
         override fun write(token: String?) {
             this.token = token?.takeIf(String::isNotBlank)
@@ -302,6 +321,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         }
 
         override fun handOff() = Unit
+
+        override fun retry() = Unit
 
         override fun longRun(onMetered: Boolean) = Unit
 

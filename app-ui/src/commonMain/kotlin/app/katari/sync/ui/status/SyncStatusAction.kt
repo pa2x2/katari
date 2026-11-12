@@ -69,6 +69,12 @@ private fun statusAction(headline: SyncHeadline, title: String, onClick: () -> U
             onClick = onClick,
             badgeCount = headline.count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
         )
+        headline is SyncHeadline.Unfinished -> AppBar.Action(
+            title = title,
+            icon = MaterialSymbols.Rounded.CloudUpload,
+            onClick = onClick,
+            badgeCount = headline.unsent.coerceAtMost(Int.MAX_VALUE.toLong()).toInt().takeIf { it > 0 },
+        )
         headline is SyncHeadline.FirstDownloadWaitsForWifi || headline is SyncHeadline.ChangesWaitForWifi ->
             AppBar.Action(title = title, icon = platformPresentation.unmeteredNetworkIcon, onClick = onClick)
         headline is SyncHeadline.Paused ->

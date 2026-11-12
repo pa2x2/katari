@@ -16,26 +16,17 @@ class TemporarySchemaTest {
     lateinit var directory: File
 
     @Test
-    fun `published statements reach the writer and readers, and a later publication replaces them`() = runTest {
-        val schema = TemporarySchema()
-        open(directory.resolve("test.db"), schema).use { driver ->
+    fun `the writer and every reader run the statements, once the schema they name exists`() = runTest {
+        // A new file: the statements' table exists only once the driver has created the schema
+        open(directory.resolve("test.db"), TemporarySchema(listOf(CREATE_MARKER))).use { driver ->
             driver.await(
                 null,
                 "INSERT INTO entries(_id, profile_id, source, url, title) VALUES (1, 1, 1, '/entry', 'Entry')",
                 0,
             )
-            driver.await(null, "UPDATE entries SET title = 'Before publishing'", 0)
-            driver.markers() shouldBe 0
-
-            schema.publish(listOf(DROP_MARKER, CREATE_MARKER))
             driver.await(null, "UPDATE entries SET title = 'By the writer'", 0)
             // Outside a transaction a query runs on a reader connection, writes included.
             driver.writeThroughReader("UPDATE entries SET title = 'By a reader' RETURNING _id")
-            driver.markers() shouldBe 2
-
-            schema.publish(listOf(DROP_MARKER))
-            driver.await(null, "UPDATE entries SET title = 'Unmarked by the writer'", 0)
-            driver.writeThroughReader("UPDATE entries SET title = 'Unmarked by a reader' RETURNING _id")
             driver.markers() shouldBe 2
         }
     }
@@ -63,7 +54,6 @@ class TemporarySchemaTest {
     ).await()
 
     private companion object {
-        const val DROP_MARKER = "DROP TRIGGER IF EXISTS temp.marker"
         const val CREATE_MARKER = """
             CREATE TEMP TRIGGER marker AFTER UPDATE OF title ON main.entries
             BEGIN

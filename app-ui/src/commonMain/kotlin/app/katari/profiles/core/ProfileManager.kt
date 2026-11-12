@@ -82,7 +82,8 @@ class ProfileManager(
         val loadedProfiles = profileDatabase.getProfiles(includeArchived = true)
         val visibleProfiles = loadedProfiles.filterNot(Profile::isArchived)
         val activeId = profilesPreferences.activeProfileId.get()
-        val initialProfile = loadedProfiles.firstOrNull { it.id == activeId }
+        // A profile archived while it was open, on another device or by a restored backup, isn't opened again
+        val initialProfile = visibleProfiles.firstOrNull { it.id == activeId }
             ?: visibleProfiles.firstOrNull()
             ?: loadedProfiles.firstOrNull { it.id == ProfileConstants.DEFAULT_PROFILE_ID }
         if (initialProfile != null) {

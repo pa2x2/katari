@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.entry
 
+import app.katari.sync.client.payload.SourceMemo
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.payload.SyncedFile
@@ -33,6 +34,8 @@ data class EntryPayload(
      * the record knew it.
      */
     @ProtoNumber(14) val sourceName: String? = null,
+    /** Null when the device that wrote the record carried none. */
+    @ProtoNumber(15) val details: EntryDetails? = null,
 )
 
 /** The source's description of the entry as this device last fetched it. */
@@ -46,4 +49,16 @@ data class EntryMetadata(
     @ProtoNumber(6) val status: Long = 0,
     @ProtoNumber(7) val thumbnailUrl: String? = null,
     @ProtoNumber(8) val backgroundUrl: String? = null,
+)
+
+/**
+ * The rest of the source's description of the entry, which came after [EntryMetadata] was released: a device on that
+ * release rewrites the metadata message without fields it doesn't know, so these travel as one of their own.
+ */
+@Serializable
+data class EntryDetails(
+    /** What the source's extension stored with the entry and needs back to list its chapters. */
+    @ProtoNumber(1) val memo: SourceMemo,
+    /** The `entries.update_strategy` column's value: whether library updates refresh the entry or leave it. */
+    @ProtoNumber(2) val updateStrategy: Long = 0,
 )

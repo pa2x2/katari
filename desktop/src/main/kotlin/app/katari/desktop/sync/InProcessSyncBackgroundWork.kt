@@ -14,9 +14,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Sync's background work as [InProcessWork], which runs while the app is open: the periodic sync, a hand-off that a
- * quit cut short runs again at the next launch, and a long run, whose progress shows in a notification and which the
- * app asks about before quitting cuts it short. A desktop has no battery saver that asks apps to hold back.
+ * Sync's background work as [InProcessWork], which runs while the app is open: the periodic sync, a hand-off or retry
+ * that a quit cut short runs again at the next launch, and a long run, whose progress shows in a notification and
+ * which the app asks about before quitting cuts it short. A desktop has no battery saver that asks apps to hold back.
  *
  * [run] is a function because [SyncBackgroundRun] itself needs this work.
  */
@@ -27,7 +27,7 @@ class InProcessSyncBackgroundWork(
     private val run: () -> SyncBackgroundRun,
     private val longRunNotification: DesktopSyncLongRunNotification,
 ) : SyncBackgroundWork, ResumableWork {
-    override val kinds: Set<String> = setOf(PERIODIC, HAND_OFF, LONG_RUN)
+    override val kinds: Set<String> = setOf(PERIODIC, HAND_OFF, RETRY, LONG_RUN)
 
     // The app runs on in the tray, its live channel open, until the person quits it
     override fun keepConnected(connected: Boolean) = Unit
@@ -51,6 +51,14 @@ class InProcessSyncBackgroundWork(
         work.enqueue(HAND_OFF, ExistingWorkPolicy.Replace, request)
     }
 
+    override fun retry() {
+        val request = InProcessWorkRequest(resumeAs = RETRY, requiresNetwork = true, backoff = RETRY_BACKOFF) {
+            run().retry()
+        }
+        // Replacing the work would start it over without its backoff, at once after each run that leaves work.
+        work.enqueue(RETRY, ExistingWorkPolicy.Keep, request)
+    }
+
     // The run itself waits for Wi-Fi where a first download must (D022); the work only needs a network
     override fun longRun(onMetered: Boolean) {
         val request = InProcessWorkRequest(resumeAs = LONG_RUN, requiresNetwork = true, backoff = LONG_RUN_BACKOFF) {
@@ -71,6 +79,7 @@ class InProcessSyncBackgroundWork(
     override suspend fun resume(kind: String, input: Map<String, String>) {
         when (kind) {
             HAND_OFF -> handOff()
+            RETRY -> retry()
             // The triggers schedule these again once the app starts, the long run while the stage still asks for it.
             PERIODIC, LONG_RUN -> Unit
         }
@@ -81,6 +90,8 @@ class InProcessSyncBackgroundWork(
         const val PERIODIC = "SyncPeriodic"
         const val HAND_OFF = "SyncHandOff"
         val HAND_OFF_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
+        const val RETRY = "SyncRetry"
+        val RETRY_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
         const val LONG_RUN = "SyncLongRun"
         val LONG_RUN_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
     }

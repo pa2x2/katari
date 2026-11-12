@@ -18,6 +18,8 @@ class SecretStoreDeviceTokens(private val secrets: SecretStore) : DeviceTokenSto
 
     override fun read(): String? = secrets.read(TOKEN)
 
+    override fun allowAsking() = secrets.allowAsking(TOKEN)
+
     // The store forgets a key when given a blank one.
     override fun write(token: String?) = secrets.write(TOKEN, token.orEmpty())
 

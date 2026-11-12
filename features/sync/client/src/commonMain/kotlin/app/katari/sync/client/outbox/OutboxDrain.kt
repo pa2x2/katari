@@ -34,7 +34,9 @@ import tachiyomi.data.DatabaseHandler
  * A record of a part of the account this device chose not to sync ([OffParts]) is stored like any other, so its edits
  * keep the times they were made, and held back from pushing until the part is synced again.
  *
- * It only reads the local database and preferences, so it runs whether or not the server is reachable.
+ * It only reads the local database and preferences, so it runs whether or not the server is reachable. The rows a
+ * restore under way wrote stay in the outbox for the restore to record
+ * ([app.katari.sync.client.restore.RestoreStamping]).
  */
 @Inject
 class OutboxDrain(
@@ -56,15 +58,10 @@ class OutboxDrain(
         val state = sync_stateQueries.get().awaitAsOne()
         val deviceId = state.device_id
         if (!state.enabled || deviceId == null) return@await 0
-        SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
-            val version = kind.version.toLong()
-            // Inserting no rows still tells the outbox's listeners it changed, and that starts another drain: a drain
-            // that queued nothing would start the next one, for as long as the app is open
-            if (!sync_recordsQueries.hasOutdated(kind = kind.name, version = version).awaitAsOne()) return@forEach
-            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = version)
-            sync_recordsQueries.raiseVersion(kind = kind.name, version = version)
-        }
-        val rows = sync_outboxQueries.batch(limit).awaitAsList()
+        val through = state.restore_outbox_seq
+        // Rows queued now would be the restore's too, and recorded with its rows as what they stand for
+        if (through == null) queueOutdatedRereads()
+        val rows = sync_outboxQueries.batch(limit).awaitAsList().takeWhile { through == null || it.seq <= through }
         if (rows.isEmpty()) return@await 0
 
         val clock = sync_clockQueries.get().awaitAsOne()
@@ -83,6 +80,17 @@ class OutboxDrain(
         sync_outboxQueries.deleteThrough(rows.last().seq)
         sync_clockQueries.setIssued(stamper.issuedPhysical, stamper.issuedCounter.toLong())
         rows.size
+    }
+
+    private suspend fun Database.queueOutdatedRereads() {
+        SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
+            val version = kind.version.toLong()
+            // Inserting no rows still tells the outbox's listeners it changed, and that starts another drain: a drain
+            // that queued nothing would start the next one, for as long as the app is open
+            if (!sync_recordsQueries.hasOutdated(kind = kind.name, version = version).awaitAsOne()) return@forEach
+            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = version)
+            sync_recordsQueries.raiseVersion(kind = kind.name, version = version)
+        }
     }
 
     private class Drain(
@@ -106,7 +114,7 @@ class OutboxDrain(
                 record(deletedRecordKey, kind).add(fields, stamp)
                 return null
             }
-            read += kind.name to ref
+            if (read.add(kind.name to ref)) kind.rejoin(reads, ref)
             return when (val found = kind.read(reads, ref)) {
                 is LocalRead.Found -> Present(kind, ref, found).also { present ->
                     record(found.key, kind).apply {
@@ -196,6 +204,12 @@ private suspend fun <P : Any> Database.storePresent(
         if (replacing) {
             sync_recordsQueries.deleteReplaced(kind.name, present.ref.json, key)
         } else {
+            // Left live, the record the row was synced under before would make the row again on every device, at
+            // what it was keyed by then
+            present.found.replaces?.let { replaced ->
+                val old = sync_recordsQueries.getByKey(replaced).awaitAsOne()
+                storeTombstone(replaced, kind, old.payload, stamps.latest ?: Stamped.UNKNOWN_EDIT, key, parts)
+            }
             sync_recordsQueries.detachLocalRef(kind.name, present.ref.json, key)
         }
     }
@@ -227,23 +241,8 @@ private suspend fun <P : Any> Database.storeAbsent(
     val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return
     if (stored.deleted) return
     when (kind.absence) {
-        SyncedKind.Absence.TOMBSTONE -> {
-            val tombstone = ProtoBuf.encodeToByteArray(
-                Tombstone.serializer(),
-                Tombstone(stamps.latest ?: Stamped.UNKNOWN_EDIT, last = stored.payload),
-            )
-            sync_recordsQueries.storeLocalChange(
-                recordKey = key,
-                kind = kind.name,
-                localRef = null,
-                kindVersion = kind.version.toLong(),
-                payload = tombstone,
-                deleted = true,
-                changeId = newChangeId(),
-                recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
-            )
-            if (parts.isOff(kind, kind.decode(stored.payload))) sync_recordsQueries.holdBack(key)
-        }
+        SyncedKind.Absence.TOMBSTONE ->
+            storeTombstone(key, kind, stored.payload, stamps.latest ?: Stamped.UNKNOWN_EDIT, replacedBy = null, parts)
         SyncedKind.Absence.REMOVED_FLAG -> {
             val previous = kind.decode(stored.payload)
             val removed = kind.removed(previous, stamps)
@@ -262,4 +261,28 @@ private suspend fun <P : Any> Database.storeAbsent(
         }
         SyncedKind.Absence.KEEP -> Unit
     }
+}
+
+/** Marks [key], whose payload was [last], deleted at [deletedAt], in favour of [replacedBy] when it names one. */
+private suspend fun <P : Any> Database.storeTombstone(
+    key: String,
+    kind: SyncedKind<P>,
+    last: ByteArray,
+    deletedAt: HybridTimestamp,
+    replacedBy: String?,
+    parts: OffParts,
+) {
+    val tombstone =
+        ProtoBuf.encodeToByteArray(Tombstone.serializer(), Tombstone(deletedAt, replacedBy = replacedBy, last = last))
+    sync_recordsQueries.storeLocalChange(
+        recordKey = key,
+        kind = kind.name,
+        localRef = null,
+        kindVersion = kind.version.toLong(),
+        payload = tombstone,
+        deleted = true,
+        changeId = newChangeId(),
+        recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
+    )
+    if (parts.isOff(kind, kind.decode(last))) sync_recordsQueries.holdBack(key)
 }

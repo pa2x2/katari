@@ -3,9 +3,10 @@ package app.katari.sync.client.capture
 import app.katari.sync.client.record.FieldStamps
 
 /**
- * A TEMP trigger that records edits of [table] into `sync_outbox` for one kind. [ref] are SQL expressions over the
- * row (`NEW.` or `OLD.` columns) that locate it, in the order the kind reads them. An update is recorded only when a
- * column of [fields] changed, with the payload fields it touched; inserts and deletes touch every field.
+ * A TEMP trigger that records edits of [table] into `sync_outbox` for one kind while sync is on. [ref] are SQL
+ * expressions over the row (`NEW.` or `OLD.` columns) that locate it, in the order the kind reads them. An update is
+ * recorded only when a column of [fields] changed, with the payload fields it touched; inserts and deletes touch every
+ * field.
  */
 internal class CaptureTrigger(
     val table: String,
@@ -15,22 +16,28 @@ internal class CaptureTrigger(
     /** An SQL condition the row must also meet. */
     val condition: String? = null,
     /**
-     * For a delete, the entries and chapters the row belongs to. The delete is recorded only while every one of them
-     * is still here: a row deleted along with its entry or chapter, as a refresh, a move or clearing the database
-     * removes them, went as cache and not by the person's hand, so its record stays as it is everywhere (D017).
+     * For a delete, the profile, entries and chapters the row belongs to. The delete is recorded only while every one
+     * of them is still here: a row deleted along with its entry or chapter, as a refresh, a move or clearing the
+     * database removes them, went as cache and not by the person's hand, so its record stays as it is everywhere
+     * (D017). A row deleted along with its profile went with the profile's deletion, whose record stands for it: its
+     * own record stays live, so a profile kept after the question about its deletion (D018) comes back with it.
      */
     val owners: List<Owner> = emptyList(),
     /**
-     * Whether the insert is the person's edit of the row's fields. A row a refresh brings is not: it touches no field,
-     * so its values give way to every edit made anywhere, as the rows recorded at the first sync do.
+     * Whether the insert or delete is the person's edit of the row's fields. A row a refresh brings is not: it touches
+     * no field, so its values give way to every edit made anywhere, as the rows recorded at the first sync do. Nor is
+     * the delete of a row that only notes something of the row [ref] locates, such as its stand-ins for the source's
+     * details: that row is read again as it is, when a record holds it, and keeps its record.
      */
     val personsEdit: Boolean = true,
 ) {
     init {
         require((event == Event.UPDATE) == fields.isNotEmpty()) { "Only updates name the fields they capture" }
         require(event == Event.DELETE || owners.isEmpty()) { "Only deletes depend on their owners" }
-        require(event == Event.INSERT || personsEdit) { "Only inserts may be no edit of the person's" }
+        require(event != Event.UPDATE || personsEdit) { "Only inserts and deletes may be no edit of the person's" }
     }
+
+    private val deletesRecord = event == Event.DELETE && personsEdit
 
     /** The row of [table] whose `_id` is [id], an SQL expression over the deleted row. */
     class Owner(val table: String, val id: String) {
@@ -38,6 +45,8 @@ internal class CaptureTrigger(
             fun entry(column: String = "entry_id") = Owner("entries", "OLD.$column")
 
             fun chapter(column: String = "chapter_id") = Owner("chapters", "OLD.$column")
+
+            fun profile(column: String = "profile_id") = Owner("profiles", "OLD.$column")
         }
     }
 
@@ -50,7 +59,7 @@ internal class CaptureTrigger(
         }
     }
 
-    fun name(kind: String, index: Int): String =
+    private fun name(kind: String, index: Int): String =
         "sync_capture_${kind.replace(Regex("[^a-z]"), "_")}_${event.name.lowercase()}_$index"
 
     fun createStatement(kind: String, index: Int): String {
@@ -61,32 +70,37 @@ internal class CaptureTrigger(
                 val differs = field.columns.joinToString(" OR ") { "OLD.$it IS NOT NEW.$it" }
                 "(CASE WHEN $differs THEN $bit ELSE 0 END)"
             }
-            Event.INSERT -> if (personsEdit) FieldStamps.EVERY_FIELD.toString() else "0"
-            Event.DELETE -> FieldStamps.EVERY_FIELD.toString()
+            Event.INSERT, Event.DELETE -> if (personsEdit) FieldStamps.EVERY_FIELD.toString() else "0"
         }
         val columns = when (event) {
             Event.UPDATE -> " OF " + fields.flatMap { it.columns.toList() }.distinct().joinToString()
             Event.INSERT, Event.DELETE -> ""
         }
         val conditions = listOfNotNull(
+            // Installed on every connection whether or not this device syncs (CaptureTriggers)
+            "EXISTS (SELECT 1 FROM main.sync_state WHERE id = 0 AND enabled)",
             "($changed) != 0".takeIf { event == Event.UPDATE },
             condition?.let { "($it)" },
+            "EXISTS (SELECT 1 FROM main.sync_records WHERE kind = '$kind' AND local_ref = $localRef)"
+                .takeIf { event == Event.DELETE && !personsEdit },
         )
-        val recordKey = when (event) {
-            Event.DELETE -> "(SELECT record_key FROM sync_records WHERE kind = '$kind' AND local_ref = $localRef)"
-            Event.INSERT, Event.UPDATE -> "NULL"
+        val recordKey = if (deletesRecord) {
+            "(SELECT record_key FROM sync_records WHERE kind = '$kind' AND local_ref = $localRef)"
+        } else {
+            "NULL"
         }
         // SQLite deletes a cascade's rows after their owner's, so an owner still here means the row went by itself.
         val ownersHere = owners.joinToString("") { " AND EXISTS (SELECT 1 FROM main.${it.table} WHERE _id = ${it.id})" }
         // A deleted row's record is detached from it, so a row that later takes the same local id starts its own.
-        val detach = when (event) {
-            Event.DELETE -> "UPDATE sync_records SET local_ref = NULL WHERE kind = '$kind' AND local_ref = $localRef;"
-            Event.INSERT, Event.UPDATE -> ""
+        val detach = if (deletesRecord) {
+            "UPDATE sync_records SET local_ref = NULL WHERE kind = '$kind' AND local_ref = $localRef;"
+        } else {
+            ""
         }
         return """
             CREATE TEMP TRIGGER ${name(kind, index)}
             AFTER ${event.name}$columns ON main.$table
-            FOR EACH ROW${if (conditions.isEmpty()) "" else " WHEN " + conditions.joinToString(" AND ")}
+            FOR EACH ROW WHEN ${conditions.joinToString(" AND ")}
             BEGIN
                 INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
                 SELECT '$kind', $localRef, $changed, $recordKey, $NOW_MILLIS, seen_physical, seen_counter

@@ -63,4 +63,51 @@ class ProfileDeletionQuestionTest {
                 }
             }
         }
+
+    @Test
+    fun `a profile kept after its deletion elsewhere comes back with its categories on every device`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                        "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                        """
+                        INSERT INTO entries(_id, profile_id, source, url, title, favorite, type)
+                        VALUES (1, 2, -2, '/show', 'Show', 1, 'anime')
+                        """,
+                        "INSERT INTO categories(_id, profile_id, name, sort, flags) VALUES (5, 2, 'Later', 1, 0)",
+                        "INSERT INTO entries_categories(profile_id, entry_id, category_id) VALUES (2, 1, 5)",
+                        "INSERT INTO category_update_rules(profile_id, category_id, auto_update) VALUES (2, 5, 0)",
+                    )
+                    exchange.settle(listOf(a, b))
+
+                    // As the app deletes a profile: its entries first, then the profile with the rest of its rows
+                    a.sql("DELETE FROM entries WHERE profile_id = 2", "DELETE FROM profiles WHERE uuid = 'work'")
+                    a.drainAll()
+                    delay(5)
+                    b.sql("UPDATE entries SET notes = 'Kept for later'")
+                    exchange.settle(listOf(a, b))
+                    // Answered on the device that deleted it
+                    a.questions.answerProfileDeletion("work", ProfileDeletionAnswer.KEEP)
+                    exchange.settle(listOf(a, b))
+
+                    a.questions.open().first().shouldBeEmpty()
+                    a.library() shouldBe b.library()
+                    a.library() shouldContain """["category","work","Later",1,0]"""
+                    a.library() shouldContain """["in category","/show","Later"]"""
+                    val rules = """
+                        SELECT json_array(P.uuid, C.name, R.auto_update)
+                        FROM category_update_rules R
+                        JOIN profiles P ON P._id = R.profile_id
+                        JOIN categories C ON C._id = R.category_id
+                    """
+                    a.rows(rules) shouldBe listOf("""["work","Later",0]""")
+                    b.rows(rules) shouldBe a.rows(rules)
+                }
+            }
+        }
 }

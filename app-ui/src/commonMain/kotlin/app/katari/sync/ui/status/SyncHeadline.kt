@@ -27,6 +27,9 @@ sealed interface SyncHeadline {
 
     data object ChoicesWaiting : SyncHeadline
 
+    /** The device's sign-in can't be read from the platform's store for secrets now, such as a locked keyring. */
+    data object TokenUnreadable : SyncHeadline
+
     data class Questions(val count: Int) : SyncHeadline
 
     data class UnreachableLong(val server: String, val sinceMillis: Long) : SyncHeadline
@@ -66,6 +69,9 @@ sealed interface SyncHeadline {
 
     data class Unreachable(val server: String) : SyncHeadline
 
+    /** [unsent] changes made here, possibly none, or files wait for a run that tries again by itself. */
+    data class Unfinished(val unsent: Long) : SyncHeadline
+
     /** The last run failed on this device; [lastSyncedAtMillis] is null before the first sync finished. */
     data class Failed(val lastSyncedAtMillis: Long?) : SyncHeadline
 
@@ -73,16 +79,24 @@ sealed interface SyncHeadline {
     data class UpToDate(val atMillis: Long?, val files: FilesNote?) : SyncHeadline
 
     sealed interface FilesNote {
-        data class WaitingForWifi(val count: Long) : FilesNote
+        val count: Long
 
-        data class MissingOnServer(val count: Long) : FilesNote
+        /** Refused by the server, or a proxy in front of it, as too large. */
+        data class TooLarge(override val count: Long) : FilesNote
+
+        data class WaitingForWifi(override val count: Long) : FilesNote
+
+        /** Still to move, with nothing keeping them waiting. */
+        data class ToMove(override val count: Long) : FilesNote
+
+        data class MissingOnServer(override val count: Long) : FilesNote
     }
 
     /** Whether this is trouble the person should notice, which sync's status icon shows as a warning. */
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,
-            is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
+            TokenUnreadable, is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
             -> true
             else -> false
         }
@@ -110,6 +124,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     }
     val activity = activity
     if (activity == SyncStatus.Activity.WaitingForChoices) return SyncHeadline.ChoicesWaiting
+    if (activity == SyncStatus.Activity.TokenUnreadable) return SyncHeadline.TokenUnreadable
     if (questions.isNotEmpty()) return SyncHeadline.Questions(questions.size)
     if (activity is SyncStatus.Activity.Unreachable && activity.isLong(nowMillis)) {
         return SyncHeadline.UnreachableLong(server, activity.sinceMillis)
@@ -132,14 +147,24 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
             SyncHeadline.Unreachable(server)
         }
         is SyncStatus.Activity.Failed -> SyncHeadline.Failed(activity.lastSyncedAtMillis)
-        is SyncStatus.Activity.UpToDate -> SyncHeadline.UpToDate(activity.atMillis, filesNote())
+        SyncStatus.Activity.Unfinished -> SyncHeadline.Unfinished(unsent)
+        // A run that got through leaves changes behind only when they name files waiting for Wi-Fi; any other is a
+        // run that ended before it could send them
+        is SyncStatus.Activity.UpToDate -> when {
+            unsent > 0 && files.waitingForWifi -> SyncHeadline.ChangesWaitForWifi(unsent)
+            unsent > 0 -> SyncHeadline.Unfinished(unsent)
+            else -> SyncHeadline.UpToDate(activity.atMillis, filesNote())
+        }
         // Already handled above, or not linked
-        SyncStatus.Activity.WaitingForChoices, SyncStatus.Activity.Idle -> SyncHeadline.UpToDate(null, filesNote())
+        SyncStatus.Activity.WaitingForChoices, SyncStatus.Activity.TokenUnreadable, SyncStatus.Activity.Idle ->
+            SyncHeadline.UpToDate(null, filesNote())
     }
 }
 
 private fun SyncStatus.filesNote(): SyncHeadline.FilesNote? = when {
+    files.refusedAsTooLarge > 0 -> SyncHeadline.FilesNote.TooLarge(files.refusedAsTooLarge)
     files.waitingForWifi -> SyncHeadline.FilesNote.WaitingForWifi(files.toUpload + files.toDownload)
+    files.toUpload + files.toDownload > 0 -> SyncHeadline.FilesNote.ToMove(files.toUpload + files.toDownload)
     files.missingOnServer > 0 -> SyncHeadline.FilesNote.MissingOnServer(files.missingOnServer)
     else -> null
 }

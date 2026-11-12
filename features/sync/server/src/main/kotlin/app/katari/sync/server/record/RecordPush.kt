@@ -19,6 +19,10 @@ import app.katari.sync.server.storage.ServerStorage
  * retention has since dropped: accepting it would put the edit over the deletion without the device ever merging the
  * two, so the device is told the server holds nothing (sequence 0) and merges first.
  *
+ * A refusal hands back the copy the server holds ([PushResult.current]), so the device merges it whether or not its
+ * pulls would bring it: a deletion marker before the device's position, or one a pull leaving deletions out skipped,
+ * never comes again.
+ *
  * A change the account has already applied is answered as accepted with the sequence it got then, so a push retried
  * after its answer was lost changes nothing.
  *
@@ -56,9 +60,31 @@ class RecordPush(
             }
             wrote = sequence != before.sequence
             if (wrote) storage.records.advanceSequenceTo(accountId, sequence)
-            PushResponse(results = results, server = storage.identityOf(accountId), caughtUp = caughtUp)
+            PushResponse(
+                results = withCurrentCopies(accountId, request.records, results),
+                server = storage.identityOf(accountId),
+                caughtUp = caughtUp,
+            )
         }
         if (wrote) changes.announce(accountId, response.server.sequence)
         return response
     }
+
+    /** [results], one for each of [records], with the copy the server holds at each stale refusal's sequence. */
+    private fun withCurrentCopies(
+        accountId: Long,
+        records: List<RecordEnvelope>,
+        results: List<PushResult>,
+    ): List<PushResult> {
+        val refused = records.zip(results) { record, result -> record.key.takeIf { result.isStaleOverCopy } }
+            .filterNotNull()
+        if (refused.isEmpty()) return results
+        // Sequences are unique in an account, and a refusal names the one its key's copy holds now
+        val copies = storage.records.copiesOf(accountId, refused).associateBy { it.sequence }
+        return results.map { result ->
+            if (result.isStaleOverCopy) result.copy(current = copies[result.sequence]) else result
+        }
+    }
+
+    private val PushResult.isStaleOverCopy get() = outcome == PushOutcome.STALE && sequence != 0L
 }

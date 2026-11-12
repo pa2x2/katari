@@ -8,13 +8,18 @@ import app.katari.sync.server.retention.UnreferencedFileRetention
 import java.io.File
 import java.net.ServerSocket
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Instant
 
 /**
  * A real sync server in the test's process, over SQLite in [directory], always on one address: restarting it over a
  * copy of its data or over none stands for a server restored from a backup or replaced by a new one.
  */
-internal class TestSyncServer(private val directory: File, private val pageSize: Int = 3) : AutoCloseable {
+internal class TestSyncServer(
+    private val directory: File,
+    private val pageSize: Int = 3,
+    private val maxFileBytes: Long? = null,
+) : AutoCloseable {
     private val port = ServerSocket(0).use { it.localPort }
     private var data = directory.resolve("server")
     private var server: SyncServer? = null
@@ -55,12 +60,15 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
     }
 
     /**
-     * Drops the deletion markers every device has pulled past, as the server's retention does, and returns the newest
-     * sequence dropped so far.
+     * Drops the deletion markers every device has pulled past, as the server's retention does [later] than now, when
+     * devices silent for longer hold none, and returns the newest sequence dropped so far.
      */
-    fun dropPassedDeletionMarkers(accountId: Long): Long {
+    fun dropPassedDeletionMarkers(accountId: Long, later: Duration = Duration.ZERO): Long {
         val services = running().services
-        DeletionMarkerRetention(services.storage, services.clock).sweep(accountId)
+        val clock = object : Clock {
+            override fun now(): Instant = services.clock.now() + later
+        }
+        DeletionMarkerRetention(services.storage, clock).sweep(accountId)
         return services.storage.records.markersDroppedThrough(accountId)
     }
 
@@ -88,7 +96,9 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
     }
 
     private fun start() {
-        val config = ServerConfig.fromEnvironment(mapOf(ServerConfig.PULL_PAGE_SIZE to "$pageSize"))
+        val environment = mapOf(ServerConfig.PULL_PAGE_SIZE to "$pageSize") +
+            listOfNotNull(maxFileBytes?.let { ServerConfig.MAX_FILE_BYTES to "$it" })
+        val config = ServerConfig.fromEnvironment(environment)
             .copy(dataDirectory = data.toPath(), host = "127.0.0.1", port = port)
         server = SyncServer(config).also { it.start(wait = false) }
     }

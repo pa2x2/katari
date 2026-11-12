@@ -19,6 +19,9 @@ interface RecordStore {
     /** The sequences of the stored copies of [keys], by key, leaving out the keys the account holds no copy of. */
     fun sequencesOf(accountId: Long, keys: Collection<String>): Map<String, Long>
 
+    /** The stored copies of [keys], deletion markers included, leaving out the keys the account holds no copy of. */
+    fun copiesOf(accountId: Long, keys: Collection<String>): List<SequencedRecord>
+
     /** The sequences the changes were stored with, by change id, leaving out the changes the account has no record of. */
     fun appliedChanges(accountId: Long, changeIds: Collection<String>): Map<String, Long>
 
@@ -32,8 +35,11 @@ interface RecordStore {
     /** The account's history chain at [sequence], or null when it is not kept. */
     fun chainAt(accountId: Long, sequence: Long): ByteArray?
 
-    /** Stored copies with sequences in ([after], [through]], in sequence order. */
-    fun page(accountId: Long, after: Long, through: Long, limit: Int, includeDeleted: Boolean): List<SequencedRecord>
+    /**
+     * Stored copies with sequences in ([after], [through]], in sequence order, leaving out the deletion markers at or
+     * before [markersAfter].
+     */
+    fun page(accountId: Long, after: Long, through: Long, limit: Int, markersAfter: Long): List<SequencedRecord>
 
     /** The stored copies in [group] ([RecordEnvelope.group]), in sequence order, at most [limit]. */
     fun group(accountId: Long, group: String, limit: Int): List<SequencedRecord>

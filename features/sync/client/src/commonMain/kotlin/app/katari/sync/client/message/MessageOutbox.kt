@@ -5,6 +5,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.message.MessageBody
+import app.katari.sync.protocol.message.MessageLimits
 import app.katari.sync.protocol.message.SendMessageRequest
 import dev.zacsweers.metro.Inject
 import tachiyomi.data.DatabaseHandler
@@ -52,8 +53,10 @@ class MessageOutbox(private val handler: DatabaseHandler) {
                     SendMessageRequest(
                         to = row.target_device_id?.let(::DeviceId),
                         body = MessageBody(row.kind, row.kind_version.toInt(), row.payload),
-                        // What is left of its lifetime: the server holds it as long as it would have waited here
-                        lifetimeMillis = (row.expires_at - now).coerceAtLeast(1),
+                        // What is left of its lifetime: the server holds it as long as it would have waited here. A
+                        // clock set back since it was queued leaves more than any message may have, which the server
+                        // refuses
+                        lifetimeMillis = (row.expires_at - now).coerceIn(1, MAX_LIFETIME_MILLIS),
                         replaces = row.replaces,
                     ),
                 )
@@ -66,5 +69,6 @@ class MessageOutbox(private val handler: DatabaseHandler) {
 
     private companion object {
         const val BATCH = 50L
+        val MAX_LIFETIME_MILLIS = MessageLimits.MAX_LIFETIME.inWholeMilliseconds
     }
 }

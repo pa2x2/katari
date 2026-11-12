@@ -12,7 +12,10 @@ import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
 
-/** Cuts a device's calls short as a dropped connection would, and counts the pushes that reached the server. */
+/**
+ * Cuts a device's calls short as a dropped connection would, and counts the pushes and file uploads that reached the
+ * server.
+ */
 internal class CallCutter : Interceptor {
     /** Pulls left before the next one fails without reaching the server; null lets every pull through. */
     @Volatile
@@ -27,6 +30,7 @@ internal class CallCutter : Interceptor {
     var cutNextUpload = false
 
     val pushes = AtomicInteger()
+    val uploads = AtomicInteger()
 
     @Volatile
     private var held: Pair<String, CountDownLatch>? = null
@@ -57,6 +61,7 @@ internal class CallCutter : Interceptor {
             }
         }
         val response = chain.proceed(chain.request())
+        if (chain.request().method == "PUT") uploads.incrementAndGet()
         if (path.endsWith(SyncHttp.PUSH)) {
             pushes.incrementAndGet()
             if (loseNextPushAnswer) {

@@ -1,0 +1,60 @@
+-- Entries and chapters sync created from a record that carried none of their source's details hold stand-ins for them
+-- (tachiyomi/data/entries_placeholder_details.sq, tachiyomi/data/chapters_placeholder_details.sq).
+CREATE TABLE entries_placeholder_details(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER entries_placeholder_details_initialized
+AFTER UPDATE OF initialized ON entries
+FOR EACH ROW
+WHEN new.initialized = 1
+BEGIN
+    DELETE FROM entries_placeholder_details
+    WHERE entry_id = new._id;
+END;
+
+CREATE TABLE chapters_placeholder_details(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+-- Nothing tells the rows sync created so far from the others, so every row holding exactly the stand-ins counts as
+-- one; for a row whose source's details really are those, that only holds them back from sync until the source lists
+-- it again. An entry whose details were fetched holds its source's own.
+INSERT INTO entries_placeholder_details(entry_id)
+SELECT _id
+FROM entries
+WHERE initialized = 0 AND update_strategy = 0 AND CAST(memo AS TEXT) = '{}';
+
+INSERT INTO chapters_placeholder_details(chapter_id)
+SELECT _id
+FROM chapters
+WHERE CAST(memo AS TEXT) = '{}'
+AND summary IS NULL
+AND preview_url IS NULL
+AND kind = 0
+AND group_key IS NULL
+AND date_text IS NULL;
+
+-- The records of rows holding source details other than the stand-ins are read again, so those stored before records
+-- carried details pass them on to the account. A read, not an edit, as for a record stored under an older version of
+-- its kind (app/katari/sync/data/sync_outbox.sq): it leaves every value's edit time as the record holds it, so it gives
+-- way to any edit made anywhere.
+INSERT INTO sync_outbox(kind, local_ref, fields, record_key, changed_at, seen_physical, seen_counter)
+SELECT R.kind, R.local_ref, 0, NULL, CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER),
+    C.seen_physical, C.seen_counter
+FROM sync_records R, sync_clock C, sync_state S
+WHERE C.id = 0 AND S.id = 0 AND S.enabled = 1
+AND (
+    R.kind = 'entry' AND json_extract(R.local_ref, '$[0]') IN (
+        SELECT _id
+        FROM entries
+        WHERE update_strategy != 0 OR CAST(memo AS TEXT) != '{}'
+    )
+    OR R.kind = 'chapter' AND json_extract(R.local_ref, '$[0]') IN (
+        SELECT _id
+        FROM chapters
+        WHERE _id NOT IN (SELECT chapter_id FROM chapters_placeholder_details)
+    )
+);

@@ -44,7 +44,13 @@ object CategoryKind : SyncedKind<CategoryPayload>(
             fields = listOf(Field(2, "name"), Field(3, "sort"), Field(4, "flags")),
             condition = "NEW._id != 0",
         ),
-        CaptureTrigger("categories", Event.DELETE, listOf("OLD._id"), condition = "OLD._id != 0"),
+        CaptureTrigger(
+            "categories",
+            Event.DELETE,
+            listOf("OLD._id"),
+            condition = "OLD._id != 0",
+            owners = listOf(Owner.profile()),
+        ),
     )
 
     fun ref(categoryId: Long): LocalRef = LocalRef.of(categoryId)
@@ -176,7 +182,12 @@ object CategoryUpdateRulesKind : SyncedKind<CategoryUpdateRulesPayload>(
                 Field(9, "interval_hours"),
             ),
         ),
-        CaptureTrigger("category_update_rules", Event.DELETE, listOf("OLD.profile_id", "OLD.category_id")),
+        CaptureTrigger(
+            "category_update_rules",
+            Event.DELETE,
+            listOf("OLD.profile_id", "OLD.category_id"),
+            owners = listOf(Owner.profile()),
+        ),
     )
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<CategoryUpdateRulesPayload> {

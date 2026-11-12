@@ -1,17 +1,19 @@
 package app.katari.sync.client.kind.chapter
 
+import app.katari.sync.client.payload.SourceMemo
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.protocol.clock.HybridTimestamp
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
 /**
- * A chapter or episode the person marked, or one a refresh found as new. [metadata] and [sourceOrder] let another
- * device create the row in its place and show it as read, or in Updates, before it refreshes the entry; its next
- * refresh overrides them, but not [dateFetch].
+ * A chapter or episode the person marked, or one a refresh found as new. [metadata], [details] and [sourceOrder] let
+ * another device create the row in its place, as its own refresh would list it, and show it as read, or in Updates,
+ * before it refreshes the entry; its next refresh overrides them, but not [dateFetch].
  *
- * [dateFetch], [sourceOrder] and [markedReadAt] came after the first release with sync, so they are top-level fields,
- * which an older device keeps as they are when it rewrites the record ([app.katari.sync.client.payload.UnknownFields]).
+ * [dateFetch], [sourceOrder], [markedReadAt], [details] and [renamedFrom] came after the first release with sync, so
+ * they are top-level fields, which an older device keeps as they are when it rewrites the record
+ * ([app.katari.sync.client.payload.UnknownFields]).
  */
 @Serializable
 data class ChapterPayload(
@@ -32,6 +34,13 @@ data class ChapterPayload(
      * while it is [read]'s: an older device that read the chapter again keeps this as it was, next to a newer [read].
      */
     @ProtoNumber(8) val markedReadAt: HybridTimestamp? = null,
+    /** Null when the device that wrote the record carried none. */
+    @ProtoNumber(9) val details: ChapterDetails? = null,
+    /**
+     * The URL a refresh found the chapter had before the source moved it to [url], so a device that still lists it
+     * there renames its row rather than adding the chapter again; null for a chapter no refresh renamed.
+     */
+    @ProtoNumber(10) val renamedFrom: String? = null,
 ) {
     val isMarkedRead: Boolean
         get() = read.value && markedReadAt == read.at
@@ -44,4 +53,31 @@ data class ChapterMetadata(
     @ProtoNumber(3) val scanlator: String? = null,
     /** Epoch milliseconds. */
     @ProtoNumber(4) val dateUpload: Long = 0,
+)
+
+/**
+ * The rest of the source's description of the chapter, which came after [ChapterMetadata] was released: a device on
+ * that release rewrites the metadata message without fields it doesn't know, so these travel as one of their own.
+ */
+@Serializable
+data class ChapterDetails(
+    /** What the source's extension stored with the chapter and needs back to open it. */
+    @ProtoNumber(1) val memo: SourceMemo,
+    @ProtoNumber(2) val summary: String? = null,
+    @ProtoNumber(3) val previewUrl: String? = null,
+    /** `eu.kanade.tachiyomi.source.entry.ChapterKind.code`, which reads as a regular chapter where it is unknown. */
+    @ProtoNumber(4) val kind: Long = 0,
+    /** The group the source lists the chapter in; null when it lists it in none. */
+    @ProtoNumber(5) val group: ChapterGroup? = null,
+    /** The release time as the source shows it, when it gave no date. */
+    @ProtoNumber(6) val dateText: String? = null,
+)
+
+/** One of an entry's groups of chapters, such as a season or volume, as the source lists them. */
+@Serializable
+data class ChapterGroup(
+    @ProtoNumber(1) val key: String,
+    @ProtoNumber(2) val title: String,
+    /** Its place among the entry's groups. */
+    @ProtoNumber(3) val position: Long,
 )

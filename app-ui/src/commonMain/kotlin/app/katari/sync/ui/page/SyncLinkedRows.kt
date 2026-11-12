@@ -71,6 +71,7 @@ internal fun linkedPreferences(
     // In the status card, under the status they explain
     addAll(attentionRows(headline, link, actions))
     if (status.live == LiveUpdatesState.NOT_WORKING) add(liveUpdatesNotWorkingRow())
+    if (status.files.refusedAsTooLarge > 0) add(filesTooLargeRow())
     profilesNotSynced.filter { it.state == ProfileSyncState.ASKING }.forEach { add(arrivingProfileRow(it, actions)) }
     if (missingExtensions.isNotEmpty()) add(missingExtensionsRow(missingExtensions, actions))
     if (status.heldAside > 0) {
@@ -168,6 +169,24 @@ private fun liveUpdatesNotWorkingRow(): Preference.PreferenceItem<*, *> {
     }
 }
 
+/**
+ * Covers or fonts the server, or a proxy in front of it, refused as too large, opening the guide's section on the
+ * proxy, which names its upload limit.
+ */
+@Composable
+private fun filesTooLargeRow(): Preference.PreferenceItem<*, *> {
+    val title = stringResource(MR.strings.sync_files_too_large)
+    val openGuide = rememberOpenSyncGuide()
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = stringResource(MR.strings.sync_files_too_large_text),
+            icon = MaterialSymbols.Rounded.SyncProblem,
+            onPreferenceClick = { openGuide(PROXY_GUIDE) },
+        )
+    }
+}
+
 /** Library titles whose extensions this device lacks, opening the sheet that installs them. */
 @Composable
 private fun missingExtensionsRow(
@@ -224,6 +243,12 @@ private fun attentionRows(
         }
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncFailedHelp)),
+        )
+        // Reads it again as Sync now does, which may ask to unlock a keyring the person turned down; runs in the
+        // background never ask again
+        SyncHeadline.TokenUnreadable -> listOf(
+            row(stringResource(platformPresentation.syncTokenUnreadableAction), actions.syncNow),
+            Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncTokenUnreadableHelp)),
         )
         is SyncHeadline.ServerTooOld -> {
             val openGuide = rememberOpenSyncGuide()
@@ -375,5 +400,8 @@ private fun intervalName(minutes: Int): StringResource = when (minutes) {
     else -> error("No name for syncing every $minutes minutes")
 }
 
-/** The server guide's section on running it behind a proxy, which says what a proxy must pass on for live updates. */
+/**
+ * The server guide's section on running it behind a proxy, which says what a proxy must pass on for live updates and
+ * how large an upload it must let through.
+ */
 private const val PROXY_GUIDE = "${SyncGuide.SERVER}#https"

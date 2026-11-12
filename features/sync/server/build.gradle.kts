@@ -11,7 +11,7 @@ plugins {
 }
 
 // The server's own version, shown on its web page and released apart from the apps.
-version = "1.1.0"
+version = "1.1.1"
 
 application {
     applicationName = "katari-sync-server"

@@ -1,0 +1,26 @@
+-- Entries whose memo and update_strategy are stand-ins: sync created them from a record that carried none of their
+-- source's details (app/katari/sync/data/sync_apply.sq), or a backup restored them holding exactly those, so their
+-- extension can't rely on them and sync doesn't send them on. A refresh of the entry's details, or a record that
+-- carries them, ends that.
+CREATE TABLE entries_placeholder_details(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+-- Only fetching the entry's details from its source, or restoring fetched ones, makes it initialized.
+CREATE TRIGGER entries_placeholder_details_initialized
+AFTER UPDATE OF initialized ON entries
+FOR EACH ROW
+WHEN new.initialized = 1
+BEGIN
+    DELETE FROM entries_placeholder_details
+    WHERE entry_id = new._id;
+END;
+
+-- A backup doesn't say whether an entry's details were stand-ins, so an entry it restores anew is taken for one when
+-- it holds exactly those, as every entry was when this table came (migrations/86.sqm).
+noteRestoredStandIns:
+INSERT INTO entries_placeholder_details(entry_id)
+SELECT _id
+FROM entries
+WHERE _id = :entryId AND initialized = 0 AND update_strategy = 0 AND CAST(memo AS TEXT) = '{}';

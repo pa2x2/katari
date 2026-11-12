@@ -9,6 +9,7 @@ import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.file.transfer.FilePlacement
+import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
@@ -33,6 +34,7 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 
 /**
  * One sync run ([SyncRuns] keeps them to one at a time).
@@ -56,11 +58,15 @@ import tachiyomi.core.common.util.system.logcat
  * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
  *    drained, and every change pushed.
  *    Pulling first (D021) means the push is based on the newest copies, so it is rarely refused as stale; one that is
- *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run. Records naming a
+ *    refused is pulled, merged and pushed again, a few rounds at most, then left for a later run. Records naming a
  *    custom cover or font go once the server has the file ([PushChanges]).
  * 4. Files: those queued for upload that no pushed record took along, such as after a full resync, and then the files
  *    the applied records name that aren't in place here yet ([FilePlacement]). A file that can't move now, for want
  *    of Wi-Fi or of an answer, waits for a later run without holding back any record.
+ *
+ * A run that leaves changes or files it could send or fetch now, refused as stale every round or cut off from the
+ * server while files moved, ends [SyncOutcome.UNFINISHED], and one is run again later. So does one that can't read the
+ * device's token now ([SyncOutcome.TOKEN_UNREADABLE]): only a token that isn't saved means signing in again.
  *
  * Every page, and the changes each push had acknowledged, are committed as they arrive, so a run cut off anywhere
  * loses nothing and the next one carries on. Steps that can take a while say how far they got ([SyncSteps]). A
@@ -91,6 +97,7 @@ class SyncPass(
     private val messageOutbox: MessageOutbox,
     private val messageInbox: MessageInbox,
     private val changeRule: ChangeTransferRule,
+    private val fileRule: FileTransferRule,
     // Taken after the first run that synced: a listener may send messages, and sending needs the runs that need this
     private val syncedListeners: Lazy<Set<SyncedListener>>,
 ) {
@@ -105,8 +112,8 @@ class SyncPass(
             return outcome
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
-            handOff.settle(request.entriesFirst, reached = outcome == SyncOutcome.SYNCED || outcome == SyncOutcome.IDLE)
-            if (outcome == SyncOutcome.SYNCED) {
+            handOff.settle(request.entriesFirst, reached = outcome.pulledAll || outcome == SyncOutcome.IDLE)
+            if (outcome.pulledAll) {
                 handOff.pulled()
                 tellSynced()
             }
@@ -136,7 +143,13 @@ class SyncPass(
             handOff.unreachable(request.entriesFirst)
             return SyncOutcome.OFFLINE
         }
-        val token = connection.token()
+        val token = try {
+            connection.token()
+        } catch (e: IOException) {
+            logcat(LogPriority.WARN, e) { "Can't read the sync device token now" }
+            handOff.unreachable(request.entriesFirst)
+            return SyncOutcome.TOKEN_UNREADABLE
+        }
         if (token == null) {
             connection.stop(SyncStop.SIGN_IN_AGAIN)
             return SyncOutcome.IDLE
@@ -201,7 +214,7 @@ class SyncPass(
                     SyncStage.DOWNLOADING -> {
                         if (waitsForWifi(state)) return SyncOutcome.WAITING_FOR_WIFI
                         pull.pullAll(client, device, liveOnly = true)
-                        connection.setStage(SyncStage.SETTINGS)
+                        resync.finishDownload(state.downloadRestartedAs)
                     }
                     SyncStage.SETTINGS -> firstSync.recordSettings()
                     SyncStage.RESYNC, SyncStage.RESYNC_WITHOUT_DELETIONS -> {
@@ -211,15 +224,23 @@ class SyncPass(
                     SyncStage.READY -> return exchange(client, device, request)
                 }
             } catch (e: ResyncNeeded) {
-                // A first download that finds its server changed takes the new one's records from the start instead,
-                // and still goes on to the device's settings after. A resync after a lost or restored server stays one:
-                // resyncing without deletions deletes what the server doesn't send back, which is what it lost.
-                val stage = when (state.stage) {
-                    SyncStage.DOWNLOADING, SyncStage.RESYNC -> state.stage
-                    else -> e.stage
+                val server = e.server ?: client.snapshot().server
+                // A position refused by another instance means nothing there, whatever the refusal said
+                val reason = if (state.instanceId != null && server.instanceId != state.instanceId) {
+                    SyncStage.RESYNC
+                } else {
+                    e.stage
                 }
-                logcat(LogPriority.WARN) { "The sync server was lost or restored; resyncing in full ($stage)" }
-                resync.start(stage, e.server ?: client.snapshot().server)
+                logcat(LogPriority.WARN) { "The sync server can't continue from this device's position ($reason)" }
+                when (state.stage) {
+                    // A first download takes the server's records from the start instead, and still goes on to the
+                    // device's settings after
+                    SyncStage.DOWNLOADING -> resync.restartDownload(reason, server)
+                    // A resync after a lost or restored server stays one: resyncing without deletions deletes what the
+                    // server doesn't send back, which is what it lost
+                    SyncStage.RESYNC -> resync.start(SyncStage.RESYNC, server)
+                    else -> resync.start(reason, server)
+                }
             }
         }
         logcat(LogPriority.ERROR) { "Sync stages didn't settle" }
@@ -238,6 +259,7 @@ class SyncPass(
             }
         }
         incoming.retryHeld()
+        var stale = false
         steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
             var sent = 0L
             // The files records wait for, named while they upload, the records named again once taken
@@ -249,7 +271,7 @@ class SyncPass(
                     drainAll()
                     val total = sent + pending.count()
                     progress(sent, total)
-                    val stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
+                    stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
                         sent += taken
                         progress(sent, total)
                     }
@@ -258,19 +280,25 @@ class SyncPass(
                 }
             }
         }
-        moveFiles(client)
-        return SyncOutcome.SYNCED
+        val filesMoved = moveFiles(client)
+        // A change still waiting waits for nothing a later run lacks when the server kept refusing it as stale, or when
+        // files may move, as one naming a file whose bytes changed while they were uploaded
+        val changesLeft = pending.count() > 0 && (stale || fileRule.allowsNow())
+        return if (filesMoved && !changesLeft) SyncOutcome.SYNCED else SyncOutcome.UNFINISHED
     }
 
-    private suspend fun moveFiles(client: SyncServerClient) {
+    /** Returns false when the server stopped answering midway. */
+    private suspend fun moveFiles(client: SyncServerClient): Boolean {
         try {
             steps.step(SyncStep.Kind.UPLOADING_FILES) { progress -> uploads.offerQueued(client, progress) }
             steps.step(SyncStep.Kind.DOWNLOADING_FILES) { progress -> placement.place(client, progress) }
+            return true
         } catch (e: SyncFailure.Refused) {
             throw e
         } catch (e: SyncFailure) {
-            // The records are synced; the files wait for the next run.
+            // The records are synced; the files wait for the run tried again.
             logcat(LogPriority.INFO, e) { "Synced files not moved" }
+            return false
         }
     }
 

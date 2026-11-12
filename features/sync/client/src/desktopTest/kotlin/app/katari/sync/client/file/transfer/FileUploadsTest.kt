@@ -55,6 +55,35 @@ class FileUploadsTest {
     }
 
     @Test
+    fun `a cover the server refuses as too large holds back no record and isn't uploaded again on every sync`(): Unit =
+        runBlocking {
+            TestSyncServer(directory, maxFileBytes = 1024).use { server ->
+                val account = server.account("reader")
+                val cutter = CallCutter()
+                SyncingTestDevice(directory.resolve("a.db"), cutter.client).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.sql(*showRows("/show"))
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+
+                        a.local.setCustomCover("/show", ByteArray(4096) { it.toByte() })
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        a.local.pending.count() shouldBe 0
+                        a.status.status().first().files.refusedAsTooLarge shouldBe 1
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        cutter.uploads.get() shouldBe 1
+
+                        // The record naming the cover came, without it
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.status.status().first().files.missingOnServer shouldBe 1
+                    }
+                }
+            }
+        }
+
+    @Test
     fun `an upload cut off midway is sent again whole and stored once`(): Unit = runBlocking {
         TestSyncServer(directory).use { server ->
             val account = server.account("reader")

@@ -3,10 +3,12 @@ package app.katari.data.di
 import app.cash.sqldelight.db.SqlDriver
 import app.katari.data.database.DatabaseRepositoryImpl
 import app.katari.data.database.TemporarySchema
+import app.katari.data.database.TemporarySchemaPart
 import app.katari.domain.database.repository.DatabaseRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import tachiyomi.data.AndroidDatabaseHandler
@@ -32,6 +34,9 @@ interface DatabaseBindings {
     @Binds
     val AndroidDatabaseHandler.databaseHandler: DatabaseHandler
 
+    @Multibinds(allowEmpty = true)
+    fun temporarySchemaParts(): Set<TemporarySchemaPart>
+
     companion object {
         // The driver reports its migration state to the repository, which reads the driver back lazily.
         @Provides
@@ -40,7 +45,8 @@ interface DatabaseBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun temporarySchema(): TemporarySchema = TemporarySchema()
+        fun temporarySchema(parts: Set<TemporarySchemaPart>): TemporarySchema =
+            TemporarySchema(parts.flatMap(TemporarySchemaPart::statements))
 
         @Provides
         @SingleIn(AppScope::class)

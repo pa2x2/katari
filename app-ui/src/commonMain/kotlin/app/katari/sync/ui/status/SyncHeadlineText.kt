@@ -32,6 +32,7 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     SyncHeadline.AppTooOld -> stringResource(MR.strings.sync_status_app_too_old)
     is SyncHeadline.ServerTooOld -> stringResource(MR.strings.sync_status_server_too_old, headline.server)
     SyncHeadline.ChoicesWaiting -> stringResource(MR.strings.sync_status_choices)
+    SyncHeadline.TokenUnreadable -> stringResource(platformPresentation.syncTokenUnreadableLabel)
     is SyncHeadline.Questions ->
         pluralStringResource(MR.plurals.sync_questions_waiting, headline.count, headline.count)
     is SyncHeadline.UnreachableLong -> stringResource(
@@ -66,6 +67,8 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     )
     SyncHeadline.Offline -> stringResource(MR.strings.sync_status_offline)
     is SyncHeadline.Unreachable -> stringResource(MR.strings.sync_status_unreachable, headline.server)
+    is SyncHeadline.Unfinished -> unsentText(headline.unsent, MR.strings.sync_unsent_retrying)
+        ?: stringResource(MR.strings.sync_status_unfinished)
     is SyncHeadline.Failed ->
         headline.lastSyncedAtMillis
             ?.let { stringResource(MR.strings.sync_status_failed_at, relativeTimeSpanString(it)) }
@@ -74,23 +77,21 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
         val upToDate = headline.atMillis
             ?.let { stringResource(MR.strings.sync_status_up_to_date_at, relativeTimeSpanString(it)) }
             ?: stringResource(MR.strings.sync_status_up_to_date)
-        when (val files = headline.files) {
-            null -> upToDate
-            is SyncHeadline.FilesNote.WaitingForWifi -> stringResource(
-                MR.strings.sync_status_with_note,
-                upToDate,
-                pluralStringResource(
-                    platformPresentation.syncFilesWaitingPlural,
-                    files.count.toInt(),
-                    files.count.toInt(),
-                ),
-            )
-            is SyncHeadline.FilesNote.MissingOnServer -> stringResource(
-                MR.strings.sync_status_with_note,
-                upToDate,
-                pluralStringResource(MR.plurals.sync_files_missing, files.count.toInt(), files.count.toInt()),
-            )
-        }
+        headline.files
+            ?.let { stringResource(MR.strings.sync_status_with_note, upToDate, filesNoteText(it)) }
+            ?: upToDate
+    }
+}
+
+@Composable
+private fun filesNoteText(note: SyncHeadline.FilesNote): String {
+    val count = note.count.toInt()
+    return when (note) {
+        is SyncHeadline.FilesNote.TooLarge -> pluralStringResource(MR.plurals.sync_files_too_large, count, count)
+        is SyncHeadline.FilesNote.WaitingForWifi ->
+            pluralStringResource(platformPresentation.syncFilesWaitingPlural, count, count)
+        is SyncHeadline.FilesNote.ToMove -> pluralStringResource(MR.plurals.sync_files_to_move, count, count)
+        is SyncHeadline.FilesNote.MissingOnServer -> pluralStringResource(MR.plurals.sync_files_missing, count, count)
     }
 }
 
@@ -124,8 +125,9 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
     -> ContentTone.Error
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
-    is SyncHeadline.Unsent, SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi,
+    SyncHeadline.ChoicesWaiting, SyncHeadline.TokenUnreadable, is SyncHeadline.Questions, is SyncHeadline.HeldKinds,
+    is SyncHeadline.HeldAside, is SyncHeadline.Unsent, is SyncHeadline.Unfinished,
+    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi,
     -> ContentTone.Warning
     is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
         ContentTone.Primary
@@ -144,8 +146,8 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> platformPresentation.thisDeviceRemovedIcon
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
-    is SyncHeadline.Failed,
+    SyncHeadline.ChoicesWaiting, SyncHeadline.TokenUnreadable, is SyncHeadline.Questions, is SyncHeadline.HeldKinds,
+    is SyncHeadline.HeldAside, is SyncHeadline.Failed,
     -> MaterialSymbols.Rounded.SyncProblem
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff
@@ -160,9 +162,10 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
         platformPresentation.unmeteredNetworkIcon
     is SyncHeadline.Paused -> MaterialSymbols.Rounded.SyncDisabled
     SyncHeadline.Syncing -> MaterialSymbols.Rounded.Sync
-    is SyncHeadline.UpToDate -> if (files is SyncHeadline.FilesNote.WaitingForWifi) {
-        platformPresentation.unmeteredNetworkIcon
-    } else {
-        MaterialSymbols.Rounded.CloudDone
+    is SyncHeadline.Unfinished -> MaterialSymbols.Rounded.CloudUpload
+    is SyncHeadline.UpToDate -> when (files) {
+        is SyncHeadline.FilesNote.WaitingForWifi -> platformPresentation.unmeteredNetworkIcon
+        is SyncHeadline.FilesNote.TooLarge -> MaterialSymbols.Rounded.SyncProblem
+        else -> MaterialSymbols.Rounded.CloudDone
     }
 }

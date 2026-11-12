@@ -4,12 +4,16 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -36,7 +40,12 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     private var waiting: SyncRequest? = null
     private var worker: Job? = null
     private var requested = 0L
-    private val finished = MutableStateFlow(Finished(0, SyncOutcome.IDLE))
+
+    // Each waiting caller has its own run's outcome handed to it: the latest outcome alone can be a later run's, as
+    // when the writes of the run it waited for start another that finds nothing to do
+    private val waiters = ArrayList<Waiter>()
+    private val finishedThrough = MutableStateFlow(0L)
+    private val endings = MutableSharedFlow<SyncOutcome>(extraBufferCapacity = ENDINGS_BUFFER)
     private val runningState = MutableStateFlow(false)
     private val outcomes = MutableStateFlow(SyncOutcome.IDLE)
 
@@ -49,14 +58,21 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
      */
     val lastOutcome: StateFlow<SyncOutcome> = outcomes.asStateFlow()
 
+    /**
+     * How each run ends from now on, IDLE ones too. A collector that falls behind hears every one, as one that left
+     * work must be retried even when a run that found nothing to do ends right after it.
+     */
+    val ends: SharedFlow<SyncOutcome> = endings.asSharedFlow()
+
     fun request(request: SyncRequest = SyncRequest()) {
         enqueue(request)
     }
 
     /** Requests a run and waits for the run that carries it, returning how it ended. */
     suspend fun runAndWait(request: SyncRequest = SyncRequest()): SyncOutcome {
-        val ticket = enqueue(request)
-        return finished.first { it.ticket >= ticket }.outcome
+        val outcome = CompletableDeferred<SyncOutcome>()
+        synchronized(lock) { waiters += Waiter(enqueue(request), outcome) }
+        return outcome.await()
     }
 
     /**
@@ -66,7 +82,7 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
     internal suspend fun awaitIdle() {
         while (true) {
             val last = synchronized(lock) { requested }
-            finished.first { it.ticket >= last }
+            finishedThrough.first { it >= last }
             if (synchronized(lock) { requested } == last) return
         }
     }
@@ -110,11 +126,21 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
                 runningState.value = synchronized(lock) { waiting != null }
             }
             if (outcome != SyncOutcome.IDLE) outcomes.value = outcome
-            finished.value = Finished(ticket, outcome)
+            val carried = synchronized(lock) {
+                waiters.filter { it.ticket <= ticket }.also { waiters.removeAll(it.toSet()) }
+            }
+            carried.forEach { it.outcome.complete(outcome) }
+            finishedThrough.value = ticket
+            endings.emit(outcome)
         }
     }
 
-    private class Finished(val ticket: Long, val outcome: SyncOutcome)
+    private class Waiter(val ticket: Long, val outcome: CompletableDeferred<SyncOutcome>)
+
+    private companion object {
+        // A collector this many endings behind holds up the next run's end until it catches up
+        const val ENDINGS_BUFFER = 16
+    }
 }
 
 /**

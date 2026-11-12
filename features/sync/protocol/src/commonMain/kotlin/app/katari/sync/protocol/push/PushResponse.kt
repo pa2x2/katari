@@ -1,5 +1,6 @@
 package app.katari.sync.protocol.push
 
+import app.katari.sync.protocol.record.SequencedRecord
 import app.katari.sync.protocol.server.ServerIdentity
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -29,6 +30,12 @@ data class PushResult(
      * with the deletion and pushes the result based on 0.
      */
     @ProtoNumber(3) val sequence: Long,
+    /**
+     * For a [PushOutcome.STALE] other than 0, the copy the server holds at [sequence], deletion marker or not. The
+     * device merges it as it would a pulled one, as no pull may bring it: a marker before the device's position, or
+     * one a pull leaving deletions out skipped. Always null from a server that predates it.
+     */
+    @ProtoNumber(4) val current: SequencedRecord? = null,
 )
 
 @Serializable
@@ -38,8 +45,8 @@ enum class PushOutcome {
     ACCEPTED,
 
     /**
-     * Another device changed the record after the copy this change was based on. The device pulls, merges and pushes
-     * the merged record again.
+     * Another device changed the record after the copy this change was based on. The device merges the server's copy
+     * ([PushResult.current]), or pulls it from a server that doesn't hand it back, and pushes the merged record again.
      */
     @ProtoNumber(2)
     STALE,

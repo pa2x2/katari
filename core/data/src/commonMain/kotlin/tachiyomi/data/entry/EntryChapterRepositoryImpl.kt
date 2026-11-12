@@ -190,6 +190,7 @@ class EntryChapterRepositoryImpl(
         removedIds: List<Long>,
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
+        listedIds: Collection<Long>,
         afterUpdates: suspend () -> Unit,
         afterInserts: suspend (List<EntryChapter>) -> Unit,
     ): List<EntryChapter> {
@@ -197,7 +198,13 @@ class EntryChapterRepositoryImpl(
             removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
             updated.forEach { updateChapterFromSource(it, chapterId = it.id) }
             afterUpdates()
-            inserted.map { insertOrUpdateChapter(it) }.also { afterInserts(it) }
+            val saved = inserted.map { insertOrUpdateChapter(it) }
+            // An inserted chapter stored already by its URL, as one sync created, is rewritten from the source too
+            (listedIds + saved.map(EntryChapter::id)).chunkedForSqlQuery().forEach {
+                chapters_placeholder_detailsQueries.listedBySource(it)
+            }
+            afterInserts(saved)
+            saved
         }
     }
 

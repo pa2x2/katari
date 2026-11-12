@@ -25,6 +25,11 @@ SELECT record_key, sequence
 FROM records
 WHERE account_id = :accountId AND record_key IN :recordKeys;
 
+copiesOf:
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+FROM records
+WHERE account_id = :accountId AND record_key IN :recordKeys;
+
 upsert:
 INSERT INTO records(
     account_id, record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
@@ -49,7 +54,7 @@ FROM records
 WHERE account_id = :accountId
     AND sequence > :after
     AND sequence <= :through
-    AND (:includeDeleted OR is_deleted = 0)
+    AND (is_deleted = 0 OR sequence > :markersAfter)
 ORDER BY sequence
 LIMIT :limit;
 

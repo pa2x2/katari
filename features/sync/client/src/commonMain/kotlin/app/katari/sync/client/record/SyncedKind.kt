@@ -1,5 +1,6 @@
 package app.katari.sync.client.record
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
 import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
@@ -38,6 +39,14 @@ abstract class SyncedKind<P : Any>(
     internal abstract suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<P>
 
     /**
+     * Writes to the row [ref] locates what its record holds and the row lost, when the row was deleted with its owner,
+     * which leaves its record ([CaptureTrigger.owners]), and made again since. The drain does it before it first reads
+     * a row it drains an edit of, so the edit adds to the record rather than starting it over. A restore doesn't: the
+     * rows it writes hold the backup's values whole.
+     */
+    internal open suspend fun rejoin(reads: LocalReads, ref: LocalRef) = Unit
+
+    /**
      * The payload holding both [local]'s and [incoming]'s edits of one record (D017). Every device must reach the same
      * payload from the same edits whatever order they come in, so it is commutative, associative and idempotent. The
      * fields a key is computed from are equal in both.
@@ -57,6 +66,31 @@ abstract class SyncedKind<P : Any>(
      */
     internal open suspend fun applyDeletion(writes: LocalWrites, key: String, ref: LocalRef?): ApplyOutcome =
         ApplyOutcome.Applied(null)
+
+    /**
+     * [edits], made to a record before another device deleted it in favour of [replacement]
+     * ([app.katari.sync.client.payload.Tombstone.replacedBy]) as its row moved to that one's key, as edits of that one,
+     * with the fields its key is computed from. Null for a kind whose records are only ever replaced by merging into
+     * another row, whose edits go with the deletion.
+     */
+    internal open val moveInto: ((edits: P, replacement: P) -> P)? = null
+
+    /**
+     * Whether [payload], a live copy of a record deleted in favour of [replacement] as its row moved, holds edits made
+     * where the row was by a device that hadn't heard of the move, rather than the row moved back there. False for a
+     * kind that can't tell them apart: such a copy stays live until the device that made it hears of the move.
+     */
+    internal open fun editedBeforeHeardOfMove(payload: P, replacement: P): Boolean = false
+
+    /**
+     * The live record that holds the row [ref] under a key other than [key], the row's now: the record the row was
+     * synced as before a change of what its key is computed from moved it, with its payload as stored.
+     */
+    internal suspend fun heldBeforeMove(reads: LocalReads, ref: LocalRef, key: String): HeldRecord<P>? {
+        val held = reads.database.sync_recordsQueries.getByLocalRef(name, ref.json).awaitAsOneOrNull()
+        if (held == null || held.deleted || held.record_key == key) return null
+        return HeldRecord(held.record_key, decode(held.payload))
+    }
 
     /** The entry a record of this kind belongs to, so records of an entry another one replaced follow it there. */
     internal open fun entryKeyOf(payload: P): String? = null
@@ -107,3 +141,6 @@ abstract class SyncedKind<P : Any>(
         KEEP,
     }
 }
+
+/** The record [key] as stored, with its [payload]. */
+class HeldRecord<P : Any>(val key: String, val payload: P)

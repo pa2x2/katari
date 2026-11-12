@@ -28,6 +28,12 @@ interface SyncBackgroundWork {
     fun handOff()
 
     /**
+     * Runs [SyncBackgroundRun.retry] as soon as there is a network, as work that runs again with a growing backoff
+     * until a run gets through. Work for it already waiting or retrying carries on instead, keeping its backoff.
+     */
+    fun retry()
+
+    /**
      * Runs [SyncBackgroundRun.longRun] as work that shows its progress in a notification and keeps going when the app
      * leaves the front, on any network when [onMetered], otherwise on an unmetered one. Work for it already waiting or
      * going carries on instead.

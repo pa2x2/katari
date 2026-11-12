@@ -7,6 +7,7 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.ChangeTransferRule
+import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import dev.zacsweers.metro.AppScope
@@ -47,6 +48,8 @@ import kotlin.time.Duration.Companion.minutes
  * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
  *   progress and goes on when the app leaves the front.
+ * - A run that left work, or couldn't read the device's token ([SyncOutcome.leavesWork]): the platform's retry work
+ *   ([SyncBackgroundWork.retry]), which backs off while runs keep leaving it.
  *
  * None of it runs while the device isn't linked to an account (D001); while syncing is paused, runs end at once.
  */
@@ -118,6 +121,7 @@ class SyncTriggers(
                 // Told again whenever the app opens: a platform may only let the app start it from the front
                 .collect { (connected, _) -> work.keepConnected(connected) }
         }
+        scope.launch { runs.ends.collect { outcome -> if (outcome.leavesWork) work.retry() } }
         // What waited for syncing to resume, or for Wi-Fi, goes as soon as it may
         scope.launch {
             combine(linked, preferences.paused.changes(), changeRule.allows()) { isLinked, paused, allowed ->

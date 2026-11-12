@@ -19,6 +19,12 @@ data class SyncConnectionState(
     val stage: SyncStage,
     /** The server sequence a download or resync runs to, as the server last reported it; 0 when none runs. */
     val stageTarget: Long,
+    /**
+     * For a first download that started over, the full resync ([SyncStage.RESYNC] or
+     * [SyncStage.RESYNC_WITHOUT_DELETIONS]) whose way it settles the records it took before and doesn't get back; null
+     * otherwise.
+     */
+    val downloadRestartedAs: SyncStage?,
     val stopped: SyncStop?,
     /** The protocol version the app had when [stopped] for a version mismatch. */
     val stoppedProtocol: Int,
@@ -43,6 +49,7 @@ data class SyncConnectionState(
             chain = row.chain,
             stage = SyncStage.of(row.stage),
             stageTarget = row.stage_target,
+            downloadRestartedAs = row.download_restarted_as?.let(SyncStage::of),
             stopped = SyncStop.of(row.stopped),
             stoppedProtocol = row.stopped_protocol.toInt(),
             lastSyncedAt = row.last_synced_at,

@@ -242,17 +242,17 @@ UPDATE sync_records
 SET based_on = 0
 WHERE record_key = :recordKey;
 
--- A full resync starts: no copy is known to be on the server until the resync's pull brings it again.
--- The records of :kind stored under a version older than :version, once they are queued to be read again under it.
 -- Whether a record of :kind is stored under a version older than :version, to be read again.
 hasOutdated:
 SELECT EXISTS(SELECT 1 FROM sync_records WHERE kind = :kind AND kind_version < :version);
 
+-- The records of :kind stored under a version older than :version, once they are queued to be read again under it.
 raiseVersion:
 UPDATE sync_records
 SET kind_version = :version
 WHERE kind = :kind AND kind_version < :version;
 
+-- A full resync starts: no copy is known to be on the server until the resync's pull brings it again.
 forgetBases:
 UPDATE sync_records
 SET based_on = 0;
@@ -262,19 +262,26 @@ SET based_on = 0;
 newestBase:
 SELECT coalesce(max(based_on), 0) FROM sync_records;
 
--- After a full resync from a lost or restored server, every record its pull didn't bring is pushed again.
+-- After a full resync, the records this device had synced that its pull didn't bring, neither merged (based_on) nor
+-- held (sync_pending), are pushed again. Deletions only when the pull brought the server's (:withDeletions): one that
+-- left them out didn't bring the deletion markers the server still has, and a deletion pushed over one would be
+-- refused as stale on every push.
 pushUnseen:
 UPDATE sync_records
 SET change_id = lower(hex(randomblob(16)))
-WHERE based_on = 0 AND change_id IS NULL AND synced = 1;
+WHERE based_on = 0 AND change_id IS NULL AND synced = 1
+AND (deleted = 0 OR :withDeletions)
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE pulled_since_resync = 1);
 
--- After a full resync that left deletions out, the live records its pull didn't bring that this device had synced
--- and hasn't changed since: the server dropped their deletion markers, so they were deleted elsewhere.
+-- After a full resync that left deletions out, the live records its pull didn't bring, neither merged nor held, that
+-- this device had synced and hasn't changed since: the server dropped their deletion markers, so they were deleted
+-- elsewhere.
 deletedElsewhere:
 SELECT record_key, kind, local_ref, kind_version, payload, deleted, based_on, synced, change_id, base_payload,
     record_group, held_back
 FROM sync_records
 WHERE based_on = 0 AND change_id IS NULL AND synced = 1 AND deleted = 0
+AND record_key NOT IN (SELECT record_key FROM sync_pending WHERE pulled_since_resync = 1)
 ORDER BY record_key;
 
 clear:

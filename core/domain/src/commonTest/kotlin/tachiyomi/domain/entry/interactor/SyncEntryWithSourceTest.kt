@@ -52,7 +52,7 @@ class SyncEntryWithSourceTest {
         val error = runCatching { sync(entry, fetchDetails = false) }.exceptionOrNull()
 
         (error is NoChaptersException) shouldBe true
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -277,7 +277,7 @@ class SyncEntryWithSourceTest {
             description shouldBe "Updated"
             backgroundUrl shouldBe "/art.jpg"
         }
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -376,10 +376,12 @@ class SyncEntryWithSourceTest {
     ): EntryChapterRepository = mockk(relaxed = true) {
         coEvery { getChaptersByEntryIdAwait(1L, false) } returns chapters
         coEvery { getChaptersByEntryIdAwait(1L, true) } returns chapters
-        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any(), any()) } coAnswers {
-            arg<suspend () -> Unit>(3).invoke()
+        coEvery {
+            applySourceSync(capture(removed), capture(updated), capture(inserted), any(), any(), any())
+        } coAnswers {
+            arg<suspend () -> Unit>(4).invoke()
             inserted.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
-                .also { arg<suspend (List<EntryChapter>) -> Unit>(4).invoke(it) }
+                .also { arg<suspend (List<EntryChapter>) -> Unit>(5).invoke(it) }
         }
     }
 

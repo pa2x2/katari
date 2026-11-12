@@ -40,6 +40,9 @@ SELECT
     Entry.status,
     Entry.thumbnail_url,
     Entry.background_url,
+    Entry.memo,
+    Entry.update_strategy,
+    EXISTS (SELECT 1 FROM entries_placeholder_details WHERE entry_id = Entry._id) AS placeholder_details,
     Name.name AS source_name
 FROM entries Entry
 JOIN profiles P ON P._id = Entry.profile_id
@@ -48,10 +51,14 @@ LEFT JOIN sources Name ON Name._id = Entry.source
 WHERE Entry._id = :entryId;
 
 chapterRow:
-SELECT entry_id, url, read, bookmark, name, chapter_number, scanlator, date_upload, date_fetch, source_order,
-    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = chapters._id) AS marked_read
-FROM chapters
-WHERE _id = :chapterId;
+SELECT C.entry_id, C.url, C.read, C.bookmark, C.name, C.chapter_number, C.scanlator, C.date_upload, C.date_fetch,
+    C.source_order, C.memo, C.summary, C.preview_url, C.kind, C.date_text, G.group_key, G.title AS group_title,
+    G.position AS group_position,
+    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = C._id) AS marked_read,
+    EXISTS (SELECT 1 FROM chapters_placeholder_details WHERE chapter_id = C._id) AS placeholder_details
+FROM chapters C
+LEFT JOIN chapter_groups G ON G.entry_id = C.entry_id AND G.group_key = C.group_key
+WHERE C._id = :chapterId;
 
 progressRow:
 SELECT
@@ -195,14 +202,28 @@ SELECT
 FROM playback_preferences
 WHERE entry_id = :entryId;
 
--- A group whose target its source declared is derived on every device; only merges the user made sync.
+-- The entry's place in a merge, and whether that place is one the merged entry's source gave it: the merged entry's
+-- own, or that of a title its source lists. Every device derives those from its own refreshes, so they never sync;
+-- a title the person added to such a merge does, as every place in a merge the person made does.
 mergeMemberRow:
-SELECT M.entry_id, M.target_entry_id, M.position
+SELECT M.entry_id, M.target_entry_id, M.position,
+    EXISTS (
+        SELECT 1
+        FROM entries T
+        WHERE T._id = M.target_entry_id
+        AND T.merged_by_source
+        AND (
+            M.entry_id = M.target_entry_id
+            OR EXISTS (
+                SELECT 1
+                FROM source_merge_listings L
+                WHERE L.profile_id = M.profile_id AND L.root_entry_id = M.target_entry_id AND L.entry_id = M.entry_id
+            )
+        )
+    ) AS given_by_source
 FROM merged_entries M
-JOIN entries T ON T._id = M.target_entry_id
 WHERE M.profile_id = :profileId
-AND M.entry_id = :entryId
-AND T.merged_by_source = 0;
+AND M.entry_id = :entryId;
 
 entryMigrationRow:
 SELECT source_entry_id, target_entry_id, intent_fingerprint, chapter_state_only

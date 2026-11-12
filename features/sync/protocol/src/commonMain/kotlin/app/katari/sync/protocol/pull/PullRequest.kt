@@ -14,8 +14,10 @@ data class PullRequest(
     /** At most this many records; 0 lets the server choose. A page may hold fewer. */
     @ProtoNumber(2) val limit: Int = 0,
     /**
-     * Leave out deletions. A device taking the whole account pulls from 0 this way, which is what a snapshot download
-     * is: it pages and resumes like any pull, and a device with nothing of its own has no use for deletion markers.
+     * Leave out the deletions made before the pull from 0. A device taking the whole account pulls from 0 this way,
+     * which is what a snapshot download is: it pages and resumes like any pull, and a record deleted before it began
+     * is nothing the device takes. A deletion made after it began still comes, as it may delete a record an earlier
+     * page brought, and the server keeps it until the device has it.
      */
     @ProtoNumber(3) val liveOnly: Boolean = false,
     /**

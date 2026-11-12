@@ -1,11 +1,10 @@
 package app.katari.sync.client.kind.replacement.carry
 
 import app.cash.sqldelight.async.coroutines.awaitAsList
+import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.apply.Resolved
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
-import app.katari.sync.client.kind.chapter.ChapterMetadata
-import app.katari.sync.client.kind.chapter.ChapterPayload
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.history.HistoryPayload
@@ -102,12 +101,14 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
 
     private suspend fun write(target: Chapter, read: Stamped<Boolean>, bookmark: Stamped<Boolean>) {
         if (read == target.read && bookmark == target.bookmark) return
-        val base = carry.stored(ChapterKind, target.key) ?: ChapterPayload(
+        // A chapter nobody marked has no record yet; its row holds what the source listed, which the record carries
+        val base = carry.stored(ChapterKind, target.key) ?: ChapterKind.payload(
+            row = carry.writes.database.sync_local_rowsQueries.chapterRow(target.id).awaitAsOne(),
             entryKey = carry.to,
-            url = target.url,
             read = target.read,
             bookmark = target.bookmark,
-            metadata = ChapterMetadata(name = target.name, number = target.number),
+            previousDetails = null,
+            renamedFrom = null,
         )
         carry.writes.change(ChapterKind, target.key, base.copy(read = read, bookmark = bookmark))
     }
@@ -233,6 +234,7 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         val read: Stamped<Boolean>,
         val bookmark: Stamped<Boolean>,
     ) {
+        val id: Long = row._id
         val url: String = row.url
         val name: String = row.name
         val number: Double = row.chapter_number

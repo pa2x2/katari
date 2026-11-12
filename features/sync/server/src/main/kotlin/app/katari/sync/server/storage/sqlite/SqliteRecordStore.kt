@@ -32,6 +32,13 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
             records.sequencesOf(accountId, chunk) { key, sequence -> key to sequence }.executeAsList()
         }.toMap()
 
+    override fun copiesOf(accountId: Long, keys: Collection<String>): List<SequencedRecord> =
+        database.transactionWithResult {
+            keys.distinct().chunked(MAX_LOOKUP_VALUES).flatMap { chunk ->
+                records.copiesOf(accountId, chunk, ::StoredRow).executeAsList().withFiles(accountId)
+            }
+        }
+
     override fun appliedChanges(accountId: Long, changeIds: Collection<String>): Map<String, Long> =
         changeIds.distinct().chunked(MAX_LOOKUP_VALUES).flatMap { chunk ->
             changes.sequencesOf(accountId, chunk) { changeId, sequence -> changeId to sequence }.executeAsList()
@@ -85,9 +92,9 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
         after: Long,
         through: Long,
         limit: Int,
-        includeDeleted: Boolean,
+        markersAfter: Long,
     ): List<SequencedRecord> = database.transactionWithResult {
-        records.page(accountId, after, through, includeDeleted, limit.toLong(), ::StoredRow).executeAsList()
+        records.page(accountId, after, through, markersAfter, limit.toLong(), ::StoredRow).executeAsList()
             .withFiles(accountId)
     }
 

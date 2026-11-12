@@ -56,6 +56,10 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
         queries.setSyncedUpTo(position = position, id = id.value)
     }
 
+    override fun setDownloadStart(id: DeviceId, position: Long) {
+        queries.setDownloadStart(position = position, id = id.value)
+    }
+
     override fun revoke(id: DeviceId) {
         queries.revoke(id.value)
     }
@@ -86,6 +90,7 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
         registeredAtMillis = registered_at,
         lastSeenMillis = last_seen_at,
         syncedUpTo = synced_up_to,
+        downloadStart = download_start,
         isRevoked = is_revoked,
     )
 }

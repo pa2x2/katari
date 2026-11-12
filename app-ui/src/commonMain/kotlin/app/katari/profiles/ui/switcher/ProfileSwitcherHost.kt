@@ -38,8 +38,9 @@ fun ProfileSwitcherHost(
     val dockAnchor = rememberPopoverAnchor()
 
     val current = activeProfile
-    val switcher = remember(current, profiles.size) {
-        current?.takeIf { profiles.size > 1 }?.let {
+    val switcher = remember(current, profiles) {
+        // The open profile can be archived on another device, which leaves it out of the profiles to switch to
+        current?.takeIf { profiles.any { profile -> profile.id != it.id } }?.let {
             ProfileSwitcher(it, profiles.size, dockAnchor) { from ->
                 openedFrom = from
                 showSheet = true

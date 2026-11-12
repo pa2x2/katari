@@ -118,18 +118,19 @@ class SyncServerClient internal constructor(
         call(post(SyncHttp.FILE_CLAIM, FileClaimRequest(files)))
 
     /**
-     * Uploads [source] as [file]. False when the server turned the bytes down, as not hashing to [file]'s name, which
-     * happens when the file changed while it was read, or as too large.
+     * Uploads [source] as [file]. A proxy in front of the server refuses one too large as the server does, with its own
+     * error page rather than a sync error.
      */
-    suspend fun uploadFile(file: FileReference, source: File): Boolean {
+    suspend fun uploadFile(file: FileReference, source: File): UploadResult {
         val body = source.asRequestBody(OCTET_STREAM)
         val request = authorized(Request.Builder().url(url(SyncHttp.filePath(file.category, file.sha256))).put(body))
             .build()
         return execute(request, transports.files) { response ->
             when {
-                response.isSuccessful -> true
+                response.isSuccessful -> UploadResult.STORED
                 isSyncError(response) -> throw failureOf(response)
-                response.code == HTTP_BAD_REQUEST || response.code == HTTP_TOO_LARGE -> false
+                response.code == HTTP_BAD_REQUEST -> UploadResult.CHANGED
+                response.code == HTTP_TOO_LARGE -> UploadResult.TOO_LARGE
                 else -> throw SyncFailure.NotASyncServer(response.code)
             }
         }

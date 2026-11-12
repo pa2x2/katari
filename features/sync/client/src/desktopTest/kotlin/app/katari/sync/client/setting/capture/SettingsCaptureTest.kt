@@ -52,6 +52,29 @@ class SettingsCaptureTest {
             }
         }
 
+    @Test
+    fun `an edit the database failed to take is recorded at the next flush, before the edits made after it`(): Unit =
+        runBlocking {
+            SyncTestDevice(directory.resolve("device.db")).use { device ->
+                val profile = device.preferences.profiles.profileStore(1)
+                device.startSync(deviceId = 1)
+                device.sql(
+                    "CREATE TRIGGER failing_outbox BEFORE INSERT ON sync_outbox BEGIN SELECT RAISE(ABORT, 'full'); END",
+                )
+                profile.getString("pref_display_mode_library").set("grid")
+                withTimeout(5_000) { device.settingsCapture.flush() }
+                device.outboxEdits().shouldBeEmpty()
+
+                device.sql("DROP TRIGGER failing_outbox")
+                profile.getString("library_sorting_mode").set("LAST_READ,DESCENDING")
+                withTimeout(5_000) { device.settingsCapture.flush() }
+                device.outboxEdits() shouldBe listOf(
+                    "setting.profile" to """[1,"pref_display_mode_library"]""",
+                    "setting.profile" to """[1,"library_sorting_mode"]""",
+                )
+            }
+        }
+
     private suspend fun SyncTestDevice.outboxEdits(): List<Pair<String, String>> = handler.await {
         sync_outboxQueries.batch(Long.MAX_VALUE).awaitAsList().map { it.kind to it.local_ref }
     }

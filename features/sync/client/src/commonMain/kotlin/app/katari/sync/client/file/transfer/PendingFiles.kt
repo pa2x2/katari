@@ -13,8 +13,10 @@ import tachiyomi.data.DatabaseHandler
 /** How many custom covers and fonts wait to move, as they change. */
 @Inject
 class PendingFiles(private val handler: DatabaseHandler, private val preferences: SyncPreferences) {
-    /** Files this device holds that the server may lack. */
+    /** Files this device holds that the server may lack, not counting [refusedAsTooLarge]. */
     fun uploads(): Flow<Long> = handler.subscribeToOne { sync_filesQueries.uploadCount() }
+
+    fun refusedAsTooLarge(): Flow<Long> = handler.subscribeToOne { sync_filesQueries.refusedCount() }
 
     /**
      * Files records name that aren't here yet, not counting [missingOnServer], nor files of a kind this device doesn't

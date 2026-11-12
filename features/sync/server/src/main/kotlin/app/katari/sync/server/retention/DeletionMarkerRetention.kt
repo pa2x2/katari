@@ -7,8 +7,8 @@ import kotlin.time.Duration.Companion.days
 /**
  * Drops deletion markers once no device needs them. A device needs the markers after the position it last pulled
  * from, until it is revoked or has been silent for [DEVICE_SILENCE_LIMIT]; a device that has never pulled needs none,
- * since a new device takes the account by a pull that leaves deletions out. With no device holding them, every
- * marker goes.
+ * since a new device takes the account by a pull that leaves out the deletions made before it began. With no device
+ * holding them, every marker goes.
  *
  * What is dropped is remembered as the account's markers-dropped-through sequence, so a device that comes back from
  * before it is sent to a full resync ([app.katari.sync.server.record.RecordPull]) instead of missing deletions. Applied

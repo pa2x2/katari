@@ -19,6 +19,8 @@ internal class AndroidKeystoreSecretStore(private val context: Context) : Secret
 
     override fun read(connection: ServerConnectionId): String? = store(connection).read()
 
+    override fun allowAsking(connection: ServerConnectionId) = store(connection).allowAsking()
+
     override fun write(connection: ServerConnectionId, value: String) = store(connection).write(value)
 
     private fun store(connection: ServerConnectionId): AndroidKeystoreApiKeyStore =

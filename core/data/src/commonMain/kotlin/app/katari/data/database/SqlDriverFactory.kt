@@ -17,7 +17,7 @@ import tachiyomi.data.Database
  * Configured like Room's connection manager: WAL on every device, so a write never blocks reads, and a busy timeout
  * on every connection, so a connection waits for a lock held by another one instead of failing with SQLITE_BUSY.
  * Each reader connection keeps its own page cache, so [readerCount] trades memory for concurrent reads. Every
- * connection carries what [temporarySchema] publishes.
+ * connection carries [temporarySchema]'s statements.
  */
 internal fun configuredSqlDriver(
     databaseType: AndroidxSqliteDatabaseType,
@@ -48,6 +48,7 @@ internal fun configuredSqlDriver(
             databaseRepository.isMigrating.value = version in 1..<Database.Schema.version
         },
         onOpen = {
+            temporarySchema.schemaReady()
             databaseRepository.isMigrating.value = false
         },
     )

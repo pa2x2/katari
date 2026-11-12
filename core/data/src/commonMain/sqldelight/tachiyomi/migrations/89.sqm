@@ -1,0 +1,4 @@
+-- A restore under way, held from draining until it is recorded as made when its backup was
+-- (app/katari/sync/data/sync_state.sq).
+ALTER TABLE sync_state ADD COLUMN restore_outbox_seq INTEGER;
+ALTER TABLE sync_state ADD COLUMN restore_backup_created_at INTEGER;

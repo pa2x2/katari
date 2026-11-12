@@ -203,6 +203,7 @@ class ChangeCaptureTest {
                     inserted = listOf(
                         EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2", dateFetch = 1000),
                     ),
+                    listedIds = listOf(10L),
                     afterUpdates = {},
                     afterInserts = {},
                 )
@@ -214,6 +215,7 @@ class ChangeCaptureTest {
                     inserted = listOf(
                         EntryChapter.create().copy(entryId = 1, url = "/show/3", name = "Episode 3", dateFetch = 2000),
                     ),
+                    listedIds = emptyList(),
                     afterUpdates = {},
                     afterInserts = {},
                 )
@@ -230,6 +232,30 @@ class ChangeCaptureTest {
             withClue("both episodes and the new release, not the local chapter") {
                 stored.count { it == "chapter" } shouldBe 3
             }
+        }
+    }
+
+    @Test
+    fun `a process that starts with sync on captures its first write, before anything resumes`() = runTest {
+        val file = directory.resolve("device.db")
+        SyncTestDevice(file).use { device ->
+            device.sql(
+                "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                """
+                INSERT INTO entries(_id, profile_id, source, url, title, favorite, date_added, type)
+                VALUES (1, 1, -2, '/show', 'Show', 1, 1000, 'anime')
+                """,
+                "INSERT INTO chapters(_id, entry_id, url, name) VALUES (10, 1, '/show/1', 'Episode 1')",
+            )
+            device.startSync(deviceId = 1)
+            device.drainAll()
+        }
+        // As a notification's action that starts the process writes while the app is still starting
+        SyncTestDevice(file).use { restarted ->
+            EntryChapterRepositoryImpl(restarted.handler, restarted.defaultProfile).let { chapters ->
+                chapters.update(chapters.getChapterById(10)!!.copy(read = true))
+            }
+            restarted.outboxKinds() shouldBe listOf("chapter")
         }
     }
 }

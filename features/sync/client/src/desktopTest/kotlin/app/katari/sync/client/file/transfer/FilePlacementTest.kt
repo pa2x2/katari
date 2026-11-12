@@ -41,7 +41,13 @@ class FilePlacementTest {
                     b.sync() shouldBe SyncOutcome.SYNCED
                     b.local.customCover("/show").shouldBeNull()
                     b.status.status().first().files shouldBe
-                        SyncStatus.Files(toUpload = 0, toDownload = 1, missingOnServer = 0, waitingForWifi = true)
+                        SyncStatus.Files(
+                            toUpload = 0,
+                            refusedAsTooLarge = 0,
+                            toDownload = 1,
+                            missingOnServer = 0,
+                            waitingForWifi = true,
+                        )
 
                     b.network.onWifi(true)
                     b.sync() shouldBe SyncOutcome.SYNCED

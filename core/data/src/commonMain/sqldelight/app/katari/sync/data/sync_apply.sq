@@ -46,13 +46,34 @@ WHERE _id = :entryId;
 insertEntry:
 INSERT INTO entries(
     profile_id, source, url, type, title, author, artist, description, genre, status, thumbnail_url, background_url,
-    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, download_title
+    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, memo, update_strategy
 )
 VALUES (
     :profileId, :source, :url, :type, :title, :author, :artist, :description, :genre, :status, :thumbnailUrl,
-    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :title
+    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :memo,
+    :updateStrategy
 )
 RETURNING _id;
+
+-- An entry created from a record that carried none of its source's details holds stand-ins until one does.
+notePlaceholderEntryDetails:
+INSERT INTO entries_placeholder_details(entry_id)
+VALUES (:entryId);
+
+entryHoldsPlaceholderDetails:
+SELECT count(*) > 0
+FROM entries_placeholder_details
+WHERE entry_id = :entryId;
+
+fillEntryDetails {
+    UPDATE entries
+    SET memo = :memo,
+        update_strategy = :updateStrategy
+    WHERE _id = :entryId;
+
+    DELETE FROM entries_placeholder_details
+    WHERE entry_id = :entryId;
+}
 
 updateEntry:
 UPDATE entries
@@ -86,6 +107,22 @@ chapterId:
 SELECT _id
 FROM chapters
 WHERE entry_id = :entryId AND url = :url;
+
+-- A chapter another device's refresh found at a new URL, which this device still lists at the old one.
+renameChapter:
+UPDATE chapters
+SET url = :url
+WHERE _id = :chapterId;
+
+-- A chapter's reading position is kept under its URL, with no content key
+moveChapterProgress:
+UPDATE entry_progress_state
+SET resource_key = :newUrl
+WHERE entry_id = :entryId AND content_key = '' AND resource_key = :oldUrl
+    AND NOT EXISTS (
+        SELECT 1 FROM entry_progress_state
+        WHERE entry_id = :entryId AND content_key = '' AND resource_key = :newUrl
+    );
 
 chapterExists:
 SELECT count(*) > 0
@@ -133,9 +170,12 @@ FROM chapters
 WHERE entry_id = :entryId;
 
 -- A record that doesn't say when the chapter was found dates it no later than its entry joined the Library, so it
--- isn't taken for a new release.
+-- isn't taken for a new release. Its group's place is copied from the group's row, which addChapterGroup writes first.
 insertChapter:
-INSERT INTO chapters(entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order)
+INSERT INTO chapters(
+    entry_id, url, name, read, bookmark, chapter_number, scanlator, date_upload, date_fetch, source_order, memo,
+    summary, preview_url, kind, group_key, group_position, date_text
+)
 VALUES (
     :entryId, :url, :name, :read, :bookmark, :chapterNumber, :scanlator, :dateUpload,
     CASE
@@ -149,9 +189,49 @@ VALUES (
             CAST(round((julianday('now') - 2440587.5) * 86400000) AS INTEGER)
         )
     END,
-    :sourceOrder
+    :sourceOrder,
+    :memo,
+    :summary,
+    :previewUrl,
+    :kind,
+    :groupKey,
+    (SELECT position FROM chapter_groups WHERE entry_id = :entryId AND group_key = :groupKey),
+    :dateText
 )
 RETURNING _id;
+
+-- A group this device lists already keeps its own title and place, which its chapters' copies follow.
+addChapterGroup:
+INSERT OR IGNORE INTO chapter_groups(entry_id, group_key, title, position)
+VALUES (:entryId, :groupKey, :title, :position);
+
+-- A chapter created from a record that carried none of its source's details holds stand-ins until one does.
+notePlaceholderChapterDetails:
+INSERT INTO chapters_placeholder_details(chapter_id)
+VALUES (:chapterId);
+
+chapterHoldsPlaceholderDetails:
+SELECT count(*) > 0
+FROM chapters_placeholder_details
+WHERE chapter_id = :chapterId;
+
+-- Its group's place is copied from the group's row, which addChapterGroup writes first.
+fillChapterDetails {
+    UPDATE chapters
+    SET memo = :memo,
+        summary = :summary,
+        preview_url = :previewUrl,
+        kind = :kind,
+        group_key = :groupKey,
+        group_position = (
+            SELECT position FROM chapter_groups WHERE entry_id = chapters.entry_id AND group_key = :groupKey
+        ),
+        date_text = :dateText
+    WHERE _id = :chapterId;
+
+    DELETE FROM chapters_placeholder_details
+    WHERE chapter_id = :chapterId;
+}
 
 -- The time the chapter was found is the one every device agrees on, when the record has one.
 updateChapterMarks:
@@ -218,6 +298,12 @@ ON CONFLICT(chapter_id) DO UPDATE SET
     entry_id = excluded.entry_id,
     last_read = excluded.last_read,
     time_read = excluded.time_read;
+
+-- A history row made again for a chapter whose record held time read that the row deleted before it took along.
+addHistoryTime:
+UPDATE history
+SET time_read = time_read + :millis
+WHERE chapter_id = :chapterId;
 
 deleteHistory:
 DELETE FROM history
@@ -482,11 +568,28 @@ deletePlaybackPreferences:
 DELETE FROM playback_preferences
 WHERE entry_id = :entryId;
 
--- Merges the person made
+-- Merges the person made, and the titles the person added to merges a source made
 
 deleteMergeMember:
 DELETE FROM merged_entries
 WHERE profile_id = :profileId AND entry_id = :entryId;
+
+mergeMemberAt:
+SELECT entry_id
+FROM merged_entries
+WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position = :position;
+
+-- Moves the members from the position on one place on, through negative positions, which no member holds, so no two
+-- share a position on the way.
+freeMergePosition {
+    UPDATE merged_entries
+    SET position = -position - 1
+    WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position >= :position;
+
+    UPDATE merged_entries
+    SET position = -position
+    WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position < 0;
+}
 
 -- A member already at the position, from a merge applied in another order, gives way; its own record puts it back.
 insertMergeMember:
@@ -533,9 +636,28 @@ SET chapter_id = (
 )
 WHERE _id = :progressId;
 
+-- The groups the moved chapters name, and which of them are open in the chapter list. A group the new entry lists
+-- already keeps its own title and place.
+moveChapterGroups {
+    INSERT OR IGNORE INTO chapter_groups(entry_id, group_key, title, position)
+    SELECT :toEntryId, group_key, title, position
+    FROM chapter_groups
+    WHERE entry_id = :fromEntryId;
+
+    INSERT OR IGNORE INTO expanded_chapter_groups(entry_id, group_key)
+    SELECT :toEntryId, group_key
+    FROM expanded_chapter_groups
+    WHERE entry_id = :fromEntryId;
+}
+
+-- Each chapter's copy of its group's place follows the group's row under the new entry (moveChapterGroups).
 moveChapters:
 UPDATE OR IGNORE chapters
-SET entry_id = :toEntryId
+SET entry_id = :toEntryId,
+    group_position = coalesce(
+        (SELECT position FROM chapter_groups WHERE entry_id = :toEntryId AND group_key = chapters.group_key),
+        group_position
+    )
 WHERE entry_id = :fromEntryId;
 
 moveProgress:

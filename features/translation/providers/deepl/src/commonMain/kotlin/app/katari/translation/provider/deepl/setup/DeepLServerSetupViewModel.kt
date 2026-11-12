@@ -20,7 +20,7 @@ class DeepLServerSetupViewModel internal constructor(
     private val configuration = connection.configuration
 
     val initialEndpoint: String = configuration.endpoint?.toString().orEmpty()
-    val initialApiKey: String = configuration.apiKey.orEmpty()
+    val initialApiKey: String = configuration.askForApiKey().orEmpty()
     val keyStorage = secrets.description
 
     val coordinator = ServerSetupCoordinator(

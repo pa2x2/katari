@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.first
 import tachiyomi.domain.work.WorkOutcome
 
 /**
- * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off or the long run its input names. A long
+ * Runs [SyncBackgroundRun] for WorkManager, as the periodic sync, the hand-off, the retry or the long run its input
+ * names. A long
  * run goes in the foreground, showing its progress as it goes.
  */
 class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
@@ -28,6 +29,7 @@ class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorke
     override suspend fun doWork(): Result {
         val outcome = when (inputData.getString(KIND)) {
             HAND_OFF -> run.handOff()
+            RETRY -> run.retry()
             LONG_RUN -> {
                 setForegroundSafely()
                 try {
@@ -55,6 +57,7 @@ class SyncJob(context: Context, workerParams: WorkerParameters) : CoroutineWorke
         const val KIND = "kind"
         const val PERIODIC = "periodic"
         const val HAND_OFF = "handOff"
+        const val RETRY = "retry"
         const val LONG_RUN = "longRun"
     }
 }

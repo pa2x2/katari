@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.1] - 2026-11-12
+
+### 🐛 Fixed
+
+- Various sync fixes
+
 ## [3.3.0] - 2026-11-12
 
 > Sync in this version needs sync server 1.1.0. Update the server first, or sync stops until you do.
@@ -1243,7 +1249,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.1...HEAD
+[3.3.1]: https://github.com/pa2x2/katari/releases/tag/v3.3.1
 [3.3.0]: https://github.com/pa2x2/katari/releases/tag/v3.3.0
 [3.2.1]: https://github.com/pa2x2/katari/releases/tag/v3.2.1
 [3.2.0]: https://github.com/pa2x2/katari/releases/tag/v3.2.0

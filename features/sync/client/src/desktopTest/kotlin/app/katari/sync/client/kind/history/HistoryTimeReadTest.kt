@@ -51,6 +51,38 @@ class HistoryTimeReadTest {
     }
 
     @Test
+    fun `time read on a chapter removed and listed again adds to what every device read on it before`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                        "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/show', 'Show', 1, 'anime')",
+                        "INSERT INTO chapters(_id, entry_id, url, name, chapter_number) VALUES (10, 1, '/show/1', 'Ep 1', 1)",
+                        "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 10, 1000, 1000)",
+                    )
+                    exchange.settle(listOf(a, b))
+                    b.sql("UPDATE history SET time_read = time_read + 500, last_read = 2000")
+                    exchange.settle(listOf(a, b))
+
+                    // A refresh on A no longer lists the episode, and a later one lists it again
+                    a.sql("DELETE FROM chapters WHERE _id = 10")
+                    a.sql(
+                        "INSERT INTO chapters(_id, entry_id, url, name, chapter_number) VALUES (11, 1, '/show/1', 'Ep 1', 1)",
+                        "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 11, 3000, 200)",
+                    )
+                    exchange.settle(listOf(a, b))
+
+                    a.library() shouldBe b.library()
+                    a.library() shouldContain """["history","/show/1",3000,1700]"""
+                }
+            }
+        }
+
+    @Test
     fun `a joining device's time on a chapter the account has counts as the larger of the two, then adds up`(): Unit =
         runBlocking {
             TestSyncServer(directory).use { server ->

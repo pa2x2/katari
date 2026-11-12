@@ -1,5 +1,11 @@
 # Desktop Changelog
 
+## [1.0.0-beta.13] - 2026-11-12
+
+### 🐛 Fixed
+
+- Various sync fixes
+
 ## [1.0.0-beta.12] - 2026-11-12
 
 > Sync in this version needs sync server 1.1.0. Update the server first, or sync stops until you do.
@@ -339,7 +345,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.12...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.13...HEAD
+[1.0.0-beta.13]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.13
 [1.0.0-beta.12]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.12
 [1.0.0-beta.11]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.11
 [1.0.0-beta.10]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.10

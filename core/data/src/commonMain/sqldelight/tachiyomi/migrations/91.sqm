@@ -1,0 +1,6 @@
+-- Entries sync created stored their title as the name their downloads go under, which only a name other than the title
+-- belongs in: a merged entry's member named so then never got its merged entry's name, and two merged entries' members
+-- of one title shared a download folder. The title names the same folder.
+UPDATE entries
+SET download_title = NULL
+WHERE download_title = title;

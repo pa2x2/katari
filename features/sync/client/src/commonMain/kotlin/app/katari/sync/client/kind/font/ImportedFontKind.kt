@@ -21,10 +21,10 @@ import app.katari.sync.protocol.file.FileReference
 
 /**
  * Fonts imported for the book reader, keyed by profile uuid and file name. Local ref: `[profile_id, file_name]`
- * ([FileOwner.Font]). Fonts are files, not rows, so no trigger captures them: importing, deleting or deleting the
- * profile is heard from the app's file store ([app.katari.sync.client.file.capture.FileCapture]). Deleting a font
- * deletes the record, which releases its file on the server; two devices importing different files under one name
- * keep the later.
+ * ([FileOwner.Font]). Fonts are files, not rows, so no trigger captures them: importing or deleting one is heard from
+ * the app's file store ([app.katari.sync.client.file.capture.FileCapture]). Deleting a font deletes the record, which
+ * releases its file on the server, but deleting its profile leaves the record to the profile's deletion, as the
+ * profile's rows are; two devices importing different files under one name keep the later.
  */
 object ImportedFontKind : SyncedKind<ImportedFontPayload>(
     "font.imported",

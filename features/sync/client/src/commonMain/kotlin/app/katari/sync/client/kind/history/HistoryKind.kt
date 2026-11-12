@@ -73,6 +73,22 @@ object HistoryKind : SyncedKind<HistoryPayload>("history", 1, HistoryPayload.ser
     }
 
     /**
+     * A row made again after its chapter was removed, as a refresh that no longer lists it or an entry removed as
+     * cache does, starts with only the time read since, while its record keeps every device's share, this device's
+     * own included: the row takes them, so that time adds to them instead of replacing this device's share. A row its
+     * record holds, or a record under another key holds, as a moved chapter's does ([movedFrom]), is the record's.
+     */
+    override suspend fun rejoin(reads: LocalReads, ref: LocalRef) {
+        val records = reads.database.sync_recordsQueries
+        val chapterKey = reads.chapterKey(ref.long(0)) ?: return
+        val record = records.getByKey(RecordKeys.derive(name, chapterKey)).awaitAsOneOrNull() ?: return
+        if (record.deleted || record.local_ref == ref.json) return
+        if (records.getByLocalRef(name, ref.json).awaitAsOneOrNull() != null) return
+        val millis = decode(record.payload).timeRead.sumOf { it.millis }
+        reads.database.sync_applyQueries.addHistoryTime(millis = millis, chapterId = ref.long(0))
+    }
+
+    /**
      * The shares of the record the row held before its chapter moved to another profile with its entry, each carried as
      * read on that chapter, so the new record starts from them rather than taking all of the row's time as this
      * device's own: a device that reads the old chapter before it hears of the move changes only its carried share.

@@ -24,6 +24,13 @@ enum class SyncOutcome {
     /** Pulled and pushed everything, or had nothing to send. */
     SYNCED,
 
+    /**
+     * Pulled everything, but left changes or files it may send or fetch now for a later run: changes the server kept
+     * refusing as stale while other devices changed them, or files that stopped moving when the server stopped
+     * answering. Tried again later ([app.katari.sync.client.trigger.SyncBackgroundWork.retry]).
+     */
+    UNFINISHED,
+
     /** Not set up, stopped, paused, or waiting for the person's first-sync choices: nothing to run. */
     IDLE,
 
@@ -34,6 +41,12 @@ enum class SyncOutcome {
     UNREACHABLE,
 
     /**
+     * The platform's store for secrets couldn't give the device's token now, such as a locked keyring; tried again
+     * later ([app.katari.sync.client.trigger.SyncBackgroundWork.retry]).
+     */
+    TOKEN_UNREADABLE,
+
+    /**
      * A first download waits for Wi-Fi, which the person didn't allow to use mobile data, or changes do, which the
      * person keeps off mobile data.
      */
@@ -41,4 +54,11 @@ enum class SyncOutcome {
 
     /** Something went wrong that retrying later may fix, such as a write that failed. */
     FAILED,
+    ;
+
+    /** Whether the run pulled everything the server had. */
+    val pulledAll: Boolean get() = this == SYNCED || this == UNFINISHED
+
+    /** Whether a later run should try again by itself, with no trigger to start it. */
+    val leavesWork: Boolean get() = this == UNFINISHED || this == TOKEN_UNREADABLE
 }

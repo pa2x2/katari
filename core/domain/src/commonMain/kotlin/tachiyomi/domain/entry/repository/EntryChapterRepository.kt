@@ -49,7 +49,8 @@ interface EntryChapterRepository {
     /**
      * Writes a source sync's chapter changes in one transaction, so a failed sync leaves the chapters as they were.
      * [afterUpdates] runs inside that transaction once [updated] is written, and [afterInserts] once [inserted] is,
-     * with their ids; repository writes made from either join the transaction.
+     * with their ids; repository writes made from either join the transaction. [listedIds] are the stored chapters the
+     * source listed, which then hold its own source details, whether or not [updated] rewrites them.
      *
      * @return [inserted] with their database ids.
      */
@@ -57,6 +58,7 @@ interface EntryChapterRepository {
         removedIds: List<Long>,
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
+        listedIds: Collection<Long>,
         afterUpdates: suspend () -> Unit = {},
         afterInserts: suspend (List<EntryChapter>) -> Unit = {},
     ): List<EntryChapter>

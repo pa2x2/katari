@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.extension
 
+import app.katari.sync.client.payload.Stamped
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -17,4 +18,10 @@ data class ExtensionRepositoryPayload(
     @ProtoNumber(6) val contactDiscord: String? = null,
     @ProtoNumber(7) val format: String,
     @ProtoNumber(8) val extensionListUrl: String? = null,
+    /**
+     * Always true; what it carries is its time, when the person last added the repository, so that removing it
+     * before then loses to adding it again and removing it after wins. [Stamped.UNKNOWN_EDIT] for one added while
+     * sync wasn't recording, or by a version 1 app, which carried no time.
+     */
+    @ProtoNumber(9) val added: Stamped<Boolean> = Stamped(true, Stamped.UNKNOWN_EDIT),
 )

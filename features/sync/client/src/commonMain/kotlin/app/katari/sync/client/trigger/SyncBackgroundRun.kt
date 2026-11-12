@@ -41,10 +41,7 @@ class SyncBackgroundRun(
         return coroutineScope {
             val reporting = launch { statusFlow.status().collect(onProgress) }
             try {
-                when (runs.runAndWait(SyncRequest())) {
-                    SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED -> WorkOutcome.RetryLater
-                    SyncOutcome.SYNCED, SyncOutcome.IDLE, SyncOutcome.WAITING_FOR_WIFI -> WorkOutcome.Done
-                }
+                runs.runAndWait(SyncRequest()).toWork()
             } finally {
                 reporting.cancel()
             }
@@ -52,8 +49,15 @@ class SyncBackgroundRun(
     }
 
     /** Sends what changed; retried while the server can't be reached, until it has it. */
-    suspend fun handOff(): WorkOutcome = when (runs.runAndWait(SyncRequest(onlyIfChanged = true))) {
-        SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED -> WorkOutcome.RetryLater
+    suspend fun handOff(): WorkOutcome = runs.runAndWait(SyncRequest(onlyIfChanged = true)).toWork()
+
+    /** A whole run again, after one left work it couldn't finish; retried until one gets through. */
+    suspend fun retry(): WorkOutcome = runs.runAndWait(SyncRequest()).toWork()
+
+    private fun SyncOutcome.toWork(): WorkOutcome = when (this) {
+        SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED, SyncOutcome.UNFINISHED,
+        SyncOutcome.TOKEN_UNREADABLE,
+        -> WorkOutcome.RetryLater
         SyncOutcome.SYNCED, SyncOutcome.IDLE, SyncOutcome.WAITING_FOR_WIFI -> WorkOutcome.Done
     }
 }
