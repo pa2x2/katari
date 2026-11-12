@@ -64,17 +64,24 @@ class FileCapture(
         val heard = Channel<Heard>(Channel.UNLIMITED)
         val watch = files.watch { owner -> heard.trySend(Change(owner)) }
         val recording = scope.launch {
+            val unrecorded = LinkedHashMap<FileOwner, Change>()
             for (next in heard) {
-                when (next) {
-                    is Change -> record(next)
-                    is Flush -> next.done.complete(Unit)
+                if (next is Change) {
+                    // The file is read when recorded, so a later change of the same file stands for an earlier one
+                    unrecorded.remove(next.owner)
+                    unrecorded[next.owner] = next
                 }
+                recordEach(unrecorded)
+                if (next is Flush) next.done.complete(Unit)
             }
         }
         return Running(watch, heard, recording)
     }
 
-    /** Returns once every change heard so far is recorded, so a drain after it sees them; at once when not listening. */
+    /**
+     * Returns once every change heard so far is recorded, so a drain after it sees them; at once when not listening.
+     * Changes the database failed to take are not waited for; they are tried again at the next change or flush.
+     */
     suspend fun flush() {
         val flush = Flush()
         val queued = synchronized(this) { running?.heard?.trySend(flush)?.isSuccess == true }
@@ -102,19 +109,32 @@ class FileCapture(
             FileCategory.FONT -> handler.await { sync_local_rowsQueries.profiles().awaitAsList() }
                 .flatMap { profile -> files.locked { fonts(profile._id) }.map { FileOwner.Font(profile._id, it) } }
         }
-        (known + present).distinct().forEach { record(Change(it)) }
+        val queued = synchronized(this) {
+            val heard = running?.heard ?: return@synchronized false
+            (known + present).distinct().all { heard.trySend(Change(it)).isSuccess }
+        }
+        if (queued) flush()
+    }
+
+    /** Records [unrecorded], each removed once recorded; one the database fails to take stays for the next try. */
+    private suspend fun recordEach(unrecorded: MutableMap<FileOwner, Change>) {
+        unrecorded.values.toList().forEach { change ->
+            try {
+                record(change)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Couldn't record a change of ${change.owner}" }
+                return@forEach
+            }
+            unrecorded.remove(change.owner)
+        }
     }
 
     private suspend fun record(change: Change) {
-        try {
-            files.locked {
-                val now = content(change.owner)
-                handler.await(inTransaction = true) { record(change, now) }
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Couldn't record a change of ${change.owner}" }
+        files.locked {
+            val now = content(change.owner)
+            handler.await(inTransaction = true) { record(change, now) }
         }
     }
 
