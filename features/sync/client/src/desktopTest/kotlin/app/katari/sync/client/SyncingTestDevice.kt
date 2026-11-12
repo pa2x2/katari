@@ -255,6 +255,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         var periodic = false
             private set
 
+        override fun keepConnected(connected: Boolean) = Unit
+
         override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
             periodic = enabled
         }

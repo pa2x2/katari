@@ -32,6 +32,13 @@
     <string name="sync_status_changes_wifi">Changes wait for Wi-Fi</string>
     <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
     <string name="sync_unsent_waiting_for_wifi">waiting for Wi-Fi</string>
+    <string name="sync_instant_title">Instant sync</string>
+    <string name="sync_instant_connected">Connected</string>
+    <string name="sync_instant_connecting">Connecting…</string>
+    <string name="sync_instant_waiting_for_network">Waiting for a network</string>
+    <string name="sync_instant_waiting_for_wifi">Waiting for Wi-Fi</string>
+    <string name="sync_instant_hide_hint">Sync keeps working with this notification hidden</string>
+    <string name="sync_instant_hide">Hide notification</string>
     <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="pref_dump_crash_logs">Share crash logs</string>
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>

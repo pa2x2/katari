@@ -14,9 +14,10 @@ class DesktopAppNotifications : AppNotifications {
     override val isOffered: Boolean = true
 
     override val choices = NotificationChoices.InApp(
-        // Desktop posts none for background translation, video playback or incognito mode
+        // Desktop posts none for background translation, video playback, incognito mode or keeping sync connected
         AppNotificationKind.entries - setOf(
             AppNotificationKind.TRANSLATION_PROGRESS,
+            AppNotificationKind.SYNC_CONNECTION,
             AppNotificationKind.VIDEO_PLAYBACK,
             AppNotificationKind.INCOGNITO_MODE,
         ),

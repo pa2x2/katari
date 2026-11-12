@@ -57,6 +57,9 @@ object Notifications {
     /** The progress of a long run, such as a first sync, while it goes. */
     const val ID_SYNC_LONG_RUN = -903
 
+    /** What keeps the app running for instant sync. */
+    const val ID_SYNC_CONNECTION = -904
+
     const val ID_INCOGNITO_MODE = -701
 
     const val ID_EXTENSION_UPDATES = -401
@@ -139,6 +142,7 @@ object Notifications {
             AppNotificationKind.BACKUP_RESTORE_PROGRESS,
             AppNotificationKind.SOURCE_MIGRATION_PROGRESS,
             AppNotificationKind.SYNC_PROGRESS,
+            AppNotificationKind.SYNC_CONNECTION,
             AppNotificationKind.VIDEO_PLAYBACK,
             AppNotificationKind.INCOGNITO_MODE,
             -> IMPORTANCE_LOW
@@ -170,6 +174,7 @@ object Notifications {
             AppNotificationKind.BACKUP_RESTORE_COMPLETE,
             AppNotificationKind.SOURCE_MIGRATION_PROGRESS,
             AppNotificationKind.SYNC_PROGRESS,
+            AppNotificationKind.SYNC_CONNECTION,
             AppNotificationKind.VIDEO_PLAYBACK,
             -> false
         }

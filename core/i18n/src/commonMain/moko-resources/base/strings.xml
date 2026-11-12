@@ -3207,6 +3207,7 @@
     <string name="sync_status_catching_up_unknown">Catching the server up…</string>
     <string name="sync_catching_up_text">The server went back to an older copy. This device is sending it what it\'s missing.</string>
     <string name="sync_progress_channel">Sync progress</string>
+    <string name="sync_connection_channel">Instant sync connection</string>
     <!-- Titles of the notification shown while sync moves a whole library, such as on a device's first sync -->
     <string name="sync_long_run_preparing">Preparing your library</string>
     <string name="sync_long_run_uploading">Uploading your library</string>
