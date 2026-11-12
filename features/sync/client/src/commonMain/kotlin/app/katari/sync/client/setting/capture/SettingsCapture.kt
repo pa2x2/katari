@@ -11,6 +11,7 @@ import app.katari.sync.client.setting.read.SettingReads
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Clock
 
@@ -55,11 +58,11 @@ class SettingsCapture(
             sourceFiles.watchWrites { write -> heard.trySend(edit(write)) },
         )
         val recording = scope.launch {
+            val unrecorded = ArrayDeque<Edit>()
             for (next in heard) {
-                when (next) {
-                    is Edit -> record(next)
-                    is Flush -> next.done.complete(Unit)
-                }
+                if (next is Edit) unrecorded.addLast(next)
+                recordEach(unrecorded)
+                if (next is Flush) next.done.complete(Unit)
             }
         }
         return Running(watches, heard, recording)
@@ -67,7 +70,8 @@ class SettingsCapture(
 
     /**
      * Returns once every edit heard so far is in the outbox, so a drain after it sees them; at once when not
-     * listening. Edits a store's listeners deliver later, such as Android's on the main thread, are not waited for.
+     * listening. Edits a store's listeners deliver later, such as Android's on the main thread, are not waited for,
+     * and neither are edits the database failed to take, which are tried again at the next edit or flush.
      */
     suspend fun flush() {
         val flush = Flush()
@@ -94,6 +98,25 @@ class SettingsCapture(
     private fun edit(write: SourceSettingWrite): Edit = when (val key = write.key) {
         null -> Edit(SourceSettingKind.name, SourceSettingKind.refPrefix(write.profileId, write.sourceId), all = true)
         else -> Edit(SourceSettingKind.name, SourceSettingKind.ref(write.profileId, write.sourceId, key).json)
+    }
+
+    /**
+     * Records [unrecorded] in the order they were heard, stopping at one the database fails to take: it stays first,
+     * with the time it was made, so a later edit of the same setting is never recorded before it.
+     */
+    private suspend fun recordEach(unrecorded: ArrayDeque<Edit>) {
+        while (unrecorded.isNotEmpty()) {
+            val edit = unrecorded.first()
+            try {
+                record(edit)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Couldn't record an edit of ${edit.kind} ${edit.localRef}" }
+                return
+            }
+            unrecorded.removeFirst()
+        }
     }
 
     private suspend fun record(edit: Edit) {
