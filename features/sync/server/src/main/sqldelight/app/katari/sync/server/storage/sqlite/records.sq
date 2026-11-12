@@ -25,6 +25,11 @@ SELECT record_key, sequence
 FROM records
 WHERE account_id = :accountId AND record_key IN :recordKeys;
 
+copiesOf:
+SELECT record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group
+FROM records
+WHERE account_id = :accountId AND record_key IN :recordKeys;
+
 upsert:
 INSERT INTO records(
     account_id, record_key, sequence, kind, kind_version, based_on, change_id, device_id, is_deleted, payload, record_group

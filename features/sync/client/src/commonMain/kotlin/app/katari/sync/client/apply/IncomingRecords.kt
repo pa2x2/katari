@@ -43,9 +43,10 @@ class IncomingRecords(private val writing: SyncWriting) {
     }
 
     /**
-     * Applies [records] fetched ahead of the device's position, a group of them ([RecordGroups]), leaving the position
-     * where it is. Merging is idempotent and order-free, and the server hands out only a record's newest copy, so
-     * the pull that reaches them later applies the same copies again, or newer ones, and changes nothing else.
+     * Applies [records] the server handed out apart from a pull, leaving the position where it is: a group of them
+     * fetched ahead of the position ([RecordGroups]), or the copies a push was refused over, which may lie behind it.
+     * Merging is idempotent and order-free, and the server hands out only a record's newest copy, so the pull that
+     * reaches them later applies the same copies again, or newer ones, and changes nothing else.
      */
     suspend fun applyAhead(records: List<SequencedRecord>) = writing.writeHoldingFailures { session ->
         records

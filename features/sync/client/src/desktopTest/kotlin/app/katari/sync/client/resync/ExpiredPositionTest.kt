@@ -11,6 +11,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -110,4 +111,44 @@ class ExpiredPositionTest {
             }
         }
     }
+
+    @Test
+    fun `a change made while away to a record deleted since gives way to the deletion it couldn't pull`(): Unit =
+        runBlocking {
+            TestSyncServer(directory).use { server ->
+                val account = server.account("reader")
+                SyncingTestDevice(directory.resolve("a.db")).use { a ->
+                    SyncingTestDevice(directory.resolve("b.db")).use { b ->
+                        a.sql(
+                            "INSERT INTO categories(name, sort, flags) VALUES ('Gone', 1, 0)",
+                            "INSERT INTO categories(name, sort, flags) VALUES ('Later', 2, 0)",
+                        )
+                        a.join(server, account)
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.join(server, account)
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.sql("UPDATE categories SET sort = 5 WHERE name = 'Later'")
+                        delay(5)
+
+                        a.sql("DELETE FROM categories WHERE name = 'Gone'")
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        // B stays away past the time the server keeps deletions for it
+                        server.dropPassedDeletionMarkers(
+                            account,
+                            later = DeletionMarkerRetention.DEVICE_SILENCE_LIMIT * 2,
+                        ) shouldBeGreaterThan b.connection.state().position
+                        // Kept by the server, but left out by the pull of B's resync, as it comes before that pull
+                        a.sql("DELETE FROM categories WHERE name = 'Later'")
+                        a.sync() shouldBe SyncOutcome.SYNCED
+
+                        b.sync() shouldBe SyncOutcome.SYNCED
+                        b.connection.state().stage shouldBe SyncStage.READY
+                        b.local.pending.count() shouldBe 0
+                        a.sync() shouldBe SyncOutcome.SYNCED
+                        b.library() shouldNotContain """["category","default","Later",5,0]"""
+                        b.library() shouldBe a.library()
+                    }
+                }
+            }
+        }
 }

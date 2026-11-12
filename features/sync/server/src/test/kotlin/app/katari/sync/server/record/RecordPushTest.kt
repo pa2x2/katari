@@ -24,8 +24,10 @@ class RecordPushTest {
             val created = record("entry:1", basedOn = 0, payload = "from phone", changeId = "phone-1")
 
             phone.push(created).results shouldContainExactly listOf(PushResult("phone-1", PushOutcome.ACCEPTED, 1))
-            desktop.push(record("entry:1", basedOn = 0, changeId = "desktop-1")).results shouldContainExactly
-                listOf(PushResult("desktop-1", PushOutcome.STALE, 1))
+            val refused = desktop.push(record("entry:1", basedOn = 0, changeId = "desktop-1")).results.single()
+            refused.copy(current = null) shouldBe PushResult("desktop-1", PushOutcome.STALE, 1)
+            // The copy refused over comes along, for a device whose pulls may never bring it
+            refused.current?.let { it.sequence to it.record.payload.decodeToString() } shouldBe (1L to "from phone")
             desktop.push(record("entry:1", basedOn = 1, payload = "merged on desktop", changeId = "desktop-2")).results
                 .shouldContainExactly(PushResult("desktop-2", PushOutcome.ACCEPTED, 2))
 

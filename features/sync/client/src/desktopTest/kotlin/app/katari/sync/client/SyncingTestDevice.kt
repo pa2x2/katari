@@ -150,6 +150,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
                 continuity,
                 local.pending,
                 uploads,
+                local.incoming,
             ),
             local.incoming, local.pending, local.settingsCapture,
             local.fileCapture, local.drain, uploads,

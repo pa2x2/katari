@@ -1,5 +1,6 @@
 package app.katari.sync.client.run
 
+import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.record.PendingChanges
@@ -7,6 +8,7 @@ import app.katari.sync.client.server.SyncServerClient
 import app.katari.sync.protocol.push.PushOutcome
 import app.katari.sync.protocol.push.PushRequest
 import app.katari.sync.protocol.record.RecordEnvelope
+import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.Inject
 
 /**
@@ -26,10 +28,13 @@ class PushChanges(
     private val continuity: ServerContinuity,
     private val pending: PendingChanges,
     private val uploads: FileUploads,
+    private val incoming: IncomingRecords,
 ) {
     /**
      * Pushes everything once. Returns whether the server refused some change as stale: another device changed the
-     * record since, so a pull merges the two and the merged record goes with the next push.
+     * record since, so the server's copy is merged and the merged record goes with the next push. The copy comes with
+     * the refusal, merged here at once, as no pull may bring it: a deletion marker before the device's position, or
+     * one a pull leaving deletions out skipped. A server that predates that leaves it to the pull that follows.
      *
      * A refusal naming no server copy (sequence 0) means the record's last copy was a deletion the server since
      * dropped. On the first push the deletion may not have reached this device yet, which the pull that follows
@@ -79,17 +84,20 @@ class PushChanges(
         continuity.check(response.server)
         val sent = records.associateBy { it.changeId }
         val taken = ArrayList<PendingChanges.Taken>()
+        val current = ArrayList<SequencedRecord>()
         response.results.forEach { result ->
             val envelope = sent[result.changeId] ?: return@forEach
             when (result.outcome) {
                 PushOutcome.ACCEPTED -> taken += PendingChanges.Taken(envelope.key, envelope.changeId, result.sequence)
                 PushOutcome.STALE -> {
                     stale = true
+                    result.current?.let(current::add)
                     if (afterPull && result.sequence == 0L && envelope.basedOn != 0L) pending.rebase(envelope.key)
                 }
             }
         }
         pending.taken(taken)
+        if (current.isNotEmpty()) incoming.applyAhead(current)
         onTaken(taken.size)
         if (response.caughtUp) connection.passOwnPush(response.server)
         return stale

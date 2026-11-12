@@ -19,6 +19,9 @@ interface RecordStore {
     /** The sequences of the stored copies of [keys], by key, leaving out the keys the account holds no copy of. */
     fun sequencesOf(accountId: Long, keys: Collection<String>): Map<String, Long>
 
+    /** The stored copies of [keys], deletion markers included, leaving out the keys the account holds no copy of. */
+    fun copiesOf(accountId: Long, keys: Collection<String>): List<SequencedRecord>
+
     /** The sequences the changes were stored with, by change id, leaving out the changes the account has no record of. */
     fun appliedChanges(accountId: Long, changeIds: Collection<String>): Map<String, Long>
 
