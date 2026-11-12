@@ -119,8 +119,13 @@ import { sitePath } from "../../site/links.ts";
     <p>
       Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
       the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs with
-      <strong>Sync in the background</strong> on, every 30 minutes unless <strong>How often</strong> says otherwise. <strong>Pause syncing</strong>
+      <strong>Sync in the background</strong> on, every 30 minutes unless <strong>Sync mode</strong> says otherwise. <strong>Pause syncing</strong>
       keeps changes on the device until you turn it off.
+    </p>
+    <p>
+      <PlatformLabel platform="Android" lead />Set <strong>Sync mode</strong> to <strong>Instant</strong> to stay connected while Katari is
+      closed, so changes from your other devices arrive at once. Android shows a notification while it does, which you can hide, and Katari
+      asks to run without battery optimization.
     </p>
     <p>
       When another device got further in a title, opening it in the reader or player offers to go there, such as
@@ -128,6 +133,20 @@ import { sitePath } from "../../site/links.ts";
       to stay.
     </p>
     <p>History names the device a title was last read on when it wasn't this one.</p>
+  </Task>
+
+  <Task id="download-elsewhere" title="Download on another device">
+    <p>
+      Downloads stay on each device, but one device can ask another to download chapters. Press and hold a chapter's download button, or
+      right-click it on Linux, and its menu offers <strong>Download on another device…</strong> for that chapter. With chapters selected,
+      the same action is under <strong>More</strong>, and an entry's <strong>Download</strong> menu offers <strong>On another device…</strong>
+      with the same amounts. When only one of your devices can take them, the action names it, such as <strong>Download on Desktop</strong>.
+    </p>
+    <p>
+      The other device downloads the chapters once the entry is in its library, and shows a notification for any it couldn't download, such
+      as when it doesn't have the source's extension. A device that is offline gets the request when it next syncs, within a week. A device
+      on an older Katari shows <strong>Needs a newer Katari</strong>.
+    </p>
   </Task>
 
   <Task id="questions" title="Needs your answer">
