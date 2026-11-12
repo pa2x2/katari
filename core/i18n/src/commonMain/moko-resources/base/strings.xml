@@ -798,7 +798,10 @@
     <!-- Preferences -->
       <!-- Subsections -->
     <string name="pref_category_general">General</string>
+    <string name="pref_general_summary">Language, date &amp; time format, background activity</string>
+    <string name="pref_category_language_and_region">Language and region</string>
     <string name="pref_category_appearance">Appearance</string>
+    <string name="pref_appearance_layout_summary">Theme, layout, home screen tabs</string>
     <string name="pref_category_library">Library</string>
     <string name="pref_category_reader">Reader</string>
     <string name="pref_category_readers">Readers</string>
@@ -980,7 +983,6 @@
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
 
-    <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary_anime">Categories, display, group, updates</string>
     <string name="pref_library_summary_unified">Categories, display, cover badges, chapters</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
@@ -1144,9 +1146,14 @@
     <string name="library_update_pause_pick">Pick a date and time…</string>
     <string name="library_update_pause_until_title">Pause until</string>
     <string name="library_update_report_retry">Retry</string>
+    <string name="library_update_report_retry_all">Retry all</string>
     <string name="library_update_report_unknown_source">Unknown source</string>
     <string name="library_update_report_rechecked">Rechecked</string>
     <string name="library_update_report_with_rechecked">%s · rechecked</string>
+    <string name="library_update_report_took">took %s</string>
+    <string name="library_update_report_checked_of">%1$d of %2$d checked</string>
+    <string name="library_update_report_checking">Checking %1$d of %2$d</string>
+    <string name="library_update_report_checking_now">Now: %s</string>
     <string name="library_update_on_device">%1$s on %2$s</string>
     <string name="library_update_on_other_device">%s on another device</string>
     <string name="library_update_report_from_device">Updated on %s. Each entry\'s result stays on that device.</string>
@@ -1670,11 +1677,6 @@
     <string name="pref_reset_viewer_flags_error">Couldn\'t reset reader settings</string>
     <string name="pref_dump_crash_logs_summary">Saves error logs to a file for sharing with the developers</string>
     <string name="label_background_activity">Background activity</string>
-    <string name="pref_disable_battery_optimization">Disable battery optimization</string>
-    <string name="pref_disable_battery_optimization_summary">Helps with background library updates and backups</string>
-    <string name="battery_optimization_disabled">Battery optimization is already disabled</string>
-    <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
-    <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
     <string name="pref_tablet_ui_mode">Wide layouts</string>
     <string name="pref_interface_size">Interface size</string>
     <string name="pref_interface_size_summary">On top of the desktop’s scale</string>
@@ -2494,6 +2496,7 @@
     <!-- Updates -->
     <string name="updating_library">Updating library</string>
     <string name="update_already_running">An update is already running</string>
+    <string name="library_update_view_running">View</string>
     <string name="library_update_queued">Update queued. It starts when %s\'s update finishes.</string>
     <string name="library_update_waiting">Waiting for %s\'s update</string>
     <string name="library_update_progress">%1$s · %2$d / %3$d</string>
@@ -3204,6 +3207,7 @@
     <string name="sync_status_catching_up_unknown">Catching the server up…</string>
     <string name="sync_catching_up_text">The server went back to an older copy. This device is sending it what it\'s missing.</string>
     <string name="sync_progress_channel">Sync progress</string>
+    <string name="sync_connection_channel">Instant sync connection</string>
     <!-- Titles of the notification shown while sync moves a whole library, such as on a device's first sync -->
     <string name="sync_long_run_preparing">Preparing your library</string>
     <string name="sync_long_run_uploading">Uploading your library</string>
@@ -3361,7 +3365,26 @@
     <string name="sync_options">Options</string>
     <string name="sync_in_background">Sync in the background</string>
     <string name="sync_in_background_summary">While the app is closed</string>
-    <string name="sync_background_interval">How often</string>
+    <string name="sync_mode">Sync mode</string>
+    <string name="sync_mode_instant">Instant</string>
+    <string name="sync_device_connected">connected now</string>
+    <string name="sync_test_message_send">Send a test message</string>
+    <string name="sync_test_message_received">A test message came from %s</string>
+    <string name="sync_test_message_unknown_device">another device</string>
+    <string name="sync_download_elsewhere">Download on another device…</string>
+    <string name="sync_download_elsewhere_title">Download on another device</string>
+    <string name="sync_download_on">Download on %s</string>
+    <string name="sync_download_elsewhere_amounts">On another device…</string>
+    <string name="sync_download_elsewhere_amounts_on">On %s…</string>
+    <string name="sync_download_elsewhere_what">%1$s · %2$s</string>
+    <string name="sync_download_requested">Download requested on %s</string>
+    <string name="sync_download_requested_later">%s gets the request when it next syncs</string>
+    <string name="sync_download_needs_newer_app">Needs a newer Katari</string>
+    <string name="sync_download_missing_extension">Doesn\'t have the %s extension</string>
+    <string name="sync_download_request_failed_title">Couldn\'t download %s</string>
+    <string name="sync_download_request_missing_source">%1$s asked for %2$s, but %3$s isn\'t installed here.</string>
+    <string name="sync_download_request_missing_chapters">%1$s asked for %2$s, which %3$s no longer lists.</string>
+    <string name="sync_download_request_unknown_device">Another device</string>
     <string name="sync_pause">Pause syncing</string>
     <string name="sync_pause_summary">Changes wait on this device until you resume</string>
     <string name="sync_choices_title">What syncs</string>

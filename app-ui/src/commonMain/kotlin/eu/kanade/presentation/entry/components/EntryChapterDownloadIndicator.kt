@@ -5,11 +5,17 @@ import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.entry.interactions.translate.EntryTranslateStatus
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.Translate
 import app.katari.presentation.kit.button.DownloadIndicator
 import app.katari.presentation.kit.button.DownloadIndicatorAction
 import app.katari.presentation.kit.button.DownloadIndicatorMenuItem
 import app.katari.presentation.kit.button.DownloadIndicatorState
+import app.katari.presentation.kit.sheet.popoverAnchor
+import app.katari.presentation.kit.sheet.rememberPopoverAnchor
+import app.katari.sync.ui.download.DownloadElsewhereRequest
+import app.katari.sync.ui.download.LocalDownloadElsewhere
+import app.katari.sync.ui.download.label
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.ChapterTranslationBadge
 import eu.kanade.presentation.entry.translation.chapterTranslateActions
@@ -23,6 +29,10 @@ enum class ChapterDownloadAction {
     DELETE,
 }
 
+/**
+ * A chapter's or group's download button. Its menu adds translating them when [onTranslateClick] is given, and asking
+ * another device of the account to download them ([downloadElsewhere]) on a screen that offers it.
+ */
 @Composable
 fun EntryChapterDownloadIndicator(
     enabled: Boolean,
@@ -32,6 +42,7 @@ fun EntryChapterDownloadIndicator(
     modifier: Modifier = Modifier,
     translateStatusProvider: () -> EntryTranslateStatus? = { null },
     onTranslateClick: ((ChapterTranslateAction) -> Unit)? = null,
+    downloadElsewhere: DownloadElsewhereRequest? = null,
 ) {
     if (onClick == null) return
 
@@ -45,12 +56,24 @@ fun EntryChapterDownloadIndicator(
     } else {
         emptyList()
     }
+    val anchor = rememberPopoverAnchor()
+    val elsewhere = LocalDownloadElsewhere.current
+    val elsewhereMenuItems = listOfNotNull(
+        downloadElsewhere?.let { request ->
+            elsewhere?.offer(request.entryIds)?.let { offer ->
+                DownloadIndicatorMenuItem(offer.label(), MaterialSymbols.Rounded.Devices) {
+                    elsewhere.open(request, anchor)
+                }
+            }
+        },
+    )
+    val menuItems = translateMenuItems + elsewhereMenuItems
     DownloadIndicator(
         enabled = enabled,
-        modifier = modifier,
+        modifier = modifier.popoverAnchor(anchor),
         badge = translateStatus?.let { status -> { ChapterTranslationBadge(status) } },
-        menuItems = translateMenuItems,
-        notDownloadedMenuItems = translateMenuItems,
+        menuItems = menuItems,
+        notDownloadedMenuItems = menuItems,
         downloadStateProvider = {
             when (downloadStateProvider()) {
                 EntryDownloadState.NOT_DOWNLOADED -> DownloadIndicatorState.NOT_DOWNLOADED

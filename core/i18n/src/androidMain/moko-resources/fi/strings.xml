@@ -13,4 +13,8 @@
     <string name="pref_read_with_long_tap">Näytä pitkällä napautuksella</string>
     <string name="ext_permission_install_apps_warning">Laajennosten asentamiseen tarvitaan lupia. Napauta tästä myöntääksesi luvat.</string>
     <string name="connected_to_wifi">Ainoastaan WiFillä</string>
+    <string name="pref_disable_battery_optimization">Poista akun optimointi käytöstä</string>
+    <string name="pref_disable_battery_optimization_summary">Auttaa taustalla pyörivien kirjaston päivitysten ja varmuuskopioiden kanssa</string>
+    <string name="battery_optimization_disabled">Akun optimointi on jo poistettu käytöstä</string>
+    <string name="battery_optimization_setting_activity_not_found">Laiteasetuksia ei voitu avata</string>
 </resources>

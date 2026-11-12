@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Högersvep på kapitel</string>
     <string name="ext_permission_install_apps_warning">Behörigheter krävs för att installera tillägg. Tryck här för att bevilja.</string>
     <string name="connected_to_wifi">Bara över Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Inaktivera batterioptimering</string>
+    <string name="pref_disable_battery_optimization_summary">Hjälper till med uppdateringar och säkerhetskopior i bakgrunden</string>
+    <string name="battery_optimization_disabled">Batterioptimering är redan inaktiverat</string>
+    <string name="battery_optimization_setting_activity_not_found">Det gick inte att öppna enhetsinställningarna</string>
+    <string name="about_dont_kill_my_app">Vissa tillverkare har ytterligare appbegränsningar som dödar bakgrundstjänster. Denna webbplats har mer information om hur du åtgärdar det.</string>
 </resources>

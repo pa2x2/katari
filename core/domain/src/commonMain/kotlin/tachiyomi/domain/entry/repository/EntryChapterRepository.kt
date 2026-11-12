@@ -17,6 +17,9 @@ interface EntryChapterRepository {
     /** Every chapter of [entryIds], excluded scanlators included, in each entry's [getChaptersByEntryIdAwait] order. */
     suspend fun getChaptersByEntryIdsAwait(entryIds: Collection<Long>): List<EntryChapter>
 
+    /** The chapters of [entryIds] first fetched at or after [since], each entry's newest first as its source lists them. */
+    suspend fun getChaptersFetchedSince(entryIds: Collection<Long>, since: Long): List<EntryChapter>
+
     suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary
 
     suspend fun getRecentRead(

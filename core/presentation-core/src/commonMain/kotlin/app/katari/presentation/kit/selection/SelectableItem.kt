@@ -49,7 +49,8 @@ fun Modifier.selectableItem(
                     val action: (() -> Unit)? = when {
                         event.buttons.isSecondaryPressed -> {
                             val coordinates = placement.coordinates
-                            if (coordinates != null) {
+                            // A control in the item that has a menu of its own, such as a download button, opens it
+                            if (coordinates != null && !items.claimed(coordinates.localToWindow(change.position))) {
                                 { items.openMenu(item, coordinates, change.position) }
                             } else {
                                 null

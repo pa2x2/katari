@@ -2,7 +2,9 @@ package app.katari.android.sync
 
 import android.app.ActivityManager
 import android.app.Application
+import android.content.Intent
 import android.os.PowerManager
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -16,6 +18,8 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.setBackoffCriteria
 import eu.kanade.tachiyomi.util.system.workManager
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.work.WorkBackoff
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -28,6 +32,21 @@ import kotlin.time.Duration.Companion.seconds
  */
 @Inject
 class AndroidSyncBackgroundWork(private val application: Application) : SyncBackgroundWork {
+    override fun keepConnected(connected: Boolean) {
+        val intent = Intent(application, InstantSyncService::class.java)
+        if (!connected) {
+            application.stopService(intent)
+            return
+        }
+        try {
+            ContextCompat.startForegroundService(application, intent)
+        } catch (e: IllegalStateException) {
+            // Android 12 and later refuse it from the background unless battery optimisation is off; the app's next
+            // opening starts it.
+            logcat(LogPriority.WARN, e) { "Instant sync not started" }
+        }
+    }
+
     override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
         if (!enabled) {
             application.workManager.cancelUniqueWork(PERIODIC)

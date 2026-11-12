@@ -94,12 +94,13 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     <PlatformAnswers>
       <p slot="android">
         Android puts apps to sleep to save battery, and some phone makers are much stricter about it. Under
-        <Path>Settings › Advanced</Path>, tap <strong>Disable battery optimization</strong>, then follow the steps for your phone on
+        <Path>Settings › General</Path>, tap <strong>Disable battery optimization</strong>, then follow the steps for your phone on
         <a href="https://dontkillmyapp.com" {...leavesSite()}>Don't kill my app!</a>
       </p>
       <p slot="linux">
-        Updates and backups run only while Katari is open. One missed while it was closed runs when Katari next starts, and quitting
-        during one asks first.
+        Updates and backups run only while Katari runs. Closing the window leaves it running in the tray unless you turn off
+        <strong>Keep running in the tray</strong> under <Path>Settings › General</Path>, where <strong>Start at login</strong> also starts
+        it there when you sign in. One missed while Katari wasn't running runs when it next starts, and quitting during one asks first.
       </p>
     </PlatformAnswers>
   </Task>

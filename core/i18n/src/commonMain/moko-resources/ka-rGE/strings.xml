@@ -200,8 +200,6 @@
     <string name="pref_clear_database_summary">ისტორიიდან წაიშლება ჩანაწერები, რომლებიც თქვენს ბიბლიოთეკაში არაა შენახული</string>
     <string name="clear_database_completed">ჩანაწერები წაშლილია</string>
     <string name="pref_refresh_library_covers">ბიბლიოთეკის მანგების ყდის ცვლილება</string>
-    <string name="battery_optimization_disabled">ელემენტის ოპტიმიზაცუა უკვე გამორთულია</string>
-    <string name="battery_optimization_setting_activity_not_found">ვერ მოხერხდა მოწყობილობის პარამეტრების გახსნა</string>
     <string name="website">ვებსაიტი</string>
     <string name="version">ვერსია</string>
     <string name="check_for_updates">განახლებების მოძებნა</string>
@@ -312,8 +310,6 @@
     <string name="pref_color_filter_mode">ფერთა ფილტრის შეხამების რეჟიმი</string>
     <string name="webtoon_viewer">ვებ კომიქსი</string>
     <string name="pager_viewer">დანომრილი</string>
-    <string name="pref_disable_battery_optimization">გამორთე ბატარეის ოპტიმიზაცია</string>
-    <string name="pref_disable_battery_optimization_summary">ეხმარება უკანა ფონში მიმდინარე ბიბლიოთეკის განახლებებსდა რეზერვს</string>
     <string name="licenses">ღია კოდის ლიცენზია</string>
     <string name="pinned_sources">მიმაგრებული</string>
     <string name="local_source_help_guide">ლოკალური წყაროს გიდი</string>

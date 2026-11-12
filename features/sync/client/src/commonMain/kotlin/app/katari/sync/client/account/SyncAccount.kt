@@ -23,6 +23,9 @@ import app.katari.sync.protocol.version.ProtocolCompatibility
 import app.katari.sync.protocol.version.SyncProtocolVersion
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import okhttp3.HttpUrl
@@ -51,7 +54,7 @@ class SyncAccount(
     private val disconnection: Disconnection,
     private val deviceChanges: DeviceListChanges,
 ) {
-    /** Changes whenever the server says a device joined or left the account, while the app listens live. */
+    /** Changes whenever the server says a device joined, left or described itself anew, while the app listens live. */
     val deviceListChanges: Flow<Long> get() = deviceChanges.heard
 
     /**
@@ -192,6 +195,19 @@ class SyncAccount(
 
     /** This device's ID in its account, known without the server; null while the device has never joined one. */
     suspend fun thisDevice(): DeviceId? = connection.state().device
+
+    /** The account's devices as last listed ([DeviceDirectory]), which [devices] lists again. */
+    fun listedDevices(): Flow<List<AccountDevice>> = combine(
+        devices.devices(),
+        connection.states().map { it.device }.distinctUntilChanged(),
+    ) { listed, thisDevice -> listed.map { AccountDevice(it, isThisDevice = it.id == thisDevice) } }
+
+    /** Names this device [name], in its own listing at once and in the account with the sync this starts. */
+    suspend fun renameThisDevice(name: String) {
+        naming.rename(name)
+        thisDevice()?.let { devices.rename(it, naming.name()) }
+        syncNow()
+    }
 
     suspend fun devices(): AccountCall<List<AccountDevice>> = linked { client, device ->
         client.devices().devices.also { devices.remember(it) }.map { AccountDevice(it, isThisDevice = it.id == device) }

@@ -282,9 +282,6 @@
     <string name="notification_chapters_single">Глава %1$s</string>
     <string name="pref_category_display">Отображение</string>
     <string name="updating_library">Обновление библиотеки</string>
-    <string name="battery_optimization_disabled">Оптимизация батареи уже выключена</string>
-    <string name="pref_disable_battery_optimization_summary">Помогает с обновлением библиотеки и резервной копией в фоне</string>
-    <string name="pref_disable_battery_optimization">Отключить оптимизацию батареи</string>
     <string name="hide_notification_content">Скрыть содержимое уведомлений</string>
     <string name="secure_screen_summary">Защита экрана скрывает содержимое при переключении между приложениями, а также блокирует создание скриншотов</string>
     <string name="action_oldest">Старейший</string>
@@ -324,7 +321,6 @@
     <string name="viewer">Режим чтения</string>
     <string name="pref_category_for_this_series">Для этой серии</string>
     <string name="gray_background">Серый</string>
-    <string name="battery_optimization_setting_activity_not_found">Не удалось открыть настройки устройства</string>
     <string name="pref_refresh_library_covers">Обновить обложки серий</string>
     <string name="sort_by_upload_date">Дата добавления</string>
     <string name="label_data">Данные</string>
@@ -447,7 +443,6 @@
     <string name="theme_tako">Тако</string>
     <string name="theme_strawberrydaiquiri">Клубничный Дайкири</string>
     <string name="theme_midnightdusk">Полуночные Сумерки</string>
-    <string name="about_dont_kill_my_app">У некоторых производителей есть дополнительные ограничения для приложений, которые убивают фоновые службы. На этом сайте есть более подробная информация о том, как это исправить.</string>
     <string name="restore_miui_warning">Резервная копия/Восстановление может не работать должным образом, если отключена «Оптимизация MIUI».</string>
     <string name="theme_monet">Динамическая</string>
     <string name="label_background_activity">Фоновая активность</string>
@@ -548,7 +543,6 @@
     <string name="popular">Популярное</string>
     <string name="action_search_hint">Искать…</string>
     <string name="crash_screen_restart_application">Перезапустить приложение</string>
-    <string name="pref_appearance_summary">Тема, формат даты и времени</string>
     <string name="pref_reader_summary">Режим чтения, отображение, навигация</string>
     <string name="pref_downloads_summary">Автоматическая загрузка, загрузка наперёд</string>
     <string name="pref_browse_summary">Источники, расширения, глобальный поиск</string>

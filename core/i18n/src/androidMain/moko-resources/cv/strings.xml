@@ -13,4 +13,8 @@
     <string name="pref_chapter_swipe_end">Сылтӑмалла туртсан сыпӑк</string>
     <string name="ext_permission_install_apps_warning">Хушмасене лартма ирӗксем кирлӗ. Ирӗксене пама кунта пус.</string>
     <string name="connected_to_wifi">Wi-Fi урлӑ ҫеҫ</string>
+    <string name="battery_optimization_setting_activity_not_found">Хатӗрӗн ӗнерлӗве уҫаймарӗ</string>
+    <string name="battery_optimization_disabled">Петтерей лайӑхлатнине сӳнтернӗ ӗнтӗ</string>
+    <string name="pref_disable_battery_optimization_summary">Хыҫ планлӑ ҫӗнетӳпе тата янтавланипе пулӑшать</string>
+    <string name="pref_disable_battery_optimization">Петтерей лайӑхлатнине сӳнтер</string>
 </resources>

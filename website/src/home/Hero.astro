@@ -21,10 +21,10 @@ const platforms = await offeredPlatforms();
         Katari is an app for comics, books, and video. Keep them all in one library, translate comics, and see where
         your reading time goes.
       </p>
-      <div class="get" data-download-buttons>
+      <div class="get" data-download-buttons data-names-platform={platforms.length > 1 ? "" : undefined}>
         <a class="button" href={sitePath("download/")}>
           <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14" /></svg>
-          Download
+          <span class="label">Download</span>
         </a>
         <p class="platforms">{platforms.join(" · ")}</p>
       </div>
@@ -60,6 +60,26 @@ const platforms = await offeredPlatforms();
     </div>
   </div>
 </section>
+
+<script>
+  import { visitorPlatform } from "../site/visitor-platform.ts";
+
+  // On a platform Katari is released for, the button names it and opens its part of the download page, and the other
+  // platform takes the line beside it. Anywhere else the button stays as the page was built.
+  const get = document.querySelector<HTMLElement>("[data-names-platform]");
+  const platform = get && visitorPlatform();
+  if (get && platform) {
+    const button = get.querySelector<HTMLAnchorElement>(".button")!;
+    const download = button.href;
+    button.href = `${download}#${platform.toLowerCase()}`;
+    button.querySelector(".label")!.textContent = `Download for ${platform}`;
+    const other = platform === "Linux" ? "Android" : "Linux";
+    const link = document.createElement("a");
+    link.href = `${download}#${other.toLowerCase()}`;
+    link.textContent = other;
+    get.querySelector(".platforms")!.replaceChildren("Also for ", link);
+  }
+</script>
 
 <style>
   .hero {
@@ -120,6 +140,14 @@ const platforms = await offeredPlatforms();
     margin: 0;
     color: var(--text-muted);
     font-weight: 600;
+  }
+
+  .platforms :global(a) {
+    text-decoration: none;
+  }
+
+  .platforms :global(a:hover) {
+    text-decoration: underline;
   }
 
   .personal {

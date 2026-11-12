@@ -14,6 +14,7 @@ import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.layout.FramedContent
+import app.katari.sync.ui.download.ProvideDownloadElsewhere
 import app.katari.ui.di.LocalAppUiGraph
 import app.katari.upcoming.UpcomingScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -29,13 +30,14 @@ import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.UpdatesFilterDialog
 import eu.kanade.presentation.updates.UpdatesFilterSummaryBar
 import eu.kanade.presentation.updates.UpdatesFilteredEmptyScreen
-import eu.kanade.presentation.updates.UpdatesLastUpdatedHeader
+import eu.kanade.presentation.updates.UpdatesLibraryUpdateHeader
 import eu.kanade.presentation.updates.UpdatesScreen
 import eu.kanade.presentation.updates.UpdatesScreenState
 import eu.kanade.presentation.updates.unifiedUpdatesUiItems
+import eu.kanade.presentation.updates.updatesDownloadElsewhere
 import eu.kanade.presentation.updates.updatesFeedFilterSummary
 import eu.kanade.presentation.updates.updatesFeedFooterItem
-import eu.kanade.presentation.updates.updatesLastUpdatedItem
+import eu.kanade.presentation.updates.updatesLibraryUpdateItem
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -67,6 +69,11 @@ data object UpdatesTab : Tab {
 
     @Composable
     override fun Content() {
+        ProvideDownloadElsewhere { UpdatesContent() }
+    }
+
+    @Composable
+    private fun UpdatesContent() {
         val context = currentPlatformContext()
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
@@ -83,14 +90,15 @@ data object UpdatesTab : Tab {
         val feed = state.feed
         val filterSummary = updatesFeedFilterSummary(feed.filter, categories, feed.sources)
 
-        val latestUpdateSummary by viewModel.latestUpdateSummary.collectAsStateWithLifecycle()
-        val otherDeviceUpdate by viewModel.otherDeviceUpdate.collectAsStateWithLifecycle()
-        val pausedSourceNames by viewModel.pausedSourceNames.collectAsStateWithLifecycle()
+        val libraryUpdateStatus by viewModel.libraryUpdateStatus.collectAsStateWithLifecycle()
         // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
-        val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
+        val updateStarter = rememberLibraryUpdateStarter(
+            viewModel.snackbarHostState,
+            onViewRunning = { navigator.push(LibraryUpdateReportScreen()) },
+        )
 
         val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }
-            .takeIf { latestUpdateSummary != null || otherDeviceUpdate != null }
+            .takeIf { libraryUpdateStatus.hasReport }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -141,11 +149,14 @@ data object UpdatesTab : Tab {
                                 it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
                         }
                     },
+                    downloadElsewhere = updatesDownloadElsewhere(selected),
+                    onDownloadElsewhereOpened = { viewModel.toggleAllSelection(false) },
                 ),
             ),
             snackbarHostState = viewModel.snackbarHostState,
             onSelectAll = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
+            libraryUpdate = libraryUpdateStatus.update,
             onUpdateLibrary = suspend { updateStarter.start(viewModel::updateLibrary) }
                 .takeIf { graph.libraryUpdateQueue.isOffered },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
@@ -168,12 +179,10 @@ data object UpdatesTab : Tab {
                 // An update that found nothing still says when it ran and what it couldn't check
                 FramedContent(modifier = modifier.fillMaxSize()) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        UpdatesLastUpdatedHeader(
-                            lastUpdated = viewModel.lastUpdated,
-                            failed = latestUpdateSummary?.failed ?: 0,
-                            otherDevice = otherDeviceUpdate,
-                            pausedSources = pausedSourceNames,
+                        UpdatesLibraryUpdateHeader(
+                            status = libraryUpdateStatus,
                             onClick = openUpdateReport,
+                            onCancel = viewModel::cancelLibraryUpdate,
                         )
                         if (feed.hiddenByFilters > 0) {
                             UpdatesFilteredEmptyScreen(
@@ -188,12 +197,10 @@ data object UpdatesTab : Tab {
                 }
             },
         ) {
-            updatesLastUpdatedItem(
-                lastUpdated = viewModel.lastUpdated,
-                failed = latestUpdateSummary?.failed ?: 0,
-                otherDevice = otherDeviceUpdate,
-                pausedSources = pausedSourceNames,
+            updatesLibraryUpdateItem(
+                status = libraryUpdateStatus,
                 onClick = openUpdateReport,
+                onCancel = viewModel::cancelLibraryUpdate,
             )
             unifiedUpdatesUiItems(
                 uiModels = state.getUiModel(),

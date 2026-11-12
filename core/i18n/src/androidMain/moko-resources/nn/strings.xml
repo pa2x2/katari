@@ -2,4 +2,5 @@
 <resources>
     <string name="action_show_errors">Trykk for å sjå detaljar</string>
     <string name="connected_to_wifi">Berre på Wi-Fi</string>
+    <string name="about_dont_kill_my_app">Nokre produsentar har ytterlegare appavgrensingar som drep bakgrunnstenester. Denne nettstaden har meir info om korleis det kan fiksast.</string>
 </resources>

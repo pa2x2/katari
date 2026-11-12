@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">چپتر مربوط به کشیدن به راست</string>
     <string name="ext_permission_install_apps_warning">مجوز برای نصب افزونه ها لازم است. به اینجا ضربه بزنید تا اعطا کنید.</string>
     <string name="connected_to_wifi">فقط روی Wi-Fi</string>
+    <string name="battery_optimization_setting_activity_not_found">تنظیمات دستگاه باز نشد</string>
+    <string name="battery_optimization_disabled">بهینه سازی باتری از قبل غیرفعال شده است</string>
+    <string name="pref_disable_battery_optimization_summary">به بروزرسانی‌ها و پشتیبان‌گیری از کتابخانه در حالت پس زمینه کمک می‌کند</string>
+    <string name="pref_disable_battery_optimization">غیر فعال کردن بهینه سازی باتری</string>
+    <string name="about_dont_kill_my_app">برخی از سازندگان محدودیت‌های اضافی برای برنامه‌ها اعمال می‌کنند که باعث متوقف شدن سرویس‌های پس‌زمینه می‌شود. این وب‌سایت اطلاعات بیشتری درباره نحوه رفع این مشکل ارائه می‌دهد.</string>
 </resources>

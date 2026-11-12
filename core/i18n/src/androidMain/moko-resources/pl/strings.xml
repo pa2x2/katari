@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Przesuń palcem w prawo</string>
     <string name="ext_permission_install_apps_warning">Uprawnienia są wymagane aby zainstalować rozszerzenia. Kliknij tutaj aby je przyznać.</string>
     <string name="connected_to_wifi">Tylko przez Wi-Fi</string>
+    <string name="battery_optimization_disabled">Oszczędzanie baterii jest już wyłączone</string>
+    <string name="pref_disable_battery_optimization_summary">Pomaga z aktualizacjami biblioteki i backupami w tle</string>
+    <string name="pref_disable_battery_optimization">Wyłącz oszczędzanie baterii</string>
+    <string name="battery_optimization_setting_activity_not_found">Niepowodzenie otwarcia ustawień urządzenia</string>
+    <string name="about_dont_kill_my_app">Niektórzy producenci mają dodatkowe ograniczenia, które zabijają usługi działające w tle. Ta strona zawiera więcej informacji na ten temat.</string>
 </resources>

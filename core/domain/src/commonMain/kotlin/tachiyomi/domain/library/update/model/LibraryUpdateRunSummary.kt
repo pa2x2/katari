@@ -25,8 +25,8 @@ data class LibraryUpdateRunSummary(
         fun of(run: LibraryUpdateRun, statuses: List<EntryUpdateStatus>) = LibraryUpdateRunSummary(
             run = run,
             checked = statuses.count { it.outcome in CHECKED_OUTCOMES },
-            newChapters = statuses.sumOf { it.newChapters },
-            failed = statuses.count { it.outcome == EntryUpdateOutcome.FAILED },
+            newChapters = statuses.newChapterCount(),
+            failed = statuses.failedCount(),
             skipped = statuses.count { it.outcome == EntryUpdateOutcome.SKIPPED },
             neverChecked = statuses.count { it.reason == EntryUpdateDecisionReason.ENTRY_NEVER },
             switchedOff = statuses.count { it.reason in SWITCH_REASONS },

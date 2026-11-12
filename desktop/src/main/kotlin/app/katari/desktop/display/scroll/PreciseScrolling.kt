@@ -1,6 +1,9 @@
 package app.katari.desktop.display.scroll
 
+import androidx.compose.ui.geometry.Offset
+import app.katari.desktop.display.scroll.natural.TouchpadScrollDirection
 import app.katari.presentation.kit.pointer.TouchpadScroll
+import app.katari.presentation.kit.pointer.TouchpadScrollStage
 import app.katari.presentation.kit.pointer.TouchpadWheelEvent
 import java.awt.AWTEvent
 import java.awt.Component
@@ -24,13 +27,20 @@ import kotlin.math.sqrt
  * toolkit's. A wheel's notches scroll as the toolkit's do. A touchpad's fingers move the content by [FINGER_GAIN]
  * times the travel the display reports for them, [sessionScale] screen pixels for each of the session's, or the
  * toolkit's own scale where that is null, and a flick leaves it gliding once they lift, until the next scroll, a
- * click, a key or the pointer moving off.
+ * click, a key or the pointer moving off. Their lifting comes as a step of its own that scrolls by nothing, for what
+ * follows the fingers and stops with them. Each swipe scrolls in the [direction] that holds when it starts, turning
+ * the display's steps around where the app scrolls the other way than the system, and its steps say whether content
+ * moves with the fingers, so what follows the fingers knows which way they go.
  *
  * Compose scrolls a wheel's turn by a distance that grows with the root of the scrolling content's size, which the
  * window can't know for the content under the pointer, so that distance is exact for content that takes most of the
  * window, as a screen's list does, and falls short in smaller content. Used by the event dispatch thread.
  */
-internal class PreciseScrolling(private val window: Window, private val sessionScale: Float?) : AutoCloseable {
+internal class PreciseScrolling(
+    private val window: Window,
+    private val sessionScale: Float?,
+    private val direction: () -> TouchpadScrollDirection,
+) : AutoCloseable {
     private val velocity = FingerVelocity()
     private val vertical = FingerTravel()
     private val horizontal = FingerTravel()
@@ -39,6 +49,7 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
 
     // Numbers the fingers' scrolls, for what counts them
     private var swipe = 0
+    private var swipeDirection = TouchpadScrollDirection(turnsContent = false, contentFollowsFingers = false)
 
     // What turns a time on the display's clock into AWT's, the system's
     private var clockOffset: Long? = null
@@ -76,16 +87,19 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
             is ScrollMotion.Fingers -> {
                 if (motion.starts) {
                     swipe++
+                    swipeDirection = direction()
                     vertical.reset()
                     horizontal.reset()
                     velocity.start()
                 }
-                val x = motion.horizontal * FINGER_GAIN
-                val y = motion.vertical * FINGER_GAIN
+                val gain = if (swipeDirection.turnsContent) -FINGER_GAIN else FINGER_GAIN
+                val x = motion.horizontal * gain
+                val y = motion.vertical * gain
                 velocity.add(motion.at.timeMillis, x, y)
-                moveBy(motion.at, x, y, gliding = false)
+                moveBy(motion.at, x, y, TouchpadScrollStage.Fingers)
             }
             is ScrollMotion.FingersLifted -> {
+                send(fingersEvent(motion.at, pixels = 0.0, TouchpadScrollStage.Lifted, sideways = false))
                 val (velocityX, velocityY) = velocity.atLift(motion.at.timeMillis)
                 val leaves = ScrollGlide.from(velocityX, velocityY) ?: return
                 glide = RunningGlide(leaves, motion.at, System.nanoTime())
@@ -102,7 +116,7 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
         val elapsedMillis = (System.nanoTime() - running.startedNanos) / NANOS_PER_MILLI
         val (x, y) = running.glide.travelled(elapsedMillis)
         val at = running.at.copy(timeMillis = running.at.timeMillis + elapsedMillis.toLong())
-        moveBy(at, x - running.travelledX, y - running.travelledY, gliding = true)
+        moveBy(at, x - running.travelledX, y - running.travelledY, TouchpadScrollStage.Gliding)
         running.travelledX = x
         running.travelledY = y
         if (running.glide.isOver(elapsedMillis)) endGlide()
@@ -116,15 +130,20 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
     }
 
     /** Moves the content by [x] and [y] of the session's pixels, once they come to a screen pixel. */
-    private fun moveBy(at: ScrollPoint, x: Double, y: Double, gliding: Boolean) {
+    private fun moveBy(at: ScrollPoint, x: Double, y: Double, stage: TouchpadScrollStage) {
         val scale = screenPixelsPerSessionPixel()
         val verticalPixels = vertical.move(y * scale)
         val horizontalPixels = horizontal.move(x * scale)
-        if (verticalPixels != null) send(fingersEvent(at, verticalPixels, gliding, sideways = false))
-        if (horizontalPixels != null) send(fingersEvent(at, horizontalPixels, gliding, sideways = true))
+        if (verticalPixels != null) send(fingersEvent(at, verticalPixels, stage, sideways = false))
+        if (horizontalPixels != null) send(fingersEvent(at, horizontalPixels, stage, sideways = true))
     }
 
-    private fun fingersEvent(at: ScrollPoint, pixels: Double, gliding: Boolean, sideways: Boolean): MouseWheelEvent {
+    private fun fingersEvent(
+        at: ScrollPoint,
+        pixels: Double,
+        stage: TouchpadScrollStage,
+        sideways: Boolean,
+    ): MouseWheelEvent {
         val scale = awtScale()
         val insets = window.insets
         val extent = if (sideways) {
@@ -136,17 +155,21 @@ internal class PreciseScrolling(private val window: Window, private val sessionS
         val contentExtent = (extent * scale * CONTENT_SHARE).coerceAtLeast(1.0)
         val pixelsPerRotation = TouchpadWheelEvent.NOTCH_SCROLL_AMOUNT * sqrt(contentExtent)
         val place = place(at, scale)
+        val modifiers = modifiers(at, sideways)
+        // Along the axis Compose takes the event for, which Shift turns sideways
+        val distance = pixels.toFloat().let {
+            if (modifiers and InputEvent.SHIFT_DOWN_MASK != 0) Offset(it, 0f) else Offset(0f, it)
+        }
         return TouchpadWheelEvent(
             source = place.target,
             whenMillis = awtTime(at),
-            modifiers = modifiers(at, sideways),
+            modifiers = modifiers,
             x = place.x,
             y = place.y,
             xOnScreen = place.xOnScreen,
             yOnScreen = place.yOnScreen,
             rotation = pixels / pixelsPerRotation,
-            pixels = pixels,
-            scroll = TouchpadScroll(swipe, gliding),
+            scroll = TouchpadScroll(swipe, stage, distance, swipeDirection.contentFollowsFingers),
         )
     }
 

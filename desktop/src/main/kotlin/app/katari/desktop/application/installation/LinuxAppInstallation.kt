@@ -3,6 +3,7 @@ package app.katari.desktop.application.installation
 import app.katari.desktop.application.DesktopAppVariant
 import app.katari.desktop.application.thisProcessLaunch
 import java.io.File
+import java.nio.file.Path
 
 /**
  * Linux: the app runs from an AppImage, whose runtime names it in `APPIMAGE`, or from the build tool. Only the release
@@ -17,6 +18,9 @@ internal class LinuxAppInstallation : AppInstallation {
      * the AppImage's first process lives, which ends as this one does.
      */
     override fun launch(): List<String>? = appImage?.let(::listOf) ?: thisProcessLaunch()
+
+    /** The AppImage, which an update replaces in its place; moving it leaves a login start behind until it runs again. */
+    override val loginProgram: Path? = appImage?.let(Path::of)
 
     override val update: InstallationUpdate? by lazy {
         appImage

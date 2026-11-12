@@ -10,6 +10,7 @@ import com.sun.jna.Structure
 import com.sun.jna.ptr.DoubleByReference
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.NativeLongByReference
+import com.sun.jna.ptr.PointerByReference
 
 /**
  * The part of the system's XInput 2 library (`libXi`, `XInput2.h`) that the app calls itself, for the input AWT never
@@ -39,6 +40,27 @@ internal interface XInput : Library {
      * null when it has none.
      */
     fun listProperties(display: Pointer, deviceid: Int, count: IntByReference): Pointer?
+
+    /**
+     * Reads up to [length] 32-bit units of the device's [property] from [offset], of any type when [type] is 0: its
+     * [typeReturn], [formatReturn] (8, 16 or 32 bits an item), [itemCount] items and [bytesAfter] left unread. The
+     * items in [data] are the caller's to [Xlib.free]; returns 0 on success, where a device without the property
+     * answers with no type and no data.
+     */
+    fun getProperty(
+        display: Pointer,
+        deviceid: Int,
+        property: NativeLong,
+        offset: NativeLong,
+        length: NativeLong,
+        deleteProperty: Boolean,
+        type: NativeLong,
+        typeReturn: NativeLongByReference,
+        formatReturn: IntByReference,
+        itemCount: NativeLongByReference,
+        bytesAfter: NativeLongByReference,
+        data: PointerByReference,
+    ): Int
 
     /**
      * Where the pointer [deviceid] is and what is held, with [rootX] and [rootY] in the screen of [root]; false when

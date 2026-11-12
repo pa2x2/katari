@@ -44,11 +44,13 @@ internal class ScrollSteps {
         if (kind == ScrollDeviceKind.Wheel) {
             return if (still) null else ScrollMotion.Wheel(at, horizontal, vertical)
         }
-        val running = fingersAt?.let { at.timeMillis - it <= FINGERS_KEPT_MS } ?: false
         if (still) {
+            // However long ago the fingers last moved: fingers resting on the touchpad report nothing until they lift
+            val lifted = fingersAt != null
             fingersAt = null
-            return if (running) ScrollMotion.FingersLifted(at) else null
+            return if (lifted) ScrollMotion.FingersLifted(at) else null
         }
+        val running = fingersAt?.let { at.timeMillis - it <= FINGERS_KEPT_MS } ?: false
         val wheel = kind == ScrollDeviceKind.Xwayland && !running && horizontal.isWheelStep() && vertical.isWheelStep()
         if (wheel) return ScrollMotion.Wheel(at, horizontal, vertical)
         fingersAt = at.timeMillis

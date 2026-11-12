@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.Flow
 interface SingleInstance {
     /**
      * Makes this process the running instance, or hands this launch's request, opening [links], to the one that
-     * already is.
+     * already is, which brings its window forward unless the launch [startsInTray].
      */
-    fun claim(links: List<String>): InstanceClaim
+    fun claim(links: List<String>, startsInTray: Boolean): InstanceClaim
 }
 
 sealed interface InstanceClaim {

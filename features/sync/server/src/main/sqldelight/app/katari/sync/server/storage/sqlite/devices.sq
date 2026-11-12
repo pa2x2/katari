@@ -1,4 +1,6 @@
 import kotlin.Boolean;
+import kotlin.String;
+import kotlin.collections.List;
 
 CREATE TABLE devices(
     -- The device's DeviceId, picked at random over all 64 bits.
@@ -7,6 +9,8 @@ CREATE TABLE devices(
     name TEXT NOT NULL,
     platform TEXT NOT NULL,
     app_version TEXT NOT NULL,
+    -- The message kinds the device acts on, one per line.
+    message_kinds TEXT AS List<String> NOT NULL DEFAULT '',
     -- SHA-256 of the device's bearer token; the token itself is never stored.
     token_hash BLOB NOT NULL UNIQUE,
     registered_at INTEGER NOT NULL,
@@ -23,8 +27,10 @@ countWithId:
 SELECT (SELECT count(*) FROM devices WHERE _id = :id) + (SELECT count(*) FROM retired_devices WHERE _id = :id);
 
 insert:
-INSERT INTO devices(_id, account_id, name, platform, app_version, token_hash, registered_at, last_seen_at)
-VALUES (:id, :accountId, :name, :platform, :appVersion, :tokenHash, :registeredAt, :registeredAt);
+INSERT INTO devices(
+    _id, account_id, name, platform, app_version, message_kinds, token_hash, registered_at, last_seen_at
+)
+VALUES (:id, :accountId, :name, :platform, :appVersion, :messageKinds, :tokenHash, :registeredAt, :registeredAt);
 
 byTokenHash:
 SELECT *
@@ -44,7 +50,7 @@ ORDER BY registered_at, _id;
 
 describe:
 UPDATE devices
-SET name = :name, platform = :platform, app_version = :appVersion
+SET name = :name, platform = :platform, app_version = :appVersion, message_kinds = :messageKinds
 WHERE _id = :id;
 
 touch:

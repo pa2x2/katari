@@ -1,0 +1,31 @@
+-- Download requests other devices of the account sent here whose entry this device hasn't got yet, or couldn't act on
+-- for now, kept until it can or the request expires. A request whose entry is here is carried out and removed.
+CREATE TABLE sync_download_requests(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    from_device_id INTEGER NOT NULL,
+    entry_key TEXT NOT NULL,
+    -- The request as it came (app.katari.sync.client.downloadrequest.DownloadRequestPayload).
+    payload BLOB NOT NULL,
+    -- Epoch milliseconds.
+    expires_at INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO sync_download_requests(from_device_id, entry_key, payload, expires_at)
+VALUES (:fromDeviceId, :entryKey, :payload, :expiresAt);
+
+all:
+SELECT *
+FROM sync_download_requests
+ORDER BY _id;
+
+delete:
+DELETE FROM sync_download_requests
+WHERE _id = :id;
+
+deleteExpired:
+DELETE FROM sync_download_requests
+WHERE expires_at <= :now;
+
+clear:
+DELETE FROM sync_download_requests;

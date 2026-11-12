@@ -5,6 +5,9 @@ import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.LinkCodeAccountRequest
 import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.protocol.file.FileReference
+import app.katari.sync.protocol.message.FetchMessagesRequest
+import app.katari.sync.protocol.message.MessageLimits
+import app.katari.sync.protocol.message.SendMessageRequest
 import app.katari.sync.protocol.pull.GroupRequest
 import app.katari.sync.protocol.pull.PullRequest
 import app.katari.sync.protocol.push.PushRequest
@@ -51,6 +54,18 @@ internal object RequestChecks {
         require(request.group.length in 1..MAX_KEY_LENGTH) { "Group length" }
     }
 
+    fun check(request: SendMessageRequest) {
+        require(request.body.kind.length in 1..MessageLimits.MAX_KIND_LENGTH) { "Message kind length" }
+        require(request.body.payload.size <= MessageLimits.MAX_PAYLOAD_BYTES) { "Message payload size" }
+        require(request.lifetimeMillis in 1..MessageLimits.MAX_LIFETIME.inWholeMilliseconds) { "Message lifetime" }
+        require(request.replaces.length <= MessageLimits.MAX_REPLACES_LENGTH) { "Message replaces length" }
+    }
+
+    fun check(request: FetchMessagesRequest) {
+        require(request.after >= 0) { "Negative message number" }
+        require(request.waitMillis in 0..FetchMessagesRequest.MAX_WAIT_MILLIS) { "Message wait" }
+    }
+
     fun isSha256(text: String): Boolean = sha256Hex.matches(text)
 
     fun check(file: FileReference) {
@@ -70,6 +85,12 @@ internal object RequestChecks {
         listOf(description.name, description.platform, description.appVersion).forEach {
             require(it.isNotBlank() && it.length <= DeviceDescription.MAX_FIELD_LENGTH) {
                 "Device description field length"
+            }
+        }
+        require(description.messageKinds.size <= DeviceDescription.MAX_MESSAGE_KINDS) { "Message kinds count" }
+        description.messageKinds.forEach { kind ->
+            require(kind.length in 1..MessageLimits.MAX_KIND_LENGTH && kind.none { it == '\n' || it == '\r' }) {
+                "Message kind"
             }
         }
     }

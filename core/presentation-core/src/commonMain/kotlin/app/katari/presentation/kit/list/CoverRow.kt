@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,7 +34,7 @@ enum class CoverRowSlot { Book, Wide }
  * as a title's rank.
  *
  * A row without a [cover] continues the row above it, such as a chapter of an expanded group: its lines start where
- * the cover rows' lines do, and it sits tighter.
+ * the cover rows' lines do, and it sits tighter, though never lower than a touch target, so each one stays easy to hit.
  */
 @Composable
 fun CoverRow(
@@ -64,6 +65,7 @@ fun CoverRow(
                     Modifier
                 },
             )
+            .then(if (nested) Modifier.heightIn(min = KatariTheme.sizes.touchTarget) else Modifier)
             .padding(
                 start = if (nested) spacing.m + coverSize.width + spacing.l else spacing.m,
                 end = spacing.m,

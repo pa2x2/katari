@@ -32,6 +32,17 @@
     <string name="sync_status_changes_wifi">Changes wait for Wi-Fi</string>
     <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
     <string name="sync_unsent_waiting_for_wifi">waiting for Wi-Fi</string>
+    <string name="sync_instant_title">Instant sync</string>
+    <string name="sync_instant_connected">Connected</string>
+    <string name="sync_instant_connecting">Connecting…</string>
+    <string name="sync_instant_waiting_for_network">Waiting for a network</string>
+    <string name="sync_instant_hide_hint">Sync keeps working with this notification hidden</string>
+    <string name="sync_instant_hide">Hide notification</string>
+    <string name="sync_instant_setup">Katari stays connected while closed, so changes and messages from your other devices arrive at once. Android shows a notification while it does, and Katari asks to run without battery optimization so the connection holds while the phone sleeps.</string>
+    <string name="sync_instant_turn_on">Turn on</string>
+    <string name="sync_instant_hide_title">Hide the notification?</string>
+    <string name="sync_instant_hide_setup">Instant sync keeps working with it hidden. In the settings that open, turn off “Instant sync connection”.</string>
+    <string name="sync_instant_keep_notification">Keep it</string>
     <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="pref_dump_crash_logs">Share crash logs</string>
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>
@@ -51,4 +62,9 @@
     <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
     <string name="connected_to_wifi">Only on Wi-Fi</string>
     <string name="pref_auto_scroll_summary">Shows a toolbar toggle in Long strip and Long strip with gaps. While active, volume up slows down and volume down speeds up.</string>
+    <string name="pref_disable_battery_optimization">Disable battery optimization</string>
+    <string name="pref_disable_battery_optimization_summary">Helps with background library updates and backups</string>
+    <string name="battery_optimization_disabled">Battery optimization is already disabled</string>
+    <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
+    <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
 </resources>

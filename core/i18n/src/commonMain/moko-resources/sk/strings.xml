@@ -381,7 +381,6 @@
     <string name="nav_zone_prev">Predchádzajúci</string>
     <string name="pref_high">Vysoké</string>
     <string name="restore_miui_warning">Zálohovanie/obnovenie nemusí fungovať správne, ak je vypnutá optimalizácia MIUI.</string>
-    <string name="pref_disable_battery_optimization">Zakázať optimalizáciu batérie</string>
     <string name="local_source_help_guide">Príručka pre lokálne zdroje</string>
     <string name="unknown_author">Neznámy autor</string>
     <string name="clipboard_copy_error">Nepodarilo sa skopírovať do schránky</string>
@@ -496,10 +495,6 @@
     <string name="migration_help_guide">Príručka k migrácií zdrojov</string>
     <string name="pref_reset_viewer_flags_success">Všetky nastavenia čítačky sa obnovia</string>
     <string name="label_background_activity">Aktivita na pozadí</string>
-    <string name="pref_disable_battery_optimization_summary">Pomáha s aktualizáciami a zálohovaním knižnice na pozadí</string>
-    <string name="battery_optimization_disabled">Optimalizácia batérie je už vypnutá</string>
-    <string name="battery_optimization_setting_activity_not_found">Nepodarilo sa otvoriť nastavenia zariadenia</string>
-    <string name="about_dont_kill_my_app">Niektorí výrobcovia majú ďalšie obmedzenia aplikácií, ktoré vypínajú služby na pozadí. Na tejto webovej stránke nájdete viac informácií o tom, ako to opraviť.</string>
     <string name="viewer">Režim čítania</string>
     <string name="error_saving_picture">Chyba pri ukladaní obrázka</string>
     <string name="appwidget_unavailable_locked">Widget nie je k dispozícii, keď je povolený zámok aplikácie</string>
@@ -592,7 +587,6 @@
     <string name="onboarding_permission_analytics">Povoliť analytické dáta</string>
     <string name="onboarding_permission_analytics_description">Posielať anonymizované dáta o používaní aplikácie vývojárom pre zlepšenie zážitku.</string>
     <string name="onboarding_permission_action_grant">Povoliť</string>
-    <string name="pref_appearance_summary">Téma, dátum a formát času</string>
     <string name="upcoming_guide">Príručka pre nadchádzajúce</string>
     <string name="private_settings">Zahrnúť citlivé nastavenia (napr. prihlasovacie údaje)</string>
     <string name="pref_reader_summary">Režim čítania, displej, navigácia</string>

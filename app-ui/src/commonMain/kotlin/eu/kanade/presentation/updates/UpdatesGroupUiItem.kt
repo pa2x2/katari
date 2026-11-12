@@ -108,6 +108,7 @@ internal fun UpdatesGroupUiItem(
                         }
                         onDownloadChapter(targets, action)
                     },
+                    downloadElsewhere = updatesDownloadElsewhere(items),
                 )
             }
         } else {

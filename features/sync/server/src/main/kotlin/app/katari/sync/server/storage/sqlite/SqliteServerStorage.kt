@@ -8,6 +8,7 @@ import app.katari.sync.server.device.DeviceStore
 import app.katari.sync.server.device.LinkCodeStore
 import app.katari.sync.server.file.StoredFileIndex
 import app.katari.sync.server.invite.InviteStore
+import app.katari.sync.server.message.MessageStore
 import app.katari.sync.server.record.RecordStore
 import app.katari.sync.server.storage.ServerStorage
 import app.katari.sync.server.websession.WebSessionStore
@@ -20,6 +21,7 @@ class SqliteServerStorage private constructor(private val driver: SqliteFileDriv
         driver,
         record_filesAdapter = Record_files.Adapter(categoryAdapter = EnumColumnAdapter()),
         stored_filesAdapter = Stored_files.Adapter(categoryAdapter = EnumColumnAdapter()),
+        devicesAdapter = Devices.Adapter(message_kindsAdapter = MessageKindsAdapter),
     )
 
     override val instanceId: String = database.transactionWithResult {
@@ -34,6 +36,7 @@ class SqliteServerStorage private constructor(private val driver: SqliteFileDriv
     override val files: StoredFileIndex = SqliteStoredFileIndex(database)
     override val invites: InviteStore = SqliteInviteStore(database)
     override val webSessions: WebSessionStore = SqliteWebSessionStore(database)
+    override val messages: MessageStore = SqliteMessageStore(database)
 
     override fun <T> transaction(block: () -> T): T = database.transactionWithResult { block() }
 

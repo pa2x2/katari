@@ -12,8 +12,11 @@ import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.message.MessageInbox
+import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.PendingChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
@@ -36,15 +39,19 @@ import tachiyomi.core.common.util.system.logcat
  *
  * Nothing runs while the person paused syncing.
  *
+ * Messages waiting to go to the account's other devices ([MessageOutbox]) go first, once the server answers, whatever
+ * stage the device is at and on any network, so a run that has a long way to go doesn't hold them up.
+ *
  * A device still joining its account goes on with its first sync ([FirstSyncSteps]), one stored stage after another,
  * and pushes nothing until it has taken the account's records, so what it held before merges with them first. A
  * device whose server turned out lost or restored resyncs in full ([FullResync]) before anything else.
  *
  * A device that is ready runs, in this order:
- * 1. The entries it was asked about first ([EntryHandOff]), so their progress is here before anything else. On a
- *    metered network, while the person keeps changes off mobile data, the run ends here. Records
- *    stored before an update that keeps their groups get them first ([UngroupedRecords]), a batch at a time, so the
- *    first migration applied after it doesn't read every record while every other write waits.
+ * 1. The messages waiting for it ([MessageInbox]), on any network too. Then the entries it was asked about first
+ *    ([EntryHandOff]), so their progress is here before anything else. Where changes wait for Wi-Fi
+ *    ([ChangeTransferRule]), the run ends here. Records stored before an update that keeps their groups get them
+ *    first ([UngroupedRecords]), a batch at a time, so the first migration applied after it doesn't read every record
+ *    while every other write waits.
  * 2. Every page after its position, then the records held for later, which those pages may have made applicable.
  * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
  *    drained, and every change pushed.
@@ -81,6 +88,11 @@ class SyncPass(
     private val disconnection: Disconnection,
     private val steps: SyncSteps,
     private val ungrouped: UngroupedRecords,
+    private val messageOutbox: MessageOutbox,
+    private val messageInbox: MessageInbox,
+    private val changeRule: ChangeTransferRule,
+    // Taken after the first run that synced: a listener may send messages, and sending needs the runs that need this
+    private val syncedListeners: Lazy<Set<SyncedListener>>,
 ) {
     /**
      * Runs [request], calling [working] once it is found to have work to do with the server: a run that stops before,
@@ -94,7 +106,20 @@ class SyncPass(
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
             handOff.settle(request.entriesFirst, reached = outcome == SyncOutcome.SYNCED || outcome == SyncOutcome.IDLE)
-            if (outcome == SyncOutcome.SYNCED) handOff.pulled()
+            if (outcome == SyncOutcome.SYNCED) {
+                handOff.pulled()
+                tellSynced()
+            }
+        }
+    }
+
+    private fun tellSynced() {
+        syncedListeners.value.forEach { listener ->
+            try {
+                listener.onSynced()
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "A listener to synced runs failed" }
+            }
         }
     }
 
@@ -126,6 +151,7 @@ class SyncPass(
             // A server that answers is reachable from now, not only once the run is done, which a large pull makes long
             connection.reached(synced = false)
             if (state.stopped == SyncStop.SERVER_TOO_OLD && !serverUpdated(info)) return SyncOutcome.IDLE
+            messageOutbox.deliver(client)
             stages(client, checkNotNull(state.device), request).also { outcome ->
                 connection.reached(synced = outcome == SyncOutcome.SYNCED)
             }
@@ -201,11 +227,10 @@ class SyncPass(
     }
 
     private suspend fun exchange(client: SyncServerClient, device: DeviceId, request: SyncRequest): SyncOutcome {
+        messageInbox.fetch(client)
         ungrouped.fill()
         if (request.entriesFirst.isNotEmpty()) handOff.fetchFirst(client, device, request.entriesFirst)
-        if (!preferences.changesOnMobileData.get() && !network.current().countsAsWifi) {
-            return SyncOutcome.WAITING_FOR_WIFI
-        }
+        if (!changeRule.allowsNow()) return SyncOutcome.WAITING_FOR_WIFI
         steps.step(SyncStep.Kind.DOWNLOADING_CHANGES) { progress ->
             val from = connection.state().position
             pull.pullAll(client, device, liveOnly = false) { position, sequence ->
@@ -281,7 +306,7 @@ class SyncPass(
         settings.flush()
         fileCapture.flush()
         drainAll()
-        return pending.count() > 0
+        return pending.count() > 0 || messageOutbox.count() > 0
     }
 
     private suspend fun drainAll() {

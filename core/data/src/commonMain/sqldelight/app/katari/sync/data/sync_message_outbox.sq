@@ -1,0 +1,42 @@
+-- Messages to the account's other devices, kept until the server takes them or they expire.
+CREATE TABLE sync_message_outbox(
+    seq INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    -- The DeviceId of the device it goes to; NULL for every other device of the account.
+    target_device_id INTEGER,
+    kind TEXT NOT NULL,
+    kind_version INTEGER NOT NULL,
+    payload BLOB NOT NULL,
+    -- Empty for a message that replaces none.
+    replaces TEXT NOT NULL,
+    -- Epoch milliseconds.
+    expires_at INTEGER NOT NULL
+);
+
+insert:
+INSERT INTO sync_message_outbox(target_device_id, kind, kind_version, payload, replaces, expires_at)
+VALUES (:target, :kind, :kindVersion, :payload, :replaces, :expiresAt);
+
+deleteReplaced:
+DELETE FROM sync_message_outbox
+WHERE replaces = :replaces AND target_device_id IS :target;
+
+oldest:
+SELECT *
+FROM sync_message_outbox
+ORDER BY seq
+LIMIT :limit;
+
+count:
+SELECT count(*)
+FROM sync_message_outbox;
+
+delete:
+DELETE FROM sync_message_outbox
+WHERE seq = :seq;
+
+deleteExpired:
+DELETE FROM sync_message_outbox
+WHERE expires_at <= :now;
+
+clear:
+DELETE FROM sync_message_outbox;

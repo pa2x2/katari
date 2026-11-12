@@ -1,11 +1,11 @@
 ---
-import type { Feature } from "./chapters.ts";
+import type { FullFeature } from "./chapters.ts";
 import DocsLinks from "./DocsLinks.astro";
 import Highlights from "./Highlights.astro";
 import ShotStack from "./ShotStack.astro";
 
 interface Props {
-  feature: Feature;
+  feature: FullFeature;
   /** Puts the screenshots on the left, so that consecutive features alternate sides. */
   flip: boolean;
 }
@@ -21,9 +21,47 @@ const { feature, flip } = Astro.props;
     <DocsLinks paths={feature.docs} />
   </div>
   <div class="shots">
-    <ShotStack shots={feature.shots} arrangement={feature.arrangement ?? "overlap"} />
+    {
+      feature.computerShots ? (
+        <div data-platform-shots>
+          <div class="platforms" role="group" aria-label="Device">
+            <button type="button" data-shows="phone" aria-pressed="true">
+              Phone
+            </button>
+            <button type="button" data-shows="computer" aria-pressed="false">
+              Computer
+            </button>
+          </div>
+          <div class="sides">
+            <div class="side current" data-platform="phone">
+              <ShotStack shots={feature.shots} arrangement="switch" />
+            </div>
+            <div class="side" data-platform="computer">
+              <ShotStack shots={feature.computerShots} arrangement="switch" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <ShotStack shots={feature.shots} arrangement="switch" />
+      )
+    }
   </div>
 </section>
+
+<script>
+  import { visitorPlatform } from "../site/visitor-platform.ts";
+
+  for (const shots of document.querySelectorAll<HTMLElement>("[data-platform-shots]")) {
+    const buttons = [...shots.querySelectorAll<HTMLButtonElement>("[data-shows]")];
+    const show = (platform: string) => {
+      for (const button of buttons) button.setAttribute("aria-pressed", String(button.dataset.shows === platform));
+      for (const side of shots.querySelectorAll<HTMLElement>("[data-platform]")) side.classList.toggle("current", side.dataset.platform === platform);
+    };
+    for (const button of buttons) button.addEventListener("click", () => show(button.dataset.shows!));
+    // A visitor on a Linux computer sees the Linux app first.
+    if (visitorPlatform() === "Linux") show("computer");
+  }
+</script>
 
 <style>
   .feature {
@@ -38,6 +76,54 @@ const { feature, flip } = Astro.props;
 
   .flip .text {
     order: 2;
+  }
+
+  .platforms {
+    display: flex;
+    gap: 0.15rem;
+    width: fit-content;
+    margin: 0 auto 1.5rem;
+    padding: 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .platforms button {
+    padding: 0.35rem 1.1rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .platforms button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .platforms button[aria-pressed="true"] {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--text-strong);
+  }
+
+  /* Both sides take the same cell and only the chosen one shows, so switching moves nothing below. */
+  .sides {
+    display: grid;
+    align-items: center;
+  }
+
+  .side {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .side:not(.current) {
+    visibility: hidden;
   }
 
   h3 {

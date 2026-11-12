@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.advanced
+package eu.kanade.presentation.more.settings.screen.general
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
@@ -6,18 +6,14 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.core.net.toUri
 import app.katari.core.platform.PlatformContext
-import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.powerManager
 
-/** Android's battery optimisation, which the app asks to be exempted from. */
-@Inject
-class AndroidBackgroundWorkRestrictions : BackgroundWorkRestrictions {
-    override val isOffered: Boolean = true
-
-    override fun requestUnrestricted(context: PlatformContext): UnrestrictedBackgroundWorkRequest {
+/** Asks Android to exempt the app from battery optimisation, which otherwise stops its work in the background. */
+internal object UnrestrictedBackground {
+    fun request(context: PlatformContext): UnrestrictedRequest {
         val packageName: String = context.packageName
         if (context.powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            return UnrestrictedBackgroundWorkRequest.AlreadyUnrestricted
+            return UnrestrictedRequest.AlreadyUnrestricted
         }
         return try {
             @SuppressLint("BatteryLife")
@@ -27,9 +23,20 @@ class AndroidBackgroundWorkRestrictions : BackgroundWorkRestrictions {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-            UnrestrictedBackgroundWorkRequest.Asked
+            UnrestrictedRequest.Asked
         } catch (_: ActivityNotFoundException) {
-            UnrestrictedBackgroundWorkRequest.SettingMissing
+            UnrestrictedRequest.SettingMissing
         }
     }
+}
+
+internal enum class UnrestrictedRequest {
+    /** The system's prompt was opened. */
+    Asked,
+
+    /** The app already works unrestricted, so nothing was asked. */
+    AlreadyUnrestricted,
+
+    /** The device has no screen to ask on. */
+    SettingMissing,
 }

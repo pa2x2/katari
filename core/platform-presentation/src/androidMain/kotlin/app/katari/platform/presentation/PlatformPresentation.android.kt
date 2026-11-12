@@ -60,4 +60,5 @@ actual val platformPresentation = PlatformPresentation(
     wifiOnlyLabel = PlatformStrings.connected_to_wifi,
     defaultReadingModeIcon = PlatformSymbols.Rounded.MobileGear,
     unmeteredNetworkIcon = PlatformSymbols.Rounded.Wifi,
+    touchpadSettings = null,
 )

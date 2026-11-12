@@ -59,6 +59,18 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
         return finished.first { it.ticket >= ticket }.outcome
     }
 
+    /**
+     * Waits until every run requested so far has ended, and those requested meanwhile too. [running] doesn't tell: it
+     * turns on only once a run has work to do, after the run has already read the database to decide.
+     */
+    internal suspend fun awaitIdle() {
+        while (true) {
+            val last = synchronized(lock) { requested }
+            finished.first { it.ticket >= last }
+            if (synchronized(lock) { requested } == last) return
+        }
+    }
+
     /** Runs [block] with no run going, after the current one ends. */
     suspend fun <T> exclusive(block: suspend () -> T): T = runLock.withLock { block() }
 

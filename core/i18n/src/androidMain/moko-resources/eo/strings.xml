@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Ĉapitro je ŝovumo dekstren</string>
     <string name="ext_permission_install_apps_warning">Permesoj bezonatas por instali etendaĵojn. Tuŝetu ĉi tie por permesi.</string>
     <string name="connected_to_wifi">Nur per vifio</string>
+    <string name="battery_optimization_setting_activity_not_found">Ne eblis malfermi aparatajn agordojn</string>
+    <string name="pref_disable_battery_optimization">Malŝalti baterian optimumigon</string>
+    <string name="pref_disable_battery_optimization_summary">Helpas pri fonaj ĝisdatigoj de biblioteko kaj savkopioj</string>
+    <string name="battery_optimization_disabled">Bateria optimumigo jam estis malŝaltita</string>
+    <string name="about_dont_kill_my_app">Kelkaj fabrikantoj havas aldonajn apajn malpermesojn, kiuj ĉesigas fonajn servojn. Jena retpaĝo havas pli da informoj pri kiel ripari tion.</string>
 </resources>

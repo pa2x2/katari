@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Hoofdstuk bij rechts vegen</string>
     <string name="ext_permission_install_apps_warning">Er zijn rechten nodig om extensies te installeren. Tik hier om deze toe te staan.</string>
     <string name="connected_to_wifi">Alleen via Wi-Fi</string>
+    <string name="battery_optimization_disabled">Batterijoptimalisatie is al uitgeschakeld</string>
+    <string name="pref_disable_battery_optimization_summary">Helpt bij het bijwerken van bibliotheek en back-ups op de achtergrond</string>
+    <string name="pref_disable_battery_optimization">Batterijoptimalisatie uitzetten</string>
+    <string name="battery_optimization_setting_activity_not_found">Kon de apparaatinstellingen niet openen</string>
+    <string name="about_dont_kill_my_app">Sommige fabrikanten hebben extra beperkingen op apps die achtergronddiensten uitschakelen. Informatie over hoe je dit kan oplossen kan je vinden op de deze website.</string>
 </resources>

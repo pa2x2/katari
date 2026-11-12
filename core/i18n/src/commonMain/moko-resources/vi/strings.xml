@@ -246,9 +246,6 @@
     <string name="notification_chapters_single">Chương %1$s</string>
     <string name="updating_library">Đang cập nhật thư viện</string>
     <string name="paused">Đã tạm ngưng</string>
-    <string name="battery_optimization_disabled">Tối ưu pin đã được tắt</string>
-    <string name="pref_disable_battery_optimization_summary">Giúp cập nhật và sao lưu thư viện trong nền</string>
-    <string name="pref_disable_battery_optimization">Tắt tối ưu pin</string>
     <string name="pref_category_reading">Đang đọc</string>
     <string name="pref_skip_filtered_chapters">Bỏ qua các chương đã lọc</string>
     <string name="filter_mode_screen">Màn hình</string>
@@ -364,7 +361,6 @@
     <string name="licenses">Mở giấy phép nguồn mở</string>
     <string name="whats_new">Có gì mới</string>
     <string name="website">Trang chủ</string>
-    <string name="battery_optimization_setting_activity_not_found">Không thể mở tùy chỉnh thiết bị</string>
     <string name="label_data">Dữ liệu</string>
     <string name="pref_dns_over_https">DNS qua HTTPS (DoH)</string>
     <string name="label_network">Mạng</string>
@@ -440,7 +436,6 @@
     <string name="theme_yotsuba">Yotsuba</string>
     <string name="pref_dark_theme_pure_black">Chế độ đen tuyền</string>
     <string name="categorized_display_settings">Tùy chỉnh sắp xếp cho mỗi danh mục</string>
-    <string name="about_dont_kill_my_app">Một vài nhà sản xuất có các hạn chế gây ảnh hưởng đến quá trình chạy trong nền của nhiều ứng dụng. Xem thêm cách sửa chữa ở địa chỉ này.</string>
     <string name="theme_tealturquoise">Xanh lam &amp; Xanh ngọc</string>
     <string name="pref_category_appearance">Giao diện</string>
     <string name="confirm_lock_change">Xác nhận thay đổi</string>
@@ -532,7 +527,6 @@
     <string name="download_ahead_info">Chỉ áp dụng khi chương hiện giờ + chương tiếp theo đã được tải.</string>
     <string name="multi_lang">Đa Ngôn Ngữ</string>
     <string name="action_search_hint">Tìm kiếm…</string>
-    <string name="pref_appearance_summary">Chủ đề, kiểu hiển thị ngày &amp; giờ</string>
     <string name="pref_reader_summary">Dạng đọc, hiển thị, điều hướng</string>
     <string name="pref_downloads_summary">Tự động tải xuống, tải xuống trước</string>
     <string name="pref_backup_summary">Sao lưu thủ công &amp; tự động, lưu trữ</string>

@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Acción de arrastrar á dereita</string>
     <string name="ext_permission_install_apps_warning">Preme aquí para conceder os permisos para instalar extensións.</string>
     <string name="connected_to_wifi">Só con Wi-Fi</string>
+    <string name="pref_disable_battery_optimization_summary">Fai que funcionen mellor as actualizacións e as copias de seguridade que se fagan en segundo plano</string>
+    <string name="battery_optimization_setting_activity_not_found">Non se puideron abrir os axustes do dispositivo</string>
+    <string name="pref_disable_battery_optimization">Desactivar a optimización de batería</string>
+    <string name="battery_optimization_disabled">A optimización de batería xa está desactivada</string>
+    <string name="about_dont_kill_my_app">Algúns fabricantes teñen restricións adicionais para as aplicacións que causan a detención dos servizos en segundo plano. Esta páxina web ten máis información sobre como arranxalo.</string>
 </resources>

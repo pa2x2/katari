@@ -82,6 +82,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             linkDevice = { dialog = SyncPageDialog.LinkDevice },
             renameDevice = { dialog = SyncPageDialog.RenameDevice },
             removeDevice = { dialog = SyncPageDialog.RemoveDevice(it.id.value, it.device.description.name) },
+            sendTestMessage = if (model.sendsTestMessages) model::sendTestMessage else null,
             disconnect = { dialog = SyncPageDialog.Disconnect },
             changeServer = { dialog = SyncPageDialog.ServerAddress },
             dismissEnded = model::dismissEnded,
@@ -96,21 +97,27 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             actions = { GuideButton(page = SyncGuide.SYNC) },
             onBackPressed = backPress,
             itemsProvider = {
+                // Nothing until the status and the kept device list are read, so the page doesn't move as they come
+                val listed = devices
                 when (val link = status?.link) {
                     null -> emptyList()
                     SyncStatus.Link.NotSetUp -> setUpPreferences(canKeepSignIn != false, actions)
                     is SyncStatus.Link.Ended -> endedPreferences(link, actions)
-                    is SyncStatus.Link.Linked -> linkedPreferences(
-                        link = link,
-                        status = checkNotNull(status),
-                        headline = headline,
-                        devices = devices,
-                        preferences = model.preferences,
-                        choices = choices,
-                        profilesNotSynced = profilesNotSynced,
-                        missingExtensions = missingExtensions,
-                        actions = actions,
-                    )
+                    is SyncStatus.Link.Linked -> if (listed == null) {
+                        emptyList()
+                    } else {
+                        linkedPreferences(
+                            link = link,
+                            status = checkNotNull(status),
+                            headline = headline,
+                            devices = listed,
+                            preferences = model.preferences,
+                            choices = choices,
+                            profilesNotSynced = profilesNotSynced,
+                            missingExtensions = missingExtensions,
+                            actions = actions,
+                        )
+                    }
                 }
             },
         )
@@ -174,6 +181,8 @@ internal class SyncPageActions(
     val linkDevice: () -> Unit,
     val renameDevice: () -> Unit,
     val removeDevice: (app.katari.sync.client.account.AccountDevice) -> Unit,
+    /** Null where the build sends no test messages. */
+    val sendTestMessage: ((app.katari.sync.client.account.AccountDevice) -> Unit)?,
     val disconnect: () -> Unit,
     val changeServer: () -> Unit,
     val dismissEnded: () -> Unit,

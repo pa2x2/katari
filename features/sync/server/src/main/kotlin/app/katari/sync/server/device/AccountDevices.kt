@@ -6,6 +6,7 @@ import app.katari.sync.protocol.device.LinkCode
 import app.katari.sync.protocol.device.LinkedDevice
 import app.katari.sync.protocol.device.LinkedDevices
 import app.katari.sync.server.live.AccountChanges
+import app.katari.sync.server.live.ConnectedDevices
 import app.katari.sync.server.onetimecode.OneTimeCode
 import app.katari.sync.server.storage.ServerStorage
 import java.security.SecureRandom
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.minutes
 class AccountDevices(
     private val storage: ServerStorage,
     private val changes: AccountChanges,
+    private val connected: ConnectedDevices,
     private val clock: Clock,
     private val random: SecureRandom,
 ) {
@@ -26,6 +28,7 @@ class AccountDevices(
                 description = it.description,
                 lastSeenMillis = it.lastSeenMillis,
                 syncedUpTo = it.syncedUpTo ?: 0,
+                connected = connected.isConnected(it.id),
             )
         },
     )

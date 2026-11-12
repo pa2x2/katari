@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">إجراء التمرير الى اليمين</string>
     <string name="ext_permission_install_apps_warning">تثبيت الإضافات يتطلب أذونات. انقر هنا لمنحها.</string>
     <string name="connected_to_wifi">فقط على شبكة Wi-Fi</string>
+    <string name="battery_optimization_disabled">تم إلغاء وضع تحسين البطارية مُسبقاً</string>
+    <string name="pref_disable_battery_optimization_summary">يساعد في عملية تحديث المكتبة والنسخ الإحتياطي في الخلفية</string>
+    <string name="pref_disable_battery_optimization">إطفاء وضع تحسين البطارية</string>
+    <string name="battery_optimization_setting_activity_not_found">تعذر فتح إعدادات الجهاز</string>
+    <string name="about_dont_kill_my_app">تقوم بعض الشركات المصنعة بوضع قيود إضافية على التطبيقات التي قد تقضي على الخدمات التي تعمل في الخلفية. يحتوي هذا الموقع على مزيد من المعلومات حول كيفية إصلاحه.</string>
 </resources>

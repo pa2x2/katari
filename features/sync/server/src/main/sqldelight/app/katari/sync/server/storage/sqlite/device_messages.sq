@@ -1,0 +1,66 @@
+-- Messages one device sent another, held until the target confirms them or they expire.
+CREATE TABLE device_messages(
+    -- The message's number, given by message_numbers. AUTOINCREMENT, which kept numbers from coming again before
+    -- that, no longer gives any.
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    target_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
+    from_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    kind_version INTEGER NOT NULL,
+    payload BLOB NOT NULL,
+    -- Empty for a message that replaces none.
+    replaces TEXT NOT NULL,
+    sent_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX device_messages_target_index ON device_messages(target_device_id, _id);
+
+insert:
+INSERT INTO device_messages(
+    _id, target_device_id, from_device_id, kind, kind_version, payload, replaces, sent_at, expires_at
+)
+VALUES (:number, :target, :from, :kind, :kindVersion, :payload, :replaces, :sentAt, :expiresAt);
+
+deleteReplaced:
+DELETE FROM device_messages
+WHERE target_device_id = :target AND from_device_id = :from AND replaces = :replaces;
+
+count:
+SELECT count(*)
+FROM device_messages
+WHERE target_device_id = :target;
+
+deleteOldest:
+DELETE FROM device_messages
+WHERE _id IN (
+    SELECT _id
+    FROM device_messages
+    WHERE target_device_id = :target
+    ORDER BY _id
+    LIMIT :count
+);
+
+waitingAfter:
+SELECT *
+FROM device_messages
+WHERE target_device_id = :target AND _id > :after AND expires_at > :now
+ORDER BY _id
+LIMIT :limit;
+
+totalsWaiting:
+SELECT count(*) AS count, sum(length(payload)) AS bytes, max(_id) AS newest
+FROM device_messages
+WHERE target_device_id = :target AND expires_at > :now;
+
+confirm:
+DELETE FROM device_messages
+WHERE target_device_id = :target AND _id <= :through;
+
+deleteExpired:
+DELETE FROM device_messages
+WHERE expires_at <= :now;
+
+deleteForRevokedDevices:
+DELETE FROM device_messages
+WHERE target_device_id IN (SELECT _id FROM devices WHERE is_revoked);

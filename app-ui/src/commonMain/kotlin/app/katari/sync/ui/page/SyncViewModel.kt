@@ -16,6 +16,9 @@ import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.status.SyncStatusState
+import app.katari.sync.ui.testmessage.TestMessages
+import app.katari.ui.buildinfo.AppBuild
+import app.katari.ui.buildinfo.AppBuildType
 import app.katari.ui.di.AppUiScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
@@ -46,7 +50,12 @@ class SyncViewModel(
     private val choiceChanges: SyncChoiceChanges,
     profileStates: ProfileSyncStates,
     @AppCoroutineScope private val appScope: CoroutineScope,
+    private val testMessages: TestMessages,
+    build: AppBuild,
 ) : ViewModel() {
+    /** Debug builds send test messages to the account's other devices ([TestMessages]). */
+    val sendsTestMessages: Boolean = build.type == AppBuildType.Debug
+
     val status: StateFlow<SyncStatus?> = statusState.status
 
     val choices: StateFlow<ChoiceSet> =
@@ -57,8 +66,21 @@ class SyncViewModel(
         .map { profiles -> profiles.filter { it.state != ProfileSyncState.SYNCED } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    val devices: StateFlow<DevicesState>
-        field = MutableStateFlow<DevicesState>(DevicesState.Loading)
+    // Whether the last listing since the page opened failed, which matters only while none was ever kept
+    private val listingFailed = MutableStateFlow(false)
+
+    /**
+     * The account's devices as last listed, at once, then as the server lists them again; null until the kept list is
+     * read, so the page doesn't show an empty one first.
+     */
+    val devices: StateFlow<DevicesState?> = combine(account.listedDevices(), listingFailed) { listed, failed ->
+        when {
+            listed.isNotEmpty() -> DevicesState.Listed(listed.sortedByDescending { it.isThisDevice })
+            failed -> DevicesState.Unavailable
+            else -> DevicesState.Loading
+        }
+    }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Whether this device has somewhere to keep its sign-in; false on a desktop without a keyring (D061). */
     val canKeepSignIn: StateFlow<Boolean?>
@@ -96,16 +118,17 @@ class SyncViewModel(
 
     fun refreshDevices() {
         viewModelScope.launchIO {
-            devices.value = when (val call = account.devices()) {
-                is AccountCall.Done -> DevicesState.Listed(call.value.sortedByDescending { it.isThisDevice })
-                AccountCall.NotLinked -> DevicesState.Loading
-                AccountCall.Unreachable, is AccountCall.Refused -> DevicesState.Unavailable
-            }
+            val call = account.devices()
+            listingFailed.value = call is AccountCall.Unreachable || call is AccountCall.Refused
         }
     }
 
     fun syncNow() {
         viewModelScope.launchIO { account.syncNow() }
+    }
+
+    fun sendTestMessage(device: AccountDevice) {
+        viewModelScope.launchIO { testMessages.send(device) }
     }
 
     fun removeDevice(device: AccountDevice) {
@@ -116,28 +139,14 @@ class SyncViewModel(
         }
     }
 
-    /** Names this device [name], in its row at once and in the account with the sync this starts. */
     fun renameThisDevice(name: String) {
-        viewModelScope.launchIO {
-            naming.rename(name)
-            (devices.value as? DevicesState.Listed)?.let { listed ->
-                val named = naming.name()
-                devices.value = DevicesState.Listed(
-                    listed.devices.map { device ->
-                        if (!device.isThisDevice) return@map device
-                        val description = device.device.description.copy(name = named)
-                        device.copy(device = device.device.copy(description = description))
-                    },
-                )
-            }
-            account.syncNow()
-        }
+        viewModelScope.launchIO { account.renameThisDevice(name) }
     }
 
     fun disconnect() {
         viewModelScope.launchIO {
             account.disconnect()
-            devices.value = DevicesState.Loading
+            listingFailed.value = false
         }
     }
 

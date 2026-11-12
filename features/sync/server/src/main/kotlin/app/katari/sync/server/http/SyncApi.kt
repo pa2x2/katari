@@ -38,6 +38,7 @@ fun Application.syncApi(services: SyncServices) {
                 recordRoutes(services)
                 fileRoutes(services)
                 liveRoute(services)
+                messageRoutes(services)
             }
         }
     }

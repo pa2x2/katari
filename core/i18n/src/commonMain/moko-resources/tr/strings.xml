@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">Bölüm %1$s ve %2$d daha</string>
     <string name="notification_chapters_multiple">Bölüm %1$s</string>
     <string name="hide_notification_content">Bildirim içeriğini gizle</string>
-    <string name="pref_disable_battery_optimization">Pil iyileştirmesini devre dışı bırak</string>
-    <string name="pref_disable_battery_optimization_summary">Arka plan kitaplık güncellemelerine ve yedeklemelere yardım eder</string>
-    <string name="battery_optimization_disabled">Pil iyileştirmesi zaten devre dışı</string>
     <string name="action_menu">Menü</string>
     <string name="action_newest">En yeni</string>
     <string name="action_oldest">En eski</string>
@@ -316,7 +313,6 @@
     <string name="gray_background">Gri</string>
     <string name="viewer">Okuma modu</string>
     <string name="pref_category_for_this_series">Bu seri için</string>
-    <string name="battery_optimization_setting_activity_not_found">Cihaz ayarları açılamadı</string>
     <string name="pref_refresh_library_covers">Kitaplıktakilerin kapaklarını yenile</string>
     <string name="sort_by_upload_date">Yükleme tarihine göre</string>
     <string name="label_data">Veri</string>
@@ -431,7 +427,6 @@
     <string name="categorized_display_settings">Her kategori için ayrı sıralama ayarları</string>
     <string name="information_empty_category_dialog">Henüz bir kategoriniz yok.</string>
     <string name="action_start_downloading_now">Şimdi indirmeye başla</string>
-    <string name="about_dont_kill_my_app">Bazı üreticilerin arka plan hizmetlerini durduran ek uygulama kısıtlamaları vardır. Bu web sitesi bu durumun nasıl düzeltileceği hakkında daha fazla bilgi verir.</string>
     <string name="restore_miui_warning">MIUI iyileştirmesi devre dışıysa yedekleme/geri yükleme düzgün çalışmayabilir.</string>
     <string name="pref_dark_theme_pure_black">Tamamen karanlık koyu mod</string>
     <string name="theme_yotsuba">Yotsuba</string>
@@ -537,7 +532,6 @@
     <string name="pref_browse_summary">Kaynaklar, uzantılar, genel arama</string>
     <string name="pref_downloads_summary">Otomatik indirme, önceden indirme</string>
     <string name="pref_reader_summary">Okuma modu, görüntüleme, gezinme</string>
-    <string name="pref_appearance_summary">Tema, tarih ve saat biçimi</string>
     <string name="crash_screen_restart_application">Uygulamayı yeniden başlat</string>
     <string name="crash_screen_title">Tüh!</string>
     <string name="unknown_title">Bilinmeyen başlık</string>

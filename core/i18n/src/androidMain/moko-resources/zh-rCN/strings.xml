@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">向右滑动章节</string>
     <string name="ext_permission_install_apps_warning">需要安装插件的权限，点击此处授权。</string>
     <string name="connected_to_wifi">仅连接 Wi-Fi 时</string>
+    <string name="pref_disable_battery_optimization">关闭电池优化</string>
+    <string name="pref_disable_battery_optimization_summary">有助于后台更新书架和备份</string>
+    <string name="battery_optimization_disabled">电池优化已经关闭</string>
+    <string name="battery_optimization_setting_activity_not_found">打开系统设置失败</string>
+    <string name="about_dont_kill_my_app">部分厂商杀掉后台服务的现象比较严重，此网站提供了一些解决方法。</string>
 </resources>

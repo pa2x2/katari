@@ -11,4 +11,9 @@
     <string name="pref_show_navigation_mode">Nabigazio-diseinuaren geruza erakutsi</string>
     <string name="pref_read_with_long_tap">Erakutsi sakaketa luzean</string>
     <string name="connected_to_wifi">Wi-Fi bidez bakarrik</string>
+    <string name="battery_optimization_disabled">Bateriaren optimizazioa desgaituta dago dagoeneko</string>
+    <string name="pref_disable_battery_optimization">Desgaitu bateriaren optimizazioa</string>
+    <string name="about_dont_kill_my_app">Fabrikatzaile batzuek aplikazioen murrizketa gehigarriak dituzte, atzeko planoko zerbitzuak akabatzen dituztenak. Webgune honek informazio gehiago du nola konpondu jakiteko.</string>
+    <string name="pref_disable_battery_optimization_summary">Liburutegiaren eguneraketak eta babeskopiak atzeko planoan egiten laguntzen du</string>
+    <string name="battery_optimization_setting_activity_not_found">Ezin izan dira gailuaren ezarpenak ireki</string>
 </resources>

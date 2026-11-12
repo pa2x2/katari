@@ -382,10 +382,6 @@
         <item quantity="one">Defers %d entry today</item>
         <item quantity="other">Defers %d entries today</item>
     </plurals>
-    <plurals name="library_update_report_considered">
-        <item quantity="one">%d entry considered</item>
-        <item quantity="other">%d entries considered</item>
-    </plurals>
     <plurals name="library_update_report_failed_in_a_row">
         <item quantity="one">%1$s · failed %2$d check in a row</item>
         <item quantity="other">%1$s · failed %2$d checks in a row</item>
@@ -397,6 +393,10 @@
     <plurals name="library_update_report_retry_entries">
         <item quantity="one">Retry %d</item>
         <item quantity="other">Retry %d</item>
+    </plurals>
+    <plurals name="library_update_report_shared_failure">
+        <item quantity="one">%1$d entry on %2$d sources</item>
+        <item quantity="other">%1$d entries on %2$d sources</item>
     </plurals>
     <plurals name="library_update_report_migrate_entries">
         <item quantity="one">Migrate %d</item>
@@ -484,6 +484,10 @@
     <plurals name="sync_status_held_aside">
         <item quantity="one">%d synced change waits for a Katari update</item>
         <item quantity="other">%d synced changes wait for a Katari update</item>
+    </plurals>
+    <plurals name="sync_download_request_and_more">
+        <item quantity="one">%1$s and %2$d more</item>
+        <item quantity="other">%1$s and %2$d more</item>
     </plurals>
     <plurals name="sync_questions_waiting">
         <item quantity="one">%d question needs your answer</item>

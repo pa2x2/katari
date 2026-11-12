@@ -7,8 +7,9 @@ import okhttp3.HttpUrl
 
 /**
  * Each platform's notifications for sync (D028): questions waiting and sync having stopped, each shown in place of the
- * one before it. Tapping a question notification opens the questions, the other the Sync page. Progress posts none,
- * except a long run's, which the platform's work for it shows ([SyncBackgroundWork.longRun]).
+ * one before it, and download requests from other devices that couldn't be carried out, one per entry. Tapping a
+ * question notification opens the questions, a download request's its entry, the others the Sync page. Progress
+ * posts none, except a long run's, which the platform's work for it shows ([SyncBackgroundWork.longRun]).
  */
 @PlatformFacility
 interface SyncNotifications {
@@ -20,4 +21,9 @@ interface SyncNotifications {
     fun showStopped(reason: SyncStop, server: HttpUrl?)
 
     fun withdrawStopped()
+
+    /** A test message came from the device named [from], null when the account didn't list it. */
+    fun showTestMessage(from: String?)
+
+    fun showDownloadRequestFailed(failure: DownloadRequestFailure)
 }

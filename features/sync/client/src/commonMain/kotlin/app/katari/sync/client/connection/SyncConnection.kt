@@ -104,6 +104,10 @@ class SyncConnection(
         handler.await { sync_stateQueries.reached(now.takeIf { synced }) }
     }
 
+    suspend fun messagesHandled(through: Long) {
+        handler.await { sync_stateQueries.setMessagesHandled(through) }
+    }
+
     suspend fun unreachable() {
         handler.await { sync_stateQueries.unreachable(Clock.System.now().toEpochMilliseconds()) }
     }
@@ -116,6 +120,7 @@ class SyncConnection(
             sync_recordsQueries.clear()
             sync_pendingQueries.clear()
             sync_outboxQueries.clear()
+            sync_message_outboxQueries.clear()
             sync_filesQueries.clear()
             sync_filesQueries.clearUploads()
         }

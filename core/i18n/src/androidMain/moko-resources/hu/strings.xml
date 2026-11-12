@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
     <string name="ext_permission_install_apps_warning">A bővítmények telepítéséhez engedélyek szükségesek. Az engedélyezéshez koppintson ide.</string>
     <string name="connected_to_wifi">Csak Wi-Fi-n keresztül</string>
+    <string name="about_dont_kill_my_app">Néhány gyártónak extra korlátozása van arra, hogy kikapcsolja a háttér folyamatokat. Ezen a web oldalon több információt találsz, hogy hogyan oldható meg.</string>
+    <string name="battery_optimization_setting_activity_not_found">Nem lehetett megnyitni a beállításokat</string>
+    <string name="pref_disable_battery_optimization">Akkumulátor optimalizálás kikapcsolása</string>
+    <string name="pref_disable_battery_optimization_summary">Segít háttérbeli könyvtár frissítésben és a biztonsági mentésekben</string>
+    <string name="battery_optimization_disabled">Akkumulátor optimalizálás már ki van kapcsolva</string>
 </resources>

@@ -1,0 +1,137 @@
+---
+/**
+ * What Katari is and what it leaves to the visitor, said once on the home page: where content comes from, what stays on
+ * the device and what is sent. Each fact links the page that explains it.
+ */
+import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
+
+interface Fact {
+  title: string;
+  text: string;
+  link: { label: string; href: string; external?: boolean };
+}
+
+const facts: Fact[] = [
+  {
+    title: "Content comes from extensions",
+    text: "Katari hosts nothing. You add extension stores, and it loads Katari, Mihon, Aniyomi and LNReader extensions.",
+    link: { label: "Extension compatibility", href: sitePath("docs/extension-compatibility/") },
+  },
+  {
+    title: "No account",
+    text: "Your library, progress, history and settings stay on your device. Katari has no server of its own.",
+    link: { label: "Privacy policy", href: sitePath("privacy/") },
+  },
+  {
+    title: "Open source",
+    text: "Apache License 2.0. A personal project, shared as it is; forking is welcome.",
+    link: { label: "Source code", href: REPOSITORY, external: true },
+  },
+  {
+    title: "You choose what Katari sends",
+    text: "Crash logs can be turned off, and analytics stay off until you turn them on. Katari FOSS sends nothing.",
+    link: { label: "Privacy policy", href: sitePath("privacy/") },
+  },
+  {
+    title: "Sync on your own server",
+    text: "Sync is optional and runs through a server you host yourself, in Docker.",
+    link: { label: "Running a sync server", href: sitePath("docs/sync-server/") },
+  },
+  {
+    title: "Translation on your device",
+    text: "With an on-device engine, nothing you translate leaves your device.",
+    link: { label: "Translation", href: sitePath("docs/translation/") },
+  },
+];
+---
+
+<section class="good-to-know" aria-labelledby="good-to-know-title">
+  <h2 id="good-to-know-title">Good to know</h2>
+  <p class="intro">What Katari is, and what it leaves to you.</p>
+  <ul>
+    {
+      facts.map((fact) => (
+        <li>
+          <h3>{fact.title}</h3>
+          <p>{fact.text}</p>
+          <a href={fact.link.href} {...(fact.link.external ? leavesSite() : {})}>
+            {fact.link.label} →
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  .good-to-know {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 5rem var(--gutter) 2rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 2.6rem);
+  }
+
+  .intro {
+    margin: 0.4rem 0 2rem;
+    color: var(--text-muted);
+    font-size: 1.15rem;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    padding: 1.4rem 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--surface);
+  }
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+  }
+
+  li p {
+    margin: 0;
+    color: var(--text);
+  }
+
+  a {
+    display: inline-block;
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 64rem) {
+    ul {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 44rem) {
+    .good-to-know {
+      padding-top: 3.5rem;
+    }
+
+    ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

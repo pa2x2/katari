@@ -7,6 +7,7 @@ internal val SyncScopes = PreferenceScopeTable {
         "sync_use_mobile_data",
         "sync_in_background",
         "sync_background_interval",
+        "sync_instant",
         "sync_paused",
         "sync_changes_on_mobile_data",
     )

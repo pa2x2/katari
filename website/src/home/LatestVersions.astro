@@ -1,0 +1,138 @@
+---
+/**
+ * The line under the hero: each product's newest version as a link to its release notes, and which of them came out
+ * last. The notes themselves are on GitHub, so a newcomer reaches the features without reading them first.
+ */
+import { releaseNotes } from "../changelog/release-notes.ts";
+import { desktopRelease } from "../download/desktop-release.ts";
+import { latestRelease } from "../download/latest-release.ts";
+import { releaseDate } from "../download/release-format.ts";
+import { syncServerRelease } from "../download/sync-server-release.ts";
+import { leavesSite, RELEASES } from "../site/links.ts";
+
+interface Version {
+  product: string;
+  /** The product's name as a sentence names it, such as "Katari for Linux". */
+  app: string;
+  version: string;
+  published: Date;
+  /** The release's page on GitHub, with its notes. */
+  page: string;
+}
+
+// The changelog can already hold a release that is still a draft, so Android follows the release GitHub offers and
+// the changelog's newest only when GitHub couldn't be asked.
+const android = await latestRelease();
+const written = releaseNotes()[0]!;
+const androidVersion = android ? android.tag.replace(/^v/, "") : written.version;
+const versions: Version[] = [
+  {
+    product: "Android",
+    app: "Katari for Android",
+    version: androidVersion,
+    published: android?.publishedAt ?? written.date,
+    page: android?.page ?? `${RELEASES}/tag/v${androidVersion}`,
+  },
+];
+
+// The desktop app and the server join once they have a release, as their downloads do.
+const desktop = await desktopRelease();
+if (desktop) versions.push({ product: "Linux", app: "Katari for Linux", version: desktop.version, published: desktop.publishedAt, page: desktop.page });
+const server = await syncServerRelease();
+if (server) versions.push({ product: "Sync server", app: "Katari sync server", version: server.version, published: server.publishedAt, page: server.page });
+
+const newest = versions.reduce((latest, version) => (version.published > latest.published ? version : latest));
+---
+
+<section class="versions" aria-label="Latest versions">
+  <ul>
+    {
+      versions.map((version) => (
+        <li>
+          <a href={version.page} {...leavesSite()}>
+            {version.product} <span class="number">{version.version}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="newest">
+    Newest: <strong>{newest.app} {newest.version}</strong> · {releaseDate(newest.published)}
+  </p>
+  <a class="notes" href={newest.page} {...leavesSite()}>What's new →</a>
+</section>
+
+<style>
+  .versions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1.25rem;
+    width: calc(min(100%, var(--page-width)) - 2 * var(--gutter));
+    margin: 1rem auto 0;
+  }
+
+  /* On a phone the versions scroll sideways rather than wrap. */
+  ul {
+    display: flex;
+    gap: 0.4rem;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+  }
+
+  li {
+    flex: none;
+  }
+
+  li a {
+    display: block;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+
+  li a:hover {
+    border-color: var(--accent);
+    color: var(--text-strong);
+  }
+
+  .number {
+    opacity: 0.75;
+    font-size: 0.85em;
+  }
+
+  .newest {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .newest strong {
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  .notes {
+    margin-left: auto;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .notes:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 44rem) {
+    .notes {
+      margin-left: 0;
+    }
+  }
+</style>

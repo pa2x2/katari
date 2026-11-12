@@ -10,6 +10,7 @@ internal class TemporaryDesktopDirectories(private val directory: Path) : Deskto
     override val cache: Path = directory
     override val state: Path = directory
     override val runtime: Path = directory
+    override val autostart: Path = directory
     override val home: Path = directory
     override val pictures: Path = directory
 

@@ -4,8 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.katari.core.platform.PlatformContext
-import app.katari.desktop.display.backend.DisplayBackend
-import app.katari.desktop.window.OpenWindow
+import app.katari.desktop.window.MainWindowVisibility
 import app.katari.desktop.window.WindowPlatformContext
 import app.katari.entry.interactions.player.AnimePlayer
 import app.katari.entry.interactions.player.AnimePlayerDestination
@@ -29,8 +28,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 class WindowAnimePlayer(
     internal val player: AnimePlayer,
     internal val webViewDestination: WebViewDestination,
-    private val openWindow: OpenWindow,
-    private val displayBackend: DisplayBackend,
+    internal val mainWindowVisibility: MainWindowVisibility,
 ) : AnimePlayerDestination {
     internal var visit by mutableStateOf<AnimePlayerVisit?>(null)
         private set
@@ -62,7 +60,7 @@ class WindowAnimePlayer(
             visit.inPictureInPicture = false
             visit.navigator.push(screen)
         }
-        openWindow.context?.window?.let { displayBackend.bringForward(it, activationToken = null) }
+        mainWindowVisibility.bringForward(activationToken = null)
     }
 
     internal fun close(visit: AnimePlayerVisit) {

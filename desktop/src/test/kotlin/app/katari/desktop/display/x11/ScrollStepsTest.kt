@@ -25,4 +25,13 @@ class ScrollStepsTest {
         xwayland(0.0).shouldBeInstanceOf<ScrollMotion.FingersLifted>()
         xwayland(0.25) shouldBe ScrollMotion.Wheel(ScrollPoint(32, 0.0, 0.0, 0), 0.0, 0.25)
     }
+
+    @Test
+    fun `fingers that rested before lifting still lift`() {
+        xwayland(0.37).shouldBeInstanceOf<ScrollMotion.Fingers>()
+        now += 5_000
+
+        xwayland(0.0).shouldBeInstanceOf<ScrollMotion.FingersLifted>()
+        xwayland(0.0) shouldBe null
+    }
 }

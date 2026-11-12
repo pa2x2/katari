@@ -9,4 +9,9 @@
     <string name="pref_show_navigation_mode">Ipakita ang mga tap zone nga overlay</string>
     <string name="pref_read_with_long_tap">Ipakita sa taas nga gripo</string>
     <string name="connected_to_wifi">Sa Wi-Fi lang</string>
+    <string name="about_dont_kill_my_app">Ang ubang mga tiggama adunay dugang nga mga pagdili sa app nga nagpatay sa mga serbisyo sa background. Kini nga website adunay dugang nga impormasyon kon unsaon kini pag-ayo.</string>
+    <string name="pref_disable_battery_optimization">I-disable ang pag-optimize sa baterya</string>
+    <string name="battery_optimization_disabled">Ang pag-optimize sa baterya gi-disable na</string>
+    <string name="battery_optimization_setting_activity_not_found">Dili maablihan ang mga setting sa device</string>
+    <string name="pref_disable_battery_optimization_summary">Nagtabang sa mga update sa librarya sa background ug pag-backup</string>
 </resources>

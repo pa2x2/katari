@@ -17,6 +17,9 @@ import app.katari.presentation.kit.feedback.Tooltip
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuDivider
 import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.sheet.Popover
+import app.katari.presentation.kit.sheet.PopoverAnchor
+import app.katari.presentation.kit.sheet.popoverAnchor
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.shortcut.KeyboardShortcutHandler
 import app.katari.presentation.kit.theme.ContentTone
@@ -43,7 +46,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
     // A menu anchors to its parent layout, so each one shares a Box with its button rather than anchoring to the
     // whole actions row.
     actions.filterIsInstance<AppBar.Action>().forEach { action ->
-        Box {
+        Box(modifier = action.anchor?.let { Modifier.popoverAnchor(it) } ?: Modifier) {
             ActionButton(action)
             action.menu?.invoke()
         }
@@ -120,6 +123,8 @@ sealed interface AppBar {
         val menu: (@Composable () -> Unit)? = null,
         val shortcut: KeyboardShortcut? = null,
         val longPress: LongPress? = null,
+        /** Marks this action's button for a [Popover] it opens, such as one a choice in its [menu] leads to. */
+        val anchor: PopoverAnchor? = null,
     ) : AppBarAction
 
     /**

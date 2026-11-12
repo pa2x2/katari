@@ -221,8 +221,6 @@
     <string name="ext_updates_pending">Ажурирања на чекању</string>
     <string name="pref_category_display">Прикажи</string>
     <string name="hide_notification_content">Сакриј обавештења</string>
-    <string name="pref_disable_battery_optimization">Искључи оптимизацију коришћења батерије</string>
-    <string name="battery_optimization_disabled">Оптимизација потрошње батерије је већ искључена</string>
     <string name="information_empty_library">Ваша колекција је празна</string>
     <string name="information_no_recent_manga">Ништа није недавно читано</string>
     <string name="information_no_recent">Нема недавних ажурирања</string>
@@ -294,7 +292,6 @@
     <string name="pref_skip_filtered_chapters">Прескочи филтрирана поглавља</string>
     <string name="pref_cutout_short">Прикажи садржај у исечку</string>
     <string name="set_as_cover">Постави као омот</string>
-    <string name="pref_disable_battery_optimization_summary">Помаже при ажурирању колекције и резервних копија</string>
     <string name="download_notifier_title_error">Грешка</string>
     <string name="download_notifier_downloader_title">Преузимања</string>
     <string name="information_webview_outdated">Ажурирајте WebView за бољу компатибилност</string>
@@ -354,7 +351,6 @@
     <string name="pref_color_filter_mode">Режим мешања филтера боја</string>
     <string name="gray_background">Сива</string>
     <string name="nav_zone_prev">Прет.</string>
-    <string name="about_dont_kill_my_app">Неки произвођачи имају додатна ограничења за апликације која гасе сервисе које су у позадини. Овај сајт садржи више информација о могућим решењима.</string>
     <string name="kindlish_nav">Као Kindle</string>
     <string name="edge_nav">Ивица</string>
     <string name="right_and_left_nav">Десно и лево</string>
@@ -372,7 +368,6 @@
     <string name="backup_restore_content_full">Подаци из датотеке резервне копије ће бити враћени. \n \nМораћете после тога да инсталирате све додатке које недостају да бисте их користили.</string>
     <string name="help_translate">Помозите у превођењу</string>
     <string name="pref_verbose_logging_summary">Исписуј детаљне извештаје у системски дневник (смањује перформансе апликације)</string>
-    <string name="battery_optimization_setting_activity_not_found">Није могуће отворити подешавања уређаја</string>
     <string name="pref_refresh_library_covers">Освежи омоте у колекцији</string>
     <string name="whats_new">Шта је ново</string>
     <string name="notification_incognito_text">Деактивирај инкогнито мод</string>
@@ -561,7 +556,6 @@
     <string name="download_notifier_split_page_path_not_found">Није могуће пронаћи пут датотеке странице %d</string>
     <string name="download_notifier_cache_renewal">Провера преузимања</string>
     <string name="action_not_now">Не сада</string>
-    <string name="pref_appearance_summary">Формат теме, датума и времена</string>
     <string name="action_open_random_manga">Отвори насумични наслов</string>
     <string name="download_ahead_info">Ради само ако је тренутно и следеће поглавље већ преузето.</string>
     <string name="information_no_entries_found">Нема наслова у овој категорији</string>

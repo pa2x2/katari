@@ -273,14 +273,11 @@
     <string name="paused">Dijeda</string>
     <string name="information_cloudflare_bypass_failure">Gagal untuk menembus Cloudflare</string>
     <string name="information_webview_outdated">Harap perbarui aplikasi WebView untuk kompatibilitas yang lebih baik</string>
-    <string name="pref_disable_battery_optimization">Nonaktifkan optimisasi baterai</string>
-    <string name="battery_optimization_disabled">Optimalisasi baterai sudah dimatikan</string>
     <string name="secure_screen">Amankan layar</string>
     <string name="pref_category_display">Tampilan</string>
     <string name="notification_chapters_single">Bab %1$s</string>
     <string name="notification_chapters_single_and_more">Bab %1$s dan %2$d lainnya</string>
     <string name="notification_chapters_multiple">Bab %1$s</string>
-    <string name="pref_disable_battery_optimization_summary">Membantu pembaruan pustaka dan pencadangan di latar belakang</string>
     <string name="label_sources">Sumber</string>
     <string name="channel_ext_updates">Pembaruan ekstensi</string>
     <string name="pref_category_reading">Membaca</string>
@@ -314,7 +311,6 @@
     <string name="viewer">Mode membaca</string>
     <string name="gray_background">Abu-abu</string>
     <string name="pref_category_for_this_series">Untuk seri ini</string>
-    <string name="battery_optimization_setting_activity_not_found">Tidak dapat membuka pengaturan perangkat</string>
     <string name="pref_refresh_library_covers">Muat ulang sampul pustaka</string>
     <string name="pref_library_update_refresh_metadata_summary">Periksa sampul dan detail baru saat memperbarui pustaka</string>
     <string name="pref_library_update_refresh_metadata">Segarkan metadata secara otomatis</string>
@@ -429,7 +425,6 @@
     <string name="categorized_display_settings">Pengaturan per-kategori untuk urutan</string>
     <string name="information_empty_category_dialog">Anda belum memiliki kategori apapun.</string>
     <string name="action_start_downloading_now">Mulai mengunduh sekarang</string>
-    <string name="about_dont_kill_my_app">Beberapa pabrikan mempunyai batasan aplikasi tambahan yang mematikan layanan latar belakang. Website ini memiliki info lebih lanjut untuk memperbaikinya.</string>
     <string name="restore_miui_warning">Pencadangan/pemulihan mungkin tidak berfungsi jika Optimisasi MIUI dimatikan.</string>
     <string name="pref_dark_theme_pure_black">Mode gelap hitam pekat</string>
     <string name="theme_yotsuba">Empat Daun</string>
@@ -536,7 +531,6 @@
     <string name="pref_browse_summary">Sumber, ekstensi, pencarian global</string>
     <string name="pref_reader_summary">Mode membaca, tampilan, navigasi</string>
     <string name="pref_downloads_summary">Unduh otomatis, unduh terlebih dahulu</string>
-    <string name="pref_appearance_summary">Tema, format tanggal &amp; waktu</string>
     <string name="pref_backup_summary">Pencadangan manual &amp; otomatis, ruang penyimpanan</string>
     <string name="crash_screen_title">Ups!</string>
     <string name="crash_screen_restart_application">Mulai ulang aplikasi</string>

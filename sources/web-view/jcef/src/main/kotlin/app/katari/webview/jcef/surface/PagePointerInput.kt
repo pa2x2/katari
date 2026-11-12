@@ -85,7 +85,7 @@ private class WheelPixels {
             pixels = 0.0
         }
         // The fingers' distance is in the window's pixels, [PagePointerTarget.scale] of them to one of the page's
-        pixels -= (event as? TouchpadWheelEvent)?.let { it.pixels / page.scale }
+        pixels -= (event as? TouchpadWheelEvent)?.scroll?.distance?.let { (if (sideways) it.x else it.y) / page.scale }
             ?: (event.preciseWheelRotation * PIXELS_PER_STEP)
         val whole = pixels.toInt()
         if (whole == 0) return

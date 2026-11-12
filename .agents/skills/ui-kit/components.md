@@ -158,6 +158,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A sheet of settings split into tabs | `TabbedSheet` | |
 | A sheet's list in two parts, such as a filter's options beside its long list of languages | `SheetSplitList` | Side by side in a large window's two-column sheet, one list otherwise |
 | A short choice opened from a button, such as the profile switcher or an entry's update choices | `Popover`, `rememberPopoverAnchor` | Beside its button from medium windows on, nothing dimmed; the button marks itself with `Modifier.popoverAnchor`. A sheet in compact windows or when the button isn't on screen |
+| One thing picked from a short list opened from a button, such as the device a chapter downloads on | `PickerPopover` | A `Popover` of `PickerChoice` rows, headed by what the pick is for; a choice that can't be picked says why; `onBack` for a later step of the same pick, such as how much to download |
 | A sheet that explains one item, such as an engine or a library | `DetailsSheet`, `DetailsSection` | |
 | What a source says about one chapter or episode | `ChapterSheet` | |
 | A dialog | `Dialog`, `DialogActions` | |
@@ -178,6 +179,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | A full-width strip saying what the app or a screen is doing, such as incognito mode or a library update | `StatusStrip` | A tone per mode, an optional wait indicator, progress bar and action; at the top it runs under the status bar (`StatusStripTone.isLight` picks the bar's icons) |
+| A line at the top of a list saying how the work behind it stands and opening its details, such as when the library last updated on Updates | `StatusLine` | Scrolls with the list. Its action (such as Cancel) and the arrow keep their place at the end while the lines wrap beside them; `progress` adds a bar under the lines |
 | A list, picker or sheet section with nothing to show | `NoResults` | `EmptyScreen` when the whole screen is empty |
 | A problem inside content that keeps showing | `ProblemCard` | |
 | A short note beside the screen's floating action about what it does right now, such as where Resume's progress came from | `FloatingNote` | Read, not pressed; it steps aside while a snackbar shows above the action. `FloatingChip` for a chip that jumps through a list |

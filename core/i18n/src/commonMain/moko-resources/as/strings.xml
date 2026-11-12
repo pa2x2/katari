@@ -203,7 +203,6 @@
     <string name="onboarding_permission_action_grant">অনুমতি দিয়ক</string>
     <string name="pref_category_reader">পাঠক</string>
     <string name="pref_category_downloads">ডাউনলোড</string>
-    <string name="pref_appearance_summary">থিম, তাৰিখ আৰু সময় বিন্যাস</string>
     <string name="pref_category_library">পুথিভঁৰাল</string>
     <string name="pref_reader_summary">পঢ়াৰ মোড, প্ৰদৰ্শন, নেভিগেশ্বন</string>
     <string name="pref_downloads_summary">স্বয়ংক্ৰিয় ডাউনলোড, আগতীয়া ডাউনলোড</string>
@@ -456,11 +455,6 @@
     <string name="pref_reset_viewer_flags_error">পাঠক ছেটিং ৰিছেট কৰিব পৰা নগ\'ল</string>
     <string name="pref_dump_crash_logs_summary">বিকাশকৰ্তাৰ সৈতে শ্বেয়াৰ কৰিবলৈ ত্ৰুটি লগ এটা ফাইলত সাঁচে</string>
     <string name="label_background_activity">পৃষ্ঠভূমি কাৰ্য্যকলাপ</string>
-    <string name="pref_disable_battery_optimization">বেটাৰী অনুকূলন নিষ্ক্ৰিয় কৰক</string>
-    <string name="pref_disable_battery_optimization_summary">পৃষ্ঠভূমি পুথিভঁৰাল আপডেট আৰু বেকআপত সহায় কৰে</string>
-    <string name="battery_optimization_disabled">বেটাৰী অনুকূলন ইতিমধ্যে নিষ্ক্ৰিয় কৰা হৈছে</string>
-    <string name="battery_optimization_setting_activity_not_found">যন্ত্ৰ ছেটিং খুলিব পৰা নগ\'ল</string>
-    <string name="about_dont_kill_my_app">কিছুমান নিৰ্মাতাৰ অতিৰিক্ত এপ প্ৰতিবন্ধকতা থাকে যিয়ে পৃষ্ঠভূমি সেৱা বন্ধ কৰে। এই ৱেবছাইটত কেনেকৈ সমাধান কৰিব সেয়াৰ অধিক তথ্য আছে।</string>
     <string name="pref_tablet_ui_mode">টেবলেট UI</string>
     <string name="pref_verbose_logging">বিশদ লগিং</string>
     <string name="pref_verbose_logging_summary">চিষ্টেম লগলৈ বিশদ লগ প্ৰিন্ট কৰে (এপ কাৰ্য্যক্ষমতা হ্ৰাস কৰে)</string>

@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.3.0] - 2026-11-12
+
+> Sync in this version needs sync server 1.1.0. Update the server first, or sync stops until you do.
+
+### ✨ Added
+
+- Download on another device asks another device on your sync account to download chapters. The other device downloads them once the entry is in its library and shows a notification for chapters it couldn't download. A device that is offline gets the request when it next syncs, within a week.
+- Sync mode in the Sync settings offers Instant: Katari stays connected while closed, so changes and download requests from your other devices arrive at once.
+- The top of Updates shows a running library update's progress and what it has found so far, with Cancel.
+
+### 🔄 Changed
+
+- A new General settings page holds the app language, the date and time formats, and the battery optimization settings, which were in Appearance and Advanced.
+
+### 🧩 Improved
+
+- The update report shows a running update's progress, the entries it is checking and Cancel. A finished report says how long the update took and how many entries it checked.
+- When one error fails entries on several sources, the update report lists it once with one retry, and Failed offers Retry all.
+- Update report rows show the entry's type and source, and new chapters are named and open as they do in Updates.
+- "An update is already running" offers View, which opens the running update's report.
+- The Sync page lists your devices as soon as it opens and marks the ones connected now.
+
 ## [3.2.1] - 2026-11-11
 
 ### ✨ Added
@@ -1221,7 +1243,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.2.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/pa2x2/katari/releases/tag/v3.3.0
 [3.2.1]: https://github.com/pa2x2/katari/releases/tag/v3.2.1
 [3.2.0]: https://github.com/pa2x2/katari/releases/tag/v3.2.0
 [3.1.3]: https://github.com/pa2x2/katari/releases/tag/v3.1.3

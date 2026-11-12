@@ -23,6 +23,13 @@ class SyncPreferences(profileStore: ProfileStore) {
     /** Whether the device syncs on a schedule while the app is closed. */
     val syncInBackground: Preference<Boolean> = store.getBoolean("sync_in_background", true)
 
+    /**
+     * Whether, while the device syncs in the background, it stays connected to the server so other devices' changes
+     * and messages come at once, rather than syncing every [backgroundInterval]. Only where the platform has to keep
+     * the app running for it ([app.katari.sync.client.trigger.SyncBackgroundWork.keepConnected]).
+     */
+    val instant: Preference<Boolean> = store.getBoolean("sync_instant", false)
+
     /** Minutes between background syncs; one of [BACKGROUND_INTERVALS]. */
     val backgroundInterval: Preference<Int> = store.getInt("sync_background_interval", 30)
 

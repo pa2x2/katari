@@ -30,6 +30,9 @@ class XdgDesktopDirectories(
             ?: state
     }
 
+    // XDG Autostart: the folder in the user's configuration base directory, beside the desktop's own settings
+    override val autostart: Path by lazy { baseDirectory("XDG_CONFIG_HOME", ".config").resolve("autostart") }
+
     override val home: Path by lazy {
         Path(environment["HOME"]?.takeIf { it.isNotEmpty() } ?: System.getProperty("user.home"))
     }

@@ -283,9 +283,6 @@
     <string name="notification_chapters_single_and_more">Capítol %1$s i %2$d més</string>
     <string name="notification_chapters_multiple">Capítols %1$s</string>
     <string name="hide_notification_content">Amaga el contingut de les notificacions</string>
-    <string name="pref_disable_battery_optimization">Desactiva l’optimització de la bateria</string>
-    <string name="pref_disable_battery_optimization_summary">Fa que funcionin millor les actualitzacions de la biblioteca en segon pla i les còpies de seguretat</string>
-    <string name="battery_optimization_disabled">L’optimització de la bateria ja està desactivada</string>
     <string name="action_menu">Menú</string>
     <string name="action_newest">Els més nous</string>
     <string name="action_oldest">Els més antics</string>
@@ -324,7 +321,6 @@
     <string name="gray_background">Gris</string>
     <string name="viewer">Mode de lectura</string>
     <string name="pref_category_for_this_series">Per a aquesta sèrie</string>
-    <string name="battery_optimization_setting_activity_not_found">No s’ha pogut obrir la configuració del dispositiu</string>
     <string name="pref_refresh_library_covers">Refresca les portades de la biblioteca</string>
     <string name="sort_by_upload_date">Per data de pujada</string>
     <string name="label_data">Dades</string>
@@ -478,7 +474,6 @@
     <string name="ext_installer_pref">Instal·lador</string>
     <string name="ext_installer_legacy">Antic</string>
     <string name="pref_auto_clear_chapter_cache">Buida la memòria cau de capítols en obrir l’aplicació</string>
-    <string name="about_dont_kill_my_app">Alguns fabricants tenen restriccions addicionals per a les aplicacions que finalitzen els serveis en segon pla. Aquest lloc web té més informació de com solucionar-ho.</string>
     <string name="clear_database_source_item_count">Hi ha %1$d elements a la base de dades que no són a la biblioteca</string>
     <string name="cancelled">Cancel·lada</string>
     <string name="extension_api_error">No s’han pogut obtenir les extensions disponibles</string>
@@ -538,7 +533,6 @@
     <string name="update_already_running">Ja s’està executant una actualització</string>
     <string name="theme_tidalwave">Tsunami</string>
     <string name="error_user_agent_string_blank">La cadena de l’agent d’usuari no pot estar buida</string>
-    <string name="pref_appearance_summary">Tema, formats de data i hora</string>
     <string name="are_you_sure">N’esteu segur?</string>
     <string name="invalid_location">Ubicació invàlida: %s</string>
     <string name="auto_download_while_reading">Baixa automàticament mentre es llegeix</string>

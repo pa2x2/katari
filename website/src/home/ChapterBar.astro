@@ -1,0 +1,124 @@
+---
+/**
+ * The chapters as a bar under the header, shown from where the features begin and marking the chapter in view. It lies
+ * over the page instead of taking a row of it, so it appearing moves nothing.
+ */
+import { chapters } from "./chapters.ts";
+---
+
+<nav class="chapter-bar" aria-label="Chapters" data-chapter-bar data-pagefind-ignore>
+  <ul>
+    {
+      chapters.map((chapter) => (
+        <li>
+          <a href={`#${chapter.id}`}>
+            <span class="numeral" lang="ja" aria-hidden="true">
+              {chapter.numeral}
+            </span>
+            {chapter.title}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  const bar = document.querySelector<HTMLElement>("[data-chapter-bar]")!;
+  const features = bar.parentElement!;
+  const links = [...bar.querySelectorAll<HTMLAnchorElement>("a")];
+  const sections = links.map((link) => document.querySelector<HTMLElement>(link.hash)!);
+  const headerHeight = () => document.querySelector<HTMLElement>(".header")!.offsetHeight;
+
+  const update = () => {
+    const line = headerHeight() + bar.offsetHeight;
+    const { top, bottom } = features.getBoundingClientRect();
+    bar.classList.toggle("shown", top < headerHeight() && bottom > line);
+    // The chapter in view is the last one whose title page has reached the bar.
+    const current = sections.findLastIndex((section) => section.getBoundingClientRect().top <= line + 1);
+    links.forEach((link, index) => {
+      if (index === current) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
+    });
+  };
+  document.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+</script>
+
+<style>
+  /* Sticks under the header through the features; its negative margin gives its row back to the page. */
+  .chapter-bar {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 9;
+    height: var(--chapter-bar-height);
+    margin-bottom: calc(-1 * var(--chapter-bar-height));
+    border-bottom: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity 0.2s,
+      visibility 0.2s;
+  }
+
+  .chapter-bar.shown {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* On a phone the chapters scroll sideways rather than wrap. */
+  ul {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: var(--page-width);
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    overflow-x: auto;
+    list-style: none;
+    scrollbar-width: none;
+  }
+
+  li {
+    flex: none;
+  }
+
+  a {
+    display: block;
+    padding: 0.3rem 0.9rem;
+    border-radius: 999px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  a:hover {
+    color: var(--text-strong);
+  }
+
+  a[aria-current] {
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--text-strong);
+  }
+
+  .numeral {
+    margin-right: 0.4rem;
+    color: var(--accent);
+    font-family: var(--serif);
+    font-weight: 700;
+  }
+</style>
+
+<style is:global>
+  /* A chapter a link jumps to stops under the bar as well as the header. */
+  :root:has([data-chapter-bar]) {
+    --chapter-bar-height: 3.1rem;
+    scroll-padding-top: calc(var(--header-height) + var(--chapter-bar-height));
+  }
+</style>

@@ -63,6 +63,12 @@ FROM chapters
 WHERE entry_id IN :entryIds
 ORDER BY entry_id, _id;
 
+getChaptersFetchedSince:
+SELECT *
+FROM chapters
+WHERE entry_id IN :entryIds AND date_fetch >= :since
+ORDER BY entry_id, source_order;
+
 chapterTableInvalidation:
 SELECT _id
 FROM chapters

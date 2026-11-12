@@ -18,6 +18,8 @@ data class LinkedDevice(
     @ProtoNumber(3) val lastSeenMillis: Long = 0,
     /** The sequence the device has pulled up to; deletion markers are kept until every device has passed them. */
     @ProtoNumber(4) val syncedUpTo: Long = 0,
+    /** Whether the device's live channel is open now, so a message sent to it is announced at once. */
+    @ProtoNumber(5) val connected: Boolean = false,
 )
 
 /**

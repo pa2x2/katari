@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">Bab %1$s dan %2$d lagi</string>
     <string name="notification_chapters_multiple">Bab %1$s</string>
     <string name="hide_notification_content">Sembunyikan kandungan pemberitahuan</string>
-    <string name="pref_disable_battery_optimization">Nyahdaya pengoptimuman bateri</string>
-    <string name="pref_disable_battery_optimization_summary">Membantu dengan pengemaskinian latar belakang pustaka dan sandaran</string>
-    <string name="battery_optimization_disabled">Pengoptimuman bateri sudah dinyahdayakan</string>
     <string name="action_menu">Menu</string>
     <string name="action_newest">Terbaru</string>
     <string name="action_oldest">Terlama</string>
@@ -316,7 +313,6 @@
     <string name="gray_background">Kelabu</string>
     <string name="viewer">Mod membaca</string>
     <string name="pref_category_for_this_series">Untuk siri ini</string>
-    <string name="battery_optimization_setting_activity_not_found">Tetapan peranti tidak dapat dibuka</string>
     <string name="pref_refresh_library_covers">Segar semula muka hadapan pustaka</string>
     <string name="sort_by_upload_date">Mengikut tarikh muat naik</string>
     <string name="label_data">Data</string>
@@ -440,7 +436,6 @@
     <string name="theme_monet">Dinamik</string>
     <string name="pref_app_theme">Tema aplikasi</string>
     <string name="restore_miui_warning">Sandaran/memulih mungkin tidak berfungsi dengan betul jika pengoptimuman MIUI dinyahaktifkan.</string>
-    <string name="about_dont_kill_my_app">Sesetengah pengeluar ada sekatan tambahan pada aplikasi yang akan menghentikan perkidmatan latar belakang. Laman web ini ada maklumat cara membaikinya.</string>
     <string name="theme_strawberrydaiquiri">Strawberry Daiquiri</string>
     <string name="pref_lowest">Terendah</string>
     <string name="pref_low">Rendah</string>
@@ -533,7 +528,6 @@
     <string name="remove_manga">Anda akan membuang \"%s\" ini daripada pustaka anda</string>
     <string name="popular">Popular</string>
     <string name="action_search_hint">Cari…</string>
-    <string name="pref_appearance_summary">Tema, format tarikh &amp; masa</string>
     <string name="pref_reader_summary">Mod membaca, paparan, navigasi</string>
     <string name="pref_downloads_summary">Muat turun automatik, muat turun maju</string>
     <string name="pref_backup_summary">Sandaran manual &amp; automatik, ruang storan</string>

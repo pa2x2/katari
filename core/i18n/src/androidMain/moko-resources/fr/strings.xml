@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Action de glisser à droite</string>
     <string name="ext_permission_install_apps_warning">Des permissions sont nécessaires pour installer des extensions. Appuyer ici pour les accorder.</string>
     <string name="connected_to_wifi">Uniquement en Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Désactiver la fonction d\'optimisation de la batterie</string>
+    <string name="pref_disable_battery_optimization_summary">Facilite les mises à jour et sauvegardes de la bibliothèque en arrière-plan</string>
+    <string name="battery_optimization_disabled">La fonction d\'optimisation de la batterie est déjà désactivée</string>
+    <string name="battery_optimization_setting_activity_not_found">Impossible d\'ouvrir les paramètres de l\'appareil</string>
+    <string name="about_dont_kill_my_app">Certains fabricants ont mis en place des restrictions supplémentaires sur les applications qui tuent les services d\'arrière-plan. Ce site Web contient plus d\'informations sur la manière de résoudre ce problème.</string>
 </resources>

@@ -1,0 +1,18 @@
+-- The last number given to a message (device_messages._id). A device skips every number up to the last it handled, so
+-- no number may come again: not once its message is gone, nor after the server's clock is set back, nor after the
+-- database is restored from a backup, which takes this row back with it. So a number is the clock's, scaled to leave
+-- room for 1,024 messages a millisecond, unless that isn't past the last one given.
+CREATE TABLE message_numbers(
+    id INTEGER NOT NULL PRIMARY KEY CHECK (id = 0),
+    last_given INTEGER NOT NULL
+);
+
+give:
+INSERT INTO message_numbers(id, last_given)
+VALUES (0, :sentAt * 1024)
+ON CONFLICT(id) DO UPDATE SET last_given = max(excluded.last_given, last_given + 1);
+
+lastGiven:
+SELECT last_given
+FROM message_numbers
+WHERE id = 0;

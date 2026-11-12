@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.hoverable
@@ -35,6 +36,8 @@ import app.katari.icons.materialsymbols.automirroredrounded.VolumeOff
 import app.katari.icons.materialsymbols.automirroredrounded.VolumeUp
 import app.katari.presentation.kit.button.IconButton
 import app.katari.presentation.kit.button.IconButtonSize
+import app.katari.presentation.kit.pointer.TouchpadSwipes
+import app.katari.presentation.kit.pointer.touchpadScroll
 import app.katari.presentation.kit.shortcut.KeyboardShortcut
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
@@ -61,7 +64,8 @@ enum class MediaVolumeSlider {
  * 0 to [maxLevel], shown as [slider] says. Above [fullLevel] the volume is louder than recorded, and a mark on the track
  * shows where that starts; null leaves the mark out. While [muted] the slider shows the level that unmuting returns to,
  * and moving it unmutes, as [onLevelChange] decides. With a [wheelStep], the wheel over the control changes the level
- * by that much a notch, and the wheel is the control's alone there.
+ * by that much a notch, and a touchpad's swipe up or down by [mediaVolumeLevelsSwiped]; the wheel is the control's
+ * alone there.
  */
 @Composable
 fun MediaVolumeControl(
@@ -102,10 +106,11 @@ fun MediaVolumeControl(
                 if (wheelStep == null) {
                     Modifier
                 } else {
-                    Modifier.volumeWheel { notches ->
-                        val changed = (latestLevel + notches * wheelStep).coerceIn(0, latestMaxLevel)
-                        latestOnLevelChange(changed)
-                    }
+                    Modifier.volumeWheel(
+                        wheelStep = wheelStep,
+                        level = { latestLevel },
+                        onLevelChange = { latestOnLevelChange(it.coerceIn(0, latestMaxLevel)) },
+                    )
                 },
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -133,24 +138,43 @@ fun MediaVolumeControl(
     }
 }
 
-/** The wheel over the control, as whole notches up (positive) or down, which it takes from whatever lies under it. */
-private fun Modifier.volumeWheel(onNotches: (Int) -> Unit): Modifier = pointerInput(Unit) {
-    var pending = 0f
-    awaitPointerEventScope {
-        while (true) {
-            val event = awaitPointerEvent()
-            if (event.type != PointerEventType.Scroll) continue
-            val change = event.changes.firstOrNull() ?: continue
-            change.consume()
-            // Up is negative, as the wheel scrolls toward the start
-            pending -= change.scrollDelta.y
-            val notches = pending.toInt()
-            if (notches == 0) continue
-            pending -= notches
-            onNotches(notches)
+/**
+ * The wheel over the control, which it takes from whatever lies under it, changing [level] by [wheelStep] a notch, and
+ * a touchpad's swipe up or down over it, which sets the level as far from where the swipe began as the fingers go.
+ */
+private fun Modifier.volumeWheel(wheelStep: Int, level: () -> Int, onLevelChange: (Int) -> Unit): Modifier =
+    pointerInput(wheelStep) {
+        var pending = 0f
+        var swipeFrom = 0
+        val swipes = TouchpadSwipes(
+            slop = viewConfiguration.touchSlop,
+            onStart = { axis ->
+                swipeFrom = level()
+                axis == Orientation.Vertical
+            },
+            onMove = { _, travel -> onLevelChange(swipeFrom + mediaVolumeLevelsSwiped(travel)) },
+        )
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent()
+                if (event.type == PointerEventType.Exit) swipes.end()
+                if (event.type != PointerEventType.Scroll) continue
+                val change = event.changes.firstOrNull() ?: continue
+                val touchpad = event.touchpadScroll
+                if (touchpad != null) {
+                    if (swipes.onStep(touchpad)) change.consume()
+                    continue
+                }
+                change.consume()
+                // Up is negative, as the wheel scrolls toward the start
+                pending -= change.scrollDelta.y
+                val notches = pending.toInt()
+                if (notches == 0) continue
+                pending -= notches
+                onLevelChange(level() + notches * wheelStep)
+            }
         }
     }
-}
 
 @Composable
 private fun VolumeTrack(level: Int, maxLevel: Int, fullLevel: Int?, dimmed: Boolean, onLevelChange: (Int) -> Unit) {

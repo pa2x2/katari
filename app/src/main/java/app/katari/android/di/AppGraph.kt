@@ -1,6 +1,7 @@
 package app.katari.android.di
 
 import android.app.Application
+import app.katari.android.sync.InstantSyncGraph
 import app.katari.android.sync.SyncWorkGraph
 import app.katari.android.work.RetiredWorkerBindings
 import app.katari.android.work.RetiredWorkerGraph
@@ -90,6 +91,7 @@ interface AppGraph :
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,
     SyncWorkGraph,
+    InstantSyncGraph,
     RetiredWorkerGraph,
     TabletUiGraph,
     WidgetGraph {

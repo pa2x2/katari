@@ -1,5 +1,5 @@
 /**
- * What the home page tells, in order: four chapters of features, each with its copy and screenshots. The components
+ * What the home page tells, in order: four chapters of features, each with its copy, its screenshots and its size. The components
  * in this directory only lay it out.
  */
 import type { ImageMetadata } from "astro";
@@ -11,7 +11,6 @@ import globalSearch from "../captures/global-search.png";
 import libraryFamily from "../captures/library-family.png";
 import library from "../captures/library.png";
 import mergedEntry from "../captures/merged-entry.png";
-import player from "../captures/player.png";
 import profiles from "../captures/profiles.png";
 import recapClip from "../captures/recap.mp4?url";
 import recapShare from "../captures/recap-share.png";
@@ -31,27 +30,39 @@ export type Shot =
   | { kind: "compare"; before: ImageMetadata; after: ImageMetadata; beforeLabel: string; afterLabel: string; alt: string; caption: string }
   | { kind: "clip"; src: string; poster: ImageMetadata; label: string; caption: string };
 
-export interface Feature {
+interface FeatureBase {
   id: string;
   title: string;
   text: string;
-  highlights: string[];
-  /** The first shot is the one in front. */
+  /** The first shot is the one a full-size feature shows first. */
   shots: Shot[];
   /** Paths of the docs pages that explain the feature. */
   docs: string[];
+}
+
+/** A feature shown at full size: beside its shots, or across the page as a band. */
+export interface FullFeature extends FeatureBase {
+  highlights: string[];
+  /** The feature in Katari for Linux. With these, a switch above the shots chooses between phone and computer. */
+  computerShots?: Shot[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
-  /**
-   * How the shots stand beside the text when not overlapping phones: in a scene the wide shot stands behind and the
-   * upright ones in front of its lower edge; with windows the first window stands behind and the others in front of it.
-   */
-  arrangement?: "scene" | "windows";
 }
+
+/** A feature shown as a card under its chapter's full-size ones: its upright shots, its title, one sentence and its docs. */
+export interface CardFeature extends FeatureBase {
+  card: true;
+}
+
+export type Feature = FullFeature | CardFeature;
 
 export interface Chapter {
   id: string;
   numeral: string;
+  /** The chapter's name in Japanese, set upright on its title page like the hero's 語り. */
+  word: string;
+  /** The two colours the title page's background runs between; dark, so the page reads the same in either theme. */
+  tint: [string, string];
   title: string;
   intro: string;
   features: Feature[];
@@ -61,6 +72,8 @@ export const chapters: Chapter[] = [
   {
     id: "collect",
     numeral: "一",
+    word: "集める",
+    tint: ["#5a2a20", "#2a1611"],
     title: "Collect",
     intro: "Everything you read and watch, in one place.",
     features: [
@@ -82,13 +95,22 @@ export const chapters: Chapter[] = [
           },
           { kind: "still", image: updates, alt: "New episodes listed in the updates feed", caption: "The updates feed" },
         ],
+        computerShots: [
+          {
+            kind: "still",
+            image: plannedCapture("sync-desktop.png"),
+            alt: "A library holding comics, books, and films in Katari for Linux",
+            caption: "The library in Katari for Linux",
+            device: "window",
+          },
+        ],
       },
       {
         id: "discover",
         docs: ["docs/first-steps/"],
         title: "Find the next story",
         text: "Search every source at once, or follow a source's popular and latest titles as a feed.",
-        highlights: ["One search across comics, books, and films", "Feeds of what's popular and what's new"],
+        card: true,
         shots: [
           { kind: "still", image: feed, alt: "A feed of popular books", caption: "Popular books as a feed" },
           {
@@ -104,7 +126,7 @@ export const chapters: Chapter[] = [
         docs: ["docs/profiles/"],
         title: "Everyone gets their own library",
         text: "Profiles keep separate libraries, history, statistics, and reader and library settings.",
-        highlights: ["For a shared tablet, or for keeping collections apart"],
+        card: true,
         shots: [
           { kind: "still", image: profiles, alt: "Choosing between two profiles", caption: "Pick a profile" },
           { kind: "still", image: library, alt: "The Personal profile's library", caption: "Personal" },
@@ -116,6 +138,8 @@ export const chapters: Chapter[] = [
   {
     id: "read-and-watch",
     numeral: "二",
+    word: "読む・観る",
+    tint: ["#1c4a44", "#0f2624"],
     title: "Read & watch",
     intro: "A reader made for each format, in any language.",
     features: [
@@ -124,12 +148,11 @@ export const chapters: Chapter[] = [
         docs: ["docs/comic-reader/", "docs/book-reader/", "docs/video/"],
         title: "A reader made for each format",
         text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
-        highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
+        card: true,
         shots: [
           { kind: "still", image: plannedCapture("comic-reader.png"), alt: "A comic page in the reader", caption: "A comic in the reader" },
           { kind: "still", image: bookPaper, alt: "A book in the paper theme", caption: "The paper theme" },
           { kind: "still", image: bookDusk, alt: "The same page in the dusk theme", caption: "The dusk theme" },
-          { kind: "still", image: player, alt: "Sintel playing in the video player", caption: "Sintel in the player", device: "phone-landscape" },
         ],
       },
       {
@@ -166,6 +189,8 @@ export const chapters: Chapter[] = [
   {
     id: "look-back",
     numeral: "三",
+    word: "振り返る",
+    tint: ["#1d3d66", "#0f1f38"],
     title: "Look back",
     intro: "Where your time went, and what it added up to.",
     features: [
@@ -174,7 +199,7 @@ export const chapters: Chapter[] = [
         docs: ["docs/statistics/"],
         title: "See where your time goes",
         text: "Katari keeps track of how long you read and watch.",
-        highlights: ["A daily goal and a streak", "Every month and year at a glance", "How long a title took, and how long the rest should take"],
+        card: true,
         shots: [
           { kind: "still", image: statistics, alt: "Reading statistics for the last 30 days, with the daily goal", caption: "The last 30 days" },
           { kind: "still", image: statisticsYear, alt: "A year of reading, month by month", caption: "A year, month by month" },
@@ -198,6 +223,8 @@ export const chapters: Chapter[] = [
   {
     id: "everywhere",
     numeral: "四",
+    word: "どこでも",
+    tint: ["#40295f", "#1d1530"],
     title: "Everywhere",
     intro: "One library on all your devices.",
     features: [
@@ -212,7 +239,6 @@ export const chapters: Chapter[] = [
           "Keep an episode playing in a small window while you work",
           "The desktop's media controls pause it and change episodes",
         ],
-        arrangement: "windows",
         shots: [
           {
             kind: "still",
@@ -248,7 +274,6 @@ export const chapters: Chapter[] = [
           "Link a new device by scanning a code",
           "Choose what each device syncs, down to single settings and profiles",
         ],
-        arrangement: "scene",
         shots: [
           {
             kind: "still",

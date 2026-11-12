@@ -48,8 +48,15 @@ class LibraryPreferences(
 
     val coverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_library_cover_size", CoverSize.Auto)
 
+    /** When the latest library update started, which tells whether another device's update is newer. */
     val lastUpdatedTimestamp: Preference<Long> = preferenceStore.getLong(
         Preference.appStateKey("library_update_last_timestamp"),
+        0L,
+    )
+
+    /** When the latest library update ended, stopped or not; 0 until an update ends. */
+    val lastUpdateFinishedAt: Preference<Long> = preferenceStore.getLong(
+        Preference.appStateKey("library_update_last_finished"),
         0L,
     )
     val autoUpdateInterval: Preference<Int> = preferenceStore.getInt("pref_library_update_interval_key", 0)

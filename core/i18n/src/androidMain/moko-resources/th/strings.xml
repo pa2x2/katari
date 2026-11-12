@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">เปิดตอนเมื่อปัดไปทางขวา</string>
     <string name="ext_permission_install_apps_warning">จำเป็นต้องมีสิทธิ์ในการติดตั้งส่วนขยาย แตะที่นี่เพื่อให้สิทธิ์</string>
     <string name="connected_to_wifi">เฉพาะขณะเชื่อมต่อ Wi-Fi</string>
+    <string name="battery_optimization_setting_activity_not_found">ไม่สามารถเปิดการตั้งค่าอุปกรณ์</string>
+    <string name="battery_optimization_disabled">การเพิ่มประสิทธิภาพแบตเตอรี่ถูกปิดใช้งานอยู่แล้ว</string>
+    <string name="pref_disable_battery_optimization_summary">ช่วยในการอัปเดตและสำรองข้อมูลคลังในพื้นหลัง</string>
+    <string name="pref_disable_battery_optimization">ปิดการใช้งานการเพิ่มประสิทธิภาพแบตเตอรี่</string>
+    <string name="about_dont_kill_my_app">ผู้ผลิตบางรายมีข้อจำกัดเพิ่มเติมของแอปที่ปิดบริการพื้นหลัง เว็บไซต์นี้มีข้อมูลเพิ่มเติมเกี่ยวกับวิธีการแก้ไข</string>
 </resources>

@@ -5,4 +5,8 @@
     <string name="pref_double_tap_anim_speed">Иккитэ баттыырга хамсааһын түргэнэ</string>
     <string name="pref_viewer_nav">Нэбигээссийэ бэлиэтэ</string>
     <string name="pref_read_with_long_tap">Уһун баттааһыҥҥа - кэпсэтии</string>
+    <string name="pref_disable_battery_optimization">Батарея тупсарыытын араарыы</string>
+    <string name="pref_disable_battery_optimization_summary">Бэбэлэтиэкэ уонна хаппаас куопуйатыгар кэннинээҕи саҥардыытыгар көмөлөһөр</string>
+    <string name="battery_optimization_setting_activity_not_found">Устройства түстэлэ сатаан арыллыбата</string>
+    <string name="battery_optimization_disabled">Батарея тупсуруута араарыллынна</string>
 </resources>

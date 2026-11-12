@@ -12,11 +12,13 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * What the live channel tells connected devices: an account's sequence moving on, a device joining or leaving the
- * account, and devices being revoked or their account disabled, either of which closes their connection.
+ * account, a message coming for a device, and devices being revoked or their account disabled, either of which closes
+ * their connection.
  */
 class AccountChanges {
     private val sequences = ConcurrentHashMap<Long, MutableStateFlow<Long>>()
     private val deviceCounts = ConcurrentHashMap<Long, MutableStateFlow<Long>>()
+    private val newestMessages = ConcurrentHashMap<DeviceId, MutableStateFlow<Long>>()
     private val revoked = MutableSharedFlow<DeviceId>(extraBufferCapacity = 64)
     private val disabled = MutableSharedFlow<Long>(extraBufferCapacity = 64)
 
@@ -25,6 +27,9 @@ class AccountChanges {
 
     /** How many times a device joined or left the account since the server started. */
     fun devices(accountId: Long): StateFlow<Long> = deviceCountOf(accountId).asStateFlow()
+
+    /** The newest message number sent to the device since the server started, 0 before the first. */
+    fun newestMessage(device: DeviceId): StateFlow<Long> = newestMessageOf(device).asStateFlow()
 
     val revocations: SharedFlow<DeviceId> = revoked.asSharedFlow()
 
@@ -41,6 +46,11 @@ class AccountChanges {
         deviceCountOf(accountId).update { it + 1 }
     }
 
+    /** Called once the message [number] for [device] has committed. */
+    fun announceMessage(device: DeviceId, number: Long) {
+        newestMessageOf(device).update { maxOf(it, number) }
+    }
+
     fun announceRevoked(device: DeviceId) {
         revoked.tryEmit(device)
     }
@@ -52,4 +62,6 @@ class AccountChanges {
     private fun flowOf(accountId: Long) = sequences.computeIfAbsent(accountId) { MutableStateFlow(0) }
 
     private fun deviceCountOf(accountId: Long) = deviceCounts.computeIfAbsent(accountId) { MutableStateFlow(0) }
+
+    private fun newestMessageOf(device: DeviceId) = newestMessages.computeIfAbsent(device) { MutableStateFlow(0) }
 }

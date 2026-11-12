@@ -2,6 +2,7 @@ package app.katari.desktop.application.installation
 
 import app.katari.core.common.platform.DesktopOperatingSystem
 import java.io.File
+import java.nio.file.Path
 
 /**
  * How this copy of the app is installed on the system: what starts it again, and whether and how it puts a release's
@@ -13,6 +14,12 @@ interface AppInstallation {
 
     /** How the installation updates itself; null where it doesn't, as a development build or a build tool's run. */
     val update: InstallationUpdate?
+
+    /**
+     * The program the desktop can start the app with at the user's login, which outlasts this run; null where the app
+     * runs from nothing that does, as a build tool's run, whose build changes under it.
+     */
+    val loginProgram: Path?
 }
 
 /** Putting a release's package in the installed app's place, which runs once the app starts again. */

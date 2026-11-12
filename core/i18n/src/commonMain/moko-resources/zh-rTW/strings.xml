@@ -277,9 +277,6 @@
     <string name="action_display_comfortable_grid">鬆散格狀</string>
     <string name="pref_category_for_this_series">套用於這部作品</string>
     <string name="pref_category_reading">翻閱</string>
-    <string name="battery_optimization_disabled">已停用電池效能最佳化</string>
-    <string name="battery_optimization_setting_activity_not_found">無法前往裝置設定</string>
-    <string name="pref_disable_battery_optimization">停用電池效能最佳化</string>
     <string name="manga_info_collapse">較少</string>
     <string name="updating_library">正在更新書櫃</string>
     <string name="add_to_library">加入書櫃</string>
@@ -292,7 +289,6 @@
     <string name="pref_library_update_refresh_metadata_summary">更新書櫃時一併檢查封面與簡介是否有更動</string>
     <string name="pref_refresh_library_covers">重新整理書櫃中的封面</string>
     <string name="ext_updates_pending">等待更新中</string>
-    <string name="pref_disable_battery_optimization_summary">有助於背景更新書櫃與自動備份</string>
     <string name="pinned_sources">已釘選</string>
     <string name="action_unpin">取消釘選</string>
     <string name="action_pin">釘選</string>
@@ -430,7 +426,6 @@
     <string name="cover_saved">已儲存封面</string>
     <string name="manga_cover">封面</string>
     <string name="action_start_downloading_now">立刻開始下載</string>
-    <string name="about_dont_kill_my_app">部分裝置製造商設有額外的應用程式限制來終止背景服務，此網站提供了修復這項問題的詳細資訊</string>
     <string name="label_background_activity">背景活動</string>
     <string name="restore_miui_warning">若停用 MIUI 最佳化，備份與還原可能無法正確執行</string>
     <string name="categorized_display_settings">獨立各類別的排序方式</string>
@@ -534,7 +529,6 @@
     <string name="popular">熱門</string>
     <string name="action_search_hint">搜尋…</string>
     <string name="pref_reader_summary">閱讀模式、檢視、導覽</string>
-    <string name="pref_appearance_summary">主題、日期格式</string>
     <string name="pref_downloads_summary">自動下載、預先下載</string>
     <string name="pref_backup_summary">手動與自動備份、儲存空間</string>
     <string name="crash_screen_restart_application">重新啟動應用程式</string>
