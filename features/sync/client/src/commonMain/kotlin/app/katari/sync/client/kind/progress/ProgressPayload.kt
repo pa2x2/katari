@@ -14,6 +14,12 @@ data class ProgressPayload(
     @ProtoNumber(4) val chapterKey: String? = null,
     @ProtoNumber(5) val locator: Stamped<ProgressLocator>,
     @ProtoNumber(6) val completed: Stamped<Boolean>,
+    /**
+     * The key of the record the position was kept under before its resource moved here, as a refresh found its chapter
+     * at a new URL; null for one that never moved. A device holding edits made there tells by it the position moved
+     * back from those it must move along.
+     */
+    @ProtoNumber(7) val movedFrom: String? = null,
 )
 
 @Serializable

@@ -32,7 +32,8 @@ import kotlinx.serialization.json.JsonObject
  * refresh that lists a chapter holding stand-ins for the source's details (`chapters_placeholder_details`) has its
  * record read again, as no edit. A chapter the source dropped keeps its record, since a refresh never deletes anything
  * on other devices. A chapter a refresh moved to another URL takes its record's marks to the record under its new
- * key, which names the URL it had ([ChapterPayload.renamedFrom]).
+ * key, which names the URL it had ([ChapterPayload.renamedFrom]); the record under its old key is deleted in favour of
+ * it, so no device makes the chapter again at that URL, and records naming the old key apply to the new one.
  */
 object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPayload.serializer(), Absence.KEEP) {
     override val capture = listOf(
@@ -85,28 +86,27 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         return LocalRead.Found(
             key = key,
             parents = listOf(RecordRef(EntryKind, EntryKind.ref(row.entry_id))),
+            replaces = renamed?.key,
         ) { previous, stamps ->
-            val before = previous ?: renamed
+            val before = previous ?: renamed?.payload
             payload(
                 row = row,
                 entryKey = entryKey,
                 read = stamps.field(3, row.read, before?.read),
                 bookmark = stamps.field(4, row.bookmark, before?.bookmark),
                 previousDetails = before?.details,
-                renamedFrom = previous?.renamedFrom ?: renamed?.url,
+                renamedFrom = previous?.renamedFrom ?: renamed?.payload?.url,
             )
         }
     }
 
     /**
      * The record that holds the row [ref] under another URL of the same entry, [key] being the row's now: a refresh
-     * moved the chapter there, so that record's marks, with the times they were made, are the chapter's.
+     * moved the chapter there, so that record's marks, with the times they were made, are the chapter's, and the
+     * record is deleted in favour of the one under [key].
      */
-    private suspend fun renamedFrom(reads: LocalReads, ref: LocalRef, key: String, entryKey: String): ChapterPayload? {
-        val held = reads.database.sync_recordsQueries.getByLocalRef(name, ref.json).awaitAsOneOrNull()
-        if (held == null || held.deleted || held.record_key == key) return null
-        return decode(held.payload).takeIf { it.entryKey == entryKey }
-    }
+    private suspend fun renamedFrom(reads: LocalReads, ref: LocalRef, key: String, entryKey: String) =
+        heldBeforeMove(reads, ref, key)?.takeIf { it.payload.entryKey == entryKey }
 
     /**
      * The record of the chapter [row] of [entryKey], with its marks as [read] and [bookmark]. Details the row holds
@@ -175,13 +175,22 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         )
     }
 
+    // Marks made at the chapter's old URL by a device that hadn't heard of the move yet are marks at the new one
+    override val moveInto: ((ChapterPayload, ChapterPayload) -> ChapterPayload) = { edits, replacement ->
+        edits.copy(entryKey = replacement.entryKey, url = replacement.url, renamedFrom = replacement.renamedFrom)
+    }
+
+    // A refresh that moved the chapter back names the URL it moved it from
+    override fun editedBeforeHeardOfMove(payload: ChapterPayload, replacement: ChapterPayload) =
+        payload.renamedFrom != replacement.url
+
     /**
      * Creates the row, and its group when this device lists none of that key, from the record's metadata and details
      * when the entry wasn't refreshed here, where the record's device has it in the list; a refresh overrides all but
      * when it was found, which every device takes from the record. A row that holds stand-ins a record without details
      * left (`chapters_placeholder_details`) takes the details of the first record that carries them. A row still at
      * the URL the chapter was renamed from takes the new one, as this device's own refresh would give it, keeping
-     * what hangs off it here.
+     * what hangs off it here, and its reading position goes along unless one is kept at the new URL already.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
@@ -189,9 +198,12 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         val metadata = payload.metadata
         val details = payload.details
         val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
-            ?: payload.renamedFrom
-                ?.let { queries.chapterId(entryId, it).awaitAsOneOrNull() }
-                ?.also { queries.renameChapter(url = payload.url, chapterId = it) }
+            ?: payload.renamedFrom?.let { renamedFrom ->
+                queries.chapterId(entryId, renamedFrom).awaitAsOneOrNull()?.also { chapterId ->
+                    queries.renameChapter(url = payload.url, chapterId = chapterId)
+                    queries.moveChapterProgress(entryId = entryId, oldUrl = renamedFrom, newUrl = payload.url)
+                }
+            }
         val written = details?.takeIf {
             existing == null || queries.chapterHoldsPlaceholderDetails(existing).awaitAsOne()
         }

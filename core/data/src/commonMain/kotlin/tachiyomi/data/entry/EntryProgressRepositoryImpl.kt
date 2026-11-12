@@ -108,7 +108,20 @@ class EntryProgressRepositoryImpl(
                 newResourceKey,
                 EntryProgressStateMapper::mapState,
             ).awaitAsOneOrNull()
-            val merged = existing?.mergeWith(moved) ?: moved
+            if (existing == null) {
+                // In its own row, which sync sees as the position moving rather than one deleted and another started
+                entry_progress_stateQueries.moveKey(
+                    chapterId = chapterId,
+                    newContentKey = newContentKey,
+                    newResourceKey = newResourceKey,
+                    entryId = entryId,
+                    oldContentKey = oldContentKey,
+                    oldResourceKey = oldResourceKey,
+                )
+                syncChildCompletion(moved)
+                return@await
+            }
+            val merged = existing.mergeWith(moved)
             upsertProgress(merged)
             entry_progress_stateQueries.deleteByKey(entryId, oldContentKey, oldResourceKey)
             syncChildCompletion(merged)

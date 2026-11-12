@@ -204,6 +204,12 @@ private suspend fun <P : Any> Database.storePresent(
         if (replacing) {
             sync_recordsQueries.deleteReplaced(kind.name, present.ref.json, key)
         } else {
+            // Left live, the record the row was synced under before would make the row again on every device, at
+            // what it was keyed by then
+            present.found.replaces?.let { replaced ->
+                val old = sync_recordsQueries.getByKey(replaced).awaitAsOne()
+                storeTombstone(replaced, kind, old.payload, stamps.latest ?: Stamped.UNKNOWN_EDIT, key, parts)
+            }
             sync_recordsQueries.detachLocalRef(kind.name, present.ref.json, key)
         }
     }
@@ -235,23 +241,8 @@ private suspend fun <P : Any> Database.storeAbsent(
     val stored = sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return
     if (stored.deleted) return
     when (kind.absence) {
-        SyncedKind.Absence.TOMBSTONE -> {
-            val tombstone = ProtoBuf.encodeToByteArray(
-                Tombstone.serializer(),
-                Tombstone(stamps.latest ?: Stamped.UNKNOWN_EDIT, last = stored.payload),
-            )
-            sync_recordsQueries.storeLocalChange(
-                recordKey = key,
-                kind = kind.name,
-                localRef = null,
-                kindVersion = kind.version.toLong(),
-                payload = tombstone,
-                deleted = true,
-                changeId = newChangeId(),
-                recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
-            )
-            if (parts.isOff(kind, kind.decode(stored.payload))) sync_recordsQueries.holdBack(key)
-        }
+        SyncedKind.Absence.TOMBSTONE ->
+            storeTombstone(key, kind, stored.payload, stamps.latest ?: Stamped.UNKNOWN_EDIT, replacedBy = null, parts)
         SyncedKind.Absence.REMOVED_FLAG -> {
             val previous = kind.decode(stored.payload)
             val removed = kind.removed(previous, stamps)
@@ -270,4 +261,28 @@ private suspend fun <P : Any> Database.storeAbsent(
         }
         SyncedKind.Absence.KEEP -> Unit
     }
+}
+
+/** Marks [key], whose payload was [last], deleted at [deletedAt], in favour of [replacedBy] when it names one. */
+private suspend fun <P : Any> Database.storeTombstone(
+    key: String,
+    kind: SyncedKind<P>,
+    last: ByteArray,
+    deletedAt: HybridTimestamp,
+    replacedBy: String?,
+    parts: OffParts,
+) {
+    val tombstone =
+        ProtoBuf.encodeToByteArray(Tombstone.serializer(), Tombstone(deletedAt, replacedBy = replacedBy, last = last))
+    sync_recordsQueries.storeLocalChange(
+        recordKey = key,
+        kind = kind.name,
+        localRef = null,
+        kindVersion = kind.version.toLong(),
+        payload = tombstone,
+        deleted = true,
+        changeId = newChangeId(),
+        recordGroup = RecordGroups.of(kind.name, key, deleted = true, tombstone),
+    )
+    if (parts.isOff(kind, kind.decode(last))) sync_recordsQueries.holdBack(key)
 }

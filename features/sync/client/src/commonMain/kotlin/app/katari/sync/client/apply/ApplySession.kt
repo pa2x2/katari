@@ -75,6 +75,7 @@ internal class ApplySession(
 ) : LocalWrites {
     private val resolving = HashSet<String>()
     private val questions = QuestionDetection(this)
+    private val movedEdits = MovedRecordEdits(this, parts)
     private val afterRecords = LinkedHashMap<String, AfterRecords>()
     private val readHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
     private val markedHere = LinkedHashMap<Long, LinkedHashSet<Long>>()
@@ -99,15 +100,21 @@ internal class ApplySession(
      * stale. A newer one received is merged first.
      */
     suspend fun retryHeld() {
-        database.sync_pendingQueries.retryable(appVersion).awaitAsList().forEach { held ->
-            database.sync_pendingQueries.release(held.record_key)
-            val record = ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record)
-            val stored = database.sync_recordsQueries.getByKey(held.record_key).awaitAsOneOrNull()
-            if (stored != null && stored.based_on >= record.sequence) {
-                reapply(held.record_key, held)
-            } else {
-                receive(record)
-            }
+        database.sync_pendingQueries.retryable(appVersion).awaitAsList().forEach { held -> retry(held) }
+    }
+
+    /**
+     * Tries [held] again: writes the stored copy it was held after storing, or receives it whole when it was held
+     * before this device stored it, as a deletion waiting for the record its edits move to ([MovedRecordEdits]).
+     */
+    private suspend fun retry(held: Sync_pending) {
+        database.sync_pendingQueries.release(held.record_key)
+        val record = ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record)
+        val stored = database.sync_recordsQueries.getByKey(held.record_key).awaitAsOneOrNull()
+        if (stored != null && stored.based_on >= record.sequence) {
+            reapply(held.record_key, held)
+        } else {
+            receive(record)
         }
     }
 
@@ -124,14 +131,15 @@ internal class ApplySession(
             edited?.let(::see)
             database.sync_pendingQueries.release(envelope.key)
 
-            questions.detect(
-                kind,
-                envelope.key,
-                database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull(),
-                incoming,
-            )
+            val earlier = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
+            val earlierState = earlier?.let { RecordState.of(it.deleted, it.payload) }
+            movedEdits.waitsFor(kind, earlierState, incoming)?.let { replacement ->
+                return hold(record, HoldReason.PARENT, waitsFor = replacement)
+            }
+            questions.detect(kind, envelope.key, earlier, incoming)
             val stored = database.sync_recordsQueries.getByKey(envelope.key).awaitAsOneOrNull()
-            val merged = stored?.let { kind.merge(RecordState.of(it.deleted, it.payload), incoming) } ?: incoming
+            val local = stored?.let { RecordState.of(it.deleted, it.payload) }
+            val merged = movedEdits.settled(kind, local, incoming, local?.let { kind.merge(it, incoming) } ?: incoming)
             val holdsLocalEdits = !kind.sameRecord(merged, incoming)
             val payload = if (holdsLocalEdits) merged.bytes else envelope.payload
             database.sync_recordsQueries.storeMerged(
@@ -154,6 +162,7 @@ internal class ApplySession(
             }
             settle(kind, envelope.key, outcome, stored?.local_ref, record)
             if (outcome is ApplyOutcome.Applied && merged is RecordState.Live) carry(kind, envelope.key, merged)
+            movedEdits.carry(kind, local, incoming, merged)
         } catch (e: Exception) {
             throw failure(envelope.key, stage, e)
         }
@@ -241,6 +250,7 @@ internal class ApplySession(
     ) {
         when (outcome) {
             is ApplyOutcome.Applied -> {
+                outcome.ref?.let { movedEdits.takeOver(kind, key, it.json) }
                 link(kind, key, outcome.ref?.json)
                 database.sync_pendingQueries.release(key)
                 retryWaitingFor(key)
@@ -282,10 +292,7 @@ internal class ApplySession(
     }
 
     private suspend fun retryWaitingFor(key: String) {
-        database.sync_pendingQueries.waitingFor(key).awaitAsList().forEach { held ->
-            database.sync_pendingQueries.release(held.record_key)
-            reapply(held.record_key, held)
-        }
+        database.sync_pendingQueries.waitingFor(key).awaitAsList().forEach { held -> retry(held) }
     }
 
     /**
@@ -368,19 +375,13 @@ internal class ApplySession(
     }
 
     override suspend fun categoryId(categoryKey: String, profileUuid: String): Resolved {
-        var key = categoryKey
-        repeat(MAX_REPLACEMENTS) {
-            if (key == RecordKeys.derive(LocalReads.DEFAULT_CATEGORY, profileUuid)) return Resolved.Found(0)
-            val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return Resolved.Missing(key)
-            if (!stored.deleted) {
-                return resolve(key) { ref ->
-                    ref.long(0).takeIf { database.sync_applyQueries.categoryExists(it).awaitAsOne() }
-                }
-            }
-            key = (RecordState.of(true, stored.payload) as RecordState.Deleted).tombstone.replacedBy
-                ?: return Resolved.Gone
+        // The default category is no record's row
+        val defaultCategory = RecordKeys.derive(LocalReads.DEFAULT_CATEGORY, profileUuid)
+        if (categoryKey == defaultCategory) return Resolved.Found(0)
+        val resolved = resolve(categoryKey) { ref ->
+            ref.long(0).takeIf { database.sync_applyQueries.categoryExists(it).awaitAsOne() }
         }
-        return Resolved.Gone
+        return if (resolved is Resolved.Missing && resolved.key == defaultCategory) Resolved.Found(0) else resolved
     }
 
     override suspend fun activitySession(sessionId: String): Resolved {
@@ -603,13 +604,19 @@ internal class ApplySession(
     }
 
     /**
-     * The local ID of the record [key]: of the row it is stored as holding, or else of the row written from the
-     * stored record now. Missing when no record is stored, or when the record itself waits for its own parent.
+     * The local ID of the record [key], or of the one it stands for ([standing]): of the row it is stored as holding,
+     * or else of the row written from the stored record now. Missing when no record is stored, or when the record
+     * itself waits for its own parent.
      */
-    private suspend fun resolve(key: String, idOf: suspend (LocalRef) -> Long?): Resolved {
-        val stored = database.sync_recordsQueries.getByKey(key).awaitAsOneOrNull() ?: return Resolved.Missing(key)
-        if (stored.deleted) return Resolved.Gone
-        stored.local_ref?.let { idOf(LocalRef(it)) }?.let { return Resolved.Found(it) }
+    private suspend fun resolve(key: String, idOf: suspend (LocalRef) -> Long?): Resolved =
+        when (val standing = database.standing(key)) {
+            is Standing.Live -> resolveLive(standing.key, standing.record.local_ref, idOf)
+            is Standing.Missing -> Resolved.Missing(standing.key)
+            Standing.Gone -> Resolved.Gone
+        }
+
+    private suspend fun resolveLive(key: String, localRef: String?, idOf: suspend (LocalRef) -> Long?): Resolved {
+        localRef?.let { idOf(LocalRef(it)) }?.let { return Resolved.Found(it) }
         if (!resolving.add(key)) return Resolved.Missing(key)
         try {
             return when (val outcome = reapply(key, database.sync_pendingQueries.get(key).awaitAsOneOrNull())) {
@@ -624,9 +631,6 @@ internal class ApplySession(
     }
 
     private companion object {
-        /** Categories merged into ones merged again; a chain this long can only be a loop. */
-        const val MAX_REPLACEMENTS = 16
-
         const val PAGE = 500L
     }
 }

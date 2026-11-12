@@ -114,6 +114,16 @@ UPDATE chapters
 SET url = :url
 WHERE _id = :chapterId;
 
+-- A chapter's reading position is kept under its URL, with no content key
+moveChapterProgress:
+UPDATE entry_progress_state
+SET resource_key = :newUrl
+WHERE entry_id = :entryId AND content_key = '' AND resource_key = :oldUrl
+    AND NOT EXISTS (
+        SELECT 1 FROM entry_progress_state
+        WHERE entry_id = :entryId AND content_key = '' AND resource_key = :newUrl
+    );
+
 chapterExists:
 SELECT count(*) > 0
 FROM chapters

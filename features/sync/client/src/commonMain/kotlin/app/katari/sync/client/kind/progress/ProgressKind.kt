@@ -12,6 +12,7 @@ import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
+import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
@@ -43,6 +44,14 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             listOf("NEW._id"),
             fields = listOf(Field(5, *locatorColumns), Field(6, "completed")),
         ),
+        // A chapter a refresh moved to another URL takes its position along in its own row: the record follows it to
+        // the key of the resource's new URL
+        CaptureTrigger(
+            "entry_progress_state",
+            Event.UPDATE,
+            listOf("NEW._id"),
+            fields = listOf(Field(2, "content_key"), Field(3, "resource_key")),
+        ),
         CaptureTrigger("entry_progress_state", Event.DELETE, listOf("OLD._id"), owners = listOf(Owner.entry())),
     )
 
@@ -51,13 +60,18 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             ?: return LocalRead.Missing
         val entryKey = reads.entryKey(row.entry_id) ?: return LocalRead.NotSynced
         val chapterKey = row.chapter_id?.let { reads.chapterKey(it) }
+        val key = RecordKeys.derive(name, entryKey, row.content_key, row.resource_key)
+        // The row moved from another resource key, whose record's positions, with the times they were read, are its
+        val moved = heldBeforeMove(reads, ref, key)?.takeIf { it.payload.entryKey == entryKey }
         return LocalRead.Found(
-            key = RecordKeys.derive(name, entryKey, row.content_key, row.resource_key),
+            key = key,
             parents = listOfNotNull(
                 RecordRef(EntryKind, EntryKind.ref(row.entry_id)),
                 row.chapter_id?.let { RecordRef(ChapterKind, ChapterKind.ref(it)) },
             ),
-        ) { previous, stamps ->
+            replaces = moved?.key,
+        ) { stored, stamps ->
+            val previous = stored ?: moved?.payload
             ProgressPayload(
                 entryKey = entryKey,
                 contentKey = row.content_key,
@@ -85,6 +99,7 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
                     row.completion_updated_at,
                     reads.device,
                 ),
+                movedFrom = stored?.movedFrom ?: moved?.key,
             )
         }
     }
@@ -101,7 +116,25 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
         ).reduceOrNull(::latest)?.value,
         locator = latest(local.locator, incoming.locator),
         completed = latest(local.completed, incoming.completed),
+        movedFrom = fieldOfNewer(serializer, local, incoming) { it.movedFrom } ?: local.movedFrom ?: incoming.movedFrom,
     )
+
+    // A position read at the resource's old key by a device that hadn't heard of the move yet is one at the new key
+    override val moveInto: ((ProgressPayload, ProgressPayload) -> ProgressPayload) = { edits, replacement ->
+        edits.copy(
+            entryKey = replacement.entryKey,
+            contentKey = replacement.contentKey,
+            resourceKey = replacement.resourceKey,
+            chapterKey = replacement.chapterKey,
+            movedFrom = replacement.movedFrom,
+        )
+    }
+
+    override fun editedBeforeHeardOfMove(payload: ProgressPayload, replacement: ProgressPayload): Boolean {
+        val replacementKey =
+            RecordKeys.derive(name, replacement.entryKey, replacement.contentKey, replacement.resourceKey)
+        return payload.movedFrom != replacementKey
+    }
 
     override suspend fun apply(writes: LocalWrites, key: String, payload: ProgressPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
