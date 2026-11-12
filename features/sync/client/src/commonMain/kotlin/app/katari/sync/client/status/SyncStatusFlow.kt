@@ -103,12 +103,14 @@ class SyncStatusFlow(
 
     private fun files(): Flow<SyncStatus.Files> = combine(
         pendingFiles.uploads(),
+        pendingFiles.refusedAsTooLarge(),
         pendingFiles.downloads(),
         pendingFiles.missingOnServer(),
         fileRule.allows(),
-    ) { uploads, downloads, missing, allowed ->
+    ) { uploads, refused, downloads, missing, allowed ->
         SyncStatus.Files(
             toUpload = uploads,
+            refusedAsTooLarge = refused,
             toDownload = downloads,
             missingOnServer = missing,
             waitingForWifi = !allowed && uploads + downloads > 0,
@@ -191,6 +193,7 @@ class SyncStatusFlow(
             inputs.outcome == SyncOutcome.WAITING_FOR_WIFI -> SyncStatus.Activity.ChangesWaitForWifi
             state.stage != SyncStage.READY ->
                 SyncStatus.Activity.Syncing(inputs.progress.download, catchingUp = state.catchingUp)
+            inputs.outcome == SyncOutcome.UNFINISHED -> SyncStatus.Activity.Unfinished
             else -> SyncStatus.Activity.UpToDate(state.lastSyncedAt)
         }
     }

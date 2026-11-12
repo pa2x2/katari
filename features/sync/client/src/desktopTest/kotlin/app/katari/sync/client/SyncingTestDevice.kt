@@ -163,6 +163,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             messageOutbox,
             messageInbox,
             changeRule,
+            fileRule,
             lazyOf(setOf(DownloadRequestRetry(downloadRequestInbox))),
         ),
         steps,
@@ -306,6 +307,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         }
 
         override fun handOff() = Unit
+
+        override fun retry() = Unit
 
         override fun longRun(onMetered: Boolean) = Unit
 

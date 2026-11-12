@@ -9,6 +9,7 @@ import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.file.capture.FileCapture
 import app.katari.sync.client.file.transfer.FilePlacement
+import app.katari.sync.client.file.transfer.FileTransferRule
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
@@ -56,11 +57,14 @@ import tachiyomi.core.common.util.system.logcat
  * 3. The settings and files heard but not recorded yet ([SettingsCapture.flush], [FileCapture.flush]), the outbox
  *    drained, and every change pushed.
  *    Pulling first (D021) means the push is based on the newest copies, so it is rarely refused as stale; one that is
- *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run. Records naming a
+ *    refused is pulled, merged and pushed again, a few rounds at most, then left for a later run. Records naming a
  *    custom cover or font go once the server has the file ([PushChanges]).
  * 4. Files: those queued for upload that no pushed record took along, such as after a full resync, and then the files
  *    the applied records name that aren't in place here yet ([FilePlacement]). A file that can't move now, for want
  *    of Wi-Fi or of an answer, waits for a later run without holding back any record.
+ *
+ * A run that leaves changes or files it could send or fetch now, refused as stale every round or cut off from the
+ * server while files moved, ends [SyncOutcome.UNFINISHED], and one is run again later.
  *
  * Every page, and the changes each push had acknowledged, are committed as they arrive, so a run cut off anywhere
  * loses nothing and the next one carries on. Steps that can take a while say how far they got ([SyncSteps]). A
@@ -91,6 +95,7 @@ class SyncPass(
     private val messageOutbox: MessageOutbox,
     private val messageInbox: MessageInbox,
     private val changeRule: ChangeTransferRule,
+    private val fileRule: FileTransferRule,
     // Taken after the first run that synced: a listener may send messages, and sending needs the runs that need this
     private val syncedListeners: Lazy<Set<SyncedListener>>,
 ) {
@@ -105,8 +110,8 @@ class SyncPass(
             return outcome
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
-            handOff.settle(request.entriesFirst, reached = outcome == SyncOutcome.SYNCED || outcome == SyncOutcome.IDLE)
-            if (outcome == SyncOutcome.SYNCED) {
+            handOff.settle(request.entriesFirst, reached = outcome.pulledAll || outcome == SyncOutcome.IDLE)
+            if (outcome.pulledAll) {
                 handOff.pulled()
                 tellSynced()
             }
@@ -246,6 +251,7 @@ class SyncPass(
             }
         }
         incoming.retryHeld()
+        var stale = false
         steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
             var sent = 0L
             // The files records wait for, named while they upload, the records named again once taken
@@ -257,7 +263,7 @@ class SyncPass(
                     drainAll()
                     val total = sent + pending.count()
                     progress(sent, total)
-                    val stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
+                    stale = push.pushAll(client, afterPull = round > 0, onFiles = files) { taken ->
                         sent += taken
                         progress(sent, total)
                     }
@@ -266,19 +272,25 @@ class SyncPass(
                 }
             }
         }
-        moveFiles(client)
-        return SyncOutcome.SYNCED
+        val filesMoved = moveFiles(client)
+        // A change still waiting waits for nothing a later run lacks when the server kept refusing it as stale, or when
+        // files may move, as one naming a file whose bytes changed while they were uploaded
+        val changesLeft = pending.count() > 0 && (stale || fileRule.allowsNow())
+        return if (filesMoved && !changesLeft) SyncOutcome.SYNCED else SyncOutcome.UNFINISHED
     }
 
-    private suspend fun moveFiles(client: SyncServerClient) {
+    /** Returns false when the server stopped answering midway. */
+    private suspend fun moveFiles(client: SyncServerClient): Boolean {
         try {
             steps.step(SyncStep.Kind.UPLOADING_FILES) { progress -> uploads.offerQueued(client, progress) }
             steps.step(SyncStep.Kind.DOWNLOADING_FILES) { progress -> placement.place(client, progress) }
+            return true
         } catch (e: SyncFailure.Refused) {
             throw e
         } catch (e: SyncFailure) {
-            // The records are synced; the files wait for the next run.
+            // The records are synced; the files wait for the run tried again.
             logcat(LogPriority.INFO, e) { "Synced files not moved" }
+            return false
         }
     }
 

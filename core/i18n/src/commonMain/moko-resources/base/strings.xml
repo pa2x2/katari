@@ -3244,6 +3244,8 @@
     <!-- Joins the main status and a note, such as "Up to date · 3 covers and fonts wait for Wi-Fi" -->
     <string name="sync_status_with_note">%1$s · %2$s</string>
     <string name="sync_unsent_no_connection">no connection</string>
+    <string name="sync_unsent_retrying">trying again shortly</string>
+    <string name="sync_status_unfinished">Sync didn\'t finish · trying again shortly</string>
     <string name="sync_unsent_paused">syncing paused</string>
     <!-- %1$s is the server's address -->
     <string name="sync_unsent_unreachable">can\'t reach %1$s</string>
@@ -3304,6 +3306,8 @@
     <string name="sync_guide_admin_account">Setting up the admin account</string>
     <string name="sync_live">Live</string>
     <string name="sync_live_not_working">Live updates aren\'t working</string>
+    <string name="sync_files_too_large">Covers or fonts too large for the server</string>
+    <string name="sync_files_too_large_text">The server, or a proxy in front of it, refused them for their size. Their titles synced without them, and Katari offers them again a day later. Raising the server\'s or the proxy\'s upload limit lets them through.</string>
     <string name="sync_live_not_working_text">Changes from other devices come when you open the app and every few minutes. The server may need to let WebSockets through.</string>
     <string name="sync_invite_code">Invite code</string>
     <string name="sync_choose_username">Choose a username</string>

@@ -1,0 +1,3 @@
+-- When the server refused a file as too large, so it isn't uploaded again on every sync
+-- (app/katari/sync/data/sync_files.sq).
+ALTER TABLE sync_file_uploads ADD COLUMN refused_since INTEGER;

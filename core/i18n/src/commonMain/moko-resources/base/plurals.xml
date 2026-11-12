@@ -460,6 +460,14 @@
         <item quantity="other">%d rules</item>
     </plurals>
 
+    <plurals name="sync_files_too_large">
+        <item quantity="one">%d cover or font is too large for the server</item>
+        <item quantity="other">%d covers and fonts are too large for the server</item>
+    </plurals>
+    <plurals name="sync_files_to_move">
+        <item quantity="one">%d cover or font still to move</item>
+        <item quantity="other">%d covers and fonts still to move</item>
+    </plurals>
     <plurals name="sync_files_missing">
         <item quantity="one">%d cover or font is missing on the server</item>
         <item quantity="other">%d covers and fonts are missing on the server</item>

@@ -26,6 +26,9 @@ CREATE TABLE sync_file_uploads(
     category TEXT NOT NULL,
     sha256 TEXT NOT NULL,
     size INTEGER NOT NULL,
+    -- Epoch milliseconds when the server, or a proxy in front of it, last refused the file as too large; NULL while it
+    -- hasn't.
+    refused_since INTEGER,
     PRIMARY KEY(category, sha256)
 );
 
@@ -138,11 +141,23 @@ queueUpload:
 INSERT OR IGNORE INTO sync_file_uploads(category, sha256, size)
 VALUES (:category, :sha256, :size);
 
+-- The files to offer the server: all but those it refused as too large after :refusedAfter.
 uploads:
 SELECT category, sha256, size
 FROM sync_file_uploads
+WHERE refused_since IS NULL OR refused_since <= :refusedAfter
 ORDER BY category, sha256
 LIMIT :limit;
+
+refusedSince:
+SELECT refused_since
+FROM sync_file_uploads
+WHERE category = :category AND sha256 = :sha256;
+
+refuse:
+INSERT INTO sync_file_uploads(category, sha256, size, refused_since)
+VALUES (:category, :sha256, :size, :at)
+ON CONFLICT(category, sha256) DO UPDATE SET refused_since = excluded.refused_since;
 
 uploaded:
 DELETE FROM sync_file_uploads
@@ -150,7 +165,13 @@ WHERE category = :category AND sha256 = :sha256;
 
 uploadCount:
 SELECT count(*)
-FROM sync_file_uploads;
+FROM sync_file_uploads
+WHERE refused_since IS NULL;
+
+refusedCount:
+SELECT count(*)
+FROM sync_file_uploads
+WHERE refused_since IS NOT NULL;
 
 clearUploads:
 DELETE FROM sync_file_uploads;

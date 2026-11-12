@@ -8,10 +8,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -48,6 +51,9 @@ class SyncRuns(private val pass: SyncPass, private val steps: SyncSteps) {
      * to do leaves it, so a failure stays reported until a run gets through.
      */
     val lastOutcome: StateFlow<SyncOutcome> = outcomes.asStateFlow()
+
+    /** How each run ends from now on, IDLE ones too; a collector that falls behind hears the latest. */
+    val ends: Flow<SyncOutcome> = finished.drop(1).map { it.outcome }
 
     fun request(request: SyncRequest = SyncRequest()) {
         enqueue(request)

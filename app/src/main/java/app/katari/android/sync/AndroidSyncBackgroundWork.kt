@@ -76,6 +76,17 @@ class AndroidSyncBackgroundWork(private val application: Application) : SyncBack
         application.workManager.enqueueUniqueWork(HAND_OFF, ExistingWorkPolicy.REPLACE, request)
     }
 
+    override fun retry() {
+        val request = OneTimeWorkRequestBuilder<SyncJob>()
+            .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+            .setInputData(workDataOf(SyncJob.KIND to SyncJob.RETRY))
+            .setBackoffCriteria(RETRY_BACKOFF)
+            .addTag(RETRY)
+            .build()
+        // Replacing the work would start it over without its backoff, at once after each run that leaves work.
+        application.workManager.enqueueUniqueWork(RETRY, ExistingWorkPolicy.KEEP, request)
+    }
+
     override fun longRun(onMetered: Boolean) {
         val request = OneTimeWorkRequestBuilder<SyncJob>()
             .setConstraints(
@@ -103,6 +114,8 @@ class AndroidSyncBackgroundWork(private val application: Application) : SyncBack
         const val PERIODIC = "SyncPeriodic"
         const val HAND_OFF = "SyncHandOff"
         val HAND_OFF_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
+        const val RETRY = "SyncRetry"
+        val RETRY_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
         const val LONG_RUN = "SyncLongRun"
         val LONG_RUN_BACKOFF = WorkBackoff(initialDelay = 30.seconds)
     }

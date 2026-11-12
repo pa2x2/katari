@@ -15,7 +15,11 @@ import kotlin.time.Instant
  * A real sync server in the test's process, over SQLite in [directory], always on one address: restarting it over a
  * copy of its data or over none stands for a server restored from a backup or replaced by a new one.
  */
-internal class TestSyncServer(private val directory: File, private val pageSize: Int = 3) : AutoCloseable {
+internal class TestSyncServer(
+    private val directory: File,
+    private val pageSize: Int = 3,
+    private val maxFileBytes: Long? = null,
+) : AutoCloseable {
     private val port = ServerSocket(0).use { it.localPort }
     private var data = directory.resolve("server")
     private var server: SyncServer? = null
@@ -92,7 +96,9 @@ internal class TestSyncServer(private val directory: File, private val pageSize:
     }
 
     private fun start() {
-        val config = ServerConfig.fromEnvironment(mapOf(ServerConfig.PULL_PAGE_SIZE to "$pageSize"))
+        val environment = mapOf(ServerConfig.PULL_PAGE_SIZE to "$pageSize") +
+            listOfNotNull(maxFileBytes?.let { ServerConfig.MAX_FILE_BYTES to "$it" })
+        val config = ServerConfig.fromEnvironment(environment)
             .copy(dataDirectory = data.toPath(), host = "127.0.0.1", port = port)
         server = SyncServer(config).also { it.start(wait = false) }
     }
