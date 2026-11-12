@@ -105,6 +105,61 @@ class EntryReplacementTest {
         }
 
     @Test
+    fun `a mark carried to a chapter nobody marked yet arrives with what its source listed`(): Unit = runBlocking {
+        val exchange = RecordExchange()
+        SyncTestDevice(directory.resolve("a.db")).use { a ->
+            SyncTestDevice(directory.resolve("b.db")).use { b ->
+                a.startSync(deviceId = 1)
+                b.startSync(deviceId = 2)
+                a.sql(
+                    """
+                    INSERT INTO source_identities(local_key, id_scheme, external_id)
+                    VALUES (-2, 'aniyomi', 777), (-3, 'aniyomi', 888)
+                    """,
+                    "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/old', 'Show', 1, 'anime')",
+                    """
+                    INSERT INTO chapters(_id, entry_id, url, name, chapter_number, read)
+                    VALUES (10, 1, '/old/1', 'Episode 1', 1, 1), (11, 1, '/old/2', 'Episode 2', 2, 0)
+                    """,
+                )
+                exchange.settle(listOf(a, b))
+                b.sql(
+                    "INSERT INTO chapters(entry_id, url, name, chapter_number) SELECT _id, '/old/2', 'Episode 2', 2 FROM entries",
+                )
+
+                a.sql(
+                    "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (2, -3, '/new', 'Show', 1, 'anime')",
+                    """
+                    INSERT INTO chapters(_id, entry_id, url, name, chapter_number, read, scanlator, date_upload, memo)
+                    VALUES
+                        (20, 2, '/new/1', 'Episode 1', 1, 1, NULL, 0, CAST('{}' AS BLOB)),
+                        (21, 2, '/new/2', 'Episode 2', 2, 0, 'Fansub', 3000, CAST('{"hash":"9f3c"}' AS BLOB))
+                    """,
+                    "UPDATE entries SET favorite = 0 WHERE _id = 1",
+                    """
+                    INSERT INTO entry_migration_operations(
+                        operation_id, intent_fingerprint, profile_id, source_entry_id, target_entry_id, mode, created_at
+                    )
+                    VALUES ('operation', 'REPLACE:CHILD_STATE', 1, 1, 2, 'REPLACE', 0)
+                    """,
+                )
+                a.drainAll()
+                delay(5)
+                // B hasn't heard of the migration yet, and watches the second episode, which A carries over
+                b.sql("UPDATE chapters SET read = 1 WHERE url = '/old/2'")
+                exchange.settle(listOf(a, b))
+
+                b.rows(
+                    """
+                    SELECT json_array(C.read, C.scanlator, C.date_upload, CAST(C.memo AS TEXT))
+                    FROM chapters C WHERE C.url = '/new/2'
+                    """,
+                ) shouldBe listOf("""[1,"Fansub",3000,"{\"hash\":\"9f3c\"}"]""")
+            }
+        }
+    }
+
+    @Test
     fun `a migration takes the time read along on every device, also a session from before it was heard of`(): Unit =
         runBlocking {
             val exchange = RecordExchange()

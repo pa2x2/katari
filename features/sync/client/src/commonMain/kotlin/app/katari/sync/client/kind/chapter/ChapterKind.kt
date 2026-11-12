@@ -14,11 +14,13 @@ import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
 import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
+import app.katari.sync.data.ChapterRow
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -71,39 +73,56 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             key = reads.chapterKey(entryKey, row.url),
             parents = listOf(RecordRef(EntryKind, EntryKind.ref(row.entry_id))),
         ) { previous, stamps ->
-            val read = stamps.field(3, row.read, previous?.read)
-            ChapterPayload(
+            payload(
+                row = row,
                 entryKey = entryKey,
-                url = row.url,
-                read = read,
+                read = stamps.field(3, row.read, previous?.read),
                 bookmark = stamps.field(4, row.bookmark, previous?.bookmark),
-                metadata = ChapterMetadata(
-                    name = row.name,
-                    number = row.chapter_number,
-                    scanlator = row.scanlator,
-                    dateUpload = row.date_upload,
-                ),
-                dateFetch = row.date_fetch,
-                sourceOrder = row.source_order,
-                markedReadAt = read.at.takeIf { row.read && row.marked_read },
-                // Stand-ins would replace the source's details on every device that creates the chapter from the record
-                details = if (row.placeholder_details) {
-                    previous?.details
-                } else {
-                    ChapterDetails(
-                        memo = row.memo,
-                        summary = row.summary,
-                        previewUrl = row.preview_url,
-                        kind = row.kind,
-                        group = row.group_key?.let { key ->
-                            ChapterGroup(key = key, title = row.group_title!!, position = row.group_position!!)
-                        },
-                        dateText = row.date_text,
-                    )
-                },
+                previousDetails = previous?.details,
             )
         }
     }
+
+    /**
+     * The record of the chapter [row] of [entryKey], with its marks as [read] and [bookmark]. Details the row holds
+     * only stand-ins for are [previousDetails]: stand-ins would replace the source's details on every device that
+     * creates the chapter from the record.
+     */
+    internal fun payload(
+        row: ChapterRow,
+        entryKey: String,
+        read: Stamped<Boolean>,
+        bookmark: Stamped<Boolean>,
+        previousDetails: ChapterDetails?,
+    ) = ChapterPayload(
+        entryKey = entryKey,
+        url = row.url,
+        read = read,
+        bookmark = bookmark,
+        metadata = ChapterMetadata(
+            name = row.name,
+            number = row.chapter_number,
+            scanlator = row.scanlator,
+            dateUpload = row.date_upload,
+        ),
+        dateFetch = row.date_fetch,
+        sourceOrder = row.source_order,
+        markedReadAt = read.at.takeIf { row.read && row.marked_read },
+        details = if (row.placeholder_details) {
+            previousDetails
+        } else {
+            ChapterDetails(
+                memo = row.memo,
+                summary = row.summary,
+                previewUrl = row.preview_url,
+                kind = row.kind,
+                group = row.group_key?.let { key ->
+                    ChapterGroup(key = key, title = row.group_title!!, position = row.group_position!!)
+                },
+                dateText = row.date_text,
+            )
+        },
+    )
 
     /**
      * A chapter two devices found at different times was found at the later one: a release either device shows in
