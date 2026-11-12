@@ -83,8 +83,9 @@ private class WheelScrollEndNode(var onEnd: suspend (lastStep: Offset) -> Unit) 
     }
 
     private fun waitForEnd() {
-        val step = lastStep ?: return
+        // Also once the scroll has ended and onEnd runs: a new scroll takes over from it at its first event
         ending?.cancel()
+        val step = lastStep ?: return
         if (fingersResting) return
         ending = coroutineScope.launch {
             delay(SCROLL_END_QUIET_MILLIS)

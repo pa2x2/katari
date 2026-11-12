@@ -17,7 +17,8 @@ import kotlinx.coroutines.launch
  *
  * A title a scroll left part-way goes on the way the scroll last went, as a touch fling takes it: open after a scroll
  * toward the top, collapsed after one away from it. A step toward the top that nothing scrolled by, over content
- * already there, opens it, as a drag past the top does.
+ * already there, opens it, as a drag past the top does. Either gives way to the next step that goes anywhere else, so
+ * a scroll that turns back right away isn't held at the top while the title moves.
  */
 internal fun Modifier.appBarFollowsWheel(behavior: AppBarScrollBehavior): Modifier = this
     .onWheelScrollEnd { lastStep -> behavior.settle(open = lastStep.y > 0f) }
@@ -27,11 +28,17 @@ internal fun Modifier.appBarFollowsWheel(behavior: AppBarScrollBehavior): Modifi
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Final)
+                    if (event.type == PointerEventType.Press) opening?.cancel()
                     if (event.type != PointerEventType.Scroll) continue
                     val step = event.changes.firstOrNull() ?: continue
                     // A wheel turned toward the top is a step up, the opposite of nested scrolling's sign
-                    if (step.isConsumed || step.scrollDelta.y >= 0f || opening?.isActive == true) continue
-                    opening = launch { behavior.animateTo(open = true) }
+                    val opens = !step.isConsumed && step.scrollDelta.y < 0f
+                    if (opens) {
+                        if (opening?.isActive != true) opening = launch { behavior.animateTo(open = true) }
+                    } else if (step.scrollDelta.y != 0f) {
+                        // Any other step moves the content or the title itself, and the opening would push back
+                        opening?.cancel()
+                    }
                 }
             }
         }
