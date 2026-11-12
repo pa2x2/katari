@@ -158,6 +158,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A sheet of settings split into tabs | `TabbedSheet` | |
 | A sheet's list in two parts, such as a filter's options beside its long list of languages | `SheetSplitList` | Side by side in a large window's two-column sheet, one list otherwise |
 | A short choice opened from a button, such as the profile switcher or an entry's update choices | `Popover`, `rememberPopoverAnchor` | Beside its button from medium windows on, nothing dimmed; the button marks itself with `Modifier.popoverAnchor`. A sheet in compact windows or when the button isn't on screen |
+| One thing picked from a short list opened from a button, such as the device a chapter downloads on | `PickerPopover` | A `Popover` of `PickerChoice` rows, headed by what the pick is for; a choice that can't be picked says why; `onBack` for a later step of the same pick, such as how much to download |
 | A sheet that explains one item, such as an engine or a library | `DetailsSheet`, `DetailsSection` | |
 | What a source says about one chapter or episode | `ChapterSheet` | |
 | A dialog | `Dialog`, `DialogActions` | |

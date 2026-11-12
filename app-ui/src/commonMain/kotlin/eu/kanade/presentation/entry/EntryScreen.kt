@@ -133,6 +133,7 @@ fun EntryScreen(
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
+    downloadElsewhere: EntryDownloadElsewhere?,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
     updatesAnchor: PopoverAnchor,
@@ -222,6 +223,7 @@ fun EntryScreen(
             onShareClicked = onShareClicked,
             onDownloadActionClicked = onDownloadActionClicked,
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+            downloadElsewhere = downloadElsewhere,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
             updatesAnchor = updatesAnchor,
@@ -283,6 +285,7 @@ fun EntryScreen(
             onShareClicked = onShareClicked,
             onDownloadActionClicked = onDownloadActionClicked,
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+            downloadElsewhere = downloadElsewhere,
             onEditCategoryClicked = onEditCategoryClicked,
             onUpdatesClicked = onUpdatesClicked,
             updatesAnchor = updatesAnchor,
@@ -354,6 +357,7 @@ private fun EntryScreenSmallImpl(
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
+    downloadElsewhere: EntryDownloadElsewhere?,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
     updatesAnchor: PopoverAnchor,
@@ -419,6 +423,7 @@ private fun EntryScreenSmallImpl(
         onDownloadChapter = onDownloadChapter,
         translation = translation,
         onMultiDeleteClicked = onMultiDeleteClicked,
+        onClearSelection = { onAllChapterSelected(false) },
     )
     val chapterSelection = ItemSelection(
         active = isAnySelected,
@@ -452,6 +457,7 @@ private fun EntryScreenSmallImpl(
                 onClickShare = onShareClicked,
                 onClickDownload = onDownloadActionClicked,
                 bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+                downloadElsewhere = downloadElsewhere,
                 onClickEditCategory = onEditCategoryClicked,
                 onClickEditDisplayName = onEditDisplayNameClicked,
                 onClickManageMerge = onManageMergeClicked,
@@ -701,6 +707,7 @@ fun EntryScreenLargeImpl(
     onShareClicked: (() -> Unit)?,
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
+    downloadElsewhere: EntryDownloadElsewhere?,
     onEditCategoryClicked: (() -> Unit)?,
     onUpdatesClicked: (() -> Unit)?,
     updatesAnchor: PopoverAnchor,
@@ -770,6 +777,7 @@ fun EntryScreenLargeImpl(
         onDownloadChapter = onDownloadChapter,
         translation = translation,
         onMultiDeleteClicked = onMultiDeleteClicked,
+        onClearSelection = { onAllChapterSelected(false) },
     )
     val chapterSelection = ItemSelection(
         active = isAnySelected,
@@ -790,6 +798,7 @@ fun EntryScreenLargeImpl(
                 onClickShare = onShareClicked,
                 onClickDownload = onDownloadActionClicked,
                 bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+                downloadElsewhere = downloadElsewhere,
                 onClickEditCategory = onEditCategoryClicked,
                 onClickEditDisplayName = onEditDisplayNameClicked,
                 onClickManageMerge = onManageMergeClicked,
@@ -1014,6 +1023,7 @@ private fun sharedChapterSelectionActions(
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     translation: EntryChapterTranslationUi?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
+    onClearSelection: () -> Unit,
 ): SelectionActions {
     val presentationFeature = LocalAppUiGraph.current.entryTypePresentationFeature
     val selectionTypes = remember(selected) { selected.fastMap { it.entry.type } }
@@ -1067,6 +1077,12 @@ private fun sharedChapterSelectionActions(
         }?.takeIf {
             selected.fastAny { translation.statuses[it.id] == EntryTranslateStatus.Translated }
         },
+        downloadElsewhere = if (onDownloadChapter != null && selected.isNotEmpty()) {
+            entryChaptersElsewhere(selected)
+        } else {
+            null
+        },
+        onDownloadElsewhereOpened = onClearSelection,
     )
 }
 
@@ -1207,6 +1223,7 @@ private fun LazyListScope.sharedChapterItems(
                     },
                     translateStatusProvider = { translation?.statuses?.get(item.id) },
                     onTranslateClick = translation?.let { ui -> { action -> ui.onAction(listOf(item), action) } },
+                    downloadElsewhere = if (onDownloadChapter != null) entryChaptersElsewhere(listOf(item)) else null,
                 )
             }
         }

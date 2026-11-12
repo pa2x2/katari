@@ -39,7 +39,7 @@ class DownloadTargets(
     private val handler: DatabaseHandler,
     private val preferences: SyncPreferences,
 ) {
-    /** Nothing while this device isn't linked. [pkgName] is the entry's extension, null when no extension provides it. */
+    /** None while this device isn't linked. [pkgName] is the entry's extension, null when none provides it. */
     fun of(pkgName: String?): Flow<List<DownloadTarget>> = combine(
         connection.states(),
         directory.devices(),

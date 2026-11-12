@@ -6,6 +6,7 @@ import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.client.showRows
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -32,6 +33,7 @@ class DownloadRequestDeliveryTest {
                         val show = phone.entryId("/show")
 
                         phone.downloadRequestSending.requestable(listOf(show)) shouldBe setOf(show)
+                        phone.syncedEntries.syncing().first() shouldBe setOf(show)
                         val chapters = listOf(
                             ChapterToRequest(show, "/show/2", "Episode 2"),
                             ChapterToRequest(show, "/show/3", "Episode 3"),
@@ -71,6 +73,7 @@ class DownloadRequestDeliveryTest {
                 phone.sync() shouldBe SyncOutcome.SYNCED
 
                 phone.downloadRequestSending.requestable(listOf(phone.entryId("/show"))).shouldBeEmpty()
+                phone.syncedEntries.syncing().first().shouldBeEmpty()
             }
         }
     }

@@ -12,6 +12,7 @@ import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.BookmarkAdd
 import app.katari.icons.materialsymbols.rounded.BookmarkRemove
 import app.katari.icons.materialsymbols.rounded.Delete
+import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.DoneAll
 import app.katari.icons.materialsymbols.rounded.Download
 import app.katari.icons.materialsymbols.rounded.RemoveDone
@@ -19,6 +20,9 @@ import app.katari.icons.materialsymbols.rounded.Translate
 import app.katari.presentation.kit.navigation.SelectionActionBar
 import app.katari.presentation.kit.selection.ItemAction
 import app.katari.presentation.kit.selection.SelectionActions
+import app.katari.sync.ui.download.DownloadElsewhereRequest
+import app.katari.sync.ui.download.LocalDownloadElsewhere
+import app.katari.sync.ui.download.label
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -39,7 +43,10 @@ fun EntryBottomActionMenu(
     }
 }
 
-/** The actions on selected chapters or episodes, for their bar and for their rows' right-click menus. */
+/**
+ * The actions on selected chapters or episodes, for their bar and for their rows' right-click menus. Asking another
+ * device to download them ([downloadElsewhere]) sits behind More, and [onDownloadElsewhereOpened] ends the selection.
+ */
 @Composable
 fun chapterSelectionActions(
     onBookmarkClicked: (() -> Unit)? = null,
@@ -56,6 +63,8 @@ fun chapterSelectionActions(
     onDeleteClicked: (() -> Unit)? = null,
     onTranslateClicked: (() -> Unit)? = null,
     onDeleteTranslationClicked: (() -> Unit)? = null,
+    downloadElsewhere: DownloadElsewhereRequest? = null,
+    onDownloadElsewhereOpened: () -> Unit = {},
 ): SelectionActions {
     val actions = listOfNotNull(
         onBookmarkClicked?.let {
@@ -83,7 +92,20 @@ fun chapterSelectionActions(
             ItemAction(stringResource(MR.strings.action_delete), MaterialSymbols.Rounded.Delete, it)
         },
     )
+    val elsewhere = LocalDownloadElsewhere.current
     val overflow = listOfNotNull(
+        downloadElsewhere?.let { request ->
+            elsewhere?.offer(request.entryIds)?.let { offer ->
+                ItemAction(
+                    label = offer.label(),
+                    icon = MaterialSymbols.Rounded.Devices,
+                    onClick = {
+                        elsewhere.open(request, anchor = null)
+                        onDownloadElsewhereOpened()
+                    },
+                )
+            }
+        },
         onDeleteTranslationClicked?.let {
             ItemAction(stringResource(MR.strings.action_delete_translation), MaterialSymbols.Rounded.Delete, it)
         },

@@ -4,6 +4,9 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.record.LocalRef
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import tachiyomi.data.DatabaseHandler
 
 /**
@@ -18,6 +21,11 @@ class SyncedEntries(private val handler: DatabaseHandler) {
             ?.takeIf { !it.deleted }
             ?.record_key
     }
+
+    /** The entries that sync, and each change to them, as a new one in the library joins once its record is stored. */
+    fun syncing(): Flow<Set<Long>> = handler.subscribeToList { sync_recordsQueries.liveLocalRefs(EntryKind.name) }
+        .map { refs -> refs.mapTo(mutableSetOf()) { LocalRef(it).long(0) } }
+        .distinctUntilChanged()
 
     /** The entry here whose record has [key]; null while that record hasn't come, or its entry is gone. */
     suspend fun entryOf(key: String): Long? = handler.await {

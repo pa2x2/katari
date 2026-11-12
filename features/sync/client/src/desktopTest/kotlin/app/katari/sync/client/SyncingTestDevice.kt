@@ -104,7 +104,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
     /** The download requests other devices sent here, as this device carried them out once their entry was here. */
     val downloadRequests: MutableList<ReceivedDownloadRequest> = Collections.synchronizedList(mutableListOf())
-    private val syncedEntries = SyncedEntries(local.handler)
+    val syncedEntries = SyncedEntries(local.handler)
     val downloadRequestInbox = DownloadRequestInbox(local.handler, connection, syncedEntries, directory) { request ->
         downloadRequests += request
         DownloadRequestResult.DONE

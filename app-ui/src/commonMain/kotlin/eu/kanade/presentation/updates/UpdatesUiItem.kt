@@ -211,6 +211,7 @@ internal fun UnifiedUpdatesUiItem(
                     translateStatusProvider = { translateStatusOf(item) },
                     onTranslateClick = { action: ChapterTranslateAction -> onTranslateChapter(item, action) }
                         .takeIf { isTranslateApplicable(item) },
+                    downloadElsewhere = updatesDownloadElsewhere(listOf(item)),
                 )
             }
         } else {
