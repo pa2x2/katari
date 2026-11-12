@@ -10,7 +10,9 @@ CREATE TABLE sync_devices(
     app_version TEXT NOT NULL DEFAULT '',
     -- Epoch milliseconds of its last call to the server, 0 when it made none.
     last_seen_at INTEGER NOT NULL DEFAULT 0,
-    synced_up_to INTEGER NOT NULL DEFAULT 0
+    synced_up_to INTEGER NOT NULL DEFAULT 0,
+    -- The kinds of message it acts on, one per line, so a message is offered only to devices that take it.
+    message_kinds TEXT NOT NULL DEFAULT ''
 );
 
 all:
@@ -19,8 +21,8 @@ FROM sync_devices
 ORDER BY position;
 
 insert:
-INSERT INTO sync_devices(device_id, name, position, platform, app_version, last_seen_at, synced_up_to)
-VALUES (:deviceId, :name, :position, :platform, :appVersion, :lastSeenAt, :syncedUpTo);
+INSERT INTO sync_devices(device_id, name, position, platform, app_version, last_seen_at, synced_up_to, message_kinds)
+VALUES (:deviceId, :name, :position, :platform, :appVersion, :lastSeenAt, :syncedUpTo, :messageKinds);
 
 rename:
 UPDATE sync_devices

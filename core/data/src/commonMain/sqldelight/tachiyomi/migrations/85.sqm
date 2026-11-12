@@ -1,0 +1,2 @@
+-- The kinds of message each of the account's devices acts on (app/katari/sync/data/sync_devices.sq).
+ALTER TABLE sync_devices ADD COLUMN message_kinds TEXT NOT NULL DEFAULT '';

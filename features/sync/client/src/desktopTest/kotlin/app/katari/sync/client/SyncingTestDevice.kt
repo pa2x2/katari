@@ -26,6 +26,7 @@ import app.katari.sync.client.handoff.LastReadDevices
 import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdates
 import app.katari.sync.client.message.DeviceMessaging
 import app.katari.sync.client.message.MessageHandler
+import app.katari.sync.client.message.MessageHandlers
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.part.SyncChoiceChanges
@@ -70,7 +71,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val clients = SyncServerClients { http }
     val connection = SyncConnection(local.handler, tokens)
     private val capture = SyncCapture(local.handler, local.temporarySchema, local.settingsCapture, local.fileCapture)
-    private val directory = DeviceDirectory(local.handler)
+    val directory = DeviceDirectory(local.handler)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff, directory)
     val lastReadDevices = LastReadDevices(local.handler, connection, directory)
@@ -90,23 +91,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     private val fileRule = FileTransferRule(network, preferences)
     private val changeRule = ChangeTransferRule(network, preferences)
     private val uploads = FileUploads(local.handler, local.ownedFiles, fileRule)
-    val naming = DeviceNaming(
-        object : ThisDevice {
-            override fun platformName() = file.nameWithoutExtension
-
-            override val platform = "Linux"
-
-            override val appVersion get() = local.appVersion
-        },
-        preferences,
-    )
-    val steps = SyncSteps()
-    private val messageOutbox = MessageOutbox(local.handler)
 
     /** The text of each note another device sent here, as its handler took it. */
     val notes: MutableList<String> = Collections.synchronizedList(mutableListOf())
-    private val messageInbox = MessageInbox(
-        connection,
+    private val messageHandlers = MessageHandlers(
         lazyOf(
             setOf(
                 object : MessageHandler {
@@ -121,6 +109,21 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             ),
         ),
     )
+    val naming = DeviceNaming(
+        object : ThisDevice {
+            override fun platformName() = file.nameWithoutExtension
+
+            override val platform = "Linux"
+
+            override val appVersion get() = local.appVersion
+        },
+        preferences,
+        messageHandlers,
+    )
+    val steps = SyncSteps()
+    private val messageOutbox = MessageOutbox(local.handler)
+
+    private val messageInbox = MessageInbox(connection, messageHandlers)
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
@@ -230,7 +233,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.close()
     }
 
-    private companion object {
+    companion object {
+        /** The only kind of message a test device takes. */
         const val NOTE = "note"
     }
 

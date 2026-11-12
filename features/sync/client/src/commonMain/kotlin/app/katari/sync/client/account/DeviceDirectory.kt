@@ -47,6 +47,7 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
                     appVersion = device.description.appVersion,
                     lastSeenAt = device.lastSeenMillis,
                     syncedUpTo = device.syncedUpTo,
+                    messageKinds = device.description.messageKinds.joinToString(KINDS_SEPARATOR),
                 )
             }
         }
@@ -64,7 +65,12 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
             val id = DeviceId(row.device_id)
             LinkedDevice(
                 id = id,
-                description = DeviceDescription(name = row.name, platform = row.platform, appVersion = row.app_version),
+                description = DeviceDescription(
+                    name = row.name,
+                    platform = row.platform,
+                    appVersion = row.app_version,
+                    messageKinds = row.message_kinds.split(KINDS_SEPARATOR).filter { it.isNotEmpty() },
+                ),
                 lastSeenMillis = row.last_seen_at,
                 syncedUpTo = row.synced_up_to,
                 connected = id in connected,
@@ -118,4 +124,9 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
         ?: handler.awaitList { sync_devicesQueries.all() }
             .associate { DeviceId(it.device_id) to it.name }
             .also { known = it }
+
+    private companion object {
+        // The server takes no kind with a line break in it
+        const val KINDS_SEPARATOR = "\n"
+    }
 }
