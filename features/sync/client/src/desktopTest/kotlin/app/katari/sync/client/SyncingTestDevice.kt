@@ -24,6 +24,10 @@ import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.handoff.LastReadDevices
 import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdates
+import app.katari.sync.client.message.DeviceMessaging
+import app.katari.sync.client.message.MessageHandler
+import app.katari.sync.client.message.MessageInbox
+import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.UngroupedRecords
 import app.katari.sync.client.resync.FullResync
@@ -41,13 +45,17 @@ import app.katari.sync.client.trigger.LiveUpdates
 import app.katari.sync.client.trigger.LocalChanges
 import app.katari.sync.client.trigger.SyncBackgroundWork
 import app.katari.sync.client.trigger.SyncTriggers
+import app.katari.sync.protocol.message.DeviceMessage
+import app.katari.sync.protocol.message.MessageBody
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import java.util.Collections
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 
 /**
  * A [SyncTestDevice] with sync's transport wired as the app wires it, talking to a real server over [http]: a test
@@ -91,6 +99,24 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         preferences,
     )
     val steps = SyncSteps()
+    private val messageOutbox = MessageOutbox(local.handler)
+
+    /** The text of each note another device sent here, as its handler took it. */
+    val notes: MutableList<String> = Collections.synchronizedList(mutableListOf())
+    private val messageInbox = MessageInbox(
+        connection,
+        setOf(
+            object : MessageHandler {
+                override val kind = NOTE
+
+                override val version = 1
+
+                override suspend fun handle(message: DeviceMessage) {
+                    notes += message.body.payload.decodeToString()
+                }
+            },
+        ),
+    )
     val runs = SyncRuns(
         SyncPass(
             connection, clients, network, preferences, firstSync, resync,
@@ -108,9 +134,12 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             disconnection,
             steps,
             UngroupedRecords(local.handler),
+            messageOutbox,
+            messageInbox,
         ),
         steps,
     )
+    val messaging = DeviceMessaging(connection, messageOutbox, runs)
     val choiceChanges = SyncChoiceChanges(
         local.handler,
         preferences,
@@ -125,7 +154,16 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         clients, connection, tokens, naming, capture, runs, resync, firstSync, directory, disconnection,
         deviceChanges,
     )
-    private val live = LiveUpdates(connection, clients, network, runs, deviceChanges, handOff, preferences)
+    private val live = LiveUpdates(
+        connection,
+        clients,
+        network,
+        runs,
+        deviceChanges,
+        handOff,
+        preferences,
+        messageInbox,
+    )
     val triggers = SyncTriggers(
         runs,
         live,
@@ -159,6 +197,11 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
     suspend fun sync(): SyncOutcome = runs.runAndWait()
 
+    suspend fun sendNote(text: String, to: SyncingTestDevice) {
+        val body = MessageBody(kind = NOTE, kindVersion = 1, payload = text.encodeToByteArray())
+        messaging.send(to.connection.state().device, body, lifetime = 1.hours)
+    }
+
     /** A client of the account this device is linked to, for a test to look at the server's side. */
     suspend fun client(): SyncServerClient =
         clients.of(checkNotNull(connection.state().server), checkNotNull(connection.token()))
@@ -175,6 +218,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         // Joining and changing a sync choice start runs a test may not wait for; closing the database under one fails
         runBlocking { runs.awaitIdle() }
         local.close()
+    }
+
+    private companion object {
+        const val NOTE = "note"
     }
 
     private class MemoryTokens : DeviceTokenStore {

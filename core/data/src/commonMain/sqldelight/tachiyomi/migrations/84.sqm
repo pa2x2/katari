@@ -1,0 +1,13 @@
+-- The last message from another device handled here (app/katari/sync/data/sync_state.sq), and the messages to the
+-- account's other devices waiting to go (app/katari/sync/data/sync_message_outbox.sq).
+ALTER TABLE sync_state ADD COLUMN messages_handled INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE sync_message_outbox(
+    seq INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    target_device_id INTEGER,
+    kind TEXT NOT NULL,
+    kind_version INTEGER NOT NULL,
+    payload BLOB NOT NULL,
+    replaces TEXT NOT NULL,
+    expires_at INTEGER NOT NULL
+);

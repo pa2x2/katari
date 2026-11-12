@@ -12,6 +12,8 @@ import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileUploads
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
+import app.katari.sync.client.message.MessageInbox
+import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.PendingChanges
@@ -51,7 +53,9 @@ import tachiyomi.core.common.util.system.logcat
  *    Pulling first (D021) means the push is based on the newest copies, so it is rarely refused as stale; one that is
  *    refused is pulled, merged and pushed again, a few rounds at most, then left for the next run. Records naming a
  *    custom cover or font go once the server has the file ([PushChanges]).
- * 4. Files: those queued for upload that no pushed record took along, such as after a full resync, and then the files
+ * 4. Messages: those waiting to go to the account's other devices ([MessageOutbox]), then those waiting for this one
+ *    ([MessageInbox]).
+ * 5. Files: those queued for upload that no pushed record took along, such as after a full resync, and then the files
  *    the applied records name that aren't in place here yet ([FilePlacement]). A file that can't move now, for want
  *    of Wi-Fi or of an answer, waits for a later run without holding back any record.
  *
@@ -81,6 +85,8 @@ class SyncPass(
     private val disconnection: Disconnection,
     private val steps: SyncSteps,
     private val ungrouped: UngroupedRecords,
+    private val messageOutbox: MessageOutbox,
+    private val messageInbox: MessageInbox,
 ) {
     /**
      * Runs [request], calling [working] once it is found to have work to do with the server: a run that stops before,
@@ -233,6 +239,8 @@ class SyncPass(
                 }
             }
         }
+        messageOutbox.deliver(client)
+        messageInbox.fetch(client)
         moveFiles(client)
         return SyncOutcome.SYNCED
     }
@@ -281,7 +289,7 @@ class SyncPass(
         settings.flush()
         fileCapture.flush()
         drainAll()
-        return pending.count() > 0
+        return pending.count() > 0 || messageOutbox.count() > 0
     }
 
     private suspend fun drainAll() {
