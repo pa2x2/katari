@@ -93,15 +93,17 @@ internal class ApplySession(
 
     /**
      * Applies again what waits for a reason that may have passed: an update, the clock, a reference, a profile. A
-     * record held aside after failing whose copy here already holds what was received is written from that copy,
-     * which keeps the edits it has waiting to be pushed; a newer one received is merged first.
+     * record whose copy here already holds what was received is written from that copy, which keeps the edits it has
+     * waiting to be pushed and the server copy it is based on: a record held after it was merged, or one this device
+     * pushed an edit of since, would otherwise be based on the older copy held again, and its next push refused as
+     * stale. A newer one received is merged first.
      */
     suspend fun retryHeld() {
         database.sync_pendingQueries.retryable(appVersion).awaitAsList().forEach { held ->
             database.sync_pendingQueries.release(held.record_key)
             val record = ProtoBuf.decodeFromByteArray(SequencedRecord.serializer(), held.record)
             val stored = database.sync_recordsQueries.getByKey(held.record_key).awaitAsOneOrNull()
-            if (held.reason == HoldReason.FAILED.stored && stored != null && stored.based_on >= record.sequence) {
+            if (stored != null && stored.based_on >= record.sequence) {
                 reapply(held.record_key, held)
             } else {
                 receive(record)
