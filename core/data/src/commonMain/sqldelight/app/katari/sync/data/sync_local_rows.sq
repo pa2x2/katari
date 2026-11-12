@@ -42,6 +42,7 @@ SELECT
     Entry.background_url,
     Entry.memo,
     Entry.update_strategy,
+    EXISTS (SELECT 1 FROM entries_placeholder_details WHERE entry_id = Entry._id) AS placeholder_details,
     Name.name AS source_name
 FROM entries Entry
 JOIN profiles P ON P._id = Entry.profile_id
@@ -53,7 +54,8 @@ chapterRow:
 SELECT C.entry_id, C.url, C.read, C.bookmark, C.name, C.chapter_number, C.scanlator, C.date_upload, C.date_fetch,
     C.source_order, C.memo, C.summary, C.preview_url, C.kind, C.date_text, G.group_key, G.title AS group_title,
     G.position AS group_position,
-    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = C._id) AS marked_read
+    EXISTS (SELECT 1 FROM chapters_marked_read WHERE chapter_id = C._id) AS marked_read,
+    EXISTS (SELECT 1 FROM chapters_placeholder_details WHERE chapter_id = C._id) AS placeholder_details
 FROM chapters C
 LEFT JOIN chapter_groups G ON G.entry_id = C.entry_id AND G.group_key = C.group_key
 WHERE C._id = :chapterId;

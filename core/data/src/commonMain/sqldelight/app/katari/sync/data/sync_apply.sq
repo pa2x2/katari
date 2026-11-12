@@ -56,6 +56,26 @@ VALUES (
 )
 RETURNING _id;
 
+-- An entry created from a record that carried none of its source's details holds stand-ins until one does.
+notePlaceholderEntryDetails:
+INSERT INTO entries_placeholder_details(entry_id)
+VALUES (:entryId);
+
+entryHoldsPlaceholderDetails:
+SELECT count(*) > 0
+FROM entries_placeholder_details
+WHERE entry_id = :entryId;
+
+fillEntryDetails {
+    UPDATE entries
+    SET memo = :memo,
+        update_strategy = :updateStrategy
+    WHERE _id = :entryId;
+
+    DELETE FROM entries_placeholder_details
+    WHERE entry_id = :entryId;
+}
+
 updateEntry:
 UPDATE entries
 SET favorite = :favorite,
@@ -169,6 +189,34 @@ RETURNING _id;
 addChapterGroup:
 INSERT OR IGNORE INTO chapter_groups(entry_id, group_key, title, position)
 VALUES (:entryId, :groupKey, :title, :position);
+
+-- A chapter created from a record that carried none of its source's details holds stand-ins until one does.
+notePlaceholderChapterDetails:
+INSERT INTO chapters_placeholder_details(chapter_id)
+VALUES (:chapterId);
+
+chapterHoldsPlaceholderDetails:
+SELECT count(*) > 0
+FROM chapters_placeholder_details
+WHERE chapter_id = :chapterId;
+
+-- Its group's place is copied from the group's row, which addChapterGroup writes first.
+fillChapterDetails {
+    UPDATE chapters
+    SET memo = :memo,
+        summary = :summary,
+        preview_url = :previewUrl,
+        kind = :kind,
+        group_key = :groupKey,
+        group_position = (
+            SELECT position FROM chapter_groups WHERE entry_id = chapters.entry_id AND group_key = :groupKey
+        ),
+        date_text = :dateText
+    WHERE _id = :chapterId;
+
+    DELETE FROM chapters_placeholder_details
+    WHERE chapter_id = :chapterId;
+}
 
 -- The time the chapter was found is the one every device agrees on, when the record has one.
 updateChapterMarks:

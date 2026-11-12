@@ -16,6 +16,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.JsonObject
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
@@ -80,7 +81,9 @@ class EntryRestorer(
             val dbEntry = findExistingEntry(profileId, backupEntry)
             val entry = backupEntry.toEntry().copy(profileId = profileId)
             val restoredEntry = if (dbEntry == null) {
-                entry.copy(id = entryRepository.insert(entry, profileId))
+                entry.copy(id = entryRepository.insert(entry, profileId)).also {
+                    entries_placeholder_detailsQueries.noteRestoredStandIns(it.id)
+                }
             } else {
                 restoreExistingEntry(profileId, entry, dbEntry)
             }
@@ -216,7 +219,15 @@ class EntryRestorer(
     private suspend fun restoreChapters(entry: Entry, backupChapters: List<BackupChapter>) {
         val dbChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
         val groupPositions = entryChapterGroupRepository.getByEntryId(entry.id).associate { it.key to it.position }
-        entryChapterRepository.insertOrUpdate(restoredChapters(entry.id, backupChapters, dbChapters, groupPositions))
+        val storedUrls = dbChapters.mapTo(HashSet(), EntryChapter::url)
+        val restored = entryChapterRepository.insertOrUpdate(
+            restoredChapters(entry.id, backupChapters, dbChapters, groupPositions),
+        )
+        // A backup made where sync had created chapters from records without their details holds those stand-ins
+        val created = restored.filter { it.url !in storedUrls }.map(EntryChapter::id)
+        handler.await {
+            created.chunkedForSqlQuery().forEach { chapters_placeholder_detailsQueries.noteRestoredStandIns(it) }
+        }
     }
 
     private suspend fun restoreHistory(entry: Entry, backupHistory: List<BackupHistory>) {

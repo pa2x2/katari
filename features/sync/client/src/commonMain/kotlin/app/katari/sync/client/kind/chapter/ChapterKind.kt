@@ -10,6 +10,7 @@ import app.katari.sync.client.apply.idOr
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.capture.CaptureTrigger.Event
 import app.katari.sync.client.capture.CaptureTrigger.Field
+import app.katari.sync.client.capture.CaptureTrigger.Owner
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.fieldOfNewer
 import app.katari.sync.client.merge.latest
@@ -26,7 +27,9 @@ import kotlinx.serialization.json.JsonObject
  * Rows come from source refreshes, which are no change but for what they find: read and bookmark are captured, and a
  * new row when it arrives already marked (a restore, a migration) or when a refresh found it as a new release of an
  * entry in the Library, which Updates shows, so every device shows it there without refreshing the entry first. A
- * chapter the source dropped keeps its record, since a refresh never deletes anything on other devices.
+ * refresh that lists a chapter holding stand-ins for the source's details (`chapters_placeholder_details`) has its
+ * record read again, as no edit. A chapter the source dropped keeps its record, since a refresh never deletes anything
+ * on other devices.
  */
 object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPayload.serializer(), Absence.KEEP) {
     override val capture = listOf(
@@ -48,6 +51,14 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
         ),
         // Marking a chapter read notes it right after writing the read, which a drain may already have taken
         CaptureTrigger("chapters_marked_read", Event.INSERT, listOf("NEW.chapter_id"), personsEdit = false),
+        // The source listed a chapter that held stand-ins for its details, so devices that create it get the source's
+        CaptureTrigger(
+            "chapters_placeholder_details",
+            Event.DELETE,
+            listOf("OLD.chapter_id"),
+            owners = listOf(Owner.chapter()),
+            personsEdit = false,
+        ),
     )
 
     fun ref(chapterId: Long): LocalRef = LocalRef.of(chapterId)
@@ -75,16 +86,21 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 dateFetch = row.date_fetch,
                 sourceOrder = row.source_order,
                 markedReadAt = read.at.takeIf { row.read && row.marked_read },
-                details = ChapterDetails(
-                    memo = row.memo,
-                    summary = row.summary,
-                    previewUrl = row.preview_url,
-                    kind = row.kind,
-                    group = row.group_key?.let { key ->
-                        ChapterGroup(key = key, title = row.group_title!!, position = row.group_position!!)
-                    },
-                    dateText = row.date_text,
-                ),
+                // Stand-ins would replace the source's details on every device that creates the chapter from the record
+                details = if (row.placeholder_details) {
+                    previous?.details
+                } else {
+                    ChapterDetails(
+                        memo = row.memo,
+                        summary = row.summary,
+                        previewUrl = row.preview_url,
+                        kind = row.kind,
+                        group = row.group_key?.let { key ->
+                            ChapterGroup(key = key, title = row.group_title!!, position = row.group_position!!)
+                        },
+                        dateText = row.date_text,
+                    )
+                },
             )
         }
     }
@@ -101,7 +117,8 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
             bookmark = latest(local.bookmark, incoming.bookmark),
             metadata = fieldOfNewer(serializer, local, incoming) { it.metadata },
             dateFetch = maxOf(local.dateFetch, incoming.dateFetch),
-            // A copy from a device that doesn't know the place or the details never takes them away
+            // A copy from a device that doesn't know the place or the details, or holds only stand-ins for the details,
+            // never takes them away
             sourceOrder = fieldOfNewer(serializer, local, incoming) { it.sourceOrder }
                 ?: local.sourceOrder
                 ?: incoming.sourceOrder,
@@ -112,20 +129,24 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
     /**
      * Creates the row, and its group when this device lists none of that key, from the record's metadata and details
      * when the entry wasn't refreshed here, where the record's device has it in the list; a refresh overrides all but
-     * when it was found, which every device takes from the record.
+     * when it was found, which every device takes from the record. A row that holds stand-ins a record without details
+     * left (`chapters_placeholder_details`) takes the details of the first record that carries them.
      */
     override suspend fun apply(writes: LocalWrites, key: String, payload: ChapterPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.entryKey).idOr { return it }
         val queries = writes.database.sync_applyQueries
         val metadata = payload.metadata
+        val details = payload.details
         val existing = queries.chapterId(entryId, payload.url).awaitAsOneOrNull()
+        val written = details?.takeIf {
+            existing == null || queries.chapterHoldsPlaceholderDetails(existing).awaitAsOne()
+        }
+        written?.group?.let { queries.addChapterGroup(entryId, it.key, it.title, it.position) }
         val chapterId = if (existing == null) {
             val place = payload.sourceOrder
             if (place != null && queries.chapterHoldsPlace(entryId, place).awaitAsOne()) {
                 queries.freeChapterPlace(entryId, place).await()
             }
-            val details = payload.details
-            details?.group?.let { queries.addChapterGroup(entryId, it.key, it.title, it.position) }
             queries.insertChapter(
                 entryId = entryId,
                 url = payload.url,
@@ -143,8 +164,19 @@ object ChapterKind : SyncedKind<ChapterPayload>(LocalReads.CHAPTER, 1, ChapterPa
                 kind = details?.kind ?: 0,
                 groupKey = details?.group?.key,
                 dateText = details?.dateText,
-            ).awaitAsOne()
+            ).awaitAsOne().also { if (details == null) queries.notePlaceholderChapterDetails(it) }
         } else {
+            written?.let {
+                queries.fillChapterDetails(
+                    memo = it.memo,
+                    summary = it.summary,
+                    previewUrl = it.previewUrl,
+                    kind = it.kind,
+                    groupKey = it.group?.key,
+                    dateText = it.dateText,
+                    chapterId = existing,
+                ).await()
+            }
             val wasRead = queries.chapterRead(existing).awaitAsOne()
             queries.updateChapterMarks(
                 read = payload.read.value,

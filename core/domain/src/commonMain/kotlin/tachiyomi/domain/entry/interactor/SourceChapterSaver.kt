@@ -260,6 +260,7 @@ internal class SourceChapterSaver(
                 removedIds = chaptersToRemove,
                 updated = chaptersToUpdate,
                 inserted = chaptersToInsert,
+                listedIds = matchedChapterIds,
                 afterUpdates = {
                     if (groupsChanged) entryChapterGroupRepository.replace(entry.id, finalGroups)
                     progressResourcesToRekey.forEach { rekey ->

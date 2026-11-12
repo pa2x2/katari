@@ -243,14 +243,14 @@ class ChapterListPartsSyncTest {
         // Applies writes the way the real repository does, in order, giving inserted chapters ids
         private val chapterRepository: EntryChapterRepository = mockk(relaxed = true) {
             coEvery { getChaptersByEntryIdAwait(1L, any()) } answers { chapters }
-            coEvery { applySourceSync(any(), any(), any(), any(), any()) } coAnswers {
+            coEvery { applySourceSync(any(), any(), any(), any(), any(), any()) } coAnswers {
                 val removed = firstArg<List<Long>>().toSet()
                 val updated = secondArg<List<EntryChapter>>().associateBy(EntryChapter::id)
                 chapters = chapters.filterNot { it.id in removed }.map { updated[it.id] ?: it }
-                arg<suspend () -> Unit>(3).invoke()
+                arg<suspend () -> Unit>(4).invoke()
                 val inserted = thirdArg<List<EntryChapter>>().map { it.copy(id = nextId++) }
                 chapters = chapters + inserted
-                arg<suspend (List<EntryChapter>) -> Unit>(4).invoke(inserted)
+                arg<suspend (List<EntryChapter>) -> Unit>(5).invoke(inserted)
                 inserted
             }
         }

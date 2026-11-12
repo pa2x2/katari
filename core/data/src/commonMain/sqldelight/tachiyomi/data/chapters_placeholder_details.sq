@@ -1,0 +1,26 @@
+-- Chapters whose memo, summary, preview_url, kind, group and date_text are stand-ins: sync created them from a record
+-- that carried none of their source's details (app/katari/sync/data/sync_apply.sq), or a backup restored them holding
+-- exactly those, so their extension can't rely on them and sync doesn't send them on. The source listing the chapter,
+-- or a record that carries them, ends that.
+CREATE TABLE chapters_placeholder_details(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE
+);
+
+listedBySource:
+DELETE FROM chapters_placeholder_details
+WHERE chapter_id IN :chapterIds;
+
+-- A backup doesn't say whether a chapter's details were stand-ins, so a chapter it restores anew is taken for one when
+-- it holds exactly those, as every chapter was when this table came (migrations/86.sqm).
+noteRestoredStandIns:
+INSERT INTO chapters_placeholder_details(chapter_id)
+SELECT _id
+FROM chapters
+WHERE _id IN :chapterIds
+AND CAST(memo AS TEXT) = '{}'
+AND summary IS NULL
+AND preview_url IS NULL
+AND kind = 0
+AND group_key IS NULL
+AND date_text IS NULL;

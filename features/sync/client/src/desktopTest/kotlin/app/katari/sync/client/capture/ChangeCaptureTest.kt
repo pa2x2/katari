@@ -203,6 +203,7 @@ class ChangeCaptureTest {
                     inserted = listOf(
                         EntryChapter.create().copy(entryId = 1, url = "/show/2", name = "Episode 2", dateFetch = 1000),
                     ),
+                    listedIds = listOf(10L),
                     afterUpdates = {},
                     afterInserts = {},
                 )
@@ -214,6 +215,7 @@ class ChangeCaptureTest {
                     inserted = listOf(
                         EntryChapter.create().copy(entryId = 1, url = "/show/3", name = "Episode 3", dateFetch = 2000),
                     ),
+                    listedIds = emptyList(),
                     afterUpdates = {},
                     afterInserts = {},
                 )
