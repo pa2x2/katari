@@ -3,6 +3,8 @@ package app.katari.android.sync
 import android.app.ActivityManager
 import android.app.Application
 import android.content.Intent
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
@@ -89,15 +91,27 @@ class AndroidSyncBackgroundWork(private val application: Application) : SyncBack
 
     override fun longRun(onMetered: Boolean) {
         val request = OneTimeWorkRequestBuilder<SyncJob>()
-            .setConstraints(
-                Constraints(requiredNetworkType = if (onMetered) NetworkType.CONNECTED else NetworkType.UNMETERED),
-            )
+            .setConstraints(if (onMetered) Constraints(requiredNetworkType = NetworkType.CONNECTED) else onWifi())
             .setInputData(workDataOf(SyncJob.KIND to SyncJob.LONG_RUN))
             .setBackoffCriteria(LONG_RUN_BACKOFF)
             .addTag(LONG_RUN)
             .build()
         // The work already going carries the run on; a second one would only wait for the same run.
         application.workManager.enqueueUniqueWork(LONG_RUN, ExistingWorkPolicy.KEEP, request)
+    }
+
+    /**
+     * A Wi-Fi network, as the run tells it apart ([app.katari.core.platform.network.NetworkState.countsAsWifi]):
+     * Wi-Fi the system calls metered, such as a phone's hotspot, counts, and Ethernet doesn't, where a run would only
+     * wait for Wi-Fi and end the work.
+     */
+    private fun onWifi(): Constraints {
+        val wifi = NetworkRequest.Builder()
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .build()
+        // The network type stands in only below Android 9, which the app doesn't run on
+        return Constraints.Builder().setRequiredNetworkRequest(wifi, NetworkType.UNMETERED).build()
     }
 
     override fun dropLongRun() {
