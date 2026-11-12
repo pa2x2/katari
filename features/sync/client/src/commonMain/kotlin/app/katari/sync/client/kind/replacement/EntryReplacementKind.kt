@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.replacement
 
+import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
@@ -165,15 +166,17 @@ object EntryReplacementKind : SyncedKind<EntryReplacementPayload>(
     }
 
     /**
-     * Moves the old entry's chapters, history, positions and activity to the entry it became in the other profile,
-     * then deletes the old row with what didn't move: its category links, as a local move drops them, what the new
-     * entry already had, which its own records hold, and its custom cover, which the new entry's record names.
+     * Moves the old entry's chapters with their groups, history, positions and activity to the entry it became in the
+     * other profile, then deletes the old row with what didn't move: its category links, as a local move drops them,
+     * what the new entry already had, which its own records hold, and its custom cover, which the new entry's record
+     * names.
      */
     private suspend fun moveRows(writes: LocalWrites, from: String, toId: Long) {
         val fromId = otherLocalEntry(writes, from, toId) ?: return
         val queries = writes.database.sync_applyQueries
         val progressChapters = queries.progressChapterLinks(fromId).awaitAsList()
         queries.detachProgressChapters(fromId)
+        queries.moveChapterGroups(toEntryId = toId, fromEntryId = fromId).await()
         queries.moveChapters(toEntryId = toId, fromEntryId = fromId)
         queries.moveProgress(toEntryId = toId, fromEntryId = fromId)
         progressChapters.forEach { queries.relinkProgressChapter(chapterId = it.chapter_id, progressId = it._id) }

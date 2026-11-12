@@ -2,6 +2,8 @@ package app.katari.sync.client.kind.replacement
 
 import app.katari.sync.client.RecordExchange
 import app.katari.sync.client.SyncTestDevice
+import app.katari.sync.client.kind.chapter.ChapterGroup
+import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.library
 import app.katari.sync.client.rows
 import io.kotest.matchers.collections.shouldContainAll
@@ -261,4 +263,54 @@ class EntryReplacementTest {
                 }
             }
         }
+
+    @Test
+    fun `a profile move keeps the chapters' groups on the other device, so a chapter marked there keeps its group`():
+        Unit = runBlocking {
+        val exchange = RecordExchange()
+        SyncTestDevice(directory.resolve("a.db")).use { a ->
+            SyncTestDevice(directory.resolve("b.db")).use { b ->
+                a.startSync(deviceId = 1)
+                b.startSync(deviceId = 2)
+                a.sql(
+                    "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                    "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                    "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/show', 'Show', 1, 'anime')",
+                    "INSERT INTO chapter_groups(entry_id, group_key, title, position) VALUES (1, 's2', 'Season 2', 1)",
+                    """
+                        INSERT INTO chapters(_id, entry_id, url, name, chapter_number, read, group_key, group_position)
+                        VALUES (10, 1, '/show/s2e1', 'Episode 1', 1, 1, 's2', 1)
+                        """,
+                )
+                exchange.settle(listOf(a, b))
+                b.sql("INSERT INTO expanded_chapter_groups(entry_id, group_key) SELECT _id, 's2' FROM entries")
+
+                a.sql("UPDATE entries SET profile_id = 2 WHERE _id = 1")
+                exchange.settle(listOf(a, b))
+
+                b.rows(
+                    """
+                        SELECT json_array(P.uuid, C.url, G.title, C.group_position)
+                        FROM chapters C
+                        JOIN entries E ON E._id = C.entry_id
+                        JOIN profiles P ON P._id = E.profile_id
+                        JOIN chapter_groups G ON G.entry_id = C.entry_id AND G.group_key = C.group_key
+                        """,
+                ) shouldBe listOf("""["work","/show/s2e1","Season 2",1]""")
+                b.rows(
+                    """
+                        SELECT json_array(P.uuid, X.group_key)
+                        FROM expanded_chapter_groups X
+                        JOIN entries E ON E._id = X.entry_id
+                        JOIN profiles P ON P._id = E.profile_id
+                        """,
+                ) shouldBe listOf("""["work","s2"]""")
+
+                b.sql("UPDATE chapters SET bookmark = 1")
+                exchange.pushFrom(b).map { it.record }.filter { it.kind == ChapterKind.name }
+                    .map { ChapterKind.decode(it.payload).details?.group } shouldBe
+                    listOf(ChapterGroup(key = "s2", title = "Season 2", position = 1))
+            }
+        }
+    }
 }

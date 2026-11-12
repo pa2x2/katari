@@ -597,9 +597,28 @@ SET chapter_id = (
 )
 WHERE _id = :progressId;
 
+-- The groups the moved chapters name, and which of them are open in the chapter list. A group the new entry lists
+-- already keeps its own title and place.
+moveChapterGroups {
+    INSERT OR IGNORE INTO chapter_groups(entry_id, group_key, title, position)
+    SELECT :toEntryId, group_key, title, position
+    FROM chapter_groups
+    WHERE entry_id = :fromEntryId;
+
+    INSERT OR IGNORE INTO expanded_chapter_groups(entry_id, group_key)
+    SELECT :toEntryId, group_key
+    FROM expanded_chapter_groups
+    WHERE entry_id = :fromEntryId;
+}
+
+-- Each chapter's copy of its group's place follows the group's row under the new entry (moveChapterGroups).
 moveChapters:
 UPDATE OR IGNORE chapters
-SET entry_id = :toEntryId
+SET entry_id = :toEntryId,
+    group_position = coalesce(
+        (SELECT position FROM chapter_groups WHERE entry_id = :toEntryId AND group_key = chapters.group_key),
+        group_position
+    )
 WHERE entry_id = :fromEntryId;
 
 moveProgress:
