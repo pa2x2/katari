@@ -32,6 +32,7 @@ fun syncHeadlineText(headline: SyncHeadline): String = when (headline) {
     SyncHeadline.AppTooOld -> stringResource(MR.strings.sync_status_app_too_old)
     is SyncHeadline.ServerTooOld -> stringResource(MR.strings.sync_status_server_too_old, headline.server)
     SyncHeadline.ChoicesWaiting -> stringResource(MR.strings.sync_status_choices)
+    SyncHeadline.TokenUnreadable -> stringResource(platformPresentation.syncTokenUnreadableLabel)
     is SyncHeadline.Questions ->
         pluralStringResource(MR.plurals.sync_questions_waiting, headline.count, headline.count)
     is SyncHeadline.UnreachableLong -> stringResource(
@@ -124,9 +125,9 @@ fun SyncHeadline.tone(): ContentTone = when (this) {
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled, is SyncHeadline.UnreachableLong, is SyncHeadline.Failed,
     -> ContentTone.Error
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
-    is SyncHeadline.Unsent, is SyncHeadline.Unfinished, SyncHeadline.FirstDownloadWaitsForWifi,
-    is SyncHeadline.ChangesWaitForWifi,
+    SyncHeadline.ChoicesWaiting, SyncHeadline.TokenUnreadable, is SyncHeadline.Questions, is SyncHeadline.HeldKinds,
+    is SyncHeadline.HeldAside, is SyncHeadline.Unsent, is SyncHeadline.Unfinished,
+    SyncHeadline.FirstDownloadWaitsForWifi, is SyncHeadline.ChangesWaitForWifi,
     -> ContentTone.Warning
     is SyncHeadline.Downloading, is SyncHeadline.CatchingUp, is SyncHeadline.Step, SyncHeadline.Syncing ->
         ContentTone.Primary
@@ -145,8 +146,8 @@ fun SyncHeadline.icon(): ImageVector = when (this) {
     SyncHeadline.NotSetUp -> MaterialSymbols.Rounded.CloudSync
     is SyncHeadline.Removed, is SyncHeadline.AccountDisabled -> platformPresentation.thisDeviceRemovedIcon
     SyncHeadline.SignInAgain, SyncHeadline.ServerReset, SyncHeadline.AppTooOld, is SyncHeadline.ServerTooOld,
-    SyncHeadline.ChoicesWaiting, is SyncHeadline.Questions, is SyncHeadline.HeldKinds, is SyncHeadline.HeldAside,
-    is SyncHeadline.Failed,
+    SyncHeadline.ChoicesWaiting, SyncHeadline.TokenUnreadable, is SyncHeadline.Questions, is SyncHeadline.HeldKinds,
+    is SyncHeadline.HeldAside, is SyncHeadline.Failed,
     -> MaterialSymbols.Rounded.SyncProblem
     is SyncHeadline.UnreachableLong, is SyncHeadline.Unsent, SyncHeadline.Offline, is SyncHeadline.Unreachable ->
         MaterialSymbols.Rounded.CloudOff

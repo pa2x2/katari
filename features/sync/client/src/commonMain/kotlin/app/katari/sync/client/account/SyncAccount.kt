@@ -4,6 +4,7 @@ import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
+import app.katari.sync.client.connection.SyncConnectionState
 import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.SyncStop
 import app.katari.sync.client.firstsync.FirstSyncSteps
@@ -30,6 +31,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import okhttp3.HttpUrl
 import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -38,7 +40,8 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Joining starts capture at once and leaves the first sync to a background run, so the app is usable meanwhile. A
  * device that had to sign in again to the same server ([SyncStop.SIGN_IN_AGAIN]) keeps what it captured and resyncs
- * in full instead (D048): it asks nothing, since its records already merged with the account's before.
+ * in full instead (D048): it asks nothing, since its records already merged with the account's before. Its earlier
+ * registration in the account is removed, so the server doesn't keep holding history back for it.
  */
 @Inject
 class SyncAccount(
@@ -136,8 +139,10 @@ class SyncAccount(
             return JoinResult.ServerNotReady(ServerCheck.NotASyncServer)
         }
         val choicesWaiting = runs.exclusive {
-            start(check.server, registered)
+            val previous = connection.state()
+            start(check.server, registered, previous)
             val client = clients.of(check.server, registered.token)
+            retire(client, previous, registered)
             setNameApart(client, registered.device)
             compareWithAccount(client)
         }
@@ -173,8 +178,7 @@ class SyncAccount(
         return connection.state().stage == SyncStage.CHOOSING
     }
 
-    private suspend fun start(server: HttpUrl, registered: RegisterDeviceResponse) {
-        val previous = connection.state()
+    private suspend fun start(server: HttpUrl, registered: RegisterDeviceResponse, previous: SyncConnectionState) {
         // Signing in again to the account and server storage the device synced with resumes it in full. Another
         // account, or a server that lost its storage and started over, is one the device never synced with: it joins
         // as a device with data of its own, so its profiles pair with the account's by name (D065).
@@ -191,6 +195,28 @@ class SyncAccount(
         if (previous.enabled && !sameAccount) disconnection.leave(reason = null)
         connection.connect(server, registered, SyncStage.JOINING)
         if (!sameAccount) capture.start()
+    }
+
+    /**
+     * Removes the registration this device had in the account before signing in again, on the same server storage. Left
+     * there, it would count as a device that stopped syncing midway, whose position holds back the server's clean-up
+     * of deletions and history until it has been silent for months. A server that can't be reached for it leaves it in
+     * the device list, to remove there.
+     */
+    private suspend fun retire(
+        client: SyncServerClient,
+        previous: SyncConnectionState,
+        registered: RegisterDeviceResponse,
+    ) {
+        val old = previous.device ?: return
+        val sameAccount = previous.instanceId == registered.server.instanceId &&
+            previous.accountName == registered.accountName
+        if (old == registered.device || !sameAccount) return
+        try {
+            client.revoke(old)
+        } catch (e: SyncFailure) {
+            logcat(LogPriority.INFO, e) { "Couldn't remove this device's earlier registration" }
+        }
     }
 
     /** This device's ID in its account, known without the server; null while the device has never joined one. */
@@ -246,7 +272,12 @@ class SyncAccount(
             val state = connection.state()
             val server = state.server
             val device = state.device
-            val token = connection.token()
+            val token = try {
+                connection.token()
+            } catch (e: IOException) {
+                logcat(LogPriority.INFO, e) { "Can't read the sync device token to leave" }
+                null
+            }
             if (server != null && device != null && token != null) {
                 try {
                     withTimeoutOrNull(LAST_PUSH_TIMEOUT) { clients.of(server, token).revoke(device) }
@@ -259,7 +290,9 @@ class SyncAccount(
         }
     }
 
+    /** A sync the person asked for, which may ask them to unlock the store the device's token is kept in. */
     suspend fun syncNow() {
+        connection.allowAskingForToken()
         runs.request()
     }
 
@@ -297,8 +330,14 @@ class SyncAccount(
         val state = connection.state()
         val server = state.server
         val device = state.device
-        val token = connection.token()
-        if (!state.isLinked || server == null || device == null || token == null) return AccountCall.NotLinked
+        if (!state.isLinked || server == null || device == null) return AccountCall.NotLinked
+        val token = try {
+            connection.token() ?: return AccountCall.NotLinked
+        } catch (e: IOException) {
+            // The call can't be made now; the status says why
+            logcat(LogPriority.INFO, e) { "Can't read the sync device token" }
+            return AccountCall.Unreachable
+        }
         return try {
             AccountCall.Done(call(clients.of(server, token), device))
         } catch (e: SyncFailure.Refused) {

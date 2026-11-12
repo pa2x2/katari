@@ -27,6 +27,9 @@ sealed interface SyncHeadline {
 
     data object ChoicesWaiting : SyncHeadline
 
+    /** The device's sign-in can't be read from the platform's store for secrets now, such as a locked keyring. */
+    data object TokenUnreadable : SyncHeadline
+
     data class Questions(val count: Int) : SyncHeadline
 
     data class UnreachableLong(val server: String, val sinceMillis: Long) : SyncHeadline
@@ -93,7 +96,7 @@ sealed interface SyncHeadline {
     val needsAttention: Boolean
         get() = when (this) {
             is Removed, is AccountDisabled, SignInAgain, ServerReset, AppTooOld, is ServerTooOld, ChoicesWaiting,
-            is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
+            TokenUnreadable, is Questions, is UnreachableLong, is HeldKinds, is HeldAside, is Failed,
             -> true
             else -> false
         }
@@ -121,6 +124,7 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
     }
     val activity = activity
     if (activity == SyncStatus.Activity.WaitingForChoices) return SyncHeadline.ChoicesWaiting
+    if (activity == SyncStatus.Activity.TokenUnreadable) return SyncHeadline.TokenUnreadable
     if (questions.isNotEmpty()) return SyncHeadline.Questions(questions.size)
     if (activity is SyncStatus.Activity.Unreachable && activity.isLong(nowMillis)) {
         return SyncHeadline.UnreachableLong(server, activity.sinceMillis)
@@ -152,7 +156,8 @@ fun SyncStatus.headline(nowMillis: Long): SyncHeadline {
             else -> SyncHeadline.UpToDate(activity.atMillis, filesNote())
         }
         // Already handled above, or not linked
-        SyncStatus.Activity.WaitingForChoices, SyncStatus.Activity.Idle -> SyncHeadline.UpToDate(null, filesNote())
+        SyncStatus.Activity.WaitingForChoices, SyncStatus.Activity.TokenUnreadable, SyncStatus.Activity.Idle ->
+            SyncHeadline.UpToDate(null, filesNote())
     }
 }
 

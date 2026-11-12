@@ -11,6 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import okhttp3.HttpUrl
@@ -20,7 +22,8 @@ import kotlin.time.Clock
 
 /**
  * This device's connection to its account: the state in `sync_state`, which no backup holds, and the token in the
- * platform's secret store. The token is remembered once read, since every call to the server needs it.
+ * platform's secret store. The token is remembered once read, since every call to the server needs it; a store that
+ * can't be read now is asked again next time.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -31,6 +34,9 @@ class SyncConnection(
     @Volatile
     private var token: Remembered? = null
 
+    // One read at a time, so a locked keyring never asks the person twice at once
+    private val reading = Mutex()
+
     suspend fun state(): SyncConnectionState = handler.await {
         SyncConnectionState.of(sync_stateQueries.get().awaitAsOne())
     }
@@ -39,9 +45,18 @@ class SyncConnection(
         .map(SyncConnectionState::of)
         .distinctUntilChanged()
 
+    /** Null when no token is saved. Throws [java.io.IOException] when the store can't be read now. */
     suspend fun token(): String? {
         token?.let { return it.value }
-        return withContext(Dispatchers.IO) { tokens.read() }.also { token = Remembered(it) }
+        return reading.withLock {
+            token?.let { return it.value }
+            withContext(Dispatchers.IO) { tokens.read() }.also { token = Remembered(it) }
+        }
+    }
+
+    /** Lets the next read of the token ask the person to unlock the store, for a sync they started. */
+    fun allowAskingForToken() {
+        tokens.allowAsking()
     }
 
     /**

@@ -48,8 +48,8 @@ import kotlin.time.Duration.Companion.minutes
  * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
  *   progress and goes on when the app leaves the front.
- * - A run that left work ([SyncOutcome.leavesWork]): the platform's retry work ([SyncBackgroundWork.retry]), which
- *   backs off while runs keep leaving it.
+ * - A run that left work, or couldn't read the device's token ([SyncOutcome.leavesWork]): the platform's retry work
+ *   ([SyncBackgroundWork.retry]), which backs off while runs keep leaving it.
  *
  * None of it runs while the device isn't linked to an account (D001); while syncing is paused, runs end at once.
  */

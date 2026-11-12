@@ -187,6 +187,7 @@ class SyncStatusFlow(
                 SyncStatus.Activity.Syncing(inputs.progress.download, inputs.progress.step, state.catchingUp)
             !inputs.network.hasNetwork -> SyncStatus.Activity.Offline
             inputs.outcome == SyncOutcome.FAILED -> SyncStatus.Activity.Failed(state.lastSyncedAt)
+            inputs.outcome == SyncOutcome.TOKEN_UNREADABLE -> SyncStatus.Activity.TokenUnreadable
             unreachableSince != null -> SyncStatus.Activity.Unreachable(unreachableSince)
             inputs.outcome == SyncOutcome.WAITING_FOR_WIFI && state.stage == SyncStage.DOWNLOADING ->
                 SyncStatus.Activity.WaitingForWifi

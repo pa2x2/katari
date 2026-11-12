@@ -57,6 +57,11 @@ data class PlatformPresentation(
     /** Names the action that hands over the crash logs: sharing them, or saving them to a file. */
     val dumpCrashLogsLabel: StringResource,
     val syncFailedHelp: StringResource,
+    /** Names where the sync sign-in is kept: the Android Keystore, or the desktop's keyring, which can be locked. */
+    val syncTokenUnreadableLabel: StringResource,
+    val syncTokenUnreadableHelp: StringResource,
+    /** Reads it again now, which on a desktop asks the person to unlock the keyring. */
+    val syncTokenUnreadableAction: StringResource,
     val securitySettingsSummary: StringResource,
     val monthlyRecapSummary: StringResource,
     /** Names the parts of a page that turn it or show the menu when pressed. */

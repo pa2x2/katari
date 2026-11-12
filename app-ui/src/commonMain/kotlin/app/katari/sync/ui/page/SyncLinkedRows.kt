@@ -244,6 +244,12 @@ private fun attentionRows(
         is SyncHeadline.Failed -> listOf(
             Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncFailedHelp)),
         )
+        // Reads it again as Sync now does, which may ask to unlock a keyring the person turned down; runs in the
+        // background never ask again
+        SyncHeadline.TokenUnreadable -> listOf(
+            row(stringResource(platformPresentation.syncTokenUnreadableAction), actions.syncNow),
+            Preference.PreferenceItem.InfoPreference(stringResource(platformPresentation.syncTokenUnreadableHelp)),
+        )
         is SyncHeadline.ServerTooOld -> {
             val openGuide = rememberOpenSyncGuide()
             listOf(row(serverFixLabel(ServerFix.UPDATE)) { openGuide(ServerFix.UPDATE.page) })

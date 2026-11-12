@@ -80,6 +80,12 @@ data class SyncStatus(
             fun isLong(nowMillis: Long): Boolean = nowMillis - sinceMillis > 1.days.inWholeMilliseconds
         }
 
+        /**
+         * The platform's store for secrets couldn't give the device's token, such as a locked keyring; runs try again,
+         * and syncing goes on once it can be read.
+         */
+        data object TokenUnreadable : Activity
+
         /** The last run got through but left changes or files it could have moved, which a run tried again later sends. */
         data object Unfinished : Activity
 
@@ -141,8 +147,8 @@ data class SyncStatus(
 
     /** Whether something waits for the person, which More marks with a dot (D028). */
     val needsAttention: Boolean
-        get() = questions.isNotEmpty() || activity == Activity.WaitingForChoices || link is Link.Ended ||
-            (link as? Link.Linked)?.stopped != null
+        get() = questions.isNotEmpty() || activity == Activity.WaitingForChoices ||
+            activity == Activity.TokenUnreadable || link is Link.Ended || (link as? Link.Linked)?.stopped != null
 
     /** Whether the device is linked and syncing isn't stopped. */
     val isOn: Boolean

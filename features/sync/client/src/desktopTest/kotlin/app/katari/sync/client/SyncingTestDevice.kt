@@ -64,6 +64,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.IOException
 import java.util.Collections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -72,9 +73,12 @@ import kotlin.time.Duration.Companion.hours
  * A [SyncTestDevice] with sync's transport wired as the app wires it, talking to a real server over [http]: a test
  * passes a client of its own to cut calls short where a real network would.
  */
-internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()) : AutoCloseable {
+internal class SyncingTestDevice(
+    file: File,
+    http: OkHttpClient = OkHttpClient(),
+    private val tokens: MemoryTokens = MemoryTokens(),
+) : AutoCloseable {
     val local = SyncTestDevice(file)
-    private val tokens = MemoryTokens()
     val network = Network()
     val work = RecordedBackgroundWork()
     private val clients = SyncServerClients { http }
@@ -269,13 +273,23 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         const val NOTE = "note"
     }
 
-    private class MemoryTokens : DeviceTokenStore {
+    /** The platform's store for the token, which outlives the app: a test hands one to the device it opens again. */
+    class MemoryTokens : DeviceTokenStore {
         @Volatile
         private var token: String? = null
 
+        /** Reads fail as a locked keyring's do. */
+        @Volatile
+        var unreadable = false
+
         override val isAvailable = true
 
-        override fun read() = token
+        override fun read(): String? {
+            if (unreadable) throw IOException("The keyring is locked")
+            return token
+        }
+
+        override fun allowAsking() = Unit
 
         override fun write(token: String?) {
             this.token = token?.takeIf(String::isNotBlank)

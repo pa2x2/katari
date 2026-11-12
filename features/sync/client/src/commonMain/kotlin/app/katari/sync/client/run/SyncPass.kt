@@ -34,6 +34,7 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 
 /**
  * One sync run ([SyncRuns] keeps them to one at a time).
@@ -64,7 +65,8 @@ import tachiyomi.core.common.util.system.logcat
  *    of Wi-Fi or of an answer, waits for a later run without holding back any record.
  *
  * A run that leaves changes or files it could send or fetch now, refused as stale every round or cut off from the
- * server while files moved, ends [SyncOutcome.UNFINISHED], and one is run again later.
+ * server while files moved, ends [SyncOutcome.UNFINISHED], and one is run again later. So does one that can't read the
+ * device's token now ([SyncOutcome.TOKEN_UNREADABLE]): only a token that isn't saved means signing in again.
  *
  * Every page, and the changes each push had acknowledged, are committed as they arrive, so a run cut off anywhere
  * loses nothing and the next one carries on. Steps that can take a while say how far they got ([SyncSteps]). A
@@ -141,7 +143,13 @@ class SyncPass(
             handOff.unreachable(request.entriesFirst)
             return SyncOutcome.OFFLINE
         }
-        val token = connection.token()
+        val token = try {
+            connection.token()
+        } catch (e: IOException) {
+            logcat(LogPriority.WARN, e) { "Can't read the sync device token now" }
+            handOff.unreachable(request.entriesFirst)
+            return SyncOutcome.TOKEN_UNREADABLE
+        }
         if (token == null) {
             connection.stop(SyncStop.SIGN_IN_AGAIN)
             return SyncOutcome.IDLE

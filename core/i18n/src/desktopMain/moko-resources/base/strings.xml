@@ -59,6 +59,9 @@
     <string name="tts_speech_dispatcher_processing">Speech Dispatcher\'s voices run on this computer.</string>
     <string name="pref_dump_crash_logs">Save crash logs</string>
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Save crash logs in Settings › Advanced to report it.</string>
+    <string name="sync_status_token_unreadable">Can\'t read this device\'s sync sign-in · unlock the keyring</string>
+    <string name="sync_token_unreadable_help">Katari keeps this device\'s sync sign-in in the desktop\'s keyring, such as GNOME Keyring or KWallet, which is locked or isn\'t running. Sync carries on by itself, without asking again, once the keyring is unlocked or started.</string>
+    <string name="sync_action_unlock_keyring">Unlock the keyring</string>
     <string name="pref_security_summary">App lock</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap</string>
     <string name="pref_viewer_nav">Click zones</string>

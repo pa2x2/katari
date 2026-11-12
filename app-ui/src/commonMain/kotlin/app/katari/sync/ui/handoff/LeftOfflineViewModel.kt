@@ -80,7 +80,8 @@ class LeftOfflineViewModel(
     private fun SyncStatus.leftOffline(settledAt: Long): Boolean? {
         if (link !is SyncStatus.Link.Linked) return false
         return when (val activity = activity) {
-            is SyncStatus.Activity.Offline, is SyncStatus.Activity.Unreachable -> true
+            is SyncStatus.Activity.Offline, is SyncStatus.Activity.Unreachable, SyncStatus.Activity.TokenUnreadable ->
+                true
             is SyncStatus.Activity.UpToDate -> if ((activity.atMillis ?: 0L) >= settledAt) false else null
             else -> null
         }

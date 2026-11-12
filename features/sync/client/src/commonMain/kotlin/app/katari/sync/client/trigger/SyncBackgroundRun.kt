@@ -55,8 +55,9 @@ class SyncBackgroundRun(
     suspend fun retry(): WorkOutcome = runs.runAndWait(SyncRequest()).toWork()
 
     private fun SyncOutcome.toWork(): WorkOutcome = when (this) {
-        SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED, SyncOutcome.UNFINISHED ->
-            WorkOutcome.RetryLater
+        SyncOutcome.OFFLINE, SyncOutcome.UNREACHABLE, SyncOutcome.FAILED, SyncOutcome.UNFINISHED,
+        SyncOutcome.TOKEN_UNREADABLE,
+        -> WorkOutcome.RetryLater
         SyncOutcome.SYNCED, SyncOutcome.IDLE, SyncOutcome.WAITING_FOR_WIFI -> WorkOutcome.Done
     }
 }

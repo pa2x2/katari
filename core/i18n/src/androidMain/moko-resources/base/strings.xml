@@ -46,6 +46,9 @@
     <string name="translate_waiting_for_wifi">Waiting for Wi-Fi</string>
     <string name="pref_dump_crash_logs">Share crash logs</string>
     <string name="sync_failed_help">Something on this device stopped the last sync, not the connection. Sync now tries again; if it keeps failing, updating Katari may fix it. Share crash logs in Settings › Advanced to report it.</string>
+    <string name="sync_action_read_sign_in_again">Try again</string>
+    <string name="sync_status_token_unreadable">Can\'t read this device\'s sync sign-in right now</string>
+    <string name="sync_token_unreadable_help">Katari keeps this device\'s sync sign-in in the Android Keystore, which didn\'t answer. Sync tries again by itself; if it keeps failing, restarting the device may help.</string>
     <string name="pref_security_summary">App lock, secure screen</string>
     <string name="statistics_monthly_recap_summary">A notification after each month with its recap to see and share</string>
     <string name="pref_viewer_nav">Tap zones</string>

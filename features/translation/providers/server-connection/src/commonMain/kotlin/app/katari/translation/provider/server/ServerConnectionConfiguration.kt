@@ -1,12 +1,17 @@
 package app.katari.translation.provider.server
 
+import logcat.LogPriority
 import okhttp3.HttpUrl
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.util.system.logcat
+import java.io.IOException
 
 /** A translation server the user configured: where it is, its key, and what the user accepted about it. */
 interface ServerConnectionSettings {
     val endpoint: HttpUrl?
+
+    /** Null when none is saved, or while the store can't be read, when a call goes without it and the server says so. */
     val apiKey: String?
 
     /** Whether the saved endpoint passed a connection test when it was saved. */
@@ -28,6 +33,8 @@ class ServerConnectionConfiguration internal constructor(
         secrets = object : ServerApiKeyStore {
             override fun read(): String? = secrets.read(connection)
 
+            override fun allowAsking() = secrets.allowAsking(connection)
+
             override fun write(value: String) = secrets.write(connection, value)
         },
     )
@@ -36,7 +43,18 @@ class ServerConnectionConfiguration internal constructor(
         get() = ServerEndpointPolicy.validate(state.endpoint.orEmpty())
 
     override val apiKey: String?
-        get() = secrets.read()?.takeIf(String::isNotBlank)
+        get() = try {
+            secrets.read()?.takeIf(String::isNotBlank)
+        } catch (e: IOException) {
+            logcat(LogPriority.WARN, e) { "Can't read a translation server's API key now" }
+            null
+        }
+
+    /** The key, for a screen the person opened, which may ask them to unlock the store ([SecretStore.allowAsking]). */
+    fun askForApiKey(): String? {
+        secrets.allowAsking()
+        return apiKey
+    }
 
     override val isInitiallyVerified: Boolean
         get() = endpoint?.toString() == state.verifiedEndpoint
@@ -64,7 +82,9 @@ class ServerConnectionConfiguration internal constructor(
 }
 
 internal interface ServerApiKeyStore {
+    /** As [SecretStore.read] for one connection: null when none is saved, throwing when the store can't be read now. */
     fun read(): String?
+    fun allowAsking()
     fun write(value: String)
 }
 
