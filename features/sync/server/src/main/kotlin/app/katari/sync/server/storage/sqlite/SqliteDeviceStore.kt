@@ -24,6 +24,7 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
             name = description.name,
             platform = description.platform,
             appVersion = description.appVersion,
+            messageKinds = description.messageKinds,
             tokenHash = tokenHash,
             registeredAt = registeredAtMillis,
         )
@@ -42,6 +43,7 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
             name = description.name,
             platform = description.platform,
             appVersion = description.appVersion,
+            messageKinds = description.messageKinds,
             id = id.value,
         )
     }
@@ -75,7 +77,12 @@ internal class SqliteDeviceStore(database: SyncServerDatabase) : DeviceStore {
     private fun Devices.toDevice() = Device(
         id = DeviceId(_id),
         accountId = account_id,
-        description = DeviceDescription(name = name, platform = platform, appVersion = app_version),
+        description = DeviceDescription(
+            name = name,
+            platform = platform,
+            appVersion = app_version,
+            messageKinds = message_kinds,
+        ),
         registeredAtMillis = registered_at,
         lastSeenMillis = last_seen_at,
         syncedUpTo = synced_up_to,

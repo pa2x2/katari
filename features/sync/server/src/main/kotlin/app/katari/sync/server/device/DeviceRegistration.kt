@@ -109,7 +109,7 @@ class DeviceRegistration(
         .first { it.value != 0L && !storage.devices.exists(it) }
 
     private fun DeviceDescription.trimmed() =
-        DeviceDescription(name = name.trim(), platform = platform.trim(), appVersion = appVersion.trim())
+        copy(name = name.trim(), platform = platform.trim(), appVersion = appVersion.trim())
 }
 
 sealed interface RegistrationOutcome {

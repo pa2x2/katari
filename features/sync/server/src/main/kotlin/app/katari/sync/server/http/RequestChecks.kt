@@ -87,6 +87,12 @@ internal object RequestChecks {
                 "Device description field length"
             }
         }
+        require(description.messageKinds.size <= DeviceDescription.MAX_MESSAGE_KINDS) { "Message kinds count" }
+        description.messageKinds.forEach { kind ->
+            require(kind.length in 1..MessageLimits.MAX_KIND_LENGTH && kind.none { it == '\n' || it == '\r' }) {
+                "Message kind"
+            }
+        }
     }
 
     private inline fun require(condition: Boolean, message: () -> String) {

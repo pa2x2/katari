@@ -21,6 +21,7 @@ class SqliteServerStorage private constructor(private val driver: SqliteFileDriv
         driver,
         record_filesAdapter = Record_files.Adapter(categoryAdapter = EnumColumnAdapter()),
         stored_filesAdapter = Stored_files.Adapter(categoryAdapter = EnumColumnAdapter()),
+        devicesAdapter = Devices.Adapter(message_kindsAdapter = MessageKindsAdapter),
     )
 
     override val instanceId: String = database.transactionWithResult {
