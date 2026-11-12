@@ -36,7 +36,12 @@ CREATE TABLE sync_state(
     -- For a first download that started over on the server's answer, the full resync whose way the records it took
     -- before and doesn't get back are settled once it ends (app.katari.sync.client.resync.FullResync.finishDownload).
     -- NULL in any other stage, and for a download that didn't start over.
-    download_restarted_as TEXT
+    download_restarted_as TEXT,
+    -- A restore under way (app.katari.sync.client.restore.RestoreStamping): the last outbox row written before it,
+    -- and its backup's creation time in epoch milliseconds. No drain takes the rows after it, which the restore records
+    -- as made when the backup was, after a process that stopped meanwhile starts again too. NULL when none is.
+    restore_outbox_seq INTEGER,
+    restore_backup_created_at INTEGER
 );
 
 INSERT OR IGNORE INTO sync_state(id) VALUES (0);
@@ -122,7 +127,9 @@ SET enabled = 0,
     stopped_protocol = 0,
     last_synced_at = NULL,
     unreachable_since = NULL,
-    messages_handled = 0
+    messages_handled = 0,
+    restore_outbox_seq = NULL,
+    restore_backup_created_at = NULL
 WHERE id = 0;
 
 -- Clears what a removal left for the person to read.
@@ -150,3 +157,15 @@ setMessagesHandled:
 UPDATE sync_state
 SET messages_handled = :number
 WHERE id = 0 AND messages_handled < :number;
+
+-- A restore of a backup created at :backupCreatedAt starts: the rows written from now are its.
+startRestore:
+UPDATE sync_state
+SET restore_outbox_seq = (SELECT coalesce(max(seq), 0) FROM sync_outbox), restore_backup_created_at = :backupCreatedAt
+WHERE id = 0;
+
+-- The restore is recorded, or the outbox it held rows of is cleared.
+endRestore:
+UPDATE sync_state
+SET restore_outbox_seq = NULL, restore_backup_created_at = NULL
+WHERE id = 0;

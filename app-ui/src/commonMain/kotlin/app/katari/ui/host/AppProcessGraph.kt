@@ -4,6 +4,7 @@ import app.katari.core.metro.AppCoroutineScope
 import app.katari.core.metro.StartupWarmup
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.extension.InstalledExtensionLog
+import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.trigger.SyncTriggers
 import app.katari.sync.ui.notice.SyncNotices
 import app.katari.ui.buildinfo.AppBuild
@@ -36,6 +37,7 @@ interface AppProcessGraph : MigrationGraph {
     val database: Database
     val startupWarmups: Set<StartupWarmup>
     val syncCapture: SyncCapture
+    val restoreStamping: RestoreStamping
     val syncTriggers: SyncTriggers
     val syncNotices: SyncNotices
     val installedExtensionLog: InstalledExtensionLog

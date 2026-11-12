@@ -34,7 +34,9 @@ import tachiyomi.data.DatabaseHandler
  * A record of a part of the account this device chose not to sync ([OffParts]) is stored like any other, so its edits
  * keep the times they were made, and held back from pushing until the part is synced again.
  *
- * It only reads the local database and preferences, so it runs whether or not the server is reachable.
+ * It only reads the local database and preferences, so it runs whether or not the server is reachable. The rows a
+ * restore under way wrote stay in the outbox for the restore to record
+ * ([app.katari.sync.client.restore.RestoreStamping]).
  */
 @Inject
 class OutboxDrain(
@@ -56,15 +58,10 @@ class OutboxDrain(
         val state = sync_stateQueries.get().awaitAsOne()
         val deviceId = state.device_id
         if (!state.enabled || deviceId == null) return@await 0
-        SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
-            val version = kind.version.toLong()
-            // Inserting no rows still tells the outbox's listeners it changed, and that starts another drain: a drain
-            // that queued nothing would start the next one, for as long as the app is open
-            if (!sync_recordsQueries.hasOutdated(kind = kind.name, version = version).awaitAsOne()) return@forEach
-            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = version)
-            sync_recordsQueries.raiseVersion(kind = kind.name, version = version)
-        }
-        val rows = sync_outboxQueries.batch(limit).awaitAsList()
+        val through = state.restore_outbox_seq
+        // Rows queued now would be the restore's too, and recorded with its rows as what they stand for
+        if (through == null) queueOutdatedRereads()
+        val rows = sync_outboxQueries.batch(limit).awaitAsList().takeWhile { through == null || it.seq <= through }
         if (rows.isEmpty()) return@await 0
 
         val clock = sync_clockQueries.get().awaitAsOne()
@@ -83,6 +80,17 @@ class OutboxDrain(
         sync_outboxQueries.deleteThrough(rows.last().seq)
         sync_clockQueries.setIssued(stamper.issuedPhysical, stamper.issuedCounter.toLong())
         rows.size
+    }
+
+    private suspend fun Database.queueOutdatedRereads() {
+        SyncKinds.all.filter { it.oldestReadableVersion < it.version }.forEach { kind ->
+            val version = kind.version.toLong()
+            // Inserting no rows still tells the outbox's listeners it changed, and that starts another drain: a drain
+            // that queued nothing would start the next one, for as long as the app is open
+            if (!sync_recordsQueries.hasOutdated(kind = kind.name, version = version).awaitAsOne()) return@forEach
+            sync_outboxQueries.recordRereadOfOutdated(kind = kind.name, version = version)
+            sync_recordsQueries.raiseVersion(kind = kind.name, version = version)
+        }
     }
 
     private class Drain(

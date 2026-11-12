@@ -96,16 +96,17 @@ object AppProcessStart {
     }
 
     /**
-     * Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits, and
-     * then starts what makes sync run by itself and what tells of it by notification. On a device that doesn't sync,
-     * none of them does anything. The extensions installed here are kept either way, after capture resumes so the
-     * changes found at start are captured.
+     * Resumes capturing edits for sync once the upgrade migrations have run, so their writes are never edits, records
+     * what a restore the last process stopped in had written, and then starts what makes sync run by itself and what
+     * tells of it by notification. On a device that doesn't sync, none of them does anything. The extensions installed
+     * here are kept either way, after capture resumes so the changes found at start are captured.
      */
     @HostEntryPoint
     fun startSync(graph: AppProcessGraph) {
         Migrator.scope.launch {
             Migrator.await()
             graph.syncCapture.resume()
+            graph.restoreStamping.finishInterrupted()
             graph.syncTriggers.start()
             graph.syncNotices.start()
             graph.installedExtensionLog.start()

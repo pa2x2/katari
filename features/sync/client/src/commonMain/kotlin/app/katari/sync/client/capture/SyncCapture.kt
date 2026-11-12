@@ -29,6 +29,7 @@ class SyncCapture(
     suspend fun start() {
         handler.await(inTransaction = true) {
             sync_outboxQueries.clear()
+            sync_stateQueries.endRestore()
             sync_stateQueries.setEnabled(true)
         }
         temporarySchema.publish(CaptureTriggers.install)
@@ -55,6 +56,7 @@ class SyncCapture(
         handler.await(inTransaction = true) {
             sync_stateQueries.setEnabled(false)
             sync_outboxQueries.clear()
+            sync_stateQueries.endRestore()
         }
     }
 }

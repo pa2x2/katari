@@ -23,7 +23,6 @@ import app.katari.sync.client.question.Questions
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
 import app.katari.sync.client.record.PendingChanges
-import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.setting.capture.SettingsCapture
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
@@ -129,7 +128,6 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val questions = Questions(handler, writing)
     val held = HeldRecords(handler)
     val firstSync = FirstSync(handler, writing, preferences.reads, preferences.profiles, syncPreferences)
-    val restoreStamping = RestoreStamping(handler, writing, settingsCapture, preferences.reads)
 
     suspend fun startSync(deviceId: Long) {
         handler.await { sync_stateQueries.setServer(serverUrl = "https://sync.test", deviceId = deviceId) }

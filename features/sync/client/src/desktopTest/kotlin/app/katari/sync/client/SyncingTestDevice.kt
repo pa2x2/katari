@@ -39,6 +39,7 @@ import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.UngroupedRecords
+import app.katari.sync.client.restore.RestoreStamping
 import app.katari.sync.client.resync.FullResync
 import app.katari.sync.client.run.PullChanges
 import app.katari.sync.client.run.PushChanges
@@ -166,6 +167,8 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         ),
         steps,
     )
+    val restoreStamping =
+        RestoreStamping(local.handler, local.writing, local.settingsCapture, local.preferences.reads, runs)
     val messaging = DeviceMessaging(connection, messageOutbox, runs)
     val downloadRequestSending = DownloadRequestSending(messaging, syncedEntries)
     val choiceChanges = SyncChoiceChanges(

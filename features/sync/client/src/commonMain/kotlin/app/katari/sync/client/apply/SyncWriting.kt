@@ -1,6 +1,5 @@
 package app.katari.sync.client.apply
 
-import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.connection.ThisDevice
@@ -12,7 +11,6 @@ import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
 import app.katari.sync.client.setting.apply.SettingWrites
-import app.katari.sync.data.Sync_outbox
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
@@ -44,8 +42,7 @@ class SyncWriting(
     private val preferences: SyncPreferences,
     private val readElsewhereListeners: () -> Set<ChaptersReadElsewhereListener>,
 ) {
-    internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T =
-        write(takeAfter = null) { session, _ -> block(session) }
+    internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T = write(failing = emptyMap(), block)
 
     /**
      * Runs [block] as [write] does, holding aside each record that fails to apply (D067). A failure rolls the whole
@@ -57,7 +54,7 @@ class SyncWriting(
         val failing = HashMap<String, FailedStage>()
         while (true) {
             try {
-                return write(takeAfter = null, failing) { session, _ -> block(session) }
+                return write(failing, block)
             } catch (e: RecordApplyFailure) {
                 val before = failing[e.key]
                 if (before == FailedStage.STORING || before == e.stage) throw e
@@ -67,25 +64,12 @@ class SyncWriting(
         }
     }
 
-    /**
-     * Runs [block] as [write] does, handing it, instead of draining them, the outbox rows written after [takeAfter],
-     * such as a restore's, so it can record them differently from a person's edits. Null takes none.
-     */
-    internal suspend fun <T> write(
-        takeAfter: Long?,
-        block: suspend Database.(ApplySession, taken: List<Sync_outbox>) -> T,
-    ): T = write(takeAfter, failing = emptyMap(), block)
-
     private suspend fun <T> write(
-        takeAfter: Long?,
         failing: Map<String, FailedStage>,
-        block: suspend Database.(ApplySession, taken: List<Sync_outbox>) -> T,
+        block: suspend Database.(ApplySession) -> T,
     ): T {
         var read = emptyList<ChaptersReadElsewhere>()
         val result = handler.await(inTransaction = true) {
-            val taken = takeAfter?.let { seq ->
-                sync_outboxQueries.after(seq).awaitAsList().also { sync_outboxQueries.deleteAfter(seq) }
-            }.orEmpty()
             do {
                 val drained = drain.drain()
             } while (drained > 0)
@@ -102,7 +86,7 @@ class SyncWriting(
                 appVersion = thisDevice.appVersion,
                 failing = failing,
             ) { Clock.System.now().toEpochMilliseconds() }
-            val written = block(session, taken)
+            val written = block(session)
             session.finish()
             session.newestSeen?.let { seen ->
                 val clock = sync_clockQueries.get().awaitAsOne()
