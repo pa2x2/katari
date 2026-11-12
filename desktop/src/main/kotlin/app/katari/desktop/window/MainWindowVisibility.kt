@@ -19,6 +19,16 @@ class MainWindowVisibility(private val openWindow: OpenWindow, private val displ
 
     val isHidden: StateFlow<Boolean> = hidden.asStateFlow()
 
+    /** Whether the app started hidden in the tray ([startInTray]), as at login, before the window was ever shown. */
+    var startedInTray: Boolean = false
+        private set
+
+    /** Starts the app with the window hidden in the tray. Before the window composes. */
+    fun startInTray() {
+        startedInTray = true
+        hidden.value = true
+    }
+
     /** Hides the window, which [KatariWindow] does once it next composes. */
     fun hide() {
         hidden.value = true

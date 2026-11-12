@@ -79,7 +79,7 @@ fun main(arguments: Array<String>) {
  * opening any of the app's files, once the running instance has its request and [launch]'s links.
  */
 private fun claimInstance(singleInstance: SingleInstance, launch: LaunchArguments): InstanceClaim.Running {
-    val claim = singleInstance.claim(launch.links)
+    val claim = singleInstance.claim(launch.links, launch.startsInTray)
     if (claim is InstanceClaim.Running) return claim
     // The log starts with the graph, which a launch that ends here never builds
     launch.ignored.forEach { System.err.println("Katari ignores the argument $it") }
@@ -120,6 +120,8 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     graph.classDataArchive.start()
     graph.chromiumUpkeep.start()
     graph.appTray.start()
+    graph.loginStart.start()
+    if (launch.startsInTray) graph.mainWindowVisibility.startInTray()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)

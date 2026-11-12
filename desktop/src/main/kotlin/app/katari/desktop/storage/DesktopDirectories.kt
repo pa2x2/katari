@@ -25,6 +25,9 @@ interface DesktopDirectories {
      */
     val runtime: Path
 
+    /** The folder of the desktop entries the user's desktop starts at login, not the app's own. It may not exist yet. */
+    val autostart: Path
+
     /** The user's home directory, which holds the folders the user sees and picks from, not the app's own. */
     val home: Path
 

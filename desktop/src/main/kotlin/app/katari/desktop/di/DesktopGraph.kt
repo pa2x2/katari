@@ -8,6 +8,7 @@ import app.katari.desktop.appearance.PreferenceAppLocaleStore
 import app.katari.desktop.application.AppRestart
 import app.katari.desktop.application.classdata.ClassDataArchive
 import app.katari.desktop.application.installation.AppInstallation
+import app.katari.desktop.autostart.LoginStart
 import app.katari.desktop.display.backend.DisplayBackend
 import app.katari.desktop.display.size.InterfaceSizePreferences
 import app.katari.desktop.display.size.SessionScale
@@ -102,6 +103,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val openWindow: OpenWindow
     val mainWindowVisibility: MainWindowVisibility
     val appTray: AppTray
+    val loginStart: LoginStart
     val homeDestinations: HomeDestinations
     val desktopNotifications: DesktopNotifications
     val systemFileChooser: SystemFileChooser

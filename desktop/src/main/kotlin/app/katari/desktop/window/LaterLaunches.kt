@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Answers each of [laterLaunches] on the window's thread: brings the window forward through [visibility], hidden in
- * the tray or not, then opens the launch's links in [destinations].
+ * the tray or not, unless the launch starts in the tray, then opens the launch's links in [destinations].
  */
 @Composable
 internal fun AnswerLaterLaunches(
@@ -19,7 +19,7 @@ internal fun AnswerLaterLaunches(
 ) {
     LaunchedEffect(laterLaunches) {
         laterLaunches.collect { request ->
-            visibility.bringForward(request.activationToken)
+            if (!request.startsInTray) visibility.bringForward(request.activationToken)
             LaunchLinks.open(request.links, destinations)
         }
     }

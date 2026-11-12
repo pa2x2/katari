@@ -3,9 +3,9 @@ package app.katari.desktop.application.instance
 import kotlinx.serialization.Serializable
 
 /**
- * What a later launch of the app asks of the running instance, which answers every request by bringing its window
- * forward and opening what the launch opens. Every field needs a default, so an instance still reads the requests of a
- * launch from an older or newer version.
+ * What a later launch of the app asks of the running instance, which answers a request by bringing its window forward,
+ * unless the launch [startsInTray], and opening what the launch opens. Every field needs a default, so an instance
+ * still reads the requests of a launch from an older or newer version.
  */
 @Serializable
 data class InstanceRequest(
@@ -20,4 +20,6 @@ data class InstanceRequest(
      * a newer launch may send.
      */
     val links: List<String> = emptyList(),
+    /** Whether the launch starts the app hidden in the tray, as the login start does, which leaves the window as it is. */
+    val startsInTray: Boolean = false,
 )
