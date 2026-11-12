@@ -49,7 +49,7 @@ FROM records
 WHERE account_id = :accountId
     AND sequence > :after
     AND sequence <= :through
-    AND (:includeDeleted OR is_deleted = 0)
+    AND (is_deleted = 0 OR sequence > :markersAfter)
 ORDER BY sequence
 LIMIT :limit;
 

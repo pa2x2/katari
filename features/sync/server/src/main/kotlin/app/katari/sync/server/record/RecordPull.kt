@@ -15,10 +15,16 @@ import app.katari.sync.server.storage.ServerStorage
  * gave its sequences to other changes, so this one lost data or was restored from an old copy (and other devices may
  * have pushed past it since), and the device must resync in full rather than skip or misread what was written here.
  *
- * A position the history chain is no longer kept for, or one from before a dropped deletion marker, is refused as
- * [SyncErrorCode.CURSOR_EXPIRED]: the first cannot be checked, and pulling from the second would miss that deletion
- * (a pull that leaves out deletions has nothing to miss and is never refused for it, nor is a resync after a lost or
- * restored server ([PullRequest.resync]), whose device applied those deletions before).
+ * A pull that leaves out deletions ([PullRequest.liveOnly]) is a download of the whole account from 0, and still hands
+ * out the deletions made after it began: a record an earlier page brought may have been deleted since, and its marker
+ * replaced it at a sequence a later page reaches. The download's start is kept with the device, and its position holds
+ * those markers back until a page hands them out, like any other device's.
+ *
+ * A position the history chain is no longer kept for, or a pull whose device needs a deletion marker that was dropped,
+ * is refused as [SyncErrorCode.CURSOR_EXPIRED]: the first cannot be checked, and the second would miss that deletion.
+ * So is a download past 0 that began before the server kept its start, which may have missed some already. A resync
+ * after a lost or restored server ([PullRequest.resync]) is never refused for dropped markers, as its device applied
+ * those deletions before.
  */
 class RecordPull(
     private val storage: ServerStorage,
@@ -33,9 +39,12 @@ class RecordPull(
         if (request.afterChain.isNotEmpty() && request.afterChain != chainThere.toHexString()) {
             return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_UNKNOWN)
         }
-        if (!request.liveOnly && !request.resync && request.after < storage.records.markersDroppedThrough(accountId)) {
+        val deletionsAfter = deletionsNeededAfter(device, request, sequence)
+            ?: return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_EXPIRED)
+        if (!request.resync && deletionsAfter < storage.records.markersDroppedThrough(accountId)) {
             return@transaction PullOutcome.Refused(SyncErrorCode.CURSOR_EXPIRED)
         }
+        if (request.liveOnly && request.after == 0L) storage.devices.setDownloadStart(device.id, sequence)
         storage.devices.setSyncedUpTo(device.id, request.after)
         val limit = request.limit.takeIf { it in 1..pageSize } ?: pageSize
         val found = storage.records.page(
@@ -43,7 +52,7 @@ class RecordPull(
             after = request.after,
             through = sequence,
             limit = limit + 1,
-            includeDeleted = !request.liveOnly,
+            markersAfter = deletionsAfter,
         )
         val hasMore = found.size > limit
         val records = found.take(limit)
@@ -59,6 +68,17 @@ class RecordPull(
                 nextChain = checkNotNull(storage.chainAt(accountId, nextCursor)).toHexString(),
             ),
         )
+    }
+
+    /**
+     * The position after which [device] needs every deletion: its own, and for a download also where the download
+     * began, or null for one begun before the server kept that. A download starting from 0 begins at the account's
+     * [sequence], as every record deleted before it is a marker at or before it, which deletes nothing the device takes.
+     */
+    private fun deletionsNeededAfter(device: Device, request: PullRequest, sequence: Long): Long? = when {
+        !request.liveOnly -> request.after
+        request.after == 0L -> sequence
+        else -> device.downloadStart?.let { maxOf(it, request.after) }
     }
 }
 

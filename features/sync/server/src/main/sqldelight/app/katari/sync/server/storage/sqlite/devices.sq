@@ -17,6 +17,9 @@ CREATE TABLE devices(
     last_seen_at INTEGER NOT NULL,
     -- The position the device last pulled from, null until its first pull.
     synced_up_to INTEGER,
+    -- The account's sequence when the device's latest download that leaves deletions out began, the deletions after
+    -- which it still takes. NULL before such a download, or for one begun before the server kept this.
+    download_start INTEGER,
     -- A revoked device keeps its row, so its id is never given out again and its token is answered as revoked.
     is_revoked INTEGER AS Boolean NOT NULL DEFAULT 0
 );
@@ -61,6 +64,11 @@ WHERE _id = :id;
 setSyncedUpTo:
 UPDATE devices
 SET synced_up_to = :position
+WHERE _id = :id;
+
+setDownloadStart:
+UPDATE devices
+SET download_start = :position
 WHERE _id = :id;
 
 revoke:

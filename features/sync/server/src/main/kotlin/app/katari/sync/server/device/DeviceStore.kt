@@ -29,6 +29,8 @@ interface DeviceStore {
 
     fun setSyncedUpTo(id: DeviceId, position: Long)
 
+    fun setDownloadStart(id: DeviceId, position: Long)
+
     fun revoke(id: DeviceId)
 
     fun revokeAll(accountId: Long)

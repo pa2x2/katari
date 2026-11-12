@@ -85,9 +85,9 @@ internal class SqliteRecordStore(private val database: SyncServerDatabase) : Rec
         after: Long,
         through: Long,
         limit: Int,
-        includeDeleted: Boolean,
+        markersAfter: Long,
     ): List<SequencedRecord> = database.transactionWithResult {
-        records.page(accountId, after, through, includeDeleted, limit.toLong(), ::StoredRow).executeAsList()
+        records.page(accountId, after, through, markersAfter, limit.toLong(), ::StoredRow).executeAsList()
             .withFiles(accountId)
     }
 

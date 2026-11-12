@@ -1,0 +1,1 @@
+ALTER TABLE devices ADD COLUMN download_start INTEGER;

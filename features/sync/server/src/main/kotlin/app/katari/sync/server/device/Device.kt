@@ -11,5 +11,11 @@ data class Device(
     val lastSeenMillis: Long,
     /** The position the device last pulled from, or null before its first pull. */
     val syncedUpTo: Long?,
+    /**
+     * The account's sequence when the device's latest download that leaves deletions out
+     * ([app.katari.sync.protocol.pull.PullRequest.liveOnly]) began, or null before one, or for one begun before the
+     * server kept this.
+     */
+    val downloadStart: Long?,
     val isRevoked: Boolean,
 )
