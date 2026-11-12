@@ -4,6 +4,7 @@ import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.core.platform.network.NetworkState
 import app.katari.sync.client.account.DeviceDirectory
 import app.katari.sync.client.account.DeviceListChanges
+import app.katari.sync.client.account.DeviceListFollowing
 import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.SyncAccount
@@ -202,6 +203,7 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
         local.preferences.profiles,
         handOff,
         changeRule,
+        DeviceListFollowing(deviceChanges, account),
     )
     val status = SyncStatusFlow(
         connection,
