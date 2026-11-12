@@ -1,20 +1,23 @@
 package app.katari.sync.client.connection
 
+import app.katari.sync.client.message.MessageHandlers
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.protocol.device.DeviceDescription
 import dev.zacsweers.metro.Inject
 
 /**
  * How this device presents itself in its account's device list: the name the person gave it here, else the
- * platform's name for it, with its platform and the app's version. The description goes with every pull, so a new
- * name reaches the account with the next sync and needs nothing new of the server.
+ * platform's name for it, with its platform, the app's version and the kinds of message it acts on. The description
+ * goes with every pull, so a new name, or the kinds a newer app takes, reach the account with the next sync.
  */
 @Inject
 class DeviceNaming(
     private val device: ThisDevice,
     private val preferences: SyncPreferences,
+    private val handlers: MessageHandlers,
 ) {
-    fun description(): DeviceDescription = DeviceDescription(name(), device.platform, device.appVersion)
+    fun description(): DeviceDescription =
+        DeviceDescription(name(), device.platform, device.appVersion, messageKinds = handlers.kinds())
 
     fun name(): String = preferences.deviceName.get().ifBlank { device.platformName() }
 

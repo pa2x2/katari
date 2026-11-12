@@ -14,6 +14,7 @@ import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.download.EntryDownloadState
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.layout.FramedContent
+import app.katari.sync.ui.download.ProvideDownloadElsewhere
 import app.katari.ui.di.LocalAppUiGraph
 import app.katari.upcoming.UpcomingScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -33,6 +34,7 @@ import eu.kanade.presentation.updates.UpdatesLibraryUpdateHeader
 import eu.kanade.presentation.updates.UpdatesScreen
 import eu.kanade.presentation.updates.UpdatesScreenState
 import eu.kanade.presentation.updates.unifiedUpdatesUiItems
+import eu.kanade.presentation.updates.updatesDownloadElsewhere
 import eu.kanade.presentation.updates.updatesFeedFilterSummary
 import eu.kanade.presentation.updates.updatesFeedFooterItem
 import eu.kanade.presentation.updates.updatesLibraryUpdateItem
@@ -67,6 +69,11 @@ data object UpdatesTab : Tab {
 
     @Composable
     override fun Content() {
+        ProvideDownloadElsewhere { UpdatesContent() }
+    }
+
+    @Composable
+    private fun UpdatesContent() {
         val context = currentPlatformContext()
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
@@ -142,6 +149,8 @@ data object UpdatesTab : Tab {
                                 it.downloadStateProvider() == EntryDownloadState.DOWNLOADED
                         }
                     },
+                    downloadElsewhere = updatesDownloadElsewhere(selected),
+                    onDownloadElsewhereOpened = { viewModel.toggleAllSelection(false) },
                 ),
             ),
             snackbarHostState = viewModel.snackbarHostState,

@@ -28,6 +28,7 @@ import app.katari.entry.interactions.source.EntryWebViewResolution
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.sourcemigration.config.MigrationConfigScreen
+import app.katari.sync.ui.download.ProvideDownloadElsewhere
 import app.katari.sync.ui.entry.rememberEntrySync
 import app.katari.sync.ui.question.SyncQuestionsScreen
 import app.katari.ui.di.LocalAppUiGraph
@@ -38,6 +39,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
 import eu.kanade.presentation.entry.EntryChapterSettingsDialog
+import eu.kanade.presentation.entry.EntryDownloadElsewhere
 import eu.kanade.presentation.entry.EntryScreen
 import eu.kanade.presentation.entry.activity.EntryActivitySheet
 import eu.kanade.presentation.entry.components.DeleteChaptersDialog
@@ -45,6 +47,7 @@ import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
+import eu.kanade.presentation.entry.toRequest
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
 import eu.kanade.presentation.entry.translation.TranslatableChapter
@@ -90,6 +93,11 @@ class EntryScreen(
 
     @Composable
     override fun Content() {
+        ProvideDownloadElsewhere { EntryContent() }
+    }
+
+    @Composable
+    private fun EntryContent() {
         if (!ifSourcesLoaded()) {
             LoadingScreen()
             return
@@ -363,6 +371,12 @@ class EntryScreen(
             onDownloadActionClicked = viewModel.downloads::runBulkAction
                 .takeIf { bulkDownloadsAvailable },
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
+            downloadElsewhere = EntryDownloadElsewhere(
+                entryIds = successState.memberIds.toSet() + successState.entry.id,
+                sourceId = successState.entry.source.takeIf { successState.memberIds.size <= 1 },
+                title = successState.entry.displayTitle,
+                chapters = { action -> viewModel.downloads.chaptersElsewhere(action).map { it.toRequest() } },
+            ).takeIf { bulkDownloadsAvailable },
             onEditCategoryClicked = viewModel.library::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
             updatesAnchor = updatesAnchor,

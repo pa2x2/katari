@@ -28,11 +28,8 @@ import kotlin.time.Duration
 @SingleIn(AppScope::class)
 class MessageInbox(
     private val connection: SyncConnection,
-    // Taken when the first message comes: a handler may send messages of its own, and sending needs the runs that
-    // need this inbox
-    handlers: Lazy<Set<MessageHandler>>,
+    private val handlers: MessageHandlers,
 ) {
-    private val handlers by lazy { handlers.value.associateBy { it.kind } }
     private val handling = Mutex()
 
     /** Handles what came along with [changes], then fetches the rest, when it announces any message not handled yet. */
@@ -66,7 +63,7 @@ class MessageInbox(
     }
 
     private suspend fun dispatch(message: DeviceMessage) {
-        val handler = handlers[message.body.kind]
+        val handler = handlers.of(message.body.kind)
         if (handler == null || message.body.kindVersion > handler.version) {
             logcat(LogPriority.INFO) { "Passed over a ${message.body.kind} message (${message.body.kindVersion})" }
             return

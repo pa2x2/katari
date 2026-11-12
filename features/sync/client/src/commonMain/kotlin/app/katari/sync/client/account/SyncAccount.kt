@@ -54,7 +54,7 @@ class SyncAccount(
     private val disconnection: Disconnection,
     private val deviceChanges: DeviceListChanges,
 ) {
-    /** Changes whenever the server says a device joined or left the account, while the app listens live. */
+    /** Changes whenever the server says a device joined, left or described itself anew, while the app listens live. */
     val deviceListChanges: Flow<Long> get() = deviceChanges.heard
 
     /**

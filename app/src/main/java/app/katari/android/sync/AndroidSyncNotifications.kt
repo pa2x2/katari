@@ -2,13 +2,17 @@ package app.katari.android.sync
 
 import android.app.Application
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.connection.SyncStop
+import app.katari.sync.ui.notice.DownloadRequestFailure
 import app.katari.sync.ui.notice.SyncNotifications
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.cancelNotification
+import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
 import okhttp3.HttpUrl
 import tachiyomi.i18n.*
@@ -53,6 +57,40 @@ class AndroidSyncNotifications(private val application: Application) : SyncNotif
         )
     }
 
+    override fun showDownloadRequestFailed(failure: DownloadRequestFailure) {
+        val from = failure.from ?: application.stringResource(MR.strings.sync_download_request_unknown_device)
+        val chapters = failure.chapters.singleOrNull() ?: application.pluralStringResource(
+            MR.plurals.sync_download_request_and_more,
+            failure.chapters.size - 1,
+            failure.chapters.first(),
+            failure.chapters.size - 1,
+        )
+        val text = when (failure.reason) {
+            DownloadRequestFailure.Reason.SOURCE_MISSING -> MR.strings.sync_download_request_missing_source
+            DownloadRequestFailure.Reason.CHAPTERS_GONE -> MR.strings.sync_download_request_missing_chapters
+        }
+        val notification = application.notificationBuilder(AppNotificationKind.SYNC.id) {
+            setSmallIcon(R.drawable.ic_katari)
+            setContentTitle(application.stringResource(MR.strings.sync_download_request_failed_title, failure.title))
+            setContentText(application.stringResource(text, from, chapters, failure.sourceName))
+            setStyle(NotificationCompat.BigTextStyle())
+            setAutoCancel(true)
+            setContentIntent(
+                NotificationReceiver.openEntryPendingActivity(application, failure.profileId, failure.entryId),
+            )
+        }.build()
+        // One per entry, apart from the entry's other notifications by its tag
+        application.notify(
+            listOf(
+                NotificationManagerCompat.NotificationWithIdAndTag(
+                    DOWNLOAD_REQUEST_TAG,
+                    failure.entryId.hashCode(),
+                    notification,
+                ),
+            ),
+        )
+    }
+
     private fun notify(id: Int, title: String, text: String?, action: String) {
         application.notify(id, AppNotificationKind.SYNC.id) {
             setSmallIcon(R.drawable.ic_katari)
@@ -62,5 +100,9 @@ class AndroidSyncNotifications(private val application: Application) : SyncNotif
             setAutoCancel(true)
             setContentIntent(SyncNavigation.pendingIntent(application, action, id))
         }
+    }
+
+    private companion object {
+        const val DOWNLOAD_REQUEST_TAG = "sync-download-request"
     }
 }

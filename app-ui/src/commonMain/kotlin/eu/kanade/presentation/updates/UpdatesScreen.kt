@@ -34,6 +34,7 @@ import app.katari.presentation.kit.selection.SelectableItems
 import app.katari.presentation.kit.selection.SelectionActions
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.profiles.ui.switcher.ActiveProfileButton
+import app.katari.sync.ui.download.DownloadElsewhereRequest
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import eu.kanade.presentation.entry.components.chapterSelectionActions
@@ -165,6 +166,8 @@ data class UpdatesBottomBarConfig(
     val markAsUnreadLabel: StringResource = MR.strings.action_mark_as_unread,
     val onDownloadClicked: (() -> Unit)? = null,
     val onDeleteClicked: (() -> Unit)? = null,
+    val downloadElsewhere: DownloadElsewhereRequest? = null,
+    val onDownloadElsewhereOpened: () -> Unit = {},
 )
 
 @Composable
@@ -251,4 +254,6 @@ private fun updatesSelectionActions(config: UpdatesBottomBarConfig): SelectionAc
     markAsUnreadLabel = config.markAsUnreadLabel,
     onDownloadClicked = config.onDownloadClicked,
     onDeleteClicked = config.onDeleteClicked,
+    downloadElsewhere = config.downloadElsewhere,
+    onDownloadElsewhereOpened = config.onDownloadElsewhereOpened,
 )

@@ -253,26 +253,36 @@ class EntryChapterDownloads(
     }
 
     fun runBulkAction(action: DownloadAction) {
-        val bulkAction = action.toEntryBulkDownloadAction()
         scope.launchNonCancellable {
-            if (bulkAction.needsWholeChildList && state.loaded?.olderChapters != null) finishOlderChapters()
-            val loaded = state.loaded ?: return@launchNonCancellable
-            val candidateItems = loaded.processedChapters
-                .filter { item -> item.downloadState == EntryDownloadState.NOT_DOWNLOADED }
-            val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
-                EntryBulkDownloadRequest(
-                    entry = loaded.entry,
-                    action = bulkAction,
-                    sourceIds = loaded.chapters.mapTo(mutableSetOf(loaded.entry.source)) { it.entry.source },
-                    visibleCandidates = candidateItems.map(EntryChapterList.Item::chapter),
-                    memberEntryIds = loaded.memberIds,
-                ),
-            )
-            if (result is EntryBulkDownloadResolutionResult.Candidates) {
-                val itemsByChapterId = candidateItems.associateBy { it.chapter.id }
-                start(result.chapters.mapNotNull { itemsByChapterId[it.id] }, false)
-            }
+            val items = bulkCandidates(action) { item -> item.downloadState == EntryDownloadState.NOT_DOWNLOADED }
+            if (items.isNotEmpty()) start(items, false)
         }
+    }
+
+    /** The chapters [action] picks for another device to download, whether or not this device has them. */
+    suspend fun chaptersElsewhere(action: DownloadAction): List<EntryChapter> =
+        bulkCandidates(action) { true }.map(EntryChapterList.Item::chapter)
+
+    private suspend fun bulkCandidates(
+        action: DownloadAction,
+        isCandidate: (EntryChapterList.Item) -> Boolean,
+    ): List<EntryChapterList.Item> {
+        val bulkAction = action.toEntryBulkDownloadAction()
+        if (bulkAction.needsWholeChildList && state.loaded?.olderChapters != null) finishOlderChapters()
+        val loaded = state.loaded ?: return emptyList()
+        val candidateItems = loaded.processedChapters.filter(isCandidate)
+        val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
+            EntryBulkDownloadRequest(
+                entry = loaded.entry,
+                action = bulkAction,
+                sourceIds = loaded.chapters.mapTo(mutableSetOf(loaded.entry.source)) { it.entry.source },
+                visibleCandidates = candidateItems.map(EntryChapterList.Item::chapter),
+                memberEntryIds = loaded.memberIds,
+            ),
+        )
+        if (result !is EntryBulkDownloadResolutionResult.Candidates) return emptyList()
+        val itemsByChapterId = candidateItems.associateBy { it.chapter.id }
+        return result.chapters.mapNotNull { itemsByChapterId[it.id] }
     }
 
     fun delete(chapters: List<EntryChapter>) {

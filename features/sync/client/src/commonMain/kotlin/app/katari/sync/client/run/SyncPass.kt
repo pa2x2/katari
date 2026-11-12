@@ -91,6 +91,8 @@ class SyncPass(
     private val messageOutbox: MessageOutbox,
     private val messageInbox: MessageInbox,
     private val changeRule: ChangeTransferRule,
+    // Taken after the first run that synced: a listener may send messages, and sending needs the runs that need this
+    private val syncedListeners: Lazy<Set<SyncedListener>>,
 ) {
     /**
      * Runs [request], calling [working] once it is found to have work to do with the server: a run that stops before,
@@ -104,7 +106,20 @@ class SyncPass(
         } finally {
             // However the run ended, no entry it was asked to fetch first is left being checked (D052)
             handOff.settle(request.entriesFirst, reached = outcome == SyncOutcome.SYNCED || outcome == SyncOutcome.IDLE)
-            if (outcome == SyncOutcome.SYNCED) handOff.pulled()
+            if (outcome == SyncOutcome.SYNCED) {
+                handOff.pulled()
+                tellSynced()
+            }
+        }
+    }
+
+    private fun tellSynced() {
+        syncedListeners.value.forEach { listener ->
+            try {
+                listener.onSynced()
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "A listener to synced runs failed" }
+            }
         }
     }
 

@@ -18,6 +18,7 @@ import app.katari.presentation.kit.list.SwipeActionsRow
 import app.katari.presentation.kit.selection.ItemAction
 import app.katari.presentation.kit.selection.selectableItem
 import app.katari.presentation.kit.surface.pulsingHighlight
+import app.katari.sync.ui.download.DownloadElsewhereRequest
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
@@ -56,6 +57,7 @@ fun EntryChapterListItem(
     highlightTrigger: Int? = null,
     translateStatusProvider: () -> EntryTranslateStatus? = { null },
     onTranslateClick: ((ChapterTranslateAction) -> Unit)? = null,
+    downloadElsewhere: DownloadElsewhereRequest? = null,
 ) {
     val start = swipeAction(
         action = chapterSwipeStartAction,
@@ -113,6 +115,7 @@ fun EntryChapterListItem(
                     onClick = onDownloadClick,
                     translateStatusProvider = translateStatusProvider,
                     onTranslateClick = onTranslateClick,
+                    downloadElsewhere = downloadElsewhere,
                 )
             },
         )

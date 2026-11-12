@@ -106,6 +106,11 @@ internal class SelectableItemsState {
     var menu by mutableStateOf<ItemMenu?>(null)
         private set
 
+    /** The controls in the items that take their own right-clicks ([secondaryClick]). */
+    val claims = mutableSetOf<SecondaryClickClaim>()
+
+    fun claimed(windowPosition: Offset): Boolean = claims.any { it.covers(windowPosition) }
+
     fun openMenu(item: ItemPointer, itemCoordinates: LayoutCoordinates, position: Offset) {
         val coordinates = coordinates?.takeIf { it.isAttached } ?: return
         if (!itemCoordinates.isAttached) return

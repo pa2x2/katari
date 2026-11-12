@@ -23,8 +23,10 @@ import app.katari.presentation.kit.navigation.AppBar
 import app.katari.presentation.kit.navigation.AppBarActions
 import app.katari.presentation.kit.navigation.AppBarTitle
 import app.katari.presentation.kit.refresh.refreshAppBarAction
+import app.katari.presentation.kit.sheet.rememberPopoverAnchor
 import app.katari.presentation.kit.theme.ContentTone
 import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.EntryDownloadElsewhere
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.*
@@ -39,6 +41,7 @@ fun EntryToolbar(
     onClickShare: (() -> Unit)?,
     onClickDownload: ((DownloadAction) -> Unit)?,
     bookmarkedDownloadsSupported: Boolean,
+    downloadElsewhere: EntryDownloadElsewhere?,
     onClickEditCategory: (() -> Unit)?,
     onClickEditDisplayName: (() -> Unit)?,
     onClickManageMerge: (() -> Unit)?,
@@ -72,6 +75,7 @@ fun EntryToolbar(
         navigateUp = navigateUp,
         actions = {
             var downloadExpanded by remember { mutableStateOf(false) }
+            val downloadAnchor = rememberPopoverAnchor()
             val filterTone = if (hasFilters) ContentTone.Active else ContentTone.Inherit
             AppBarActions(
                 actions = buildList {
@@ -105,8 +109,11 @@ fun EntryToolbar(
                                         onDownloadClicked = onClickDownload,
                                         bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
                                         presentation = entryType.entryTypePresentation(),
+                                        downloadElsewhere = downloadElsewhere,
+                                        anchor = downloadAnchor,
                                     )
                                 },
+                                anchor = downloadAnchor,
                             ),
                         )
                     }
