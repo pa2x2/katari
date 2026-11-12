@@ -546,11 +546,28 @@ deletePlaybackPreferences:
 DELETE FROM playback_preferences
 WHERE entry_id = :entryId;
 
--- Merges the person made
+-- Merges the person made, and the titles the person added to merges a source made
 
 deleteMergeMember:
 DELETE FROM merged_entries
 WHERE profile_id = :profileId AND entry_id = :entryId;
+
+mergeMemberAt:
+SELECT entry_id
+FROM merged_entries
+WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position = :position;
+
+-- Moves the members from the position on one place on, through negative positions, which no member holds, so no two
+-- share a position on the way.
+freeMergePosition {
+    UPDATE merged_entries
+    SET position = -position - 1
+    WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position >= :position;
+
+    UPDATE merged_entries
+    SET position = -position
+    WHERE profile_id = :profileId AND target_entry_id = :targetEntryId AND position < 0;
+}
 
 -- A member already at the position, from a merge applied in another order, gives way; its own record puts it back.
 insertMergeMember:

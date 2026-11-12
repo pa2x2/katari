@@ -202,14 +202,28 @@ SELECT
 FROM playback_preferences
 WHERE entry_id = :entryId;
 
--- A group whose target its source declared is derived on every device; only merges the user made sync.
+-- The entry's place in a merge, and whether that place is one the merged entry's source gave it: the merged entry's
+-- own, or that of a title its source lists. Every device derives those from its own refreshes, so they never sync;
+-- a title the person added to such a merge does, as every place in a merge the person made does.
 mergeMemberRow:
-SELECT M.entry_id, M.target_entry_id, M.position
+SELECT M.entry_id, M.target_entry_id, M.position,
+    EXISTS (
+        SELECT 1
+        FROM entries T
+        WHERE T._id = M.target_entry_id
+        AND T.merged_by_source
+        AND (
+            M.entry_id = M.target_entry_id
+            OR EXISTS (
+                SELECT 1
+                FROM source_merge_listings L
+                WHERE L.profile_id = M.profile_id AND L.root_entry_id = M.target_entry_id AND L.entry_id = M.entry_id
+            )
+        )
+    ) AS given_by_source
 FROM merged_entries M
-JOIN entries T ON T._id = M.target_entry_id
 WHERE M.profile_id = :profileId
-AND M.entry_id = :entryId
-AND T.merged_by_source = 0;
+AND M.entry_id = :entryId;
 
 entryMigrationRow:
 SELECT source_entry_id, target_entry_id, intent_fingerprint, chapter_state_only

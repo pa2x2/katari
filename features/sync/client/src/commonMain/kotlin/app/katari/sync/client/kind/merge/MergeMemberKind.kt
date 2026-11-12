@@ -1,5 +1,6 @@
 package app.katari.sync.client.kind.merge
 
+import app.cash.sqldelight.async.coroutines.await
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.apply.ApplyOutcome
@@ -20,8 +21,9 @@ import app.katari.sync.client.record.RecordRef
 import app.katari.sync.client.record.SyncedKind
 
 /**
- * Members of merges the person made, keyed by the member entry's key. Local ref: `[profile_id, entry_id]`. Groups a
- * source declared are derived on every device from the source and never sync.
+ * Members of merges the person made, and titles the person added to merges a source made, keyed by the member entry's
+ * key. Local ref: `[profile_id, entry_id]`. The places a source gave, its merged entry's own and those of the titles it
+ * lists, are derived on every device from its own refreshes and never sync (`sync_local_rows.mergeMemberRow`).
  */
 object MergeMemberKind : SyncedKind<MergeMemberPayload>(
     "merge.member",
@@ -47,6 +49,7 @@ object MergeMemberKind : SyncedKind<MergeMemberPayload>(
 
     override suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<MergeMemberPayload> {
         val row = reads.database.sync_local_rowsQueries.mergeMemberRow(ref.long(0), ref.long(1)).awaitAsOneOrNull()
+            ?.takeUnless { it.given_by_source }
             ?: return LocalRead.Missing
         val memberKey = reads.entryKey(row.entry_id) ?: return LocalRead.NotSynced
         val targetKey = reads.entryKey(row.target_entry_id) ?: return LocalRead.NotSynced
@@ -74,15 +77,47 @@ object MergeMemberKind : SyncedKind<MergeMemberPayload>(
         removed = latest(local.removed, incoming.removed),
     )
 
+    /**
+     * Puts the entry where the record places it. A place a source gave here stays: the person's record of the entry
+     * never takes it away or moves it within the source's merge, though one that puts the entry in a merge the person
+     * made wins, as a refresh of the source leaves it there. Members a source placed give way by moving along instead
+     * of being replaced, as no record puts them back, and a merged entry that has no place of its own here, as one this
+     * device's refresh hasn't made a merge of yet, takes the first.
+     */
     override suspend fun apply(writes: LocalWrites, key: String, payload: MergeMemberPayload): ApplyOutcome {
         val entryId = writes.entryId(payload.memberKey).idOr { return it }
+        val targetId = if (payload.removed.value) null else writes.entryId(payload.target.value).idOr { return it }
         val queries = writes.database.sync_applyQueries
         val profileId = queries.entryProfile(entryId).awaitAsOne()
-        queries.deleteMergeMember(profileId, entryId)
-        if (!payload.removed.value) {
-            val targetId = writes.entryId(payload.target.value).idOr { return it }
-            queries.insertMergeMember(profileId, targetId, entryId, payload.position.value)
+        val applied = ApplyOutcome.Applied(LocalRef.of(profileId, entryId))
+        val place = writes.mergePlace(profileId, entryId)
+        val staysInMerge = place?.target_entry_id == targetId
+        if (place?.given_by_source == true && (targetId == null || staysInMerge)) return applied
+        // Leaving a merge deletes the place, so a merge left with one member dissolves (merged_entries.sq); a move
+        // within the merge replaces it, which fires no delete trigger
+        if (place != null && !staysInMerge) queries.deleteMergeMember(profileId, entryId)
+        if (targetId == null) return applied
+        val position = payload.position.value
+        if (writes.sourcePlaced(profileId, targetId, position)) {
+            queries.freeMergePosition(profileId, targetId, position).await()
         }
-        return ApplyOutcome.Applied(LocalRef.of(profileId, entryId))
+        queries.insertMergeMember(profileId, targetId, entryId, position)
+        if (targetId != entryId && writes.mergePlace(profileId, targetId) == null) {
+            if (queries.mergeMemberAt(profileId, targetId, 0).awaitAsOneOrNull() != null) {
+                queries.freeMergePosition(profileId, targetId, 0).await()
+            }
+            queries.insertMergeMember(profileId, targetId, targetId, 0)
+        }
+        return applied
+    }
+
+    private suspend fun LocalWrites.mergePlace(profileId: Long, entryId: Long) =
+        database.sync_local_rowsQueries.mergeMemberRow(profileId, entryId).awaitAsOneOrNull()
+
+    /** Whether the member at [position] of [targetId]'s merge holds a place a source gave it. */
+    private suspend fun LocalWrites.sourcePlaced(profileId: Long, targetId: Long, position: Long): Boolean {
+        val holder = database.sync_applyQueries.mergeMemberAt(profileId, targetId, position).awaitAsOneOrNull()
+            ?: return false
+        return mergePlace(profileId, holder)?.given_by_source == true
     }
 }
