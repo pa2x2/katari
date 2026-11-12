@@ -22,7 +22,9 @@ import app.katari.desktop.profile.ProfileRelock
 import app.katari.desktop.security.signin.SignInPrompts
 import app.katari.desktop.security.signin.SystemSignIn
 import app.katari.desktop.storage.DesktopDirectories
+import app.katari.desktop.tray.AppTray
 import app.katari.desktop.webview.ChromiumUpkeep
+import app.katari.desktop.window.MainWindowVisibility
 import app.katari.desktop.window.OpenWindow
 import app.katari.desktop.window.WindowPreferences
 import app.katari.desktop.work.PersistedWorkResume
@@ -98,6 +100,8 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val preferenceAppLocaleStore: PreferenceAppLocaleStore
     val workCloseGuard: WorkCloseGuard
     val openWindow: OpenWindow
+    val mainWindowVisibility: MainWindowVisibility
+    val appTray: AppTray
     val homeDestinations: HomeDestinations
     val desktopNotifications: DesktopNotifications
     val systemFileChooser: SystemFileChooser

@@ -119,6 +119,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     AppProcessStart.scheduleWarmups({ warmups -> thread(name = "Startup warmups") { warmups.run() } }) { graph }
     graph.classDataArchive.start()
     graph.chromiumUpkeep.start()
+    graph.appTray.start()
     runWindow(graph, laterLaunches = instance.requests) {
         HomeWindowContent(startup, graph.activeProfileLock, graph.homeDestinations) { navigator ->
             graph.windowAnimePlayer.Host(navigator)
@@ -131,6 +132,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
         LaunchedEffect(Unit) { WindowThreadFreezes.watch() }
     }
     graph.classDataArchive.stop()
+    graph.appTray.close()
     // The work they show ends with the app
     graph.desktopNotifications.close()
     // Before a restart's launch, whose web view would find Chromium's profile still in use

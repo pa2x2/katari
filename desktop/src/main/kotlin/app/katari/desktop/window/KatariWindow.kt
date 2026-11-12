@@ -47,8 +47,9 @@ import javax.swing.JFrame
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
  * screen's title unless the profile is locked, carrying the app's icon, brought forward when the app is launched again
- * and opening what that launch opens, and closing the app when it closes, after asking while background work runs (see
- * [app.katari.desktop.work.WorkCloseGuard]). [content] gets what [AppUiRoot] gives every platform's screens, and around it what only a
+ * and opening what that launch opens, and hidden when it closes while the app's icon shows in the tray
+ * ([app.katari.desktop.tray.AppTray]), which brings it back and quits the app. Where no tray shows the icon, closing it
+ * closes the app, after asking while background work runs (see [app.katari.desktop.work.WorkCloseGuard]). [content] gets what [AppUiRoot] gives every platform's screens, and around it what only a
  * desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its navigators
  * show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, the window's full screen, which F11 and screens such
@@ -59,9 +60,9 @@ import javax.swing.JFrame
  * profile picker included, and the density of the session's scale and the interface size. While it is open,
  * extensions find the activity that stands for it in the foreground
  * ([app.katari.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity open in it.
- * The app is open for as long as it is, minimized or not, which keeps sync's live channel open ([ReportsOpen]); its
- * focus is the app's front, which the rest of sync follows ([ReportsForeground]); and whether it is minimized counts
- * toward the user being away, which locks the open profile again ([ReportsPresence]).
+ * The app is open for as long as it is, minimized or hidden in the tray included, which keeps sync's live channel open
+ * ([ReportsOpen]); its focus is the app's front, which the rest of sync follows ([ReportsForeground]); and whether it is
+ * minimized or hidden counts toward the user being away, which locks the open profile again ([ReportsPresence]).
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -80,9 +81,12 @@ fun ApplicationScope.KatariWindow(
     val title = screenTitle?.let { stringResource(MR.strings.window_title_with_screen, appName, it) } ?: appName
     val icon = remember { AppIcon.painter() }
     val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }
+    val hidden by graph.mainWindowVisibility.isHidden.collectAsState()
+    val inTray by graph.appTray.isShown.collectAsState()
     Window(
-        onCloseRequest = requestQuit,
+        onCloseRequest = { if (inTray) graph.mainWindowVisibility.hide() else requestQuit() },
         state = state,
+        visible = !hidden,
         title = title,
         icon = icon,
         onKeyEvent = shortcuts::onKeyEvent,
@@ -140,7 +144,9 @@ private fun WindowContent(
     ReportsOpen(graph)
     ReportsForeground(window, graph)
     ReportsPresence(window, graph.windowAnimePlayer, graph.appPresence)
-    AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
+    AnswerLaterLaunches(laterLaunches, graph.mainWindowVisibility, graph.homeDestinations)
+    AnswerTrayRequests(graph.appTray, graph.mainWindowVisibility, graph.workCloseGuard, onQuit = onQuit)
+    ReturnsFromTray(graph)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,

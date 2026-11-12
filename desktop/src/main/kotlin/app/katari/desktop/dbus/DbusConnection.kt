@@ -110,6 +110,11 @@ internal class DbusConnection private constructor(private val channel: SocketCha
         return result == REQUEST_NAME_PRIMARY_OWNER || result == REQUEST_NAME_ALREADY_OWNER
     }
 
+    /** Lets go of [name], which services that follow its owner see as this connection leaving. */
+    fun releaseName(name: String) {
+        call(BUS_NAME, BUS_PATH, BUS_NAME, "ReleaseName", "s", name)
+    }
+
     /** Answers [call] with [values] of [signature], unless its caller asked for no answer. */
     fun reply(call: DbusMessage, signature: String = "", vararg values: Any?) {
         if (call.expectsReply) send(DbusMessage.methodReturn(++serial, call, signature, values.toList()))
