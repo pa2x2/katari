@@ -175,9 +175,16 @@ class LiveUpdates(
         }
     }
 
+    // A channel that doesn't work can be a server that is down, so failing fetches back off as reopening the channel does
     private suspend fun pollMessages(latest: AtomicReference<SyncConnectionState>): Nothing {
+        var backoff = FIRST_BACKOFF
         while (true) {
-            if (!withClient(latest) { inbox.fetch(it, wait = MESSAGE_WAIT) }) delay(FIRST_BACKOFF)
+            if (withClient(latest) { inbox.fetch(it, wait = MESSAGE_WAIT) }) {
+                backoff = FIRST_BACKOFF
+            } else {
+                delay(backoff)
+                backoff = (backoff * 2).coerceAtMost(MAX_BACKOFF)
+            }
         }
     }
 

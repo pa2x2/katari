@@ -14,6 +14,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Duration.Companion.minutes
@@ -127,6 +129,11 @@ class SyncTriggers(
         preferences.changesOnMobileData.changes(),
         network.state(),
     ) { onMobileData, network -> !onMobileData && !network.countsAsWifi }.distinctUntilChanged()
+
+    /** Ends what [start] started and waits for it, as a test device does before its database closes. */
+    internal suspend fun stop() {
+        scope.coroutineContext.job.cancelAndJoin()
+    }
 
     fun appOpened() {
         isOpen.value = true

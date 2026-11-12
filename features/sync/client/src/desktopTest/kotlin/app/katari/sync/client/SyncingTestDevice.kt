@@ -217,8 +217,12 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     suspend fun sql(vararg statements: String) = local.sql(*statements)
 
     override fun close() {
-        // Joining and changing a sync choice start runs a test may not wait for; closing the database under one fails
-        runBlocking { runs.awaitIdle() }
+        // Joining and changing a sync choice start runs a test may not wait for, and the triggers a test started go on
+        // by themselves; closing the database under either fails
+        runBlocking {
+            triggers.stop()
+            runs.awaitIdle()
+        }
         local.close()
     }
 
