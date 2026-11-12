@@ -15,9 +15,11 @@ internal class CaptureTrigger(
     /** An SQL condition the row must also meet. */
     val condition: String? = null,
     /**
-     * For a delete, the entries and chapters the row belongs to. The delete is recorded only while every one of them
-     * is still here: a row deleted along with its entry or chapter, as a refresh, a move or clearing the database
-     * removes them, went as cache and not by the person's hand, so its record stays as it is everywhere (D017).
+     * For a delete, the profile, entries and chapters the row belongs to. The delete is recorded only while every one
+     * of them is still here: a row deleted along with its entry or chapter, as a refresh, a move or clearing the
+     * database removes them, went as cache and not by the person's hand, so its record stays as it is everywhere
+     * (D017). A row deleted along with its profile went with the profile's deletion, whose record stands for it: its
+     * own record stays live, so a profile kept after the question about its deletion (D018) comes back with it.
      */
     val owners: List<Owner> = emptyList(),
     /**
@@ -42,6 +44,8 @@ internal class CaptureTrigger(
             fun entry(column: String = "entry_id") = Owner("entries", "OLD.$column")
 
             fun chapter(column: String = "chapter_id") = Owner("chapters", "OLD.$column")
+
+            fun profile(column: String = "profile_id") = Owner("profiles", "OLD.$column")
         }
     }
 

@@ -124,15 +124,15 @@ class FileCapture(
         val category = owner.category.stored
         val ref = owner.ref.json
         val row = sync_filesQueries.get(category, ref).awaitAsOneOrNull()
-        val synced = ownerSyncs(owner)
-        if (owner is FileOwner.CustomCover && !synced) {
-            // The entry is gone, or never syncs; its record keeps the cover it names (D013, KEEP).
+        if (!ownerSyncs(owner)) {
+            // The entry is gone, or never syncs; its record keeps the cover it names (D013, KEEP). Or the profile is
+            // gone, whose deletion stands for its fonts', as for its other rows (CaptureTrigger.owners)
             if (row != null) sync_filesQueries.delete(category, ref)
             return
         }
         if (!preferences.choices().syncs(owner.category.dataGroup)) return
         when {
-            row == null && (now == null || !synced) -> return
+            row == null && now == null -> return
             row != null && now?.sha256 == row.placed_sha256 -> return
             row != null && now?.sha256 == row.wanted_sha256 -> {
                 sync_filesQueries.setPlaced(sha256 = now?.sha256, category = category, owner = ref)
