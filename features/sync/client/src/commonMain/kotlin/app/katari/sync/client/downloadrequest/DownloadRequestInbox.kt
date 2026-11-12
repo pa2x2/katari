@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -62,6 +63,11 @@ class DownloadRequestInbox(
 
     /** Carries out the requests waiting whose entry is here now, apart from whoever asked. */
     fun lookAgain(): Job = scope.launch { working.withLock { carryOut() } }
+
+    /** Waits until the looks started so far are done, such as before the database closes. */
+    suspend fun awaitIdle() {
+        scope.coroutineContext.job.children.forEach { it.join() }
+    }
 
     private suspend fun carryOut() {
         if (!connection.state().isLinked) {

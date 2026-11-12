@@ -246,11 +246,13 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     suspend fun deviceId(): DeviceId = checkNotNull(connection.state().device)
 
     override fun close() {
-        // Joining and changing a sync choice start runs a test may not wait for, and the triggers a test started go on
-        // by themselves; closing the database under either fails
+        // Joining and changing a sync choice start runs a test may not wait for, the triggers a test started go on by
+        // themselves, and a run that synced has download requests looked at after it; closing the database under any
+        // of them fails
         runBlocking {
             triggers.stop()
             runs.awaitIdle()
+            downloadRequestInbox.awaitIdle()
         }
         local.close()
     }
