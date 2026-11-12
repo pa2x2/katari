@@ -46,12 +46,11 @@ WHERE _id = :entryId;
 insertEntry:
 INSERT INTO entries(
     profile_id, source, url, type, title, author, artist, description, genre, status, thumbnail_url, background_url,
-    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, download_title, memo,
-    update_strategy
+    favorite, date_added, display_name, notes, library_pinned, viewer, chapter_flags, memo, update_strategy
 )
 VALUES (
     :profileId, :source, :url, :type, :title, :author, :artist, :description, :genre, :status, :thumbnailUrl,
-    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :title, :memo,
+    :backgroundUrl, :favorite, :dateAdded, :displayName, :notes, :libraryPinned, :viewer, :chapterFlags, :memo,
     :updateStrategy
 )
 RETURNING _id;

@@ -35,6 +35,8 @@ class SourceDetailsTest {
                     b.rows(CHAPTER_DETAILS_QUERY) shouldBe listOf(CHAPTER_DETAILS)
                     b.rows("SELECT json_array(group_key, title, position) FROM chapter_groups") shouldBe
                         listOf("""["s2","Season 2",1]""")
+                    // Downloads go under the title, as for an entry added here, until a merge names them otherwise
+                    b.rows("SELECT download_title IS NULL FROM entries") shouldBe listOf("1")
                 }
             }
         }
