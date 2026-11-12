@@ -1,5 +1,36 @@
 # Desktop Changelog
 
+## [1.0.0-beta.12] - 2026-11-12
+
+> Sync in this version needs sync server 1.1.0. Update the server first, or sync stops until you do.
+
+### ✨ Added
+
+- Closing the window keeps Katari running in the tray. `Keep running` in the tray in Settings > General turns this off.
+- `Start at login` opens Katari hidden in the tray when you sign in.
+- Download on another device asks another device on your sync account to download chapters. The other device downloads them once the entry is in its library and shows a notification for chapters it couldn't download. A device that is offline gets the request when it next syncs, within a week. Both devices need this version.
+- Settings > Touchpad sets natural scrolling for the whole app: as the system sets it, on, or off.
+- The top of Updates shows a running library update's progress and what it has found so far, with Cancel.
+
+### 🔄 Changed
+
+- A new General settings page holds the app language and the date and time formats, which were in Appearance, and the tray switches.
+
+### 🧩 Improved
+
+- A touchpad swipe over the player changes the volume or seeks as far as your fingers move, follows them when the system scrolls naturally, and stops when they lift.
+- A touchpad swipe pans a zoomed image as far as your fingers move, and an up or down swipe over a sideways row scrolls the page.
+- Right-clicking a chapter's download button opens its menu instead of the chapter's.
+- The update report shows a running update's progress, the entries it is checking and Cancel. A finished report says how long the update took and how many entries it checked.
+- When one error fails entries on several sources, the update report lists it once with one retry, and Failed offers Retry all.
+- Update report rows show the entry's type and source, and new chapters are named and open as they do in Updates.
+- "An update is already running" offers View, which opens the running update's report.
+- The Sync page lists your devices as soon as it opens and marks the ones connected now.
+
+### 🐛 Fixed
+
+- A wheel or touchpad scroll no longer leaves a large title or a sheet half open, and scrolling up at the top of a list opens the large title.
+
 ## [1.0.0-beta.11] - 2026-11-11
 
 ### ✨ Added
@@ -308,7 +339,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.11...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.12...HEAD
+[1.0.0-beta.12]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.12
 [1.0.0-beta.11]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.11
 [1.0.0-beta.10]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.10
 [1.0.0-beta.9]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.9
