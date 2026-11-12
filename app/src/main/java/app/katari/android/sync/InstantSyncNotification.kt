@@ -9,7 +9,6 @@ import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.notification.AppNotificationKind
-import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.trigger.LiveUpdates
 import app.katari.sync.client.trigger.LiveUpdatesState
 import dev.icerock.moko.resources.StringResource
@@ -32,16 +31,10 @@ class InstantSyncNotification(
     private val application: Application,
     private val live: LiveUpdates,
     private val network: NetworkConnectivity,
-    private val preferences: SyncPreferences,
 ) {
-    fun states(): Flow<StringResource> = combine(
-        live.states,
-        network.state(),
-        preferences.changesOnMobileData.changes(),
-    ) { live, network, onMobileData ->
+    fun states(): Flow<StringResource> = combine(live.states, network.state()) { live, network ->
         when {
             !network.hasNetwork -> PlatformStrings.sync_instant_waiting_for_network
-            !onMobileData && !network.countsAsWifi -> PlatformStrings.sync_instant_waiting_for_wifi
             live == LiveUpdatesState.OPEN -> PlatformStrings.sync_instant_connected
             else -> PlatformStrings.sync_instant_connecting
         }

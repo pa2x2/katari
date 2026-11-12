@@ -1,11 +1,11 @@
 package app.katari.sync.client.trigger
 
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
-import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
+import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.run.SyncRequest
 import app.katari.sync.client.run.SyncRuns
 import dev.zacsweers.metro.AppScope
@@ -60,7 +60,7 @@ class SyncTriggers(
     private val handler: DatabaseHandler,
     private val profileStore: ProfileStore,
     private val handOff: EntryHandOff,
-    private val network: NetworkConnectivity,
+    private val changeRule: ChangeTransferRule,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isOpen = MutableStateFlow(false)
@@ -116,19 +116,14 @@ class SyncTriggers(
         }
         // What waited for syncing to resume, or for Wi-Fi, goes as soon as it may
         scope.launch {
-            combine(linked, preferences.paused.changes(), changesWaitForWifi()) { isLinked, paused, waits ->
-                isLinked && !paused && !waits
+            combine(linked, preferences.paused.changes(), changeRule.allows()) { isLinked, paused, allowed ->
+                isLinked && !paused && allowed
             }
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { mayGo -> if (mayGo) runs.request(SyncRequest()) }
         }
     }
-
-    private fun changesWaitForWifi() = combine(
-        preferences.changesOnMobileData.changes(),
-        network.state(),
-    ) { onMobileData, network -> !onMobileData && !network.countsAsWifi }.distinctUntilChanged()
 
     /** Ends what [start] started and waits for it, as a test device does before its database closes. */
     internal suspend fun stop() {

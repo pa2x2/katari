@@ -46,4 +46,35 @@ class MessageDeliveryTest {
                 }
             }
         }
+
+    @Test
+    fun `messages go and come on mobile data while changes wait for Wi-Fi`(): Unit = runBlocking {
+        TestSyncServer(directory).use { server ->
+            val account = server.account("reader")
+            SyncingTestDevice(directory.resolve("phone.db")).use { phone ->
+                SyncingTestDevice(directory.resolve("desktop.db")).use { desktop ->
+                    phone.join(server, account)
+                    desktop.join(server, account)
+                    phone.sync() shouldBe SyncOutcome.SYNCED
+                    desktop.sync() shouldBe SyncOutcome.SYNCED
+                    listOf(phone, desktop).forEach { device ->
+                        device.preferences.changesOnMobileData.set(false)
+                        device.network.onWifi(false)
+                    }
+
+                    phone.sendNote("by a run", to = desktop)
+                    phone.runs.awaitIdle()
+                    desktop.sync() shouldBe SyncOutcome.WAITING_FOR_WIFI
+                    desktop.notes shouldContainExactly listOf("by a run")
+
+                    desktop.triggers.start()
+                    desktop.triggers.appOpened()
+                    phone.sendNote("by the live channel", to = desktop)
+                    withTimeout(10.seconds) { while (desktop.notes.size < 2) delay(50.milliseconds) }
+
+                    desktop.notes shouldContainExactly listOf("by a run", "by the live channel")
+                }
+            }
+        }
+    }
 }

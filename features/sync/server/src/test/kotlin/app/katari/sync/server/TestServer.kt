@@ -29,9 +29,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
 
-/** The server's services over a real SQLite database in [dataDirectory], with a clock the test moves. */
-class TestServer(dataDirectory: Path) : AutoCloseable {
-    val clock = SettableClock()
+/**
+ * The server's services over a real SQLite database in [dataDirectory], with a clock the test moves. A server opened
+ * again over the same directory takes the [clock] the one before it ended with.
+ */
+class TestServer(dataDirectory: Path, val clock: SettableClock = SettableClock()) : AutoCloseable {
     private val config = ServerConfig.fromEnvironment(emptyMap()).copy(dataDirectory = dataDirectory)
     val services = SyncServices(config, SqliteServerStorage.open(config.databaseFile), clock)
         .also { it.content.prepare() }

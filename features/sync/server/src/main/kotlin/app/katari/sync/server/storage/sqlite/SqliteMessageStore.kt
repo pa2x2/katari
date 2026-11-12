@@ -8,6 +8,7 @@ import app.katari.sync.server.message.WaitingTotals
 
 internal class SqliteMessageStore(database: SyncServerDatabase) : MessageStore {
     private val queries = database.device_messagesQueries
+    private val numbers = database.message_numbersQueries
 
     override fun insert(
         target: DeviceId,
@@ -17,7 +18,10 @@ internal class SqliteMessageStore(database: SyncServerDatabase) : MessageStore {
         sentAtMillis: Long,
         expiresAtMillis: Long,
     ): Long {
+        numbers.give(sentAtMillis)
+        val number = numbers.lastGiven().executeAsOne()
         queries.insert(
+            number = number,
             target = target.value,
             from = from.value,
             kind = body.kind,
@@ -27,7 +31,7 @@ internal class SqliteMessageStore(database: SyncServerDatabase) : MessageStore {
             sentAt = sentAtMillis,
             expiresAt = expiresAtMillis,
         )
-        return queries.lastInsertedNumber().executeAsOne()
+        return number
     }
 
     override fun deleteReplaced(target: DeviceId, from: DeviceId, replaces: String) {
