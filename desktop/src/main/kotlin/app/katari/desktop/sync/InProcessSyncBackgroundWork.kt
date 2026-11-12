@@ -29,6 +29,9 @@ class InProcessSyncBackgroundWork(
 ) : SyncBackgroundWork, ResumableWork {
     override val kinds: Set<String> = setOf(PERIODIC, HAND_OFF, LONG_RUN)
 
+    // The app runs on in the tray, its live channel open, until the person quits it
+    override fun keepConnected(connected: Boolean) = Unit
+
     override suspend fun schedulePeriodic(enabled: Boolean, every: Duration) {
         if (!enabled) {
             work.cancelPeriodic(PERIODIC)

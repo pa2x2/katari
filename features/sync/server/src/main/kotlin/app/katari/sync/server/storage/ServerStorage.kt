@@ -5,6 +5,7 @@ import app.katari.sync.server.device.DeviceStore
 import app.katari.sync.server.device.LinkCodeStore
 import app.katari.sync.server.file.StoredFileIndex
 import app.katari.sync.server.invite.InviteStore
+import app.katari.sync.server.message.MessageStore
 import app.katari.sync.server.record.RecordStore
 import app.katari.sync.server.websession.WebSessionStore
 
@@ -26,6 +27,7 @@ interface ServerStorage : AutoCloseable {
     val files: StoredFileIndex
     val invites: InviteStore
     val webSessions: WebSessionStore
+    val messages: MessageStore
 
     /**
      * Runs [block] as one atomic unit that no other transaction interleaves with; store calls made inside it join it.

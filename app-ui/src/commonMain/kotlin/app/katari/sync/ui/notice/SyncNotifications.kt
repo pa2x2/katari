@@ -20,4 +20,7 @@ interface SyncNotifications {
     fun showStopped(reason: SyncStop, server: HttpUrl?)
 
     fun withdrawStopped()
+
+    /** A test message came from the device named [from], null when the account didn't list it. */
+    fun showTestMessage(from: String?)
 }

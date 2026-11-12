@@ -54,6 +54,9 @@ enum class AppNotificationKind(
 
     /** The progress of a long sync run, such as a first sync. */
     SYNC_PROGRESS("sync_progress_channel", null, MR.strings.sync_progress_channel),
+
+    /** What keeps the app running, its notification only there because the platform needs one, which may be hidden. */
+    SYNC_CONNECTION("sync_connection_channel", null, MR.strings.sync_connection_channel),
     VIDEO_PLAYBACK("video_playback_channel", null, MR.strings.channel_video_playback),
     INCOGNITO_MODE("incognito_mode_channel", null, MR.strings.pref_incognito_mode),
 }

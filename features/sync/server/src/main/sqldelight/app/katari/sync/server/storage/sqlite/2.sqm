@@ -1,0 +1,13 @@
+CREATE TABLE device_messages(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    target_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
+    from_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    kind_version INTEGER NOT NULL,
+    payload BLOB NOT NULL,
+    replaces TEXT NOT NULL,
+    sent_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
+);
+
+CREATE INDEX device_messages_target_index ON device_messages(target_device_id, _id);

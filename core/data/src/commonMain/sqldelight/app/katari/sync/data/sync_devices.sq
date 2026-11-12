@@ -1,17 +1,31 @@
 -- The account's devices as the server last listed them, so History can name the device a chapter was last read on
--- without asking the server. Replaced whole on each listing; cleared when this device leaves the account.
+-- without asking the server, and the Sync page shows them before the server answers. Replaced whole on each listing;
+-- cleared when this device leaves the account.
 CREATE TABLE sync_devices(
     device_id INTEGER NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    -- Where the server listed it, oldest first.
+    position INTEGER NOT NULL DEFAULT 0,
+    platform TEXT NOT NULL DEFAULT '',
+    app_version TEXT NOT NULL DEFAULT '',
+    -- Epoch milliseconds of its last call to the server, 0 when it made none.
+    last_seen_at INTEGER NOT NULL DEFAULT 0,
+    synced_up_to INTEGER NOT NULL DEFAULT 0
 );
 
 all:
-SELECT device_id, name
-FROM sync_devices;
+SELECT *
+FROM sync_devices
+ORDER BY position;
 
 insert:
-INSERT INTO sync_devices(device_id, name)
-VALUES (:deviceId, :name);
+INSERT INTO sync_devices(device_id, name, position, platform, app_version, last_seen_at, synced_up_to)
+VALUES (:deviceId, :name, :position, :platform, :appVersion, :lastSeenAt, :syncedUpTo);
+
+rename:
+UPDATE sync_devices
+SET name = :name
+WHERE device_id = :deviceId;
 
 clear:
 DELETE FROM sync_devices;

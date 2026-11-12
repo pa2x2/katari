@@ -3,6 +3,9 @@ package app.katari.sync.ui.page
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.CloudSync
 import app.katari.icons.materialsymbols.rounded.Dns
@@ -34,10 +37,12 @@ import app.katari.sync.ui.guide.ServerFix
 import app.katari.sync.ui.guide.SyncGuide
 import app.katari.sync.ui.guide.rememberOpenSyncGuide
 import app.katari.sync.ui.guide.serverFixLabel
+import app.katari.sync.ui.instant.InstantSyncSetup
 import app.katari.sync.ui.status.SyncHeadline
 import app.katari.sync.ui.status.icon
 import app.katari.sync.ui.status.stopsSync
 import app.katari.sync.ui.status.syncHeadlineText
+import app.katari.ui.di.LocalAppUiGraph
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
@@ -293,6 +298,10 @@ private fun serverAddressRow(
  * The device's own sync options, which every device sets for itself (D022, D050), led by [leading] rows once linked:
  * what syncs and the server's address. Where the platform can't tell Wi-Fi, the mobile data switches hold files and
  * changes back on networks the system marks metered, and say so.
+ *
+ * In the background the device syncs in one mode: every so often, or, where the platform offers it, instantly
+ * ([InstantSyncSetup]), which picking it sets up first. Instant sync keeps the interval for the periodic sync that
+ * goes on under it.
  */
 @Composable
 internal fun syncOptionsGroup(
@@ -300,7 +309,18 @@ internal fun syncOptionsGroup(
     leading: List<Preference.PreferenceItem<out Any, out Any>> = emptyList(),
 ): Preference.PreferenceGroup {
     val inBackground by preferences.syncInBackground.collectAsState()
-    val intervals = SyncPreferences.BACKGROUND_INTERVALS.associateWith { stringResource(intervalName(it)) }
+    val instant by preferences.instant.collectAsState()
+    val interval by preferences.backgroundInterval.collectAsState()
+    val instantSetup = LocalAppUiGraph.current.instantSyncSetup
+    var settingUpInstant by rememberSaveable { mutableStateOf(false) }
+    // A dialog over the page, whichever row of it is on screen
+    if (settingUpInstant) {
+        instantSetup.Setup(onTurnOn = { preferences.instant.set(true) }, onClose = { settingUpInstant = false })
+    }
+    val modes = buildMap {
+        if (instantSetup.isOffered) put(INSTANT_MODE, stringResource(MR.strings.sync_mode_instant))
+        SyncPreferences.BACKGROUND_INTERVALS.forEach { put(it.toString(), stringResource(intervalName(it))) }
+    }
     return Preference.PreferenceGroup(
         title = stringResource(MR.strings.sync_options),
         preferenceItems = leading + listOf(
@@ -324,15 +344,25 @@ internal fun syncOptionsGroup(
                 title = stringResource(MR.strings.sync_in_background),
                 subtitle = stringResource(MR.strings.sync_in_background_summary),
             ),
-            Preference.PreferenceItem.ListPreference(
-                preference = preferences.backgroundInterval,
-                entries = intervals,
-                title = stringResource(MR.strings.sync_background_interval),
+            Preference.PreferenceItem.BasicListPreference(
+                value = if (instant && instantSetup.isOffered) INSTANT_MODE else interval.toString(),
+                entries = modes,
+                title = stringResource(MR.strings.sync_mode),
                 visible = inBackground,
+                onValueChanged = { mode ->
+                    if (mode == INSTANT_MODE) {
+                        settingUpInstant = true
+                    } else {
+                        preferences.instant.set(false)
+                        preferences.backgroundInterval.set(mode.toInt())
+                    }
+                },
             ),
         ),
     )
 }
+
+private const val INSTANT_MODE = "instant"
 
 private fun intervalName(minutes: Int): StringResource = when (minutes) {
     15 -> MR.strings.update_15min

@@ -2,18 +2,23 @@ package app.katari.sync.client.account
 
 import app.katari.sync.client.server.SyncFailure
 import app.katari.sync.client.server.SyncServerClient
+import app.katari.sync.protocol.device.DeviceDescription
 import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.device.LinkedDevice
 import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import tachiyomi.data.DatabaseHandler
 import kotlin.concurrent.Volatile
 
 /**
  * The account's devices as the server last listed them, kept on this device so progress from another device, and the
- * History rows read on one, can name it without asking the server. A device not in the list is looked up once more,
+ * History rows read on one, can name it without asking the server, and the Sync page lists them before it answers.
+ * Which of them are connected now is only kept while the app runs, since it soon goes out of date. A device not in the list is looked up once more,
  * as it may have joined since; one that still isn't listed then, such as a device that has left the account, isn't
  * asked about again until the list is fetched for another reason, since a pull can bring its progress for many entries
  * on every page.
@@ -28,14 +33,49 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
     @Volatile
     private var unlisted: Set<DeviceId> = emptySet()
 
+    private val connected = MutableStateFlow<Set<DeviceId>>(emptySet())
+
     suspend fun remember(devices: List<LinkedDevice>) {
-        val names = devices.associate { it.id to it.description.name }
         handler.await(inTransaction = true) {
             sync_devicesQueries.clear()
-            names.forEach { (device, name) -> sync_devicesQueries.insert(device.value, name) }
+            devices.forEachIndexed { position, device ->
+                sync_devicesQueries.insert(
+                    deviceId = device.id.value,
+                    name = device.description.name,
+                    position = position.toLong(),
+                    platform = device.description.platform,
+                    appVersion = device.description.appVersion,
+                    lastSeenAt = device.lastSeenMillis,
+                    syncedUpTo = device.syncedUpTo,
+                )
+            }
         }
-        known = names
+        known = devices.associate { it.id to it.description.name }
         unlisted = emptySet()
+        connected.value = devices.filter { it.connected }.mapTo(mutableSetOf()) { it.id }
+    }
+
+    /** The account's devices as the account last listed them, in its order, and each change to them. */
+    fun devices(): Flow<List<LinkedDevice>> = combine(
+        handler.subscribeToList { sync_devicesQueries.all() },
+        connected,
+    ) { rows, connected ->
+        rows.map { row ->
+            val id = DeviceId(row.device_id)
+            LinkedDevice(
+                id = id,
+                description = DeviceDescription(name = row.name, platform = row.platform, appVersion = row.app_version),
+                lastSeenMillis = row.last_seen_at,
+                syncedUpTo = row.synced_up_to,
+                connected = id in connected,
+            )
+        }
+    }
+
+    /** Gives [device] its new [name] here before the account lists it so. */
+    suspend fun rename(device: DeviceId, name: String) {
+        handler.await { sync_devicesQueries.rename(name = name, deviceId = device.value) }
+        known = known?.plus(device to name)
     }
 
     /** The account's devices and their names, as the account last listed them. */
@@ -71,6 +111,7 @@ class DeviceDirectory(private val handler: DatabaseHandler) {
         handler.await { sync_devicesQueries.clear() }
         known = emptyMap()
         unlisted = emptySet()
+        connected.value = emptySet()
     }
 
     private suspend fun names(): Map<DeviceId, String> = known

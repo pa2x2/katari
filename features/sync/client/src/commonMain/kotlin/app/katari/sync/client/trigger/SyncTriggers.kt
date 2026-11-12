@@ -14,6 +14,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import tachiyomi.data.DatabaseHandler
 import kotlin.time.Duration.Companion.minutes
@@ -38,6 +40,8 @@ import kotlin.time.Duration.Companion.minutes
  * - The app coming to the front: a run that fetches the entry Resume continues first (D052), then pulls and pushes.
  * - While open: the live channel ([LiveUpdates]).
  * - In the background: the platform's periodic work while background sync is on, at the interval the person chose.
+ *   With instant updates on as well, the platform keeps the app running and the live channel open
+ *   ([SyncBackgroundWork.keepConnected]); the periodic work goes on under it, for when the channel can't.
  * - Syncing resumed, or Wi-Fi reached while changes wait for it: a run, for what waited.
  * - A long run, moving the whole library in a first sync or a full resync: the platform's work for it, which shows its
  *   progress and goes on when the app leaves the front.
@@ -60,6 +64,7 @@ class SyncTriggers(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isOpen = MutableStateFlow(false)
+    private val isConnectedInBackground = MutableStateFlow(false)
     private var started = false
 
     /** Starts the triggers that watch by themselves, once a process, after capture has resumed. */
@@ -69,7 +74,8 @@ class SyncTriggers(
             started = true
         }
         val linked = connection.states().map { it.isLinked }.distinctUntilChanged()
-        scope.launch { live.wanted(isOpen).collectLatest { wanted -> if (wanted) live.listen() } }
+        val listening = combine(isOpen, isConnectedInBackground) { open, connected -> open || connected }
+        scope.launch { live.wanted(listening).collectLatest { wanted -> if (wanted) live.listen() } }
         scope.launch { linked.collectLatest { isLinked -> if (isLinked) sendLocalEdits() } }
         scope.launch {
             connection.states().map { state -> state.stage.takeIf { state.isLinked && it.movesLibrary } }
@@ -94,6 +100,20 @@ class SyncTriggers(
                 .distinctUntilChanged()
                 .collect { (enabled, every) -> work.schedulePeriodic(enabled, every) }
         }
+        scope.launch {
+            combine(
+                linked,
+                preferences.syncInBackground.changes(),
+                preferences.instant.changes(),
+                preferences.paused.changes(),
+                isOpen,
+            ) { isLinked, inBackground, instant, paused, open ->
+                (isLinked && inBackground && instant && !paused) to open
+            }
+                .distinctUntilChanged()
+                // Told again whenever the app opens: a platform may only let the app start it from the front
+                .collect { (connected, _) -> work.keepConnected(connected) }
+        }
         // What waited for syncing to resume, or for Wi-Fi, goes as soon as it may
         scope.launch {
             combine(linked, preferences.paused.changes(), changesWaitForWifi()) { isLinked, paused, waits ->
@@ -110,12 +130,22 @@ class SyncTriggers(
         network.state(),
     ) { onMobileData, network -> !onMobileData && !network.countsAsWifi }.distinctUntilChanged()
 
+    /** Ends what [start] started and waits for it, as a test device does before its database closes. */
+    internal suspend fun stop() {
+        scope.coroutineContext.job.cancelAndJoin()
+    }
+
     fun appOpened() {
         isOpen.value = true
     }
 
     fun appClosed() {
         isOpen.value = false
+    }
+
+    /** The platform keeps the app running for the live channel ([SyncBackgroundWork.keepConnected]), or stopped. */
+    fun connectedInBackground(connected: Boolean) {
+        isConnectedInBackground.value = connected
     }
 
     fun appCameToFront() {

@@ -10,6 +10,13 @@ import kotlin.time.Duration
  */
 @PlatformFacility
 interface SyncBackgroundWork {
+    /**
+     * Keeps the app running while [connected], so the live channel stays open with the app closed, or lets it stop.
+     * The platform tells [SyncTriggers.connectedInBackground] while it does. Only where an app closed by the person
+     * stops running: a desktop app keeps running in the tray.
+     */
+    fun keepConnected(connected: Boolean)
+
     /** Runs [SyncBackgroundRun.periodic] about [every] while [enabled], or stops doing so. */
     suspend fun schedulePeriodic(enabled: Boolean, every: Duration)
 

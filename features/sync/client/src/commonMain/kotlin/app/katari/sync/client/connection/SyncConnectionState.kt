@@ -26,6 +26,8 @@ data class SyncConnectionState(
     val lastSyncedAt: Long?,
     /** Epoch milliseconds of the first failure to reach the server since it was last reached. */
     val unreachableSince: Long?,
+    /** The last message from another device handled here; only messages numbered past it are new. */
+    val messagesHandled: Long,
 ) {
     /** Whether the device belongs to an account, signed in and registered, whether or not it syncs right now. */
     val isLinked: Boolean get() = enabled && device != null && server != null
@@ -45,6 +47,7 @@ data class SyncConnectionState(
             stoppedProtocol = row.stopped_protocol.toInt(),
             lastSyncedAt = row.last_synced_at,
             unreachableSince = row.unreachable_since,
+            messagesHandled = row.messages_handled,
         )
     }
 }

@@ -8,11 +8,12 @@ package app.katari.sync.protocol.version
  * default, so older peers skip it and newer peers read its absence as the default. Field numbers are never reused or
  * renumbered. The version goes up only when an older peer would get a message wrong: a field changes meaning, a new
  * field must not be ignored, or an enum gains an entry (kotlinx protobuf refuses enum numbers it does not know, so a
- * peer sends only the entries the other side's version has).
+ * peer sends only the entries the other side's version has). It also goes up when apps rely on something only newer
+ * servers do, as version 2's device messages ([app.katari.sync.protocol.message.DeviceMessage]).
  *
  * Record payloads are not covered: each kind versions its own format
  * ([app.katari.sync.protocol.record.RecordEnvelope.kindVersion]), and the server never needs to understand it.
  */
 object SyncProtocolVersion {
-    const val CURRENT: Int = 1
+    const val CURRENT: Int = 2
 }

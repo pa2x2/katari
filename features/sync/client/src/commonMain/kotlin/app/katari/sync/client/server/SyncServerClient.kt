@@ -16,6 +16,10 @@ import app.katari.sync.protocol.file.FileClaimRequest
 import app.katari.sync.protocol.file.FileClaimResponse
 import app.katari.sync.protocol.file.FileReference
 import app.katari.sync.protocol.http.SyncHttp
+import app.katari.sync.protocol.message.FetchMessagesRequest
+import app.katari.sync.protocol.message.MessagePage
+import app.katari.sync.protocol.message.SendMessageRequest
+import app.katari.sync.protocol.message.SendMessageResponse
 import app.katari.sync.protocol.pull.GroupRecords
 import app.katari.sync.protocol.pull.GroupRequest
 import app.katari.sync.protocol.pull.PullPage
@@ -147,6 +151,24 @@ class SyncServerClient internal constructor(
             }
         }
     }
+
+    /** Null when [SendMessageRequest.to] is no longer a device of the account. */
+    suspend fun sendMessage(request: SendMessageRequest): SendMessageResponse? =
+        execute(post(SyncHttp.SEND_MESSAGE, request)) { response ->
+            when {
+                response.isSuccessful ->
+                    decode(SendMessageResponse.serializer(), response)
+                        ?: throw SyncFailure.NotASyncServer(response.code)
+                response.code == HTTP_NOT_FOUND -> null
+                else -> throw failureOf(response)
+            }
+        }
+
+    /** One that waits for a message ([FetchMessagesRequest.waitMillis]) is held open as long as a page of records. */
+    suspend fun fetchMessages(request: FetchMessagesRequest): MessagePage = call(
+        post(SyncHttp.FETCH_MESSAGES, request),
+        if (request.waitMillis > 0) transports.pages else transports.calls,
+    )
 
     /** Opens the live channel ([LiveChannel]); its frames and its end go to [listener]. */
     internal fun live(listener: LiveChannel.Listener): LiveChannel {
