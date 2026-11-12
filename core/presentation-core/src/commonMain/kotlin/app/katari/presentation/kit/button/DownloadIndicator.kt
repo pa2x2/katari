@@ -48,6 +48,7 @@ import app.katari.icons.materialsymbols.roundedfilled.CheckCircle
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.menu.DropdownMenu
 import app.katari.presentation.kit.menu.DropdownMenuItem
+import app.katari.presentation.kit.selection.secondaryClick
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.material.IconButtonTokens
@@ -78,7 +79,9 @@ class DownloadIndicatorMenuItem(
 
 /**
  * The download state of a chapter or group of chapters as an icon button: tap to download, follow progress, cancel or
- * delete. [badge] is pinned to its bottom end corner, such as the chapter's translation mark.
+ * delete. A long press or a right-click opens its menu, with [notDownloadedMenuItems] or [menuItems] beside its own
+ * actions, such as downloading on another device. [badge] is pinned to its bottom end corner, such as the chapter's
+ * translation mark.
  *
  * [downloadProgressProvider] gives 0–100, and 0 shows a spinner. A group's progress can be above 0 while it is queued,
  * once some of its chapters are done; the ring then keeps that share and stays still until the next one starts.
@@ -250,7 +253,8 @@ private fun NotDownloadedIndicator(
                     if (menuItems.isEmpty()) onClick(DownloadIndicatorAction.START_NOW) else isMenuExpanded = true
                 },
                 onClick = { onClick(DownloadIndicatorAction.START) },
-            ),
+            )
+            .secondaryClick(enabled) { isMenuExpanded = true },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -309,7 +313,8 @@ private fun DownloadingIndicator(
                 hapticFeedback = LocalHapticFeedback.current,
                 onLongClick = { onClick(DownloadIndicatorAction.CANCEL) },
                 onClick = { isMenuExpanded = true },
-            ),
+            )
+            .secondaryClick(enabled) { isMenuExpanded = true },
         contentAlignment = Alignment.Center,
     ) {
         val color = KatariTheme.colors.onSurfaceVariant
@@ -401,7 +406,8 @@ private fun DownloadedIndicator(
                 hapticFeedback = LocalHapticFeedback.current,
                 onLongClick = { isMenuExpanded = true },
                 onClick = { isMenuExpanded = true },
-            ),
+            )
+            .secondaryClick(enabled) { isMenuExpanded = true },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
