@@ -13,6 +13,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
+import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.client.record.LocalRef
@@ -87,8 +88,17 @@ object ProgressKind : SyncedKind<ProgressPayload>("progress", 1, ProgressPayload
             )
         }
     }
+
+    /**
+     * The chapter is the one the newer position was read in, so two devices that link the resource to different
+     * chapters, as when a refresh changed a chapter's URL on one of them, agree on one instead of each keeping its own.
+     * A copy from a device that links it to none never takes it away.
+     */
     override fun merge(local: ProgressPayload, incoming: ProgressPayload) = local.copy(
-        chapterKey = local.chapterKey ?: incoming.chapterKey,
+        chapterKey = listOfNotNull(
+            local.chapterKey?.let { Stamped(it, local.locator.at) },
+            incoming.chapterKey?.let { Stamped(it, incoming.locator.at) },
+        ).reduceOrNull(::latest)?.value,
         locator = latest(local.locator, incoming.locator),
         completed = latest(local.completed, incoming.completed),
     )
