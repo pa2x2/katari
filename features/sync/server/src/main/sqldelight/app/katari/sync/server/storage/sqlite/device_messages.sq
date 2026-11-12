@@ -1,7 +1,7 @@
 -- Messages one device sent another, held until the target confirms them or they expire.
 CREATE TABLE device_messages(
-    -- The message's number: AUTOINCREMENT so a number is never given out again once its message is gone, since a
-    -- device skips every number up to the last it handled.
+    -- The message's number, given by message_numbers. AUTOINCREMENT, which kept numbers from coming again before
+    -- that, no longer gives any.
     _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     target_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
     from_device_id INTEGER NOT NULL REFERENCES devices(_id) ON DELETE CASCADE,
@@ -17,11 +17,10 @@ CREATE TABLE device_messages(
 CREATE INDEX device_messages_target_index ON device_messages(target_device_id, _id);
 
 insert:
-INSERT INTO device_messages(target_device_id, from_device_id, kind, kind_version, payload, replaces, sent_at, expires_at)
-VALUES (:target, :from, :kind, :kindVersion, :payload, :replaces, :sentAt, :expiresAt);
-
-lastInsertedNumber:
-SELECT last_insert_rowid();
+INSERT INTO device_messages(
+    _id, target_device_id, from_device_id, kind, kind_version, payload, replaces, sent_at, expires_at
+)
+VALUES (:number, :target, :from, :kind, :kindVersion, :payload, :replaces, :sentAt, :expiresAt);
 
 deleteReplaced:
 DELETE FROM device_messages

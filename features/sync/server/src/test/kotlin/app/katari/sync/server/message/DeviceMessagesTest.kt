@@ -1,12 +1,17 @@
 package app.katari.sync.server.message
 
 import app.katari.sync.protocol.message.MessagePage
+import app.katari.sync.server.SettableClock
 import app.katari.sync.server.TestServer
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
+import kotlin.io.path.copyTo
+import kotlin.io.path.createDirectories
+import kotlin.io.path.listDirectoryEntries
+import kotlin.time.Duration.Companion.minutes
 
 class DeviceMessagesTest {
 
@@ -45,6 +50,42 @@ class DeviceMessagesTest {
             phone.send("third", to = desktop)
 
             desktop.fetch(after = handled).texts() shouldContainExactly listOf("third")
+        }
+    }
+
+    @Test
+    fun `after the server is restored from a backup, a new message gets a number past those the device handled since`(
+        @TempDir root: Path,
+    ) {
+        val live = root.resolve("live").createDirectories()
+        val backup = root.resolve("backup").createDirectories()
+        val clock = SettableClock()
+        lateinit var phoneToken: String
+        lateinit var desktopToken: String
+        TestServer(live, clock).use { server ->
+            val account = server.account()
+            val phone = server.device(account)
+            val desktop = server.device(account)
+            phoneToken = phone.token
+            desktopToken = desktop.token
+            phone.send("before the backup", to = desktop)
+        }
+        live.listDirectoryEntries().forEach { it.copyTo(backup.resolve(it.fileName)) }
+        clock.advance(1.minutes)
+        val handled = TestServer(live, clock).use { server ->
+            val phone = server.LinkedTestDevice(phoneToken)
+            val desktop = server.LinkedTestDevice(desktopToken)
+            phone.send("after the backup", to = desktop)
+            desktop.fetch(after = 0).messages.last().number.also { desktop.fetch(after = it) }
+        }
+
+        clock.advance(1.minutes)
+        TestServer(backup, clock).use { restored ->
+            val phone = restored.LinkedTestDevice(phoneToken)
+            val desktop = restored.LinkedTestDevice(desktopToken)
+            phone.send("after the restore", to = desktop)
+
+            desktop.fetch(after = handled).texts() shouldContainExactly listOf("after the restore")
         }
     }
 

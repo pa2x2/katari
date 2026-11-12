@@ -1,0 +1,4 @@
+CREATE TABLE message_numbers(
+    id INTEGER NOT NULL PRIMARY KEY CHECK (id = 0),
+    last_given INTEGER NOT NULL
+);

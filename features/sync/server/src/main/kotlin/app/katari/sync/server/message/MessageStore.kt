@@ -5,7 +5,7 @@ import app.katari.sync.protocol.message.DeviceMessage
 import app.katari.sync.protocol.message.MessageBody
 
 interface MessageStore {
-    /** The number the message was given. */
+    /** The number given to the message, past every one given before; called inside a transaction. */
     fun insert(
         target: DeviceId,
         from: DeviceId,
