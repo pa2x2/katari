@@ -16,6 +16,7 @@ import app.katari.sync.protocol.record.SequencedRecord
 import app.katari.sync.protocol.server.ServerIdentity
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.protobuf.ProtoBuf
+import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 
 /**
@@ -23,16 +24,22 @@ import tachiyomi.data.DatabaseHandler
  * an empty one or restored from an old copy ([SyncStage.RESYNC]), or no longer keeps the deletions made since the
  * device's position ([SyncStage.RESYNC_WITHOUT_DELETIONS]).
  *
- * [start] forgets which server copy every record was based on and moves the position back to 0, in one transaction.
- * The pull from 0 then merges every record the server has, which bases each one it brings on the server's copy again
- * and pushes whatever this device holds that the server's copy lacks. [finish] deals with the records the pull didn't
- * bring, which are still based on nothing:
+ * [start] forgets which server copy every record was based on, and which held records the server has, and moves the
+ * position back to 0, in one transaction. The pull from 0 then merges every record the server has, which bases each
+ * one it brings on the server's copy again and pushes whatever this device holds that the server's copy lacks. A
+ * record the pull holds instead, such as one of a part this device doesn't sync or one this app can't read, is merged
+ * once it is taken in, and until then counts as brought; one held before that the pull didn't bring again, of which
+ * this device stores no copy, is let go, as the server holds none of it live. [finish] deals with the records the pull
+ * didn't bring, which are still based on nothing:
  * - From a lost or restored server, every one is pushed: the server lost it, and the device's copy, merged from every
  *   device before the loss, is the newest there is. So the first device of a replaced server fills it, and the next
  *   ones merge into what it holds; a record two devices push is merged by the server's stale check like any edit.
  * - From a server that dropped deletions, a record the device had synced and hasn't changed since was deleted
  *   elsewhere, and is deleted here without pushing; one it changed since is pushed, the change outliving a deletion it
  *   can't be compared with; one never synced is pushed as it would have been.
+ *
+ * Deletions are pushed again only after a pull that brought the server's own: one that leaves them out brings none of
+ * the deletion markers the server still has, and a deletion pushed over one would be refused as stale every time.
  *
  * A first download that starts over ([restartDownload]) settles the records it took before and doesn't get back the
  * same way, as the resync it starts over for would ([finishDownload]). Neither touches the rows only this device held,
@@ -53,7 +60,7 @@ class FullResync(
     suspend fun start(stage: SyncStage, server: ServerIdentity) {
         require(stage == SyncStage.RESYNC || stage == SyncStage.RESYNC_WITHOUT_DELETIONS) { "$stage is no resync" }
         handler.await(inTransaction = true) {
-            sync_recordsQueries.forgetBases()
+            forgetServerCopies()
             sync_stateQueries.restartPosition(stage.stored, server.sequence, server.instanceId)
         }
     }
@@ -67,31 +74,38 @@ class FullResync(
         handler.await(inTransaction = true) {
             val before = sync_stateQueries.get().awaitAsOne().download_restarted_as?.let(SyncStage::of)
             val restartedAs = if (before == SyncStage.RESYNC) before else reason
-            sync_recordsQueries.forgetBases()
+            forgetServerCopies()
             sync_stateQueries.restartPosition(SyncStage.DOWNLOADING.stored, server.sequence, server.instanceId)
             sync_stateQueries.setDownloadRestartedAs(restartedAs.stored)
         }
     }
 
-    /** Ends a resync at [stage]. */
-    suspend fun finish(stage: SyncStage) = settle(stage, next = SyncStage.READY)
+    /** Ends a resync at [stage], whose pull left out deletions unless it is one after a lost or restored server. */
+    suspend fun finish(stage: SyncStage) =
+        settle(stage, next = SyncStage.READY, pulledDeletions = stage == SyncStage.RESYNC)
 
     /**
      * Ends a first download, which goes on to the device's settings. One that started over settles the records it
-     * took before as a resync at [restartedAs] does.
+     * took before as a resync at [restartedAs] does, though its pull, a download's, left out deletions.
      */
     suspend fun finishDownload(restartedAs: SyncStage?) {
         if (restartedAs == null) {
             handler.await { sync_stateQueries.setStage(SyncStage.SETTINGS.stored, 0) }
         } else {
-            settle(restartedAs, next = SyncStage.SETTINGS)
+            settle(restartedAs, next = SyncStage.SETTINGS, pulledDeletions = false)
         }
     }
 
-    private suspend fun settle(stage: SyncStage, next: SyncStage) {
+    private suspend fun Database.forgetServerCopies() {
+        sync_recordsQueries.forgetBases()
+        sync_pendingQueries.forgetPulled()
+    }
+
+    private suspend fun settle(stage: SyncStage, next: SyncStage, pulledDeletions: Boolean) {
         if (stage == SyncStage.RESYNC_WITHOUT_DELETIONS) deleteWhatWasDeletedElsewhere()
         writing.write { session ->
-            sync_recordsQueries.pushUnseen()
+            sync_pendingQueries.releaseUnpulledUnstored()
+            sync_recordsQueries.pushUnseen(withDeletions = pulledDeletions)
             session.holdBackOffChanges()
             sync_filesQueries.queuePlaced()
             sync_filesQueries.forgetUnavailable()

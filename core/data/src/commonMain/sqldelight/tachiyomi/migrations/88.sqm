@@ -1,0 +1,2 @@
+-- Which held records a full resync's pull brought again (app/katari/sync/data/sync_pending.sq).
+ALTER TABLE sync_pending ADD COLUMN pulled_since_resync INTEGER NOT NULL DEFAULT 0;

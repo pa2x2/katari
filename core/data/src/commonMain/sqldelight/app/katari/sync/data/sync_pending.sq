@@ -14,7 +14,10 @@ CREATE TABLE sync_pending(
     kind TEXT NOT NULL DEFAULT '',
     -- The app version that held it, for a record that waits for an update ('unreadable', 'failed'): retried once the
     -- app differs.
-    held_on TEXT
+    held_on TEXT,
+    -- Set once a pull since the last full resync began brought the record. A full resync tells by it the records its
+    -- pull brought and held, which the server still has, from those held before, which it may have dropped since.
+    pulled_since_resync INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 CREATE INDEX idx_sync_pending_waits_for ON sync_pending(waits_for) WHERE waits_for IS NOT NULL;
@@ -31,12 +34,12 @@ ON CONFLICT(record_key) DO UPDATE SET
     held_on = excluded.held_on;
 
 get:
-SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on, pulled_since_resync
 FROM sync_pending
 WHERE record_key = :recordKey;
 
 waitingFor:
-SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on, pulled_since_resync
 FROM sync_pending
 WHERE waits_for = :recordKey
 ORDER BY received_at, record_key;
@@ -45,7 +48,7 @@ ORDER BY received_at, record_key;
 -- What waits for an update, a record this app can't read or one that failed to apply, is tried again only by another
 -- app version than the one that held it. What belongs to a part this device doesn't sync waits for the person.
 retryable:
-SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on, pulled_since_resync
 FROM sync_pending
 WHERE waits_for IS NULL
 AND reason != 'turned-off'
@@ -53,10 +56,30 @@ AND (reason NOT IN ('unreadable', 'failed') OR held_on IS NOT :appVersion)
 ORDER BY received_at, record_key;
 
 turnedOff:
-SELECT record_key, record, reason, waits_for, received_at, kind, held_on
+SELECT record_key, record, reason, waits_for, received_at, kind, held_on, pulled_since_resync
 FROM sync_pending
 WHERE reason = 'turned-off'
 ORDER BY received_at, record_key;
+
+-- A pull brought the record :recordKey, whether it was applied, held or held again.
+markPulled:
+UPDATE sync_pending
+SET pulled_since_resync = 1
+WHERE record_key = :recordKey;
+
+-- A full resync starts: no held record is known to be on the server until the resync's pull brings it again.
+forgetPulled:
+UPDATE sync_pending
+SET pulled_since_resync = 0;
+
+-- After a full resync, the held records its pull didn't bring that this device stores no copy of. Every pull brings
+-- every live record, a pull leaving deletions out only leaving out deletion markers, so the server holds none of them
+-- live: deleted elsewhere, or lost with the server. Merging one once its part is synced again or the app is updated
+-- would bring back here what no other device has.
+releaseUnpulledUnstored:
+DELETE FROM sync_pending
+WHERE pulled_since_resync = 0
+AND record_key NOT IN (SELECT record_key FROM sync_records);
 
 release:
 DELETE FROM sync_pending

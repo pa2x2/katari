@@ -6,6 +6,7 @@ import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.protocol.pull.PullPage
 import app.katari.sync.protocol.record.SequencedRecord
 import dev.zacsweers.metro.Inject
+import tachiyomi.data.Database
 
 /**
  * Where records pulled from the server enter the device. Transport calls [apply] with each page in the order the
@@ -31,6 +32,7 @@ class IncomingRecords(private val writing: SyncWriting) {
         page.records
             .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
             .forEach { session.receive(it) }
+        notePulled(page.records)
         sync_stateQueries.setPosition(
             serverInstanceId = page.server.instanceId,
             cursor = page.nextCursor,
@@ -49,6 +51,16 @@ class IncomingRecords(private val writing: SyncWriting) {
         records
             .sortedBy { kindOrder[it.record.kind] ?: Int.MAX_VALUE }
             .forEach { session.receive(it) }
+        notePulled(records)
+    }
+
+    /**
+     * Notes that the server still has [records], the held ones too, which a full resync tells apart from the records
+     * its pull didn't bring ([app.katari.sync.client.resync.FullResync]): a held record isn't merged, so its copy here
+     * isn't based on the one pulled.
+     */
+    private suspend fun Database.notePulled(records: List<SequencedRecord>) {
+        records.forEach { sync_pendingQueries.markPulled(it.record.key) }
     }
 
     /** Applies what was held for a reason that may have passed: an app update, the clock, a reference, a profile. */
