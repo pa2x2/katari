@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.notification.AppNotificationKind
 import app.katari.sync.client.preference.SyncPreferences
@@ -79,5 +80,12 @@ class InstantSyncNotification(
             .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
             .putExtra(Settings.EXTRA_CHANNEL_ID, AppNotificationKind.SYNC_CONNECTION.id)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        /** False once the person has turned the notification off, by its channel or all of the app's. */
+        fun isShown(context: Context): Boolean {
+            val manager = NotificationManagerCompat.from(context)
+            val channel = manager.getNotificationChannelCompat(AppNotificationKind.SYNC_CONNECTION.id)
+            return manager.areNotificationsEnabled() && channel?.importance != NotificationManagerCompat.IMPORTANCE_NONE
+        }
     }
 }

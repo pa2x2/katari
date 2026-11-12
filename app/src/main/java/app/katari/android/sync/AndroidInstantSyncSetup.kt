@@ -16,7 +16,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * Says what instant sync costs and, once the person agrees, asks to be exempted from battery optimisation, which would
  * otherwise cut the connection while the phone sleeps. Then it offers to hide the notification Android makes the app
- * run under, by opening that notification's settings ([InstantSyncNotification]).
+ * run under, by opening that notification's settings ([InstantSyncNotification]), unless the person has hidden it
+ * already.
  */
 @Inject
 class AndroidInstantSyncSetup : InstantSyncSetup {
@@ -32,9 +33,9 @@ class AndroidInstantSyncSetup : InstantSyncSetup {
                 text = stringResource(PlatformStrings.sync_instant_setup),
                 confirmLabel = stringResource(PlatformStrings.sync_instant_turn_on),
                 onConfirm = {
-                    turnedOn = true
                     onTurnOn()
                     UnrestrictedBackground.request(context)
+                    if (InstantSyncNotification.isShown(context)) turnedOn = true else onClose()
                 },
                 onDismissRequest = onClose,
             )
