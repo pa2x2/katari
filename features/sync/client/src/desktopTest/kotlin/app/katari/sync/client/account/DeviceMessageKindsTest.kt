@@ -3,6 +3,7 @@ package app.katari.sync.client.account
 import app.katari.sync.client.SyncingTestDevice
 import app.katari.sync.client.SyncingTestDevice.Companion.NOTE
 import app.katari.sync.client.TestSyncServer
+import app.katari.sync.client.downloadrequest.DownloadRequestMessage
 import app.katari.sync.client.run.SyncOutcome
 import app.katari.sync.protocol.device.DeviceDescription
 import io.kotest.matchers.shouldBe
@@ -29,7 +30,8 @@ class DeviceMessageKindsTest {
                         laptop.join(server, account)
                         laptop.sync() shouldBe SyncOutcome.SYNCED
 
-                        val both = mapOf("Phone" to listOf(NOTE), "Laptop" to listOf(NOTE))
+                        val kinds = listOf(DownloadRequestMessage.KIND, NOTE)
+                        val both = mapOf("Phone" to kinds, "Laptop" to kinds)
                         val listed = phone.account.devices().shouldBeInstanceOf<AccountCall.Done<List<AccountDevice>>>()
                         listed.value.map { it.device.description }.kinds() shouldBe both
                         phone.directory.devices().first().map { it.description }.kinds() shouldBe both

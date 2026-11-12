@@ -12,6 +12,11 @@ import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.connection.ThisDevice
+import app.katari.sync.client.downloadrequest.DownloadRequestInbox
+import app.katari.sync.client.downloadrequest.DownloadRequestResult
+import app.katari.sync.client.downloadrequest.DownloadRequestRetry
+import app.katari.sync.client.downloadrequest.DownloadRequestSending
+import app.katari.sync.client.downloadrequest.ReceivedDownloadRequest
 import app.katari.sync.client.extension.OtherDeviceExtensions
 import app.katari.sync.client.file.transfer.FilePlacement
 import app.katari.sync.client.file.transfer.FileTransferRule
@@ -23,6 +28,7 @@ import app.katari.sync.client.firstsync.ExistingSettings
 import app.katari.sync.client.firstsync.FirstSyncSteps
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.handoff.LastReadDevices
+import app.katari.sync.client.identity.SyncedEntries
 import app.katari.sync.client.libraryupdate.OtherDeviceLibraryUpdates
 import app.katari.sync.client.message.DeviceMessaging
 import app.katari.sync.client.message.MessageHandler
@@ -47,6 +53,7 @@ import app.katari.sync.client.trigger.LiveUpdates
 import app.katari.sync.client.trigger.LocalChanges
 import app.katari.sync.client.trigger.SyncBackgroundWork
 import app.katari.sync.client.trigger.SyncTriggers
+import app.katari.sync.protocol.device.DeviceId
 import app.katari.sync.protocol.message.DeviceMessage
 import app.katari.sync.protocol.message.MessageBody
 import io.kotest.matchers.shouldBe
@@ -94,9 +101,18 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
 
     /** The text of each note another device sent here, as its handler took it. */
     val notes: MutableList<String> = Collections.synchronizedList(mutableListOf())
+
+    /** The download requests other devices sent here, as this device carried them out once their entry was here. */
+    val downloadRequests: MutableList<ReceivedDownloadRequest> = Collections.synchronizedList(mutableListOf())
+    private val syncedEntries = SyncedEntries(local.handler)
+    val downloadRequestInbox = DownloadRequestInbox(local.handler, connection, syncedEntries, directory) { request ->
+        downloadRequests += request
+        DownloadRequestResult.DONE
+    }
     private val messageHandlers = MessageHandlers(
         lazyOf(
             setOf(
+                downloadRequestInbox,
                 object : MessageHandler {
                     override val kind = NOTE
 
@@ -144,10 +160,12 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
             messageOutbox,
             messageInbox,
             changeRule,
+            lazyOf(setOf(DownloadRequestRetry(downloadRequestInbox))),
         ),
         steps,
     )
     val messaging = DeviceMessaging(connection, messageOutbox, runs)
+    val downloadRequestSending = DownloadRequestSending(messaging, syncedEntries)
     val choiceChanges = SyncChoiceChanges(
         local.handler,
         preferences,
@@ -222,6 +240,10 @@ internal class SyncingTestDevice(file: File, http: OkHttpClient = OkHttpClient()
     suspend fun library() = local.library().filterNot { it.startsWith("[\"chapter\"") && it.endsWith(",0,0]") }
 
     suspend fun sql(vararg statements: String) = local.sql(*statements)
+
+    suspend fun entryId(url: String): Long = local.entryId(url)
+
+    suspend fun deviceId(): DeviceId = checkNotNull(connection.state().device)
 
     override fun close() {
         // Joining and changing a sync choice start runs a test may not wait for, and the triggers a test started go on

@@ -1,2 +1,12 @@
 -- The kinds of message each of the account's devices acts on (app/katari/sync/data/sync_devices.sq).
 ALTER TABLE sync_devices ADD COLUMN message_kinds TEXT NOT NULL DEFAULT '';
+
+-- Download requests from the account's other devices waiting for their entry
+-- (app/katari/sync/data/sync_download_requests.sq).
+CREATE TABLE sync_download_requests(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    from_device_id INTEGER NOT NULL,
+    entry_key TEXT NOT NULL,
+    payload BLOB NOT NULL,
+    expires_at INTEGER NOT NULL
+);
