@@ -114,7 +114,7 @@ class OutboxDrain(
                 record(deletedRecordKey, kind).add(fields, stamp)
                 return null
             }
-            read += kind.name to ref
+            if (read.add(kind.name to ref)) kind.rejoin(reads, ref)
             return when (val found = kind.read(reads, ref)) {
                 is LocalRead.Found -> Present(kind, ref, found).also { present ->
                     record(found.key, kind).apply {

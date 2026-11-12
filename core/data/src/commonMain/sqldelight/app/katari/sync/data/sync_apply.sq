@@ -283,6 +283,12 @@ ON CONFLICT(chapter_id) DO UPDATE SET
     last_read = excluded.last_read,
     time_read = excluded.time_read;
 
+-- A history row made again for a chapter whose record held time read that the row deleted before it took along.
+addHistoryTime:
+UPDATE history
+SET time_read = time_read + :millis
+WHERE chapter_id = :chapterId;
+
 deleteHistory:
 DELETE FROM history
 WHERE chapter_id = :chapterId;

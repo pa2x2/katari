@@ -38,6 +38,14 @@ abstract class SyncedKind<P : Any>(
     internal abstract suspend fun read(reads: LocalReads, ref: LocalRef): LocalRead<P>
 
     /**
+     * Writes to the row [ref] locates what its record holds and the row lost, when the row was deleted with its owner,
+     * which leaves its record ([CaptureTrigger.owners]), and made again since. The drain does it before it first reads
+     * a row it drains an edit of, so the edit adds to the record rather than starting it over. A restore doesn't: the
+     * rows it writes hold the backup's values whole.
+     */
+    internal open suspend fun rejoin(reads: LocalReads, ref: LocalRef) = Unit
+
+    /**
      * The payload holding both [local]'s and [incoming]'s edits of one record (D017). Every device must reach the same
      * payload from the same edits whatever order they come in, so it is commutative, associative and idempotent. The
      * fields a key is computed from are equal in both.
