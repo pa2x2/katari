@@ -354,7 +354,6 @@
     <string name="pref_clear_database">दत्तनिधिं मार्जयतु</string>
     <string name="database_clean">दत्तनिधिः मार्जितः</string>
     <string name="label_background_activity">पृष्ठभूमिकार्यक्रमम्</string>
-    <string name="pref_disable_battery_optimization">विद्युत्कोषवृद्धिकरणम् अशक्तं करोतु</string>
     <string name="whats_new">नूतनं किम्</string>
     <string name="pref_tablet_ui_mode">टाबलेट् यू॰ऐ</string>
     <string name="help_translate">अनुवादसाहाय्यं करोतु</string>
@@ -407,7 +406,6 @@
     <string name="channel_ext_updates">विस्तारनवीकरणानि</string>
     <string name="pref_dns_over_https">HTTPS उपरि DNS (DoH)</string>
     <string name="getting_started_guide">प्रारम्भिकमार्गदर्शनम्</string>
-    <string name="battery_optimization_setting_activity_not_found">साधनसमायोजनानि उद्घाटयितुं न अशक्नोम्</string>
     <string name="pref_verbose_logging">अतिविस्तीर्णेतिवृत्तलेखनम्</string>
     <string name="page_list_empty_error">पुटाः न लभ्याः</string>
     <string name="loader_not_implemented_error">मूलं न लभ्यम्</string>
@@ -447,7 +445,6 @@
     <string name="migration_dialog_what_to_include">संयोजयितुं दत्तांशान् चिनोतु</string>
     <string name="requires_app_restart">प्रभावयितुम् अनुप्रयोगस्य पुनःप्रारम्भः आवश्यकः</string>
     <string name="decode_image_error">चित्रस्य आरोहणं न अशक्नोत्</string>
-    <string name="battery_optimization_disabled">विद्युत्कोषवृद्धिकरणं पूर्वमेव अशक्तं कृतम्</string>
     <string name="clipboard_copy_error">अंशफलकान्ते प्रतिलेखनम् अनुत्तीर्णम्</string>
     <string name="transition_pages_error">पुटानाम् आरोहणम् अनुत्तीर्णम् - %1$s</string>
     <string name="download_notifier_no_network">जालसम्पर्कः न उपलभ्यः</string>
@@ -470,7 +467,6 @@
     <string name="pref_dump_crash_logs_summary">व्युत्पादकेभ्यः प्रसारयितुं दोषदत्तम् एकस्यां सञ्चिकायां रक्षति</string>
     <string name="confirm_set_chapter_settings">इमानि समायोजनानि प्राथमिकानि इव रक्षितुं त्वं निश्चितं किम्</string>
     <string name="pref_acra_summary">स्खलितानां परिहरणे साहाय्यं करिष्यति। संवेदनशीलदत्तांशाः न प्रेषिष्यते॥</string>
-    <string name="pref_disable_battery_optimization_summary">पृष्ठभूमौ ग्रन्थालयस्य नवीकरणेषु प्रतिलेखनेषु च साहाय्यं करोति</string>
     <string name="dialog_with_checkbox_remove_description">अस्य अध्यायस्य पठिततिथिम् एतत् निष्करोति। त्वं निश्चितं किम्</string>
     <string name="cache_delete_error">काष्वस्तु मार्जयति सति एकः दोषः भूतः</string>
     <string name="pref_auto_clear_chapter_cache">अनुप्रयोगपिधाने अध्यायस्य काष्वस्तु मार्जयतु</string>

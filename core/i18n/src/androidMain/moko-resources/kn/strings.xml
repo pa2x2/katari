@@ -8,4 +8,8 @@
     <string name="pref_read_with_tapping_inverted">ಟ್ಯಾಪಿಂಗ ಅನ್ನು ತಿರುಗಿಸಿ</string>
     <string name="pref_show_navigation_mode">ನ್ಯಾವಿಗೇಶನ್ ಲೇಔಟ್ ಓವರ್ ಲೇ ತೋರಿಸಿ</string>
     <string name="pref_read_with_long_tap">ಲಾಂಗ್ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ತೋರಿಸಿ</string>
+    <string name="battery_optimization_setting_activity_not_found">ಡಿವೈಸ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ತೆರೆಯಲಾಗಲಿಲ್ಲ</string>
+    <string name="battery_optimization_disabled">ಬ್ಯಾಟರಿ ಆಪ್ಟಿಮೈಸೇಶನ್ ಅನ್ನು ಈಗಾಗಲೇ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+    <string name="pref_disable_battery_optimization_summary">ಹಿನ್ನೆಲೆ ಗ್ರಂಥಾಲಯದ ನವೀಕರಣಗಳು ಮತ್ತು ಬ್ಯಾಕಪ್‌ಗಳೊಂದಿಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ</string>
+    <string name="pref_disable_battery_optimization">ಬ್ಯಾಟರಿ ಆಪ್ಟಿಮೈಸೇಶನ್ ಅನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ</string>
 </resources>

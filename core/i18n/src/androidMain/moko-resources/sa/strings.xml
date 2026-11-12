@@ -11,4 +11,8 @@
     <string name="pref_show_navigation_mode">मार्गणविन्यासस्य उपरिस्तरं दर्शयतु</string>
     <string name="pref_read_with_long_tap">दीर्घस्पर्शने दर्शयतु</string>
     <string name="connected_to_wifi">केवलं वै-फ़ै माध्यमेन</string>
+    <string name="pref_disable_battery_optimization">विद्युत्कोषवृद्धिकरणम् अशक्तं करोतु</string>
+    <string name="battery_optimization_setting_activity_not_found">साधनसमायोजनानि उद्घाटयितुं न अशक्नोम्</string>
+    <string name="battery_optimization_disabled">विद्युत्कोषवृद्धिकरणं पूर्वमेव अशक्तं कृतम्</string>
+    <string name="pref_disable_battery_optimization_summary">पृष्ठभूमौ ग्रन्थालयस्य नवीकरणेषु प्रतिलेखनेषु च साहाय्यं करोति</string>
 </resources>

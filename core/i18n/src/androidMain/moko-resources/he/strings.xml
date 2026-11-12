@@ -16,4 +16,9 @@
     <string name="pref_chapter_swipe_start">פרק בהחלקה שמאלה</string>
     <string name="pref_chapter_swipe_end">פרק בהחלקה ימינה</string>
     <string name="connected_to_wifi">רק ב Wi-Fi</string>
+    <string name="battery_optimization_disabled">אופטימיזציית סוללה כבר מושבתת</string>
+    <string name="pref_disable_battery_optimization_summary">עוזר בעדכוני ספריות רקע וגיבויים</string>
+    <string name="pref_disable_battery_optimization">השבתת האופטימיזציה של הסוללה</string>
+    <string name="battery_optimization_setting_activity_not_found">לא הצליח לפתוח הגדרות מכשיר</string>
+    <string name="about_dont_kill_my_app">לחלק מהיצרנים יש הגבלות אפליקציה שהורגות תהליכים ברקע. באתר הזה יש עוד מידע לגבי איך לתקן את זה.</string>
 </resources>

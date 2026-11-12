@@ -241,7 +241,6 @@
     <string name="backup_restore_missing_sources">Fontes faltantes:</string>
     <string name="pref_invalidate_download_cache">Reconstruír o índice de descargas</string>
     <string name="pref_dump_crash_logs_summary">Garda os rexistros de erros nun ficheiro para compartilo cos desenvolvedores</string>
-    <string name="pref_disable_battery_optimization_summary">Fai que funcionen mellor as actualizacións e as copias de seguridade que se fagan en segundo plano</string>
     <string name="check_for_updates">Procurar actualizacións</string>
     <string name="licenses">Licenzas de código aberto</string>
     <string name="privacy_policy">Política de privacidade</string>
@@ -266,7 +265,6 @@
     <string name="error_user_agent_string_blank">O axente de usuario non pode estar vacío</string>
     <string name="used_cache">Usado: %1$s</string>
     <string name="pref_auto_clear_chapter_cache">Borrar a caché dos capítulos ao pechar a aplicación</string>
-    <string name="battery_optimization_setting_activity_not_found">Non se puideron abrir os axustes do dispositivo</string>
     <string name="pref_enable_acra">Enviar informes de erros</string>
     <string name="tabs_header">Lapelas</string>
     <string name="no_more_results">Non hai máis resultados</string>
@@ -411,7 +409,6 @@
     <string name="in_library">Na biblioteca</string>
     <string name="unknown_title">Título descoñecido</string>
     <string name="action_close">Pechar</string>
-    <string name="pref_appearance_summary">Tema, formatos de data e hora</string>
     <string name="pref_category_appearance">Aparencia</string>
     <string name="action_display_show_continue_reading_button">Botón de seguir lendo</string>
     <string name="action_display_show_number_of_items">Mostrar o número de elementos</string>
@@ -441,9 +438,6 @@
     <string name="cache_deleted">Borrouse a caché. Elimináronse %1$d ficheiros</string>
     <string name="pref_invalidate_download_cache_summary">Forzar á aplicación a comprobar de novo os capítulos descargados</string>
     <string name="pref_reset_viewer_flags">Restablecer os axustes do lector en cada serie</string>
-    <string name="pref_disable_battery_optimization">Desactivar a optimización de batería</string>
-    <string name="battery_optimization_disabled">A optimización de batería xa está desactivada</string>
-    <string name="about_dont_kill_my_app">Algúns fabricantes teñen restricións adicionais para as aplicacións que causan a detención dos servizos en segundo plano. Esta páxina web ten máis información sobre como arranxalo.</string>
     <string name="pref_verbose_logging_summary">Amosar rexistros detallados no rexistro do sistema (diminúe o rendemento da aplicación)</string>
     <string name="whats_new">Novidades</string>
     <string name="help_translate">Axudar coa tradución</string>

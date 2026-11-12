@@ -274,9 +274,6 @@
     <string name="notification_chapters_single_and_more">Capítulo %1$s e %2$d mais</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
     <string name="hide_notification_content">Esconder conteúdo das notificações</string>
-    <string name="pref_disable_battery_optimization">Desativar otimização de bateria</string>
-    <string name="pref_disable_battery_optimization_summary">Ajuda com a atualização e cópia de segurança da biblioteca em segundo plano</string>
-    <string name="battery_optimization_disabled">A otimização de bateria já está desativada</string>
     <string name="action_menu">Menu</string>
     <string name="action_newest">Mais novos</string>
     <string name="action_oldest">Mais antigos</string>
@@ -316,7 +313,6 @@
     <string name="gray_background">Cinza</string>
     <string name="viewer">Modo de leitura</string>
     <string name="pref_category_for_this_series">Para esta série</string>
-    <string name="battery_optimization_setting_activity_not_found">Não foi possível abrir as definições do aparelho</string>
     <string name="pref_refresh_library_covers">Atualizar capas da biblioteca</string>
     <string name="pref_show_reading_mode_summary">Mostra brevemente o modo atual quando o leitor é aberto</string>
     <string name="page_list_empty_error">Nenhuma página encontrada</string>
@@ -431,7 +427,6 @@
     <string name="cover_saved">Capa guardada</string>
     <string name="manga_cover">Capa</string>
     <string name="notification_incognito_text">Desativar o modo incógnito</string>
-    <string name="about_dont_kill_my_app">Alguns fabricantes têm restrições adicionais de aplicação que desligam os serviços em segundo plano. Este sítio web tem mais informações sobre como corrigi-lo.</string>
     <string name="restore_miui_warning">Restauros de cópias de segurança podem não funcionar corretamente se a otimização MIUI estiver desativada.</string>
     <string name="categorized_display_settings">Configurações por categoria para ordenação e exibição</string>
     <string name="restrictions">Restrições: %s</string>
@@ -534,7 +529,6 @@
     <string name="popular">Famoso</string>
     <string name="action_search_hint">Pesquisar…</string>
     <string name="action_display_show_continue_reading_button">Botão de continuar a ler</string>
-    <string name="pref_appearance_summary">Tema, data e formato de hora</string>
     <string name="pref_reader_summary">Modo leitura, exibir, navegação</string>
     <string name="action_open_random_manga">Abrir entrada aleatória</string>
     <string name="label_stats">Estatísticas</string>

@@ -286,10 +286,6 @@
     <string name="licenses">Licence otvorenog koda</string>
     <string name="version">Verzija</string>
     <string name="website">Web-stranica</string>
-    <string name="battery_optimization_setting_activity_not_found">Nije moguće otvoriti postavke uređaja</string>
-    <string name="battery_optimization_disabled">Optimiranje baterije je već deaktivirano</string>
-    <string name="pref_disable_battery_optimization_summary">Pomaže pri aktualiziranju biblioteke i spremanju sigurnosnih kopija u pozadini</string>
-    <string name="pref_disable_battery_optimization">Deaktiviraj optimiranje baterije</string>
     <string name="clear_database_completed">Unosi su izbrisani</string>
     <string name="pref_clear_database_summary">Izbriši povijest za unose koji nisu spremljeni u biblioteci</string>
     <string name="pref_clear_database">Isprazni bazu podataka</string>
@@ -431,7 +427,6 @@
     <string name="categorized_display_settings">Postavke kategorija za sortiranje</string>
     <string name="restrictions">Ograničenja: %s</string>
     <string name="action_start_downloading_now">Pokreni preuzimanje sada</string>
-    <string name="about_dont_kill_my_app">Neki proizvođači imaju dodatna ograničenja za aplikaciju koja onemogućuju usluge u pozadini. Ova web-stranica sadrži daljnje informacije o tome kako to popraviti.</string>
     <string name="theme_tako">Tako</string>
     <string name="theme_midnightdusk">Ponoćni sumrak</string>
     <string name="theme_greenapple">Zelena jabuka</string>
@@ -517,7 +512,6 @@
     <string name="label_stats">Statistike</string>
     <string name="label_downloaded">Preuzeto</string>
     <string name="action_display_show_continue_reading_button">Gumb za nastavljanje čitanja</string>
-    <string name="pref_appearance_summary">Tema, format datuma i vremena</string>
     <string name="pref_browse_summary">Izvori, ekstenzije, globalno pretraživanje</string>
     <string name="pref_reader_summary">Modus čitanja, prikaz, navigacija</string>
     <string name="pref_downloads_summary">Automatsko preuzimanje, preuzimanje unaprijed</string>

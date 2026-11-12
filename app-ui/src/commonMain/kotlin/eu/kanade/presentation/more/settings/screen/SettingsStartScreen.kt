@@ -19,7 +19,7 @@ internal fun resolveSettingsStartScreen(
         SettingsScreen.Destination.LibraryUpdates -> SettingsLibraryUpdatesScreen()
         SettingsScreen.Destination.Profiles -> SettingsProfilesScreen()
         SettingsScreen.Destination.Sync -> SyncScreen()
-        null -> if (twoPane) SettingsAppearanceScreen() else SettingsMainScreen()
+        null -> if (twoPane) SettingsGeneralScreen() else SettingsMainScreen()
     }
 
     return requestedScreen

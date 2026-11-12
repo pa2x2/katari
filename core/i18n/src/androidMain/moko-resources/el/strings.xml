@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Κεφάλαιο με σύρσιμο προς τα δεξιά</string>
     <string name="ext_permission_install_apps_warning">Απαιτούνται δικαιώματα για την εγκατάσταση επεκτάσεων. Πατήστε εδώ για παραχώρηση.</string>
     <string name="connected_to_wifi">Μόνο σε Wi-Fi</string>
+    <string name="battery_optimization_disabled">Η βελτιστοποίηση μπαταρίας είναι ήδη απενεργοποιημένη</string>
+    <string name="pref_disable_battery_optimization_summary">Βοηθά στις ενημερώσεις βιβλιοθήκης και τα αντίγραφα ασφαλείας στο παρασκήνιο</string>
+    <string name="pref_disable_battery_optimization">Απενεργοποίηση βελτιστοποίησης μπαταρίας</string>
+    <string name="battery_optimization_setting_activity_not_found">Δεν ήταν δυνατό το άνοιγμα των ρυθμίσεων της συσκευής</string>
+    <string name="about_dont_kill_my_app">Ορισμένοι κατασκευαστές έχουν πρόσθετους περιορισμούς εφαρμογών που εξουδετερώνουν τις υπηρεσίες παρασκηνίου. Αυτός ο ιστότοπος έχει περισσότερες πληροφορίες για το πώς να το διορθώσετε.</string>
 </resources>

@@ -12,4 +12,9 @@
     <string name="pref_show_navigation_mode">Shfaq mbivendosjen e zonave të prekjes</string>
     <string name="pref_read_with_long_tap">Shfaq në trokitje të gjatë</string>
     <string name="connected_to_wifi">Vetëm në Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Çaktivizo optimizimin e baterisë</string>
+    <string name="pref_disable_battery_optimization_summary">Ndihmon me përditësimet dhe kopjet rezervë të bibliotekës në sfond</string>
+    <string name="battery_optimization_disabled">Optimizimi i baterisë është tashmë i çaktivizuar</string>
+    <string name="battery_optimization_setting_activity_not_found">Cilësimet e pajisjes nuk mund të hapeshin</string>
+    <string name="about_dont_kill_my_app">Disa prodhues kanë kufizime shtesë të aplikacioneve që shkatërrojnë shërbimet e sfondit. Kjo faqe interneti ka më shumë informacion se si ta rregulloni atë.</string>
 </resources>

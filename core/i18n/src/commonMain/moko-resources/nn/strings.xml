@@ -222,7 +222,6 @@
     <string name="pref_backup_interval">Reservekopifrekvens</string>
     <string name="restoring_backup_canceled">Avbroten gjenoppretting</string>
     <string name="backup_restore_missing_sources">Manglande kjelder:</string>
-    <string name="about_dont_kill_my_app">Nokre produsentar har ytterlegare appavgrensingar som drep bakgrunnstenester. Denne nettstaden har meir info om korleis det kan fiksast.</string>
     <string name="website">Nettstaden</string>
     <string name="local_filter_order_by">Sorter etter</string>
     <string name="date">Dato</string>

@@ -287,9 +287,6 @@
     <string name="check_for_updates">Sprawdź aktualizacje</string>
     <string name="licenses">Licencje open source</string>
     <string name="website">Strona WWW</string>
-    <string name="battery_optimization_disabled">Oszczędzanie baterii jest już wyłączone</string>
-    <string name="pref_disable_battery_optimization_summary">Pomaga z aktualizacjami biblioteki i backupami w tle</string>
-    <string name="pref_disable_battery_optimization">Wyłącz oszczędzanie baterii</string>
     <string name="restoring_backup_canceled">Anulowano przywracanie</string>
     <string name="restore_in_progress">Kopia zapasowa jest w trakcie przywracania</string>
     <string name="backup_in_progress">Kopia zapasowa jest już w trakcie tworzenia</string>
@@ -313,7 +310,6 @@
     <string name="local_source_help_guide">Źródła lokalne - poradnik</string>
     <string name="pref_cutout_short">Pokazuj zawartość w strefie odcięcia</string>
     <string name="action_view_chapters">Przeglądaj rozdziały</string>
-    <string name="battery_optimization_setting_activity_not_found">Niepowodzenie otwarcia ustawień urządzenia</string>
     <string name="pref_refresh_library_covers">Odśwież okładki w bibliotece</string>
     <string name="restoring_backup_error">Przywracanie kopii zapasowej zakończone niepowodzeniem</string>
     <string name="creating_backup_error">Tworzenie kopii zapasowej zakończone niepowodzeniem</string>
@@ -430,7 +426,6 @@
     <string name="action_display_local_badge">Lokalne źródło</string>
     <string name="information_empty_category_dialog">Nie masz jeszcze żadnych kategorii.</string>
     <string name="restrictions">Ograniczenia: %s</string>
-    <string name="about_dont_kill_my_app">Niektórzy producenci mają dodatkowe ograniczenia, które zabijają usługi działające w tle. Ta strona zawiera więcej informacji na ten temat.</string>
     <string name="action_start_downloading_now">Zacznij pobierać teraz</string>
     <string name="theme_greenapple">Zielone jabłko</string>
     <string name="theme_monet">Dynamiczny</string>
@@ -541,7 +536,6 @@
     <string name="invalid_location">Nieprawidłowa lokalizacja: %s</string>
     <string name="action_display_show_continue_reading_button">Przycisk wznów czytanie</string>
     <string name="pref_browse_summary">Źródła, rozszerzenia, globalne wyszukiwanie</string>
-    <string name="pref_appearance_summary">Tło, data &amp; format czasu</string>
     <string name="pref_backup_summary">Manualna &amp; automatyczna kopia</string>
     <string name="label_read_duration">Czas odczytu</string>
     <string name="label_titles_section">Wpisy</string>

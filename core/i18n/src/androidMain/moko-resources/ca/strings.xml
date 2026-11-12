@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">En lliscar cap a la dreta en un capítol</string>
     <string name="ext_permission_install_apps_warning">Calen permisos per a instal·lar extensions. Premeu aquí per a concedir-les.</string>
     <string name="connected_to_wifi">Només amb Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Desactiva l’optimització de la bateria</string>
+    <string name="pref_disable_battery_optimization_summary">Fa que funcionin millor les actualitzacions de la biblioteca en segon pla i les còpies de seguretat</string>
+    <string name="battery_optimization_disabled">L’optimització de la bateria ja està desactivada</string>
+    <string name="battery_optimization_setting_activity_not_found">No s’ha pogut obrir la configuració del dispositiu</string>
+    <string name="about_dont_kill_my_app">Alguns fabricants tenen restriccions addicionals per a les aplicacions que finalitzen els serveis en segon pla. Aquest lloc web té més informació de com solucionar-ho.</string>
 </resources>

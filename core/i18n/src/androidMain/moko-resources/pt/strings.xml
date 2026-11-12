@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Capítulo ao deslizar para a direita</string>
     <string name="ext_permission_install_apps_warning">Permissões são necessárias para instalar extensões. Toque aqui para conceder.</string>
     <string name="connected_to_wifi">Só com Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Desativar otimização de bateria</string>
+    <string name="pref_disable_battery_optimization_summary">Ajuda com a atualização e cópia de segurança da biblioteca em segundo plano</string>
+    <string name="battery_optimization_disabled">A otimização de bateria já está desativada</string>
+    <string name="battery_optimization_setting_activity_not_found">Não foi possível abrir as definições do aparelho</string>
+    <string name="about_dont_kill_my_app">Alguns fabricantes têm restrições adicionais de aplicação que desligam os serviços em segundo plano. Este sítio web tem mais informações sobre como corrigi-lo.</string>
 </resources>

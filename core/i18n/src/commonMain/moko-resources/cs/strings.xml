@@ -292,10 +292,6 @@
     <string name="licenses">Open Source licence</string>
     <string name="whats_new">Co je nového</string>
     <string name="website">Webová stránka</string>
-    <string name="battery_optimization_setting_activity_not_found">Nelze otevřít nastavení zařízení</string>
-    <string name="battery_optimization_disabled">Optimalizace je již vypnuta</string>
-    <string name="pref_disable_battery_optimization_summary">Pomáhá s aktualizacemi knihovny a záloh na pozadí</string>
-    <string name="pref_disable_battery_optimization">Vypnout optimalizaci baterie</string>
     <string name="pref_dump_crash_logs_summary">Uloží chybové protokoly do souboru pro sdílení s vývojáři</string>
     <string name="pref_refresh_library_covers">Obnovit přebaly v knihovně</string>
     <string name="label_data">Data</string>
@@ -430,7 +426,6 @@
     <string name="categorized_display_settings">Nastavení řazení pro jednotlivé kategorie</string>
     <string name="information_empty_category_dialog">Nemáte žádné kategorie.</string>
     <string name="action_start_downloading_now">Začít stahovat nyní</string>
-    <string name="about_dont_kill_my_app">Někteří výrobci používají další omezení aplikací, která vypíná služby na pozadí. Na této webové stránce najdete další informace o tom, jak to opravit.</string>
     <string name="restore_miui_warning">Pokud je MIUI optimalizace vypnutá, zálohování/obnovování nemusí fungovat správně.</string>
     <string name="pref_dark_theme_pure_black">Čistě černý tmavý režim</string>
     <string name="theme_yotsuba">Jotsuba</string>
@@ -534,7 +529,6 @@
     <string name="popular">Populární</string>
     <string name="action_search_hint">Vyhledat…</string>
     <string name="pref_reader_summary">Režim čtení, displej, navigace</string>
-    <string name="pref_appearance_summary">Téma, formát data a času</string>
     <string name="pref_downloads_summary">Automatické stahování, stahování dopředu</string>
     <string name="pref_browse_summary">Zdroje, rozšíření, globální vyhledávání</string>
     <string name="crash_screen_restart_application">Restartujte aplikaci</string>

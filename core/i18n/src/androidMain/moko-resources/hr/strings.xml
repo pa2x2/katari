@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Poglavlje pri povlačenju udesno</string>
     <string name="ext_permission_install_apps_warning">Za instaliranje proširenja su potrebne dozvole. Dodirni ovdje za odobrenje.</string>
     <string name="connected_to_wifi">Samo putem Wi-Fi veze</string>
+    <string name="battery_optimization_setting_activity_not_found">Nije moguće otvoriti postavke uređaja</string>
+    <string name="battery_optimization_disabled">Optimiranje baterije je već deaktivirano</string>
+    <string name="pref_disable_battery_optimization_summary">Pomaže pri aktualiziranju biblioteke i spremanju sigurnosnih kopija u pozadini</string>
+    <string name="pref_disable_battery_optimization">Deaktiviraj optimiranje baterije</string>
+    <string name="about_dont_kill_my_app">Neki proizvođači imaju dodatna ograničenja za aplikaciju koja onemogućuju usluge u pozadini. Ova web-stranica sadrži daljnje informacije o tome kako to popraviti.</string>
 </resources>

@@ -274,10 +274,6 @@
     <string name="licenses">مجوزهای منبع باز</string>
     <string name="version">نسخهٔ</string>
     <string name="website">وب سایت</string>
-    <string name="battery_optimization_setting_activity_not_found">تنظیمات دستگاه باز نشد</string>
-    <string name="battery_optimization_disabled">بهینه سازی باتری از قبل غیرفعال شده است</string>
-    <string name="pref_disable_battery_optimization_summary">به بروزرسانی‌ها و پشتیبان‌گیری از کتابخانه در حالت پس زمینه کمک می‌کند</string>
-    <string name="pref_disable_battery_optimization">غیر فعال کردن بهینه سازی باتری</string>
     <string name="pref_refresh_library_covers">تازه کردن عکس روی جلد مانگاها</string>
     <string name="clear_database_completed">اطلاعات حذف شدند</string>
     <string name="pref_clear_database_summary">حذف سابقه برای مانگاهایی که در کتابخانه ذخیره نشده اند</string>
@@ -474,7 +470,6 @@
     <string name="pref_app_language">زبان برنامه</string>
     <string name="invalid_location">مکان نامعتبر: %s</string>
     <string name="pref_download_new_categories_details">ورودی ها در دسته بندی های حذف شده حتی اگر در دسته بندی های در نظر گرفته شده نیز باشند، دانلود نخواهند شد.</string>
-    <string name="pref_appearance_summary">قالب تم، تاریخ و زمان</string>
     <string name="pref_reader_summary">حالت خواندن، نمایش، نوار وضعیت</string>
     <string name="multi_lang">چند</string>
     <string name="delete_category_confirmation">آیا می خواهید دسته \"%s\" را حذف کنید؟</string>
@@ -715,7 +710,6 @@
     <string name="hour_short">%dساعت</string>
     <string name="migrationConfigScreen.availableHeader">در‌دسترس</string>
     <string name="extensionStoresScreen.addStore.alreadyExists">این فروشگاه افزونه از قبل وجود دارد</string>
-    <string name="about_dont_kill_my_app">برخی از سازندگان محدودیت‌های اضافی برای برنامه‌ها اعمال می‌کنند که باعث متوقف شدن سرویس‌های پس‌زمینه می‌شود. این وب‌سایت اطلاعات بیشتری درباره نحوه رفع این مشکل ارائه می‌دهد.</string>
     <string name="action_display_unread_badge">چپتر‌های خوانده‌نشده</string>
     <string name="notes_placeholder">از آن بخشی که خوشم آمد…</string>
     <string name="migrationListScreen.copyNowActionLabel">همین حالا کپی کنید</string>

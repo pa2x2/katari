@@ -314,9 +314,6 @@
     <string name="local_source_help_guide">Lokal kildeguide</string>
     <string name="downloaded_only_summary">Filtrerer alle oppføringer i biblioteket ditt</string>
     <string name="check_for_updates">Se etter oppdateringer</string>
-    <string name="battery_optimization_setting_activity_not_found">Kunne ikke åpne enhetens innstillinger</string>
-    <string name="battery_optimization_disabled">Batterioptimalisering er allerede deaktivert</string>
-    <string name="pref_disable_battery_optimization">Deaktiver batterioptimalisering</string>
     <string name="label_data">Data</string>
     <string name="requires_app_restart">Krever omstart for å tre i kraft</string>
     <string name="label_network">Nettverk</string>
@@ -361,7 +358,6 @@
     <string name="action_global_search_query">Søk etter \"%1$s\" globalt</string>
     <string name="licenses">Friprog-lisenser</string>
     <string name="whats_new">Hva er nytt</string>
-    <string name="pref_disable_battery_optimization_summary">Hjelper med oppdatering og sikkerhetskopiering av biblioteket</string>
     <string name="pref_refresh_library_covers">Gjenoppfrisk mangaomslag i biblioteket</string>
     <string name="invalid_backup_file_missing_manga">Sikkerhetskopi inneholder ingen bibliotekoppføringer.</string>
     <string name="pref_webtoon_side_padding">Sidepolstring</string>
@@ -442,7 +438,6 @@
     <string name="cancel_all_for_series">Avbryt alle for denne serien</string>
     <string name="confirm_lock_change">Identitetsbekreft for å endre</string>
     <string name="label_default">Standard</string>
-    <string name="about_dont_kill_my_app">Noen produsenter har ytterligere appbegrensninger som dreper bakgrunnstjenester. Denne nettsiden har mer info om hvordan det kan fikses.</string>
     <string name="restore_miui_warning">Sikkerhetskopier/gjenoppretting kan krangle hvis MIUI-optimalisering er avskrudd.</string>
     <string name="pref_tablet_ui_mode">Nettbrettsgrensesnitt</string>
     <string name="pref_hide_threshold">Følsomhet for å skjule menyen når du ruller</string>
@@ -534,7 +529,6 @@
     <string name="appwidget_updates_description">Se de nylig oppdaterte biblotekoppføringene dine</string>
     <string name="appwidget_unavailable_locked">Moduler er ikke tilgjengelig når applås er aktivert</string>
     <string name="pref_user_agent_string">Standard streng for brukeragent</string>
-    <string name="pref_appearance_summary">Tema, dato- og klokkeslettformat</string>
     <string name="pref_downloads_summary">Automatisk nedlasting, last ned i forkant</string>
     <string name="pref_reader_summary">Lesemodus, skjerm, navigasjon</string>
     <string name="update_already_running">En oppdatering kjører allerede</string>

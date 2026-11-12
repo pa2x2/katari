@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Kapitel beim Streichen nach rechts</string>
     <string name="ext_permission_install_apps_warning">Für das Installieren von Erweiterungen sind Berechtigungen erforderlich. Tippe hier, um sie zu gewähren.</string>
     <string name="connected_to_wifi">Nur über WLAN</string>
+    <string name="pref_disable_battery_optimization">Akkuverbrauch-Optimierung deaktivieren</string>
+    <string name="pref_disable_battery_optimization_summary">Hilft bei Bibliotheksaktualisierungen und -sicherungen im Hintergrund</string>
+    <string name="battery_optimization_disabled">Akkuverbrauch-Optimierung ist bereits deaktiviert</string>
+    <string name="battery_optimization_setting_activity_not_found">Geräteeinstellungen konnten nicht geöffnet werden</string>
+    <string name="about_dont_kill_my_app">Einige Hersteller haben zusätzliche App-Beschränkungen, die Hintergrunddienste stoppen. Diese Webseite hat mehr Informationen darüber, wie man dies beheben kann.</string>
 </resources>

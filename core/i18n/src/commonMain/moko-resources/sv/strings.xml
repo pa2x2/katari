@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">Kapitel %1$s och %2$d till</string>
     <string name="notification_chapters_multiple">Kapitlen %1$s</string>
     <string name="hide_notification_content">Dölj notisinnehåll</string>
-    <string name="pref_disable_battery_optimization">Inaktivera batterioptimering</string>
-    <string name="pref_disable_battery_optimization_summary">Hjälper till med uppdateringar och säkerhetskopior i bakgrunden</string>
-    <string name="battery_optimization_disabled">Batterioptimering är redan inaktiverat</string>
     <string name="action_menu">Meny</string>
     <string name="action_newest">Nyaste</string>
     <string name="action_oldest">Äldsta</string>
@@ -316,7 +313,6 @@
     <string name="viewer">Läsläge</string>
     <string name="pref_category_for_this_series">För denna serie</string>
     <string name="gray_background">Grå</string>
-    <string name="battery_optimization_setting_activity_not_found">Det gick inte att öppna enhetsinställningarna</string>
     <string name="pref_refresh_library_covers">Uppdatera bibliotekets omslag</string>
     <string name="sort_by_upload_date">Efter uppladdningsdatum</string>
     <string name="label_data">Data</string>
@@ -441,7 +437,6 @@
     <string name="theme_greenapple">Grönt äpple</string>
     <string name="theme_monet">Dynamisk</string>
     <string name="pref_app_theme">App-tema</string>
-    <string name="about_dont_kill_my_app">Vissa tillverkare har ytterligare appbegränsningar som dödar bakgrundstjänster. Denna webbplats har mer information om hur du åtgärdar det.</string>
     <string name="label_background_activity">Bakgrundsaktivitet</string>
     <string name="pref_lowest">Lägsta</string>
     <string name="pref_low">Låg</string>
@@ -540,7 +535,6 @@
     <string name="pref_downloads_summary">Automatisk nedladdning, ladda ned i förväg</string>
     <string name="pref_backup_summary">Manuell och automatisk säkerhetskopiering, lagringsutrymme</string>
     <string name="invalid_location">Ogiltig plats: %s</string>
-    <string name="pref_appearance_summary">Tema, datum och tidsformat</string>
     <string name="pref_browse_summary">Källor, tillägg, global sökning</string>
     <string name="crash_screen_restart_application">Starta om applikationen</string>
     <string name="crash_screen_title">Hoppsan!</string>

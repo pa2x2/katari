@@ -271,10 +271,6 @@
     <string name="check_for_updates">更新を確認</string>
     <string name="licenses">オープン ソース ライセンス</string>
     <string name="website">ウェブサイト</string>
-    <string name="battery_optimization_setting_activity_not_found">デバイス設定を開きませんでした</string>
-    <string name="battery_optimization_disabled">バッテリー最適化は既に無効です</string>
-    <string name="pref_disable_battery_optimization_summary">バックグラウンドでのライブラリの更新とバックアップに役立ちます</string>
-    <string name="pref_disable_battery_optimization">バッテリー最適化を無効にする</string>
     <string name="pref_refresh_library_covers">ライブラリの表紙を更新</string>
     <string name="label_data">データ</string>
     <string name="restoring_backup_canceled">復元をキャンセルしました</string>
@@ -440,7 +436,6 @@
     <string name="pref_app_theme">アプリテーマ</string>
     <string name="action_start_downloading_now">ダウンロードを開始します</string>
     <string name="theme_monet">ダイナミック</string>
-    <string name="about_dont_kill_my_app">一部のメーカーは、バックグラウンド サービスを停止させる追加のアプリ制限を設けています。この問題を解決する方法については、こちらのウェブサイトに詳しい情報が掲載されています。</string>
     <string name="label_background_activity">バックグラウンドアクティビティ</string>
     <string name="restore_miui_warning">MIUI 最適化が無効になっている場合、バックアップおよび復元が正常に機能しない可能性があります。</string>
     <string name="pref_lowest">最低</string>
@@ -543,7 +538,6 @@
     <string name="pref_downloads_summary">自動ダウンロード、事前ダウンロード</string>
     <string name="pref_browse_summary">ソース、拡張機能、グローバル検索</string>
     <string name="pref_backup_summary">手動・自動バックアップ、ストレージ領域</string>
-    <string name="pref_appearance_summary">テーマ、日付と時刻の形式</string>
     <string name="action_open_random_manga">おまかせ閲覧</string>
     <string name="information_no_entries_found">このカテゴリーには該当する項目が見つかりませんでした</string>
     <string name="download_notifier_cache_renewal">ダウンロード内容を検査しています</string>

@@ -353,7 +353,6 @@
     <string name="onboarding_permission_analytics">Дазволіць аналітыку</string>
     <string name="onboarding_permission_analytics_description">Ананімна дасылаць даныя выкарыстання праграмы для паляпшэння яе функцый.</string>
     <string name="onboarding_permission_action_grant">Надаць</string>
-    <string name="pref_appearance_summary">Тэма, фармат даты і часу</string>
     <string name="pref_reader_summary">Рэжым чытання, адлюстраванне, навігацыя</string>
     <string name="pref_downloads_summary">Аўтаматычнае спампоўванне, спампоўванне наперад</string>
     <string name="pref_browse_summary">Крыніцы, пашырэнні, глабальны пошук</string>
@@ -491,11 +490,6 @@
     <string name="pref_reset_viewer_flags_error">Не ўдалося скінуць параметры чытанкі</string>
     <string name="pref_dump_crash_logs_summary">Захоўвае журналы збояў у файл для адпраўкі распрацоўнікам</string>
     <string name="label_background_activity">Фонавая актыўнасць</string>
-    <string name="pref_disable_battery_optimization">Адключыць аптымізацыю батарэі</string>
-    <string name="pref_disable_battery_optimization_summary">Дапамагае з абнаўленнем бібліятэкі і рэзерваваннем ў фоне</string>
-    <string name="battery_optimization_disabled">Аптымізацыя батарэі ўжо адключана</string>
-    <string name="battery_optimization_setting_activity_not_found">Не ўдалося адкрыць налады прылады</string>
-    <string name="about_dont_kill_my_app">Некаторыя вытворцы маюць дадатковыя абмежаванні для праграм, якія забіваюць фонавыя службы. Тут ёсць зведкі, як гэта выправіць.</string>
     <string name="pref_tablet_ui_mode">Планшэтны інтэрфейс</string>
     <string name="pref_verbose_logging">Падрабязнае журналяванне</string>
     <string name="pref_verbose_logging_summary">Запісваць падрабязнасці у сістэмны журнал (зніжае прадукцыйнасць праграмы)</string>

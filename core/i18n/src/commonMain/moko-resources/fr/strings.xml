@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">Chapitre %1$s et %2$d autres</string>
     <string name="notification_chapters_multiple">Chapitres %1$s</string>
     <string name="hide_notification_content">Cacher le contenu des notifications</string>
-    <string name="pref_disable_battery_optimization">Désactiver la fonction d\'optimisation de la batterie</string>
-    <string name="pref_disable_battery_optimization_summary">Facilite les mises à jour et sauvegardes de la bibliothèque en arrière-plan</string>
-    <string name="battery_optimization_disabled">La fonction d\'optimisation de la batterie est déjà désactivée</string>
     <string name="action_menu">Menu</string>
     <string name="action_newest">Plus récent</string>
     <string name="action_oldest">Plus ancien</string>
@@ -316,7 +313,6 @@
     <string name="gray_background">Gris</string>
     <string name="pref_category_for_this_series">Pour cette série</string>
     <string name="viewer">Mode de lecture</string>
-    <string name="battery_optimization_setting_activity_not_found">Impossible d\'ouvrir les paramètres de l\'appareil</string>
     <string name="pref_refresh_library_covers">Actualiser les couvertures de la bibliothèque</string>
     <string name="pref_library_update_refresh_metadata_summary">Vérifier s\'il y a une nouvelle couverture ou synopsis lors des mises à jour de la bibliothèque</string>
     <string name="sort_by_upload_date">Par date de téléversement</string>
@@ -441,7 +437,6 @@
     <string name="theme_greenapple">Pomme verte</string>
     <string name="theme_monet">Dynamique</string>
     <string name="pref_app_theme">Thème de l\'appli</string>
-    <string name="about_dont_kill_my_app">Certains fabricants ont mis en place des restrictions supplémentaires sur les applications qui tuent les services d\'arrière-plan. Ce site Web contient plus d\'informations sur la manière de résoudre ce problème.</string>
     <string name="label_background_activity">Activité en arrière-plan</string>
     <string name="pref_lowest">Minimale</string>
     <string name="pref_low">Basse</string>
@@ -534,7 +529,6 @@
     <string name="remove_manga">Vous êtes sur le point de retirer « %s » de votre bibliothèque</string>
     <string name="action_search_hint">Recherche…</string>
     <string name="crash_screen_title">Oups !</string>
-    <string name="pref_appearance_summary">Thème, format de la date et de l\'heure</string>
     <string name="pref_downloads_summary">Téléchargement automatique, téléchargement anticipé</string>
     <string name="pref_backup_summary">Sauvegardes manuelles et automatiques</string>
     <string name="crash_screen_restart_application">Redémarrer l\'application</string>

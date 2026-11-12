@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalUriHandler
 import app.katari.core.common.GlobalCustomPreferences
 import app.katari.core.platform.currentPlatformContext
 import app.katari.entry.interactions.media.EntryViewerSettingsResetResult
@@ -21,7 +20,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
-import eu.kanade.presentation.more.settings.screen.advanced.UnrestrictedBackgroundWorkRequest
 import eu.kanade.presentation.more.settings.screen.advanced.WebViewEngineScreen
 import eu.kanade.presentation.more.settings.screen.advanced.rememberClearWebViewData
 import eu.kanade.presentation.more.settings.screen.advanced.webViewEngineStatus
@@ -104,7 +102,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
                 title = stringResource(MR.strings.pref_onboarding_guide),
                 onClick = { navigator.push(OnboardingScreen()) },
             ),
-            getBackgroundActivityGroup(),
             getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),
             getLibraryGroup(
@@ -113,39 +110,6 @@ class SettingsAdvancedScreen : SearchableSettings() {
             ),
             getReaderGroup(),
             getExtensionsGroup(globalCustomPreferences = globalCustomPreferences),
-        )
-    }
-
-    @Composable
-    private fun getBackgroundActivityGroup(): Preference.PreferenceGroup {
-        val context = currentPlatformContext()
-        val messages = rememberScreenMessages()
-        val uriHandler = LocalUriHandler.current
-        val restrictions = LocalAppUiGraph.current.backgroundWorkRestrictions
-
-        return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.label_background_activity),
-            visible = restrictions.isOffered,
-            preferenceItems = listOf(
-                Preference.PreferenceItem.TextPreference(
-                    title = stringResource(MR.strings.pref_disable_battery_optimization),
-                    subtitle = stringResource(MR.strings.pref_disable_battery_optimization_summary),
-                    onClick = {
-                        when (restrictions.requestUnrestricted(context)) {
-                            UnrestrictedBackgroundWorkRequest.Asked -> Unit
-                            UnrestrictedBackgroundWorkRequest.SettingMissing ->
-                                messages.show(MR.strings.battery_optimization_setting_activity_not_found)
-                            UnrestrictedBackgroundWorkRequest.AlreadyUnrestricted ->
-                                messages.show(MR.strings.battery_optimization_disabled)
-                        }
-                    },
-                ),
-                Preference.PreferenceItem.TextPreference(
-                    title = "Don't kill my app!",
-                    subtitle = stringResource(MR.strings.about_dont_kill_my_app),
-                    onClick = { uriHandler.openUri("https://dontkillmyapp.com/") },
-                ),
-            ),
         )
     }
 

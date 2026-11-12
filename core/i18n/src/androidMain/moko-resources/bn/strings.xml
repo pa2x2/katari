@@ -16,4 +16,9 @@
     <string name="pref_chapter_swipe_end">অধ্যায় ডানে সোয়াইপ করলে</string>
     <string name="ext_permission_install_apps_warning">এক্সটেনশন ইনস্টল করতে অনুমতি লাগবে। অনুমতি দিতে এখানে ট্যাপ করুন।</string>
     <string name="connected_to_wifi">সুধু মাত্র ওয়িফি তে</string>
+    <string name="battery_optimization_setting_activity_not_found">যন্ত্রের সেটিংস খোলা সম্ভব হয়নি</string>
+    <string name="battery_optimization_disabled">ব্যাটারি অপ্টিমাইজেশন ইতিমধ্যে অক্ষম করা আছে</string>
+    <string name="pref_disable_battery_optimization_summary">পিছেনে লাইব্রেরী হালনাগাদ ও ব্যাকআপে সাহায্য করে</string>
+    <string name="pref_disable_battery_optimization">ব্যাটারি অপ্টিমাইজেশন অক্ষম করুন</string>
+    <string name="about_dont_kill_my_app">কিছু নির্মাতাদের অতিরিক্ত অ্যাপ সীমাবদ্ধতা রয়েছে যা ব্যাকগ্রাউন্ড পরিষেবাগুলিকে হত্যা করে। এই ওয়েবসাইটে কিভাবে এটি ঠিক করা যায় সে সম্পর্কে আরও তথ্য রয়েছে।</string>
 </resources>

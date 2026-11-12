@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Bölümü sağa kaydırma</string>
     <string name="ext_permission_install_apps_warning">Uzantıları yüklemek için izin gerekli. İzin vermek için buraya dokunun.</string>
     <string name="connected_to_wifi">Yalnızca kablosuz ağda</string>
+    <string name="pref_disable_battery_optimization">Pil iyileştirmesini devre dışı bırak</string>
+    <string name="pref_disable_battery_optimization_summary">Arka plan kitaplık güncellemelerine ve yedeklemelere yardım eder</string>
+    <string name="battery_optimization_disabled">Pil iyileştirmesi zaten devre dışı</string>
+    <string name="battery_optimization_setting_activity_not_found">Cihaz ayarları açılamadı</string>
+    <string name="about_dont_kill_my_app">Bazı üreticilerin arka plan hizmetlerini durduran ek uygulama kısıtlamaları vardır. Bu web sitesi bu durumun nasıl düzeltileceği hakkında daha fazla bilgi verir.</string>
 </resources>

@@ -77,7 +77,6 @@
     <string name="app_not_available">Hozir ilovaga kirish iloji yo\'q</string>
     <string name="pref_category_general">Asosiy</string>
     <string name="pref_category_reader">Rider</string>
-    <string name="pref_appearance_summary">Mavzu, sana va vaqt formati</string>
     <string name="pref_reader_summary">O\'qish rejimi, ko\'rinish, navigatsiya</string>
     <string name="theme_system">Tizimdagidek</string>
     <string name="theme_lavender">Lavanda</string>

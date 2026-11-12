@@ -12,4 +12,9 @@
     <string name="pref_show_navigation_mode">Түрту аймақтарының қабаттасуын көрсету</string>
     <string name="pref_read_with_long_tap">Ұзақ түртуде көрсету</string>
     <string name="connected_to_wifi">Тек Wi-Fi болғанда</string>
+    <string name="pref_disable_battery_optimization_summary">Аялық кітапхананың жаңартуымен және сақтық көшірмесіне көмектеседі</string>
+    <string name="battery_optimization_disabled">Баттареяның оңтайландыруы әлдеқашан өшірілу</string>
+    <string name="pref_disable_battery_optimization">Батареяның оңтайландыруын өшіру</string>
+    <string name="battery_optimization_setting_activity_not_found">Құрылғы баптауы ашылмады</string>
+    <string name="about_dont_kill_my_app">Кейбір өндірушілерде аялық қызметтерді өшіретін қолданбаларға қосымша шектеулер бар. Бұл сайтта оны қалай түзетуге болатыны туралы толығырақ ақпарат бар.</string>
 </resources>

@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">ச்விப் டு ரைட் பற்றிய அத்தியாயம்</string>
     <string name="ext_permission_install_apps_warning">நீட்டிப்புகளை நிறுவ அனுமதிகள் தேவை. வழங்க இங்கே தட்டவும்.</string>
     <string name="connected_to_wifi">வைஃபை மட்டுமே</string>
+    <string name="pref_disable_battery_optimization">பேட்டரி தேர்வுமுறை முடக்கு</string>
+    <string name="pref_disable_battery_optimization_summary">பின்னணி நூலக புதுப்பிப்புகள் மற்றும் காப்புப்பிரதிகளுக்கு உதவுகிறது</string>
+    <string name="battery_optimization_disabled">பேட்டரி தேர்வுமுறை ஏற்கனவே முடக்கப்பட்டுள்ளது</string>
+    <string name="battery_optimization_setting_activity_not_found">சாதன அமைப்புகளைத் திறக்க முடியவில்லை</string>
+    <string name="about_dont_kill_my_app">சில உற்பத்தியாளர்களுக்கு பின்னணி சேவைகளைக் கொல்லும் கூடுதல் பயன்பாட்டு கட்டுப்பாடுகள் உள்ளன. இந்த வலைத்தளத்தை எவ்வாறு சரிசெய்வது என்பது பற்றிய கூடுதல் தகவல்கள் உள்ளன.</string>
 </resources>

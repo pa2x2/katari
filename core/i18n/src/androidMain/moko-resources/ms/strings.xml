@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Bab mengenai leret ke kanan</string>
     <string name="ext_permission_install_apps_warning">Kebenaran diperlukan untuk memasang sambungan. Ketik di sini untuk membenarkan.</string>
     <string name="connected_to_wifi">Hanya menggunakan Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Nyahdaya pengoptimuman bateri</string>
+    <string name="pref_disable_battery_optimization_summary">Membantu dengan pengemaskinian latar belakang pustaka dan sandaran</string>
+    <string name="battery_optimization_disabled">Pengoptimuman bateri sudah dinyahdayakan</string>
+    <string name="battery_optimization_setting_activity_not_found">Tetapan peranti tidak dapat dibuka</string>
+    <string name="about_dont_kill_my_app">Sesetengah pengeluar ada sekatan tambahan pada aplikasi yang akan menghentikan perkidmatan latar belakang. Laman web ini ada maklumat cara membaikinya.</string>
 </resources>
