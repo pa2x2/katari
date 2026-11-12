@@ -283,9 +283,6 @@
     <string name="notification_chapters_single_and_more">Capítulo %1$s e mais %2$d</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
     <string name="hide_notification_content">Ocultar conteúdo da notificação</string>
-    <string name="pref_disable_battery_optimization">Desativar a otimização de bateria</string>
-    <string name="pref_disable_battery_optimization_summary">Ajuda com as atualizações e os backups da biblioteca em segundo plano</string>
-    <string name="battery_optimization_disabled">A otimização de bateria já está desativada</string>
     <string name="action_menu">Menu</string>
     <string name="action_newest">Mais novos</string>
     <string name="action_oldest">Mais antigos</string>
@@ -324,7 +321,6 @@
     <string name="gray_background">Cinza</string>
     <string name="viewer">Modo de leitura</string>
     <string name="pref_category_for_this_series">Para esta série</string>
-    <string name="battery_optimization_setting_activity_not_found">Não foi possível abrir as configurações do dispositivo</string>
     <string name="pref_refresh_library_covers">Atualizar as capas da biblioteca</string>
     <string name="sort_by_upload_date">Pela data de envio</string>
     <string name="label_data">Dados</string>
@@ -439,7 +435,6 @@
     <string name="categorized_display_settings">Configurações por categoria para ordenação</string>
     <string name="information_empty_category_dialog">Você não tem categorias ainda.</string>
     <string name="action_start_downloading_now">Começar o download agora</string>
-    <string name="about_dont_kill_my_app">Algumas fabricantes possuem restrições adicionais de aplicativos que encerram os serviços em segundo plano. Este site possui mais informações sobre como corrigir este problema.</string>
     <string name="restore_miui_warning">O backup e restauração podem não funcionar corretamente se a Otimização da MIUI estiver desabilitada.</string>
     <string name="pref_dark_theme_pure_black">Modo noturno com preto absoluto</string>
     <string name="theme_yotsuba">Yotsuba</string>
@@ -556,7 +551,6 @@
     <string name="remove_manga">Você está prestes a remover \"%s\" de sua biblioteca</string>
     <string name="popular">Popular</string>
     <string name="action_search_hint">Pesquisar…</string>
-    <string name="pref_appearance_summary">Tema, formato de data e hora</string>
     <string name="pref_reader_summary">Modo de leitura, exibição, navegação</string>
     <string name="pref_downloads_summary">Download automático, download a frente</string>
     <string name="pref_browse_summary">Fontes, extensões, pesquisa global</string>

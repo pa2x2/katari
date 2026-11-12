@@ -267,9 +267,6 @@
     <string name="theme_system">النظام</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_light">فاتح</string>
-    <string name="battery_optimization_disabled">تم إلغاء وضع تحسين البطارية مُسبقاً</string>
-    <string name="pref_disable_battery_optimization_summary">يساعد في عملية تحديث المكتبة والنسخ الإحتياطي في الخلفية</string>
-    <string name="pref_disable_battery_optimization">إطفاء وضع تحسين البطارية</string>
     <string name="pref_category_reading">اعدادات القرآءة</string>
     <string name="pref_skip_filtered_chapters">تخطي الفصول المُرشحة</string>
     <string name="pref_cutout_short">إظهار المحتوى في المناطق المقطوعة</string>
@@ -316,7 +313,6 @@
     <string name="pref_webtoon_side_padding">الإزاحة الجانبية</string>
     <string name="vertical_plus_viewer">شريط طويل بين أجزائه فجوات</string>
     <string name="gray_background">رمادي</string>
-    <string name="battery_optimization_setting_activity_not_found">تعذر فتح إعدادات الجهاز</string>
     <string name="action_migrate">نقل</string>
     <string name="label_data">البيانات</string>
     <string name="backup_restore_missing_sources">المصادر المفقودة:</string>
@@ -445,7 +441,6 @@
     <string name="theme_yinyang">ين &amp; يانغ</string>
     <string name="theme_tako">تاكو</string>
     <string name="theme_monet">ديناميكي</string>
-    <string name="about_dont_kill_my_app">تقوم بعض الشركات المصنعة بوضع قيود إضافية على التطبيقات التي قد تقضي على الخدمات التي تعمل في الخلفية. يحتوي هذا الموقع على مزيد من المعلومات حول كيفية إصلاحه.</string>
     <string name="restore_miui_warning">قد لا يعمل النسخ الاحتياطيُّ أو الاستعادة إن عطِّلت أمثَلَة MIUI.</string>
     <string name="relative_time_today">اليوم</string>
     <string name="confirm_lock_change">قم بالمصادقة للتأكيد</string>
@@ -535,7 +530,6 @@
     <string name="action_search_hint">بحث…</string>
     <string name="crash_screen_title">عفوًا!</string>
     <string name="crash_screen_restart_application">أعد تشغيل التطبيق</string>
-    <string name="pref_appearance_summary">مظهر، التاريخ والوقت</string>
     <string name="pref_reader_summary">وضع القراءة، العرض، التنقل</string>
     <string name="pref_downloads_summary">التحميل التلقائي، التحميل مقدما</string>
     <string name="pref_browse_summary">المصادر، الامتدادات، البحث العالمي</string>

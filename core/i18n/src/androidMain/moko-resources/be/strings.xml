@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Раздзел пры змахванні ўправа</string>
     <string name="ext_permission_install_apps_warning">Для ўсталёўкі пашырэнняў патрабуюцца дазволы. Націсніце сюды, каб даць іх.</string>
     <string name="connected_to_wifi">Толькі праз Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Адключыць аптымізацыю батарэі</string>
+    <string name="pref_disable_battery_optimization_summary">Дапамагае з абнаўленнем бібліятэкі і рэзерваваннем ў фоне</string>
+    <string name="battery_optimization_disabled">Аптымізацыя батарэі ўжо адключана</string>
+    <string name="battery_optimization_setting_activity_not_found">Не ўдалося адкрыць налады прылады</string>
+    <string name="about_dont_kill_my_app">Некаторыя вытворцы маюць дадатковыя абмежаванні для праграм, якія забіваюць фонавыя службы. Тут ёсць зведкі, як гэта выправіць.</string>
 </resources>

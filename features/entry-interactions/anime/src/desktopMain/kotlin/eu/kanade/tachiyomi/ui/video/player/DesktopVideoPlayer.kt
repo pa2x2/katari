@@ -43,6 +43,7 @@ import eu.kanade.tachiyomi.ui.video.player.surface.ComposeSeekPreviewSurface
 import eu.kanade.tachiyomi.ui.video.player.volume.PlayerOwnVolume
 import eu.kanade.tachiyomi.ui.video.player.window.VideoPlayerFullScreen
 import eu.kanade.tachiyomi.ui.video.player.window.VideoPlayerKeepAwake
+import kotlinx.coroutines.flow.StateFlow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -71,6 +72,7 @@ internal class DesktopVideoPlayer(
         request: AnimePlayerRequest,
         navigation: AnimePlayerNavigation,
         placement: AnimePlayerPlacement,
+        mainWindowHidden: StateFlow<Boolean>,
     ) {
         val covered = placement == AnimePlayerPlacement.Covered
         val viewModel = metroViewModel<VideoPlayerViewModel>()
@@ -112,6 +114,14 @@ internal class DesktopVideoPlayer(
         val context = currentPlatformContext()
         val latestNavigation by rememberUpdatedState(navigation)
         val latestPlacement by rememberUpdatedState(placement)
+        LaunchedEffect(playback, mainWindowHidden) {
+            mainWindowHidden.collect { hidden ->
+                if (hidden && latestPlacement != AnimePlayerPlacement.PictureInPicture) {
+                    playback.player?.pause()
+                    playback.flush()
+                }
+            }
+        }
         val pictureInPicture = remember {
             WindowPictureInPicture(pictureInPictureWindow, navigation = { latestNavigation }) {
                 latestPlacement == AnimePlayerPlacement.PictureInPicture

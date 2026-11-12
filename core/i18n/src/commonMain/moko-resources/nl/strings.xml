@@ -299,9 +299,6 @@
     <string name="check_for_updates">Controleer op updates</string>
     <string name="licenses">Open-sourcelicenties</string>
     <string name="website">Website</string>
-    <string name="battery_optimization_disabled">Batterijoptimalisatie is al uitgeschakeld</string>
-    <string name="pref_disable_battery_optimization_summary">Helpt bij het bijwerken van bibliotheek en back-ups op de achtergrond</string>
-    <string name="pref_disable_battery_optimization">Batterijoptimalisatie uitzetten</string>
     <string name="creating_backup_error">Back-up mislukt</string>
     <string name="backup_in_progress">Er wordt al een back-up gemaakt</string>
     <string name="restore_duration">%1$02d min, %2$02d sec</string>
@@ -314,7 +311,6 @@
     <string name="action_unpin">Lospinnen</string>
     <string name="viewer">Leesmodus</string>
     <string name="pref_category_for_this_series">Voor deze serie</string>
-    <string name="battery_optimization_setting_activity_not_found">Kon de apparaatinstellingen niet openen</string>
     <string name="pref_webtoon_side_padding">Opvulling zijkant</string>
     <string name="gray_background">Grijs</string>
     <string name="pref_refresh_library_covers">Omslagen van manga in bibliotheek bijwerken</string>
@@ -431,7 +427,6 @@
     <string name="action_display_local_badge">Lokale bron</string>
     <string name="information_empty_category_dialog">Er zijn nog geen categorieën.</string>
     <string name="action_start_downloading_now">Begin nu met downloaden</string>
-    <string name="about_dont_kill_my_app">Sommige fabrikanten hebben extra beperkingen op apps die achtergronddiensten uitschakelen. Informatie over hoe je dit kan oplossen kan je vinden op de deze website.</string>
     <string name="restore_miui_warning">Backup/herstellen werkt waarschijnlijk niet goed als de MIUI Optimalisatie is uitgeschakeld.</string>
     <string name="pref_dark_theme_pure_black">Puur-zwarte donkere modus</string>
     <string name="theme_yotsuba">Yotsuba</string>
@@ -517,7 +512,6 @@
     <string name="label_downloaded">Gedownload</string>
     <string name="action_not_now">Niet nu</string>
     <string name="action_open_random_manga">Willekeurige openen</string>
-    <string name="pref_appearance_summary">Thema, datum- en tijdnotatie</string>
     <string name="pref_reader_summary">Leesmodus, weergave, navigatie</string>
     <string name="pref_downloads_summary">Automatische downloads, vooraf downloaden</string>
     <string name="pref_browse_summary">Bronnen, extensies, globaal zoeken</string>

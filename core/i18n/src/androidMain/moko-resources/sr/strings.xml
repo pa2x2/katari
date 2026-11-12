@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Превуци удесно</string>
     <string name="ext_permission_install_apps_warning">За инсталацију додатака потребне су дозволе. Додирни овде за одобрење</string>
     <string name="connected_to_wifi">Само преко Wi-Fi-а</string>
+    <string name="pref_disable_battery_optimization">Искључи оптимизацију коришћења батерије</string>
+    <string name="battery_optimization_disabled">Оптимизација потрошње батерије је већ искључена</string>
+    <string name="pref_disable_battery_optimization_summary">Помаже при ажурирању колекције и резервних копија</string>
+    <string name="about_dont_kill_my_app">Неки произвођачи имају додатна ограничења за апликације која гасе сервисе које су у позадини. Овај сајт садржи више информација о могућим решењима.</string>
+    <string name="battery_optimization_setting_activity_not_found">Није могуће отворити подешавања уређаја</string>
 </resources>

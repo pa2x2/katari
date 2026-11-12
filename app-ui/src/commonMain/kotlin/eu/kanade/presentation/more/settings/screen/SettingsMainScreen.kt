@@ -23,6 +23,7 @@ import app.katari.icons.materialsymbols.rounded.PlayCircle
 import app.katari.icons.materialsymbols.rounded.RecordVoiceOver
 import app.katari.icons.materialsymbols.rounded.Search
 import app.katari.icons.materialsymbols.rounded.Security
+import app.katari.icons.materialsymbols.rounded.Settings
 import app.katari.icons.materialsymbols.rounded.Storage
 import app.katari.icons.materialsymbols.rounded.Translate
 import app.katari.icons.materialsymbols.rounded.Update
@@ -165,12 +166,18 @@ private data class Item(
     val screen: VoyagerScreen,
 )
 
-/** Look and touchpad, library, reading and media, services, and the app itself. */
+/** The app as a whole, look and touchpad, library, reading and media, services, and the app's data and account. */
 private fun itemGroups() = listOf(
     listOfNotNull(
         Item(
+            titleRes = MR.strings.pref_category_general,
+            subtitleRes = MR.strings.pref_general_summary,
+            icon = MaterialSymbols.Rounded.Settings,
+            screen = SettingsGeneralScreen(),
+        ),
+        Item(
             titleRes = MR.strings.pref_category_appearance,
-            subtitleRes = MR.strings.pref_appearance_summary,
+            subtitleRes = MR.strings.pref_appearance_layout_summary,
             icon = MaterialSymbols.Rounded.Palette,
             screen = SettingsAppearanceScreen(),
         ),

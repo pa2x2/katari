@@ -276,9 +276,6 @@
     <string name="notification_chapters_single_and_more">Capítulo %1$s y %2$d más</string>
     <string name="notification_chapters_multiple">Capítulos %1$s</string>
     <string name="hide_notification_content">Ocultar el contenido de las notificaciones</string>
-    <string name="pref_disable_battery_optimization">Desactivar la optimización de batería</string>
-    <string name="pref_disable_battery_optimization_summary">Mejora la cadencia de las actualizaciones y las copias de respaldo que se hagan en segundo plano</string>
-    <string name="battery_optimization_disabled">La optimización de la batería ya está desactivada</string>
     <string name="action_menu">Menú</string>
     <string name="action_newest">Lo más nuevo</string>
     <string name="action_oldest">Lo más antiguo</string>
@@ -317,7 +314,6 @@
     <string name="viewer">Modo de lectura</string>
     <string name="pref_category_for_this_series">Para esta serie</string>
     <string name="gray_background">Gris</string>
-    <string name="battery_optimization_setting_activity_not_found">No se pudieron abrir los ajustes del dispositivo</string>
     <string name="pref_refresh_library_covers">Actualizar las portadas de la biblioteca</string>
     <string name="label_data">Datos</string>
     <string name="backup_restore_missing_sources">Fuentes que faltan:</string>
@@ -424,7 +420,6 @@
     <string name="action_start_downloading_now">Empezar la descarga</string>
     <string name="cancel_all_for_series">Cancelar todo para esta serie</string>
     <string name="action_display_local_badge">Contenido local</string>
-    <string name="about_dont_kill_my_app">Algunos fabricantes restringen aún más ciertas aplicaciones y detienen sus servicios en segundo plano. Esta página web tiene más información sobre cómo solucionarlo.</string>
     <string name="information_empty_category_dialog">Todavía no existen categorías.</string>
     <string name="error_no_match">No se han encontrado coincidencias</string>
     <string name="source_unsupported">Fuente no soportada</string>
@@ -535,7 +530,6 @@
     <string name="action_search_hint">Buscar…</string>
     <string name="pref_downloads_summary">Descargas automáticas y por adelantado</string>
     <string name="pref_reader_summary">Modos de lectura, apariencia y navegación</string>
-    <string name="pref_appearance_summary">Colores de la interfaz y formatos de fecha</string>
     <string name="pref_backup_summary">Copias de seguridad manuales y automáticas, almacenamiento</string>
     <string name="pref_browse_summary">Fuentes, extensiones y búsqueda global</string>
     <string name="crash_screen_title">¡Vaya!</string>

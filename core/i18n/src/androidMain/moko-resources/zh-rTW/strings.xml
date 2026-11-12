@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">向右滑動章節</string>
     <string name="ext_permission_install_apps_warning">缺少安裝擴充套件所需的權限，輕觸此處以授予</string>
     <string name="connected_to_wifi">僅透過 Wi-Fi</string>
+    <string name="battery_optimization_disabled">已停用電池效能最佳化</string>
+    <string name="battery_optimization_setting_activity_not_found">無法前往裝置設定</string>
+    <string name="pref_disable_battery_optimization">停用電池效能最佳化</string>
+    <string name="pref_disable_battery_optimization_summary">有助於背景更新書櫃與自動備份</string>
+    <string name="about_dont_kill_my_app">部分裝置製造商設有額外的應用程式限制來終止背景服務，此網站提供了修復這項問題的詳細資訊</string>
 </resources>

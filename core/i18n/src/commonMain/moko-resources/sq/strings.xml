@@ -133,7 +133,6 @@
     <string name="pref_browse_summary">Burimet, zgjerimet, kërkimi global</string>
     <string name="pref_backup_summary">Rezervime manuale &amp; automatike</string>
     <string name="pref_category_advanced">E avancuar</string>
-    <string name="pref_appearance_summary">Formati i temës, datës dhe orës</string>
     <string name="pref_reader_summary">Modaliteti i leximit, ekrani, navigimi</string>
     <string name="pref_category_about">Rreth</string>
     <string name="pref_category_theme">Tema</string>
@@ -378,7 +377,6 @@
     <string name="migration_dialog_what_to_include">Zgjidhni të dhënat për të përfshirë</string>
     <string name="download_queue_error">Kapitujt nuk mund të shkarkoheshin. Mund të provoni përsëri në seksionin e shkarkimeve</string>
     <string name="clear_database_completed">Elementet u fshinë</string>
-    <string name="pref_disable_battery_optimization">Çaktivizo optimizimin e baterisë</string>
     <string name="password">Fjalëkalimi</string>
     <string name="username">Emri i përdoruesit</string>
     <string name="latest">Të fundit</string>
@@ -451,10 +449,7 @@
     <string name="pref_reset_viewer_flags_summary">Rivendos modalitetin e leximit dhe orientimin e të gjitha serive</string>
     <string name="pref_reset_viewer_flags_error">Cilësimet e lexuesit nuk mund të rivendoseshin</string>
     <string name="label_background_activity">Aktiviteti në sfond</string>
-    <string name="pref_disable_battery_optimization_summary">Ndihmon me përditësimet dhe kopjet rezervë të bibliotekës në sfond</string>
     <string name="pref_dump_crash_logs_summary">Ruan regjistrat e gabimeve në një skedar për t\'i ndarë me zhvilluesit</string>
-    <string name="battery_optimization_disabled">Optimizimi i baterisë është tashmë i çaktivizuar</string>
-    <string name="battery_optimization_setting_activity_not_found">Cilësimet e pajisjes nuk mund të hapeshin</string>
     <string name="check_for_updates">Kontrolloni për përditësime</string>
     <string name="pref_enable_acra">Dërgoni raporte përplasjesh</string>
     <string name="pref_acra_summary">Ndihmon në rregullimin e çdo defekti. Nuk do të dërgohen të dhëna sensitive</string>
@@ -547,7 +542,6 @@
     <string name="whats_new">Cfare ka te re</string>
     <string name="help_translate">Ndihmoni në përkthimin</string>
     <string name="licenses">Licencat me burim të hapur</string>
-    <string name="about_dont_kill_my_app">Disa prodhues kanë kufizime shtesë të aplikacioneve që shkatërrojnë shërbimet e sfondit. Kjo faqe interneti ka më shumë informacion se si ta rregulloni atë.</string>
     <string name="pref_verbose_logging">Prerje me fjalë</string>
     <string name="pref_tablet_ui_mode">Ndërfaqja e përdoruesve të tabletit</string>
     <string name="pref_verbose_logging_summary">Printoni regjistrat me fjalë në regjistrin e sistemit (ul performancën e aplikacionit)</string>

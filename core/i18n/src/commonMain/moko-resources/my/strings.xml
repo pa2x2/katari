@@ -58,7 +58,6 @@
     <string name="pref_category_downloads">ဒေါင်းလုဒ်များ</string>
     <string name="pref_category_advanced">မြင့်မားသော</string>
     <string name="pref_category_about">အကြောင်း</string>
-    <string name="pref_appearance_summary">ပုံစံအနှစ်ချုပ်</string>
     <string name="theme_dark">အမှောင်</string>
     <string name="action_filter_empty">စစ်ထုတ်မှု ဖယ်သည်။</string>
     <string name="action_filter_unread">မဖတ်ရသေးသော</string>

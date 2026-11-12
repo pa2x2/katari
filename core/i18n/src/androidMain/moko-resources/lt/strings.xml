@@ -12,4 +12,9 @@
     <string name="pref_show_navigation_mode">Rodyti lietimui jautrias zonas</string>
     <string name="pref_read_with_long_tap">Parodyti ilgiau paspaudus</string>
     <string name="connected_to_wifi">Kai naudojamas Wi-Fi</string>
+    <string name="battery_optimization_setting_activity_not_found">Nepavyko atidaryti įrenginio nustatymų</string>
+    <string name="pref_disable_battery_optimization">Išjungti akumuliatoriaus optimizavimą</string>
+    <string name="pref_disable_battery_optimization_summary">Padeda su fono bibliotekos naujinimais ir atsarginėmis kopijomis</string>
+    <string name="battery_optimization_disabled">Akumuliatoriaus optimizavimas jau išjungtas</string>
+    <string name="about_dont_kill_my_app">Kai kurie gamintojai taiko papildomus programėlių apribojimus, kurie išjungia fono paslaugas. Šioje svetainėje rasite daugiau informacijos, kaip tai ištaisyti.</string>
 </resources>

@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Bab tentang geser ke kanan</string>
     <string name="ext_permission_install_apps_warning">Izin diperlukan untuk memasang ekstensi. Klik disini untuk memberi izin.</string>
     <string name="connected_to_wifi">Hanya pada Wi-FI</string>
+    <string name="pref_disable_battery_optimization">Nonaktifkan optimisasi baterai</string>
+    <string name="battery_optimization_disabled">Optimalisasi baterai sudah dimatikan</string>
+    <string name="pref_disable_battery_optimization_summary">Membantu pembaruan pustaka dan pencadangan di latar belakang</string>
+    <string name="battery_optimization_setting_activity_not_found">Tidak dapat membuka pengaturan perangkat</string>
+    <string name="about_dont_kill_my_app">Beberapa pabrikan mempunyai batasan aplikasi tambahan yang mematikan layanan latar belakang. Website ini memiliki info lebih lanjut untuk memperbaikinya.</string>
 </resources>

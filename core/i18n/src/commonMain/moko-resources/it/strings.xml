@@ -275,9 +275,6 @@
     <string name="notification_chapters_multiple">Capitoli %1$s</string>
     <string name="notification_chapters_single_and_more">Capitolo %1$s e altri %2$d</string>
     <string name="notification_chapters_single">Capitolo %1$s</string>
-    <string name="battery_optimization_disabled">Ottimizzazione batteria già disattivata</string>
-    <string name="pref_disable_battery_optimization_summary">Facilita gli aggiornamenti e i backup in secondo piano</string>
-    <string name="pref_disable_battery_optimization">Disattiva ottimizzazione batteria</string>
     <string name="hide_notification_content">Nascondi contenuto notifiche</string>
     <string name="action_move_to_bottom">Sposta in fondo</string>
     <string name="action_move_to_top">Sposta in cima</string>
@@ -314,7 +311,6 @@
     <string name="last_used_source">Ultimo usato</string>
     <string name="downloaded_only_summary">Filtra tutte le voci nella tua libreria</string>
     <string name="check_for_updates">Controlla aggiornamenti</string>
-    <string name="battery_optimization_setting_activity_not_found">Impossibile aprire le impostazioni del dispositivo</string>
     <string name="pref_refresh_library_covers">Aggiorna le copertine della libreria</string>
     <string name="restore_duration">%1$02d minuti, %2$02d secondi</string>
     <string name="gray_background">Grigio</string>
@@ -431,7 +427,6 @@
     <string name="manga_cover">Copertina</string>
     <string name="local_invalid_format">Formato capitolo non valido</string>
     <string name="action_start_downloading_now">Inizia a scaricare ora</string>
-    <string name="about_dont_kill_my_app">Alcuni produttori hanno restrizioni aggiuntive per le app che chiudono i servizi in secondo piano. Questo sito ha più informazioni su come risolvere il problema.</string>
     <string name="pref_lowest">Più basso</string>
     <string name="pref_low">Basso</string>
     <string name="pref_high">Alto</string>
@@ -539,7 +534,6 @@
     <string name="remove_manga">Stai per rimuovere «%s» dalla tua libreria</string>
     <string name="popular">Popolare</string>
     <string name="action_search_hint">Ricerca…</string>
-    <string name="pref_appearance_summary">Tema, formato data e ora</string>
     <string name="pref_downloads_summary">Download automatico, download anticipato</string>
     <string name="pref_browse_summary">Fonti, estensioni, ricerca globale</string>
     <string name="pref_reader_summary">Modalità di lettura, aspetto, navigazione</string>

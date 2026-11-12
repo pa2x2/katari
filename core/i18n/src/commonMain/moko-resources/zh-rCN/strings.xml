@@ -283,9 +283,6 @@
     <string name="notification_chapters_single">第 %1$s 章</string>
     <string name="notification_chapters_single_and_more">第 %1$s 章及另外 %2$d 章</string>
     <string name="notification_chapters_multiple">第 %1$s 章</string>
-    <string name="pref_disable_battery_optimization">关闭电池优化</string>
-    <string name="pref_disable_battery_optimization_summary">有助于后台更新书架和备份</string>
-    <string name="battery_optimization_disabled">电池优化已经关闭</string>
     <string name="action_menu">菜单</string>
     <string name="action_newest">从新到旧</string>
     <string name="action_oldest">从旧到新</string>
@@ -324,7 +321,6 @@
     <string name="gray_background">灰色</string>
     <string name="pref_category_for_this_series">本作品</string>
     <string name="viewer">阅读模式</string>
-    <string name="battery_optimization_setting_activity_not_found">打开系统设置失败</string>
     <string name="pref_refresh_library_covers">刷新书架封面</string>
     <string name="sort_by_upload_date">按上传日期</string>
     <string name="label_data">数据</string>
@@ -439,7 +435,6 @@
     <string name="categorized_display_settings">单独设置各个分类的排序</string>
     <string name="information_empty_category_dialog">还没有创建分类。</string>
     <string name="action_start_downloading_now">立即开始下载</string>
-    <string name="about_dont_kill_my_app">部分厂商杀掉后台服务的现象比较严重，此网站提供了一些解决方法。</string>
     <string name="restore_miui_warning">如果关闭 MIUI 优化，备份与还原可能会出现问题。</string>
     <string name="pref_dark_theme_pure_black">纯黑深色模式</string>
     <string name="theme_yotsuba">四叶草</string>
@@ -549,7 +544,6 @@
     <string name="action_search_hint">搜索…</string>
     <string name="crash_screen_title">哦豁！</string>
     <string name="crash_screen_restart_application">重启应用</string>
-    <string name="pref_appearance_summary">主题 • 日期格式</string>
     <string name="pref_downloads_summary">自动下载 • 预先下载</string>
     <string name="pref_backup_summary">手动备份 • 自动备份 • 存储空间</string>
     <string name="pref_browse_summary">图源 • 插件 • 全局搜索</string>

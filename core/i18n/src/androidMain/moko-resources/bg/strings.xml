@@ -16,4 +16,9 @@
     <string name="pref_chapter_swipe_start">Глава на ляво плъзгане</string>
     <string name="pref_chapter_swipe_end">Глава на дясно плъзгане</string>
     <string name="connected_to_wifi">Само през Wi-Fi</string>
+    <string name="battery_optimization_disabled">Оптимизацията на батерията е изключена</string>
+    <string name="pref_disable_battery_optimization_summary">Помага при фонови обновявания на библиотеката и резервни копия</string>
+    <string name="pref_disable_battery_optimization">Изключи оптимизация на батерията</string>
+    <string name="battery_optimization_setting_activity_not_found">Системните настройки не бяха отворени</string>
+    <string name="about_dont_kill_my_app">Някои производители ограничават приложенията, за да убият задноплановите услуги. Следният уебсайт съдържа информация за разрешаването на проблема.</string>
 </resources>

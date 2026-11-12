@@ -326,9 +326,6 @@
     <string name="invalid_backup_file">Nederīgs dublējuma fails</string>
     <string name="pref_backup_interval">Dublējumu biežums</string>
     <string name="backup_info">Kopijas vajadzētu glabāt arī citās vietās.</string>
-    <string name="about_dont_kill_my_app">Dažiem ražotājiem ir papildu lietojumprogrammu ierobežojumi, kas iznīcina fona pakalpojumus. Šajā vietnē ir vairāk informācijas par to, kā to izlabot.</string>
-    <string name="pref_disable_battery_optimization_summary">Palīdz ar fona bibliotēku atjauninājumiem un dublējumiem</string>
-    <string name="battery_optimization_disabled">Akumulatora optimizācija jau ir atspējota</string>
     <string name="pref_verbose_logging_summary">Drukāt verbose žurnālus sistēmas žurnālā (samazina programmas veiktspēju)</string>
     <string name="pref_dump_crash_logs_summary">Saglabā kļūdu žurnālus failā priekš koplietošanas ar izstrādātājiem</string>
     <string name="pref_clear_chapter_cache">Notīrīt nodaļas kešatmiņu</string>
@@ -343,7 +340,6 @@
     <string name="label_data">Dati</string>
     <string name="used_cache">Izmantots: %1$s</string>
     <string name="database_clean">Nav ko tīrīt</string>
-    <string name="pref_disable_battery_optimization">Atspējot akumulatora optimizāciju</string>
     <string name="pref_restore_backup_summ">Atjaunot bibliotēku no dublējuma faila</string>
     <string name="pref_clear_cookies">Notīrīt sīkfailus</string>
     <string name="pref_dns_over_https">Izvēlēties DNS pār HTTPS (DoH)</string>
@@ -363,7 +359,6 @@
     <string name="pref_clear_webview_data">Notīrīt WebView datus</string>
     <string name="webview_data_deleted">WebView dati notīrīti</string>
     <string name="label_background_activity">Fona darbība</string>
-    <string name="battery_optimization_setting_activity_not_found">Nevarēja atvērt ierīces iestatījumus</string>
     <string name="backup_created">Dublējums izveidots</string>
     <string name="pref_reset_viewer_flags_success">Visi lasītāja iestatījumi atiestatīti</string>
     <string name="pref_reset_viewer_flags_error">Nevarēja atiestatīt lasītāja iestatījumus</string>
@@ -552,7 +547,6 @@
     <string name="action_copy_to_clipboard">Kopēt starpliktuvē</string>
     <string name="pref_downloads_summary">Automātiskā lejupielāde, lejupielādes rinda</string>
     <string name="pref_browse_summary">Avoti, paplašinājumi, globālā meklēšana</string>
-    <string name="pref_appearance_summary">Tēma, datuma un laika formāti</string>
     <string name="pref_library_update_show_tab_badge">Rādīt nelasīto skaitu uz atjauninājumu ikonas</string>
     <string name="appwidget_unavailable_locked">Logrīks nav pieejams, ja ir iespējota lietotņu bloķēšana</string>
     <string name="hour_short">%dh</string>

@@ -273,9 +273,6 @@
     <string name="check_for_updates">Провери за ъпдейт</string>
     <string name="licenses">Лицензи за отворен код</string>
     <string name="website">Уебсайт</string>
-    <string name="battery_optimization_disabled">Оптимизацията на батерията е изключена</string>
-    <string name="pref_disable_battery_optimization_summary">Помага при фонови обновявания на библиотеката и резервни копия</string>
-    <string name="pref_disable_battery_optimization">Изключи оптимизация на батерията</string>
     <string name="restoring_backup_canceled">Отменено възстановяване</string>
     <string name="restoring_backup_error">Възстановяването неуспешно</string>
     <string name="restore_in_progress">Възстановяването е в процес</string>
@@ -315,7 +312,6 @@
     <string name="label_more">Още</string>
     <string name="viewer">Режим на четене</string>
     <string name="pref_category_for_this_series">За тази поредица</string>
-    <string name="battery_optimization_setting_activity_not_found">Системните настройки не бяха отворени</string>
     <string name="pref_refresh_library_covers">Обнови кориците</string>
     <string name="gray_background">Сиво</string>
     <string name="action_migrate">Мигрирай</string>
@@ -370,7 +366,6 @@
     <string name="label_default">По подразбиране</string>
     <string name="backup_restore_content_full">Ще бъдат възстановени данните от резервното копие. \n \nТрябва да инсталирате липсващи разширения, ако има такива, за да ги ползвате.</string>
     <string name="restore_miui_warning">Съхраняването/възстановяването може да не функционира правилно, ако MIUI Optimization е изключено.</string>
-    <string name="about_dont_kill_my_app">Някои производители ограничават приложенията, за да убият задноплановите услуги. Следният уебсайт съдържа информация за разрешаването на проблема.</string>
     <string name="pref_incognito_mode">Инкогнито режим</string>
     <string name="pref_incognito_mode_summary">Не записва история, докато трае режимът</string>
     <string name="local_filter_order_by">Нареди по</string>
@@ -532,7 +527,6 @@
     <string name="remove_manga">Искате да премахнете \"%s\" от библиотеката си</string>
     <string name="action_close">Затвори</string>
     <string name="pref_reset_viewer_flags_success">Всички настройки на четеца нулирани</string>
-    <string name="pref_appearance_summary">Тема, формат на датата и времето</string>
     <string name="pref_reader_summary">Режим на четене, показване, навигация</string>
     <string name="pref_downloads_summary">Автоматични изтегляния, предстоящи изтегляния</string>
     <string name="pref_browse_summary">Източници, разширения, глобално търсене</string>

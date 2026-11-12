@@ -3,14 +3,21 @@ package app.katari.desktop.mpris
 import app.katari.desktop.dbus.DbusConnection
 import app.katari.desktop.dbus.DbusException
 import app.katari.desktop.dbus.DbusMessage
+import app.katari.desktop.dbus.DbusStandardInterfaces
+import app.katari.desktop.dbus.DbusStandardInterfaces.INTROSPECTABLE
+import app.katari.desktop.dbus.DbusStandardInterfaces.NOT_SUPPORTED
+import app.katari.desktop.dbus.DbusStandardInterfaces.PEER
+import app.katari.desktop.dbus.DbusStandardInterfaces.PROPERTIES
+import app.katari.desktop.dbus.DbusStandardInterfaces.UNKNOWN_INTERFACE
+import app.katari.desktop.dbus.DbusStandardInterfaces.UNKNOWN_METHOD
+import app.katari.desktop.dbus.DbusStandardInterfaces.UNKNOWN_OBJECT
+import app.katari.desktop.dbus.Variant
 import app.katari.desktop.mpris.MprisProperties.PLAYER_INTERFACE
 import app.katari.desktop.mpris.MprisProperties.POSITION
 import app.katari.desktop.mpris.MprisProperties.ROOT_INTERFACE
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
@@ -89,7 +96,7 @@ internal class MprisPlayer(
         if (changed.isNotEmpty()) {
             bus.emitSignal(
                 PATH,
-                PROPERTIES_INTERFACE,
+                PROPERTIES,
                 "PropertiesChanged",
                 "sa{sv}as",
                 PLAYER_INTERFACE,
@@ -108,11 +115,11 @@ internal class MprisPlayer(
     private fun answer(bus: DbusConnection, call: DbusMessage, shown: Timed?) {
         val member = call.member.orEmpty()
         val iface = call.iface ?: INTERFACE_OF_MEMBER[member]
-        if (iface == PEER_INTERFACE) return answerPeer(bus, call, member)
+        if (iface == PEER) return DbusStandardInterfaces.answerPeer(bus, call)
         if (call.path != PATH) return bus.replyError(call, UNKNOWN_OBJECT, "No object at ${call.path}")
         when (iface) {
-            INTROSPECTABLE_INTERFACE -> bus.reply(call, "s", MPRIS_INTROSPECTION)
-            PROPERTIES_INTERFACE -> answerProperties(bus, call, member, shown)
+            INTROSPECTABLE -> bus.reply(call, "s", MPRIS_INTROSPECTION)
+            PROPERTIES -> DbusStandardInterfaces.answerProperties(bus, call) { name -> properties(name, shown) }
             ROOT_INTERFACE -> when (member) {
                 "Raise" -> commands.raise().also { bus.reply(call) }
                 // CanQuit is false: the player only ends from the app
@@ -158,38 +165,13 @@ internal class MprisPlayer(
         bus.reply(call)
     }
 
-    private fun answerProperties(bus: DbusConnection, call: DbusMessage, member: String, shown: Timed?) {
-        val properties = when (call.body.firstOrNull() as? String) {
-            ROOT_INTERFACE -> MprisProperties.root(identity, desktopEntry)
-            PLAYER_INTERFACE -> MprisProperties.player(
-                shown?.state,
-                shown?.positionAt(TimeSource.Monotonic.markNow()) ?: 0L,
-            )
-            else -> return bus.replyError(call, UNKNOWN_INTERFACE, "No interface ${call.body.firstOrNull()}")
-        }
-        when (member) {
-            "Get" -> {
-                val name = call.body.getOrNull(1) as? String
-                val value = properties[name] ?: return bus.replyError(call, UNKNOWN_PROPERTY, "No property $name")
-                bus.reply(call, "v", value)
-            }
-            "GetAll" -> bus.reply(call, "a{sv}", properties)
-            "Set" -> bus.replyError(call, PROPERTY_READ_ONLY, "The player's properties are read-only")
-            else -> bus.replyError(call, UNKNOWN_METHOD, "No method $member")
-        }
-    }
-
-    private fun answerPeer(bus: DbusConnection, call: DbusMessage, member: String) {
-        when (member) {
-            "Ping" -> bus.reply(call)
-            "GetMachineId" -> {
-                val id = MACHINE_ID_FILES.firstNotNullOfOrNull { file ->
-                    runCatching { Files.readString(file).trim() }.getOrNull()?.takeIf(String::isNotEmpty)
-                }
-                if (id != null) bus.reply(call, "s", id) else bus.replyError(call, FAILED, "No machine ID")
-            }
-            else -> bus.replyError(call, UNKNOWN_METHOD, "No method $member")
-        }
+    private fun properties(iface: String?, shown: Timed?): Map<String, Variant>? = when (iface) {
+        ROOT_INTERFACE -> MprisProperties.root(identity, desktopEntry)
+        PLAYER_INTERFACE -> MprisProperties.player(
+            shown?.state,
+            shown?.positionAt(TimeSource.Monotonic.markNow()) ?: 0L,
+        )
+        else -> null
     }
 
     private class Timed(val state: MprisPlayerState, val at: TimeSource.Monotonic.ValueTimeMark) {
@@ -203,29 +185,13 @@ internal class MprisPlayer(
 
     private companion object {
         const val PATH = "/org/mpris/MediaPlayer2"
-        const val PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
-        const val INTROSPECTABLE_INTERFACE = "org.freedesktop.DBus.Introspectable"
-        const val PEER_INTERFACE = "org.freedesktop.DBus.Peer"
-
-        const val UNKNOWN_OBJECT = "org.freedesktop.DBus.Error.UnknownObject"
-        const val UNKNOWN_INTERFACE = "org.freedesktop.DBus.Error.UnknownInterface"
-        const val UNKNOWN_METHOD = "org.freedesktop.DBus.Error.UnknownMethod"
-        const val UNKNOWN_PROPERTY = "org.freedesktop.DBus.Error.UnknownProperty"
-        const val PROPERTY_READ_ONLY = "org.freedesktop.DBus.Error.PropertyReadOnly"
-        const val NOT_SUPPORTED = "org.freedesktop.DBus.Error.NotSupported"
-        const val FAILED = "org.freedesktop.DBus.Error.Failed"
 
         // A call may leave out its interface; each member these objects answer belongs to one
-        val INTERFACE_OF_MEMBER = buildMap {
+        val INTERFACE_OF_MEMBER = DbusStandardInterfaces.INTERFACE_OF_MEMBER + buildMap {
             listOf("Next", "Previous", "Pause", "PlayPause", "Stop", "Play", "Seek", "SetPosition", "OpenUri")
                 .forEach { put(it, PLAYER_INTERFACE) }
             listOf("Raise", "Quit").forEach { put(it, ROOT_INTERFACE) }
-            listOf("Get", "GetAll", "Set").forEach { put(it, PROPERTIES_INTERFACE) }
-            put("Introspect", INTROSPECTABLE_INTERFACE)
-            listOf("Ping", "GetMachineId").forEach { put(it, PEER_INTERFACE) }
         }
-
-        val MACHINE_ID_FILES = listOf(Path.of("/etc/machine-id"), Path.of("/var/lib/dbus/machine-id"))
 
         // The state reports the position a few times a second while playing, so a smaller miss is only its rhythm
         const val SEEK_JUMP_US = 1_500_000L

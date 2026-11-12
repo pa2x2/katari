@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">Capitolul %1$s și %2$d în plus</string>
     <string name="notification_chapters_multiple">Capitolele %1$s</string>
     <string name="hide_notification_content">Ascunde conținutul notificării</string>
-    <string name="pref_disable_battery_optimization">Dezactivați optimizarea bateriei</string>
-    <string name="pref_disable_battery_optimization_summary">Ajută la actualizările și copiile de rezervă ale bibliotecii în fundal</string>
-    <string name="battery_optimization_disabled">Optimizarea bateriei este deja dezactivată</string>
     <string name="action_menu">Meniu</string>
     <string name="action_newest">Cele mai recente</string>
     <string name="action_oldest">Cele mai vechi</string>
@@ -316,7 +313,6 @@
     <string name="viewer">Mod de citire</string>
     <string name="pref_category_for_this_series">Pentru această serie</string>
     <string name="gray_background">Gri</string>
-    <string name="battery_optimization_setting_activity_not_found">Imposibil de deschis setările dispozitivului</string>
     <string name="pref_refresh_library_covers">Reîmprospătarea coperților bibliotecii</string>
     <string name="sort_by_upload_date">După data încărcării</string>
     <string name="backup_restore_missing_sources">Surse lipsă:</string>
@@ -435,7 +431,6 @@
     <string name="delete_category">Ștergeți categoria</string>
     <string name="pref_inverted_colors">Inversate</string>
     <string name="webview_data_deleted">Datele WebView au fost șterse</string>
-    <string name="about_dont_kill_my_app">Unii producători au restricții suplimentare privind aplicațiile care opresc serviciile de fundal. Acest site web conține mai multe informații despre cum să le rezolvați.</string>
     <string name="database_clean">Nimic de curățat</string>
     <string name="help_translate">Ajută la traducere</string>
     <string name="source_unsupported">Sursa nu este acceptată</string>
@@ -534,7 +529,6 @@
     <string name="updates_last_update_info_just_now">Chiar acum</string>
     <string name="pref_verbose_logging">Consemnare verbală</string>
     <string name="appwidget_unavailable_locked">Widgetul nu este disponibil atunci când este activată blocarea aplicației</string>
-    <string name="pref_appearance_summary">Tema, formatul datei și al orei</string>
     <string name="pref_reader_summary">Modul de citire, afișare, navigare</string>
     <string name="pref_downloads_summary">Descărcare automată, descărcare anticipată</string>
     <string name="pref_browse_summary">Surse, extensii, căutare globală</string>

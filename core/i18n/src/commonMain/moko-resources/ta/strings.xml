@@ -213,7 +213,6 @@
     <string name="onboarding_permission_install_apps">பயன்பாடுகளின் அனுமதியை நிறுவவும்</string>
     <string name="onboarding_permission_install_apps_description">மூல நீட்டிப்புகளை நிறுவ.</string>
     <string name="onboarding_permission_action_grant">மானியம்</string>
-    <string name="pref_appearance_summary">கருப்பொருள், தேதி மற்றும் நேர வடிவம்</string>
     <string name="pref_reader_summary">படித்தல் பயன்முறை, காட்சி, வழிசெலுத்தல்</string>
     <string name="pref_downloads_summary">தானியங்கி பதிவிறக்க, முன்னால் பதிவிறக்குங்கள்</string>
     <string name="pref_browse_summary">ஆதாரங்கள், நீட்டிப்புகள், உலகளாவிய தேடல்</string>
@@ -490,11 +489,6 @@
     <string name="pref_reset_viewer_flags_error">வாசகர் அமைப்புகளை மீட்டமைக்க முடியவில்லை</string>
     <string name="pref_dump_crash_logs_summary">டெவலப்பர்களுடன் பகிர்வதற்காக பிழை பதிவுகளை ஒரு கோப்பில் சேமிக்கிறது</string>
     <string name="label_background_activity">பின்னணி செயல்பாடு</string>
-    <string name="pref_disable_battery_optimization">பேட்டரி தேர்வுமுறை முடக்கு</string>
-    <string name="pref_disable_battery_optimization_summary">பின்னணி நூலக புதுப்பிப்புகள் மற்றும் காப்புப்பிரதிகளுக்கு உதவுகிறது</string>
-    <string name="battery_optimization_disabled">பேட்டரி தேர்வுமுறை ஏற்கனவே முடக்கப்பட்டுள்ளது</string>
-    <string name="battery_optimization_setting_activity_not_found">சாதன அமைப்புகளைத் திறக்க முடியவில்லை</string>
-    <string name="about_dont_kill_my_app">சில உற்பத்தியாளர்களுக்கு பின்னணி சேவைகளைக் கொல்லும் கூடுதல் பயன்பாட்டு கட்டுப்பாடுகள் உள்ளன. இந்த வலைத்தளத்தை எவ்வாறு சரிசெய்வது என்பது பற்றிய கூடுதல் தகவல்கள் உள்ளன.</string>
     <string name="pref_tablet_ui_mode">டேப்லெட் இடைமுகம்</string>
     <string name="pref_verbose_logging">சொற்களஞ்சியம் பதிவு</string>
     <string name="pref_verbose_logging_summary">கணினி பதிவுக்கு வாய்மொழி பதிவுகளை அச்சிடுக (பயன்பாட்டு செயல்திறனைக் குறைக்கிறது)</string>

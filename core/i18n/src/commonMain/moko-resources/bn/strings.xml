@@ -368,10 +368,6 @@
     <string name="pref_clear_history">ইতিহাস সাফ করুন</string>
     <string name="clear_history_confirmation">আপনি নিশ্চিত? সব ইতিহাস মুছে যাবে।</string>
     <string name="clear_history_completed">ইতিহাস মুছে ফেলা হয়েছে</string>
-    <string name="battery_optimization_setting_activity_not_found">যন্ত্রের সেটিংস খোলা সম্ভব হয়নি</string>
-    <string name="battery_optimization_disabled">ব্যাটারি অপ্টিমাইজেশন ইতিমধ্যে অক্ষম করা আছে</string>
-    <string name="pref_disable_battery_optimization_summary">পিছেনে লাইব্রেরী হালনাগাদ ও ব্যাকআপে সাহায্য করে</string>
-    <string name="pref_disable_battery_optimization">ব্যাটারি অপ্টিমাইজেশন অক্ষম করুন</string>
     <string name="action_display_show_number_of_items">আইটেমের সংখ্যা প্রদর্শন করুন</string>
     <string name="spen_next_page">পরের পৃষ্ঠা</string>
     <string name="spen_previous_page">আগের পৃষ্ঠা</string>
@@ -399,7 +395,6 @@
     <string name="local_invalid_format">দুর্বল অধ্যায় বিন্যাস</string>
     <string name="chapter_not_found">অধ্যায় পাওয়া যায় নি</string>
     <string name="notification_incognito_text">ছদ্মবেশী মোড নিষ্ক্রিয় করুন</string>
-    <string name="about_dont_kill_my_app">কিছু নির্মাতাদের অতিরিক্ত অ্যাপ সীমাবদ্ধতা রয়েছে যা ব্যাকগ্রাউন্ড পরিষেবাগুলিকে হত্যা করে। এই ওয়েবসাইটে কিভাবে এটি ঠিক করা যায় সে সম্পর্কে আরও তথ্য রয়েছে।</string>
     <string name="label_background_activity">পটভূমি কার্যকলাপ</string>
     <string name="pref_dns_over_https">এইচটিটিপিএস এর উপর ডিএনএস</string>
     <string name="restore_miui_warning">এমআইইউআই অপ্টিমাইজেশন নিষ্ক্রিয় থাকলে ব্যাকআপ/রিস্টোর সঠিকভাবে কাজ নাও করতে পারে।</string>
@@ -498,7 +493,6 @@
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
     <string name="multi_lang">বহু</string>
     <string name="pref_app_language">অ্যাপ ভাষা</string>
-    <string name="pref_appearance_summary">থিম,সময় ও তারিখের ধরন</string>
     <string name="pref_reader_summary">পঠনের ধরন, ডিসপ্লে,নেভিগেশন</string>
     <string name="pref_backup_summary">ম্যানুয়াল ও সয়ংক্রিয় ব্যাকআপ</string>
     <string name="label_local">লোকাল</string>

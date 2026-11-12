@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Chương khi vuốt sang phải</string>
     <string name="ext_permission_install_apps_warning">Cần phải cấp phép để cài đặt tiện ích mở rộng. Bấm đây để cấp.</string>
     <string name="connected_to_wifi">Chỉ qua Wi-Fi</string>
+    <string name="battery_optimization_disabled">Tối ưu pin đã được tắt</string>
+    <string name="pref_disable_battery_optimization_summary">Giúp cập nhật và sao lưu thư viện trong nền</string>
+    <string name="pref_disable_battery_optimization">Tắt tối ưu pin</string>
+    <string name="battery_optimization_setting_activity_not_found">Không thể mở tùy chỉnh thiết bị</string>
+    <string name="about_dont_kill_my_app">Một vài nhà sản xuất có các hạn chế gây ảnh hưởng đến quá trình chạy trong nền của nhiều ứng dụng. Xem thêm cách sửa chữa ở địa chỉ này.</string>
 </resources>

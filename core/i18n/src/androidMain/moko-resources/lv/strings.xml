@@ -16,4 +16,9 @@
     <string name="pref_chapter_swipe_start">Vilkt uz kreisās puses darbību</string>
     <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>
     <string name="connected_to_wifi">Tikai uz Wi-Fi</string>
+    <string name="about_dont_kill_my_app">Dažiem ražotājiem ir papildu lietojumprogrammu ierobežojumi, kas iznīcina fona pakalpojumus. Šajā vietnē ir vairāk informācijas par to, kā to izlabot.</string>
+    <string name="pref_disable_battery_optimization_summary">Palīdz ar fona bibliotēku atjauninājumiem un dublējumiem</string>
+    <string name="battery_optimization_disabled">Akumulatora optimizācija jau ir atspējota</string>
+    <string name="pref_disable_battery_optimization">Atspējot akumulatora optimizāciju</string>
+    <string name="battery_optimization_setting_activity_not_found">Nevarēja atvērt ierīces iestatījumus</string>
 </resources>

@@ -1,16 +1,24 @@
 package app.katari.entry.interactions.player
 
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.flow.StateFlow
 
 /** The anime player on the desktop, which the app's [AnimePlayerDestination] shows. */
 interface AnimePlayer {
     /**
      * The player for [request], leaving through [navigation], shown where [placement] says. It stays composed while a
      * screen it opened, such as its settings, covers it, and pauses then, as Android's player pauses under another
-     * activity; in picture-in-picture it plays on in its own window.
+     * activity; in picture-in-picture it plays on in its own window. It also pauses when [mainWindowHidden] turns true
+     * outside picture-in-picture, as the main window hides in the tray: a flow rather than a placement, since a hidden
+     * window's content doesn't recompose.
      */
     @Composable
-    fun Content(request: AnimePlayerRequest, navigation: AnimePlayerNavigation, placement: AnimePlayerPlacement)
+    fun Content(
+        request: AnimePlayerRequest,
+        navigation: AnimePlayerNavigation,
+        placement: AnimePlayerPlacement,
+        mainWindowHidden: StateFlow<Boolean>,
+    )
 }
 
 /** Where the desktop player shows. */

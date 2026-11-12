@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Kabanata sa pag-swipe pakanan</string>
     <string name="ext_permission_install_apps_warning">Kinakailangan ng permiso para mag-install ng mga extension. I-tap upang mapayagan ito.</string>
     <string name="connected_to_wifi">Sa Wi-Fi lang</string>
+    <string name="battery_optimization_setting_activity_not_found">Di mabuksan ang pagsasaayos ng iyong device</string>
+    <string name="battery_optimization_disabled">Nakapatay na ang pag-o-optimisa sa baterya</string>
+    <string name="pref_disable_battery_optimization">Patayin ang pag-o-optimisa sa baterya</string>
+    <string name="pref_disable_battery_optimization_summary">Nakatutulong sa pag-update ng aklatan sa background at pag-backup</string>
+    <string name="about_dont_kill_my_app">May dagdag na mga restriksyon sa app ang ilang mga modelo ng phone na pumapatay sa mga serbisyo sa background. May impormasyon sa site na ito para maayos ang naturang problema.</string>
 </resources>

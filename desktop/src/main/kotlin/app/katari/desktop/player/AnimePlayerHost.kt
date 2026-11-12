@@ -52,7 +52,7 @@ internal fun WindowAnimePlayer.Host(navigator: Navigator) {
         val navigation = remember(visit) { WindowPlayerNavigation(this, visit, scope, webViewDestination) }
         Placed(shown = placement == AnimePlayerPlacement.Window) {
             visit.lifecycle.ProvideBeforeScreenContent(provideSaveableState = { _, content -> content() }) {
-                player.Content(visit.request, navigation, placement)
+                player.Content(visit.request, navigation, placement, mainWindowVisibility.isHidden)
             }
         }
     }

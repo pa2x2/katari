@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.setting
 
 import cafe.adriel.voyager.core.screen.Screen
-import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
+import eu.kanade.presentation.more.settings.screen.SettingsGeneralScreen
 import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
 
 /**
@@ -11,5 +11,5 @@ import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
  */
 internal fun settingsStackFor(twoPane: Boolean, stack: List<Screen>): List<Screen> {
     val pages = stack.filterNot { it is SettingsMainScreen }
-    return if (twoPane) pages.ifEmpty { listOf(SettingsAppearanceScreen()) } else listOf(SettingsMainScreen()) + pages
+    return if (twoPane) pages.ifEmpty { listOf(SettingsGeneralScreen()) } else listOf(SettingsMainScreen()) + pages
 }

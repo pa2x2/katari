@@ -276,8 +276,6 @@
     <string name="pref_incognito_mode">시크릿 모드</string>
     <string name="check_for_updates">업데이트 확인</string>
     <string name="licenses">오픈 소스 라이선스</string>
-    <string name="battery_optimization_setting_activity_not_found">디바이스 설정을 열 수 없습니다</string>
-    <string name="pref_disable_battery_optimization">배터리 최적화 끄기</string>
     <string name="restore_miui_warning">MIUI 최적화가 꺼져 있을 경우 백업/복원 기능이 정상 작동하지 않을 수 있습니다.</string>
     <string name="restore_in_progress">복원이 이미 진행중 입니다</string>
     <string name="requires_app_restart">앱을 재시작한 후에 적용됩니다</string>
@@ -405,7 +403,6 @@
     <string name="backup_restore_missing_sources">없어진 소스:</string>
     <string name="pref_auto_clear_chapter_cache">앱 실행 시 회차 캐시 삭제</string>
     <string name="clear_database_source_item_count">서재에 없는 항목이 데이터베이스에 %1$d개 있습니다</string>
-    <string name="about_dont_kill_my_app">일부 제조사는 백그라운드 서비스를 종료하는 추가적인 제한 사항이 있습니다. 자세한 사항은 웹사이트를 참조하세요.</string>
     <string name="pref_tablet_ui_mode">태블릿 UI</string>
     <string name="tabs_header">탭</string>
     <string name="pinned_sources">핀 설정됨</string>
@@ -461,7 +458,6 @@
     <string name="action_sort_chapter_fetch_date">챕터를 가져온 날짜순</string>
     <string name="action_sort_count">전체 항목 개수순</string>
     <string name="action_webview_back">뒤로</string>
-    <string name="battery_optimization_disabled">배터리 최적화가 이미 꺼져 있습니다</string>
     <string name="action_order_by_chapter_number">회차 번호 순</string>
     <string name="action_move_to_top">맨 위로 이동</string>
     <string name="action_order_by_upload_date">업로드 날짜 순</string>
@@ -475,7 +471,6 @@
     <string name="pref_download_new_categories_details">카테고리가 다운로드에서 제외된 경우 다른 카테고리에 포함되어 있어도 다운로드 되지 않습니다.</string>
     <string name="backup_restore_content_full">복구 완료 후 없어진 소스를 다시 설치해야 합니다.</string>
     <string name="backup_info">백업 파일은 복사하여 다른 장소에 나눠 보관하세요. 백업 파일에는 비밀번호 등의 민감한 정보가 포함될 수 있습니다. 백업 파일 공유시 주의하세요.</string>
-    <string name="pref_disable_battery_optimization_summary">백그라운드 서재 업데이트와 라이브러리 업데이트를 도울 수 있습니다</string>
     <string name="pref_verbose_logging">자세한 로그</string>
     <string name="pref_verbose_logging_summary">자세한 로그를 시스템 로그에 기록 (성능이 하락할 수 있습니다)</string>
     <string name="date">날짜</string>
@@ -554,7 +549,6 @@
     <string name="pref_reader_summary">읽기 모드, 디스플레이, 탐색</string>
     <string name="pref_browse_summary">소스, 확장 기능, 전체 검색</string>
     <string name="pref_backup_summary">수동 및 자동 백업</string>
-    <string name="pref_appearance_summary">테마, 날짜 및 시간 형식</string>
     <string name="pref_downloads_summary">자동 다운로드, 미리 다운로드</string>
     <string name="crash_screen_title">앗!</string>
     <string name="crash_screen_restart_application">애플리케이션 재시작</string>

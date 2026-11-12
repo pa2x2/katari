@@ -274,9 +274,6 @@
     <string name="lock_when_idle">Lukitse käyttämättömänä</string>
     <string name="secure_screen">Salaa näyttö</string>
     <string name="secure_screen_summary">Turvallinen ruutu piilottaa sovelluksen sisällön sovelluksia vaihdettaessa ja estää kuvakaappauksen ottamisen</string>
-    <string name="pref_disable_battery_optimization">Poista akun optimointi käytöstä</string>
-    <string name="pref_disable_battery_optimization_summary">Auttaa taustalla pyörivien kirjaston päivitysten ja varmuuskopioiden kanssa</string>
-    <string name="battery_optimization_disabled">Akun optimointi on jo poistettu käytöstä</string>
     <string name="pref_cutout_short">Näytä sisältö leikkausalueella</string>
     <string name="action_menu">Valikko</string>
     <string name="action_newest">Uusin</string>
@@ -316,7 +313,6 @@
     <string name="gray_background">Harmaa</string>
     <string name="pref_category_for_this_series">Tälle sarjalle</string>
     <string name="viewer">Lukutila</string>
-    <string name="battery_optimization_setting_activity_not_found">Laiteasetuksia ei voitu avata</string>
     <string name="pref_refresh_library_covers">Päivitä kirjaston manga-kannet</string>
     <string name="sort_by_upload_date">Latauspäivämäärän mukaan</string>
     <string name="label_data">Tiedot</string>
@@ -564,7 +560,6 @@
     <string name="pref_flash_page">Väläytä näyttöä sivunvaihdon yhteydessä</string>
     <string name="pref_storage_location_info">Käytetään automaattisille varmuuskopioille, lukujen latauksille ja paikallisille lähteille.</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Vältä keskeytyksiä pitkään jatkuvissa toimenpiteissä, kuten kirjaston päivitys, lataukset, ja varmuuskopion palautukset.</string>
-    <string name="pref_appearance_summary">Teema, ajan ja päivämäärän formaatti</string>
     <string name="pref_downloads_summary">Automaattinen lataus, ennakkolataus</string>
     <string name="action_bar_up_description">Navigoi ylös</string>
 </resources>

@@ -16,4 +16,9 @@
     <string name="pref_chapter_swipe_end">Kapitola po potiahnutí prstom doprava</string>
     <string name="ext_permission_install_apps_warning">Na inštaláciu rozšírení sú potrebné povolenia. Ťuknite sem, aby ste ich udelili.</string>
     <string name="connected_to_wifi">Iba na Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Zakázať optimalizáciu batérie</string>
+    <string name="pref_disable_battery_optimization_summary">Pomáha s aktualizáciami a zálohovaním knižnice na pozadí</string>
+    <string name="battery_optimization_disabled">Optimalizácia batérie je už vypnutá</string>
+    <string name="battery_optimization_setting_activity_not_found">Nepodarilo sa otvoriť nastavenia zariadenia</string>
+    <string name="about_dont_kill_my_app">Niektorí výrobcovia majú ďalšie obmedzenia aplikácií, ktoré vypínajú služby na pozadí. Na tejto webovej stránke nájdete viac informácií o tom, ako to opraviť.</string>
 </resources>

@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.appearance
+package eu.kanade.presentation.more.settings.screen.general
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

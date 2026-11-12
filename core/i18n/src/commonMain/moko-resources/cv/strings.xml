@@ -316,10 +316,6 @@
     <string name="licenses">Уҫӑ юмлӑ лиссенсисем</string>
     <string name="version">Версси</string>
     <string name="website">Сайт</string>
-    <string name="battery_optimization_setting_activity_not_found">Хатӗрӗн ӗнерлӗве уҫаймарӗ</string>
-    <string name="battery_optimization_disabled">Петтерей лайӑхлатнине сӳнтернӗ ӗнтӗ</string>
-    <string name="pref_disable_battery_optimization_summary">Хыҫ планлӑ ҫӗнетӳпе тата янтавланипе пулӑшать</string>
-    <string name="pref_disable_battery_optimization">Петтерей лайӑхлатнине сӳнтер</string>
     <string name="pref_backup_interval">Йантӑлав тунин тӑтӑшлӑхӗ</string>
     <string name="pref_refresh_library_covers">Вулавӑшри манкӑсен хуплашкисене ҫӗнет</string>
     <string name="clear_database_completed">Ҫыравсене катертнӗ</string>
@@ -429,7 +425,6 @@
     <string name="pref_category_appearance">Кӑтартӑну</string>
     <string name="on">Ҫутнӑ</string>
     <string name="off">Сӳнтернӗ</string>
-    <string name="pref_appearance_summary">Темӗ, кун тата вӑхӑт тытӑмӗ</string>
     <string name="pref_reader_summary">Вулав тытӑмӗ, кӑтартӑнни, куҫӑм</string>
     <string name="label_default">Йаланхилле</string>
     <string name="action_open_random_manga">Ӑнсӑрт хайлав уҫ</string>

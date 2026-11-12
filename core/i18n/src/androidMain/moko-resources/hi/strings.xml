@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">अध्यााय: दाएँ स्वाइप करें</string>
     <string name="ext_permission_install_apps_warning">एक्सटेंशन स्थापित करने के लिए अनुमतियाँ आवश्यक हैं। अनुमति देने के लिए यहाँ टैप करें।</string>
     <string name="connected_to_wifi">केवल वाई-फ़ाई पर</string>
+    <string name="pref_disable_battery_optimization">बैटरी अनुकूलन को अक्षम करना</string>
+    <string name="pref_disable_battery_optimization_summary">पृष्ठभूमि पुस्तकालय अपडेट और बैकअप के साथ मदद करता है</string>
+    <string name="battery_optimization_disabled">बैटरी अनुकूलन पहले से ही अक्षम है</string>
+    <string name="battery_optimization_setting_activity_not_found">डिवाइस सेटिंग नहीं खोल सका</string>
+    <string name="about_dont_kill_my_app">कुछ निर्माताओं के पास अतिरिक्त ऐप प्रतिबंध हैं जो पृष्ठभूमि सेवाओं को मारते हैं। इस वेबसाइट में इसे ठीक करने के बारे में अधिक जानकारी है।</string>
 </resources>

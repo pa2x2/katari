@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Sveip til høyre handling</string>
     <string name="ext_permission_install_apps_warning">Tillatelse er nødvendig for å installere utvidelser. Trykk her for å tillate.</string>
     <string name="connected_to_wifi">Bare på Wi-Fi</string>
+    <string name="battery_optimization_setting_activity_not_found">Kunne ikke åpne enhetens innstillinger</string>
+    <string name="battery_optimization_disabled">Batterioptimalisering er allerede deaktivert</string>
+    <string name="pref_disable_battery_optimization">Deaktiver batterioptimalisering</string>
+    <string name="pref_disable_battery_optimization_summary">Hjelper med oppdatering og sikkerhetskopiering av biblioteket</string>
+    <string name="about_dont_kill_my_app">Noen produsenter har ytterligere appbegrensninger som dreper bakgrunnstjenester. Denne nettsiden har mer info om hvordan det kan fikses.</string>
 </resources>

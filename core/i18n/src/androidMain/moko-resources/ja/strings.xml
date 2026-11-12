@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">右にスワイプする章</string>
     <string name="ext_permission_install_apps_warning">拡張機能をインストールするためには権限が必要です。タップで許可してください。</string>
     <string name="connected_to_wifi">Wi-Fi 接続時のみ</string>
+    <string name="battery_optimization_setting_activity_not_found">デバイス設定を開きませんでした</string>
+    <string name="battery_optimization_disabled">バッテリー最適化は既に無効です</string>
+    <string name="pref_disable_battery_optimization_summary">バックグラウンドでのライブラリの更新とバックアップに役立ちます</string>
+    <string name="pref_disable_battery_optimization">バッテリー最適化を無効にする</string>
+    <string name="about_dont_kill_my_app">一部のメーカーは、バックグラウンド サービスを停止させる追加のアプリ制限を設けています。この問題を解決する方法については、こちらのウェブサイトに詳しい情報が掲載されています。</string>
 </resources>

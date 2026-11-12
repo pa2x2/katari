@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Глава при смахивании вправо</string>
     <string name="ext_permission_install_apps_warning">Нужны разрешения для установки расширений. Нажмите сюда, чтобы их предоставить.</string>
     <string name="connected_to_wifi">Только по Wi-Fi</string>
+    <string name="battery_optimization_disabled">Оптимизация батареи уже выключена</string>
+    <string name="pref_disable_battery_optimization_summary">Помогает с обновлением библиотеки и резервной копией в фоне</string>
+    <string name="pref_disable_battery_optimization">Отключить оптимизацию батареи</string>
+    <string name="battery_optimization_setting_activity_not_found">Не удалось открыть настройки устройства</string>
+    <string name="about_dont_kill_my_app">У некоторых производителей есть дополнительные ограничения для приложений, которые убивают фоновые службы. На этом сайте есть более подробная информация о том, как это исправить.</string>
 </resources>

@@ -392,7 +392,6 @@
     <string name="clear_database_completed">Ištrinti įrašai</string>
     <string name="pref_clear_chapter_cache">Išvalyti skyriaus talpyklą</string>
     <string name="used_cache">Naudota: %1$s</string>
-    <string name="battery_optimization_setting_activity_not_found">Nepavyko atidaryti įrenginio nustatymų</string>
     <string name="empty_screen">Na, tai nepatogu</string>
     <string name="cache_delete_error">Valymo metu įvyko klaida</string>
     <string name="action_display_cover_only_grid">Tik viršelių tinklelis</string>
@@ -409,7 +408,6 @@
     <string name="download_notifier_title_error">Klaida</string>
     <string name="channel_progress">Progresas</string>
     <string name="backup_in_progress">Atsarginė kopija jau kuriama</string>
-    <string name="pref_disable_battery_optimization">Išjungti akumuliatoriaus optimizavimą</string>
     <string name="restore_completed">Atkūrimas baigtas</string>
     <string name="restore_duration">%1$02d min, %2$02d sek</string>
     <string name="database_clean">Nėra ką išvalyti</string>
@@ -432,13 +430,10 @@
     <string name="pref_reset_viewer_flags_success">Visų skaitytuvo nustatymų nustatymas iš naujo</string>
     <string name="pref_reset_viewer_flags_error">Nepavyko atstatyti skaitytuvo nustatymų</string>
     <string name="label_background_activity">Fono veikla</string>
-    <string name="pref_disable_battery_optimization_summary">Padeda su fono bibliotekos naujinimais ir atsarginėmis kopijomis</string>
-    <string name="battery_optimization_disabled">Akumuliatoriaus optimizavimas jau išjungtas</string>
     <string name="channel_errors">Klaidos</string>
     <string name="pref_verbose_logging_summary">Spausdinti verbalinius žurnalus į sistemos žurnalą (sumažina programos našumą)</string>
     <string name="pref_verbose_logging">Daugiažodis registravimas</string>
     <string name="pref_tablet_ui_mode">Planšetinio kompiuterio UI</string>
-    <string name="about_dont_kill_my_app">Kai kurie gamintojai taiko papildomus programėlių apribojimus, kurie išjungia fono paslaugas. Šioje svetainėje rasite daugiau informacijos, kaip tai ištaisyti.</string>
     <string name="website">Internetinis puslapis</string>
     <string name="version">Versija</string>
     <string name="whats_new">Kas naujo</string>
@@ -534,7 +529,6 @@
     <string name="auto_download_while_reading">Automatinis atsisiuntimas beskaitant</string>
     <string name="pref_downloads_summary">Automatinis atsisiuntimas, atsisiuntimas į priekį</string>
     <string name="pref_backup_summary">Rankinės ir automatinės atsarginės kopijos</string>
-    <string name="pref_appearance_summary">Tema, datos ir laiko formatas</string>
     <string name="pref_reader_summary">Skaitymo režimas, rodymas, navigacija</string>
     <string name="pref_browse_summary">Šaltiniai, plėtiniai, visuotinė paieška</string>
     <string name="multi_lang">Kelių kalbų</string>

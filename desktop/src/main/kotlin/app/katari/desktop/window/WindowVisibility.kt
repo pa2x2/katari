@@ -8,7 +8,10 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.JFrame
 
-/** Tells [AppVisibility] the app is open while the window is, minimized or not: closing the window quits the app. */
+/**
+ * Tells [AppVisibility] the app is open while the window is, minimized or hidden in the tray included: the window stays
+ * open until the app quits.
+ */
 @Composable
 internal fun ReportsOpen(graph: AppProcessGraph) {
     DisposableEffect(graph) {

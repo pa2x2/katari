@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">Kapitola po přejetí doprava</string>
     <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
     <string name="connected_to_wifi">Jen na Wi-Fi</string>
+    <string name="battery_optimization_setting_activity_not_found">Nelze otevřít nastavení zařízení</string>
+    <string name="battery_optimization_disabled">Optimalizace je již vypnuta</string>
+    <string name="pref_disable_battery_optimization_summary">Pomáhá s aktualizacemi knihovny a záloh na pozadí</string>
+    <string name="pref_disable_battery_optimization">Vypnout optimalizaci baterie</string>
+    <string name="about_dont_kill_my_app">Někteří výrobci používají další omezení aplikací, která vypíná služby na pozadí. Na této webové stránce najdete další informace o tom, jak to opravit.</string>
 </resources>

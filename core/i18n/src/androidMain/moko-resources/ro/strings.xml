@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Glisare către dreapta a unui capitol</string>
     <string name="ext_permission_install_apps_warning">Sunt necesare permisiuni pentru instalarea de extensii. Atingeți aici pentru a permite.</string>
     <string name="connected_to_wifi">Doar prin Wi Fi</string>
+    <string name="pref_disable_battery_optimization">Dezactivați optimizarea bateriei</string>
+    <string name="pref_disable_battery_optimization_summary">Ajută la actualizările și copiile de rezervă ale bibliotecii în fundal</string>
+    <string name="battery_optimization_disabled">Optimizarea bateriei este deja dezactivată</string>
+    <string name="battery_optimization_setting_activity_not_found">Imposibil de deschis setările dispozitivului</string>
+    <string name="about_dont_kill_my_app">Unii producători au restricții suplimentare privind aplicațiile care opresc serviciile de fundal. Acest site web conține mai multe informații despre cum să le rezolvați.</string>
 </resources>

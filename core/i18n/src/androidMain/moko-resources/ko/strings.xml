@@ -19,4 +19,9 @@
     <string name="pref_chapter_swipe_end">오른쪽으로 스와이프하는 챕터</string>
     <string name="ext_permission_install_apps_warning">확장 앱을 설치하려면 권한이 필요합니다. 부가하려면 여기를 탭하세요.</string>
     <string name="connected_to_wifi">Wi-Fi 에서만</string>
+    <string name="battery_optimization_setting_activity_not_found">디바이스 설정을 열 수 없습니다</string>
+    <string name="pref_disable_battery_optimization">배터리 최적화 끄기</string>
+    <string name="about_dont_kill_my_app">일부 제조사는 백그라운드 서비스를 종료하는 추가적인 제한 사항이 있습니다. 자세한 사항은 웹사이트를 참조하세요.</string>
+    <string name="battery_optimization_disabled">배터리 최적화가 이미 꺼져 있습니다</string>
+    <string name="pref_disable_battery_optimization_summary">백그라운드 서재 업데이트와 라이브러리 업데이트를 도울 수 있습니다</string>
 </resources>

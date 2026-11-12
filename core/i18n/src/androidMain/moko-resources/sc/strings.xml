@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">Capìtulu iscurrende a destra</string>
     <string name="ext_permission_install_apps_warning">B\'at bisòngiu de sos permissos pro installare estensiones. Toca inoghe pro los frunire.</string>
     <string name="connected_to_wifi">Petzi cun su Wi-Fi</string>
+    <string name="pref_disable_battery_optimization">Disabìlita s\'otimizatzione de sa bateria</string>
+    <string name="pref_disable_battery_optimization_summary">Agiudat cun sos agiornamentos de sa biblioteca e sas còpias de seguresa</string>
+    <string name="battery_optimization_disabled">S\'otimizatzione de sa bateria est giai disabilitada</string>
+    <string name="battery_optimization_setting_activity_not_found">Abertura de sas impostatziones de sistema fallida</string>
+    <string name="about_dont_kill_my_app">Unos cantos produtores tenent restritziones de s\'aplicatzione chi istudant sos servìtzios in s\'isfundu. Custu situ web tenet informatziones in prus in subra de comente acontzare su problema.</string>
 </resources>

@@ -11,6 +11,7 @@ fun settingsScreens(graph: AppUiGraph): List<SearchableSettings> =
         .filter { it.isOffered(graph) }
 
 private fun mainSettingsScreens() = listOf(
+    SettingsGeneralScreen(),
     SettingsAppearanceScreen(),
     SettingsTouchpadScreen(),
     SettingsLibraryScreen(),

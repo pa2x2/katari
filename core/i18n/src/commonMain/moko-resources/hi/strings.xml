@@ -275,9 +275,6 @@
     <string name="notification_chapters_single_and_more">अध्याय %1$s और %2$d अधिक</string>
     <string name="notification_chapters_multiple">अध्याय %1$s</string>
     <string name="hide_notification_content">अधिसूचना सामग्री छुपाएं</string>
-    <string name="pref_disable_battery_optimization">बैटरी अनुकूलन को अक्षम करना</string>
-    <string name="pref_disable_battery_optimization_summary">पृष्ठभूमि पुस्तकालय अपडेट और बैकअप के साथ मदद करता है</string>
-    <string name="battery_optimization_disabled">बैटरी अनुकूलन पहले से ही अक्षम है</string>
     <string name="action_menu">मेन्यू</string>
     <string name="action_newest">नवीनतम</string>
     <string name="action_oldest">सबसे पुराना</string>
@@ -316,7 +313,6 @@
     <string name="viewer">पढ़न मोड</string>
     <string name="pref_category_for_this_series">इस श्रृंखला के लिए</string>
     <string name="gray_background">ग्रे</string>
-    <string name="battery_optimization_setting_activity_not_found">डिवाइस सेटिंग नहीं खोल सका</string>
     <string name="pref_refresh_library_covers">रिफ्रेश पुस्तकालय मंगा कवर</string>
     <string name="sort_by_upload_date">अपलोड तिथि द्वारा</string>
     <string name="label_data">डेटा</string>
@@ -441,7 +437,6 @@
     <string name="pref_create_folder_per_manga_summary">आइटम के शीर्षक अनुसार फोल्डर बनाता है</string>
     <string name="restore_miui_warning">MIUI ऑप्टिमाइज़ेशन अक्षम होने पर बैकअप/पुनर्स्थापना ठीक से काम नहीं कर सकता है।</string>
     <string name="label_background_activity">पृष्ठभूमि गतिविधि</string>
-    <string name="about_dont_kill_my_app">कुछ निर्माताओं के पास अतिरिक्त ऐप प्रतिबंध हैं जो पृष्ठभूमि सेवाओं को मारते हैं। इस वेबसाइट में इसे ठीक करने के बारे में अधिक जानकारी है।</string>
     <string name="local_invalid_format">अमान्य अध्याय प्रारूप</string>
     <string name="local_filter_order_by">के अनुसार ऑर्डर करें</string>
     <string name="clipboard_copy_error">क्लिपबोर्ड पर कॉपी करने में विफल</string>
@@ -545,7 +540,6 @@
     <string name="pref_browse_summary">स्रोत, विस्तार, वैश्विक खोज</string>
     <string name="invalid_location">अवैध स्थान: %s</string>
     <string name="action_update_category">श्रेणी अपडेट करें</string>
-    <string name="pref_appearance_summary">थीम, दिनांक और समय प्रारूप</string>
     <string name="pref_downloads_summary">स्वचालित डाउनलोड, आगे डाउनलोड करें</string>
     <string name="pref_library_update_show_tab_badge">नए अपडेट आइकन पर अपठित संख्या दिखाएं</string>
     <string name="pref_hide_in_library_items">पुस्तकालय में पहले से ही रही आइटम को छिपाएँ</string>

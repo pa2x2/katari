@@ -3,10 +3,9 @@ package app.katari.desktop.notification
 import app.katari.core.common.platform.DesktopOperatingSystem
 import app.katari.core.metro.AppCoroutineScope
 import app.katari.desktop.application.DesktopAppVariant
-import app.katari.desktop.display.backend.DisplayBackend
 import app.katari.desktop.home.HomeDestinations
 import app.katari.desktop.storage.DesktopDirectories
-import app.katari.desktop.window.OpenWindow
+import app.katari.desktop.window.MainWindowVisibility
 import app.katari.notification.NotificationKind
 import app.katari.notification.NotificationPreferences
 import app.katari.presentation.kit.feedback.AppMessages
@@ -24,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
  * first one. Where the desktop has no notification service, a result shows as one of the app's [messages] instead, as
  * desktop showed them before it posted notifications, and work under way isn't shown: the screens show its progress.
  * Answering a notification by opening something brings the window forward with the activation token the desktop sent,
- * as a later launch of the app does.
+ * hidden in the tray or not, as a later launch of the app does.
  *
  * Desktops keep no settings for an app's kinds of notification, as Android does for the app and its channels, so the
  * app keeps them in [preferences]: with notifications turned off, or of a kind turned off, a notification isn't shown,
@@ -38,8 +37,7 @@ class DesktopNotifications(
     directories: DesktopDirectories,
     private val messages: AppMessages,
     private val preferences: NotificationPreferences,
-    private val openWindow: OpenWindow,
-    private val displayBackend: DisplayBackend,
+    private val mainWindow: MainWindowVisibility,
     // Opening one switches profiles, and the profile manager sets up work that posts notifications
     private val destinations: Lazy<HomeDestinations>,
     @AppCoroutineScope private val scope: CoroutineScope,
@@ -98,11 +96,11 @@ class DesktopNotifications(
         override fun answered(response: NotificationResponse, activationToken: String?) {
             when (response) {
                 is NotificationResponse.Open -> scope.launch(Dispatchers.Main) {
-                    openWindow.context?.window?.let { displayBackend.bringForward(it, activationToken) }
+                    mainWindow.bringForward(activationToken)
                     destinations.value.open(response.destination)
                 }
                 is NotificationResponse.Show -> scope.launch(Dispatchers.Main) {
-                    openWindow.context?.window?.let { displayBackend.bringForward(it, activationToken) }
+                    mainWindow.bringForward(activationToken)
                     response.action()
                 }
                 is NotificationResponse.Run -> scope.launch { response.action() }

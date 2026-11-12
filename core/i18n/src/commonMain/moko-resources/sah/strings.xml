@@ -237,12 +237,8 @@
     <string name="cookies_cleared">Куки ыраастанна</string>
     <string name="pref_clear_database_summary">Эн бэбэлэтиэкэҕэр суох маанга остуоруйатын сотторуу</string>
     <string name="pref_clear_database">Билим олоҕо ыраастааһына</string>
-    <string name="pref_disable_battery_optimization">Батарея тупсарыытын араарыы</string>
     <string name="pref_refresh_library_covers">Бэбэлэтиэкэҕэ баар маанга таһын чэбдигирии</string>
     <string name="clear_database_completed">Дааннайдар сотуллубуттар</string>
-    <string name="pref_disable_battery_optimization_summary">Бэбэлэтиэкэ уонна хаппаас куопуйатыгар кэннинээҕи саҥардыытыгар көмөлөһөр</string>
-    <string name="battery_optimization_setting_activity_not_found">Устройства түстэлэ сатаан арыллыбата</string>
-    <string name="battery_optimization_disabled">Батарея тупсуруута араарыллынна</string>
     <string name="whats_new">Туох саҥа баарый</string>
     <string name="version">Биэрсия</string>
     <string name="website">Үөп сир</string>

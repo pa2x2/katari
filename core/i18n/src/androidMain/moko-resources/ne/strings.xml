@@ -17,4 +17,9 @@
     <string name="pref_chapter_swipe_end">दायाँतिर स्वाइप गर्ने अध्याय</string>
     <string name="ext_permission_install_apps_warning">एक्सटेन्शनहरू स्थापना गर्न अनुमति आवश्यक छ। प्रदान गर्न यहाँ ट्याप गर्नुहोस्।</string>
     <string name="connected_to_wifi">Wi-Fi मा मात्र</string>
+    <string name="battery_optimization_setting_activity_not_found">यन्त्रको सेटिंग्स खोल्न सकिएन</string>
+    <string name="battery_optimization_disabled">ब्याट्री अप्टिमाइजेसन पहिले नै असक्षम छ</string>
+    <string name="about_dont_kill_my_app">केही निर्माताहरूसँग अतिरिक्त एप प्रतिबन्धहरू छन् जसले ब्याकग्राउण्ड सेवाहरूलाई मार्छ। यो वेबसाइटमा यसलाई कसरी ठीक गर्ने बारे थप जानकारी छ।</string>
+    <string name="pref_disable_battery_optimization_summary">ब्याकग्राउण्ड पुस्तकालय अपडेट्स र ब्याकअप संग मद्दत गर्छ</string>
+    <string name="pref_disable_battery_optimization">ब्याट्री अप्टिमाइजेसन असक्षम पार्नुहोस्</string>
 </resources>
