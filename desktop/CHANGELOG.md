@@ -1,5 +1,24 @@
 # Desktop Changelog
 
+## [1.0.0] - 2026-11-13
+
+### ✨ Added
+
+- Subtitle timing in the player's settings moves subtitles earlier or later, in 0.1 s steps.
+- Ctrl+W closes the window, as its close button does.
+
+### 🔄 Changed
+
+- A title's own reader or player value syncs only while its setting syncs on this device.
+
+### 🧩 Improved
+
+- What syncs lists the settings you chose one by one.
+
+### 🗑️ Removed
+
+- Scrolling sideways over the player, with a tilting wheel or a touchpad, no longer seeks. Drag the timeline or use the arrow keys instead.
+
 ## [1.0.0-beta.13] - 2026-11-12
 
 ### 🐛 Fixed
@@ -345,7 +364,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0-beta.13...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0...HEAD
+[1.0.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0
 [1.0.0-beta.13]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.13
 [1.0.0-beta.12]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.12
 [1.0.0-beta.11]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.11
