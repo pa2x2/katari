@@ -29,5 +29,6 @@ internal fun BookDocumentReaderTextSelectionMenuSettings(
                 }
             }
         },
+        setting = binding.definition.profilePreference,
     )
 }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import app.katari.presentation.kit.layout.TwoPanes
 import app.katari.presentation.kit.window.currentWindowLayout
@@ -37,9 +38,13 @@ class SettingsScreen(
     private val viewerSettingsSurfaceId: String? = null,
     /** The title of the viewer settings row to scroll to and pulse. */
     private val viewerSettingsHighlight: String? = null,
+    /** A settings page to open at that no [Destination] names, such as one area's sync choices. */
+    private val page: VoyagerScreen? = null,
 ) : Screen() {
 
     constructor(destination: Destination) : this(destination.id)
+
+    constructor(page: VoyagerScreen) : this(destination = null, page = page)
 
     fun opensAt(destination: Destination): Boolean = this.destination == destination.id
     constructor(destination: Destination, viewerSettingsSurfaceId: String?, viewerSettingsHighlight: String?) :
@@ -85,7 +90,7 @@ class SettingsScreen(
             Destination.Sync.id -> Destination.Sync
             else -> null
         }.let {
-            resolveSettingsStartScreen(
+            page ?: resolveSettingsStartScreen(
                 destination = it,
                 twoPane = twoPane,
                 viewerSettingsScreen = viewerSettingsScreen,
@@ -108,7 +113,10 @@ class SettingsScreen(
             val screens = remember(navigator) {
                 movableContentOf { backFor: (VoyagerScreen) -> (() -> Unit)? ->
                     DefaultNavigatorScreenTransition(navigator) { screen ->
-                        CompositionLocalProvider(LocalBackPress provides backFor(screen)) { screen.Content() }
+                        CompositionLocalProvider(
+                            LocalBackPress provides backFor(screen),
+                            LocalSettingsNavigator provides navigator,
+                        ) { screen.Content() }
                     }
                 }
             }
@@ -153,3 +161,10 @@ class SettingsScreen(
         data object Sync : Destination(8)
     }
 }
+
+/**
+ * The navigator of the settings pages around a page, null outside Settings. Something that opens a settings page pushes
+ * it here where there is one, and otherwise opens Settings at it (`SettingsScreen(page)`), which gives the page its up
+ * action.
+ */
+val LocalSettingsNavigator = staticCompositionLocalOf<Navigator?> { null }

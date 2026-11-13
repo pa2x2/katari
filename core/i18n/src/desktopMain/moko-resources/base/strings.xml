@@ -87,4 +87,5 @@
     <string name="pref_keep_running_in_tray_no_tray">Your desktop shows no tray, so closing the window quits Katari</string>
     <string name="pref_start_at_login">Start at login</string>
     <string name="pref_start_at_login_summary">Starts hidden in the tray when you sign in, so sync and background work run from the start</string>
+    <string name="sync_mark_hint">The cloud or computer after a setting\'s name says whether it syncs with your other devices. Click it, or right-click the setting, to change that.</string>
 </resources>

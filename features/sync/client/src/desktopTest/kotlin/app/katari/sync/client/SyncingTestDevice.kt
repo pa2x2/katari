@@ -8,6 +8,7 @@ import app.katari.sync.client.account.DeviceListFollowing
 import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.SyncAccount
+import app.katari.sync.client.arrival.SettingArrivals
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
@@ -36,6 +37,7 @@ import app.katari.sync.client.message.MessageHandler
 import app.katari.sync.client.message.MessageHandlers
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.message.MessageOutbox
+import app.katari.sync.client.part.DeviceChoices
 import app.katari.sync.client.part.SyncChoiceChanges
 import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.UngroupedRecords
@@ -85,6 +87,7 @@ internal class SyncingTestDevice(
     val connection = SyncConnection(local.handler, tokens)
     private val capture = SyncCapture(local.handler, local.settingsCapture, local.fileCapture)
     val directory = DeviceDirectory(local.handler)
+    val deviceChoices = DeviceChoices(local.handler, local.writing, local.syncPreferences, directory)
     val handOff = EntryHandOff(local.handler, local.incoming, local.preferences.reads, directory)
     private val disconnection = Disconnection(capture, connection, handOff, directory)
     val lastReadDevices = LastReadDevices(local.handler, connection, directory)
@@ -168,6 +171,7 @@ internal class SyncingTestDevice(
             messageInbox,
             changeRule,
             fileRule,
+            deviceChoices,
             lazyOf(setOf(DownloadRequestRetry(downloadRequestInbox))),
         ),
         steps,
@@ -184,6 +188,14 @@ internal class SyncingTestDevice(
         connection,
         runs,
         local.fileCapture,
+    )
+    val arrivals = SettingArrivals(
+        local.handler,
+        directory,
+        choiceChanges,
+        preferences,
+        local.preferences.writes,
+        local.arrivedBatches,
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(

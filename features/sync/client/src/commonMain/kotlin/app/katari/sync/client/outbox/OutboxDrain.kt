@@ -5,6 +5,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.part.OffParts
+import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.payload.Tombstone
 import app.katari.sync.client.preference.SyncPreferences
@@ -43,6 +44,7 @@ class OutboxDrain(
     private val handler: DatabaseHandler,
     private val settings: SettingReads,
     private val preferences: SyncPreferences,
+    private val viewerSettings: ViewerSettingPreferences,
 ) {
     /**
      * Drains up to [limit] outbox rows in one transaction and returns how many it drained; 0 once it is empty.
@@ -67,7 +69,7 @@ class OutboxDrain(
         val clock = sync_clockQueries.get().awaitAsOne()
         val device = DeviceId(deviceId)
         val stamper = EditStamper(device, clock.issued_physical, clock.issued_counter.toInt())
-        val parts = OffParts(preferences.choices(), this)
+        val parts = OffParts(preferences.choices(), this, viewerSettings)
         val drain = Drain(this, LocalReads(this, device, settings), parts, replacing)
         rows.forEach { row ->
             val stamp = stamper.stamp(row.changed_at, row.seen_physical, row.seen_counter.toInt())

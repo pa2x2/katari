@@ -16,6 +16,7 @@ import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.message.MessageInbox
 import app.katari.sync.client.message.MessageOutbox
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.part.DeviceChoices
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.record.ChangeTransferRule
 import app.katari.sync.client.record.PendingChanges
@@ -98,6 +99,7 @@ class SyncPass(
     private val messageInbox: MessageInbox,
     private val changeRule: ChangeTransferRule,
     private val fileRule: FileTransferRule,
+    private val deviceChoices: DeviceChoices,
     // Taken after the first run that synced: a listener may send messages, and sending needs the runs that need this
     private val syncedListeners: Lazy<Set<SyncedListener>>,
 ) {
@@ -259,6 +261,7 @@ class SyncPass(
             }
         }
         incoming.retryHeld()
+        deviceChoices.publish()
         var stale = false
         steps.step(SyncStep.Kind.UPLOADING_RECORDS) { progress ->
             var sent = 0L

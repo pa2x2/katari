@@ -45,6 +45,7 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
                     steps = 0,
                     title = stringResource(MR.strings.pref_custom_brightness),
                     onValueChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
+                    setting = settings.customBrightnessValue.definition.profilePreference,
                 )
             }
         }
@@ -94,7 +95,10 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
     }
 
     if (colorFilter.effectiveValue) {
-        ChipsRow(title = stringResource(MR.strings.pref_color_filter_mode)) {
+        ChipsRow(
+            title = stringResource(MR.strings.pref_color_filter_mode),
+            setting = settings.colorFilterMode.definition.profilePreference,
+        ) {
             ColorFilterMode.mapIndexed { index, it ->
                 FilterChip(
                     selected = colorFilterMode.effectiveValue == index,

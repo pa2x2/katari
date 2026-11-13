@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.roundToIntRect
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import app.katari.presentation.kit.dialog.ApartFromDialog
 import app.katari.presentation.kit.layout.ApartFromScreen
 import app.katari.presentation.kit.list.LocalRowGroupContainer
 import app.katari.presentation.kit.list.ProvideRowDensity
@@ -113,12 +114,14 @@ fun Popover(
             // The popover is its own window over the floating dock and the screen, so a Scaffold or list in it has
             // nothing to clear
             ApartFromScreen {
-                CompositionLocalProvider(
-                    LocalRowGroupContainer provides SurfaceContainer.Highest,
-                    LocalSheetForm provides SheetForm.Popover,
-                    LocalSheetColumns provides 1,
-                ) {
-                    KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                ApartFromDialog {
+                    CompositionLocalProvider(
+                        LocalRowGroupContainer provides SurfaceContainer.Highest,
+                        LocalSheetForm provides SheetForm.Popover,
+                        LocalSheetColumns provides 1,
+                    ) {
+                        KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
+                    }
                 }
             }
         }

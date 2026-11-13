@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import app.katari.sync.ui.arrival.SettingArrivalNotices
 import app.katari.sync.ui.notice.SyncStopMessages
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.Navigator
@@ -85,6 +86,7 @@ fun HomeHost(
                 }
                 HomeNavigatorContent(navigator = navigator, banners = banners, overlay = overlay)
                 SyncStopMessages(onOpen = { openSyncFromRoot(navigator) })
+                SettingArrivalNotices()
                 navigatorContent(navigator)
                 if (offersOnboarding) OnboardingOnFirstStart()
             }

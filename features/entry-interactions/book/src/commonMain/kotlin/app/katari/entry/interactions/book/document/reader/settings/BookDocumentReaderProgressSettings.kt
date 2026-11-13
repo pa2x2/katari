@@ -32,6 +32,7 @@ internal fun BookDocumentReaderShowProgressSetting(binding: ViewerSettingBinding
                 }
             }
         },
+        setting = binding.definition.profilePreference,
     )
 }
 

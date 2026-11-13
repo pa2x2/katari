@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.presentation.kit.list.ToggleRow
+import eu.kanade.presentation.more.settings.LocalPreferenceSetting
 
 @Composable
 fun SwitchPreferenceWidget(
@@ -29,6 +30,7 @@ fun SwitchPreferenceWidget(
         leading = leading,
         enabled = enabled,
         titleSuffix = settingTitleSuffix(isProfileSpecific),
+        setting = LocalPreferenceSetting.current,
         onDisabledClick = onDisabledClick,
         onOpen = onOpen,
     )

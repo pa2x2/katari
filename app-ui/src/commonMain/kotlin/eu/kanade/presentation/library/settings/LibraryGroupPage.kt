@@ -14,7 +14,10 @@ internal fun LibraryGroupPage(
     viewModel: LibrarySettingsViewModel,
 ) {
     val grouping by viewModel.libraryPreferences.grouping.collectAsState()
-    RowGroupHeader(stringResource(MR.strings.library_grouping_hierarchy))
+    RowGroupHeader(
+        text = stringResource(MR.strings.library_grouping_hierarchy),
+        setting = viewModel.libraryPreferences.grouping,
+    )
     LibraryGroupingEditor(
         grouping = grouping,
         onGroupingChange = viewModel::setGrouping,

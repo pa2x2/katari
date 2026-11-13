@@ -3,6 +3,7 @@ package app.katari.sync.client.apply
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.arrival.ArrivalNotes
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
@@ -18,6 +19,7 @@ import app.katari.sync.client.merge.RecordState
 import app.katari.sync.client.merge.merge
 import app.katari.sync.client.merge.newestEdit
 import app.katari.sync.client.outbox.EditStamper
+import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.OffParts
 import app.katari.sync.client.payload.SourceReference
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
@@ -27,6 +29,7 @@ import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.apply.SettingWrites
+import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.data.Sync_pending
 import app.katari.sync.protocol.clock.HybridLogicalClock
@@ -71,6 +74,9 @@ internal class ApplySession(
     private val device: DeviceId,
     private val appVersion: String,
     private val failing: Map<String, FailedStage>,
+    private val settingReads: SettingReads,
+    /** Where a change from another device is noted; null in a session that applies no arrivals, such as a choice's. */
+    private val arrivals: ArrivalNotes?,
     private val now: () -> Long,
 ) : LocalWrites {
     private val resolving = HashSet<String>()
@@ -208,6 +214,16 @@ internal class ApplySession(
 
     override fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean) {
         (if (marked) markedHere else readHere).getOrPut(entryId, ::LinkedHashSet) += chapterId
+    }
+
+    override suspend fun settingArriving(profileId: Long?, key: String, value: Any?, at: HybridTimestamp) {
+        val notes = arrivals ?: return
+        if (at.device == device) return
+        val previous = when (profileId) {
+            null -> settingReads.sharedValue(key)
+            else -> settingReads.profileValue(profileId, key)
+        }
+        if (previous != value) notes.note(profileId, key, previous, at)
     }
 
     /** What [chapterRead] noted, by entry. */
@@ -590,18 +606,27 @@ internal class ApplySession(
     }
 
     /**
-     * Whether this device changed settings of [area] it would sync with the area on while the area was off, which it
-     * then asks about.
+     * Whether this device changed settings it doesn't sync now that the choices [turnOn] makes would sync, such as an
+     * area's or one setting's switched back on, while the account has values of its own for them, which it then asks
+     * about. A setting the account has no value for keeps this device's either way ([keepAccountSettings]).
      */
-    suspend fun changedWhileOff(area: SettingsArea): Boolean {
-        val turnedOn = OffParts(parts.choices.copy(areasOff = parts.choices.areasOff - area), database)
+    suspend fun changedWhileOff(turnOn: (ChoiceSet) -> ChoiceSet): Boolean {
+        val turnedOn = OffParts(turnOn(parts.choices), database, parts.viewerSettings)
         return database.sync_recordsQueries.heldBack().awaitAsList().any { held ->
             val kind = SyncKinds.named(held.kind) ?: return@any false
             held.change_id != null &&
-                kind.settingOf(held.deleted, held.payload)?.settingsArea == area &&
-                !turnedOn.isOff(kind, held.deleted, held.payload)
+                kind.settingOf(held.deleted, held.payload) != null &&
+                !turnedOn.isOff(kind, held.deleted, held.payload) &&
+                accountHasValue(held.record_key, held.base_payload)
         }
     }
+
+    /**
+     * Whether the account has its own copy of the held record [key]: the copy this device last took in ([basePayload]),
+     * or one that arrived while it held the record back.
+     */
+    private suspend fun accountHasValue(key: String, basePayload: ByteArray?): Boolean =
+        basePayload != null || database.sync_pendingQueries.get(key).awaitAsOneOrNull() != null
 
     /**
      * The local ID of the record [key], or of the one it stands for ([standing]): of the row it is stored as holding,

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import app.katari.presentation.kit.dialog.ApartFromDialog
 import app.katari.presentation.kit.dialog.DialogBackHandler
 import app.katari.presentation.kit.dialog.DialogDim
 import app.katari.presentation.kit.dialog.DialogWindowDim
@@ -111,7 +112,9 @@ fun Sheet(
     val half = rememberFoldHalf()
     val lastPress = LocalLastPress.current
     val density = LocalDensity.current
-    val edge = remember(window.usesSideNavigation, half) {
+    // Saved, so a sheet left open under a screen opened from it comes back on its side, not the side of the press that
+    // went back
+    val edge = rememberSaveable(window.usesSideNavigation, half) {
         sheetEdge(
             sideSheets = window.usesSideNavigation,
             half = half,
@@ -158,14 +161,16 @@ fun Sheet(
                 // The sheet is a window over the floating dock and the screen, so a Scaffold or list in it has nothing
                 // to clear
                 ApartFromScreen {
-                    CompositionLocalProvider(
-                        LocalRowGroupContainer provides SurfaceContainer.Highest,
-                        LocalScreenMessages provides messages,
-                        LocalSheetForm provides if (edge == SheetEdge.Bottom) SheetForm.Bottom else SheetForm.Side,
-                        LocalSheetColumns provides if (twoColumns) 2 else 1,
-                    ) {
-                        KeyboardShortcutLayer {
-                            ProvideRowDensity(RowDensity.Compact, content)
+                    ApartFromDialog {
+                        CompositionLocalProvider(
+                            LocalRowGroupContainer provides SurfaceContainer.Highest,
+                            LocalScreenMessages provides messages,
+                            LocalSheetForm provides if (edge == SheetEdge.Bottom) SheetForm.Bottom else SheetForm.Side,
+                            LocalSheetColumns provides if (twoColumns) 2 else 1,
+                        ) {
+                            KeyboardShortcutLayer {
+                                ProvideRowDensity(RowDensity.Compact, content)
+                            }
                         }
                     }
                 }

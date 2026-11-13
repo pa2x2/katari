@@ -29,11 +29,11 @@ class SettingsAreaSyncScreen(private val area: SettingsArea) : Screen() {
                     choices = choices,
                     settings = areaSettings(area),
                     onSyncArea = { model.syncArea(area, it) },
-                    onSyncSetting = model::syncSetting,
+                    onSyncSetting = { setting, on -> model.syncSetting(setting.key, setting.title, on) },
                     onSyncMenu = model::syncMenu,
                 )
             },
         )
-        AreaAgainQuestion(model)
+        SettingsAgainQuestion(model)
     }
 }

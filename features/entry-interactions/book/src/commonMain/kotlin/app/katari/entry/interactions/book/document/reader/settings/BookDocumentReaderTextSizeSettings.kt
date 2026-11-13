@@ -34,6 +34,7 @@ internal fun BookDocumentReaderTextSizeSettings(
         increaseContentDescription = stringResource(MR.strings.book_document_reader_increase_text_size),
         editContentDescription = stringResource(MR.strings.book_document_reader_edit_text_size),
         onValueChange = ::updateValue,
+        setting = binding.definition.profilePreference,
     )
 }
 

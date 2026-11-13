@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import app.katari.entry.interactions.library.EntryLibraryFilterAvailability
 import app.katari.presentation.kit.list.RowGroup
 import app.katari.presentation.kit.list.TriStateRow
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
@@ -28,6 +30,7 @@ internal fun LibraryFilterPage(
         .map { stringResource(it) }
         .joinToString(separator = " / ")
 
+    MenuSyncHeader(MenuSettings.LIBRARY_FILTERS)
     RowGroup {
         row {
             val filterDownloaded by viewModel.libraryPreferences.filterDownloaded.collectAsState()

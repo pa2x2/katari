@@ -69,4 +69,5 @@
     <string name="battery_optimization_disabled">Battery optimization is already disabled</string>
     <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
     <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
+    <string name="sync_mark_hint">The cloud or phone after a setting\'s name says whether it syncs with your other devices. Tap it to change that.</string>
 </resources>

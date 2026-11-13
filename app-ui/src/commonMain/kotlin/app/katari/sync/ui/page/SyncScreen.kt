@@ -15,6 +15,8 @@ import app.katari.presentation.kit.feedback.rememberScreenMessages
 import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.status.SyncStatus
 import app.katari.sync.ui.address.ServerAddressDialog
+import app.katari.sync.ui.arrival.ArrivedSettingsScreen
+import app.katari.sync.ui.arrival.ArrivedSettingsViewModel
 import app.katari.sync.ui.choice.WhatSyncsScreen
 import app.katari.sync.ui.firstsync.FirstSyncScreen
 import app.katari.sync.ui.guide.SyncGuide
@@ -88,9 +90,11 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
             dismissEnded = model::dismissEnded,
             openMissingExtensions = { dialog = SyncPageDialog.MissingExtensions },
             openWhatSyncs = { navigator.push(WhatSyncsScreen()) },
+            openArrived = { navigator.push(ArrivedSettingsScreen()) },
             answerArrivingProfile = model::answerArrivingProfile,
         )
         val missingExtensions by metroViewModel<MissingExtensionsNoticeViewModel>().installable.collectAsState()
+        val arrived by metroViewModel<ArrivedSettingsViewModel>().changes.collectAsState()
 
         PreferenceScaffold(
             titleRes = getTitleRes(),
@@ -115,6 +119,7 @@ class SyncScreen : SearchableSettings(), SyncJoinOrigin {
                             choices = choices,
                             profilesNotSynced = profilesNotSynced,
                             missingExtensions = missingExtensions,
+                            arrived = arrived.size,
                             actions = actions,
                         )
                     }
@@ -188,6 +193,8 @@ internal class SyncPageActions(
     val dismissEnded: () -> Unit,
     val openMissingExtensions: () -> Unit,
     val openWhatSyncs: () -> Unit,
+    /** Opens the settings other devices changed here. */
+    val openArrived: () -> Unit,
     /** Says whether a profile made on another device comes to this one. */
     val answerArrivingProfile: (ProfileSync, comesHere: Boolean) -> Unit,
 )

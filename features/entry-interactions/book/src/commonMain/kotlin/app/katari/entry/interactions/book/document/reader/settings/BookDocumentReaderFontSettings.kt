@@ -40,6 +40,7 @@ internal fun BookDocumentReaderFontSettings(
     SettingsRow(
         title = stringResource(MR.strings.pref_book_document_reader_font),
         subtitle = setting.effectiveValue.name(),
+        setting = binding.definition.profilePreference,
         onClick = { picking = true },
     )
     if (picking) {

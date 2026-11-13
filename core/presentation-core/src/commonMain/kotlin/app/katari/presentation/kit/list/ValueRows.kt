@@ -24,8 +24,12 @@ import app.katari.presentation.kit.surface.Pill
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import tachiyomi.core.common.preference.Preference
 
-/** A setting picked on a slider, with the current value shown as a pill beside the title. */
+/**
+ * A setting picked on a slider, with the current value shown as a pill beside the title. [setting] is the setting it
+ * picks, whose mark the app shows after the title ([SettingMarks]).
+ */
 @Composable
 fun SliderRow(
     title: String,
@@ -37,11 +41,14 @@ fun SliderRow(
     valueText: String = value.toString(),
     steps: Int = with(valueRange) { ((last - first) - 1).coerceAtLeast(0) },
     enabled: Boolean = true,
+    setting: Preference<*>? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val density = LocalRowDensity.current
+    val mark = rememberRowSettingMark(setting, title, density.titleRole, suffix = null)
     Column(
         modifier = modifier
+            .then(mark.rowModifier)
             .fillMaxWidth()
             .padding(horizontal = LocalRowInset.current, vertical = density.verticalPadding),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
@@ -51,7 +58,7 @@ fun SliderRow(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, role = density.titleRole)
+                RowTitle(title, mark.titleSuffix)
                 if (subtitle != null) Text(subtitle, role = TextRole.Supporting)
             }
             Pill(valueText)
@@ -134,17 +141,19 @@ fun ControlRow(
 /**
  * A group of chips under a group header, such as quick filters in a sheet. It sits between row group cards, with its
  * chips lined up with their edges. [supportingText] explains the choice under the chips, such as why one is disabled.
+ * [setting] is the setting the chips pick, whose mark the app shows after the header ([SettingMarks]).
  */
 @Composable
 fun ChipsRow(
     title: String,
     modifier: Modifier = Modifier,
     supportingText: String? = null,
+    setting: Preference<*>? = null,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
     val bottomPadding = LocalRowDensity.current.verticalPadding
     Column(modifier) {
-        RowGroupHeader(title)
+        RowGroupHeader(title, setting = setting)
         FlowRow(
             modifier = Modifier.padding(
                 start = rowGroupEdgeInset(),

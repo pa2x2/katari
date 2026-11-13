@@ -34,6 +34,8 @@ import app.katari.presentation.kit.menu.OverflowMenu
 import app.katari.presentation.kit.sheet.Sheet
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
@@ -97,6 +99,7 @@ internal fun ManageFeedsSheet(
     Sheet(onDismissRequest = onDismissRequest, snackbarHostState = snackbarHostState) {
         Column {
             SheetHeader(title = stringResource(MR.strings.browse_manage_feeds))
+            MenuSyncHeader(MenuSettings.SAVED_FEEDS)
             RowList(
                 state = listState,
                 modifier = Modifier.weight(1f, fill = false),

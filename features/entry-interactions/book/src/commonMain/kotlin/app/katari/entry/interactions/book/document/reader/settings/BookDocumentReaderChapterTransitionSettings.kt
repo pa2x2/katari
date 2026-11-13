@@ -23,7 +23,10 @@ internal fun BookDocumentReaderChapterTransitionSettings(
     val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     val profileDefault = setting.profileValue ?: setting.processorDefault
-    ChipsRow(title = stringResource(MR.strings.pref_chapter_transition)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_chapter_transition),
+        setting = binding.definition.profilePreference,
+    ) {
         ChapterTransitionMode.entries.forEach { candidate ->
             FilterChip(
                 label = stringResource(candidate.titleRes),

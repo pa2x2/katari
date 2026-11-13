@@ -38,6 +38,7 @@ import app.katari.presentation.kit.shortcut.KeyboardShortcutLayer
 import app.katari.presentation.kit.surface.Surface
 import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.ContentTone
+import app.katari.presentation.kit.theme.KatariSpacing
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.LocalContentColor
 import app.katari.presentation.kit.theme.TextRole
@@ -239,6 +240,22 @@ private fun DialogTitle(title: String, centred: Boolean, action: (@Composable ()
 
 /** The open dialog's confirm action, which a single-line text field in it runs from the keyboard's Done key. */
 internal val LocalDialogConfirm = compositionLocalOf<DialogAction?> { null }
+
+/**
+ * [content] in a surface of its own, such as a sheet or popover, which may be opened from a dialog's content and so
+ * composes under it: it lays its rows out as anywhere else rather than flat and edge to edge as the dialog does, and a
+ * text field in it doesn't run the dialog's confirm action.
+ */
+@Composable
+internal fun ApartFromDialog(content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalRowInset provides KatariSpacing.rowInset,
+        LocalRowGroupFramed provides true,
+        LocalInDialog provides false,
+        LocalDialogConfirm provides null,
+        content = content,
+    )
+}
 
 private val DialogMargin = 24.dp
 

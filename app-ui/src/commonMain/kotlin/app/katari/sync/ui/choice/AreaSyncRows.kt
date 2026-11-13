@@ -22,7 +22,7 @@ internal fun areaSyncPreferences(
     choices: ChoiceSet,
     settings: List<AreaSetting>,
     onSyncArea: (Boolean) -> Unit,
-    onSyncSetting: (key: String, on: Boolean) -> Unit,
+    onSyncSetting: (setting: AreaSetting, on: Boolean) -> Unit,
     onSyncMenu: (MenuSettings, on: Boolean) -> Unit,
 ): List<Preference> {
     val synced = choices.syncs(area)
@@ -88,7 +88,7 @@ internal fun areaSyncPreferences(
 
 /** A row's line from its parts, such as where it is and whether it syncs. */
 @Composable
-private fun detail(vararg parts: String?): String? = parts.filterNotNull().reduceOrNull { detail, part ->
+internal fun detail(vararg parts: String?): String? = parts.filterNotNull().reduceOrNull { detail, part ->
     stringResource(MR.strings.sync_choice_setting_detail, detail, part)
 }
 
@@ -97,14 +97,14 @@ private fun settingRow(
     subtitle: String?,
     on: Boolean,
     areaSynced: Boolean,
-    onSyncSetting: (key: String, on: Boolean) -> Unit,
+    onSyncSetting: (setting: AreaSetting, on: Boolean) -> Unit,
 ) = Preference.PreferenceItem.CustomPreference(title = setting.title) {
     SwitchPreferenceWidget(
         title = setting.title,
         subtitle = subtitle,
         checked = on,
         enabled = areaSynced,
-        onCheckedChanged = { onSyncSetting(setting.key, it) },
+        onCheckedChanged = { onSyncSetting(setting, it) },
     )
 }
 

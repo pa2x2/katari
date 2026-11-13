@@ -21,5 +21,6 @@ internal fun BindingToggleRow(
         title = label,
         checked = state.effectiveValue,
         onCheckedChange = { scope.launch { binding.updateEntry(it) } },
+        setting = binding.definition.profilePreference,
     )
 }

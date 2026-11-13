@@ -25,12 +25,14 @@ internal fun LibraryDisplayPage(
     LibraryDisplayModeChooser(
         selectedMode = displayMode,
         onModeSelected = viewModel::setDisplayMode,
+        setting = viewModel.libraryPreferences.displayMode,
     )
 
     val pinnedDisplayStyle by viewModel.libraryPreferences.pinnedDisplayStyle.collectAsState()
     LibraryPinnedStyleChooser(
         selectedStyle = pinnedDisplayStyle,
         onStyleSelected = viewModel::setPinnedDisplayStyle,
+        setting = viewModel.libraryPreferences.pinnedDisplayStyle,
     )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
@@ -45,6 +47,7 @@ internal fun LibraryDisplayPage(
                     valueRange = CoverSize.entries.indices,
                     onValueChange = { coverSizePreference.set(CoverSize.entries[it]) },
                     valueText = stringResource(coverSize.labelRes),
+                    setting = coverSizePreference,
                 )
             }
         }
@@ -100,5 +103,6 @@ private fun PreferenceToggleRow(title: String, preference: Preference<Boolean>) 
         title = title,
         checked = checked,
         onCheckedChange = { preference.toggle() },
+        setting = preference,
     )
 }

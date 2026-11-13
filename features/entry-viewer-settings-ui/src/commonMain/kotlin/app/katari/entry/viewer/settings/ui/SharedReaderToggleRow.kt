@@ -47,6 +47,7 @@ internal fun SharedReaderToggleRow(
                 }
             }
         },
+        setting = binding.definition.profilePreference,
         onDisabledClick = disabledAction?.let { action ->
             { action.perform(context) }
         },

@@ -30,6 +30,8 @@ import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
@@ -302,6 +304,7 @@ private fun SetAsDefaultDialog(
                 checked = optionalChecked,
                 onCheckedChange = { optionalChecked = it },
             )
+            MenuSyncHeader(MenuSettings.CHAPTER_LIST_DEFAULTS)
         }
     }
 }

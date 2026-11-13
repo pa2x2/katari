@@ -39,6 +39,7 @@ import app.katari.presentation.kit.surface.VerticalDivider
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import tachiyomi.core.common.preference.Preference
 
 /**
  * Where a row sits in a group of rows drawn as one card. Lazy lists compose every row as its own item, so the card is
@@ -134,7 +135,11 @@ fun RowGroupItem(
     }
 }
 
-/** The header above a row group card, lined up with the text inside the card rather than the card's edge. */
+/**
+ * The header above a row group card, lined up with the text inside the card rather than the card's edge. [setting] is
+ * the one setting the rows under it choose, such as a reader's theme, whose mark the app shows after the text
+ * ([SettingMarks]).
+ */
 @Composable
 fun RowGroupHeader(
     text: String,
@@ -142,15 +147,17 @@ fun RowGroupHeader(
     icon: ImageVector? = null,
     tone: ContentTone = ContentTone.Inherit,
     trailing: (@Composable () -> Unit)? = null,
+    setting: Preference<*>? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
+    val mark = rememberRowSettingMark(setting, text, TextRole.GroupLabel, trailing)
     CompositionLocalProvider(LocalRowInset provides rowGroupTextInset()) {
         SectionHeader(
             text = text,
-            modifier = modifier,
+            modifier = modifier.then(mark.rowModifier),
             icon = icon,
             tone = tone,
-            trailing = trailing,
+            trailing = mark.titleSuffix,
             actions = actions,
         )
     }

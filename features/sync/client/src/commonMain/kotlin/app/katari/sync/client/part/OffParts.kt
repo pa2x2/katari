@@ -11,9 +11,10 @@ import tachiyomi.data.Database
 
 /**
  * Whether a record belongs to a part of the account this device chose not to sync: one its kind's choice turns off
- * ([SyncedKind.syncsOn]), or one in a profile the device doesn't sync. A record of an entry is in the entry's profile,
- * found from the entry's record, stored or held; one whose entry isn't here at all counts as synced, and waits for its
- * entry as any record does.
+ * ([SyncedKind.syncsOn]), a title's own value of a setting that doesn't sync here ([SyncedKind.overriddenSetting],
+ * found through [viewerSettings]), or one in a profile the device doesn't sync. A record of an entry is in the entry's
+ * profile, found from the entry's record, stored or held; one whose entry isn't here at all counts as synced, and waits
+ * for its entry as any record does.
  *
  * With [ChoiceSet.askBeforeNewProfiles], a profile this device never had is off from its first record on, and [ask]
  * hears of it once, to keep it waiting for the person's answer. A profile [admit]ted is never asked about.
@@ -21,6 +22,7 @@ import tachiyomi.data.Database
 internal class OffParts(
     val choices: ChoiceSet,
     private val database: Database,
+    val viewerSettings: ViewerSettingPreferences,
     private val ask: (profileUuid: String) -> Unit = {},
 ) {
     private val entryProfiles = HashMap<String, String?>()
@@ -37,6 +39,7 @@ internal class OffParts(
 
     suspend fun <P : Any> isOff(kind: SyncedKind<P>, payload: P): Boolean {
         if (!kind.syncsOn(choices, payload)) return true
+        if (kind.overriddenSetting(payload, viewerSettings)?.let(choices::syncsSetting) == false) return true
         if (choices.profilesOff.isEmpty() && !choices.askBeforeNewProfiles) return false
         val profile = profileOf(kind, payload) ?: return false
         return !choices.syncsProfile(profile) || profile in asked || asksAbout(profile)

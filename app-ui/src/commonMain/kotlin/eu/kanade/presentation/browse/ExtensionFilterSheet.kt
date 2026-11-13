@@ -15,6 +15,8 @@ import app.katari.presentation.kit.list.ToggleRow
 import app.katari.presentation.kit.list.rowGroupItems
 import app.katari.presentation.kit.sheet.SheetSplitList
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncMark
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
 import eu.kanade.presentation.browse.components.FilterSectionHeading
@@ -94,6 +96,7 @@ fun ExtensionFilterSheet(
                     FilterSectionHeading(
                         title = stringResource(MR.strings.extension_filter_languages),
                         summary = stringResource(MR.strings.extension_filter_languages_summary),
+                        trailing = { MenuSyncMark(MenuSettings.SOURCES) },
                     )
                 }
 

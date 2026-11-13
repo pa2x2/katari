@@ -97,7 +97,17 @@ class SyncChoiceChanges(
      * Settings the device left alone meanwhile take the account's either way.
      */
     suspend fun asksWhoseSettings(area: SettingsArea): Boolean =
-        connection.state().isLinked && writing.write { it.changedWhileOff(area) }
+        asksWhoseSettings { it.copy(areasOff = it.areasOff - area) }
+
+    /** [asksWhoseSettings] for [menu]'s settings turned back on. */
+    suspend fun asksWhoseSettings(menu: MenuSettings): Boolean =
+        asksWhoseSettings { it.copy(menusOff = it.menusOff - menu) }
+
+    /** [asksWhoseSettings] for the setting [key] turned back on, or chosen to sync. */
+    suspend fun asksWhoseSetting(key: String): Boolean = asksWhoseSettings { it.withSettingSynced(key) }
+
+    private suspend fun asksWhoseSettings(turnOn: (ChoiceSet) -> ChoiceSet): Boolean =
+        connection.state().isLinked && writing.write { it.changedWhileOff(turnOn) }
 
     /**
      * Turns syncing [area] on or off. Turned on, the settings the device changed meanwhile give way to the account's,
@@ -120,13 +130,14 @@ class SyncChoiceChanges(
     /**
      * Keeps one setting of an area that syncs out of it, or brings it back; a setting that stays on each device by
      * default is instead chosen to sync. Brought in, it takes the account's value, and the value here fills in only
-     * where the account has none.
+     * where the account has none; with [keep] as [SettingsWinner.DEVICE], the value here wins instead, as [syncArea]'s.
      */
-    suspend fun syncSetting(key: String, on: Boolean) {
+    suspend fun syncSetting(key: String, on: Boolean, keep: SettingsWinner = SettingsWinner.ACCOUNT) {
         val scope = PreferenceScopes.markOf(key)?.scope
         require(scope == PreferenceScope.PERSON || scope == PreferenceScope.DEVICE_BY_DEFAULT) { "$key never syncs" }
-        if (on) handler.recordUnstamped(settingRecords(withSources = false) { it == key })
-        change(before = { if (on) it.keepAccountSettings(setOf(key)) }) {
+        val keys = setOf(key)
+        if (on) bringIn(keys, keep)
+        change(before = { if (on && keep == SettingsWinner.ACCOUNT) it.keepAccountSettings(keys) }) {
             if (scope == PreferenceScope.PERSON) {
                 preferences.settingsOff.include(key, !on)
             } else {
@@ -136,11 +147,20 @@ class SyncChoiceChanges(
     }
 
     /** [syncSetting] for every setting of [menu], which sync or stay together. */
-    suspend fun syncMenu(menu: MenuSettings, on: Boolean) {
+    suspend fun syncMenu(menu: MenuSettings, on: Boolean, keep: SettingsWinner = SettingsWinner.ACCOUNT) {
         val keys = PreferenceScopes.keysOf(menu)
-        if (on) handler.recordUnstamped(settingRecords(withSources = false) { it in keys })
-        change(before = { if (on) it.keepAccountSettings(keys) }) {
+        if (on) bringIn(keys, keep)
+        change(before = { if (on && keep == SettingsWinner.ACCOUNT) it.keepAccountSettings(keys) }) {
             preferences.menusOff.include(menu.name, !on)
+        }
+    }
+
+    /** Records the settings [keys] being brought in, to win over the account's or only to fill in what it lacks. */
+    private suspend fun bringIn(keys: Set<String>, keep: SettingsWinner) {
+        val records = settingRecords(withSources = false) { it in keys }
+        when (keep) {
+            SettingsWinner.DEVICE -> handler.recordEditsMadeNow(records)
+            SettingsWinner.ACCOUNT -> handler.recordUnstamped(records)
         }
     }
 
