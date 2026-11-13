@@ -3,6 +3,7 @@ package app.katari.sync.client.apply
 import app.cash.sqldelight.async.coroutines.awaitAsList
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
+import app.katari.sync.client.arrival.ArrivalNotes
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.SyncKinds
 import app.katari.sync.client.kind.activity.ActivitySessionKind
@@ -28,6 +29,7 @@ import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.newChangeId
 import app.katari.sync.client.setting.apply.SettingWrites
+import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.sync.data.Sync_pending
 import app.katari.sync.protocol.clock.HybridLogicalClock
@@ -72,6 +74,9 @@ internal class ApplySession(
     private val device: DeviceId,
     private val appVersion: String,
     private val failing: Map<String, FailedStage>,
+    private val settingReads: SettingReads,
+    /** Where a change from another device is noted; null in a session that applies no arrivals, such as a choice's. */
+    private val arrivals: ArrivalNotes?,
     private val now: () -> Long,
 ) : LocalWrites {
     private val resolving = HashSet<String>()
@@ -209,6 +214,16 @@ internal class ApplySession(
 
     override fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean) {
         (if (marked) markedHere else readHere).getOrPut(entryId, ::LinkedHashSet) += chapterId
+    }
+
+    override suspend fun settingArriving(profileId: Long?, key: String, value: Any?, at: HybridTimestamp) {
+        val notes = arrivals ?: return
+        if (at.device == device) return
+        val previous = when (profileId) {
+            null -> settingReads.sharedValue(key)
+            else -> settingReads.profileValue(profileId, key)
+        }
+        if (previous != value) notes.note(profileId, key, previous, at)
     }
 
     /** What [chapterRead] noted, by entry. */

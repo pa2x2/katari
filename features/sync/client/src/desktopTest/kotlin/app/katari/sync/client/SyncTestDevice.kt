@@ -10,6 +10,7 @@ import app.katari.profiles.core.ProfileDatabase
 import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
+import app.katari.sync.client.arrival.ArrivedBatches
 import app.katari.sync.client.capture.CaptureTriggers
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.ThisDevice
@@ -122,6 +123,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     /** What sync told the app's listeners of chapters it made read here. */
     val readElsewhere: MutableList<ChaptersReadElsewhere> = Collections.synchronizedList(ArrayList())
 
+    val arrivedBatches = ArrivedBatches()
     val writing = SyncWriting(
         handler,
         drain,
@@ -132,6 +134,8 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         thisDevice,
         syncPreferences,
         viewerSettings,
+        preferences.reads,
+        arrivedBatches,
     ) { setOf(ChaptersReadElsewhereListener { readElsewhere += it }) }
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)

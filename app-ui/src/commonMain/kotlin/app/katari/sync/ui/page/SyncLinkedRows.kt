@@ -8,6 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.CloudSync
+import app.katari.icons.materialsymbols.rounded.Devices
 import app.katari.icons.materialsymbols.rounded.Dns
 import app.katari.icons.materialsymbols.rounded.Extension
 import app.katari.icons.materialsymbols.rounded.Logout
@@ -65,6 +66,7 @@ internal fun linkedPreferences(
     choices: ChoiceSet,
     profilesNotSynced: List<ProfileSync>,
     missingExtensions: List<MissingExtension>,
+    arrived: Int,
     actions: SyncPageActions,
 ): List<Preference> = buildList {
     add(statusCard(link, status, headline, actions))
@@ -84,7 +86,8 @@ internal fun linkedPreferences(
             status.activity != SyncStatus.Activity.Offline
         add(devicesGroup(devices, reachable, actions))
     }
-    val linkedOptions = listOf(
+    val linkedOptions = listOfNotNull(
+        arrivedRow(arrived, actions).takeIf { arrived > 0 },
         whatSyncsRow(choices, profilesNotSynced.map { it.name }, actions),
         serverAddressRow(link, actions),
     )
@@ -281,6 +284,20 @@ private fun arrivingProfileRow(profile: ProfileSync, actions: SyncPageActions): 
                 ),
             )
         }
+    }
+}
+
+/** How many settings other devices changed here lately, opening their list with Keep mine. */
+@Composable
+private fun arrivedRow(arrived: Int, actions: SyncPageActions): Preference.PreferenceItem<out Any, out Any> {
+    val title = stringResource(MR.strings.sync_arrived_title)
+    return Preference.PreferenceItem.CustomPreference(title = title) {
+        TextPreferenceWidget(
+            title = title,
+            subtitle = pluralStringResource(MR.plurals.sync_arrived_summary, arrived, arrived),
+            icon = MaterialSymbols.Rounded.Devices,
+            onPreferenceClick = actions.openArrived,
+        )
     }
 }
 

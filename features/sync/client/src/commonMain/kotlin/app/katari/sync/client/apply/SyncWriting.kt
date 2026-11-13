@@ -2,6 +2,9 @@ package app.katari.sync.client.apply
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.profiles.core.ProfileStore
+import app.katari.sync.client.arrival.ArrivalNotes
+import app.katari.sync.client.arrival.ArrivedBatches
+import app.katari.sync.client.connection.SyncStage
 import app.katari.sync.client.connection.ThisDevice
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
@@ -12,6 +15,7 @@ import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
 import app.katari.sync.client.setting.apply.SettingWrites
+import app.katari.sync.client.setting.read.SettingReads
 import app.katari.sync.protocol.device.DeviceId
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
@@ -42,21 +46,27 @@ class SyncWriting(
     private val thisDevice: ThisDevice,
     private val preferences: SyncPreferences,
     private val viewerSettings: ViewerSettingPreferences,
+    private val settingReads: SettingReads,
+    private val arrivedBatches: ArrivedBatches,
     private val readElsewhereListeners: () -> Set<ChaptersReadElsewhereListener>,
 ) {
-    internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T = write(failing = emptyMap(), block)
+    internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T =
+        write(failing = emptyMap(), arriving = false, block)
 
     /**
      * Runs [block] as [write] does, holding aside each record that fails to apply (D067). A failure rolls the whole
      * transaction back, so nothing of the records written before it is left half applied and the position stays where
      * it was; the transaction then runs again with that record held aside as far as it got, until one completes. Each
      * attempt holds one more record aside, or holds one held after storing it before storing it instead, so it ends.
+     *
+     * It applies records that arrived, so once the device syncs as usual ([SyncStage.READY]) the settings they change
+     * from other devices are noted ([ArrivalNotes]) and told once committed ([ArrivedBatches]).
      */
     internal suspend fun <T> writeHoldingFailures(block: suspend Database.(ApplySession) -> T): T {
         val failing = HashMap<String, FailedStage>()
         while (true) {
             try {
-                return write(failing, block)
+                return write(failing, arriving = true, block)
             } catch (e: RecordApplyFailure) {
                 val before = failing[e.key]
                 if (before == FailedStage.STORING || before == e.stage) throw e
@@ -68,14 +78,20 @@ class SyncWriting(
 
     private suspend fun <T> write(
         failing: Map<String, FailedStage>,
+        arriving: Boolean,
         block: suspend Database.(ApplySession) -> T,
     ): T {
         var read = emptyList<ChaptersReadElsewhere>()
+        var arrivals: ArrivalNotes? = null
         val result = handler.await(inTransaction = true) {
             do {
                 val drained = drain.drain()
             } while (drained > 0)
-            val device = checkNotNull(sync_stateQueries.get().awaitAsOne().device_id) { "Not registered with a server" }
+            val state = sync_stateQueries.get().awaitAsOne()
+            val device = checkNotNull(state.device_id) { "Not registered with a server" }
+            if (arriving && SyncStage.of(state.stage) == SyncStage.READY) {
+                arrivals = ArrivalNotes(this, batch = Clock.System.now().toEpochMilliseconds())
+            }
             val capturedBefore = sync_outboxQueries.lastSeq().awaitAsOne()
             val session = ApplySession(
                 database = this,
@@ -87,6 +103,8 @@ class SyncWriting(
                 device = DeviceId(device),
                 appVersion = thisDevice.appVersion,
                 failing = failing,
+                settingReads = settingReads,
+                arrivals = arrivals,
             ) { Clock.System.now().toEpochMilliseconds() }
             val written = block(session)
             session.finish()
@@ -102,6 +120,7 @@ class SyncWriting(
         }
         // Told only once committed, so listeners act on rows that stay
         if (read.isNotEmpty()) tellReadElsewhere(read)
+        arrivals?.takeIf { it.noted }?.let { arrivedBatches.tell(it.batch) }
         return result
     }
 

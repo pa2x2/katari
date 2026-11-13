@@ -3516,6 +3516,15 @@
     <!-- A setting's sync choice, opened from the mark after its title -->
     <string name="sync_setting_switch">Sync this setting</string>
     <string name="sync_menu_switch">Sync %1$s</string>
+    <string name="sync_arrived_title">Changed on other devices</string>
+    <string name="sync_arrived_note">Settings your other devices changed on this one. Keep mine puts back what this device had and keeps that setting on this device.</string>
+    <string name="sync_arrived_from">From %1$s</string>
+    <string name="sync_arrived_another_device">another device</string>
+    <string name="sync_arrived_other_devices">your other devices</string>
+    <string name="sync_arrived_named">%1$s changed on %2$s</string>
+    <string name="sync_arrived_area">A %1$s setting changed on %2$s</string>
+    <string name="sync_keep_mine">Keep mine</string>
+    <string name="sync_kept_here">Kept here</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_setting_area_off">%1$s settings aren\'t synced</string>
     <string name="sync_setting_area_off_summary">They stay on this device</string>

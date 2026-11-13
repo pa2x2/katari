@@ -63,6 +63,7 @@ sealed class ProfileSettings(name: String, private val scope: PreferenceScope) :
         val profileId = writes.profileId(payload.profileUuid).idOr { return it }
         val setting = writes.localSetting(payload.key, payload.keySources, payload.value.value, payload.profileUuid)
         if (setting !is LocalSetting.Ready) return (setting as LocalSetting.NotReady).outcome
+        writes.settingArriving(profileId, setting.key, setting.value, payload.value.at)
         writes.settings.writeProfileValue(profileId, setting.key, setting.value)
         return ApplyOutcome.Applied(ref(profileId, setting.key))
     }

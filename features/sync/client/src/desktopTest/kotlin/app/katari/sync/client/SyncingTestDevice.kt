@@ -8,6 +8,7 @@ import app.katari.sync.client.account.DeviceListFollowing
 import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.account.JoinResult
 import app.katari.sync.client.account.SyncAccount
+import app.katari.sync.client.arrival.SettingArrivals
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.DeviceNaming
 import app.katari.sync.client.connection.DeviceTokenStore
@@ -184,6 +185,14 @@ internal class SyncingTestDevice(
         connection,
         runs,
         local.fileCapture,
+    )
+    val arrivals = SettingArrivals(
+        local.handler,
+        directory,
+        choiceChanges,
+        preferences,
+        local.preferences.writes,
+        local.arrivedBatches,
     )
     private val deviceChanges = DeviceListChanges()
     val account = SyncAccount(
