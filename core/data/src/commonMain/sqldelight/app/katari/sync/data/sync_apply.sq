@@ -309,6 +309,17 @@ deleteHistory:
 DELETE FROM history
 WHERE chapter_id = :chapterId;
 
+upsertSubtitleTiming:
+INSERT INTO episode_subtitle_timings(chapter_id, subtitle_key, delay_ms)
+VALUES (:chapterId, :subtitleKey, :delayMs)
+ON CONFLICT(chapter_id) DO UPDATE SET
+    subtitle_key = excluded.subtitle_key,
+    delay_ms = excluded.delay_ms;
+
+deleteSubtitleTiming:
+DELETE FROM episode_subtitle_timings
+WHERE chapter_id = :chapterId;
+
 -- Activity
 
 upsertActivitySession:

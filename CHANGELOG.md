@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.3.2] - 2026-11-13
+
+### ✨ Added
+
+- Subtitle timing in the player's settings moves subtitles earlier or later, in 0.1 s steps.
+
+### 🔄 Changed
+
+- A title's own reader or player value syncs only while its setting syncs on this device.
+
+### 🧩 Improved
+
+- Turning sync back on for a setting this device changed in the meantime asks whether to keep the account's value or this device's.
+- What syncs lists the settings you chose one by one.
+
+### 🗑️ Removed
+
+- Swiping sideways on the video no longer seeks. Double tap a side or drag the timeline instead.
+
 ## [3.3.1] - 2026-11-12
 
 ### 🐛 Fixed
@@ -1249,7 +1268,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v3.3.2...HEAD
+[3.3.2]: https://github.com/pa2x2/katari/releases/tag/v3.3.2
 [3.3.1]: https://github.com/pa2x2/katari/releases/tag/v3.3.1
 [3.3.0]: https://github.com/pa2x2/katari/releases/tag/v3.3.0
 [3.2.1]: https://github.com/pa2x2/katari/releases/tag/v3.2.1

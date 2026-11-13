@@ -78,6 +78,13 @@ interface VideoPlayer {
     fun selectText(selection: TextTrackSelection)
 
     /**
+     * Shows every subtitle [delayMs] later than its file says, or earlier for a negative delay, the subtitles the
+     * player draws itself as well as its [VideoPlayerState.cues]. It holds until changed, through seeks and track
+     * changes.
+     */
+    fun setSubtitleDelay(delayMs: Long)
+
+    /**
      * Draws the picture into [output] from now on, and no longer where it drew before; null draws it nowhere, as when
      * only the sound plays on. A player draws into one output at a time, and lets go of it when released.
      */

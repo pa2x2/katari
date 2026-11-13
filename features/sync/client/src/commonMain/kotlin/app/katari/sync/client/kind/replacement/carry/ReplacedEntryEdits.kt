@@ -22,6 +22,8 @@ import app.katari.sync.client.kind.history.HistoryPayload
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.progress.ProgressPayload
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingPayload
 import app.katari.sync.client.record.RecordGroups
 import app.katari.sync.client.record.SyncedKind
 import app.katari.sync.client.record.fillRecordGroups
@@ -83,6 +85,7 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
             }
             is ProgressPayload -> CarriedChapterState(carry).progress(payload)
             is HistoryPayload -> CarriedChapterState(carry).history(payload)
+            is SubtitleTimingPayload -> CarriedChapterState(carry).subtitleTiming(payload)
             else -> if (!carry.chapterStateOnly) carryEntryState(carry, payload)
         }
     }
@@ -113,6 +116,7 @@ internal class ReplacedEntryEdits(private val writes: LocalWrites) {
         val CARRIED: List<SyncedKind<*>> = listOf(
             EntryKind,
             ProgressKind,
+            SubtitleTimingKind,
             HistoryKind,
             CategoryMembershipKind,
             ViewerSettingKind,

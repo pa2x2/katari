@@ -33,6 +33,7 @@ import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.LocalContentColor
 import app.katari.presentation.kit.theme.TextRole
+import tachiyomi.core.common.preference.Preference
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -43,6 +44,8 @@ import kotlin.math.roundToInt
  * [subtitleTone] marks a subtitle that reports a state by its colour role, such as a warning. [iconAlert] marks the
  * icon instead, for a row that tells of a problem while its subtitle explains it calmly. [subtitleState] follows the
  * subtitle with a short state in its own tone, marked by a dot, such as Live after the account on Sync's status.
+ *
+ * [setting] is the setting the row edits, whose mark the app shows after the title ([SettingMarks]).
  *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
@@ -57,6 +60,7 @@ fun SettingsRow(
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     titleSuffix: (@Composable () -> Unit)? = null,
+    setting: Preference<*>? = null,
     subtitleMaxLines: Int = Int.MAX_VALUE,
     subtitleTone: ContentTone = ContentTone.Inherit,
     subtitleState: TonedSpan? = null,
@@ -67,8 +71,9 @@ fun SettingsRow(
     below: (@Composable () -> Unit)? = null,
     nested: Boolean = false,
 ) {
+    val mark = rememberRowSettingMark(setting, title, LocalRowDensity.current.titleRole, titleSuffix)
     RowFrame(
-        modifier = modifier,
+        modifier = modifier.then(mark.rowModifier),
         indent = if (nested) LogoSize.Row.side(KatariTheme.sizes) + KatariTheme.spacing.l else KatariTheme.sizes.none,
         enabled = enabled,
         role = role,
@@ -88,7 +93,7 @@ fun SettingsRow(
                 }
             },
             words = {
-                RowTitle(title, titleSuffix)
+                RowTitle(title, mark.titleSuffix)
                 if (subtitleState != null) {
                     TonedText(
                         spans = listOfNotNull(

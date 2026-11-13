@@ -17,8 +17,6 @@ import app.katari.presentation.kit.control.Stepper
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.SliderRow
-import app.katari.sync.ui.choice.SettingSyncMark
-import app.katari.sync.ui.choice.SettingSyncMarks
 import eu.kanade.presentation.more.settings.widget.EditTextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.InfoWidget
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
@@ -28,19 +26,20 @@ import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.preferenceHighlight
 import kotlinx.coroutines.launch
 import tachiyomi.presentation.core.util.collectAsState
+import tachiyomi.core.common.preference.Preference as PreferenceData
 
 /** Whether the preference being composed is the one settings search opened its screen for. */
 val LocalPreferenceHighlighted = compositionLocalOf(structuralEqualityPolicy()) { false }
 
-/** The sync mark of the setting being composed, which its widget shows after its title. */
-internal val LocalSettingSyncMark = compositionLocalOf<SettingSyncMark?> { null }
+/** The setting the preference being composed stores, whose mark its widget shows after its title. */
+internal val LocalPreferenceSetting = compositionLocalOf<PreferenceData<*>?> { null }
 
 @Composable
 fun StatusWrapper(
     item: Preference.PreferenceItem<*, *>,
     highlightKey: String?,
     groupPosition: RowGroupPosition?,
-    syncMark: SettingSyncMark?,
+    setting: PreferenceData<*>?,
     content: @Composable () -> Unit,
 ) {
     val visible = item.visible
@@ -52,7 +51,7 @@ fun StatusWrapper(
         content = {
             CompositionLocalProvider(
                 LocalPreferenceHighlighted provides highlighted,
-                LocalSettingSyncMark provides syncMark,
+                LocalPreferenceSetting provides setting,
             ) {
                 // Inside the visibility animation, so a hidden row takes its card slice and divider with it.
                 if (groupPosition != null) RowGroupItem(groupPosition, content = content) else content()
@@ -67,14 +66,13 @@ internal fun PreferenceItem(
     highlightKey: String?,
     showProfileChip: Boolean,
     groupPosition: RowGroupPosition?,
-    syncMarks: SettingSyncMarks?,
 ) {
     val scope = rememberCoroutineScope()
     StatusWrapper(
         item = item,
         highlightKey = highlightKey,
         groupPosition = groupPosition,
-        syncMark = item.storedPreference?.let { syncMarks?.of(it) },
+        setting = item.storedPreference,
     ) {
         when (item) {
             is Preference.PreferenceItem.SwitchPreference -> {
@@ -113,6 +111,7 @@ internal fun PreferenceItem(
                     subtitle = item.subtitle,
                     valueText = item.valueText(value),
                     steps = item.steps,
+                    setting = item.storedPreference,
                 )
             }
             is Preference.PreferenceItem.StepperPreference -> {

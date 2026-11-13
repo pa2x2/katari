@@ -485,6 +485,22 @@
         <item quantity="one">%1$d change made here hasn\'t reached %2$s yet. Your other devices won\'t get it.</item>
         <item quantity="other">%1$d changes made here haven\'t reached %2$s yet. Your other devices won\'t get them.</item>
     </plurals>
+    <plurals name="sync_arrived_summary">
+        <item quantity="one">%d setting in the last 14 days</item>
+        <item quantity="other">%d settings in the last 14 days</item>
+    </plurals>
+    <plurals name="sync_choices_settings_count">
+        <item quantity="one">%d setting</item>
+        <item quantity="other">%d settings</item>
+    </plurals>
+    <plurals name="sync_devices_older">
+        <item quantity="one">%d device on an older version doesn't say</item>
+        <item quantity="other">%d devices on an older version don't say</item>
+    </plurals>
+    <plurals name="sync_arrived_settings">
+        <item quantity="one">%1$d setting changed on %2$s</item>
+        <item quantity="other">%1$d settings changed on %2$s</item>
+    </plurals>
     <plurals name="sync_held_aside">
         <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
         <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>

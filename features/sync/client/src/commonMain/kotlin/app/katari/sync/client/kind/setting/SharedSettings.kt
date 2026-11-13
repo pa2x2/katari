@@ -55,6 +55,7 @@ sealed class SharedSettings(name: String, private val scope: PreferenceScope) :
     override suspend fun apply(writes: LocalWrites, key: String, payload: SharedSettingPayload): ApplyOutcome {
         val setting = writes.localSetting(payload.key, payload.keySources, payload.value.value, profileUuid = null)
         if (setting !is LocalSetting.Ready) return (setting as LocalSetting.NotReady).outcome
+        writes.settingArriving(null, setting.key, setting.value, payload.value.at)
         writes.settings.writeSharedValue(setting.key, setting.value)
         return ApplyOutcome.Applied(ref(setting.key))
     }

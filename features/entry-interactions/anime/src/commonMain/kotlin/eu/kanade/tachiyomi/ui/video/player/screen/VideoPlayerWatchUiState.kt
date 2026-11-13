@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBarReach
@@ -32,6 +33,12 @@ internal class VideoPlayerWatchUiState(
     var settingsVisible by mutableStateOf(false)
     var episodesDrawerVisible by mutableStateOf(false)
     var subtitleEditorVisible by mutableStateOf(false)
+
+    /** The subtitle timing bar shows over the video, from Settings' Adjust until ✓ closes it. */
+    var subtitleTimingVisible by mutableStateOf(false)
+
+    /** How many times a key has stepped the subtitle timing, each showing the timing a moment. */
+    var subtitleTimingKeySteps by mutableIntStateOf(0)
     var subtitleEditorDraft by mutableStateOf(subtitleAppearance)
     var subtitleEditorKeepsInPicture by mutableStateOf(false)
     var resumePlaybackAfterSubtitleEditor by mutableStateOf(false)

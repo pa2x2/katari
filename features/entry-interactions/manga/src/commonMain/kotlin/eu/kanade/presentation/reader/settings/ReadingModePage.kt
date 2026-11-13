@@ -21,6 +21,7 @@ import app.katari.presentation.kit.list.SliderRow
 import app.katari.presentation.kit.window.currentWindowLayout
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -30,7 +31,10 @@ import java.text.NumberFormat
 internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel, deviceControls: ViewerDeviceControls) {
     RowGroupHeader(stringResource(MR.strings.pref_category_for_this_series))
     val readingMode by screenModel.readingModeFlow.collectAsState()
-    ChipsRow(title = stringResource(MR.strings.pref_category_reading_mode)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_category_reading_mode),
+        setting = screenModel.settings.readingMode.definition.profilePreference,
+    ) {
         ReadingMode.entries.map {
             FilterChip(
                 selected = it == readingMode,
@@ -46,6 +50,7 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel,
             title = stringResource(MR.strings.rotation_type),
             supportingText = stringResource(MR.strings.rotation_not_applied)
                 .takeUnless { currentWindowLayout().honoursOrientationRequests },
+            setting = screenModel.settings.orientation.definition.profilePreference,
         ) {
             ReaderOrientation.entries.map {
                 FilterChip(
@@ -73,7 +78,10 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
 
     if (showsPageLayout) {
         val pageLayout by settings.pagerPageLayout.state.collectAsState()
-        ChipsRow(title = stringResource(MR.strings.pref_reader_pages)) {
+        ChipsRow(
+            title = stringResource(MR.strings.pref_reader_pages),
+            setting = settings.pagerPageLayout.definition.profilePreference,
+        ) {
             ReaderPageLayout.entries.forEach { value ->
                 FilterChip(
                     selected = pageLayout.effectiveValue == value,
@@ -91,10 +99,15 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
         onSelect = { selected -> scope.launch { settings.pagerNavigationMode.updateEntry(selected) } },
         invertMode = pagerNavInverted.effectiveValue,
         onSelectInvertMode = { mode -> scope.launch { settings.pagerNavigationInverted.updateEntry(mode) } },
+        zonesSetting = settings.pagerNavigationMode.definition.profilePreference,
+        inversionSetting = settings.pagerNavigationInverted.definition.profilePreference,
     )
 
     val imageScaleType by settings.imageScaleType.state.collectAsState()
-    ChipsRow(title = stringResource(MR.strings.pref_image_scale_type)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_image_scale_type),
+        setting = settings.imageScaleType.definition.profilePreference,
+    ) {
         MangaReaderSettings.ImageScaleType.mapIndexed { index, it ->
             FilterChip(
                 selected = imageScaleType.effectiveValue == index + 1,
@@ -105,7 +118,10 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
     }
 
     val zoomStart by settings.zoomStart.state.collectAsState()
-    ChipsRow(title = stringResource(MR.strings.pref_zoom_start)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_zoom_start),
+        setting = settings.zoomStart.definition.profilePreference,
+    ) {
         MangaReaderSettings.ZoomStart.mapIndexed { index, it ->
             FilterChip(
                 selected = zoomStart.effectiveValue == index + 1,
@@ -149,6 +165,8 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
         onSelect = { selected -> scope.launch { settings.webtoonNavigationMode.updateEntry(selected) } },
         invertMode = webtoonNavInverted.effectiveValue,
         onSelectInvertMode = { mode -> scope.launch { settings.webtoonNavigationInverted.updateEntry(mode) } },
+        zonesSetting = settings.webtoonNavigationMode.definition.profilePreference,
+        inversionSetting = settings.webtoonNavigationInverted.definition.profilePreference,
     )
 
     val webtoonSidePadding by settings.webtoonSidePadding.state.collectAsState()
@@ -162,6 +180,7 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
                 title = stringResource(MR.strings.pref_webtoon_side_padding),
                 valueText = numberFormat.format(webtoonSidePadding.effectiveValue / 100f),
                 onValueChange = { value -> scope.launch { settings.webtoonSidePadding.updateEntry(value) } },
+                setting = settings.webtoonSidePadding.definition.profilePreference,
             )
         }
         row { BindingToggleRow(stringResource(MR.strings.pref_crop_borders), settings.cropBordersWebtoon) }
@@ -191,11 +210,15 @@ private fun ColumnScope.TapZonesItems(
     onSelect: (Int) -> Unit,
     invertMode: MangaReaderSettings.TappingInvertMode,
     onSelectInvertMode: (MangaReaderSettings.TappingInvertMode) -> Unit,
+    zonesSetting: Preference<*>,
+    inversionSetting: Preference<*>,
 ) {
     app.katari.entry.viewer.chrome.ui.tap.ReaderTapZoneSettings(
         selected,
         onSelect,
         invertMode.ordinal,
         { onSelectInvertMode(MangaReaderSettings.TappingInvertMode.entries[it]) },
+        zonesSetting,
+        inversionSetting,
     )
 }

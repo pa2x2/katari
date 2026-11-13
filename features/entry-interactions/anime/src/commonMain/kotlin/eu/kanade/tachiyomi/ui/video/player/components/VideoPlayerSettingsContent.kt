@@ -69,6 +69,9 @@ internal fun VideoPlayerSettingsContent(
     onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
     onOpenSubtitleSettings: () -> Unit,
+    /** The playing subtitle's timing, null while no subtitle whose timing can be set plays. */
+    subtitleTimingDelayMs: Long?,
+    onAdjustSubtitleTiming: () -> Unit,
     /** The title's engine choice; null where the platform has one engine, which hides the Player row. */
     engine: VideoPlayerEngineChoice?,
     onSelectEngine: (PlayerEngineOverride?) -> Unit,
@@ -274,6 +277,9 @@ internal fun VideoPlayerSettingsContent(
                                 }
                             },
                             onOpenSubtitleSettings = onOpenSubtitleSettings.takeIf { hasSelectableSubtitleOptions },
+                            // The timing is the playing subtitle's, so it waits while another dub is drafted
+                            timingDelayMs = subtitleTimingDelayMs.takeIf { draftMatchesPlaying },
+                            onAdjustTiming = onAdjustSubtitleTiming,
                         )
                     }
                 }

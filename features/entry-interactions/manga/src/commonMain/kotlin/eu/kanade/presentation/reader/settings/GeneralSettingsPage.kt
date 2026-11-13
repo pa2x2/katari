@@ -55,7 +55,10 @@ internal fun ColumnScope.GeneralPage(
 
     val flashColor by settings.flashColor.state.collectAsState()
 
-    ChipsRow(title = stringResource(MR.strings.pref_reader_theme)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_reader_theme),
+        setting = settings.readerTheme.definition.profilePreference,
+    ) {
         themes.forEach { (labelRes, value) ->
             FilterChip(
                 selected = readerTheme.effectiveValue == value,
@@ -71,7 +74,10 @@ internal fun ColumnScope.GeneralPage(
 
     val verticalNavigatorModes by settings.verticalNavigator.state.collectAsState()
 
-    ChipsRow(title = stringResource(MR.strings.pref_vertical_navigator)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_vertical_navigator),
+        setting = settings.verticalNavigator.definition.profilePreference,
+    ) {
         ReadingMode.entries.filter { it != ReadingMode.DEFAULT }.forEach { mode ->
             FilterChip(
                 selected = verticalNavigatorModes.effectiveValue.contains(mode),
@@ -104,6 +110,7 @@ internal fun ColumnScope.GeneralPage(
                     valueRange = 65..100,
                     steps = 6,
                     onValueChange = { value -> scope.launch { settings.verticalNavigatorHeight.updateEntry(value) } },
+                    setting = settings.verticalNavigatorHeight.definition.profilePreference,
                 )
             }
         }
@@ -124,7 +131,10 @@ internal fun ColumnScope.GeneralPage(
 
     val chapterTransitionMode by settings.chapterTransition.state.collectAsState()
 
-    ChipsRow(title = stringResource(MR.strings.pref_chapter_transition)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_chapter_transition),
+        setting = settings.chapterTransition.definition.profilePreference,
+    ) {
         ChapterTransitionMode.entries.forEach { mode ->
             FilterChip(
                 selected = chapterTransitionMode.effectiveValue == mode,
@@ -151,6 +161,7 @@ internal fun ColumnScope.GeneralPage(
                             settings.flashDurationMillis.updateEntry(it * MangaReaderSettings.MILLI_CONVERSION)
                         }
                     },
+                    setting = settings.flashDurationMillis.definition.profilePreference,
                 )
             }
             row {
@@ -164,12 +175,16 @@ internal fun ColumnScope.GeneralPage(
                         flashInterval.effectiveValue,
                     ),
                     onValueChange = { value -> scope.launch { settings.flashPageInterval.updateEntry(value) } },
+                    setting = settings.flashPageInterval.definition.profilePreference,
                 )
             }
         }
     }
     if (flashing) {
-        ChipsRow(title = stringResource(MR.strings.pref_flash_with)) {
+        ChipsRow(
+            title = stringResource(MR.strings.pref_flash_with),
+            setting = settings.flashColor.definition.profilePreference,
+        ) {
             flashColors.forEach { (labelRes, value) ->
                 FilterChip(
                     selected = flashColor.effectiveValue == value,

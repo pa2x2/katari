@@ -138,6 +138,7 @@ class SyncConnection(
             sync_message_outboxQueries.clear()
             sync_filesQueries.clear()
             sync_filesQueries.clearUploads()
+            sync_arrived_settingsQueries.clear()
         }
     }
 

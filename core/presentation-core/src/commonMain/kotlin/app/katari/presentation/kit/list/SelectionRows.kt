@@ -22,6 +22,7 @@ import app.katari.presentation.kit.control.Switch
 import app.katari.presentation.kit.surface.VerticalDivider
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -32,7 +33,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * neither. [onDisabledClick] runs when the row is tapped
  * while disabled, such as to explain or fix why. With [onOpen], the setting also has a page of its own, such as a sync
  * area's list of settings: an arrow says the row opens it, and only the switch, set apart by a line, turns it on and
- * off.
+ * off. [setting] is the setting the row turns on and off, whose mark the app shows after the title ([SettingMarks]).
  */
 @Composable
 fun ToggleRow(
@@ -45,6 +46,7 @@ fun ToggleRow(
     leading: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     titleSuffix: (@Composable () -> Unit)? = null,
+    setting: Preference<*>? = null,
     onDisabledClick: (() -> Unit)? = null,
     onOpen: (() -> Unit)? = null,
 ) {
@@ -73,6 +75,7 @@ fun ToggleRow(
                 }
             },
             titleSuffix = titleSuffix,
+            setting = setting,
             onClick = onOpen,
         )
         return
@@ -93,6 +96,7 @@ fun ToggleRow(
             { Switch(checked, onCheckedChange = null, enabled = enabled) }
         },
         titleSuffix = titleSuffix,
+        setting = setting,
         enabled = enabled || onDisabledClick != null,
         role = if (compact) Role.Checkbox else Role.Switch,
         onClick = if (enabled) {

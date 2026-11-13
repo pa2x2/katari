@@ -7,6 +7,7 @@ import app.katari.sync.client.kind.category.CategoryKind
 import app.katari.sync.client.kind.category.CategoryMembershipKind
 import app.katari.sync.client.kind.category.CategoryUpdateRulesKind
 import app.katari.sync.client.kind.chapter.ChapterKind
+import app.katari.sync.client.kind.devicechoice.DeviceChoicesKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.entrychoice.DownloadPreferencesKind
 import app.katari.sync.client.kind.entrychoice.EntryUpdateModeKind
@@ -34,6 +35,7 @@ import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
 import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.kind.statistics.StatisticsEpochKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
 import app.katari.sync.client.record.SyncedKind
 
 /** Every kind of record this app version syncs. */
@@ -43,6 +45,7 @@ object SyncKinds {
         EntryKind,
         ChapterKind,
         ProgressKind,
+        SubtitleTimingKind,
         HistoryKind,
         ActivitySessionKind,
         ActivitySegmentKind,
@@ -73,6 +76,7 @@ object SyncKinds {
         MigrationQuestionKind,
         NotesQuestionKind,
         ProfileDeletionQuestionKind,
+        DeviceChoicesKind,
     )
 
     private val byName = all.associateBy { it.name }

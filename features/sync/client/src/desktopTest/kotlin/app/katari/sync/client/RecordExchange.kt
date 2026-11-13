@@ -76,6 +76,10 @@ internal suspend fun SyncTestDevice.library(): List<String> = listOf(
     FROM history H JOIN chapters C ON C._id = H.chapter_id
     """,
     """
+    SELECT json_array('subtitle timing', C.url, T.subtitle_key, T.delay_ms)
+    FROM episode_subtitle_timings T JOIN chapters C ON C._id = T.chapter_id
+    """,
+    """
     SELECT json_array('progress', E.url, R.content_key, R.resource_key, R.position, R.completed)
     FROM entry_progress_state R JOIN entries E ON E._id = R.entry_id
     """,

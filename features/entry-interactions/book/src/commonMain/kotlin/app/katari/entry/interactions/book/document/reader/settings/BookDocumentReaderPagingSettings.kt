@@ -25,7 +25,10 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
     val zones by bindings.tapZones.state.collectAsState()
     val inversion by bindings.tapInversion.state.collectAsState()
     val scope = rememberCoroutineScope()
-    ChipsRow(title = stringResource(MR.strings.pref_category_reading_mode)) {
+    ChipsRow(
+        title = stringResource(MR.strings.pref_category_reading_mode),
+        setting = bindings.readingMode.definition.profilePreference,
+    ) {
         BookDocumentReadingMode.entries.forEach { value ->
             FilterChip(
                 label = stringResource(value.stringRes),
@@ -35,7 +38,10 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
         }
     }
     if (mode.effectiveValue.isHorizontallyPaged) {
-        ChipsRow(title = stringResource(MR.strings.pref_reader_pages)) {
+        ChipsRow(
+            title = stringResource(MR.strings.pref_reader_pages),
+            setting = bindings.pageLayout.definition.profilePreference,
+        ) {
             ReaderPageLayout.entries.forEach { value ->
                 FilterChip(
                     label = stringResource(value.stringRes),
@@ -51,6 +57,8 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
             { scope.launch { bindings.tapZones.updateEntry(it) } },
             inversion.effectiveValue,
             { scope.launch { bindings.tapInversion.updateEntry(it) } },
+            zonesSetting = bindings.tapZones.definition.profilePreference,
+            inversionSetting = bindings.tapInversion.definition.profilePreference,
         )
         RowGroup {
             row { PagingToggle(bindings.animatePages, stringResource(MR.strings.pref_page_transitions)) }
@@ -75,5 +83,6 @@ private fun PagingToggle(binding: ViewerSettingBinding<Boolean>, label: String) 
         title = label,
         checked = state.effectiveValue,
         onCheckedChange = { scope.launch { binding.updateEntry(it) } },
+        setting = binding.definition.profilePreference,
     )
 }

@@ -3,6 +3,7 @@ package app.katari.sync.client.preference
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.part.enumsNamed
 import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.PreferenceScope
 import app.katari.sync.client.setting.scope.SettingsArea
@@ -78,6 +79,9 @@ class SyncPreferences(profileStore: ProfileStore) {
     val installedExtensionsKept: Preference<Boolean> =
         store.getBoolean(Preference.appStateKey("sync_installed_extensions_kept"), false)
 
+    /** Whether the hint that a setting's mark is its sync choice was dismissed, or a mark's choice opened. */
+    val markHintSeen: Preference<Boolean> = store.getBoolean(Preference.appStateKey("sync_mark_hint_seen"), false)
+
     companion object {
         /** The intervals background syncs run at, in minutes; Android runs periodic work at least 15 minutes apart. */
         val BACKGROUND_INTERVALS = listOf(15, 30, 60, 180, 360, 720, 1440)
@@ -98,16 +102,12 @@ class SyncPreferences(profileStore: ProfileStore) {
     ) { choices() }.distinctUntilChanged()
 
     fun choices(): ChoiceSet = ChoiceSet(
-        dataOff = dataOff.get().enumsOf(DataGroup.entries),
-        areasOff = areasOff.get().enumsOf(SettingsArea.entries),
+        dataOff = dataOff.get().enumsNamed(DataGroup.entries),
+        areasOff = areasOff.get().enumsNamed(SettingsArea.entries),
         settingsOff = settingsOff.get(),
-        menusOff = menusOff.get().enumsOf(MenuSettings.entries),
+        menusOff = menusOff.get().enumsNamed(MenuSettings.entries),
         settingsOn = settingsOn.get(),
         profilesOff = profilesOff.get() + profilesAsking.get(),
         askBeforeNewProfiles = askBeforeNewProfiles.get(),
     )
 }
-
-// A name a later version wrote and this one doesn't know chooses nothing here
-private fun <E : Enum<E>> Set<String>.enumsOf(entries: List<E>): Set<E> =
-    mapNotNullTo(HashSet()) { name -> entries.firstOrNull { it.name == name } }

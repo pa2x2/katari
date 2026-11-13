@@ -1,8 +1,12 @@
 package app.katari.sync.client
 
+import app.katari.sync.protocol.device.DeviceDescription
+import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.device.RegisterDeviceRequest
 import app.katari.sync.server.SyncServer
 import app.katari.sync.server.account.FirstAdminOutcome
 import app.katari.sync.server.config.ServerConfig
+import app.katari.sync.server.device.RegistrationOutcome
 import app.katari.sync.server.retention.DeletionMarkerRetention
 import app.katari.sync.server.retention.UnreferencedFileRetention
 import java.io.File
@@ -45,6 +49,16 @@ internal class TestSyncServer(
     }
 
     fun linkCode(accountId: Long): String = running().services.devices.issueLinkCode(accountId, issuedBy = null).code
+
+    /**
+     * Links a device to [accountId] that never syncs, as one on a version from before what a test checks: the account
+     * lists it, and it tells nothing.
+     */
+    fun linkIdleDevice(accountId: Long, name: String): DeviceId {
+        val request = RegisterDeviceRequest(DeviceDescription(name, "Android", "1.0.0"), linkCode = linkCode(accountId))
+        val outcome = running().services.registration.register(request, "127.0.0.1")
+        return (outcome as RegistrationOutcome.Registered).response.device
+    }
 
     /** The names of the files the server stores, which are their contents' hashes. */
     fun storedFiles(): List<String> =

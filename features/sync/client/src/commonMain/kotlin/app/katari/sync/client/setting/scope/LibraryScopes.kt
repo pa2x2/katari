@@ -103,17 +103,21 @@ internal val LibraryScopes = PreferenceScopeTable(SettingsArea.LIBRARY) {
     )
 
     // UpdatesPreferences and UpcomingPreferences
+    menu(MenuSettings.UPDATES_FILTERS) {
+        person(
+            "pref_filter_updates_downloaded",
+            "pref_filter_updates_unread",
+            "pref_filter_updates_started",
+            "pref_filter_updates_bookmarked",
+            "pref_filter_updates_included_categories",
+            "pref_filter_updates_excluded_categories",
+            "pref_filter_updates_included_entry_types",
+            "pref_filter_updates_excluded_entry_types",
+            "pref_filter_updates_included_sources",
+            "pref_filter_updates_excluded_sources",
+        )
+    }
     person(
-        "pref_filter_updates_downloaded",
-        "pref_filter_updates_unread",
-        "pref_filter_updates_started",
-        "pref_filter_updates_bookmarked",
-        "pref_filter_updates_included_categories",
-        "pref_filter_updates_excluded_categories",
-        "pref_filter_updates_included_entry_types",
-        "pref_filter_updates_excluded_entry_types",
-        "pref_filter_updates_included_sources",
-        "pref_filter_updates_excluded_sources",
         "pref_filter_upcoming_included_categories",
         "pref_filter_upcoming_excluded_categories",
     )

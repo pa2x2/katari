@@ -19,6 +19,7 @@ import tachiyomi.data.entry.EntryTranslationQueueRepositoryImpl
 import tachiyomi.data.entry.IntroTimesMatchRepositoryImpl
 import tachiyomi.data.entry.MergedMemberExpansionRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
+import tachiyomi.data.entry.SubtitleTimingRepositoryImpl
 import tachiyomi.data.entry.TheIntroDbMatchRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
@@ -47,6 +48,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.repository.SubtitleTimingRepository
 import tachiyomi.domain.entry.repository.TheIntroDbMatchRepository
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryActivityRepository
@@ -89,6 +91,9 @@ interface RepositoryBindings {
 
     @Binds
     val TheIntroDbMatchRepositoryImpl.theIntroDbMatchRepository: TheIntroDbMatchRepository
+
+    @Binds
+    val SubtitleTimingRepositoryImpl.subtitleTimingRepository: SubtitleTimingRepository
 
     @Binds
     val EntryTranslationLanguagesRepositoryImpl.entryTranslationLanguagesRepository: EntryTranslationLanguagesRepository

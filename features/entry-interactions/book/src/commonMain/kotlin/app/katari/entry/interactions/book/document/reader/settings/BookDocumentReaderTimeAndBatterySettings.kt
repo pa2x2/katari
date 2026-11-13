@@ -41,5 +41,6 @@ internal fun BookDocumentReaderTimeAndBatterySettings(
                 }
             }
         },
+        setting = binding.definition.profilePreference,
     )
 }

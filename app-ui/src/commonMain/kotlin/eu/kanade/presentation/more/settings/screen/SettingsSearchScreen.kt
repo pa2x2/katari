@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
+import tachiyomi.core.common.preference.Preference as PreferenceData
 
 class SettingsSearchScreen : Screen() {
 
@@ -131,6 +132,7 @@ private fun SearchResult(
                             title = item.title,
                             subtitle = item.breadcrumbs,
                             subtitleMaxLines = 1,
+                            setting = item.setting,
                             onClick = { onItemClick(item) },
                         )
                     }
@@ -143,7 +145,7 @@ private fun SearchResult(
 private fun search(index: List<SettingsData>, searchKey: String, isLtr: Boolean): List<SearchResultItem> {
     return index.asSequence()
         .flatMap { settingsData ->
-            fun result(title: String, categoryTitle: String?) = SearchResultItem(
+            fun result(title: String, categoryTitle: String?, setting: PreferenceData<*>? = null) = SearchResultItem(
                 route = settingsData.route,
                 title = title,
                 breadcrumbs = getLocalizedBreadcrumb(
@@ -152,6 +154,7 @@ private fun search(index: List<SettingsData>, searchKey: String, isLtr: Boolean)
                     isLtr = isLtr,
                 ),
                 highlightKey = title,
+                setting = setting,
             )
 
             fun Preference.PreferenceItem<*, *>.matches(): Boolean {
@@ -176,11 +179,11 @@ private fun search(index: List<SettingsData>, searchKey: String, isLtr: Boolean)
                             }
                             val items = p.preferenceItems.asSequence()
                                 .filter { it.visible && it.title.isNotBlank() && it.matches() }
-                                .map { result(it.title, p.title) }
+                                .map { result(it.title, p.title, it.storedPreference) }
                             heading + items
                         }
                         is Preference.PreferenceItem<*, *> -> {
-                            if (p.matches()) sequenceOf(result(p.title, null)) else emptySequence()
+                            if (p.matches()) sequenceOf(result(p.title, null, p.storedPreference)) else emptySequence()
                         }
                     }
                 }
@@ -198,7 +201,7 @@ private fun getIndex(graph: AppUiGraph): List<SettingsData> {
         SettingsData(
             title = stringResource(screen.getTitleRes()),
             route = screen,
-            contents = screen.getPreferences(),
+            contents = screen.getSearchedPreferences(),
         )
     }
 }
@@ -228,4 +231,6 @@ private data class SearchResultItem(
     val title: String,
     val breadcrumbs: String,
     val highlightKey: String,
+    /** The setting the result's row edits, whose sync mark the result shows. */
+    val setting: PreferenceData<*>?,
 )

@@ -47,6 +47,7 @@ actual val platformPresentation = PlatformPresentation(
     syncTokenUnreadableLabel = PlatformStrings.sync_status_token_unreadable,
     syncTokenUnreadableHelp = PlatformStrings.sync_token_unreadable_help,
     syncTokenUnreadableAction = PlatformStrings.sync_action_unlock_keyring,
+    syncMarkHint = PlatformStrings.sync_mark_hint,
     securitySettingsSummary = PlatformStrings.pref_security_summary,
     monthlyRecapSummary = PlatformStrings.statistics_monthly_recap_summary,
     pageZonesLabel = PlatformStrings.pref_viewer_nav,

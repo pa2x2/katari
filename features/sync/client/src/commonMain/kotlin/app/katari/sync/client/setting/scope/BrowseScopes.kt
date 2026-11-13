@@ -8,13 +8,8 @@ internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
         "hide_not_rated_extensions",
         "apply_content_warnings_to_installed",
         "pref_display_mode_catalogue",
-        "source_languages",
-        "hidden_sources",
-        "pinned_sources",
         "incognito_extensions",
         "browse_hide_in_library_items",
-        "saved_feed_presets",
-        "saved_source_feeds",
         "pref_migration_sorting",
         "pref_migration_direction",
         "migration_sources",
@@ -25,6 +20,12 @@ internal val BrowseScopes = PreferenceScopeTable(SettingsArea.BROWSE) {
         "migration_hide_without_updates",
     )
     personPrefix("pref_display_mode_catalogue_")
+    menu(MenuSettings.SOURCES) {
+        person("source_languages", "hidden_sources", "pinned_sources")
+    }
+    menu(MenuSettings.SAVED_FEEDS) {
+        person("saved_feed_presets", "saved_source_feeds")
+    }
 
     // Keys of earlier versions, read only to convert them: hidden and pinned sources before one set held them, the
     // 18+ switch before content warnings, the repositories before they had their own table, and the migration options

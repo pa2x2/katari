@@ -712,6 +712,7 @@
     <string name="keyboard_shortcut_open_focused">Open the focused item</string>
     <string name="keyboard_shortcut_full_screen">Full screen</string>
     <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
+    <string name="keyboard_shortcut_close_window">Close window</string>
     <string name="keyboard_shortcut_quit">Quit</string>
     <string name="keyboard_shortcut_clear_selection">Clear selection</string>
     <string name="keyboard_shortcut_interface_larger">Larger interface</string>
@@ -1863,6 +1864,26 @@
     <string name="anime_playback_subtitle_text_edge_shadow">Shadow</string>
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
+    <string name="anime_subtitle_timing">Subtitle timing</string>
+    <!-- A timing in seconds with its sign, such as "+0.4 s": positive shows subtitles later -->
+    <string name="anime_subtitle_timing_seconds">%1$s s</string>
+    <!-- After the seconds typed in the subtitle timing field -->
+    <string name="anime_subtitle_timing_seconds_unit">s</string>
+    <!-- Over the video when an episode opens with the subtitle timing saved for it, such as "Subtitle timing +0.4 s" -->
+    <string name="anime_subtitle_timing_notice">Subtitle timing %1$s s</string>
+    <string name="anime_subtitle_timing_adjust">Adjust</string>
+    <string name="anime_subtitle_timing_earlier">Show subtitles earlier</string>
+    <string name="anime_subtitle_timing_later">Show subtitles later</string>
+    <string name="anime_subtitle_timing_type">Enter the timing</string>
+    <string name="anime_subtitle_timing_type_hint">Positive shows subtitles later, negative earlier</string>
+    <string name="anime_subtitle_timing_invalid">Enter a number of seconds, such as 1.5 or -0.4</string>
+    <!-- Moves the timing so that a subtitle shows when its line is spoken, from two marks the viewer makes -->
+    <string name="anime_subtitle_timing_sync">Sync to a line</string>
+    <string name="anime_subtitle_timing_sync_start">Mark each as it happens</string>
+    <string name="anime_subtitle_timing_sync_after_shown">Now mark when its line is spoken</string>
+    <string name="anime_subtitle_timing_sync_after_heard">Now mark when its subtitle shows</string>
+    <string name="anime_subtitle_timing_subtitle_shown">Subtitle shown</string>
+    <string name="anime_subtitle_timing_line_heard">Line heard</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
     <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
     <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
@@ -1939,6 +1960,8 @@
     <string name="anime_shortcut_previous_frame">Previous frame, while paused</string>
     <string name="anime_shortcut_next_frame">Next frame, while paused</string>
     <string name="anime_shortcut_subtitles">Subtitles on or off</string>
+    <string name="anime_shortcut_subtitles_earlier">Subtitles earlier</string>
+    <string name="anime_shortcut_subtitles_later">Subtitles later</string>
     <string name="anime_shortcut_skip">Skip intro, recap or credits</string>
     <string name="anime_shortcut_zoom_in">Zoom in</string>
     <string name="anime_shortcut_zoom_out">Zoom out</string>
@@ -3402,6 +3425,7 @@
     <string name="sync_choices_profile">%1$s profile</string>
     <string name="sync_choices_data">Data</string>
     <string name="sync_choices_settings">Settings</string>
+    <string name="sync_choices_apart">Chosen one by one</string>
     <string name="sync_choices_profiles">Profiles</string>
     <string name="sync_choices_never">Never synced</string>
     <string name="sync_choice_library">Library and reading progress</string>
@@ -3411,7 +3435,7 @@
     <string name="sync_choice_statistics">Statistics</string>
     <string name="sync_choice_statistics_summary">Reading time, sessions, completions and goals, with their settings</string>
     <string name="sync_choice_title_choices">Title choices</string>
-    <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title</string>
+    <string name="sync_choice_title_choices_summary">Reader, player, download and translation choices made for one title. A title\'s reader or player value syncs only while its setting does.</string>
     <string name="sync_choice_repositories">Extension repositories</string>
     <string name="sync_choice_installed_extensions">Installed extensions</string>
     <string name="sync_choice_installed_extensions_summary">Offers to install or uninstall what you did on your other devices</string>
@@ -3434,8 +3458,14 @@
     <string name="sync_menu_library_sort">Library sort</string>
     <string name="sync_menu_library_filters">Library filters</string>
     <string name="sync_menu_chapter_list_defaults">Chapter list defaults</string>
+    <string name="sync_menu_updates_filters">Updates filters</string>
+    <string name="sync_menu_sources">Source languages, pinned and hidden sources</string>
+    <string name="sync_menu_saved_feeds">Saved feeds</string>
     <string name="sync_menu_place_library">Set in the library menu</string>
     <string name="sync_menu_place_chapter_list">Saved with Set as default on a title\'s page</string>
+    <string name="sync_menu_place_updates">Set in the Updates filter</string>
+    <string name="sync_menu_place_sources">Set in Browse\'s source and extension filters</string>
+    <string name="sync_menu_place_feeds">Set in Browse\'s Feeds tab</string>
     <string name="sync_choice_area_off_note">These settings stay on this device while their area isn't synced.</string>
     <string name="sync_choice_never_downloads">Downloads</string>
     <string name="sync_choice_never_downloads_summary">Chapters and episodes stay where they were downloaded</string>
@@ -3483,6 +3513,38 @@
     <string name="sync_action_sync">Sync</string>
     <string name="sync_mark_synced">Synced</string>
     <string name="sync_mark_this_device">Stays on this device</string>
+    <!-- A setting's sync choice, opened from the mark after its title -->
+    <string name="sync_setting_switch">Sync this setting</string>
+    <string name="sync_menu_switch">Sync %1$s</string>
+    <string name="sync_arrived_title">Changed on other devices</string>
+    <string name="sync_arrived_note">Settings your other devices changed on this one. Keep mine puts back what this device had and keeps that setting on this device.</string>
+    <string name="sync_arrived_from">From %1$s</string>
+    <string name="sync_arrived_another_device">another device</string>
+    <string name="sync_arrived_other_devices">your other devices</string>
+    <string name="sync_arrived_named">%1$s changed on %2$s</string>
+    <string name="sync_arrived_area">A %1$s setting changed on %2$s</string>
+    <string name="sync_keep_mine">Keep mine</string>
+    <string name="sync_kept_here">Kept here</string>
+    <string name="sync_device_syncs_too">%1$s syncs it too</string>
+    <string name="sync_device_syncs">%1$s syncs it</string>
+    <string name="sync_device_keeps_own">%1$s keeps its own</string>
+    <!-- %1$s is a Settings area, such as "Readers" -->
+    <string name="sync_setting_area_off">%1$s settings aren\'t synced</string>
+    <string name="sync_setting_area_off_summary">They stay on this device</string>
+    <!-- %1$s is what the setting goes with, such as "Statistics" or "Categories" -->
+    <string name="sync_setting_with_data">Synced with %1$s</string>
+    <!-- %1$s is what the setting goes with, such as "Statistics" or "Categories" -->
+    <string name="sync_setting_with_data_off">Kept on this device with %1$s</string>
+    <string name="sync_setting_with_data_summary">Turned on and off with them</string>
+    <string name="sync_setting_menu_note">These settings sync or stay together.</string>
+    <!-- %1$s is a Settings area, such as "Readers" -->
+    <string name="sync_setting_area_choices">All %1$s sync choices</string>
+    <!-- %1$s is a setting's title, such as "Default reading mode" -->
+    <string name="sync_setting_again_title">Sync “%1$s” again?</string>
+    <string name="sync_setting_again_text">This device changed it while it wasn\'t synced.</string>
+    <string name="sync_setting_keep_account">Account\'s value</string>
+    <string name="sync_setting_keep_device">This device\'s value</string>
+    <string name="sync_view_note">Each switch here says whether its setting syncs on this device.</string>
     <string name="sync_disconnect">Disconnect this device</string>
     <string name="sync_disconnect_title">Disconnect this device?</string>
     <!-- %1$s is the server's address -->

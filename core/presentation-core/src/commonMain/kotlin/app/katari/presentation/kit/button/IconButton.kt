@@ -44,6 +44,9 @@ enum class IconButtonSize { Standard, Large }
  *
  * [onLongClick] gives a long press a second action, such as sync's status icon syncing at once where a tap opens the
  * Sync page; [onLongClickLabel] names it to accessibility services.
+ *
+ * With [repeatWhileHeld], [onClick] acts as soon as the button is pressed, and again and again while it is held, faster
+ * the longer it is, for a button that steps a value, such as the player's subtitle timing. It takes no [onLongClick].
  */
 @Composable
 fun IconButton(
@@ -61,11 +64,14 @@ fun IconButton(
     arrows: ImageVector? = null,
     onLongClick: (() -> Unit)? = null,
     onLongClickLabel: String? = null,
+    repeatWhileHeld: Boolean = false,
 ) {
+    require(!repeatWhileHeld || onLongClick == null) { "A button that repeats while held has no long press" }
+    val pressSource = remember { MutableInteractionSource() }
     val sizedModifier = when (size) {
         IconButtonSize.Standard -> modifier
         IconButtonSize.Large -> modifier.size(KatariTheme.sizes.touchTargetLarge)
-    }
+    }.then(if (repeatWhileHeld) Modifier.repeatWhileHeld(enabled, pressSource, onClick) else Modifier)
     // Squares off while pressed
     val shapes = IconButtonDefaults.shapes()
     val toneDimmed = !enabled && tone != ContentTone.Inherit && tone != ContentTone.Original
@@ -114,13 +120,38 @@ fun IconButton(
             )
         } else {
             when (style) {
-                IconButtonStyle.Standard ->
-                    androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
-                IconButtonStyle.Filled -> FilledIconButton(onClick, shapes, sizedModifier, enabled, content = content)
-                IconButtonStyle.Tonal ->
-                    FilledTonalIconButton(onClick, shapes, sizedModifier, enabled, content = content)
-                IconButtonStyle.Outlined ->
-                    OutlinedIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+                IconButtonStyle.Standard -> androidx.compose.material3.IconButton(
+                    onClick = onClick,
+                    shapes = shapes,
+                    modifier = sizedModifier,
+                    enabled = enabled,
+                    interactionSource = pressSource,
+                    content = content,
+                )
+                IconButtonStyle.Filled -> FilledIconButton(
+                    onClick = onClick,
+                    shapes = shapes,
+                    modifier = sizedModifier,
+                    enabled = enabled,
+                    interactionSource = pressSource,
+                    content = content,
+                )
+                IconButtonStyle.Tonal -> FilledTonalIconButton(
+                    onClick = onClick,
+                    shapes = shapes,
+                    modifier = sizedModifier,
+                    enabled = enabled,
+                    interactionSource = pressSource,
+                    content = content,
+                )
+                IconButtonStyle.Outlined -> OutlinedIconButton(
+                    onClick = onClick,
+                    shapes = shapes,
+                    modifier = sizedModifier,
+                    enabled = enabled,
+                    interactionSource = pressSource,
+                    content = content,
+                )
             }
         }
     }

@@ -83,8 +83,9 @@ fun ApplicationScope.KatariWindow(
     val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }
     val hidden by graph.mainWindowVisibility.isHidden.collectAsState()
     val inTray by graph.appTray.isShown.collectAsState()
+    val closeWindow = { if (inTray) graph.mainWindowVisibility.hide() else requestQuit() }
     Window(
-        onCloseRequest = { if (inTray) graph.mainWindowVisibility.hide() else requestQuit() },
+        onCloseRequest = closeWindow,
         state = state,
         visible = !hidden,
         title = title,
@@ -101,6 +102,7 @@ fun ApplicationScope.KatariWindow(
             shortcuts = shortcuts,
             screenTitles = screenTitles,
             laterLaunches = laterLaunches,
+            onCloseWindow = closeWindow,
             onQuit = requestQuit,
             onConfirmedQuit = ::exitApplication,
             content = content,
@@ -116,6 +118,7 @@ private fun WindowContent(
     shortcuts: KeyboardShortcutRegistry,
     screenTitles: ScreenTitles,
     laterLaunches: Flow<InstanceRequest>,
+    onCloseWindow: () -> Unit,
     onQuit: () -> Unit,
     onConfirmedQuit: () -> Unit,
     content: @Composable () -> Unit,
@@ -162,7 +165,12 @@ private fun WindowContent(
                 AppMessagesHost(graph.appMessages) {
                     KeyboardShortcutsHost(shortcuts) {
                         val backInput = rememberWindowBackInput()
-                        WindowShortcuts(fullScreen = fullScreen, backInput = backInput, onQuit = onQuit)
+                        WindowShortcuts(
+                            fullScreen = fullScreen,
+                            backInput = backInput,
+                            onCloseWindow = onCloseWindow,
+                            onQuit = onQuit,
+                        )
                         InterfaceSizeShortcuts(graph.interfaceSizePreferences)
                         Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(shortcuts, backInput)) {
                             content()

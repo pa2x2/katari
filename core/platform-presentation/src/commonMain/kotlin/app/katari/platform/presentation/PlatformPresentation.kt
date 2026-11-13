@@ -62,6 +62,8 @@ data class PlatformPresentation(
     val syncTokenUnreadableHelp: StringResource,
     /** Reads it again now, which on a desktop asks the person to unlock the keyring. */
     val syncTokenUnreadableAction: StringResource,
+    /** Says once what the mark after a setting's title is, and how its sync choice opens: pressed, or right-clicked. */
+    val syncMarkHint: StringResource,
     val securitySettingsSummary: StringResource,
     val monthlyRecapSummary: StringResource,
     /** Names the parts of a page that turn it or show the menu when pressed. */

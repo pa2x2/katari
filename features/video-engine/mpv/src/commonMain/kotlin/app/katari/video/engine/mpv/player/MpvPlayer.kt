@@ -331,6 +331,10 @@ internal class MpvPlayer(
 
     override fun selectText(selection: TextTrackSelection) = select(trackRequest.with(selection, tracks))
 
+    override fun setSubtitleDelay(delayMs: Long) {
+        session.post { it.setDouble("sub-delay", delayMs / 1000.0) }
+    }
+
     private fun select(request: MpvTrackRequest) {
         trackRequest = request
         applyTrackChoices()

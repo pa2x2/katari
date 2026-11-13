@@ -10,6 +10,7 @@ import app.katari.profiles.core.ProfileDatabase
 import app.katari.sync.client.apply.HeldRecords
 import app.katari.sync.client.apply.IncomingRecords
 import app.katari.sync.client.apply.SyncWriting
+import app.katari.sync.client.arrival.ArrivedBatches
 import app.katari.sync.client.capture.CaptureTriggers
 import app.katari.sync.client.capture.SyncCapture
 import app.katari.sync.client.connection.ThisDevice
@@ -19,6 +20,7 @@ import app.katari.sync.client.firstsync.FirstSync
 import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
+import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.question.Questions
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
@@ -83,7 +85,14 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     val ownedFiles = OwnedFiles(files)
     val syncPreferences = SyncPreferences(preferences.profiles)
     val fileCapture = FileCapture(handler, ownedFiles, syncPreferences)
-    val drain = OutboxDrain(handler, preferences.reads, syncPreferences)
+
+    // The app's viewers as the manga reader's double-tap animation, whose title values stand in for its setting
+    private val viewerSettings = ViewerSettingPreferences { providerId, settingKey ->
+        DOUBLE_TAP_ANIMATION_PREFERENCE.takeIf {
+            providerId == MANGA_READER && settingKey == DOUBLE_TAP_ANIMATION
+        }
+    }
+    val drain = OutboxDrain(handler, preferences.reads, syncPreferences, viewerSettings)
 
     // What the app's deletion does to the database and preferences; the test devices own no files
     private val profileDeletion = object : LocalProfileDeletion {
@@ -114,6 +123,7 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
     /** What sync told the app's listeners of chapters it made read here. */
     val readElsewhere: MutableList<ChaptersReadElsewhere> = Collections.synchronizedList(ArrayList())
 
+    val arrivedBatches = ArrivedBatches()
     val writing = SyncWriting(
         handler,
         drain,
@@ -123,6 +133,9 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         preferences.profiles,
         thisDevice,
         syncPreferences,
+        viewerSettings,
+        preferences.reads,
+        arrivedBatches,
     ) { setOf(ChaptersReadElsewhereListener { readElsewhere += it }) }
     val incoming = IncomingRecords(writing)
     val pending = PendingChanges(handler)
@@ -166,3 +179,8 @@ internal class SyncTestDevice(file: File) : AutoCloseable {
         driver.close()
     }
 }
+
+/** The test devices' one viewer setting: the manga reader's double-tap animation, as the app defines it. */
+internal const val MANGA_READER = "builtin.manga.reader"
+internal const val DOUBLE_TAP_ANIMATION = "double_tap_animation_millis"
+internal const val DOUBLE_TAP_ANIMATION_PREFERENCE = "pref_double_tap_anim_speed"

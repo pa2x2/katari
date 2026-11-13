@@ -1,0 +1,60 @@
+import kotlin.Boolean;
+
+-- Settings other devices changed on this one while it synced as usual, each with the value it replaced, for Keep mine
+-- (app.katari.sync.client.arrival.SettingArrivals); a row goes 14 days after its change.
+CREATE TABLE sync_arrived_settings(
+    _id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    -- The local profile whose store holds the setting; null for the store all profiles share.
+    profile_id INTEGER,
+    setting_key TEXT NOT NULL,
+    from_device_id INTEGER NOT NULL,
+    -- Epoch milliseconds of the arriving edit.
+    changed_at INTEGER NOT NULL,
+    -- The value this device held before the first change not kept yet (app.katari.sync.client.setting.value.SettingValue).
+    previous BLOB NOT NULL,
+    -- When the sync that applied the change ran, in epoch milliseconds: the changes one sync applied are told as one.
+    batch INTEGER NOT NULL,
+    kept INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+insert:
+INSERT INTO sync_arrived_settings(profile_id, setting_key, from_device_id, changed_at, previous, batch)
+VALUES (:profileId, :settingKey, :fromDeviceId, :changedAt, :previous, :batch);
+
+waiting:
+SELECT _id
+FROM sync_arrived_settings
+WHERE profile_id IS :profileId AND setting_key = :settingKey AND kept = 0;
+
+changedAgain:
+UPDATE sync_arrived_settings
+SET from_device_id = :fromDeviceId, changed_at = :changedAt, batch = :batch
+WHERE _id = :id;
+
+all:
+SELECT *
+FROM sync_arrived_settings
+ORDER BY changed_at DESC, _id DESC;
+
+inBatch:
+SELECT *
+FROM sync_arrived_settings
+WHERE batch = :batch AND kept = 0
+ORDER BY _id;
+
+byIds:
+SELECT *
+FROM sync_arrived_settings
+WHERE _id IN :ids;
+
+markKept:
+UPDATE sync_arrived_settings
+SET kept = 1
+WHERE _id IN :ids;
+
+deleteBefore:
+DELETE FROM sync_arrived_settings
+WHERE changed_at < :before;
+
+clear:
+DELETE FROM sync_arrived_settings;

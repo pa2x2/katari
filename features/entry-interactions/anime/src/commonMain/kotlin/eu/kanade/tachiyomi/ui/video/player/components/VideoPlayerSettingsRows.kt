@@ -96,6 +96,9 @@ internal fun SubtitlePlaybackOptionRow(
     trackPick: MpvTrackPick,
     onSelect: (String?) -> Unit,
     onOpenSubtitleSettings: (() -> Unit)?,
+    /** The playing subtitle's timing, while a subtitle plays whose timing can be set; null hides its row. */
+    timingDelayMs: Long?,
+    onAdjustTiming: () -> Unit,
 ) {
     Column {
         ChipsRow(
@@ -119,6 +122,20 @@ internal fun SubtitlePlaybackOptionRow(
                     Button(
                         label = stringResource(MR.strings.action_edit),
                         onClick = openSubtitleSettings,
+                        style = ButtonStyle.Text,
+                        size = ButtonSize.Small,
+                    )
+                },
+            )
+        }
+        timingDelayMs?.let { delayMs ->
+            SettingsRow(
+                title = stringResource(MR.strings.anime_subtitle_timing),
+                subtitle = subtitleTimingLabel(delayMs),
+                trailing = {
+                    Button(
+                        label = stringResource(MR.strings.anime_subtitle_timing_adjust),
+                        onClick = onAdjustTiming,
                         style = ButtonStyle.Text,
                         size = ButtonSize.Small,
                     )

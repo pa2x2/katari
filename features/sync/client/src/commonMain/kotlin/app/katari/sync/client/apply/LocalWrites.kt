@@ -73,4 +73,11 @@ internal interface LocalWrites {
      * it read, rather than reading it.
      */
     fun chapterRead(entryId: Long, chapterId: Long, marked: Boolean)
+
+    /**
+     * Notes that the setting [key], in [profileId]'s store or the shared one when null, is about to be written as
+     * [value], edited [at] on the device it names, so that a change from another device can be listed and this
+     * device's value put back ([app.katari.sync.client.arrival.SettingArrivals]).
+     */
+    suspend fun settingArriving(profileId: Long?, key: String, value: Any?, at: HybridTimestamp)
 }

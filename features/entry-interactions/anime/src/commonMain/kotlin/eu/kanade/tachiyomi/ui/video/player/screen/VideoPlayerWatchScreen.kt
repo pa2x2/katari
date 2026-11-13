@@ -342,6 +342,12 @@ internal fun VideoPlayerWatchScreen(
         currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
     }
 
+    val subtitleTiming by viewModel.subtitleTiming.state.collectAsState()
+    val subtitleDelayMs = subtitleTiming.delayFor(current.chapterId)
+    LaunchedEffect(subtitleDelayMs, currentPlayer) {
+        currentPlayer.setSubtitleDelay(subtitleDelayMs)
+    }
+
     LaunchedEffect(current.playback.currentAudioTrackKey, currentPlayer) {
         currentPlayer.applyAudioTrack(current.playback.currentAudioTrackKey, current.stream.audioTracks)
     }
@@ -576,6 +582,7 @@ internal fun VideoPlayerWatchScreen(
             seekStepSeconds = seekStepSeconds,
             markerSkip = markerSkip,
             onUndoSkip = seekToPosition,
+            positionMs = { currentPlayer.currentPositionMs },
         )
 
         val progressOffer by viewModel.progressOffers.offer.collectAsState()

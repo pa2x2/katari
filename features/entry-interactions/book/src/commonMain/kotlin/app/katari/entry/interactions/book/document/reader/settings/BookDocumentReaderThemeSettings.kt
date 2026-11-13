@@ -42,7 +42,10 @@ internal fun BookDocumentReaderThemeSettings(
     val scope = rememberCoroutineScope()
     var colorsDialog by remember { mutableStateOf<ColorsDialog?>(null) }
     val unsaved = (setting.effectiveValue as? BookDocumentReaderTheme.Custom)?.takeUnless { it in saved }
-    RowGroupHeader(stringResource(MR.strings.book_document_reader_theme))
+    RowGroupHeader(
+        stringResource(MR.strings.book_document_reader_theme),
+        setting = bindings.theme.definition.profilePreference,
+    )
     RowGroup {
         (BookDocumentReaderTheme.presets + saved + listOfNotNull(unsaved)).forEach { theme ->
             row(key = theme.id) {
@@ -80,6 +83,7 @@ internal fun BookDocumentReaderThemeSettings(
                         }
                     }
                 },
+                setting = publisherStylesBinding.definition.profilePreference,
             )
         }
     }

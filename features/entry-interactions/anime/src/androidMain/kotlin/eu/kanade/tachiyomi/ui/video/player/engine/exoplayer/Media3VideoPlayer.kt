@@ -34,9 +34,12 @@ import kotlinx.coroutines.launch
 /**
  * A Media3 [Player], ExoPlayer's, as a [VideoPlayer]. The state is taken from the player after each of its events and
  * each command, and on a ticker for the position, which Media3 reports to no listener. A player that is a
- * [VolumeBoost] can boost its volume.
+ * [VolumeBoost] can boost its volume, and one whose text renderers read a [subtitleDelay] can move its subtitles.
  */
-internal class Media3VideoPlayer(private val player: Player) : VideoPlayer {
+internal class Media3VideoPlayer(
+    private val player: Player,
+    private val subtitleDelay: SubtitleDelay?,
+) : VideoPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val listeners = mutableListOf<VideoPlayerListener>()
     private val mutableState = MutableStateFlow(VideoPlayerState())
@@ -154,6 +157,10 @@ internal class Media3VideoPlayer(private val player: Player) : VideoPlayer {
 
     override fun selectText(selection: TextTrackSelection) = command {
         trackSelectionParameters = trackSelectionParameters.with(selection, currentTracks)
+    }
+
+    override fun setSubtitleDelay(delayMs: Long) {
+        subtitleDelay?.delayUs = delayMs * 1000L
     }
 
     override fun setVideoOutput(output: VideoOutput?) {

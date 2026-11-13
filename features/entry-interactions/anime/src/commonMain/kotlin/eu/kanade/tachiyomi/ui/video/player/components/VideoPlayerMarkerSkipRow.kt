@@ -4,19 +4,23 @@ import androidx.compose.runtime.Composable
 import app.katari.entry.interactions.settings.AnimeMarkerSkipMode
 import app.katari.presentation.kit.chip.FilterChip
 import app.katari.presentation.kit.list.ChipsRow
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** [override] is the title's own skip mode; null follows the one in the anime player settings. */
 internal data class VideoPlayerMarkerSkipChoice(val override: AnimeMarkerSkipMode?)
 
-/** What the title does at its marked intro, recap, credits and preview. */
+/**
+ * What the title does at its marked intro, recap, credits and preview, as its own value of the player's [setting].
+ */
 @Composable
 internal fun VideoPlayerMarkerSkipRow(
     choice: VideoPlayerMarkerSkipChoice,
     onSelect: (AnimeMarkerSkipMode?) -> Unit,
+    setting: Preference<*>,
 ) {
-    ChipsRow(title = stringResource(MR.strings.anime_marker_skip)) {
+    ChipsRow(title = stringResource(MR.strings.anime_marker_skip), setting = setting) {
         FilterChip(
             label = stringResource(MR.strings.label_default),
             selected = choice.override == null,

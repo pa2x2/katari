@@ -15,6 +15,7 @@ import app.katari.presentation.kit.surface.SurfaceContainer
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.LocalKatariThemeGraph
 import app.katari.presentation.kit.theme.TextRole
+import app.katari.sync.ui.choice.ProvideSettingSyncMarks
 import app.katari.ui.di.AppUiGraph
 import app.katari.ui.di.LocalAppUiGraph
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
@@ -22,9 +23,9 @@ import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 /**
  * What every composition of the app's screens is given, on every platform: [graph] and its ViewModels, the theme read
  * from it, links opened through [LinkOpener], whose failures show as a message instead of throwing as Compose's own
- * handler does, the app's messages, and the theme with the base surface and text role. The host provides around it
- * only what its platform alone has, such as a desktop window's platform context and density; the build fails when a
- * host provides one of these itself.
+ * handler does, the app's messages, the theme with the base surface and text role, and the sync marks of settings rows.
+ * The host provides around it only what its platform alone has, such as a desktop window's platform context and
+ * density; the build fails when a host provides one of these itself.
  */
 @HostEntryPoint
 @Composable
@@ -40,7 +41,7 @@ fun AppUiRoot(graph: AppUiGraph, content: @Composable () -> Unit) {
     ) {
         KatariTheme {
             ContentOn(SurfaceContainer.Background) {
-                ProvideTextRole(TextRole.Supporting, content)
+                ProvideTextRole(TextRole.Supporting) { ProvideSettingSyncMarks(content) }
             }
         }
     }

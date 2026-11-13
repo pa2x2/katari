@@ -12,7 +12,8 @@ import tachiyomi.domain.entry.model.PictureFraming
  * The player's keys ([VideoPlayerShortcuts]) while the watch screen shows. They leave the keys to the settings panel,
  * the episode list and the subtitle editor while one is open, all but E, which closes the episode list it opened. The
  * zoom keys zoom about the picture's centre, and the pan keys, there while the picture is zoomed past the player,
- * bring a tenth of the player's size more into view.
+ * bring a tenth of the player's size more into view. Z and X step the subtitle timing, which the picture-in-picture
+ * window, showing no timing, leaves alone.
  * [geometry] is the picture's shape in the player, null until the video has one.
  */
 @Composable
@@ -27,6 +28,10 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.PictureInPicture, enabled && target.hasPictureInPicture) {
         target.enterPictureInPicture()
     }
+    Key(VideoPlayerShortcuts.SubtitlesEarlier, enabled && target.hasSubtitles) {
+        target.stepSubtitleTiming(later = false)
+    }
+    Key(VideoPlayerShortcuts.SubtitlesLater, enabled && target.hasSubtitles) { target.stepSubtitleTiming(later = true) }
     Key(VideoPlayerShortcuts.Skip, enabled && target.skipOffered) { target.skip() }
     Key(VideoPlayerShortcuts.Episodes, enabled || target.episodesVisible) { target.toggleEpisodes() }
     Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
