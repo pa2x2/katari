@@ -3525,6 +3525,9 @@
     <string name="sync_arrived_area">A %1$s setting changed on %2$s</string>
     <string name="sync_keep_mine">Keep mine</string>
     <string name="sync_kept_here">Kept here</string>
+    <string name="sync_device_syncs_too">%1$s syncs it too</string>
+    <string name="sync_device_syncs">%1$s syncs it</string>
+    <string name="sync_device_keeps_own">%1$s keeps its own</string>
     <!-- %1$s is a Settings area, such as "Readers" -->
     <string name="sync_setting_area_off">%1$s settings aren\'t synced</string>
     <string name="sync_setting_area_off_summary">They stay on this device</string>

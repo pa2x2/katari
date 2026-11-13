@@ -72,13 +72,15 @@ internal fun SettingSyncMarkButton(mark: SyncMark, role: TextRole) {
 
 /**
  * Whether [mark]'s setting syncs, with what can change it here: its own switch, its menu's or its area's, or why it
- * stays on this device; then, where screens open, the way to the page listing the rest. Turning settings back on that this device changed meanwhile asks in place whose values they keep.
+ * stays on this device; what the account's other devices do with it; then, where screens open, the way to the page
+ * listing the rest. Turning settings back on that this device changed meanwhile asks in place whose values they keep.
  */
 @Composable
 private fun SettingSyncPopover(mark: SyncMark, anchor: PopoverAnchor, onDismissRequest: () -> Unit) {
     val model = metroViewModel<WhatSyncsViewModel>()
     val choices by model.choices.collectAsState()
     val asking by model.asking.collectAsState()
+    val others by model.otherDevices.collectAsState()
     // Whoever opens a mark's choice knows what the mark is
     LaunchedEffect(Unit) { model.preferences.markHintSeen.set(true) }
     val settingsNavigator = LocalSettingsNavigator.current
@@ -113,6 +115,11 @@ private fun SettingSyncPopover(mark: SyncMark, anchor: PopoverAnchor, onDismissR
             } else {
                 RowGroup { stateRows(state, mark, model) }
                 RowGroupGap()
+                // A setting made for this device stays on every device
+                if (state !is SettingSyncState.DeviceOnly && others.isNotEmpty()) {
+                    RowGroup { otherDeviceRows(others, mark) }
+                    RowGroupGap()
+                }
                 if (open != null) {
                     RowGroup { row { PageLink(state, open) } }
                     RowGroupGap()

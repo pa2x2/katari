@@ -7,6 +7,8 @@ import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.part.DeviceChoices
+import app.katari.sync.client.part.OtherDeviceChoices
 import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.part.ProfileSyncStates
 import app.katari.sync.client.part.SyncChoiceChanges
@@ -38,6 +40,7 @@ import tachiyomi.core.common.util.lang.launchUI
 class WhatSyncsViewModel(
     private val changes: SyncChoiceChanges,
     profileStates: ProfileSyncStates,
+    deviceChoices: DeviceChoices,
     connection: SyncConnection,
     val preferences: SyncPreferences,
     @AppCoroutineScope private val appScope: CoroutineScope,
@@ -47,6 +50,9 @@ class WhatSyncsViewModel(
 
     val profiles: StateFlow<List<ProfileSync>> =
         profileStates.profiles().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val otherDevices: StateFlow<List<OtherDeviceChoices>> =
+        deviceChoices.others().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val isLinked: StateFlow<Boolean> =
         connection.states().map { it.isLinked }.stateIn(viewModelScope, SharingStarted.Eagerly, false)

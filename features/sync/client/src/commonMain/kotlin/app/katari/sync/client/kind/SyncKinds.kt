@@ -7,6 +7,7 @@ import app.katari.sync.client.kind.category.CategoryKind
 import app.katari.sync.client.kind.category.CategoryMembershipKind
 import app.katari.sync.client.kind.category.CategoryUpdateRulesKind
 import app.katari.sync.client.kind.chapter.ChapterKind
+import app.katari.sync.client.kind.devicechoice.DeviceChoicesKind
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.entrychoice.DownloadPreferencesKind
 import app.katari.sync.client.kind.entrychoice.EntryUpdateModeKind
@@ -75,6 +76,7 @@ object SyncKinds {
         MigrationQuestionKind,
         NotesQuestionKind,
         ProfileDeletionQuestionKind,
+        DeviceChoicesKind,
     )
 
     private val byName = all.associateBy { it.name }

@@ -61,3 +61,7 @@ data class ChoiceSet(
         PreferenceScope.DEVICE, null -> throw IllegalArgumentException("$key never syncs")
     }
 }
+
+/** The values of [entries] named here; a name a later version wrote and this one doesn't know chooses nothing. */
+internal fun <E : Enum<E>> Collection<String>.enumsNamed(entries: List<E>): Set<E> =
+    mapNotNullTo(HashSet()) { name -> entries.firstOrNull { it.name == name } }

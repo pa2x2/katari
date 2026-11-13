@@ -493,6 +493,10 @@
         <item quantity="one">%d setting</item>
         <item quantity="other">%d settings</item>
     </plurals>
+    <plurals name="sync_devices_older">
+        <item quantity="one">%d device on an older version doesn't say</item>
+        <item quantity="other">%d devices on an older version don't say</item>
+    </plurals>
     <plurals name="sync_arrived_settings">
         <item quantity="one">%1$d setting changed on %2$s</item>
         <item quantity="other">%1$d settings changed on %2$s</item>
