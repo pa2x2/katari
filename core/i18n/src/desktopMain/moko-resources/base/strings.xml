@@ -16,7 +16,6 @@
     <string name="anime_guide_double_click">Double-click for full screen</string>
     <string name="anime_guide_right_click">Right-click for settings</string>
     <string name="anime_guide_scroll_volume">Scroll for volume</string>
-    <string name="anime_guide_scroll_seek">Scroll sideways to seek</string>
     <string name="anime_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
     <string name="anime_guide_keys_play">Space to play or pause</string>
     <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>

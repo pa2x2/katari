@@ -32,7 +32,6 @@ internal class VideoPlayerWatchInputTarget(
     // Observable, as the picture follows the framing it holds from outside composition
     private var current by mutableStateOf<VideoPlayerViewModel.State.Ready?>(null)
     private lateinit var player: VideoPlayer
-    private lateinit var scrub: VideoPlayerScrub
     private lateinit var actions: VideoPlayerWatchActions
     private var controlsPinned = false
     override var skipOffered = false
@@ -48,7 +47,6 @@ internal class VideoPlayerWatchInputTarget(
     fun update(
         current: VideoPlayerViewModel.State.Ready,
         player: VideoPlayer,
-        scrub: VideoPlayerScrub,
         actions: VideoPlayerWatchActions,
         controlsPinned: Boolean,
         seekGestureModeActive: Boolean,
@@ -58,7 +56,6 @@ internal class VideoPlayerWatchInputTarget(
         this.seekStepSeconds = seekStepSeconds
         this.current = current
         this.player = player
-        this.scrub = scrub
         this.actions = actions
         this.controlsPinned = controlsPinned
         this.seekGestureModeActive = seekGestureModeActive
@@ -127,16 +124,6 @@ internal class VideoPlayerWatchInputTarget(
             boostFromLevel = volume.maxLevel.takeIf { volume.boostLevels > 0 },
             boostPercent = volume.boostPercent.takeIf { level > volume.maxLevel },
         )
-    }
-
-    override fun startSeekSwipe(): Boolean = scrub.startSwipe()
-
-    override fun seekSwipeBy(deltaMs: Long) {
-        scrub.swipeBy(deltaMs)
-    }
-
-    override fun finishSeekSwipe(commit: Boolean) {
-        if (commit) scrub.finish() else scrub.cancel()
     }
 
     override val videoAspectRatio get() = host.visit.videoAspectRatio
@@ -236,7 +223,6 @@ internal fun rememberVideoPlayerWatchInputTarget(
     speedBoost: MutableState<Boolean>,
     current: VideoPlayerViewModel.State.Ready,
     player: VideoPlayer,
-    scrub: VideoPlayerScrub,
     actions: VideoPlayerWatchActions,
     controlsPinned: Boolean,
     seekGestureModeActive: Boolean,
@@ -244,6 +230,6 @@ internal fun rememberVideoPlayerWatchInputTarget(
     seekStepSeconds: Int,
 ): VideoPlayerWatchInputTarget {
     val target = remember(ui) { VideoPlayerWatchInputTarget(ui, host, viewModel, speedBoost) }
-    target.update(current, player, scrub, actions, controlsPinned, seekGestureModeActive, skipOffered, seekStepSeconds)
+    target.update(current, player, actions, controlsPinned, seekGestureModeActive, skipOffered, seekStepSeconds)
     return target
 }

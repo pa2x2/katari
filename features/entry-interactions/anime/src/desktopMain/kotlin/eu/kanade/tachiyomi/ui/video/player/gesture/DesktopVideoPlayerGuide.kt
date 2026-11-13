@@ -32,10 +32,7 @@ internal fun DesktopVideoPlayerGuide(seekStepSeconds: Int, onDismiss: () -> Unit
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(PlatformStrings.anime_guide_scroll_volume),
-                details = listOf(
-                    stringResource(PlatformStrings.anime_guide_scroll_seek),
-                    stringResource(PlatformStrings.anime_guide_scroll_zoom),
-                ),
+                details = listOf(stringResource(PlatformStrings.anime_guide_scroll_zoom)),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.Keyboard,

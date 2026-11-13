@@ -124,7 +124,6 @@ internal fun VideoPlayerOverlay(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
-    swipeSeekDeltaMs: Long?,
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long>,
@@ -261,19 +260,14 @@ internal fun VideoPlayerOverlay(
                     )
                 },
                 centre = {
-                    // A sideways swipe shows how far it moves in place of the buttons, which a lifted finger could hit.
-                    if (swipeSeekDeltaMs != null) {
-                        VideoPlayerSwipeSeekDelta(deltaMs = swipeSeekDeltaMs)
-                    } else {
-                        VideoPlayerCenterControls(
-                            isPlaying = playbackSnapshot.isPlaying,
-                            isLoading = playbackSnapshot.isLoading,
-                            seekStepSeconds = seekStepSeconds,
-                            onSeekBackward = onSeekBackward,
-                            onTogglePlayback = onTogglePlayback,
-                            onSeekForward = onSeekForward,
-                        )
-                    }
+                    VideoPlayerCenterControls(
+                        isPlaying = playbackSnapshot.isPlaying,
+                        isLoading = playbackSnapshot.isLoading,
+                        seekStepSeconds = seekStepSeconds,
+                        onSeekBackward = onSeekBackward,
+                        onTogglePlayback = onTogglePlayback,
+                        onSeekForward = onSeekForward,
+                    )
                 },
                 locked = {
                     // Only controls that can be locked are ever locked.

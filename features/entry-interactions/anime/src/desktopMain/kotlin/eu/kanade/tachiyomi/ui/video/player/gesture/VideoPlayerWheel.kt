@@ -15,14 +15,12 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.pow
-import kotlin.math.roundToLong
 
 /**
  * Scrolling over the picture. The wheel sets the volume, one percent a notch, with the side volume feedback
- * of Android's swipe; scrolling sideways, as a tilting wheel does, moves a target time as Android's sideways swipe
- * does, and seeks there once scrolling stops; with Ctrl held the wheel zooms the picture about the [pointer], which
- * shows. A touchpad's swipe is a drag, as a finger's on Android is: up or down it sets the volume and sideways the
- * target time, each as far as the fingers go, and the seek happens when they lift.
+ * of Android's swipe; with Ctrl held the wheel zooms the picture about the [pointer], which shows. A touchpad's swipe
+ * up or down is a drag, as a finger's on Android is, setting the volume as far as the fingers go. Scrolling sideways,
+ * by a tilting wheel or a touchpad, does nothing.
  */
 internal fun Modifier.videoPlayerWheel(
     target: VideoPlayerInputTarget,
@@ -31,33 +29,20 @@ internal fun Modifier.videoPlayerWheel(
 ): Modifier = pointerInput(target, pointer) {
     coroutineScope {
         var volumeSteps = 0f
-        var seekUnits = 0f
-        var seeking = false
-        var seekEnd: Job? = null
         var zoomEnd: Job? = null
         var swipeVolumeFrom = 0
-        var swipeSeeks = false
         val swipes = TouchpadSwipes(
             slop = viewConfiguration.touchSlop,
             onStart = { axis ->
-                swipeSeeks = axis == Orientation.Horizontal
-                if (swipeSeeks) {
-                    target.startSeekSwipe()
-                } else {
+                if (axis == Orientation.Vertical) {
                     swipeVolumeFrom = target.sideGestureLevel(VideoPlayerSideGestureType.Volume)
-                    true
                 }
+                axis == Orientation.Vertical
             },
             onMove = { _, travel ->
-                if (swipeSeeks) {
-                    target.seekSwipeBy((travel.toDp().value * SEEK_MS_PER_SWIPE_DP).roundToLong())
-                    target.registerControllerInteraction(showControls = true)
-                } else {
-                    val level = swipeVolumeFrom + mediaVolumeLevelsSwiped(travel)
-                    target.applySideGestureLevel(VideoPlayerSideGestureType.Volume, level)
-                }
+                val level = swipeVolumeFrom + mediaVolumeLevelsSwiped(travel)
+                target.applySideGestureLevel(VideoPlayerSideGestureType.Volume, level)
             },
-            onEnd = { if (swipeSeeks) target.finishSeekSwipe(commit = true) },
         )
         awaitPointerEventScope {
             while (true) {
@@ -88,22 +73,6 @@ internal fun Modifier.videoPlayerWheel(
                         }
                     }
                     touchpad != null -> swipes.onStep(touchpad)
-                    delta.x != 0f -> {
-                        if (!seeking) {
-                            seeking = target.startSeekSwipe()
-                            seekUnits = 0f
-                        }
-                        if (!seeking) continue
-                        seekUnits += delta.x
-                        target.seekSwipeBy((seekUnits * SEEK_MS_PER_UNIT).roundToLong())
-                        target.registerControllerInteraction(showControls = true)
-                        seekEnd?.cancel()
-                        seekEnd = launch {
-                            delay(SCROLL_END_MS)
-                            seeking = false
-                            target.finishSeekSwipe(commit = true)
-                        }
-                    }
                     delta.y != 0f -> {
                         // Up is negative, as the wheel scrolls toward the start
                         volumeSteps -= delta.y
@@ -120,10 +89,5 @@ internal fun Modifier.videoPlayerWheel(
     }
 }
 
-private const val SEEK_MS_PER_UNIT = 5_000f
-
-// A quick swipe is some 1,200 dp of scrolling, which seeks a minute
-private const val SEEK_MS_PER_SWIPE_DP = 50f
-
-// How long after the last scroll the seek or zoom it made is taken as done
+// How long after the last scroll the zoom it made is taken as done
 private const val SCROLL_END_MS = 500L

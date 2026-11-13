@@ -7,16 +7,11 @@ import android.view.ViewConfiguration
 import kotlin.math.abs
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
-private const val SEEK_SWIPE_HORIZONTAL_RATIO = 1.35f
-
-// A phone's width in landscape, some 900 dp, moves about three minutes.
-private const val SEEK_SWIPE_MS_PER_DP = 200f
 
 /**
  * Taps, double taps, holds and drags on the player: a tap toggles the controls, a double tap on either side seeks, a
  * hold in the speed zones boosts the speed until released, a vertical drag on the left or right half changes
- * brightness or volume, a sideways drag seeks when it lifts, and two fingers zoom and move the picture, cancelling a
- * drag under way. Drags starting within [edgeExclusionPx] of the top or bottom are left alone. [pinchGesture] is kept
+ * brightness or volume, and two fingers zoom and move the picture, cancelling a drag under way. Drags starting within [edgeExclusionPx] of the top or bottom are left alone. [pinchGesture] is kept
  * by the caller, so a pinch survives the listener being set again.
  */
 internal fun View.setVideoPlayerTouchGestures(
@@ -25,9 +20,7 @@ internal fun View.setVideoPlayerTouchGestures(
     edgeExclusionPx: Float,
 ) {
     val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
-    val seekSwipeMsPerPx = SEEK_SWIPE_MS_PER_DP / resources.displayMetrics.density
     var sideGestureState: SideGestureState? = null
-    var seekSwiping = false
     var holdSpeedGestureState: HoldSpeedGestureState? = null
     val gestureDetector = GestureDetector(
         context,
@@ -127,10 +120,6 @@ internal fun View.setVideoPlayerTouchGestures(
             target.setSpeedBoostActive(false)
             holdSpeedGestureState = null
             sideGestureState = null
-            if (seekSwiping) {
-                seekSwiping = false
-                target.finishSeekSwipe(commit = false)
-            }
             target.hideControls()
             val cancel = MotionEvent.obtain(motionEvent).apply { action = MotionEvent.ACTION_CANCEL }
             gestureDetector.onTouchEvent(cancel)
@@ -189,21 +178,6 @@ internal fun View.setVideoPlayerTouchGestures(
                     val deltaX = motionEvent.x - currentSideGestureState.startX
                     val deltaY = motionEvent.y - currentSideGestureState.startY
                     if (
-                        !seekSwiping &&
-                        !currentSideGestureState.active &&
-                        !target.speedBoostActive &&
-                        abs(deltaX) > touchSlop &&
-                        abs(deltaX) > abs(deltaY) * SEEK_SWIPE_HORIZONTAL_RATIO &&
-                        isDragInGestureBand(currentSideGestureState.startY, width, height, edgeExclusionPx)
-                    ) {
-                        seekSwiping = target.startSeekSwipe()
-                    }
-                    if (seekSwiping) {
-                        target.seekSwipeBy((deltaX * seekSwipeMsPerPx).toLong())
-                        target.registerControllerInteraction(true)
-                        return@setOnTouchListener true
-                    }
-                    if (
                         !currentSideGestureState.active &&
                         abs(deltaY) > touchSlop &&
                         abs(deltaY) > abs(deltaX) * SIDE_GESTURE_VERTICAL_RATIO
@@ -249,15 +223,6 @@ internal fun View.setVideoPlayerTouchGestures(
             -> {
                 target.setSpeedBoostActive(false)
                 holdSpeedGestureState = null
-                if (seekSwiping) {
-                    seekSwiping = false
-                    sideGestureState = null
-                    target.finishSeekSwipe(commit = motionEvent.actionMasked == MotionEvent.ACTION_UP)
-                    if (motionEvent.actionMasked == MotionEvent.ACTION_UP) {
-                        performClick()
-                    }
-                    return@setOnTouchListener true
-                }
                 if (sideGestureState?.active == true) {
                     sideGestureState = null
                     if (motionEvent.actionMasked == MotionEvent.ACTION_UP) {

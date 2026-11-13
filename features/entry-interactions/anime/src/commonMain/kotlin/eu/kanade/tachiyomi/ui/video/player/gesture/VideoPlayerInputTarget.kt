@@ -39,15 +39,6 @@ internal interface VideoPlayerInputTarget {
 
     fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int)
 
-    /** Starts a sideways seek from the playing position; false when it can't, such as while the length is unknown. */
-    fun startSeekSwipe(): Boolean
-
-    /** Moves the sideways seek's target [deltaMs] from where it started. */
-    fun seekSwipeBy(deltaMs: Long)
-
-    /** Ends the sideways seek, seeking to its target when [commit], or staying put. */
-    fun finishSeekSwipe(commit: Boolean)
-
     /** The video's shape, null until it has one. */
     val videoAspectRatio: Float?
 

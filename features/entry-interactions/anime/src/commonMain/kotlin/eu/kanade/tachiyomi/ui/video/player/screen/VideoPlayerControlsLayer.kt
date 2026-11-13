@@ -167,7 +167,6 @@ internal fun VideoPlayerControlsLayer(
             onScrubStarted = scrub::start,
             onScrubPositionChange = scrub::moveTo,
             onScrubFinished = scrub::finish,
-            swipeSeekDeltaMs = scrub.swipeDeltaMs,
             showsRemainingTime = host.visit.showsRemainingTime,
             onToggleRemainingTime = {
                 host.visit.showsRemainingTime = !host.visit.showsRemainingTime

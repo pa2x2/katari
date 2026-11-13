@@ -431,7 +431,6 @@ internal fun VideoPlayerWatchScreen(
         speedBoost = temporarySpeedBoost,
         current = current,
         player = currentPlayer,
-        scrub = scrub,
         actions = actions,
         controlsPinned = controlsPinned,
         seekGestureModeActive = shouldHideChromeForSeekFeedback,

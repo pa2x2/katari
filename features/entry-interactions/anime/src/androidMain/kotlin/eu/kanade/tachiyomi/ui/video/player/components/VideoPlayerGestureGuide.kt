@@ -12,7 +12,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Labels the player's touch areas the first time it opens in a profile: the brightness and volume halves with their
- * double-tap seeks, and in the middle hold for 2×, a sideways swipe to seek and a tap for the controls.
+ * double-tap seeks, and in the middle hold for 2× and a tap for the controls.
  */
 @Composable
 internal fun VideoPlayerGestureGuide(
@@ -30,10 +30,7 @@ internal fun VideoPlayerGestureGuide(
             InputGuideHint(
                 icon = platformPresentation.pointerIcon,
                 title = stringResource(MR.strings.anime_guide_hold),
-                details = listOf(
-                    stringResource(PlatformStrings.anime_guide_swipe_seek),
-                    stringResource(PlatformStrings.anime_guide_tap),
-                ),
+                details = listOf(stringResource(PlatformStrings.anime_guide_tap)),
             ),
             InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
