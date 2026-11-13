@@ -7,6 +7,7 @@ import app.katari.sync.client.kind.profile.LocalProfileDeletion
 import app.katari.sync.client.kind.replacement.carry.MigrationCarryRules
 import app.katari.sync.client.outbox.OutboxDrain
 import app.katari.sync.client.part.OffParts
+import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.preference.SyncPreferences
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhere
 import app.katari.sync.client.readelsewhere.ChaptersReadElsewhereListener
@@ -40,6 +41,7 @@ class SyncWriting(
     private val profileStore: ProfileStore,
     private val thisDevice: ThisDevice,
     private val preferences: SyncPreferences,
+    private val viewerSettings: ViewerSettingPreferences,
     private val readElsewhereListeners: () -> Set<ChaptersReadElsewhereListener>,
 ) {
     internal suspend fun <T> write(block: suspend Database.(ApplySession) -> T): T = write(failing = emptyMap(), block)
@@ -81,7 +83,7 @@ class SyncWriting(
                 profileDeletion = profileDeletion,
                 migrationRules = migrationRules,
                 activeProfileId = profileStore.currentProfileId,
-                parts = OffParts(preferences.choices(), this) { preferences.profilesAsking += it },
+                parts = OffParts(preferences.choices(), this, viewerSettings) { preferences.profilesAsking += it },
                 device = DeviceId(device),
                 appVersion = thisDevice.appVersion,
                 failing = failing,

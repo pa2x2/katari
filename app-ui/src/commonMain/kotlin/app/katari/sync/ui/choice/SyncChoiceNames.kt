@@ -106,6 +106,9 @@ internal fun MenuSettings.title(): String = stringResource(
         MenuSettings.LIBRARY_SORT -> MR.strings.sync_menu_library_sort
         MenuSettings.LIBRARY_FILTERS -> MR.strings.sync_menu_library_filters
         MenuSettings.CHAPTER_LIST_DEFAULTS -> MR.strings.sync_menu_chapter_list_defaults
+        MenuSettings.UPDATES_FILTERS -> MR.strings.sync_menu_updates_filters
+        MenuSettings.SOURCES -> MR.strings.sync_menu_sources
+        MenuSettings.SAVED_FEEDS -> MR.strings.sync_menu_saved_feeds
     },
 )
 
@@ -115,6 +118,9 @@ internal fun MenuSettings.place(): String = stringResource(
     when (this) {
         MenuSettings.LIBRARY_SORT, MenuSettings.LIBRARY_FILTERS -> MR.strings.sync_menu_place_library
         MenuSettings.CHAPTER_LIST_DEFAULTS -> MR.strings.sync_menu_place_chapter_list
+        MenuSettings.UPDATES_FILTERS -> MR.strings.sync_menu_place_updates
+        MenuSettings.SOURCES -> MR.strings.sync_menu_place_sources
+        MenuSettings.SAVED_FEEDS -> MR.strings.sync_menu_place_feeds
     },
 )
 
@@ -135,3 +141,23 @@ internal fun DeviceBound.reason(): String = stringResource(
         DeviceBound.APP -> MR.strings.sync_bound_app
     },
 )
+
+/** How a setting's sync state reads under its title. */
+@Composable
+internal fun SettingSyncState.summary(): String = when (this) {
+    is SettingSyncState.Switch -> stringResource(
+        when {
+            syncedByDefault && on -> MR.strings.sync_choice_synced
+            syncedByDefault -> MR.strings.sync_choice_off
+            on -> MR.strings.sync_choice_device_default_on
+            else -> MR.strings.sync_choice_device_default_off
+        },
+    )
+    is SettingSyncState.Menu -> stringResource(if (on) MR.strings.sync_choice_synced else MR.strings.sync_choice_off)
+    is SettingSyncState.AreaOff -> stringResource(MR.strings.sync_setting_area_off, area.title())
+    is SettingSyncState.WithData -> stringResource(
+        if (synced) MR.strings.sync_setting_with_data else MR.strings.sync_setting_with_data_off,
+        group.title(),
+    )
+    is SettingSyncState.DeviceOnly -> bound.reason()
+}

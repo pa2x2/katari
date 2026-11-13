@@ -14,6 +14,8 @@ import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.list.SortRow
 import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibrarySort
@@ -50,6 +52,7 @@ internal fun LibrarySortPage(
         )
     }
 
+    MenuSyncHeader(MenuSettings.LIBRARY_SORT)
     RowGroup {
         options.forEach { (titleRes, mode) ->
             row(key = mode) {

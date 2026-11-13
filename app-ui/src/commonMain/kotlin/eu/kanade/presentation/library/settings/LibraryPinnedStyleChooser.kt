@@ -16,6 +16,7 @@ import app.katari.presentation.kit.control.RadioButton
 import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -24,9 +25,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun LibraryPinnedStyleChooser(
     selectedStyle: LibraryPinnedDisplayStyle,
     onStyleSelected: (LibraryPinnedDisplayStyle) -> Unit,
+    setting: Preference<*>,
 ) {
     Column {
-        RowGroupHeader(stringResource(MR.strings.pref_library_pinned_display_style))
+        RowGroupHeader(stringResource(MR.strings.pref_library_pinned_display_style), setting = setting)
         Row(
             modifier = Modifier
                 .fillMaxWidth()

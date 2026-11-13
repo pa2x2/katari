@@ -78,6 +78,9 @@ class SyncPreferences(profileStore: ProfileStore) {
     val installedExtensionsKept: Preference<Boolean> =
         store.getBoolean(Preference.appStateKey("sync_installed_extensions_kept"), false)
 
+    /** Whether the hint that a setting's mark is its sync choice was dismissed, or a mark's choice opened. */
+    val markHintSeen: Preference<Boolean> = store.getBoolean(Preference.appStateKey("sync_mark_hint_seen"), false)
+
     companion object {
         /** The intervals background syncs run at, in minutes; Android runs periodic work at least 15 minutes apart. */
         val BACKGROUND_INTERVALS = listOf(15, 30, 60, 180, 360, 720, 1440)

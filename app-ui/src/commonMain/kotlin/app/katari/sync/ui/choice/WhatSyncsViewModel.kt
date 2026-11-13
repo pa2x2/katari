@@ -51,9 +51,9 @@ class WhatSyncsViewModel(
     val isLinked: StateFlow<Boolean> =
         connection.states().map { it.isLinked }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
-    /** The area being turned back on that waits for the person to say whose settings it keeps. */
-    val askingArea: StateFlow<SettingsArea?>
-        field = MutableStateFlow<SettingsArea?>(null)
+    /** Settings being turned back on that wait for the person to say whose values they keep. */
+    internal val asking: StateFlow<SettingsAgain?>
+        field = MutableStateFlow<SettingsAgain?>(null)
 
     /** The account profile being switched off, which waits for the person to confirm it leaves this device. */
     val removingProfile: StateFlow<ProfileSync?>
@@ -63,32 +63,37 @@ class WhatSyncsViewModel(
         appScope.launchIO { changes.syncData(group, on) }
     }
 
-    fun syncArea(area: SettingsArea, on: Boolean) {
+    fun syncArea(area: SettingsArea, on: Boolean) =
+        syncAgain(SettingsAgain.Area(area), on) { changes.asksWhoseSettings(area) }
+
+    /** Syncs the setting [key], the one titled [title], or keeps it on this device. */
+    fun syncSetting(key: String, title: String, on: Boolean) =
+        syncAgain(SettingsAgain.Setting(key, title), on) { changes.asksWhoseSetting(key) }
+
+    fun syncMenu(menu: MenuSettings, on: Boolean) =
+        syncAgain(SettingsAgain.Menu(menu), on) { changes.asksWhoseSettings(menu) }
+
+    /** Turns [again] on, first asking whose values it keeps where [asks], or off. */
+    private fun syncAgain(again: SettingsAgain, on: Boolean, asks: suspend () -> Boolean) {
         appScope.launchIO {
-            if (on && changes.asksWhoseSettings(area)) {
-                askingArea.value = area
-            } else {
-                changes.syncArea(area, on)
-            }
+            if (on && asks()) asking.value = again else change(again, on, SettingsWinner.ACCOUNT)
         }
     }
 
-    fun answerArea(keep: SettingsWinner) {
-        val area = askingArea.value ?: return
-        askingArea.value = null
-        appScope.launchIO { changes.syncArea(area, on = true, keep = keep) }
+    fun answer(keep: SettingsWinner) {
+        val again = asking.value ?: return
+        asking.value = null
+        appScope.launchIO { change(again, on = true, keep = keep) }
     }
 
-    fun dismissAreaQuestion() {
-        askingArea.value = null
+    fun dismissQuestion() {
+        asking.value = null
     }
 
-    fun syncSetting(key: String, on: Boolean) {
-        appScope.launchIO { changes.syncSetting(key, on) }
-    }
-
-    fun syncMenu(menu: MenuSettings, on: Boolean) {
-        appScope.launchIO { changes.syncMenu(menu, on) }
+    private suspend fun change(again: SettingsAgain, on: Boolean, keep: SettingsWinner) = when (again) {
+        is SettingsAgain.Area -> changes.syncArea(again.area, on, keep)
+        is SettingsAgain.Setting -> changes.syncSetting(again.key, on, keep)
+        is SettingsAgain.Menu -> changes.syncMenu(again.menu, on, keep)
     }
 
     /** Turns syncing [profile] on, or off, first asking when that takes it off this device. */

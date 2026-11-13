@@ -18,38 +18,28 @@ import app.katari.profiles.core.ProfileConstants
 import app.katari.profiles.ui.switcher.switchToProfile
 import app.katari.sync.client.firstsync.SettingsWinner
 import app.katari.sync.client.part.ProfileSync
-import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.ui.di.LocalAppUiGraph
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Asks whose settings [area] keeps as it syncs again, after this device changed them while it didn't. */
+/** Asks whose values the settings [again] keep as they sync again, after this device changed them while they didn't. */
 @Composable
-internal fun AreaAgainDialog(
-    area: SettingsArea,
+internal fun SettingsAgainDialog(
+    again: SettingsAgain,
     onAnswer: (SettingsWinner) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     var keep by rememberSaveable { mutableStateOf(SettingsWinner.ACCOUNT) }
     Dialog(
         onDismissRequest = onDismissRequest,
-        title = stringResource(MR.strings.sync_area_again_title, area.title()),
+        title = again.questionTitle(),
         confirm = DialogAction(stringResource(MR.strings.sync_action_sync), { onAnswer(keep) }),
         dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
     ) {
         Column {
-            Text(stringResource(MR.strings.sync_area_again_text))
+            Text(again.questionText())
             SettingsWinner.entries.forEach { winner ->
-                ChoiceRow(
-                    title = stringResource(
-                        when (winner) {
-                            SettingsWinner.ACCOUNT -> MR.strings.sync_area_keep_account
-                            SettingsWinner.DEVICE -> MR.strings.sync_area_keep_device
-                        },
-                    ),
-                    selected = keep == winner,
-                    onClick = { keep = winner },
-                )
+                ChoiceRow(title = again.answer(winner), selected = keep == winner, onClick = { keep = winner })
             }
         }
     }
@@ -77,12 +67,12 @@ internal fun RemoveProfileDialog(
     )
 }
 
-/** Asks whose settings an area turned back on keeps, while the model waits for the answer. */
+/** Asks whose values settings turned back on keep, while the model waits for the answer. */
 @Composable
-internal fun AreaAgainQuestion(model: WhatSyncsViewModel) {
-    val area by model.askingArea.collectAsState()
-    area?.let {
-        AreaAgainDialog(area = it, onAnswer = model::answerArea, onDismissRequest = model::dismissAreaQuestion)
+internal fun SettingsAgainQuestion(model: WhatSyncsViewModel) {
+    val again by model.asking.collectAsState()
+    again?.let {
+        SettingsAgainDialog(again = it, onAnswer = model::answer, onDismissRequest = model::dismissQuestion)
     }
 }
 

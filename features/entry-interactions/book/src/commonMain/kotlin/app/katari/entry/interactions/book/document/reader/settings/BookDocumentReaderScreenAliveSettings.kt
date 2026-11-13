@@ -29,5 +29,6 @@ internal fun BookDocumentReaderScreenAliveSettings(
                 }
             }
         },
+        setting = binding.definition.profilePreference,
     )
 }

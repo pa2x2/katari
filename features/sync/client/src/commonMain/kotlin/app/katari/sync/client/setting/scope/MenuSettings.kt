@@ -14,4 +14,13 @@ enum class MenuSettings {
 
     /** How a title's chapter list is filtered, sorted and shown, saved by "Set as default" in its chapter menu. */
     CHAPTER_LIST_DEFAULTS,
+
+    /** The Updates feed's filters, from its filter sheet. */
+    UPDATES_FILTERS,
+
+    /** The source languages shown and the sources pinned or hidden, from Browse's source and extension filters. */
+    SOURCES,
+
+    /** The feeds saved in Browse, with their presets, from its Feeds tab. */
+    SAVED_FEEDS,
 }

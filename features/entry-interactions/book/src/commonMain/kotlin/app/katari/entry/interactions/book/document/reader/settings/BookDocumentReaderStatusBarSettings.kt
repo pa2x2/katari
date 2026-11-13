@@ -29,5 +29,6 @@ internal fun BookDocumentReaderStatusBarSettings(
                 }
             }
         },
+        setting = binding.definition.profilePreference,
     )
 }

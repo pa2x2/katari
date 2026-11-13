@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 @ContributesTo(AppScope::class)
 interface EntryInteractionActivityGraph {
     val entryInteractionActivityTheme: EntryInteractionActivityTheme
+    val entryInteractionCompositionRoot: EntryInteractionCompositionRoot
     val readerBasePreferences: ReaderBasePreferences
     val securityPreferences: SecurityPreferences
     val readerSharedSettingsRegistry: ReaderSharedSettingsRegistry

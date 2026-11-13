@@ -7,6 +7,7 @@ import app.katari.sync.client.setting.scope.PreferenceMark
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
 import app.katari.ui.di.LocalAppUiGraph
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.settingsScreens
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,16 +31,11 @@ internal class AreaSetting(
  */
 @Composable
 internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
-    val graph = LocalAppUiGraph.current
-    val screens = remember(graph) { settingsScreens(graph) }
-    val found = screens.flatMap { screen ->
-        val screenTitle = screen.getTitleRes()
-        screen.getPreferences().storedSettings(graph.profileStore).mapNotNull { setting ->
-            // A menu's settings have one row for all of them
-            val mark = PreferenceScopes.markOf(setting.key)?.takeIf { it.area == area && it.menu == null }
-                ?: return@mapNotNull null
-            Triple(screenTitle, setting, mark)
-        }
+    val found = shownSettings().mapNotNull { (screenTitle, setting) ->
+        // A menu's settings have one row for all of them
+        val mark = PreferenceScopes.markOf(setting.key)?.takeIf { it.area == area && it.menu == null }
+            ?: return@mapNotNull null
+        Triple(screenTitle, setting, mark)
     }.distinctBy { (_, setting) -> setting.key }
     val onSeveralScreens = found.distinctBy { (screenTitle) -> screenTitle }.size > 1
     return found.map { (screenTitle, setting, mark) ->
@@ -55,16 +51,21 @@ internal fun areaSettings(area: SettingsArea): List<AreaSetting> {
 internal val SettingsArea.hasPage: Boolean
     get() = this in SettingsArea.switchable && this != SettingsArea.EXTENSION_SETTINGS
 
-/**
- * The Settings area most of these rows' settings sync with, such as Readers for a reader's settings; null for a screen
- * whose settings stay on the device.
- */
-internal fun List<Preference>.syncArea(profileStore: ProfileStore): SettingsArea? = storedSettings(profileStore)
-    .mapNotNull { PreferenceScopes.markOf(it.key)?.area }
-    .groupingBy { it }
-    .eachCount()
-    .maxByOrNull { it.value }
-    ?.key
+/** The title of each setting the Settings screens show, by its key: the first row that shows it. */
+@Composable
+internal fun settingTitles(): Map<String, String> =
+    shownSettings().reversed().associate { (_, setting) -> setting.key to setting.title }
+
+/** Every row of the Settings screens that stores its value in a preference, with its screen's title. */
+@Composable
+private fun shownSettings(): List<Pair<StringResource, StoredSetting>> {
+    val graph = LocalAppUiGraph.current
+    val screens = remember(graph) { settingsScreens(graph) }
+    return screens.flatMap { screen ->
+        val screenTitle = screen.getTitleRes()
+        screen.getPreferences().storedSettings(graph.profileStore).map { screenTitle to it }
+    }
+}
 
 private class StoredSetting(val key: String, val title: String, val group: String?)
 

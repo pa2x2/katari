@@ -16,9 +16,10 @@ fun FilterSectionHeading(
     title: String,
     summary: String,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Column(modifier = modifier) {
-        RowGroupHeader(title)
+        RowGroupHeader(title, trailing = trailing)
         RowGroupNote(summary)
     }
 }

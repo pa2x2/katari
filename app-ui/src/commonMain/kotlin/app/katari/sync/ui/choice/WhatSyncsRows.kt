@@ -15,6 +15,7 @@ import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
 import app.katari.sync.client.part.ProfileSync
 import app.katari.sync.client.part.ProfileSyncState
+import app.katari.sync.client.setting.scope.MenuSettings
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
 import dev.icerock.moko.resources.StringResource
@@ -32,20 +33,25 @@ internal class WhatSyncsActions(
     val syncArea: (SettingsArea, Boolean) -> Unit,
     val openArea: (SettingsArea) -> Unit,
     val syncProfile: (ProfileSync, Boolean) -> Unit,
+    val syncSetting: (key: String, title: String, on: Boolean) -> Unit,
+    val syncMenu: (MenuSettings, Boolean) -> Unit,
 )
 
 /**
- * What syncs: this device's choices of data, Settings areas and profiles, then what never syncs. Library and reading
- * progress lead the data, always synced, since every other record belongs to a title.
+ * What syncs: the settings and menus this device chose one by one ([chosenApartGroup]), then its choices of data,
+ * Settings areas and profiles, then what never syncs. Library and reading progress lead the data, always synced, since
+ * every other record belongs to a title.
  */
 @Composable
 internal fun whatSyncsPreferences(
     choices: ChoiceSet,
+    chosenApart: Preference.PreferenceGroup?,
     profiles: List<ProfileSync>,
     askBeforeNewProfiles: PreferenceData<Boolean>,
     actions: WhatSyncsActions,
-): List<Preference> = listOf(
+): List<Preference> = listOfNotNull(
     Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.sync_choices_note)),
+    chosenApart,
     dataGroup(choices, actions),
     settingsGroup(choices, actions),
     profilesGroup(profiles, askBeforeNewProfiles, actions),

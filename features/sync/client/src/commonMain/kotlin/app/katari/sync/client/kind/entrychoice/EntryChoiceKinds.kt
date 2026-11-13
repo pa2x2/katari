@@ -13,6 +13,7 @@ import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.merge.latest
 import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.record.FieldStamps
 import app.katari.sync.client.record.LocalRead
 import app.katari.sync.client.record.LocalReads
@@ -185,6 +186,9 @@ object ViewerSettingKind : SyncedKind<ViewerSettingPayload>(
             )
         }
     }
+
+    override fun overriddenSetting(payload: ViewerSettingPayload, viewerSettings: ViewerSettingPreferences) =
+        viewerSettings.preferenceKey(payload.providerId, payload.settingKey)
 
     override fun merge(local: ViewerSettingPayload, incoming: ViewerSettingPayload) = local.copy(
         encodedValue = latest(local.encodedValue, incoming.encodedValue),

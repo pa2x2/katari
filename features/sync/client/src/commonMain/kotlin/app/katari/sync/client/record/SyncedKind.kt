@@ -6,6 +6,7 @@ import app.katari.sync.client.apply.LocalWrites
 import app.katari.sync.client.capture.CaptureTrigger
 import app.katari.sync.client.part.ChoiceSet
 import app.katari.sync.client.part.DataGroup
+import app.katari.sync.client.part.ViewerSettingPreferences
 import app.katari.sync.client.payload.UnknownFields
 import app.katari.sync.client.setting.scope.PreferenceScopes
 import app.katari.sync.client.setting.scope.SettingsArea
@@ -100,6 +101,12 @@ abstract class SyncedKind<P : Any>(
 
     /** Whether this device syncs [payload] by what it chose ([ChoiceSet]), its profile aside. */
     internal open fun syncsOn(choices: ChoiceSet, payload: P): Boolean = dataGroup?.let(choices::syncs) ?: true
+
+    /**
+     * The key of the app setting a record of this kind holds a title's own value of, whose sync choice it follows
+     * besides [syncsOn]; null for a record that stands in for no setting.
+     */
+    internal open fun overriddenSetting(payload: P, viewerSettings: ViewerSettingPreferences): String? = null
 
     /** The uuid of the profile a record of this kind is in, when its payload names one rather than an entry. */
     internal open fun profileOf(payload: P): String? = null

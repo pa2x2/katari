@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEachIndexed
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupGap
-import app.katari.sync.ui.choice.rememberSettingSyncMarks
 import app.katari.ui.di.LocalAppUiGraph
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
@@ -44,21 +43,24 @@ fun PreferenceScreen(
     }
 
     val topLevelPositions = rowGroupPositions(items)
-    val syncMarks = rememberSettingSyncMarks()
 
     RowList(
         modifier = modifier,
         state = state,
         contentPadding = contentPadding,
     ) {
+        // Made on each run of this block, which the list may run again for the same items
+        val keys = PreferenceItemKeys()
         items.fastForEachIndexed { i, preference ->
             when (preference) {
                 // Create Preference Group
                 is Preference.PreferenceGroup -> {
                     if (!preference.visible) return@fastForEachIndexed
                     val showGroupChip = !allItemsProfileSpecific && preference.belongsToProfile(profileStore)
+                    val groupKey = keys.of(preference)
+                    val itemKeys = preference.preferenceItems.map(keys::of)
 
-                    item {
+                    item(key = groupKey) {
                         Column {
                             PreferenceGroupHeader(
                                 title = preference.title,
@@ -68,27 +70,25 @@ fun PreferenceScreen(
                         }
                     }
                     val positions = rowGroupPositions(preference.preferenceItems)
-                    itemsIndexed(preference.preferenceItems) { index, item ->
+                    itemsIndexed(preference.preferenceItems, key = { index, _ -> itemKeys[index] }) { index, item ->
                         PreferenceItem(
                             item = item,
                             highlightKey = highlightKey,
                             showProfileChip = !allItemsProfileSpecific && !showGroupChip &&
                                 item.belongsToProfile(profileStore),
                             groupPosition = positions[index],
-                            syncMarks = syncMarks,
                         )
                     }
-                    item { RowGroupGap() }
+                    item(key = "gap:$groupKey") { RowGroupGap() }
                 }
 
                 // Create Preference Item
-                is Preference.PreferenceItem<*, *> -> item {
+                is Preference.PreferenceItem<*, *> -> item(key = keys.of(preference)) {
                     PreferenceItem(
                         item = preference,
                         highlightKey = highlightKey,
                         showProfileChip = !allItemsProfileSpecific && preference.belongsToProfile(profileStore),
                         groupPosition = topLevelPositions[i],
-                        syncMarks = syncMarks,
                     )
                 }
             }
@@ -96,7 +96,7 @@ fun PreferenceScreen(
         // Every group ends with a gap, the last one too, so the list's last card keeps clear of the window's bottom
         // edge; a list that ends on rows outside a group gets the same gap
         if (items.lastOrNull { it.visible } is Preference.PreferenceItem<*, *>) {
-            item { RowGroupGap() }
+            item(key = END_GAP_KEY) { RowGroupGap() }
         }
     }
 }
@@ -114,3 +114,5 @@ private fun List<Preference>.findHighlightedIndex(highlightKey: String): Int {
         }
     }.indexOfFirst { it == highlightKey }
 }
+
+private const val END_GAP_KEY = "end-gap"

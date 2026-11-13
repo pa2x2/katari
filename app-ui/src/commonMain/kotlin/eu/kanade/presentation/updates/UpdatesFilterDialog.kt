@@ -13,6 +13,8 @@ import app.katari.presentation.kit.list.TriStateRow
 import app.katari.presentation.kit.sheet.SheetBackdrop
 import app.katari.presentation.kit.sheet.TabbedSheet
 import app.katari.presentation.kit.theme.KatariTheme
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.entry.entryTypePresentation
@@ -53,6 +55,8 @@ fun UpdatesFilterDialog(
         backdrop = SheetBackdrop.Light,
         tabTitles = tabs.map { stringResource(it.title) },
     ) { page ->
+        // Every tab's filters sync or stay as one
+        MenuSyncHeader(MenuSettings.UPDATES_FILTERS)
         when (tabs[page]) {
             UpdatesFilterTab.Filter -> FilterSheet(
                 viewModel = viewModel,

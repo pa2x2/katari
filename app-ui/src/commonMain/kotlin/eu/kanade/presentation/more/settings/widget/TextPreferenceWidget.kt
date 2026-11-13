@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.presentation.kit.content.TonedSpan
 import app.katari.presentation.kit.list.SettingsRow
 import app.katari.presentation.kit.theme.ContentTone
+import eu.kanade.presentation.more.settings.LocalPreferenceSetting
 
 @Composable
 fun TextPreferenceWidget(
@@ -29,6 +30,7 @@ fun TextPreferenceWidget(
         iconAlert = iconAlert,
         trailing = widget,
         titleSuffix = settingTitleSuffix(isProfileSpecific),
+        setting = LocalPreferenceSetting.current,
         subtitleMaxLines = SUBTITLE_MAX_LINES,
         subtitleTone = subtitleTone,
         subtitleState = subtitleState,

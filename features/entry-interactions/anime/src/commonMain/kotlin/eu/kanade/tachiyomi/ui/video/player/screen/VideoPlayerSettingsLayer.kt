@@ -184,6 +184,7 @@ internal fun VideoPlayerSettingsLayer(
                 {
                     VideoPlayerMarkerSkipRow(
                         choice = VideoPlayerMarkerSkipChoice(markerSkipOverride),
+                        setting = markerSkipSetting.definition.profilePreference,
                         onSelect = { mode ->
                             scope.launch {
                                 if (mode == null) {

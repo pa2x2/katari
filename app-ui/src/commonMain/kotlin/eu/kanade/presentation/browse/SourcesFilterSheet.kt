@@ -11,6 +11,8 @@ import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.list.ToggleRow
 import app.katari.presentation.kit.sheet.SheetSplitList
+import app.katari.sync.client.setting.scope.MenuSettings
+import app.katari.sync.ui.choice.MenuSyncHeader
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import eu.kanade.presentation.browse.components.BrowseFilterSheet
 import eu.kanade.presentation.browse.components.ContentTypeFilterSection
@@ -49,6 +51,10 @@ fun SourcesFilterSheet(
                 }
             },
             end = {
+                // The languages and the sources hidden under them sync or stay as one
+                item(key = "sources-sync") {
+                    MenuSyncHeader(MenuSettings.SOURCES)
+                }
                 // Each language is a card: its toggle first, then its sources while it is on.
                 state.items.forEach { (language, sources) ->
                     val enabled = language in state.enabledLanguages

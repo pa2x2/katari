@@ -48,7 +48,7 @@ private fun <T> TypographyChoices(
     val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     val profileDefault = setting.profileValue ?: setting.processorDefault
-    ChipsRow(title = title) {
+    ChipsRow(title = title, setting = binding.definition.profilePreference) {
         choices.forEach { choice ->
             FilterChip(
                 label = stringResource(label(choice)),
