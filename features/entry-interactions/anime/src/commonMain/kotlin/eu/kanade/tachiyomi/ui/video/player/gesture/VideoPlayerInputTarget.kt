@@ -105,6 +105,12 @@ internal interface VideoPlayerInputTarget {
     /** Turns subtitles off, or back on to the track last turned off, or else the first track. */
     fun toggleSubtitles()
 
+    /**
+     * Shows the playing subtitle a step later, or earlier, and the timing a moment; nothing while no subtitle whose
+     * timing can be set plays.
+     */
+    fun stepSubtitleTiming(later: Boolean)
+
     /** Skip shows for an intro, recap, credits or preview. */
     val skipOffered: Boolean
 

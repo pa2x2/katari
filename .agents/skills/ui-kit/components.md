@@ -108,7 +108,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | The app's button, including destructive confirms | `Button` | Style by its `style` enum and `destructive` |
-| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs; with `arrows` drawn over a still icon, only they turn |
+| An icon button, with a tooltip and shortcut keys on hover | `IconButton`, `IconToggleButton` | `spin` turns the icon, the way its arrows point, while the work it stands for runs; with `arrows` drawn over a still icon, only they turn; `repeatWhileHeld` acts on press and repeats, faster and faster, while held, for a button that steps a value |
 | Lines between groups of icon buttons in one row, such as a formatting bar | `ButtonGroupDivider` | |
 | An item's actions in a row that scrolls or wraps, such as an entry's library and web view actions | `ActionButtonRow`, `ActionButton` | |
 | Equally weighted actions with the icon above the label, such as share and save | `StackedActionButton` | |

@@ -84,6 +84,12 @@ SELECT entry_id, chapter_id, last_read, time_read
 FROM history
 WHERE chapter_id = :chapterId;
 
+subtitleTimingRow:
+SELECT C.entry_id, T.chapter_id, T.subtitle_key, T.delay_ms
+FROM episode_subtitle_timings T
+JOIN chapters C ON C._id = T.chapter_id
+WHERE T.chapter_id = :chapterId;
+
 activitySessionRow:
 SELECT session_id, entry_id, started_at, ended_at, duration
 FROM activity_sessions

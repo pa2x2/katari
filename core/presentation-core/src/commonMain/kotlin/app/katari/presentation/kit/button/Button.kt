@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.currentSurfaceContainer
+import app.katari.presentation.kit.surface.holdsMediaContent
 import app.katari.presentation.kit.theme.KatariColors
 import app.katari.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.material.ButtonColors
@@ -32,7 +34,8 @@ enum class ButtonSize { Default, Small }
 /**
  * The app's button. [destructive] marks an action that deletes or discards something; a destructive [Filled]
  * button is the confirm style of destructive dialogs. [loading] shows the wait indicator in place of [icon], for an
- * action that is already running.
+ * action that is already running. Over video or pages, such as a player notice's action, an [Outlined] or [Text]
+ * button takes the media content colour, which reads there in either theme.
  */
 @Composable
 fun Button(
@@ -69,7 +72,7 @@ fun Button(
         } else {
             null
         },
-        colors = buttonColors(style, destructive, colors),
+        colors = buttonColors(style, destructive, currentSurfaceContainer().holdsMediaContent, colors),
         contentPadding = if (size == ButtonSize.Small) {
             SmallButtonPadding
         } else {
@@ -87,7 +90,12 @@ fun Button(
     }
 }
 
-private fun buttonColors(style: ButtonStyle, destructive: Boolean, colors: KatariColors): ButtonColors {
+private fun buttonColors(
+    style: ButtonStyle,
+    destructive: Boolean,
+    onMedia: Boolean,
+    colors: KatariColors,
+): ButtonColors {
     val (container, content) = when (style) {
         ButtonStyle.Filled -> if (destructive) colors.error to colors.onError else colors.primary to colors.onPrimary
         ButtonStyle.Tonal -> if (destructive) {
@@ -95,7 +103,11 @@ private fun buttonColors(style: ButtonStyle, destructive: Boolean, colors: Katar
         } else {
             colors.secondaryContainer to colors.onSecondaryContainer
         }
-        ButtonStyle.Outlined, ButtonStyle.Text -> Color.Transparent to if (destructive) colors.error else colors.primary
+        ButtonStyle.Outlined, ButtonStyle.Text -> Color.Transparent to when {
+            destructive -> colors.error
+            onMedia -> colors.onMedia
+            else -> colors.primary
+        }
     }
     return ButtonColors(
         containerColor = container,

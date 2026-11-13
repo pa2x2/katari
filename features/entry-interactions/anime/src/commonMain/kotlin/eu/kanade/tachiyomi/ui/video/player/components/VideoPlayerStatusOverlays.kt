@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Close
 import app.katari.icons.materialsymbols.rounded.Error
+import app.katari.icons.materialsymbols.rounded.Subtitles
 import app.katari.icons.materialsymbols.roundedfilled.FastForward
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
@@ -144,6 +145,37 @@ internal fun VideoPlayerNoticePill(
             null
         },
     )
+}
+
+/** The subtitle timing set by a key, which nothing else on screen shows while the timing bar is closed. */
+@Composable
+internal fun VideoPlayerSubtitleTimingPill(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Subtitles,
+                contentDescription = null,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        },
+    )
+}
+
+/**
+ * Where what stays over the video while the controls come and go shows, such as the subtitle timing bar or a failed
+ * episode change: under the top bar, so neither covers the other at any width. The status pills, which come and go,
+ * keep to the top.
+ */
+@Composable
+internal fun Modifier.videoPlayerUnderTopBarSlot(): Modifier {
+    val spacing = KatariTheme.spacing
+    return videoPlayerSafeContentPadding(includeTop = true)
+        .padding(top = KatariTheme.sizes.touchTarget + spacing.xl, start = spacing.l, end = spacing.l)
 }
 
 @Composable

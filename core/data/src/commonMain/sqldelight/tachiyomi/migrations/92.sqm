@@ -1,0 +1,8 @@
+-- Subtitle timings set per episode (tachiyomi/data/episode_subtitle_timings.sq).
+CREATE TABLE episode_subtitle_timings(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    subtitle_key TEXT NOT NULL,
+    delay_ms INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    CHECK(delay_ms != 0)
+);

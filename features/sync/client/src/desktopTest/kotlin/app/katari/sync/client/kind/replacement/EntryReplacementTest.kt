@@ -6,6 +6,7 @@ import app.katari.sync.client.kind.chapter.ChapterGroup
 import app.katari.sync.client.kind.chapter.ChapterKind
 import app.katari.sync.client.library
 import app.katari.sync.client.rows
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -271,6 +272,37 @@ class EntryReplacementTest {
                         """["entry","work","aniyomi",777,"/show","anime",1,0,null,"",0,0,0]""",
                         """["history","/show/1",3000,1800]""",
                     )
+                }
+            }
+        }
+
+    @Test
+    fun `time read on a moved entry where the move wasn't heard of yet reaches the device that moved it`(): Unit =
+        runBlocking {
+            val exchange = RecordExchange()
+            SyncTestDevice(directory.resolve("a.db")).use { a ->
+                SyncTestDevice(directory.resolve("b.db")).use { b ->
+                    a.startSync(deviceId = 1)
+                    b.startSync(deviceId = 2)
+                    a.sql(
+                        "INSERT INTO profiles(_id, uuid, name, color_seed, position) VALUES (2, 'work', 'Work', 1, 1)",
+                        "INSERT INTO source_identities(local_key, id_scheme, external_id) VALUES (-2, 'aniyomi', 777)",
+                        "INSERT INTO entries(_id, source, url, title, favorite, type) VALUES (1, -2, '/show', 'Show', 1, 'anime')",
+                        "INSERT INTO chapters(_id, entry_id, url, name, chapter_number) VALUES (10, 1, '/show/1', 'Episode 1', 1)",
+                        "INSERT INTO history(entry_id, chapter_id, last_read, time_read) VALUES (1, 10, 1000, 300)",
+                    )
+                    exchange.settle(listOf(a, b))
+
+                    // Nothing of the episode changes on A after the move, so its chapter has no record under the new key
+                    a.sql("UPDATE entries SET profile_id = 2 WHERE _id = 1")
+                    a.drainAll()
+                    delay(5)
+                    b.sql("UPDATE history SET last_read = 3000, time_read = 1700")
+
+                    exchange.settle(listOf(a, b))
+
+                    a.library() shouldBe b.library()
+                    a.library() shouldContain """["history","/show/1",3000,1700]"""
                 }
             }
         }

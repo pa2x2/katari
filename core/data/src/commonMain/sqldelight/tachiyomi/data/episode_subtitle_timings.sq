@@ -1,0 +1,32 @@
+-- How much later (or, negative, earlier) an episode's subtitles show than their file says, as the viewer set it for the
+-- subtitle subtitle_key names. It holds for that episode and that subtitle only; an episode without a row shows them as
+-- timed. The row hangs off its chapter alone, so it follows the chapter wherever the chapter goes.
+CREATE TABLE episode_subtitle_timings(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    subtitle_key TEXT NOT NULL,
+    delay_ms INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    CHECK(delay_ms != 0)
+);
+
+get:
+SELECT *
+FROM episode_subtitle_timings
+WHERE chapter_id = :chapterId;
+
+getByEntryId:
+SELECT T.*
+FROM episode_subtitle_timings T
+JOIN chapters C ON C._id = T.chapter_id
+WHERE C.entry_id = :entryId;
+
+upsert:
+INSERT INTO episode_subtitle_timings(chapter_id, subtitle_key, delay_ms)
+VALUES (:chapterId, :subtitleKey, :delayMs)
+ON CONFLICT(chapter_id) DO UPDATE SET
+    subtitle_key = excluded.subtitle_key,
+    delay_ms = excluded.delay_ms;
+
+delete:
+DELETE FROM episode_subtitle_timings
+WHERE chapter_id = :chapterId;

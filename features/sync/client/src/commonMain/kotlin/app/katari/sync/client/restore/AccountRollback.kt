@@ -36,6 +36,7 @@ class AccountRollback(private val handler: DatabaseHandler) {
             deleteTheIntroDbPicks(profileIds)
             deleteHistory(profileIds)
             deleteProgress(profileIds)
+            deleteSubtitleTimings(profileIds)
             clearChapterMarks(profileIds)
             leaveLibrary(profileIds)
         }

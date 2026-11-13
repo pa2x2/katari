@@ -38,9 +38,9 @@ import kotlinx.coroutines.launch
  * The player settings: speed, picture, quality, subtitles, audio, source, the episode's chapters, and the title's skip
  * mode and player engine. Picking a chapter seeks to it through [onSeek] and closes the settings to show it playing.
  * Applying a source or resetting saves the progress first; the subtitle settings close the settings, pause the video
- * and open the subtitle editor. A track only mpv plays moves Auto to mpv when picked. When [introTimes] are looked up
- * online, the skip section says where they stand with each service and opens the page that changes a service's match in
- * place of the rest.
+ * and open the subtitle editor, while adjusting the subtitle timing closes them for the timing bar over the video as it
+ * plays. A track only mpv plays moves Auto to mpv when picked. When [introTimes] are looked up online, the skip section
+ * says where they stand with each service and opens the page that changes a service's match in place of the rest.
  */
 @Composable
 internal fun VideoPlayerSettingsLayer(
@@ -60,6 +60,7 @@ internal fun VideoPlayerSettingsLayer(
     onSeek: (Long) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val subtitleTiming by viewModel.subtitleTiming.state.collectAsState()
     val markerSkipOverride = markerSkipSetting?.let { it.state.collectAsState().value.entryOverride }
     val showsMarkerSkip = markerSkipSetting != null && (introTimes != null || markers.any { it.skippable })
     // The service whose match page shows in place of the settings, if any.
@@ -159,6 +160,12 @@ internal fun VideoPlayerSettingsLayer(
                 ui.resumePlaybackAfterSubtitleEditor = currentPlayer.state.value.isPlaying
                 currentPlayer.pause()
                 ui.subtitleEditorVisible = true
+            },
+            subtitleTimingDelayMs = subtitleTiming.delayMs.takeIf { subtitleTiming.adjustable },
+            onAdjustSubtitleTiming = {
+                actions.endSpeedBoost()
+                ui.settingsVisible = false
+                ui.subtitleTimingVisible = true
             },
             engine = VideoPlayerEngineChoice(
                 override = current.playback.engineOverride,

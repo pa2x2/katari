@@ -45,6 +45,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.repository.SubtitleTimingRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
@@ -121,6 +122,7 @@ object AnimePlayerBindings {
         aniSkipLookup: AniSkipLookup,
         theIntroDbLookup: TheIntroDbLookup,
         progressOffers: EntryProgressOffers,
+        subtitleTimings: SubtitleTimingRepository,
         readingSessionReports: ReadingSessionReports,
         @AppCoroutineScope appScope: CoroutineScope,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
@@ -146,6 +148,7 @@ object AnimePlayerBindings {
             aniSkipLookup = aniSkipLookup,
             theIntroDbLookup = theIntroDbLookup,
             progressOffers = progressOffers,
+            subtitleTimings = subtitleTimings,
             sessionReport = readingSessionReports.start(EntryType.ANIME),
             persistenceScope = appScope,
         )

@@ -5,6 +5,7 @@ import app.katari.entry.interactions.child.EntryChildListFeature
 import app.katari.entry.interactions.durable.EntryDurableParticipant
 import app.katari.entry.interactions.media.backup.EntryIntroTimesMatchesBackupParticipant
 import app.katari.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
+import app.katari.entry.interactions.media.backup.EntrySubtitleTimingsBackupParticipant
 import app.katari.entry.interactions.media.backup.EntryTheIntroDbMatchesBackupParticipant
 import app.katari.entry.interactions.media.backup.EntryViewerSettingsBackupParticipant
 import app.katari.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
@@ -25,7 +26,9 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
+import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
+import tachiyomi.domain.entry.repository.SubtitleTimingRepository
 import tachiyomi.domain.entry.repository.TheIntroDbMatchRepository
 
 @ContributesTo(AppScope::class)
@@ -97,6 +100,13 @@ object EntryMediaBindings {
     internal fun theIntroDbMatchesBackupState(
         repository: () -> TheIntroDbMatchRepository,
     ): EntryBackupStateParticipant = EntryTheIntroDbMatchesBackupParticipant(repository)
+
+    @Provides
+    @IntoSet
+    internal fun subtitleTimingsBackupState(
+        timings: () -> SubtitleTimingRepository,
+        chapters: () -> EntryChapterRepository,
+    ): EntryBackupStateParticipant = EntrySubtitleTimingsBackupParticipant(timings, chapters)
 
     @Provides
     @IntoSet
