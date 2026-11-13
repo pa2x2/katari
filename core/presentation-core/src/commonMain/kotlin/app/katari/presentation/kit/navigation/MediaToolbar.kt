@@ -2,11 +2,19 @@ package app.katari.presentation.kit.navigation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import app.katari.presentation.kit.theme.KatariTheme
 
 /**
@@ -20,7 +28,17 @@ import app.katari.presentation.kit.theme.KatariTheme
 @Composable
 fun MediaToolbar(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val gap = KatariTheme.spacing.xs
-    Layout(content = content, modifier = modifier.fillMaxWidth()) { measurables, constraints ->
+    val measurePolicy = remember(gap) { MediaToolbarMeasurePolicy(gap) }
+    Layout(content = content, modifier = modifier.fillMaxWidth(), measurePolicy = measurePolicy)
+}
+
+/**
+ * Measures a [MediaToolbar]. Its widest, as `IntrinsicSize.Max` asks, holds every button with its label and what
+ * fills leftover room whole, so a toolbar as wide as its content, such as one in a pill, shows them all where the
+ * window has room.
+ */
+private class MediaToolbarMeasurePolicy(private val gap: Dp) : MeasurePolicy {
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
         val gapPx = gap.roundToPx()
         val slots = measurables.map { it.layoutId as? ToolbarSlot ?: ToolbarSlot.Leading }
         // A slot that fills leftover room asks for none of its own, so no label drops to make room for it
@@ -56,7 +74,7 @@ fun MediaToolbar(modifier: Modifier = Modifier, content: @Composable () -> Unit)
         val measured = placeables.map { requireNotNull(it) }
         val height = (measured.maxOfOrNull { it.height } ?: 0).coerceIn(constraints.minHeight, constraints.maxHeight)
 
-        layout(rowWidth, height) {
+        return layout(rowWidth, height) {
             var start = 0
             var end = rowWidth
             measured.forEachIndexed { index, placeable ->
@@ -74,6 +92,14 @@ fun MediaToolbar(modifier: Modifier = Modifier, content: @Composable () -> Unit)
                 }
             }
         }
+    }
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(
+        measurables: List<IntrinsicMeasurable>,
+        height: Int,
+    ): Int {
+        val gaps = gap.roundToPx() * (measurables.size - 1).coerceAtLeast(0)
+        return measurables.sumOf { it.maxIntrinsicWidth(height) } + gaps
     }
 }
 

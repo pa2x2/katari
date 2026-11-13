@@ -120,6 +120,20 @@ internal object VideoPlayerShortcuts {
             ShortcutKeys.Chord(Key.C, "C"),
         )
 
+    val SubtitlesEarlier: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.subtitlesEarlier",
+            stringResource(MR.strings.anime_shortcut_subtitles_earlier),
+            ShortcutKeys.Chord(Key.Z, "Z"),
+        )
+
+    val SubtitlesLater: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.subtitlesLater",
+            stringResource(MR.strings.anime_shortcut_subtitles_later),
+            ShortcutKeys.Chord(Key.X, "X"),
+        )
+
     /** I, in the main window and in picture-in-picture alike: into the small window and back out of it. */
     val PictureInPicture: KeyboardShortcut
         @Composable get() = shortcut(

@@ -5,12 +5,15 @@ import app.cash.sqldelight.async.coroutines.awaitAsOne
 import app.katari.sync.client.apply.Resolved
 import app.katari.sync.client.identity.RecordKeys
 import app.katari.sync.client.kind.chapter.ChapterKind
+import app.katari.sync.client.kind.chapter.ChapterPayload
 import app.katari.sync.client.kind.entry.EntryKind
 import app.katari.sync.client.kind.history.HistoryKind
 import app.katari.sync.client.kind.history.HistoryPayload
 import app.katari.sync.client.kind.progress.ProgressKind
 import app.katari.sync.client.kind.progress.ProgressPayload
 import app.katari.sync.client.kind.replacement.EntryReplacementKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingPayload
 import app.katari.sync.client.payload.Stamped
 import app.katari.sync.client.record.LocalReads
 import app.katari.sync.data.ChaptersOfEntry
@@ -28,7 +31,7 @@ import tachiyomi.domain.entry.migration.pairMigrationChaptersInOrder
 /**
  * What hangs off an entry's chapters, carried over a replacement to the chapters that stand for them ([pairs]): read
  * and bookmark marks and positions when a migration kept chapter state, and for a move also history, whose time read
- * adds to the time read on the new chapter.
+ * adds to the time read on the new chapter, and subtitle timings.
  */
 internal class CarriedChapterState(private val carry: ReplacementCarry) {
 
@@ -101,16 +104,35 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
 
     private suspend fun write(target: Chapter, read: Stamped<Boolean>, bookmark: Stamped<Boolean>) {
         if (read == target.read && bookmark == target.bookmark) return
-        // A chapter nobody marked has no record yet; its row holds what the source listed, which the record carries
-        val base = carry.stored(ChapterKind, target.key) ?: ChapterKind.payload(
-            row = carry.writes.database.sync_local_rowsQueries.chapterRow(target.id).awaitAsOne(),
+        val base = carry.stored(ChapterKind, target.key) ?: unrecorded(target)
+        carry.writes.change(ChapterKind, target.key, base.copy(read = read, bookmark = bookmark))
+    }
+
+    /**
+     * Stores [target]'s record when it has none, before a carried record that names the chapter: that record applies
+     * only once its chapter's does. A moved entry's chapters keep their records under the old entry's keys until
+     * something of theirs changes, and a chapter nobody marked has none at all.
+     */
+    private suspend fun record(target: Chapter) {
+        if (carry.stored(ChapterKind, target.key) == null) {
+            carry.writes.change(ChapterKind, target.key, unrecorded(target))
+        }
+    }
+
+    /**
+     * The record of [target], which has none yet: its row holds what the source listed and the marks it has here, never
+     * seen edited under this key, as a drain reads a chapter for the record that names it.
+     */
+    private suspend fun unrecorded(target: Chapter): ChapterPayload {
+        val row = carry.writes.database.sync_local_rowsQueries.chapterRow(target.id).awaitAsOne()
+        return ChapterKind.payload(
+            row = row,
             entryKey = carry.to,
-            read = target.read,
-            bookmark = target.bookmark,
+            read = Stamped(row.read, Stamped.UNKNOWN_EDIT),
+            bookmark = Stamped(row.bookmark, Stamped.UNKNOWN_EDIT),
             previousDetails = null,
             renamedFrom = null,
         )
-        carry.writes.change(ChapterKind, target.key, base.copy(read = read, bookmark = bookmark))
     }
 
     /**
@@ -125,7 +147,10 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
             if (!carry.carries(EntryMigrationOption.CHILD_STATE)) return
             val sources = chapters(carry.from)
             val source = sources.firstOrNull { it.key == from.chapterKey } ?: return
-            pairedTargets(sources, source).map { it.key to it.url }
+            pairedTargets(sources, source).map { target ->
+                record(target)
+                target.key to target.url
+            }
         } else {
             listOf(null to from.resourceKey)
         }
@@ -162,6 +187,7 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
         val sources = chapters(carry.from)
         val source = sources.firstOrNull { it.key == from.chapterKey } ?: return
         pairedTargets(sources, source).forEach { target ->
+            record(target)
             carry.writes.change(
                 HistoryKind,
                 RecordKeys.derive(HistoryKind.name, target.key),
@@ -171,6 +197,25 @@ internal class CarriedChapterState(private val carry: ReplacementCarry) {
                     lastRead = lastRead ?: Stamped(null, Stamped.UNKNOWN_EDIT),
                     timeRead = shares,
                 ),
+            )
+        }
+    }
+
+    /**
+     * A subtitle timing follows a move only: a migration's episodes come from another source, whose subtitles are timed
+     * their own way, as migrating here leaves timings with the old entry too.
+     */
+    suspend fun subtitleTiming(from: SubtitleTimingPayload) {
+        if (!carry.isMove) return
+        val timing = carry.after(from.timing) ?: return
+        val sources = chapters(carry.from)
+        val source = sources.firstOrNull { it.key == from.chapterKey } ?: return
+        pairedTargets(sources, source).forEach { target ->
+            record(target)
+            carry.writes.change(
+                SubtitleTimingKind,
+                RecordKeys.derive(SubtitleTimingKind.name, target.key),
+                SubtitleTimingPayload(entryKey = carry.to, chapterKey = target.key, timing = timing),
             )
         }
     }

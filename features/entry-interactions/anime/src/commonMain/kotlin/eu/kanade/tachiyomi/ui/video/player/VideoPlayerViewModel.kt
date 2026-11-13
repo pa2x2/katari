@@ -48,6 +48,7 @@ import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
 import eu.kanade.tachiyomi.ui.video.player.server.withServersListedBefore
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.timing.VideoPlayerSubtitleTiming
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundColor
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundOpacity
 import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetX
@@ -104,6 +105,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.repository.SubtitleTimingRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.expansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -134,6 +136,7 @@ internal class VideoPlayerViewModel(
     aniSkipLookup: AniSkipLookup,
     theIntroDbLookup: TheIntroDbLookup,
     progressOffers: EntryProgressOffers,
+    subtitleTimings: SubtitleTimingRepository,
     private val sessionReport: ReadingSessionReport,
     private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -152,6 +155,15 @@ internal class VideoPlayerViewModel(
         offers = progressOffers,
         ready = mutableState,
         readyStates = mutableState.filterIsInstance<State.Ready>(),
+    )
+
+    val subtitleTiming = VideoPlayerSubtitleTiming(
+        scope = viewModelScope,
+        timings = subtitleTimings,
+        episodes = mutableState.filterIsInstance<State.Ready>().map { it.chapterId },
+        subtitles = mutableState.filterIsInstance<State.Ready>().map { it.playback.currentSubtitle },
+        persistenceScope = persistenceScope,
+        persistenceDispatcher = persistenceDispatcher,
     )
 
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
@@ -649,6 +661,7 @@ internal class VideoPlayerViewModel(
 
     fun selectSubtitle(selection: VideoPlayerSubtitleSelection) {
         val current = mutableState.value as? State.Ready ?: return
+        subtitleTiming.subtitlePicked(selection)
         if (current.playback.currentSubtitle != selection) {
             mutableState.value = current.copy(
                 playback = current.playback.copy(currentSubtitle = selection),

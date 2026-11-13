@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.entry.interactions.source.EntryChildWebViewAction
-import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
@@ -29,7 +27,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.problemExplanation
 import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.skippedLabel
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
-import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerUnderTopBarSlot
 import eu.kanade.tachiyomi.ui.video.player.picture.icon
 import eu.kanade.tachiyomi.ui.video.player.picture.label
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
@@ -44,8 +42,9 @@ import tachiyomi.presentation.core.i18n.stringResource
  * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
  * the held speed boost, a zoom, episode and source switching (an episode change can be cancelled there), a failed
  * episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch that
- * failed and the first-run gesture guide, which waits for a frame and steps aside for a problem screen.
- * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
+ * failed, the subtitle timing and the first-run gesture guide, which waits for a frame and steps aside for a problem
+ * screen. [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null. [positionMs] is the
+ * playback position now.
  */
 @Composable
 internal fun BoxScope.VideoPlayerStatusOverlays(
@@ -61,6 +60,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     seekStepSeconds: Int,
     markerSkip: VideoPlayerMarkerSkip,
     onUndoSkip: (Long) -> Unit,
+    positionMs: () -> Long,
 ) {
     if (ui.startupOverlayVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
         val playbackData = current.playback.playbackData
@@ -141,12 +141,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
             onRetry = viewModel::retryEpisodeChange,
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(
-                    top = KatariTheme.sizes.touchTarget + KatariTheme.spacing.xl,
-                    start = KatariTheme.spacing.l,
-                    end = KatariTheme.spacing.l,
-                ),
+                .videoPlayerUnderTopBarSlot(),
         )
         if (choices != null) {
             VideoPlayerSourcePicker(
@@ -280,6 +275,22 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
             },
             onDismiss = viewModel::dismissSwitchFailure,
             failure = true,
+        )
+    }
+
+    if (!isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        VideoPlayerSubtitleTimingOverlays(
+            timing = viewModel.subtitleTiming,
+            ui = ui,
+            barCovered = episodeChange is VideoPlayerViewModel.EpisodeChange.Failed || engine.problem != null,
+            statusShown = switchingLabel != null ||
+                episodeChange is VideoPlayerViewModel.EpisodeChange.Failed ||
+                serverNotice != null ||
+                skipped != null ||
+                engine.notice != null ||
+                engine.problem != null ||
+                switchFailure != null,
+            positionMs = positionMs,
         )
     }
 

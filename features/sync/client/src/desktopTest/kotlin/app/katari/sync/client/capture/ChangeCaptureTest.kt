@@ -13,12 +13,14 @@ import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
 import tachiyomi.data.entry.EntryRepositoryImpl
+import tachiyomi.data.entry.SubtitleTimingRepositoryImpl
 import tachiyomi.data.history.HistoryRepositoryImpl
 import tachiyomi.data.library.update.LibraryUpdateReportRepositoryImpl
 import tachiyomi.domain.category.model.NewCategory
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.SubtitleTiming
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.history.model.activity.HistoryCompletionCause
 import tachiyomi.domain.history.model.activity.HistoryCompletionUpdate
@@ -51,6 +53,7 @@ class ChangeCaptureTest {
             val categories = CategoryRepositoryImpl(device.handler, device.defaultProfile)
             val history = HistoryRepositoryImpl(device.handler, device.defaultProfile)
             val progress = EntryProgressRepositoryImpl(device.handler)
+            val subtitleTimings = SubtitleTimingRepositoryImpl(device.handler)
             val db = device.database
 
             entries.updateNotes(1, 1, "Written before sync")
@@ -97,6 +100,13 @@ class ChangeCaptureTest {
             expect("history", "history", "history") {
                 history.upsertHistory(HistoryUpdate(chapterId = 10, readAt = Date(5), sessionReadDuration = 60))
                 history.upsertHistory(HistoryUpdate(chapterId = 12, readAt = Date(6), sessionReadDuration = 60))
+            }
+            expect("subtitle timing set, changed and removed", *Array(4) { "episode.subtitle-timing" }) {
+                subtitleTimings.set(SubtitleTiming(chapterId = 10, subtitleKey = "external:English", delayMs = 400))
+                subtitleTimings.set(SubtitleTiming(chapterId = 10, subtitleKey = "external:English", delayMs = -1500))
+                subtitleTimings.delete(10)
+                // Kept, so the episode removed by the refresh and the entry removed as cache take one with them
+                subtitleTimings.set(SubtitleTiming(chapterId = 12, subtitleKey = "external:English", delayMs = 400))
             }
             expect("activity session and segment", "activity.session", "activity.segment") {
                 db.activityQueries.insertActivitySession("session", 1, 100, 200)

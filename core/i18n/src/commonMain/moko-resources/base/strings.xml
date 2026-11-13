@@ -1863,6 +1863,26 @@
     <string name="anime_playback_subtitle_text_edge_shadow">Shadow</string>
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
+    <string name="anime_subtitle_timing">Subtitle timing</string>
+    <!-- A timing in seconds with its sign, such as "+0.4 s": positive shows subtitles later -->
+    <string name="anime_subtitle_timing_seconds">%1$s s</string>
+    <!-- After the seconds typed in the subtitle timing field -->
+    <string name="anime_subtitle_timing_seconds_unit">s</string>
+    <!-- Over the video when an episode opens with the subtitle timing saved for it, such as "Subtitle timing +0.4 s" -->
+    <string name="anime_subtitle_timing_notice">Subtitle timing %1$s s</string>
+    <string name="anime_subtitle_timing_adjust">Adjust</string>
+    <string name="anime_subtitle_timing_earlier">Show subtitles earlier</string>
+    <string name="anime_subtitle_timing_later">Show subtitles later</string>
+    <string name="anime_subtitle_timing_type">Enter the timing</string>
+    <string name="anime_subtitle_timing_type_hint">Positive shows subtitles later, negative earlier</string>
+    <string name="anime_subtitle_timing_invalid">Enter a number of seconds, such as 1.5 or -0.4</string>
+    <!-- Moves the timing so that a subtitle shows when its line is spoken, from two marks the viewer makes -->
+    <string name="anime_subtitle_timing_sync">Sync to a line</string>
+    <string name="anime_subtitle_timing_sync_start">Mark each as it happens</string>
+    <string name="anime_subtitle_timing_sync_after_shown">Now mark when its line is spoken</string>
+    <string name="anime_subtitle_timing_sync_after_heard">Now mark when its subtitle shows</string>
+    <string name="anime_subtitle_timing_subtitle_shown">Subtitle shown</string>
+    <string name="anime_subtitle_timing_line_heard">Line heard</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
     <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
     <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
@@ -1939,6 +1959,8 @@
     <string name="anime_shortcut_previous_frame">Previous frame, while paused</string>
     <string name="anime_shortcut_next_frame">Next frame, while paused</string>
     <string name="anime_shortcut_subtitles">Subtitles on or off</string>
+    <string name="anime_shortcut_subtitles_earlier">Subtitles earlier</string>
+    <string name="anime_shortcut_subtitles_later">Subtitles later</string>
     <string name="anime_shortcut_skip">Skip intro, recap or credits</string>
     <string name="anime_shortcut_zoom_in">Zoom in</string>
     <string name="anime_shortcut_zoom_out">Zoom out</string>

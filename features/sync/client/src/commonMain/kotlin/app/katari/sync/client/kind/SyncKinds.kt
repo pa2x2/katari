@@ -34,6 +34,7 @@ import app.katari.sync.client.kind.setting.ProfileSettingKind
 import app.katari.sync.client.kind.setting.SharedSettingKind
 import app.katari.sync.client.kind.setting.SourceSettingKind
 import app.katari.sync.client.kind.statistics.StatisticsEpochKind
+import app.katari.sync.client.kind.subtitletiming.SubtitleTimingKind
 import app.katari.sync.client.record.SyncedKind
 
 /** Every kind of record this app version syncs. */
@@ -43,6 +44,7 @@ object SyncKinds {
         EntryKind,
         ChapterKind,
         ProgressKind,
+        SubtitleTimingKind,
         HistoryKind,
         ActivitySessionKind,
         ActivitySegmentKind,

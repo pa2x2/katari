@@ -118,6 +118,16 @@ private val LocalSurfaceContainer = staticCompositionLocalOf { SurfaceContainer.
 @Composable
 internal fun currentSurfaceContainer(): SurfaceContainer = LocalSurfaceContainer.current
 
+/**
+ * Whether this container holds content in the media colours, which stay the same in either theme because what is
+ * behind them, video, pages or a dimmed screen, does too. The theme's accents don't read there.
+ */
+internal val SurfaceContainer.holdsMediaContent: Boolean
+    get() = this == SurfaceContainer.MediaScrim ||
+        this == SurfaceContainer.MediaShade ||
+        this == SurfaceContainer.Media ||
+        this == SurfaceContainer.Scrim
+
 @Composable
 private fun ProvideSurfaceContainer(container: SurfaceContainer, content: @Composable () -> Unit) {
     if (container == SurfaceContainer.None) {

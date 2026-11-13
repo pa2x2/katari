@@ -17,7 +17,7 @@ private const val SEEK_PREVIEW_MAX_HEIGHT = 180
 
 /**
  * The Media3 ExoPlayer engine. Every role loads through [buildExoPlayerMediaSourceFactory] and shares [mediaCache]; the
- * watched player can boost its volume ([BoostedExoPlayer]).
+ * watched player can boost its volume ([BoostedExoPlayer]) and show its subtitles late or early ([SubtitleDelay]).
  */
 internal class ExoPlayerVideoEngine(
     private val context: Application,
@@ -30,6 +30,8 @@ internal class ExoPlayerVideoEngine(
     override fun createPlayer(stream: VideoStream, role: VideoPlayerRole): VideoPlayer {
         val mediaSourceFactory = buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream)
         val builder = ExoPlayer.Builder(context, mediaSourceFactory)
+        val subtitleDelay = if (role is VideoPlayerRole.Watched) SubtitleDelay() else null
+        subtitleDelay?.let { builder.setRenderersFactory(DelayedSubtitleRenderersFactory(context, it)) }
         if (role is VideoPlayerRole.Watched) {
             builder
                 // The second argument hands audio focus to the player, so calls and other apps' audio pause it.
@@ -59,6 +61,9 @@ internal class ExoPlayerVideoEngine(
                     .build()
             }
         }
-        return Media3VideoPlayer(if (role is VideoPlayerRole.Watched) BoostedExoPlayer(player) else player)
+        return Media3VideoPlayer(
+            player = if (role is VideoPlayerRole.Watched) BoostedExoPlayer(player) else player,
+            subtitleDelay = subtitleDelay,
+        )
     }
 }

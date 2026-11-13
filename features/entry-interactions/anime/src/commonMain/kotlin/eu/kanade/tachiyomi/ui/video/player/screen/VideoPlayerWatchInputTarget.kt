@@ -211,6 +211,13 @@ internal class VideoPlayerWatchInputTarget(
         viewModel.selectSubtitle(track?.selection ?: VideoPlayerSubtitleSelection.Default)
     }
 
+    override fun stepSubtitleTiming(later: Boolean) {
+        val timing = viewModel.subtitleTiming
+        if (!timing.state.value.adjustable) return
+        timing.step(if (later) 1 else -1)
+        ui.subtitleTimingKeySteps += 1
+    }
+
     override fun skip() = actions.skip()
 }
 
