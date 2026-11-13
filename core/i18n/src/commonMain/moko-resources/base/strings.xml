@@ -712,6 +712,7 @@
     <string name="keyboard_shortcut_open_focused">Open the focused item</string>
     <string name="keyboard_shortcut_full_screen">Full screen</string>
     <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
+    <string name="keyboard_shortcut_close_window">Close window</string>
     <string name="keyboard_shortcut_quit">Quit</string>
     <string name="keyboard_shortcut_clear_selection">Clear selection</string>
     <string name="keyboard_shortcut_interface_larger">Larger interface</string>

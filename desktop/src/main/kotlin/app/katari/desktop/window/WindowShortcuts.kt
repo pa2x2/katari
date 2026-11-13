@@ -13,10 +13,16 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The window's own shortcuts, whatever is open in it: back on Esc or Alt+←, as the mouse's back button goes, full screen
- * on F11, and quitting on Ctrl+Q. Navigation has no forward history to go to, so Alt+→ does nothing.
+ * on F11, closing the window on Ctrl+W as its close button does, and quitting on Ctrl+Q. Navigation has no forward
+ * history to go to, so Alt+→ does nothing.
  */
 @Composable
-fun WindowShortcuts(fullScreen: WindowFullScreen, backInput: WindowBackInput, onQuit: () -> Unit) {
+fun WindowShortcuts(
+    fullScreen: WindowFullScreen,
+    backInput: WindowBackInput,
+    onCloseWindow: () -> Unit,
+    onQuit: () -> Unit,
+) {
     // Compose goes back on an Esc nothing in the window used; taking it here first does the same
     KeyboardShortcutHandler(
         KeyboardShortcut(
@@ -44,6 +50,17 @@ fun WindowShortcuts(fullScreen: WindowFullScreen, backInput: WindowBackInput, on
     ) {
         if (fullScreen.isFullScreen) fullScreen.leave() else fullScreen.enter()
     }
+
+    KeyboardShortcutHandler(
+        KeyboardShortcut(
+            id = "window.close",
+            label = stringResource(MR.strings.keyboard_shortcut_close_window),
+            keys = listOf(ShortcutKeys.Chord(Key.W, "W", ctrl = true)),
+            group = ShortcutGroup.Window,
+            reach = ShortcutReach.Window,
+        ),
+        onTrigger = onCloseWindow,
+    )
 
     KeyboardShortcutHandler(
         KeyboardShortcut(
