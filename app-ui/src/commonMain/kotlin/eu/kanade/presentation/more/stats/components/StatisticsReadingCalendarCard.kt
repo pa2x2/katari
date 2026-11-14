@@ -79,10 +79,8 @@ internal fun StatisticsReadingCalendarCard(
     val scrollState = rememberScrollState()
     LaunchedEffect(scrollState.maxValue) { scrollState.scrollTo(scrollState.maxValue) }
 
-    DashboardCard(
-        title = stringResource(MR.strings.statistics_reading_calendar),
-        note = stringResource(MR.strings.statistics_last_12_months),
-    ) {
+    // The "Last 12 months" band above names what the calendar covers.
+    DashboardCard(title = stringResource(MR.strings.statistics_reading_calendar)) {
         BoxWithConstraints {
             val cell = readingCalendarCell(maxWidth - DAY_LABEL_WIDTH - KatariTheme.spacing.s, weeks.size)
             Row {

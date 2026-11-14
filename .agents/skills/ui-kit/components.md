@@ -44,6 +44,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | Job | Component | Notes |
 |---|---|---|
 | Rows grouped on a card, in a lazy list | `RowGroupItem`, `RowGroupHeader`, `RowGroupGap` | Rows keep their padding against the card's edge; `RowList` scrolls them (see `adaptive-layout`) |
+| The header above a row group card that sums the group up, such as a day of activity with its total time | `RowGroupSummaryHeader` | A line under it for a small chart or a time span; `onClick` changes what the card shows, such as the day's sessions |
 | A short group of rows composed in one piece, outside a lazy list | `RowGroup` | |
 | Rows straight on a panel without cards, such as a side panel's editor | `PlainRows` | |
 | A label naming rows inside one card that can't split into cards | `RowGroupSubheader` | |
@@ -64,6 +65,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A row whose body the caller lays out, such as a segmented choice or a pair of buttons | `ControlRow` | |
 | Chips under a group header, such as quick filters in a sheet | `ChipsRow` | |
 | An explanation or note in a sheet or dialog | `InfoRow` | |
+| A part of a whole and how much it took, compact inside a card, such as an episode watched that day | `TallyRow` | An optional mark after the value, such as finished; `heading` for a row naming the rows under it, such as a session's span; `underCover` for rows unfolded under a `CoverRow` |
 | Options as icon-and-label tiles, such as reading modes | `IconChoiceGrid` | |
 | A choice of colour swatches | `ColorChoiceRow`, `ColorSwatches` | Swatches alone where tabs already name the colour |
 | A choice of one of nine places over a picture, three by three | `PositionChoiceRow` | Such as where subtitles rest; an action beside the title, such as putting them back |
@@ -90,8 +92,12 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A notice or warning among a screen's or sheet's cards, such as an extension no store updates or a paused source | `NoticeCard` | `NoticeTone.Info` or `Warning`; an optional action at its end, and `dismissLabel` for a way to put it off (Not now), which moves the actions under the text. Never a `Card` or `Surface` with an icon of your own |
 | A banner in a story's colours that opens the story | `StoryBanner` | |
 | A dashboard section, its footer and headline tiles | `DashboardCard`, `DashboardCardFooter`, `DashboardTile` | Tiles go in `DashboardTiles` |
+| The figure a dashboard section or sheet leads with, such as a period's total time | `LeadFigure` | Short `facts` at its end, such as sessions; `detail` under it, such as the change from the period before |
+| Progress toward a daily target on a strip above a dashboard's sections, such as today against the daily goal | `DashboardGoalStrip` | A ring, a title and a line, and a related figure at the end, such as the goal streak |
 | Headline tiles side by side: one line where they fit, two to a line otherwise | `DashboardTiles` | Never a hand-built `Row` of weighted tiles |
+| Short tiles of one size in as many columns as fit, such as a year's months on Recaps | `TileGrid` | Each a `DashboardTile`, which takes `onClick` to open what it counts |
 | Figures laid out in columns inside a card | `FigureGrid` | |
+| Facts read as label and value lines, such as when a title was last opened on its Activity sheet | `FactLines` | Each a `Figure`; a long value wraps at the end |
 | A figure, such as a QR code, with the words that go with it, centred | `FigureWithText` | The words go under the figure, or beside it in a short window |
 | Facts on tiles of their own, such as an extension's version and language | `InfoTileRow`, `InfoTile` | |
 | A small rounded label for a value | `Pill` | With `onClick` it opens what sets the value, such as a list's filter summary opening the filter |

@@ -17,6 +17,7 @@ import tachiyomi.domain.statistics.model.StatisticsEarlierActivity
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
 import tachiyomi.domain.statistics.model.StatisticsSessionSummary
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
+import tachiyomi.domain.statistics.model.StatisticsWindowActivity
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
@@ -119,6 +120,51 @@ class StatisticsRepositoryImpl(
         }
     }
 
+    override fun subscribeEntriesActivity(
+        entryIds: List<Long>,
+        startLocalDate: String,
+        endLocalDate: String,
+    ): Flow<StatisticsWindowActivity> {
+        val minimumDuration = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS
+        return combine(
+            handler.subscribeToList {
+                statisticsViewQueries.activityTotalsOfEntriesInWindow(
+                    entryIds = entryIds,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    mapper = ::activityBucket,
+                )
+            },
+            handler.subscribeToList {
+                statisticsViewQueries.completionTotalsOfEntriesInWindow(
+                    entryIds = entryIds,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    mapper = ::completionBucket,
+                )
+            },
+            handler.subscribeToOne {
+                statisticsViewQueries.sessionCountOfEntriesInWindow(
+                    entryIds = entryIds,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                )
+            },
+            handler.subscribeToList {
+                statisticsViewQueries.activitySegmentsOfEntriesInWindow(
+                    entryIds = entryIds,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    mapper = ::activitySegment,
+                )
+            },
+            ::StatisticsWindowActivity,
+        )
+    }
+
     override fun subscribeActivityTimeline(
         profileId: Long,
         startLocalDate: String?,
@@ -140,19 +186,12 @@ class StatisticsRepositoryImpl(
         startLocalDate: String?,
         endLocalDate: String?,
     ): Flow<List<StatisticsActivityBucket>> = handler.subscribeToList {
-        val mapper = { type: String, localDate: String, duration: Long? ->
-            StatisticsActivityBucket(
-                type = EntryType.valueOf(type.uppercase()),
-                localDate = localDate,
-                durationMillis = duration ?: 0L,
-            )
-        }
         statisticsViewQueries.activityTotalsInWindow(
             profileId = profileId,
             minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
             startLocalDate = startLocalDate,
             endLocalDate = endLocalDate,
-            mapper = mapper,
+            mapper = ::activityBucket,
         )
     }
 
@@ -161,14 +200,7 @@ class StatisticsRepositoryImpl(
         startLocalDate: String?,
         endLocalDate: String?,
     ): Flow<List<StatisticsCompletionBucket>> = handler.subscribeToList {
-        val mapper = { type: String, localDate: String, count: Long ->
-            StatisticsCompletionBucket(
-                type = EntryType.valueOf(type.uppercase()),
-                localDate = localDate,
-                count = count,
-            )
-        }
-        statisticsViewQueries.completionTotalsInWindow(profileId, startLocalDate, endLocalDate, mapper)
+        statisticsViewQueries.completionTotalsInWindow(profileId, startLocalDate, endLocalDate, ::completionBucket)
     }
 
     private fun subscribeTopEntries(
@@ -195,16 +227,8 @@ class StatisticsRepositoryImpl(
             minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
             startLocalDate = startLocalDate,
             endLocalDate = endLocalDate,
-        ) { type, localDate, startedAt, endedAt, duration, timeZoneId ->
-            StatisticsActivitySegment(
-                type = EntryType.valueOf(type.uppercase()),
-                localDate = localDate,
-                startedAtEpochMillis = startedAt,
-                endedAtEpochMillis = endedAt,
-                durationMillis = duration,
-                timeZoneId = timeZoneId,
-            )
-        }
+            mapper = ::activitySegment,
+        )
     }
 
     private fun subscribeSessionSummaries(
@@ -265,3 +289,33 @@ private fun earlierActivity(type: String, duration: Long?): StatisticsEarlierAct
         type = EntryType.valueOf(type.uppercase()),
         durationMillis = duration ?: 0L,
     )
+
+private fun activityBucket(type: String, localDate: String, duration: Long?): StatisticsActivityBucket =
+    StatisticsActivityBucket(
+        type = EntryType.valueOf(type.uppercase()),
+        localDate = localDate,
+        durationMillis = duration ?: 0L,
+    )
+
+private fun completionBucket(type: String, localDate: String, count: Long): StatisticsCompletionBucket =
+    StatisticsCompletionBucket(
+        type = EntryType.valueOf(type.uppercase()),
+        localDate = localDate,
+        count = count,
+    )
+
+private fun activitySegment(
+    type: String,
+    localDate: String,
+    startedAt: Long,
+    endedAt: Long,
+    duration: Long,
+    timeZoneId: String,
+): StatisticsActivitySegment = StatisticsActivitySegment(
+    type = EntryType.valueOf(type.uppercase()),
+    localDate = localDate,
+    startedAtEpochMillis = startedAt,
+    endedAtEpochMillis = endedAt,
+    durationMillis = duration,
+    timeZoneId = timeZoneId,
+)

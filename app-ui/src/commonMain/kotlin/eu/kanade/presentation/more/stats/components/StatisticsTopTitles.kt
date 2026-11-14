@@ -15,7 +15,6 @@ internal fun StatisticsTopTitlesCard(
     titles: List<StatsTopTitle>,
     totalDurationMillis: Long,
     typesById: Map<EntryType, StatsType>,
-    showType: Boolean,
     formatDuration: (Long) -> String,
     onTitleClick: (Long) -> Unit,
     onSeeAll: () -> Unit,
@@ -26,14 +25,13 @@ internal fun StatisticsTopTitlesCard(
         actionLabel = stringResource(MR.strings.statistics_see_all).takeIf { titles.size >= DASHBOARD_TITLE_COUNT },
         onAction = onSeeAll,
     ) {
-        titles.take(DASHBOARD_TITLE_COUNT).forEachIndexed { index, title ->
+        titles.take(DASHBOARD_TITLE_COUNT).forEach { title ->
             val type = typesById[title.type]
             StatisticsTopTitleRow(
-                rank = index + 1,
+                rank = null,
                 title = title.title,
                 cover = title.cover,
                 type = title.type,
-                typeLabel = type?.takeIf { showType }?.let { stringResource(it.displayName) },
                 completionCount = title.completionCount,
                 durationMillis = title.durationMillis,
                 shareOf = totalDurationMillis,

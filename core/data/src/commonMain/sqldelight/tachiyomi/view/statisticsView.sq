@@ -173,3 +173,61 @@ AND session_id IN (
 AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
 AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
 ORDER BY started_at;
+
+-- The same window figures for a few titles, such as one title's members, for the summary over its activity list.
+
+activityTotalsOfEntriesInWindow:
+SELECT
+    type,
+    local_date,
+    CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate
+GROUP BY type, local_date
+ORDER BY local_date, type;
+
+completionTotalsOfEntriesInWindow:
+SELECT
+    ENT.type,
+    CMP.local_date,
+    count(*) AS count
+FROM activity_completion_events CMP
+JOIN entries ENT ON ENT._id = CMP.entry_id
+WHERE CMP.entry_id IN :entryIds
+AND CMP.cause = 'consumption'
+AND CMP.local_date >= :startLocalDate
+AND CMP.local_date <= :endLocalDate
+GROUP BY ENT.type, CMP.local_date
+ORDER BY CMP.local_date, ENT.type;
+
+sessionCountOfEntriesInWindow:
+SELECT count(DISTINCT session_id)
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate;
+
+activitySegmentsOfEntriesInWindow:
+SELECT type, local_date, started_at, ended_at, duration, time_zone_id
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate
+ORDER BY started_at;

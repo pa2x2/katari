@@ -2,15 +2,28 @@ package tachiyomi.domain.statistics.model
 
 /** Stable persisted identities, independent of labels and current data availability. */
 enum class StatisticsCard(val id: String) {
-    SUMMARY("summary"),
     ACTIVITY("activity"),
-    CALENDAR("calendar"),
     TOP_TITLES("top_titles"),
     PATTERNS("patterns"),
     EARLIER("earlier"),
-    PROGRESS("progress"),
-    MEDIA("media"),
+    CALENDAR("calendar"),
+    LIBRARY("library"),
     INSIGHTS("insights"),
+    ;
+
+    companion object {
+        /**
+         * Cards that were merged into another, by the id layouts saved before the merge: the period's tiles into
+         * its chart, and the progress and per-type cards into one library card.
+         */
+        private val mergedIds = mapOf(
+            "summary" to ACTIVITY,
+            "progress" to LIBRARY,
+            "media" to LIBRARY,
+        )
+
+        internal fun fromId(id: String): StatisticsCard? = entries.find { it.id == id } ?: mergedIds[id]
+    }
 }
 
 data class StatisticsCardLayout(
@@ -28,15 +41,21 @@ data class StatisticsCardLayout(
     }
 
     companion object {
+        /**
+         * A card merged from several keeps the place of the first of them and stays shown unless every one of them
+         * was hidden, so nothing that was on the page goes missing.
+         */
         fun decode(value: String): StatisticsCardLayout {
             val parts = value.split(';')
-            fun cards(
-                part: String,
-            ) = part.split(',').mapNotNull { id -> StatisticsCard.entries.find { it.id == id } }.distinct()
-            val saved = cards(parts.first())
+            val savedIds = parts.first().split(',')
+            val hiddenIds = parts.getOrNull(1)?.split(',').orEmpty().toSet()
+            val saved = savedIds.mapNotNull(StatisticsCard::fromId).distinct()
             return StatisticsCardLayout(
                 order = saved + StatisticsCard.entries.filterNot(saved::contains),
-                hidden = parts.getOrNull(1)?.let(::cards)?.toSet().orEmpty(),
+                hidden = StatisticsCard.entries.filterTo(mutableSetOf()) { card ->
+                    val ids = (savedIds + hiddenIds).filter { StatisticsCard.fromId(it) == card }
+                    ids.isNotEmpty() && ids.all(hiddenIds::contains)
+                },
             )
         }
     }
