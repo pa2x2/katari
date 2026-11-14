@@ -68,3 +68,11 @@ data class StatisticsActivitySnapshot(
     val sessions: List<StatisticsSessionSummary> = emptyList(),
     val segments: List<StatisticsActivitySegment> = emptyList(),
 )
+
+/** Activity inside a window, such as a few titles' (one title's merged members) or one type's. */
+data class StatisticsWindowActivity(
+    val activity: List<StatisticsActivityBucket>,
+    val completions: List<StatisticsCompletionBucket>,
+    val sessionCount: Long,
+    val segments: List<StatisticsActivitySegment>,
+)

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.CardFlow
 import app.katari.presentation.kit.list.RowGroupGap
@@ -27,15 +28,15 @@ import app.katari.presentation.kit.theme.KatariTheme
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.stats.components.StatisticsActivityCard
 import eu.kanade.presentation.more.stats.components.StatisticsActivityFeedback
-import eu.kanade.presentation.more.stats.components.StatisticsActivityPatternsCard
-import eu.kanade.presentation.more.stats.components.StatisticsActivitySummaryCards
+import eu.kanade.presentation.more.stats.components.StatisticsLibraryCard
 import eu.kanade.presentation.more.stats.components.StatisticsLibraryInsightsCard
 import eu.kanade.presentation.more.stats.components.StatisticsLifetimeCard
-import eu.kanade.presentation.more.stats.components.StatisticsMediaCard
 import eu.kanade.presentation.more.stats.components.StatisticsPeriodRow
-import eu.kanade.presentation.more.stats.components.StatisticsProgressCard
+import eu.kanade.presentation.more.stats.components.StatisticsPeriodTiles
 import eu.kanade.presentation.more.stats.components.StatisticsReadingCalendarCard
+import eu.kanade.presentation.more.stats.components.StatisticsTodayStrip
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitlesCard
+import eu.kanade.presentation.more.stats.components.StatisticsWhenYouReadCard
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
@@ -48,6 +49,7 @@ import eu.kanade.presentation.more.stats.layout.StatisticsCardGroup
 import eu.kanade.presentation.more.stats.layout.spansColumns
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.presentation.more.stats.layout.visibleSections
+import eu.kanade.presentation.more.stats.recap.StatisticsYearRecapBanner
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.statistics.model.StatisticsCard
 import tachiyomi.domain.statistics.model.StatisticsCardLayout
@@ -70,6 +72,8 @@ internal fun StatisticsDashboardPage(
     onOpenEntry: (Long) -> Unit,
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
+    newYearRecapTitle: String?,
+    onOpenNewYearRecap: () -> Unit,
 ) {
     val isOverview = selectedType == null
     val visibleTypes = state.types.filter { isOverview || it.type == selectedType }
@@ -93,6 +97,9 @@ internal fun StatisticsDashboardPage(
         }
     }
     val showToday = visibleActivity?.window?.let { it.range != StatsRange.ALL && !it.isLatest } == true
+    // The goal counts every type, so only the Overview of the latest window shows how today went.
+    val todayGoal = state.goal?.takeIf { isOverview && visibleActivity?.window?.isLatest != false }
+    val context = currentPlatformContext()
 
     CardFlow(
         state = gridState,
@@ -100,8 +107,15 @@ internal fun StatisticsDashboardPage(
         // Sections hold two or three cards, so a third column would sit empty beside them.
         maxColumns = 2,
     ) {
-        item(key = "activity-header", span = StaggeredGridItemSpan.FullLine) {
-            DashboardGroupHeader(stringResource(StatisticsCardGroup.ACTIVITY.label))
+        newYearRecapTitle?.let { title ->
+            item(key = "recap-banner", span = StaggeredGridItemSpan.FullLine) {
+                DashboardCardItem { StatisticsYearRecapBanner(title = title, onOpen = onOpenNewYearRecap) }
+            }
+        }
+        todayGoal?.let { goal ->
+            item(key = "today", span = StaggeredGridItemSpan.FullLine) {
+                DashboardCardItem { StatisticsTodayStrip(goal, formatter) }
+            }
         }
         item(key = "range", span = StaggeredGridItemSpan.FullLine) {
             DashboardItem { StatisticsRangeSelector(state.range, onRangeSelected) }
@@ -111,7 +125,7 @@ internal fun StatisticsDashboardPage(
                 DashboardItem {
                     visibleActivity?.window?.let { window ->
                         StatisticsPeriodRow(
-                            period = formatStatisticsWindow(window),
+                            period = context.formatStatisticsWindow(window),
                             showToday = showToday,
                             onToday = onShowToday,
                         )
@@ -138,11 +152,16 @@ internal fun StatisticsDashboardPage(
             }
         }
         sections.forEach { (group, cards) ->
-            if (group == StatisticsCardGroup.LIBRARY) {
-                item(key = "library-header", span = StaggeredGridItemSpan.FullLine) {
+            // The period's band is headed by the range it covers; the others name what they cover.
+            if (group != StatisticsCardGroup.PERIOD) {
+                item(key = "header-${group.name}", span = StaggeredGridItemSpan.FullLine) {
                     DashboardGroupHeader(
                         text = stringResource(group.label),
-                        count = pluralStringResource(MR.plurals.statistics_title_count, titleCount, titleCount),
+                        count = if (group == StatisticsCardGroup.LIBRARY) {
+                            pluralStringResource(MR.plurals.statistics_title_count, titleCount, titleCount)
+                        } else {
+                            null
+                        },
                     )
                 }
             }
@@ -150,27 +169,29 @@ internal fun StatisticsDashboardPage(
                 item(key = card.id, span = StaggeredGridItemSpan.FullLine.takeIf { card.spansColumns }) {
                     DashboardCardItem {
                         when (card) {
-                            StatisticsCard.SUMMARY -> StatisticsActivitySummaryCards(
-                                activity = visibleActivity,
-                                selectedType = selectedStatsType,
-                                types = visibleTypes,
-                                goal = state.goal,
-                                formatDuration = formatter,
-                                // Tiles keep to the cards' side margin.
-                                modifier = Modifier.padding(horizontal = KatariTheme.spacing.m),
-                            )
-                            StatisticsCard.ACTIVITY -> StatisticsActivityCard(
-                                state = state.activity,
-                                activity = visibleActivity,
-                                types = visibleTypes,
-                                formatter = formatter,
-                                onNavigateByBuckets = onNavigateActivity,
-                                onNavigateByWindows = onPageActivity,
-                                onShowToday = onShowToday,
-                                onShowLifetime = { onRangeSelected(StatsRange.ALL) },
-                                onRetry = onRetryActivity,
-                                onOpenActivity = { onOpenActivity(selectedType, it) },
-                            )
+                            StatisticsCard.ACTIVITY -> Column {
+                                StatisticsActivityCard(
+                                    state = state.activity,
+                                    activity = visibleActivity,
+                                    types = visibleTypes,
+                                    formatter = formatter,
+                                    onNavigateByBuckets = onNavigateActivity,
+                                    onNavigateByWindows = onPageActivity,
+                                    onShowToday = onShowToday,
+                                    onShowLifetime = { onRangeSelected(StatsRange.ALL) },
+                                    onRetry = onRetryActivity,
+                                    onOpenActivity = { onOpenActivity(selectedType, it) },
+                                )
+                                RowGroupGap()
+                                StatisticsPeriodTiles(
+                                    activity = visibleActivity,
+                                    selectedType = selectedStatsType,
+                                    types = visibleTypes,
+                                    formatDuration = formatter,
+                                    // Tiles keep to the cards' side margin.
+                                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.m),
+                                )
+                            }
                             StatisticsCard.CALENDAR -> state.calendar?.let { calendar ->
                                 StatisticsReadingCalendarCard(
                                     calendar = calendar,
@@ -188,7 +209,6 @@ internal fun StatisticsDashboardPage(
                                     titles = visibleActivity.topTitles,
                                     totalDurationMillis = visibleActivity.totalDurationMillis,
                                     typesById = state.types.associateBy(StatsType::type),
-                                    showType = isOverview,
                                     formatDuration = formatter,
                                     onTitleClick = onOpenEntry,
                                     onSeeAll = { onOpenTopTitles(selectedType, visibleActivity) },
@@ -196,11 +216,7 @@ internal fun StatisticsDashboardPage(
                             } else {
                                 EmptyStatisticsCard(MR.strings.statistics_top_titles)
                             }
-                            StatisticsCard.PATTERNS -> StatisticsActivityPatternsCard(
-                                activity = visibleActivity,
-                                color = accentColor,
-                                formatDuration = formatter,
-                            )
+                            StatisticsCard.PATTERNS -> StatisticsWhenYouReadCard(visibleActivity?.rhythm, accentColor)
                             StatisticsCard.EARLIER -> visibleActivity?.let {
                                 StatisticsLifetimeCard(
                                     trackedDurationMillis = it.totalDurationMillis,
@@ -211,11 +227,12 @@ internal fun StatisticsDashboardPage(
                                     onOpenEarlier = { onOpenEarlierActivity(selectedType) },
                                 )
                             }
-                            StatisticsCard.PROGRESS -> StatisticsProgressCard(progress, accentColor)
-                            StatisticsCard.MEDIA -> StatisticsMediaCard(
+                            StatisticsCard.LIBRARY -> StatisticsLibraryCard(
+                                progress = progress,
+                                color = accentColor,
                                 titleCounts = titleCounts,
                                 progressByType = state.library.progressByType,
-                                types = visibleTypes,
+                                types = if (isOverview) visibleTypes else emptyList(),
                                 onTypeClick = onTypeSelected,
                             )
                             StatisticsCard.INSIGHTS -> selectedType?.let { type ->
@@ -231,7 +248,7 @@ internal fun StatisticsDashboardPage(
     }
 }
 
-/** The header of the activity or library half of the dashboard, with the library's [count] of titles after it. */
+/** The header of a band of the dashboard, with the library's [count] of titles after it. */
 @Composable
 private fun DashboardGroupHeader(text: String, count: String? = null) {
     RowGroupHeader(

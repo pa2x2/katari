@@ -116,7 +116,7 @@ SELECT EXISTS (
 );
 
 recapActiveMonths:
-SELECT DISTINCT substr(local_date, 1, 7) AS month
+SELECT substr(local_date, 1, 7) AS month, CAST(sum(duration) AS INTEGER) AS duration
 FROM statisticsView
 WHERE profile_id = :profileId
 AND session_id IN (
@@ -124,4 +124,5 @@ AND session_id IN (
     FROM activity_sessions
     WHERE duration >= :minimumSessionDurationMillis
 )
+GROUP BY month
 ORDER BY month DESC;

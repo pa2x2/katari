@@ -78,6 +78,9 @@ object StatisticsMetrics {
     /** Bar comparing whole totals, such as time by entry type. */
     val shareBarThick: Dp = 8.dp
 
+    /** A day's hours drawn across a row group header, filled where time was spent. */
+    val hoursRibbon: Dp = 6.dp
+
     /** Bar split into progress stages or tracked and earlier time. */
     val stageBar: Dp = 12.dp
 
@@ -90,9 +93,9 @@ object StatisticsMetrics {
     /** Width of the rank before a ranked title row. */
     val rankWidth: Dp = 24.dp
 
-    /** Width of the time and share after a ranked title row, so every share bar has the same scale. */
-    val rankedTrailingWidth: Dp = 64.dp
+    /** Bar under a ranked title, its share of the period's time. */
+    val rankedShareBar: Dp = 6.dp
 
-    /** Width of a share percentage in a legend, so the counts before it line up. */
-    val percentWidth: Dp = 40.dp
+    /** Width of the time after a ranked title row, so every share bar has the same scale. */
+    val rankedTrailingWidth: Dp = 64.dp
 }

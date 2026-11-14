@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import app.katari.presentation.kit.content.LibraryMetrics
 import app.katari.presentation.kit.content.entryCoverScale
@@ -50,11 +51,7 @@ fun CoverRow(
 ) {
     val spacing = KatariTheme.spacing
     val nested = cover == null
-    val coverScale = entryCoverScale()
-    val coverSize = when (coverSlot) {
-        CoverRowSlot.Book -> LibraryMetrics.rowCover
-        CoverRowSlot.Wide -> LibraryMetrics.rowWideCoverSlot
-    }.let { DpSize(it.width * coverScale, it.height * coverScale) }
+    val coverSize = coverRowCoverSize(coverSlot)
     TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
@@ -67,7 +64,7 @@ fun CoverRow(
             )
             .then(if (nested) Modifier.heightIn(min = KatariTheme.sizes.touchTarget) else Modifier)
             .padding(
-                start = if (nested) spacing.m + coverSize.width + spacing.l else spacing.m,
+                start = if (nested) coverRowLinesStart(coverSlot) else spacing.m,
                 end = spacing.m,
                 top = if (nested) spacing.xs else spacing.s,
                 bottom = if (nested) spacing.xs else spacing.s,
@@ -99,3 +96,17 @@ fun CoverRow(
         trailingGap = KatariTheme.sizes.none,
     )
 }
+
+@Composable
+private fun coverRowCoverSize(coverSlot: CoverRowSlot): DpSize {
+    val coverScale = entryCoverScale()
+    return when (coverSlot) {
+        CoverRowSlot.Book -> LibraryMetrics.rowCover
+        CoverRowSlot.Wide -> LibraryMetrics.rowWideCoverSlot
+    }.let { DpSize(it.width * coverScale, it.height * coverScale) }
+}
+
+/** Where a [CoverRow]'s lines start, for rows that continue one, such as its parts unfolded under it. */
+@Composable
+internal fun coverRowLinesStart(coverSlot: CoverRowSlot = CoverRowSlot.Book): Dp =
+    KatariTheme.spacing.m + coverRowCoverSize(coverSlot).width + KatariTheme.spacing.l

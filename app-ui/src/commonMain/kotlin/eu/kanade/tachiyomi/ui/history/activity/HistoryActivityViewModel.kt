@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import app.katari.entry.interactions.presentation.EntryTypePresentationFeature
 import app.katari.entry.interactions.statistics.EntryStatisticsFeature
 import app.katari.ui.di.AppUiScope
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -35,8 +33,8 @@ import tachiyomi.core.common.util.lang.resubscribeOnFailure
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.history.model.activity.HistoryActivityScope
-import tachiyomi.domain.history.model.activity.HistoryActivitySessionDetail
 import tachiyomi.domain.history.repository.HistoryActivityRepository
+import tachiyomi.domain.statistics.model.StatisticsWindowActivity
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import java.time.LocalDate
 
@@ -80,24 +78,18 @@ class HistoryActivityViewModel(
     val types: List<StatsType> = buildStatisticsTypes(statisticsFeature, presentationFeature)
     private var activeProfileId: Long? = null
 
-    /**
-     * Totals for the whole range, independent of how many session pages are loaded; null until known, and always
-     * null for one title, whose totals the entry screen already shows.
-     */
+    /** Totals for the whole range, independent of how many days are loaded; null until known. */
     val summary: StateFlow<HistoryActivitySummary?> = activeProfileProvider.activeProfileIdFlow
         .flatMapLatest { profileId ->
-            if (isEntryScope) {
-                flowOf(null)
-            } else {
-                statisticsRepository.subscribeActivity(profileId, startLocalDate, endLocalDate).map { snapshot ->
-                    summarizeHistoryActivity(
-                        snapshot,
-                        type,
-                        LocalDate.parse(startLocalDate),
-                        LocalDate.parse(endLocalDate),
-                    )
-                }
+            when (scope) {
+                is HistoryActivityScope.Entries ->
+                    statisticsRepository.subscribeEntriesActivity(scope.entryIds, startLocalDate, endLocalDate)
+                else -> statisticsRepository.subscribeActivity(profileId, startLocalDate, endLocalDate)
+                    .map { it.windowActivity(type) }
             }
+        }
+        .map<StatisticsWindowActivity, HistoryActivitySummary?> { window ->
+            summarizeHistoryActivity(window, LocalDate.parse(startLocalDate), LocalDate.parse(endLocalDate))
         }
         .resubscribeOnFailure(this@HistoryActivityViewModel) {
             emit(null)
@@ -137,20 +129,21 @@ class HistoryActivityViewModel(
 
     private suspend fun loadPage(profileId: Long, reset: Boolean) {
         val current = state.value as? State.Success
-        val offset = if (reset) 0L else current?.sessions?.size?.toLong() ?: 0L
+        val dayOffset = if (reset) 0L else current?.days?.size?.toLong() ?: 0L
         try {
             val page = activityRepository.getActivityPage(
                 profileId = profileId,
                 startLocalDate = startLocalDate,
                 endLocalDate = endLocalDate,
                 scope = scope,
-                offset = offset,
-                limit = PAGE_SIZE,
+                dayOffset = dayOffset,
+                dayLimit = DAYS_PER_PAGE,
             )
+            val days = groupHistoryActivityDays(page.sessions)
             state.update { value ->
-                val existing = if (reset) emptyList() else (value as? State.Success)?.sessions.orEmpty()
+                val existing = if (reset) emptyList() else (value as? State.Success)?.days.orEmpty()
                 State.Success(
-                    sessions = (existing + page.sessions).distinctBy(HistoryActivitySessionDetail::sessionId),
+                    days = (existing + days).distinctBy(HistoryActivityDay::localDate),
                     hasMore = page.hasMore,
                     loadingMore = false,
                     loadMoreFailed = false,
@@ -177,7 +170,7 @@ class HistoryActivityViewModel(
 
         @Immutable
         data class Success(
-            val sessions: List<HistoryActivitySessionDetail>,
+            val days: List<HistoryActivityDay>,
             val hasMore: Boolean,
             val loadingMore: Boolean,
             val loadMoreFailed: Boolean,
@@ -185,6 +178,6 @@ class HistoryActivityViewModel(
     }
 
     private companion object {
-        const val PAGE_SIZE = 50L
+        const val DAYS_PER_PAGE = 20L
     }
 }

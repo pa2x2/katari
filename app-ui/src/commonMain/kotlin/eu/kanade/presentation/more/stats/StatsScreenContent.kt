@@ -24,7 +24,6 @@ import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.layout.StatisticsLayoutEditor
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
-import eu.kanade.presentation.more.stats.recap.StatisticsYearRecapBanner
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -92,7 +91,6 @@ fun StatsScreenContent(
 
     FramedContent(modifier = Modifier.fillMaxSize().padding(top = paddingValues.calculateTopPadding())) {
         Column(modifier = Modifier.fillMaxSize()) {
-            newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
             TabRow {
                 pages.forEachIndexed { index, type ->
                     val label = if (type == null) {
@@ -127,6 +125,8 @@ fun StatsScreenContent(
                     onOpenEntry = onOpenEntry,
                     onOpenEarlierActivity = onOpenEarlierActivity,
                     onOpenTopTitles = onOpenTopTitles,
+                    newYearRecapTitle = newYearRecapTitle,
+                    onOpenNewYearRecap = onOpenNewYearRecap,
                 )
             }
         }

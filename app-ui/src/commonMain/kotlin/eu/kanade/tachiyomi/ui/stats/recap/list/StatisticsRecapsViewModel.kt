@@ -47,10 +47,15 @@ class StatisticsRecapsViewModel(
                         recapRepository.subscribeActiveMonths(profileId),
                         unopenedYearRecap.subscribe(today),
                     ) { activeMonths, unopened ->
-                        val months = activeMonths.map(YearMonth::parse)
+                        val months = activeMonths.map {
+                            RecapMonth(StatisticsRecapPeriod.Month(YearMonth.parse(it.month)), it.durationMillis)
+                        }
                         State(
-                            years = listedRecapYears(months.mapTo(HashSet()) { it.year }, today),
-                            months = months.filter { it < currentMonth }.map(StatisticsRecapPeriod::Month),
+                            years = listedRecapYears(months.mapTo(HashSet()) { it.period.month.year }, today),
+                            monthsByYear = months
+                                .filter { it.period.month < currentMonth }
+                                .groupBy { it.period.month.year }
+                                .map { (year, yearMonths) -> RecapMonthsOfYear(year, yearMonths) },
                             unopened = unopened,
                         )
                     }
@@ -59,11 +64,17 @@ class StatisticsRecapsViewModel(
         }
     }
 
-    /** [unopened] is the year recap still marked as new. */
+    /** [monthsByYear] holds finished months, latest first; [unopened] is the year recap still marked as new. */
     @Immutable
     data class State(
         val years: List<StatisticsRecapPeriod.Year>,
-        val months: List<StatisticsRecapPeriod.Month>,
+        val monthsByYear: List<RecapMonthsOfYear>,
         val unopened: StatisticsRecapPeriod.Year?,
     )
+
+    @Immutable
+    data class RecapMonthsOfYear(val year: Int, val months: List<RecapMonth>)
+
+    @Immutable
+    data class RecapMonth(val period: StatisticsRecapPeriod.Month, val durationMillis: Long)
 }

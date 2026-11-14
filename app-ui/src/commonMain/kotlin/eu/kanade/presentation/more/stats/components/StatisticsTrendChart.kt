@@ -43,10 +43,8 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import app.katari.presentation.kit.content.StatisticsMetrics
 import app.katari.presentation.kit.content.Text
-import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.more.stats.data.StatsTrendPoint
@@ -68,7 +66,6 @@ internal fun StatisticsTrendChart(
     notTrackedLabel: String,
     previousPointLabel: String,
     nextPointLabel: String,
-    bucketLabel: String,
     canNavigateOlder: Boolean,
     canNavigateNewer: Boolean,
     navigationPending: Boolean,
@@ -257,19 +254,6 @@ internal fun StatisticsTrendChart(
             customActions = accessibilityActions
         },
     ) {
-        Text(
-            text = bucketLabel,
-            modifier = Modifier.fillMaxWidth(),
-            role = TextRole.Badge,
-            tone = ContentTone.Secondary,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(KatariTheme.spacing.m))
-        if (types.size > 1) {
-            StatisticsTrendLegend(types, typeLabels, typeColors)
-            Spacer(Modifier.height(KatariTheme.spacing.m))
-        }
-
         Row(Modifier.fillMaxWidth().height(StatisticsMetrics.chartHeight)) {
             Column(
                 modifier = Modifier.width(StatisticsMetrics.chartAxisWidth).height(StatisticsMetrics.chartHeight),
@@ -470,22 +454,30 @@ private fun TrendAxisLabels(
         }
         val height = placeables.maxOfOrNull { it.height } ?: 0
         val horizontalInset = DATA_INSET.roundToPx().toFloat()
+        val centers = placeables.indices.map { index ->
+            trendPointCenterX(
+                index = tickIndices[index],
+                width = constraints.maxWidth.toFloat(),
+                pointCount = pointCount,
+                horizontalInset = horizontalInset,
+            )
+        }
+        val shown = trendLabelsThatFit(
+            centers = centers,
+            widths = placeables.map { it.width.toFloat() },
+            gap = LABEL_GAP.toPx(),
+        )
         layout(constraints.maxWidth, height) {
-            placeables.forEachIndexed { index, placeable ->
-                val centerX = trendPointCenterX(
-                    index = tickIndices[index],
-                    width = constraints.maxWidth.toFloat(),
-                    pointCount = pointCount,
-                    horizontalInset = horizontalInset,
-                )
-                placeable.place(
-                    x = (centerX - placeable.width / 2f).roundToInt(),
-                    y = 0,
-                )
+            shown.forEach { index ->
+                val placeable = placeables[index]
+                placeable.place(x = (centers[index] - placeable.width / 2f).roundToInt(), y = 0)
             }
         }
     }
 }
+
+/** Least room between two date labels under the chart. */
+private val LABEL_GAP = KatariTheme.spacing.s
 
 /** Distance from the chart's edge to the first and last bar centres. */
 private val DATA_INSET = StatisticsMetrics.chartSideInset + StatisticsMetrics.chartEdgePointInset

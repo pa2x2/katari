@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.stats.recap
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
@@ -11,7 +10,6 @@ import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.surface.StoryBanner
 import app.katari.presentation.kit.theme.ContentTone
-import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -21,7 +19,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun StatisticsYearRecapBanner(title: String, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     StoryBanner(
         onClick = onOpen,
-        modifier = modifier.padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+        modifier = modifier,
     ) {
         Icon(MaterialSymbols.Rounded.AutoStories, contentDescription = null, tone = ContentTone.Primary)
         Column(Modifier.weight(1f)) {

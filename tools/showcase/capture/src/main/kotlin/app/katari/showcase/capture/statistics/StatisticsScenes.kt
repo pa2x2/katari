@@ -53,5 +53,6 @@ internal fun openStatistics() {
     openProfile("Personal")
     openTab(HomeTab.More)
     tap(By.text("Statistics"))
-    find(By.text("Time spent"))
+    // The range selector shows once the dashboard has loaded.
+    find(By.text("30D"))
 }

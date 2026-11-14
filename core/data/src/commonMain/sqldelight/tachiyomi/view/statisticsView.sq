@@ -32,52 +32,6 @@ AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
 GROUP BY type, local_date
 ORDER BY local_date, type;
 
-detailedLifetimeDurationByType:
-SELECT type, CAST(sum(duration) AS INTEGER) AS duration
-FROM statisticsView
-WHERE profile_id = :profileId
-GROUP BY type
-ORDER BY type;
-
-earlierActivityEntries:
-WITH legacy_entry_totals AS (
-    SELECT HIS.entry_id, CAST(sum(HIS.time_read) AS INTEGER) AS duration
-    FROM history HIS
-    JOIN entries ENT ON ENT._id = HIS.entry_id
-    WHERE ENT.profile_id = :profileId
-    AND (:type IS NULL OR ENT.type = :type)
-    GROUP BY HIS.entry_id
-), detailed_entry_totals AS (
-    SELECT entry_id, CAST(sum(duration) AS INTEGER) AS duration
-    FROM statisticsView
-    WHERE profile_id = :profileId
-    AND (:type IS NULL OR type = :type)
-    GROUP BY entry_id
-), earlier_entries AS (
-    SELECT
-        ENT._id AS entry_id,
-        ENT.type,
-        ENT.title,
-        max(LEG.duration - coalesce(DET.duration, 0), 0) AS duration
-    FROM legacy_entry_totals LEG
-    JOIN entries ENT ON ENT._id = LEG.entry_id
-    LEFT JOIN detailed_entry_totals DET ON DET.entry_id = LEG.entry_id
-)
-SELECT
-    EAR.entry_id,
-    EAR.type,
-    EAR.title,
-    CAST(EAR.duration AS INTEGER) AS duration,
-    ENT.thumbnail_url,
-    ENT.source,
-    ENT.favorite,
-    ENT.cover_last_modified
-FROM earlier_entries EAR
-JOIN entries ENT ON ENT._id = EAR.entry_id
-WHERE EAR.duration > 0
-ORDER BY EAR.duration DESC, EAR.title COLLATE NOCASE
-LIMIT :limit;
-
 sessionSummariesInWindow:
 WITH session_totals AS (
     SELECT session_id, type, CAST(sum(duration) AS INTEGER) AS duration
@@ -218,4 +172,62 @@ AND session_id IN (
 )
 AND (:startLocalDate IS NULL OR local_date >= :startLocalDate)
 AND (:endLocalDate IS NULL OR local_date <= :endLocalDate)
+ORDER BY started_at;
+
+-- The same window figures for a few titles, such as one title's members, for the summary over its activity list.
+
+activityTotalsOfEntriesInWindow:
+SELECT
+    type,
+    local_date,
+    CAST(sum(duration) AS INTEGER) AS duration
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate
+GROUP BY type, local_date
+ORDER BY local_date, type;
+
+completionTotalsOfEntriesInWindow:
+SELECT
+    ENT.type,
+    CMP.local_date,
+    count(*) AS count
+FROM activity_completion_events CMP
+JOIN entries ENT ON ENT._id = CMP.entry_id
+WHERE CMP.entry_id IN :entryIds
+AND CMP.cause = 'consumption'
+AND CMP.local_date >= :startLocalDate
+AND CMP.local_date <= :endLocalDate
+GROUP BY ENT.type, CMP.local_date
+ORDER BY CMP.local_date, ENT.type;
+
+sessionCountOfEntriesInWindow:
+SELECT count(DISTINCT session_id)
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate;
+
+activitySegmentsOfEntriesInWindow:
+SELECT type, local_date, started_at, ended_at, duration, time_zone_id
+FROM statisticsView
+WHERE entry_id IN :entryIds
+AND session_id IN (
+    SELECT session_id
+    FROM activity_sessions
+    WHERE duration >= :minimumSessionDurationMillis
+)
+AND local_date >= :startLocalDate
+AND local_date <= :endLocalDate
 ORDER BY started_at;
