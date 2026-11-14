@@ -39,7 +39,7 @@ class StatisticsRepositoryImpl(
             if (type == null) rows else rows.filter { it.type == type }
         }
         val topEntries = handler.awaitList {
-            statisticsViewQueries.earlierActivityEntries(
+            earlierActivityViewQueries.earlierActivityEntries(
                 profileId = profileId,
                 type = type?.name?.lowercase(),
                 limit = limit,
@@ -129,33 +129,11 @@ class StatisticsRepositoryImpl(
         ::StatisticsActivityTimeline,
     )
 
-    private fun subscribeEarlierActivity(profileId: Long): Flow<List<StatisticsEarlierActivity>> {
-        val legacy = handler.subscribeToList {
-            historyQueries.getReadDurationByType(profileId) { type, duration ->
-                EntryType.valueOf(type.uppercase()) to duration
-            }
-        }
-        val detailed = handler.subscribeToList {
-            statisticsViewQueries.detailedLifetimeDurationByType(profileId) { type, duration ->
-                EntryType.valueOf(type.uppercase()) to (duration ?: 0L)
-            }
-        }
-        return combine(legacy, detailed, ::calculateEarlierActivity)
-    }
+    private fun subscribeEarlierActivity(profileId: Long): Flow<List<StatisticsEarlierActivity>> =
+        handler.subscribeToList { earlierActivityViewQueries.earlierActivityByType(profileId, ::earlierActivity) }
 
-    private suspend fun getEarlierActivity(profileId: Long): List<StatisticsEarlierActivity> {
-        val legacyRows = handler.awaitList {
-            historyQueries.getReadDurationByType(profileId) { type, duration ->
-                EntryType.valueOf(type.uppercase()) to duration
-            }
-        }
-        val detailedRows = handler.awaitList {
-            statisticsViewQueries.detailedLifetimeDurationByType(profileId) { type, duration ->
-                EntryType.valueOf(type.uppercase()) to (duration ?: 0L)
-            }
-        }
-        return calculateEarlierActivity(legacyRows, detailedRows)
-    }
+    private suspend fun getEarlierActivity(profileId: Long): List<StatisticsEarlierActivity> =
+        handler.awaitList { earlierActivityViewQueries.earlierActivityByType(profileId, ::earlierActivity) }
 
     private fun subscribeActivityRows(
         profileId: Long,
@@ -282,15 +260,8 @@ private fun topEntry(
     completionCount = completionCount,
 )
 
-private fun calculateEarlierActivity(
-    legacyRows: List<Pair<EntryType, Long>>,
-    detailedRows: List<Pair<EntryType, Long>>,
-): List<StatisticsEarlierActivity> {
-    val detailedByType = detailedRows.toMap()
-    return legacyRows.mapNotNull { (type, duration) ->
-        (duration - (detailedByType[type] ?: 0L))
-            .coerceAtLeast(0L)
-            .takeIf { it > 0L }
-            ?.let { StatisticsEarlierActivity(type, it) }
-    }
-}
+private fun earlierActivity(type: String, duration: Long?): StatisticsEarlierActivity =
+    StatisticsEarlierActivity(
+        type = EntryType.valueOf(type.uppercase()),
+        durationMillis = duration ?: 0L,
+    )

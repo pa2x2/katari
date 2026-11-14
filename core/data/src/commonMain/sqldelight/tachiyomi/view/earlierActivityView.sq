@@ -1,0 +1,48 @@
+-- Time read before detailed tracking, per title: the title's history time less what its sessions recorded, never
+-- below zero. Totals by type add these up, so a title whose sessions recorded more than its history can't take
+-- earlier time away from the others.
+CREATE VIEW earlierActivityView AS
+SELECT
+    ENT._id AS entry_id,
+    ENT.profile_id,
+    ENT.type,
+    ENT.title,
+    max(LEG.duration - coalesce(DET.duration, 0), 0) AS duration
+FROM (
+    SELECT entry_id, sum(time_read) AS duration
+    FROM history
+    GROUP BY entry_id
+) LEG
+JOIN entries ENT ON ENT._id = LEG.entry_id
+LEFT JOIN (
+    SELECT SES.entry_id, sum(SEG.duration) AS duration
+    FROM activity_segments SEG
+    JOIN activity_sessions SES ON SES.session_id = SEG.session_id
+    GROUP BY SES.entry_id
+) DET ON DET.entry_id = LEG.entry_id;
+
+earlierActivityByType:
+SELECT type, CAST(sum(duration) AS INTEGER) AS duration
+FROM earlierActivityView
+WHERE profile_id = :profileId
+AND duration > 0
+GROUP BY type
+ORDER BY type;
+
+earlierActivityEntries:
+SELECT
+    EAR.entry_id,
+    EAR.type,
+    EAR.title,
+    CAST(EAR.duration AS INTEGER) AS duration,
+    ENT.thumbnail_url,
+    ENT.source,
+    ENT.favorite,
+    ENT.cover_last_modified
+FROM earlierActivityView EAR
+JOIN entries ENT ON ENT._id = EAR.entry_id
+WHERE EAR.profile_id = :profileId
+AND (:type IS NULL OR EAR.type = :type)
+AND EAR.duration > 0
+ORDER BY EAR.duration DESC, EAR.title COLLATE NOCASE
+LIMIT :limit;
