@@ -29,7 +29,7 @@ data class UpdatesLibraryUpdateStatus(
     val update: LibraryUpdateState?,
     /** What [update] found so far while it runs. */
     val resultsSoFar: LibraryUpdateResultsSoFar?,
-    /** When this device's latest update ended. */
+    /** When this device's latest update of the whole library ended; 0 when it made none. */
     val lastUpdated: Long,
     /** Entries the latest update failed to check, named so a failure is noticed without opening the report. */
     val failed: Int,
@@ -120,8 +120,7 @@ private fun RunningUpdateText(update: LibraryUpdateState.Running, results: Libra
 private fun LatestUpdateText(status: UpdatesLibraryUpdateStatus) {
     val otherDevice = status.otherDevice
     val updatedAt = if (otherDevice != null) {
-        val run = otherDevice.summary.run
-        libraryUpdateTimeOn(relativeTimeSpanString(run.finishedAt ?: run.startedAt), otherDevice.deviceName)
+        libraryUpdateTimeOn(relativeTimeSpanString(otherDevice.summary.run.endedAt), otherDevice.deviceName)
     } else {
         relativeTimeSpanString(status.lastUpdated)
     }

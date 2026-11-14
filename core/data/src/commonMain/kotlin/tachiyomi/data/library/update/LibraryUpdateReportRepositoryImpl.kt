@@ -24,9 +24,11 @@ class LibraryUpdateReportRepositoryImpl(
 ) : LibraryUpdateReportRepository {
 
     override fun subscribeLatestRun(): Flow<LibraryUpdateRun?> {
-        return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
-        }
+        return profileProvider.activeProfileIdFlow.flatMapLatest(::subscribeLatestRun)
+    }
+
+    override fun subscribeLatestRun(profileId: Long): Flow<LibraryUpdateRun?> {
+        return handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
     }
 
     override suspend fun getLatestRun(profileId: Long): LibraryUpdateRun? {
@@ -35,7 +37,7 @@ class LibraryUpdateReportRepositoryImpl(
 
     override fun subscribeLatestRunStatuses(): Flow<List<EntryUpdateStatus>> {
         return profileProvider.activeProfileIdFlow.flatMapLatest { profileId ->
-            handler.subscribeToOneOrNull { library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun) }
+            subscribeLatestRun(profileId)
                 .flatMapLatest { run ->
                     if (run == null) {
                         flowOf(emptyList())

@@ -14,6 +14,8 @@ import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 interface LibraryUpdateReportRepository {
     fun subscribeLatestRun(): Flow<LibraryUpdateRun?>
 
+    fun subscribeLatestRun(profileId: Long): Flow<LibraryUpdateRun?>
+
     suspend fun getLatestRun(profileId: Long): LibraryUpdateRun?
 
     /** Statuses decided by the latest run or by a partial update since. */

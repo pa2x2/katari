@@ -199,17 +199,6 @@ class UpdatesViewModel(
         .flatMapLatest { startedAt -> startedAt?.let(reportRepository::subscribeResultsSince) ?: flowOf(null) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    private val lastUpdated: StateFlow<Long> = combine(
-        libraryPreferences.lastUpdateFinishedAt.changes(),
-        libraryPreferences.lastUpdatedTimestamp.changes(),
-        ::lastUpdatedAt,
-    )
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            lastUpdatedAt(libraryPreferences.lastUpdateFinishedAt.get(), libraryPreferences.lastUpdatedTimestamp.get()),
-        )
-
     private val latestUpdateSummary: StateFlow<LibraryUpdateRunSummary?> = reportRepository.subscribeLatestSummary()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -227,14 +216,14 @@ class UpdatesViewModel(
     val libraryUpdateStatus: StateFlow<UpdatesLibraryUpdateStatus> = combine(
         libraryUpdate,
         resultsSoFar,
-        lastUpdated,
-        combine(latestUpdateSummary, otherDeviceUpdate, ::Pair),
+        latestUpdateSummary,
+        otherDeviceUpdate,
         pausedSourceNames,
-    ) { update, results, updatedAt, (latest, otherDevice), pausedSources ->
+    ) { update, results, latest, otherDevice, pausedSources ->
         UpdatesLibraryUpdateStatus(
             update = update,
             resultsSoFar = results,
-            lastUpdated = updatedAt,
+            lastUpdated = latest?.run?.takeIf { it.coversLibrary }?.endedAt ?: 0L,
             failed = latest?.failed ?: 0,
             otherDevice = otherDevice,
             pausedSources = pausedSources,
@@ -247,7 +236,7 @@ class UpdatesViewModel(
             UpdatesLibraryUpdateStatus(
                 update = null,
                 resultsSoFar = null,
-                lastUpdated = lastUpdated.value,
+                lastUpdated = 0L,
                 failed = 0,
                 otherDevice = null,
                 pausedSources = emptyList(),
@@ -845,6 +834,3 @@ private fun UpdateItem.EntryUpdate.consumptionStatus(): EntryConsumptionStatus {
 private fun UpdateItem.EntryUpdate.bookmarkStatus(): EntryBookmarkStatus {
     return EntryBookmarkStatus(bookmarked = update.bookmark)
 }
-
-// Updates written before the end of an update was recorded only know when they started.
-private fun lastUpdatedAt(finishedAt: Long, startedAt: Long): Long = finishedAt.takeIf { it > 0 } ?: startedAt
