@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.source.EntryChildWebViewAction
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
@@ -20,7 +21,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerPicturePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
 import eu.kanade.tachiyomi.ui.video.player.components.problemExplanation
@@ -32,7 +33,6 @@ import eu.kanade.tachiyomi.ui.video.player.picture.icon
 import eu.kanade.tachiyomi.ui.video.player.picture.label
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
-import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
@@ -43,7 +43,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * the held speed boost, a zoom, episode and source switching (an episode change can be cancelled there), a failed
  * episode change, a move to another server, an automatic skip, the engine's notices, a playback error, a switch that
  * failed, the subtitle timing and the first-run gesture guide, which waits for a frame and steps aside for a problem
- * screen. [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null. [positionMs] is the
+ * screen. [heldPlaybackSpeed] is the speed playing while the viewer holds it, otherwise null. [positionMs] is the
  * playback position now.
  */
 @Composable
@@ -54,7 +54,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
     engine: WatchedPlayerEngine,
-    temporarySpeedBoost: Float?,
+    heldPlaybackSpeed: PlaybackSpeed?,
     isInPictureInPictureMode: Boolean,
     endScreenVisible: Boolean,
     seekStepSeconds: Int,
@@ -86,9 +86,11 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         current.isSourceSwitching -> stringResource(MR.strings.anime_playback_switching_source)
         else -> null
     }
-    if (temporarySpeedBoost != null && !isInPictureInPictureMode) {
-        VideoPlayerSpeedBoostPill(
-            speedLabel = videoPlaybackSpeedLabel(temporarySpeedBoost),
+    val keyedSpeed = rememberKeyedSpeed(ui)
+    if (!isInPictureInPictureMode && (heldPlaybackSpeed != null || keyedSpeed)) {
+        VideoPlayerSpeedPill(
+            speedLabel = (heldPlaybackSpeed ?: current.playback.sessionPlaybackSpeed).label,
+            held = heldPlaybackSpeed != null,
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }
@@ -336,4 +338,19 @@ private fun rememberPicturePillFraming(ui: VideoPlayerWatchUiState): PictureFram
     return preview ?: shown
 }
 
+/** Whether a key stepped the speed a moment ago, held long enough for the pill to be read. */
+@Composable
+private fun rememberKeyedSpeed(ui: VideoPlayerWatchUiState): Boolean {
+    var shown by remember { mutableStateOf(false) }
+    val steps = ui.speedKeySteps
+    LaunchedEffect(steps) {
+        if (steps == 0) return@LaunchedEffect
+        shown = true
+        delay(KEYED_SPEED_PILL_HOLD_MS)
+        shown = false
+    }
+    return shown
+}
+
 private const val PICTURE_PILL_HOLD_MS = 900L
+private const val KEYED_SPEED_PILL_HOLD_MS = 1_500L

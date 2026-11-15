@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.RestartAlt
 import app.katari.icons.materialsymbols.rounded.Settings
@@ -31,7 +32,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
-import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.i18n.*
@@ -59,7 +59,7 @@ internal fun VideoPlayerSettingsContent(
     playback: VideoPlaybackUiState,
     initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
-    onSelectSpeed: (Float) -> Unit,
+    onSelectSpeed: (PlaybackSpeed) -> Unit,
     onSelectPicture: (PictureFraming) -> Unit,
     onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
@@ -232,15 +232,7 @@ internal fun VideoPlayerSettingsContent(
             }
 
             item(key = SPEED_ITEM) {
-                ChipsRow(title = stringResource(MR.strings.anime_playback_speed)) {
-                    videoPlaybackSpeedOptions.forEach { option ->
-                        FilterChip(
-                            label = option.label,
-                            selected = option.speed == playback.sessionPlaybackSpeed,
-                            onClick = { onSelectSpeed(option.speed) },
-                        )
-                    }
-                }
+                VideoPlayerSpeedRows(speed = playback.sessionPlaybackSpeed, onSelect = onSelectSpeed)
             }
 
             item(key = PICTURE_ITEM) {

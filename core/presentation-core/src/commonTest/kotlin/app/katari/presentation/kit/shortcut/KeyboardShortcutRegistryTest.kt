@@ -38,6 +38,39 @@ class KeyboardShortcutRegistryTest {
         ran shouldBe listOf("shown screen")
     }
 
+    @Test
+    fun `a held key starts its hold once the keyboard repeats it and ends it on release, and a tap runs on release`() {
+        val registry = KeyboardShortcutRegistry()
+        val ran = mutableListOf<String>()
+        val playPause = ShortcutRegistration(
+            registry.rootLayer,
+            play,
+            enabled = true,
+            action = { ran += "toggle" },
+            onHoldChange = { held -> ran += if (held) "hold" else "let go" },
+        ).also(registry::register)
+
+        registry.trigger(KeyPress(Key.Spacebar), canHold = true) shouldBe true
+        // The keyboard repeating a held key used to toggle playback on every repeat
+        repeat(3) { registry.trigger(KeyPress(Key.Spacebar), canHold = true) shouldBe true }
+        registry.release(Key.Spacebar) shouldBe true
+        ran shouldBe listOf("hold", "let go")
+
+        ran.clear()
+        registry.trigger(KeyPress(Key.Spacebar), canHold = true)
+        registry.release(Key.Spacebar)
+        ran shouldBe listOf("toggle")
+
+        // A hold whose key comes up where the window can't see it still ends
+        ran.clear()
+        registry.trigger(KeyPress(Key.Spacebar), canHold = true)
+        registry.trigger(KeyPress(Key.Spacebar), canHold = true)
+        registry.unregister(playPause)
+        registry.release(Key.Spacebar) shouldBe false
+        ran shouldBe listOf("hold", "let go")
+    }
+
+    private val play = shortcut("play", ShortcutKeys.Chord(Key.Spacebar, "Space"))
     private val refresh = shortcut("refresh", ShortcutKeys.Chord(Key.F5, "F5"))
     private val quit = shortcut("quit", ShortcutKeys.Chord(Key.Q, "Q", ctrl = true), ShortcutReach.Window)
     private val search = shortcut("search", ShortcutKeys.Chord(Key.F, "F", ctrl = true), whileTyping = false)

@@ -125,6 +125,7 @@ internal fun PreferenceItem(
                             value = value,
                             valueRange = item.valueRange,
                             step = item.step,
+                            kind = item.kind,
                             valueFormatter = item.valueFormatter,
                             inputSuffix = item.inputSuffix,
                             decreaseContentDescription = item.decreaseContentDescription,
@@ -149,6 +150,7 @@ internal fun PreferenceItem(
                     isProfileSpecific = showProfileChip,
                     entries = item.entries,
                     entryEnabled = { item.internalEntryEnabled(it!!) },
+                    typedEntry = item.internalTypedEntry,
                     onValueChange = { newValue ->
                         scope.launch {
                             if (item.internalOnValueChanged(newValue!!)) {

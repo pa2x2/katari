@@ -58,7 +58,16 @@ internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () ->
 
 @Composable
 private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, enabled: Boolean) {
-    Key(VideoPlayerShortcuts.PlayPause, enabled) { target.togglePlayback(showControls = false) }
+    // Held, it plays faster as holding the mouse button does, rather than toggling playback on each key repeat
+    KeyboardShortcutHandler(
+        VideoPlayerShortcuts.PlayPause,
+        enabled = enabled,
+        onHoldChange = { held ->
+            target.setSpeedBoostActive(held)
+            if (held) target.registerControllerInteraction(showControls = false)
+        },
+        onTrigger = { target.togglePlayback(showControls = false) },
+    )
     Key(VideoPlayerShortcuts.seekBackward(seekStepSeconds), enabled) {
         target.seekStep(VideoPlayerSeekDirection.Backward)
     }

@@ -1,6 +1,7 @@
 package app.katari.desktop.display.size
 
 import androidx.compose.runtime.Composable
+import app.katari.presentation.kit.control.StepperKind
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.appearance.InterfaceSizeSetting
@@ -16,6 +17,7 @@ class DesktopInterfaceSizeSetting(private val preferences: InterfaceSizePreferen
             preference = preferences.interfaceSize,
             valueRange = InterfaceSize.RANGE,
             step = InterfaceSize.STEP,
+            kind = StepperKind.TextSize,
             valueFormatter = { "$it%" },
             inputSuffix = "%",
             decreaseContentDescription = stringResource(MR.strings.keyboard_shortcut_interface_smaller),

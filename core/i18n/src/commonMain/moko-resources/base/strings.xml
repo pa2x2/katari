@@ -1842,6 +1842,9 @@
     <string name="anime_playback_source_quality">Source quality</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
+    <string name="anime_playback_speed_custom">Custom</string>
+    <string name="anime_playback_speed_type">Enter the speed</string>
+    <string name="anime_playback_speed_invalid">Enter a speed from %1$s to %2$s</string>
     <string name="anime_playback_subtitles">Subtitles</string>
     <string name="anime_playback_audio">Audio</string>
     <string name="anime_playback_audio_track">Track %d</string>
@@ -1935,7 +1938,7 @@
     <string name="anime_playback_episode_opening">Opening</string>
     <string name="anime_playback_source_waits_for_episode">Dub, server and quality come back once %s plays</string>
     <string name="anime_playback_details">Details</string>
-    <string name="anime_guide_hold">Hold for 2× speed</string>
+    <string name="anime_guide_hold">Hold to play twice as fast</string>
     <string name="action_got_it">Got it</string>
     <string name="anime_playback_change_dub">Change dub</string>
     <string name="anime_playback_change_quality">Change quality</string>

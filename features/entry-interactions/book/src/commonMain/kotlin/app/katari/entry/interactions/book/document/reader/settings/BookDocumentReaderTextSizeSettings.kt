@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import app.katari.entry.interactions.reader.settings.BookDocumentReaderSettings
 import app.katari.entry.viewer.settings.ViewerSettingBinding
+import app.katari.presentation.kit.control.StepperKind
 import app.katari.presentation.kit.list.StepperRow
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.*
@@ -28,6 +29,7 @@ internal fun BookDocumentReaderTextSizeSettings(
         value = value,
         valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
         step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
+        kind = StepperKind.TextSize,
         valueFormatter = { "$it%" },
         inputSuffix = "%",
         decreaseContentDescription = stringResource(MR.strings.book_document_reader_decrease_text_size),

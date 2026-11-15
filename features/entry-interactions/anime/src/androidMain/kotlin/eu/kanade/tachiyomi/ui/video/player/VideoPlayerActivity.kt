@@ -19,6 +19,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import app.katari.core.metro.metroGraph
 import app.katari.entry.interactions.anime.R
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.runtime.EntryInteractionActivityGraph
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.interactions.source.EntryChildWebViewAction
@@ -138,7 +139,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             ownerEntryId = ownerAnimeId,
             bypassMerge = bypassMerge,
             startPositionMs = startPositionMs,
-            defaultPlaybackSpeed = settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue / 100f,
+            defaultPlaybackSpeed = PlaybackSpeed(settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue),
         )
 
         val host = VideoPlayerScreenHost(

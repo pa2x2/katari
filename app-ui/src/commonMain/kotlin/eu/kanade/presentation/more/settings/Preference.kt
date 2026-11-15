@@ -3,7 +3,9 @@ package eu.kanade.presentation.more.settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.katari.presentation.kit.control.StepperKind
 import app.katari.profiles.core.ProfileStore
+import eu.kanade.presentation.more.settings.widget.ListTypedEntry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.core.common.preference.Preference as PreferenceData
@@ -87,6 +89,7 @@ sealed class Preference {
             val preference: PreferenceData<Int>,
             val valueRange: IntRange,
             val step: Int,
+            val kind: StepperKind,
             val valueFormatter: (Int) -> String = Int::toString,
             val inputSuffix: String = "",
             val decreaseContentDescription: String,
@@ -119,9 +122,21 @@ sealed class Preference {
             val entryEnabledProvider: (value: T) -> Boolean = { true },
             override val icon: ImageVector? = null,
             override val visible: Boolean = true,
+            val typedEntry: ListTypedEntry<T>? = null,
             override val onValueChanged: suspend (value: T) -> Boolean = { true },
         ) : PreferenceItem<T, Boolean>() {
             override val storedPreference: PreferenceData<*> = preference
+
+            internal val internalTypedEntry: ListTypedEntry<Any?>?
+                get() = typedEntry?.let { entry ->
+                    ListTypedEntry(
+                        label = entry.label,
+                        suffix = entry.suffix,
+                        text = { entry.text(it as T) },
+                        parse = entry.parse,
+                        invalid = entry.invalid,
+                    )
+                }
 
             internal fun internalSet(value: Any) = preference.set(value as T)
             internal suspend fun internalOnValueChanged(value: Any) = onValueChanged(value as T)

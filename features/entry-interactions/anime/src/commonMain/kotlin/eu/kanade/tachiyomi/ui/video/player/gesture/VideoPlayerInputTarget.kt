@@ -83,7 +83,7 @@ internal interface VideoPlayerInputTarget {
     /** Mutes or unmutes the player's own volume, where the controls set it. */
     fun toggleMute()
 
-    /** Moves to the next speed the settings offer, faster or slower. */
+    /** Moves the speed one step faster or slower, showing it a moment. */
     fun stepSpeed(faster: Boolean)
 
     /** True while paused with a player that steps frames. */

@@ -39,6 +39,9 @@ internal class VideoPlayerWatchUiState(
 
     /** How many times a key has stepped the subtitle timing, each showing the timing a moment. */
     var subtitleTimingKeySteps by mutableIntStateOf(0)
+
+    /** How many times a key has stepped the speed, each showing the speed a moment. */
+    var speedKeySteps by mutableIntStateOf(0)
     var subtitleEditorDraft by mutableStateOf(subtitleAppearance)
     var subtitleEditorKeepsInPicture by mutableStateOf(false)
     var resumePlaybackAfterSubtitleEditor by mutableStateOf(false)

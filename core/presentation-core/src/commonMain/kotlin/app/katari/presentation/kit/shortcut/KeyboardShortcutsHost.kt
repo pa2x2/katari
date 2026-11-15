@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalWindowInfo
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -24,6 +26,11 @@ fun KeyboardShortcutsHost(registry: KeyboardShortcutRegistry, content: @Composab
         LocalShortcutsActive provides true,
     ) {
         KeyboardShortcutHandler(showListShortcut(), onTrigger = registry::toggleList)
+        // A key held as the window loses focus comes up elsewhere, so its hold would never end
+        val focused = LocalWindowInfo.current.isWindowFocused
+        LaunchedEffect(registry, focused) {
+            if (!focused) registry.releaseHeldKey()
+        }
         Box(modifier = Modifier.fillMaxSize().onPreviewKeyEvent(registry::onPreviewKeyEvent)) { content() }
         val listed = registry.listed
         if (listed != null) {

@@ -17,7 +17,7 @@
     <string name="anime_guide_right_click">Right-click for settings</string>
     <string name="anime_guide_scroll_volume">Scroll for volume</string>
     <string name="anime_guide_scroll_zoom">Ctrl and scroll, or pinch, to zoom</string>
-    <string name="anime_guide_keys_play">Space to play or pause</string>
+    <string name="anime_guide_keys_play">Space to play or pause, or hold to play twice as fast</string>
     <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>
     <string name="anime_guide_keys_list">? lists every key</string>
     <string name="information_cloudflare_help">Click here for help with Cloudflare</string>

@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Close
 import app.katari.icons.materialsymbols.rounded.Error
+import app.katari.icons.materialsymbols.rounded.Speed
 import app.katari.icons.materialsymbols.rounded.Subtitles
 import app.katari.icons.materialsymbols.roundedfilled.FastForward
 import app.katari.presentation.kit.button.Button
@@ -60,10 +61,14 @@ internal fun VideoPlayerSwitchingOverlay(
     )
 }
 
-/** The speed playing while the screen is held, which nothing else on screen shows. */
+/**
+ * The speed playing, which nothing else on screen shows: while the screen or Space is [held], or a moment after a key
+ * stepped it with the controls hidden.
+ */
 @Composable
-internal fun VideoPlayerSpeedBoostPill(
+internal fun VideoPlayerSpeedPill(
     speedLabel: String,
+    held: Boolean,
     modifier: Modifier = Modifier,
 ) {
     VideoPlayerStatusPill(
@@ -71,7 +76,7 @@ internal fun VideoPlayerSpeedBoostPill(
         modifier = modifier,
         leading = {
             Icon(
-                imageVector = MaterialSymbols.RoundedFilled.FastForward,
+                imageVector = if (held) MaterialSymbols.RoundedFilled.FastForward else MaterialSymbols.Rounded.Speed,
                 contentDescription = null,
                 modifier = Modifier.size(KatariTheme.sizes.iconSmall),
             )

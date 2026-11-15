@@ -21,7 +21,6 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
@@ -85,7 +84,7 @@ internal fun VideoPlayerControlsLayer(
             hasNextEpisode = current.nextChapterId != null,
             openingEpisodeId = (current.episodeChange as? VideoPlayerViewModel.EpisodeChange.Loading)?.episodeId,
             seekStepSeconds = seekStepSeconds,
-            playbackSpeedLabel = videoPlaybackSpeedLabel(current.playback.sessionPlaybackSpeed),
+            playbackSpeedLabel = current.playback.sessionPlaybackSpeed.label,
             picture = current.playback.pictureFraming,
             showSubtitles = current.playback.hasSubtitleSelection,
             seekFeedbackState = ui.seekFeedbackState,

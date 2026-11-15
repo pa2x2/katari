@@ -15,7 +15,6 @@ import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerInputTarget
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
-import eu.kanade.tachiyomi.ui.video.player.steppedPlaybackSpeed
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import tachiyomi.domain.entry.model.PictureFraming
 
@@ -169,8 +168,8 @@ internal class VideoPlayerWatchInputTarget(
 
     override fun stepSpeed(faster: Boolean) {
         actions.endSpeedBoost()
-        viewModel.updateSessionPlaybackSpeed(steppedPlaybackSpeed(ready.playback.sessionPlaybackSpeed, faster))
-        ui.registerControllerInteraction(true)
+        viewModel.updateSessionPlaybackSpeed(ready.playback.sessionPlaybackSpeed.stepped(if (faster) 1 else -1))
+        ui.speedKeySteps += 1
     }
 
     override val stepsFrames get() = player.capabilities.stepsFrames && !player.state.value.isPlaying

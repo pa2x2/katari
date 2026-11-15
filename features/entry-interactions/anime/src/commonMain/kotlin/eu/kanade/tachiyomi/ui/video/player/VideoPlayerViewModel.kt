@@ -20,6 +20,7 @@ import app.katari.entry.interactions.media.handoff.EntryProgressOffers
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivity
 import app.katari.entry.interactions.media.session.EntryMediaSessionActivitySession
 import app.katari.entry.interactions.media.session.EntryMediaSessionEvent
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.runtime.usage.ReadingSessionReport
 import app.katari.entry.interactions.source.EntryChildWebViewResolution
 import app.katari.entry.interactions.source.EntrySourceSettingsFeature
@@ -216,9 +217,9 @@ internal class VideoPlayerViewModel(
     private var ownerEntryId: Long = INVALID_ID
     private var chapterId: Long = INVALID_ID
     private var bypassMerge: Boolean = false
-    private var sessionPlaybackSpeed: Float =
-        savedState[SESSION_PLAYBACK_SPEED_KEY] ?: DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
-    private var defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+    private var sessionPlaybackSpeed: PlaybackSpeed =
+        savedState.get<Int>(SESSION_PLAYBACK_SPEED_KEY)?.let(PlaybackSpeed::nearest) ?: PlaybackSpeed.NORMAL
+    private var defaultPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.NORMAL
 
     // Carried into each episode the session opens, where the player looks for a track with the same key.
     private var sessionAudioTrackKey: String? = null
@@ -250,7 +251,7 @@ internal class VideoPlayerViewModel(
         ownerEntryId: Long = entryId,
         bypassMerge: Boolean = false,
         startPositionMs: Long? = null,
-        defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
+        defaultPlaybackSpeed: PlaybackSpeed = PlaybackSpeed.NORMAL,
     ) {
         if (initialized) return
         initialized = true
@@ -259,7 +260,7 @@ internal class VideoPlayerViewModel(
         savedState[START_POSITION_TAKEN_KEY] = true
         this.defaultPlaybackSpeed = defaultPlaybackSpeed
         // A speed saved across process death outranks the default the player starts with.
-        if (savedState.get<Float>(SESSION_PLAYBACK_SPEED_KEY) == null) sessionPlaybackSpeed = defaultPlaybackSpeed
+        if (savedState.get<Int>(SESSION_PLAYBACK_SPEED_KEY) == null) sessionPlaybackSpeed = defaultPlaybackSpeed
         this.visibleEntryId = entryId
         this.ownerEntryId = ownerEntryId
         this.chapterId = chapterId
@@ -540,11 +541,11 @@ internal class VideoPlayerViewModel(
         )
     }
 
-    fun updateSessionPlaybackSpeed(speed: Float) {
-        val normalizedSpeed = speed.coerceIn(MIN_SESSION_PLAYBACK_SPEED, MAX_SESSION_PLAYBACK_SPEED)
+    fun updateSessionPlaybackSpeed(speed: PlaybackSpeed) {
+        val normalizedSpeed = PlaybackSpeed.nearest(speed.hundredths)
         if (sessionPlaybackSpeed == normalizedSpeed) return
         sessionPlaybackSpeed = normalizedSpeed
-        savedState[SESSION_PLAYBACK_SPEED_KEY] = normalizedSpeed
+        savedState[SESSION_PLAYBACK_SPEED_KEY] = normalizedSpeed.hundredths
         val current = mutableState.value as? State.Ready ?: return
         mutableState.value = current.copy(
             playback = current.playback.copy(sessionPlaybackSpeed = normalizedSpeed),
@@ -556,7 +557,7 @@ internal class VideoPlayerViewModel(
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
         sessionPlaybackSpeed = defaultPlaybackSpeed
-        savedState[SESSION_PLAYBACK_SPEED_KEY] = defaultPlaybackSpeed
+        savedState[SESSION_PLAYBACK_SPEED_KEY] = defaultPlaybackSpeed.hundredths
         sessionAudioTrackKey = null
         mutableState.value = current.copy(
             playback = current.playback.copy(
@@ -1665,11 +1666,11 @@ internal class VideoPlayerViewModel(
         private const val EPISODE_ID_KEY = "episode_id"
         private const val BYPASS_MERGE_KEY = "bypass_merge"
         private const val START_POSITION_TAKEN_KEY = "start_position_taken"
-        private const val SESSION_PLAYBACK_SPEED_KEY = "session_playback_speed"
+
+        // In hundredths since speeds took any step; a speed saved as a multiplier before then isn't read back
+        private const val SESSION_PLAYBACK_SPEED_KEY = "session_playback_speed_hundredths"
         private const val INVALID_ID = -1L
         private const val SELECTION_CACHE_LIMIT = 12
-        private const val MIN_SESSION_PLAYBACK_SPEED = 0.5f
-        private const val MAX_SESSION_PLAYBACK_SPEED = 2f
     }
 }
 

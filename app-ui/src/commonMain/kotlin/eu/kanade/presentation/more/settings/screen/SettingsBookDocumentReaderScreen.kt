@@ -20,6 +20,7 @@ import app.katari.entry.viewer.chrome.ui.tap.readerTapInversionLabels
 import app.katari.entry.viewer.chrome.ui.tap.readerTapZoneLabels
 import app.katari.entry.viewer.settings.asProfilePreference
 import app.katari.platform.presentation.platformPresentation
+import app.katari.presentation.kit.control.StepperKind
 import app.katari.ui.di.LocalAppUiGraph
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -169,6 +170,7 @@ class SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection(
                         preference = textSize,
                         valueRange = BookDocumentReaderSettings.TEXT_SIZE_RANGE,
                         step = BookDocumentReaderSettings.TEXT_SIZE_STEP_PERCENT,
+                        kind = StepperKind.TextSize,
                         valueFormatter = { "$it%" },
                         inputSuffix = "%",
                         decreaseContentDescription = stringResource(MR.strings.action_decrease_text_size),

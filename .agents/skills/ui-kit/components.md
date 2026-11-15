@@ -60,7 +60,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | A filter that includes, excludes or ignores | `TriStateRow` | |
 | A sort option | `SortRow` | |
 | A setting on a slider, its value in a pill | `SliderRow` | |
-| A value stepped one meaningful step at a time | `StepperRow` | |
+| A value stepped one meaningful step at a time | `StepperRow` | `StepperKind` says what it adjusts (A− A+ for a text size, − + otherwise); `StepperInput` types a decimal value, such as a speed |
 | A labelled field opening a menu of options | `SelectRow` | |
 | A row whose body the caller lays out, such as a segmented choice or a pair of buttons | `ControlRow` | |
 | Chips under a group header, such as quick filters in a sheet | `ChipsRow` | |
@@ -137,7 +137,7 @@ The Component column holds only kit composables, in backticks; `checkUiKitBounda
 | One choice of a setting shown as a picture of it | `ChoiceTile` | |
 | Bare toggles, outside rows | `Switch`, `Checkbox`, `TriStateCheckbox`, `RadioButton` | Settings use the toggle and choice rows instead |
 | A slider | `Slider`, `VerticalSlider` | `SliderRow` for a setting |
-| A value stepped one meaningful step at a time | `Stepper` | `StepperRow` for a setting |
+| A value stepped one meaningful step at a time | `Stepper` | `StepperRow` for a setting; `StepperKind` and `StepperInput` as for `StepperRow` |
 | Chips side by side, scrolling or wrapping | `ChipRow` | |
 | A chip that starts an action, such as opening a picker | `AssistChip` | |
 | A chip that switches a filter on and off | `FilterChip` | |

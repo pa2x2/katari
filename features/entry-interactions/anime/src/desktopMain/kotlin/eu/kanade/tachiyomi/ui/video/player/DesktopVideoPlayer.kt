@@ -18,6 +18,7 @@ import app.katari.entry.interactions.player.AnimePlayerNavigation
 import app.katari.entry.interactions.player.AnimePlayerPictureInPictureWindow
 import app.katari.entry.interactions.player.AnimePlayerPlacement
 import app.katari.entry.interactions.player.AnimePlayerRequest
+import app.katari.entry.interactions.player.PlaybackSpeed
 import app.katari.entry.interactions.settings.AnimePlayerDevicePreferences
 import app.katari.entry.interactions.settings.AnimePlayerPreferences
 import app.katari.entry.interactions.source.EntryChildWebViewAction
@@ -84,7 +85,9 @@ internal class DesktopVideoPlayer(
                 ownerEntryId = request.ownerEntryId,
                 bypassMerge = request.bypassMerge,
                 startPositionMs = request.startPositionMs,
-                defaultPlaybackSpeed = settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue / 100f,
+                defaultPlaybackSpeed = PlaybackSpeed(
+                    settings.defaultPlaybackSpeedPercent.resolveProfile().effectiveValue,
+                ),
             )
         }
         val scope = rememberCoroutineScope()
