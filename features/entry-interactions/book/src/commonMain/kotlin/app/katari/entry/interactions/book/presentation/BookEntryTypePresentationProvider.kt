@@ -7,14 +7,14 @@ import app.katari.entry.interactions.presentation.EntryTypePresentation
 import app.katari.entry.interactions.presentation.EntryUpdateNotificationVocabulary
 import app.katari.entry.interactions.runtime.EntryTypePresentationProvider
 import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.automirroredrounded.MenuBook
 import app.katari.icons.materialsymbols.rounded.Book
 import tachiyomi.i18n.*
 
 internal object BookEntryTypePresentationProvider : EntryTypePresentationProvider {
     override val presentation = EntryTypePresentation(
         displayNameLabel = MR.strings.entry_type_book,
-        badgeIcon = MaterialSymbols.Rounded.Book,
-        coverOverlayIcon = MaterialSymbols.Rounded.Book,
+        badgeIcon = MaterialSymbols.AutoMirroredRounded.MenuBook,
         markAsConsumedLabel = MR.strings.action_mark_as_seen,
         markAsUnconsumedLabel = MR.strings.action_mark_as_unseen,
         markPreviousAsConsumedLabel = MR.strings.action_mark_previous_as_seen,

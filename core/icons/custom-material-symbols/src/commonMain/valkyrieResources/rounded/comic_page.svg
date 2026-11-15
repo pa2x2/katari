@@ -1,0 +1,9 @@
+<!--
+  Custom Material Symbols Rounded 'comic_page'.
+  A page cut into two upper panels and one lower panel by a slanted gutter, as a manga page is.
+  Frame from Material Symbols Rounded 'crop_portrait'.
+  Gutters drawn at the Material Symbols stroke weight.
+  Copyright (C) Google LLC
+  SPDX-License-Identifier: Apache-2.0
+-->
+<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M720 -80L240 -80Q207 -80 183.5 -103.5Q160 -127 160 -160L160 -800Q160 -833 183.5 -856.5Q207 -880 240 -880L720 -880Q753 -880 776.5 -856.5Q800 -833 800 -800L800 -160Q800 -127 776.5 -103.5Q753 -80 720 -80ZM240 -800L240 -481L440.3 -531.1L400 -800ZM480 -800L517.5 -550.4L720 -601L720 -800ZM240 -399L240 -160L720 -160L720 -519Z"/></svg>
