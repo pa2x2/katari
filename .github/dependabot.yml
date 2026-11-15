@@ -35,6 +35,9 @@ updates:
       # read. libmpv moves only through the mpv-fork-upgrade skill.
       - dependency-name: app.katari.*
       - dependency-name: io.github.pa2x2:*
+      # Pinned to a JitPack commit build. JitPack lists only commit hashes, which Dependabot can't read as versions;
+      # finding none, it blames the JetBrains repository's 403 and fails the whole job.
+      - dependency-name: com.github.mihon:unifile
       # Follows the JCEF of the JetBrains Runtime pinned in gradle/katari.versions.toml.
       - dependency-name: org.jetbrains.intellij.deps.jcef:*
       # Follows dex2jar.
