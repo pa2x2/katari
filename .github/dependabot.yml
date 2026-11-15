@@ -20,7 +20,7 @@ updates:
           - "*"
 
   # Dependabot reads only gradle/libs.versions.toml and the wrapper. gradle/katari.versions.toml (Android SDK and NDK,
-  # JetBrains Runtime, Chromium, the sync server's runtime, AppImage tools) is upgraded by hand.
+  # JetBrains Runtime, the sync server's runtime, AppImage tools) is upgraded by hand.
   - package-ecosystem: gradle
     directory: /
     target-branch: upcoming

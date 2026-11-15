@@ -7,8 +7,6 @@ import kotlinx.coroutines.future.await
 import logcat.LogPriority
 import org.cef.CefApp
 import tachiyomi.core.common.util.system.logcat
-import java.io.IOException
-import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -22,18 +20,12 @@ import kotlin.time.TimeSource
  * runtime with JCEF loads; this class is loaded on any runtime, as the app binds it on all of them.
  */
 class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCookieMirror) : JcefRuntime {
-    private val presenceCheck = JcefPresenceCheck(host.chromiumDirectory)
+    // JCEF may come to a runtime that lacked it, and doesn't leave one that has it
+    @Volatile
+    private var present: JcefPresence.Present? = null
 
-    init {
-        // JCEF reads where its server is once, as its classes load, and takes the runtime's own unless told
-        if (!presenceCheck.hasRuntimeChromium) {
-            System.setProperty(SERVER_PATH, host.chromiumDirectory.resolve(Chromium.SERVER_EXECUTABLE).toString())
-        }
-    }
-
-    // Asked each time: the app installs Chromium, and removes it, while it runs
     override val presence: JcefPresence
-        get() = presenceCheck.check()
+        get() = present ?: JcefPresenceCheck.check().also { present = it as? JcefPresence.Present }
 
     private val lock = Any()
 
@@ -53,11 +45,7 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
         if (current?.isOver == false) return current.started
         // Neither is a start of Chromium, so the next call finds things as they are then
         if (hasEnded) return failed("Chromium has shut down with the app")
-        val present = when (val presence = presence) {
-            is JcefPresence.Present -> presence
-            JcefPresence.NoChromium -> return failed("No Chromium is installed")
-            JcefPresence.Absent -> return failed("This Java runtime has no JCEF")
-        }
+        if (presence !is JcefPresence.Present) return failed("This Java runtime has no JCEF")
         val next = Startup()
         startup = next
         if (!endsWithProcess) {
@@ -65,11 +53,11 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
             Runtime.getRuntime().addShutdownHook(Thread(::shutdown, "Chromium shutdown"))
         }
         // Ending the Chromium before takes seconds, which no caller's thread is held for
-        thread(name = "Chromium start", isDaemon = true) { begin(next, present.chromium, previous = current) }
+        thread(name = "Chromium start", isDaemon = true) { begin(next, previous = current) }
         next.started
     }
 
-    private fun begin(startup: Startup, chromium: Path?, previous: Startup?) {
+    private fun begin(startup: Startup, previous: Startup?) {
         val clock = TimeSource.Monotonic.markNow()
         startup.started.orTimeout(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS).whenComplete { _, error ->
             if (error == null) {
@@ -84,7 +72,6 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
                 logcat(LogPriority.WARN) { "The Chromium before didn't shut down in $SHUTDOWN_TIMEOUT" }
             }
             ChromiumProfileData(host.dataDirectory).deleteIfAsked()
-            if (chromium != null) placeSharedMemoryLibrary(chromium)
             val initialized = CompletableFuture<CefApp>()
             initialized
                 .thenCompose { app -> cookies.attach(Chromium.cookieManager()).thenApply { app } }
@@ -109,15 +96,6 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
         }
     }
 
-    private fun placeSharedMemoryLibrary(chromium: Path) {
-        val library = presenceCheck.sharedMemoryLibrary ?: return
-        try {
-            placeBesideChromium(library, chromium)
-        } catch (e: IOException) {
-            throw JcefStartException("Chromium's folder didn't take the runtime's ${library.fileName}", e)
-        }
-    }
-
     // JCEF calls it on the thread that found the server gone, and not as the app shuts Chromium down
     private fun onLost(startup: Startup) {
         logcat(LogPriority.ERROR) { "Chromium's server ended; its pages are gone" }
@@ -127,24 +105,12 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
         startup.fail(JcefStartException("Chromium's server ended"))
     }
 
-    override fun stop() {
-        val current = synchronized(lock) { if (hasEnded) null else startup } ?: return
-        end(current)
-        // JCEF tells of no loss when the app itself ends Chromium, so its pages are told here
-        current.lost.complete(Unit)
-        synchronized(lock) { if (startup === current) startup = null }
-    }
-
     override fun shutdown() {
         val current = synchronized(lock) {
             if (hasEnded) return
             hasEnded = true
             startup
         } ?: return
-        end(current)
-    }
-
-    private fun end(current: Startup) {
         // Shutting Chromium down while it initialises leaves its threads racing, so a start under way ends first
         runCatching { current.started.get(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS) }
         cookies.detach()
@@ -173,9 +139,6 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
     }
 
     private companion object {
-        // JCEF's system property for a server outside the Java runtime
-        const val SERVER_PATH = "ALT_CEF_SERVER_PATH"
-
         val START_TIMEOUT = 30.seconds
 
         // JCEF waits a second after the last browser closes before it shuts Chromium down

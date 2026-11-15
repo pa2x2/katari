@@ -197,7 +197,6 @@ include(
     ":sources:source-compat",
     ":sources:source-local",
     ":sources:web-pages",
-    ":sources:web-view:chromium",
     ":sources:web-view:engine",
     ":sources:web-view:jcef",
 )
