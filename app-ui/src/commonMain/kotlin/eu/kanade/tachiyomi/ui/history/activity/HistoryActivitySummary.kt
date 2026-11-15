@@ -3,7 +3,9 @@ package eu.kanade.tachiyomi.ui.history.activity
 import androidx.compose.runtime.Immutable
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.buildActivityRhythm
+import tachiyomi.domain.statistics.model.StatisticsActivityBucket
 import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
+import tachiyomi.domain.statistics.model.StatisticsWindowActivity
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -17,59 +19,59 @@ data class HistoryActivitySummary(
     val totalDurationMillis: Long,
     val durationByType: Map<EntryType, Long>,
     val sessionCount: Long,
-    val completionCountByType: Map<EntryType, Long>,
+    val completionCount: Long,
     val hourlyDurationMillis: List<Long>?,
     val buckets: List<HistoryActivitySummaryBucket>,
     val bucketsAreMonths: Boolean,
-) {
-    val completionCount: Long = completionCountByType.values.sum()
-}
+)
 
 @Immutable
 data class HistoryActivitySummaryBucket(
     val startDate: LocalDate,
-    val durationMillis: Long,
-)
+    val durationByType: Map<EntryType, Long>,
+) {
+    val durationMillis: Long = durationByType.values.sum()
+}
+
+/** The part of a profile's [StatisticsActivitySnapshot] an Activity screen of every type, or of [type], covers. */
+internal fun StatisticsActivitySnapshot.windowActivity(type: EntryType?): StatisticsWindowActivity =
+    StatisticsWindowActivity(
+        activity = activity.filter { type == null || it.type == type },
+        completions = completions.filter { type == null || it.type == type },
+        sessionCount = sessions.filter { type == null || it.type == type }.sumOf { it.sessionCount },
+        segments = segments.filter { type == null || it.type == type },
+    )
 
 internal fun summarizeHistoryActivity(
-    snapshot: StatisticsActivitySnapshot,
-    type: EntryType?,
+    window: StatisticsWindowActivity,
     startDate: LocalDate,
     endDate: LocalDate,
 ): HistoryActivitySummary {
-    val activity = snapshot.activity.filter { type == null || it.type == type }
-    val byDate = activity.groupBy {
-        LocalDate.parse(it.localDate)
-    }.mapValues { (_, rows) -> rows.sumOf { it.durationMillis } }
+    val byDate = window.activity.groupBy { LocalDate.parse(it.localDate) }
     val byMonth = ChronoUnit.DAYS.between(startDate, endDate) + 1L > MAX_DAILY_BUCKETS
-    val buckets = if (startDate == endDate) {
-        emptyList()
-    } else if (byMonth) {
-        generateSequence(YearMonth.from(startDate)) { it.plusMonths(1L) }
+    val buckets = when {
+        startDate == endDate -> emptyList()
+        byMonth -> generateSequence(YearMonth.from(startDate)) { it.plusMonths(1L) }
             .takeWhile { !it.isAfter(YearMonth.from(endDate)) }
             .map { month ->
                 HistoryActivitySummaryBucket(
                     startDate = month.atDay(1),
-                    durationMillis = byDate.filterKeys { YearMonth.from(it) == month }.values.sum(),
+                    durationByType = byDate.filterKeys { YearMonth.from(it) == month }.values.flatten().byType(),
                 )
             }
             .toList()
-    } else {
-        generateSequence(startDate) { it.plusDays(1L) }
+        else -> generateSequence(startDate) { it.plusDays(1L) }
             .takeWhile { !it.isAfter(endDate) }
-            .map { day -> HistoryActivitySummaryBucket(day, byDate[day] ?: 0L) }
+            .map { day -> HistoryActivitySummaryBucket(day, byDate[day].orEmpty().byType()) }
             .toList()
     }
     return HistoryActivitySummary(
-        totalDurationMillis = activity.sumOf { it.durationMillis },
-        durationByType = activity.groupBy { it.type }.mapValues { (_, rows) -> rows.sumOf { it.durationMillis } },
-        sessionCount = snapshot.sessions.filter { type == null || it.type == type }.sumOf { it.sessionCount },
-        completionCountByType = snapshot.completions.filter { type == null || it.type == type }
-            .groupBy { it.type }
-            .mapValues { (_, rows) -> rows.sumOf { it.count } },
+        totalDurationMillis = window.activity.sumOf { it.durationMillis },
+        durationByType = window.activity.byType(),
+        sessionCount = window.sessionCount,
+        completionCount = window.completions.sumOf { it.count },
         hourlyDurationMillis = if (startDate == endDate) {
-            buildActivityRhythm(snapshot.segments.filter { type == null || it.type == type }, activity)
-                .hourlyDurationMillis
+            buildActivityRhythm(window.segments, window.activity).hourlyDurationMillis
         } else {
             null
         },
@@ -77,5 +79,8 @@ internal fun summarizeHistoryActivity(
         bucketsAreMonths = byMonth,
     )
 }
+
+private fun List<StatisticsActivityBucket>.byType(): Map<EntryType, Long> =
+    groupBy { it.type }.mapValues { (_, rows) -> rows.sumOf { it.durationMillis } }
 
 private const val MAX_DAILY_BUCKETS = 62L

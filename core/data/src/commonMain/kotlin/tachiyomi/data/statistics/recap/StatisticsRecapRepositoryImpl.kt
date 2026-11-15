@@ -12,6 +12,7 @@ import tachiyomi.domain.entry.model.EntryCover
 import tachiyomi.domain.statistics.recap.StatisticsRecapActivity
 import tachiyomi.domain.statistics.recap.StatisticsRecapCompletion
 import tachiyomi.domain.statistics.recap.StatisticsRecapEntry
+import tachiyomi.domain.statistics.recap.StatisticsRecapMonth
 import tachiyomi.domain.statistics.recap.StatisticsRecapPeriodTotals
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.recap.StatisticsRecapSegment
@@ -123,7 +124,10 @@ class StatisticsRecapRepositoryImpl(
         )
     }
 
-    override fun subscribeActiveMonths(profileId: Long): Flow<List<String>> = handler.subscribeToList {
-        statisticsRecapQueries.recapActiveMonths(profileId, StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS)
+    override fun subscribeActiveMonths(profileId: Long): Flow<List<StatisticsRecapMonth>> = handler.subscribeToList {
+        statisticsRecapQueries.recapActiveMonths(
+            profileId,
+            StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
+        ) { month, duration -> StatisticsRecapMonth(month, duration ?: 0L) }
     }
 }

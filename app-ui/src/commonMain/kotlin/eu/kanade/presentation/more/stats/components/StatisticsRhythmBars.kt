@@ -9,8 +9,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
@@ -62,15 +65,29 @@ fun StatisticsRhythmBars(
                     cornerRadius = radius,
                 )
             }
-            labels.getOrNull(index)?.let { label ->
-                val layout = textMeasurer.measure(label, labelStyle)
-                val x = (slot * index + slot / 2f - layout.size.width / 2f)
-                    .coerceIn(0f, (size.width - layout.size.width).coerceAtLeast(0f))
-                drawText(layout, color = labelColor, topLeft = Offset(x, barBottom + LABEL_GAP.toPx()))
-            }
         }
+        drawSlotLabels(labels, slot, barBottom, textMeasurer, labelStyle, labelColor)
     }
 }
 
-private const val BAR_WIDTH_FRACTION = 0.7f
+/** Draws each label centred under its slot below [top], kept inside the canvas at both ends. */
+internal fun DrawScope.drawSlotLabels(
+    labels: List<String?>,
+    slot: Float,
+    top: Float,
+    textMeasurer: TextMeasurer,
+    style: TextStyle,
+    color: Color,
+) {
+    labels.forEachIndexed { index, label ->
+        if (label == null) return@forEachIndexed
+        val layout = textMeasurer.measure(label, style)
+        val x = (slot * index + slot / 2f - layout.size.width / 2f)
+            .coerceIn(0f, (size.width - layout.size.width).coerceAtLeast(0f))
+        drawText(layout, color = color, topLeft = Offset(x, top + LABEL_GAP.toPx()))
+    }
+}
+
+/** Width of a bar in its slot, so neighbouring bars keep a gap. */
+internal const val BAR_WIDTH_FRACTION = 0.7f
 private val LABEL_GAP = KatariTheme.spacing.xs

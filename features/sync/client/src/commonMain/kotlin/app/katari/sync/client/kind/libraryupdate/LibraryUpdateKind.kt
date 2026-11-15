@@ -20,7 +20,6 @@ import app.katari.sync.client.record.SyncedKind
 import tachiyomi.data.library.update.entryUpdateStatus
 import tachiyomi.data.library.update.libraryUpdateRun
 import tachiyomi.domain.library.update.model.LibraryUpdateRunSummary
-import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 
 /**
  * The newest update of a profile's whole library, keyed by profile uuid, so every device can say when the library was
@@ -56,8 +55,7 @@ object LibraryUpdateKind : SyncedKind<LibraryUpdatePayload>(
         val run = reads.database.library_update_runsQueries.getByProfile(profileId, ::libraryUpdateRun)
             .awaitAsOneOrNull()
             ?: return LocalRead.Missing
-        // An update of picked entries says nothing of when the rest of the library was checked
-        if (run.trigger == LibraryUpdateTrigger.SELECTION) return LocalRead.NotSynced
+        if (!run.coversLibrary) return LocalRead.NotSynced
         val profileUuid = reads.profileUuid(profileId) ?: return LocalRead.Missing
         val statuses = reads.database.entry_update_statusQueries
             .getDecidedSince(profileId, run.startedAt, ::entryUpdateStatus)

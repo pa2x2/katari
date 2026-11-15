@@ -46,7 +46,6 @@ data class StatisticsTopTitlesScreen(
         ) { paddingValues ->
             StatisticsTopTitlesScreenContent(
                 state = state,
-                selectedType = viewModel.type,
                 types = viewModel.types,
                 totalDurationMillis = totalDurationMillis,
                 paddingValues = paddingValues,

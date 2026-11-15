@@ -132,7 +132,6 @@ class LibraryUpdateRun(
         }
         updateScopeName = (request as? LibraryUpdateRequest.FollowRules)?.let { scopeName(it) }
         startedAt = Clock.System.now().toEpochMilliseconds()
-        libraryPreferences.lastUpdatedTimestamp.set(startedAt)
         publishProgress(completed = 0)
 
         onScoped()
@@ -154,7 +153,6 @@ class LibraryUpdateRun(
                 withNonCancellableContext {
                     val finishedAt = Clock.System.now().toEpochMilliseconds()
                     reportRepository.finishRun(profileId, startedAt, finishedAt)
-                    libraryPreferences.lastUpdateFinishedAt.set(finishedAt)
                 }
                 input.selectionName?.let(selectionFile::delete)
                 notifications.cancelProgress()

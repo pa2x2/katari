@@ -56,6 +56,14 @@
         <item quantity="one">minute</item>
         <item quantity="other">minutes</item>
     </plurals>
+    <plurals name="statistics_sessions_unit">
+        <item quantity="one">session</item>
+        <item quantity="other">sessions</item>
+    </plurals>
+    <plurals name="statistics_finished_unit">
+        <item quantity="one">finished</item>
+        <item quantity="other">finished</item>
+    </plurals>
     <plurals name="statistics_recap_full_days">
         <item quantity="one">That\'s %d full day, end to end.</item>
         <item quantity="other">That\'s %d full days, end to end.</item>
@@ -151,10 +159,6 @@
         <item quantity="other">%d days</item>
     </plurals>
 
-    <plurals name="statistics_goal_met_days">
-        <item quantity="one">Met on %1$d of the last %2$d day</item>
-        <item quantity="other">Met on %1$d of the last %2$d days</item>
-    </plurals>
     <plurals name="statistics_chapters_read_count">
         <item quantity="one">%d chapter read</item>
         <item quantity="other">%d chapters read</item>

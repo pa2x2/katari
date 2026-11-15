@@ -6,6 +6,7 @@ import tachiyomi.domain.statistics.model.StatisticsActivitySnapshot
 import tachiyomi.domain.statistics.model.StatisticsActivityTimeline
 import tachiyomi.domain.statistics.model.StatisticsEarlierActivityDetails
 import tachiyomi.domain.statistics.model.StatisticsTopEntry
+import tachiyomi.domain.statistics.model.StatisticsWindowActivity
 
 interface StatisticsRepository {
     /**
@@ -19,6 +20,13 @@ interface StatisticsRepository {
         startLocalDate: String?,
         endLocalDate: String? = null,
     ): Flow<StatisticsActivitySnapshot>
+
+    /** Subscribes to the activity of [entryIds] inside an inclusive local-date window. */
+    fun subscribeEntriesActivity(
+        entryIds: List<Long>,
+        startLocalDate: String,
+        endLocalDate: String,
+    ): Flow<StatisticsWindowActivity>
 
     /** Subscribes to the graph-only timeline inside an inclusive local-date window. */
     fun subscribeActivityTimeline(

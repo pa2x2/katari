@@ -51,6 +51,9 @@ enum class TextRole {
     /** Large numbers in statistics. */
     Metric,
 
+    /** The one figure a statistics section or sheet leads with, larger than every [Metric] around it. */
+    LeadMetric,
+
     /** Oversized text such as the empty-screen face. */
     Display,
 
@@ -83,6 +86,7 @@ internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
         fontWeight = FontWeight.Medium,
     )
     TextRole.Metric -> typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold)
+    TextRole.LeadMetric -> typography.displaySmall
     TextRole.Display -> typography.displayMedium
     TextRole.Hero -> typography.displayLarge
     TextRole.Code -> typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)

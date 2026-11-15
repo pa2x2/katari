@@ -41,6 +41,21 @@ internal fun trendTickIndices(pointCount: Int): List<Int> {
     }.distinct()
 }
 
+/**
+ * Which of the date labels centred at [centers] to show so that none runs into the next: every one when they fit,
+ * otherwise every second, third and so on, counted back from the latest, which is always named.
+ */
+internal fun trendLabelsThatFit(centers: List<Float>, widths: List<Float>, gap: Float): List<Int> {
+    if (centers.isEmpty()) return emptyList()
+    return (1..centers.size).asSequence()
+        .map { step -> centers.indices.filter { (centers.lastIndex - it) % step == 0 } }
+        .first { shown ->
+            shown.zipWithNext().all { (left, right) ->
+                centers[right] - centers[left] >= (widths[left] + widths[right]) / 2f + gap
+            }
+        }
+}
+
 internal data class TrendDurationAxis(
     val maximumMillis: Long,
     val ticksDescending: List<Long>,

@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.StatisticsMetrics
@@ -54,7 +55,7 @@ internal fun StatisticsActivityRequestStatus(
                     Text(
                         text = stringResource(
                             MR.strings.statistics_loading_period,
-                            formatStatisticsWindow(target),
+                            currentPlatformContext().formatStatisticsWindow(target),
                         ),
                         modifier = Modifier.padding(start = KatariTheme.spacing.s),
                         role = TextRole.Supporting,
@@ -74,7 +75,7 @@ internal fun StatisticsActivityRequestStatus(
                     Text(
                         text = stringResource(
                             MR.strings.statistics_could_not_load_period,
-                            formatStatisticsWindow(target),
+                            currentPlatformContext().formatStatisticsWindow(target),
                         ),
                         modifier = Modifier.weight(1f).padding(start = KatariTheme.spacing.m),
                         role = TextRole.Supporting,

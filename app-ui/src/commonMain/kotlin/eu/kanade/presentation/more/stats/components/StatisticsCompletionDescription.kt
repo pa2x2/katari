@@ -3,12 +3,13 @@ package eu.kanade.presentation.more.stats.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalLocale
 import app.katari.core.platform.currentPlatformContext
+import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.data.StatsActivity
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import java.text.NumberFormat
 import java.time.LocalDate
 
 /**
@@ -27,7 +28,7 @@ fun statisticsCompletionLabel(types: List<StatsType>, completionCountByType: Map
 }
 
 /**
- * Context under the finished-items count of [types] in [activity]: each type's share when several finished something,
+ * Context under the finished-items count of [types] in [activity]: each type's count when several finished something,
  * the average time per item when one did, and when an item was last finished when none did. Null when there's nothing
  * to say, such as before anything was ever finished.
  */
@@ -54,11 +55,12 @@ internal fun statisticsCompletionDetail(
                 stringResource(type.timePerItemLabel, time)
             }
         }
-        else -> {
-            val numbers = NumberFormat.getIntegerInstance()
-            counted.map { (type, count) -> "${stringResource(type.displayName)} ${numbers.format(count)}" }
-                .joinToString(" · ")
-        }
+        // Types that count the same unit, such as manga and books counting chapters, are counted together.
+        else -> localizedList(
+            counted.groupBy({ (type, _) -> type.type.entryTypePresentation().childCountPlural }, { it.second })
+                .map { (plural, counts) -> pluralStringResource(plural, counts.sum().toInt(), counts.sum().toInt()) },
+            LocalLocale.current.platformLocale,
+        )
     }
 }
 

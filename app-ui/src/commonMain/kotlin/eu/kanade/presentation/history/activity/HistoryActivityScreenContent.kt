@@ -1,47 +1,53 @@
 package eu.kanade.presentation.history.activity
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Refresh
-import app.katari.presentation.kit.button.Button
-import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.feedback.EmptyScreen
 import app.katari.presentation.kit.feedback.EmptyScreenAction
 import app.katari.presentation.kit.feedback.LoadingScreen
 import app.katari.presentation.kit.layout.RowList
-import app.katari.presentation.kit.list.RowGroupHeader
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.presentation.kit.theme.KatariTheme
+import eu.kanade.presentation.more.stats.components.color
+import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
+/**
+ * @param oneTitle the list is one title's: each day lists its chapters or episodes, and opens up into its sessions,
+ * instead of listing titles.
+ */
 @Composable
 fun HistoryActivityScreenContent(
     state: HistoryActivityViewModel.State,
     summary: HistoryActivitySummary?,
-    type: EntryType?,
     types: List<StatsType>,
-    showSessionType: Boolean,
-    showSessionEntry: Boolean,
+    oneTitle: Boolean,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onRetry: () -> Unit,
@@ -50,17 +56,11 @@ fun HistoryActivityScreenContent(
     when (state) {
         HistoryActivityViewModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
         HistoryActivityViewModel.State.Failed -> ActivityLoadFailed(paddingValues, onRetry)
-        is HistoryActivityViewModel.State.Success -> ActivitySessionList(
-            state = state,
-            summary = summary,
-            type = type,
-            types = types,
-            showSessionType = showSessionType,
-            showSessionEntry = showSessionEntry,
-            paddingValues = paddingValues,
-            onEntryClick = onEntryClick,
-            onLoadMore = onLoadMore,
-        )
+        is HistoryActivityViewModel.State.Success -> if (state.days.isEmpty()) {
+            EmptyScreen(stringRes = MR.strings.statistics_no_activity, modifier = Modifier.padding(paddingValues))
+        } else {
+            ActivityDayList(state, summary, types, oneTitle, paddingValues, onEntryClick, onLoadMore)
+        }
     }
 }
 
@@ -80,82 +80,86 @@ private fun ActivityLoadFailed(paddingValues: PaddingValues, onRetry: () -> Unit
 }
 
 @Composable
-private fun ActivitySessionList(
+private fun ActivityDayList(
     state: HistoryActivityViewModel.State.Success,
     summary: HistoryActivitySummary?,
-    type: EntryType?,
     types: List<StatsType>,
-    showSessionType: Boolean,
-    showSessionEntry: Boolean,
+    oneTitle: Boolean,
     paddingValues: PaddingValues,
     onEntryClick: (Long) -> Unit,
     onLoadMore: () -> Unit,
 ) {
-    val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM) }
-
-    if (state.sessions.isEmpty()) {
-        EmptyScreen(
-            stringRes = MR.strings.statistics_no_activity,
-            modifier = Modifier.padding(paddingValues),
-        )
-        return
+    val formatDuration = rememberStatisticsDurationFormatter()
+    val colors = types.associate { it.type to it.accent.color() }
+    // Days opened up into their sessions (one title's list) and titles unfolded into their parts (a period's list).
+    var openDays by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    var unfoldedTitles by rememberSaveable { mutableStateOf(emptySet<String>()) }
+    val listState = rememberLazyListState()
+    // Re-evaluated after every page, so a first page shorter than the screen still asks for more.
+    LaunchedEffect(listState, state.days.size, state.hasMore, state.loadMoreFailed) {
+        if (!state.hasMore || state.loadMoreFailed) return@LaunchedEffect
+        snapshotFlow {
+            listState.layoutInfo.run {
+                (visibleItemsInfo.lastOrNull()?.index ?: 0) >= totalItemsCount - LOAD_AHEAD_ITEMS
+            }
+        }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { onLoadMore() }
     }
-
-    val sessions = state.sessions
     RowList(
+        state = listState,
         contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.xl),
     ) {
         // Always present so the list stays anchored at the top when the summary arrives after the first page.
         item("summary") {
-            summary?.let { HistoryActivitySummaryCard(it, type, types) }
+            summary?.let { HistoryActivitySummaryCard(it, types, colors) }
         }
-        itemsIndexed(
-            items = sessions,
-            key = { _, session -> session.sessionId },
-        ) { index, session ->
-            val startsDay = index == 0 || sessions[index - 1].localDate != session.localDate
-            val endsDay = index == sessions.lastIndex || sessions[index + 1].localDate != session.localDate
-            Column {
-                if (startsDay) {
-                    RowGroupHeader(LocalDate.parse(session.localDate).format(dateFormatter))
-                }
-                RowGroupItem(
-                    position = when {
-                        startsDay && endsDay -> RowGroupPosition.Alone
-                        startsDay -> RowGroupPosition.First
-                        endsDay -> RowGroupPosition.Last
-                        else -> RowGroupPosition.Middle
-                    },
-                ) {
-                    ActivitySession(
-                        session = session,
-                        showType = showSessionType,
-                        showEntry = showSessionEntry,
-                        onClick = onEntryClick,
-                    )
-                }
+        state.days.forEach { day ->
+            val date = day.localDate.toString()
+            item("header-$date") {
+                ActivityDayHeader(
+                    day = day,
+                    colors = colors,
+                    formatDuration = formatDuration,
+                    showsSessions = (date in openDays).takeIf { oneTitle },
+                    onToggleSessions = { openDays = openDays.toggle(date) },
+                )
             }
-        }
-        if (state.hasMore || state.loadMoreFailed) {
-            item("load-more") {
-                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    if (state.loadingMore) {
-                        LoadingIndicator()
+            item("day-$date") {
+                RowGroupItem(position = RowGroupPosition.Alone) {
+                    if (oneTitle) {
+                        ActivityDayParts(day, showsSessions = date in openDays, formatDuration = formatDuration)
                     } else {
-                        Button(
-                            label = stringResource(
-                                if (state.loadMoreFailed) {
-                                    MR.strings.action_retry
-                                } else {
-                                    MR.strings.statistics_show_more_activity
-                                },
-                            ),
-                            onClick = onLoadMore,
-                            style = ButtonStyle.Text,
+                        ActivityDayTitles(
+                            day = day,
+                            unfoldedTitles = unfoldedTitles,
+                            formatDuration = formatDuration,
+                            onEntryClick = onEntryClick,
+                            onToggleUnfolded = { unfoldedTitles = unfoldedTitles.toggle(it) },
                         )
                     }
                 }
             }
         }
+        when {
+            state.loadMoreFailed -> item("load-more-failed") {
+                NoticeCard(
+                    text = stringResource(MR.strings.statistics_could_not_load_activity),
+                    tone = NoticeTone.Warning,
+                    actionLabel = stringResource(MR.strings.action_retry),
+                    onAction = onLoadMore,
+                )
+            }
+            state.hasMore -> item("loading-more") {
+                Box(Modifier.fillMaxWidth().padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
+                    LoadingIndicator(Modifier.size(KatariTheme.sizes.icon))
+                }
+            }
+        }
     }
 }
+
+private fun Set<String>.toggle(key: String): Set<String> = if (key in this) this - key else this + key
+
+private const val LOAD_AHEAD_ITEMS = 6

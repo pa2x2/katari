@@ -1,0 +1,22 @@
+-- Earlier time per title, so the Earlier total and its list of titles agree (view/earlierActivityView.sq).
+DROP VIEW IF EXISTS earlierActivityView;
+
+CREATE VIEW earlierActivityView AS
+SELECT
+    ENT._id AS entry_id,
+    ENT.profile_id,
+    ENT.type,
+    ENT.title,
+    max(LEG.duration - coalesce(DET.duration, 0), 0) AS duration
+FROM (
+    SELECT entry_id, sum(time_read) AS duration
+    FROM history
+    GROUP BY entry_id
+) LEG
+JOIN entries ENT ON ENT._id = LEG.entry_id
+LEFT JOIN (
+    SELECT SES.entry_id, sum(SEG.duration) AS duration
+    FROM activity_segments SEG
+    JOIN activity_sessions SES ON SES.session_id = SEG.session_id
+    GROUP BY SES.entry_id
+) DET ON DET.entry_id = LEG.entry_id;

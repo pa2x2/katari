@@ -6,6 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.EntryCover
+import tachiyomi.domain.history.model.activity.HistoryActivityCompletion
 import tachiyomi.domain.history.model.activity.HistoryActivityPage
 import tachiyomi.domain.history.model.activity.HistoryActivityScope
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentDetail
@@ -24,13 +25,50 @@ class HistoryActivityRepositoryImpl(
         startLocalDate: String,
         endLocalDate: String,
         scope: HistoryActivityScope,
-        offset: Long,
-        limit: Long,
+        dayOffset: Long,
+        dayLimit: Long,
     ): HistoryActivityPage {
-        require(offset >= 0L) { "Activity page offset cannot be negative" }
-        require(limit > 0L) { "Activity page limit must be positive" }
+        require(dayOffset >= 0L) { "Activity page offset cannot be negative" }
+        require(dayLimit > 0L) { "Activity page limit must be positive" }
+        val minimumDuration = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS
 
-        val rows = handler.awaitList {
+        val days = handler.awaitList {
+            when (scope) {
+                HistoryActivityScope.All -> activityQueries.getActivityDetailDays(
+                    profileId = profileId,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    limit = dayLimit + 1L,
+                    offset = dayOffset,
+                )
+                is HistoryActivityScope.Type -> activityQueries.getActivityDetailDaysByType(
+                    profileId = profileId,
+                    type = scope.type.name.lowercase(),
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    limit = dayLimit + 1L,
+                    offset = dayOffset,
+                )
+                is HistoryActivityScope.Entries -> activityQueries.getActivityDetailDaysByEntries(
+                    profileId = profileId,
+                    entryIds = scope.entryIds,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    limit = dayLimit + 1L,
+                    offset = dayOffset,
+                )
+            }
+        }
+        val pageDays = days.take(dayLimit.toInt())
+        if (pageDays.isEmpty()) return HistoryActivityPage(emptyList(), emptyList(), hasMore = false)
+        // Days are listed newest first, so the page covers every day from its last to its first.
+        val firstLocalDate = pageDays.last()
+        val lastLocalDate = pageDays.first()
+
+        val sessions = handler.awaitList {
             val mapper = {
                     sessionId: String,
                     entryId: Long,
@@ -40,11 +78,6 @@ class HistoryActivityRepositoryImpl(
                     source: Long,
                     favorite: Boolean,
                     coverLastModified: Long,
-                    localDate: String,
-                    startedAt: Long,
-                    endedAt: Long,
-                    duration: Long?,
-                    completionCount: Long,
                 ->
                 SessionRow(
                     sessionId = sessionId,
@@ -58,94 +91,82 @@ class HistoryActivityRepositoryImpl(
                         url = thumbnailUrl,
                         lastModified = coverLastModified,
                     ),
-                    localDate = localDate,
-                    startedAtEpochMillis = startedAt,
-                    endedAtEpochMillis = endedAt,
-                    durationMillis = duration ?: 0L,
-                    completionCount = completionCount,
                 )
             }
             when (scope) {
                 HistoryActivityScope.All -> activityQueries.getActivityDetailSessions(
+                    profileId = profileId,
+                    minimumSessionDurationMillis = minimumDuration,
                     startLocalDate = startLocalDate,
                     endLocalDate = endLocalDate,
-                    profileId = profileId,
-                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
-                    limit = limit + 1L,
-                    offset = offset,
+                    firstLocalDate = firstLocalDate,
+                    lastLocalDate = lastLocalDate,
                     mapper = mapper,
                 )
                 is HistoryActivityScope.Type -> activityQueries.getActivityDetailSessionsByType(
-                    startLocalDate = startLocalDate,
-                    endLocalDate = endLocalDate,
                     profileId = profileId,
                     type = scope.type.name.lowercase(),
-                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
-                    limit = limit + 1L,
-                    offset = offset,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    firstLocalDate = firstLocalDate,
+                    lastLocalDate = lastLocalDate,
                     mapper = mapper,
                 )
                 is HistoryActivityScope.Entries -> activityQueries.getActivityDetailSessionsByEntries(
-                    startLocalDate = startLocalDate,
-                    endLocalDate = endLocalDate,
                     profileId = profileId,
                     entryIds = scope.entryIds,
-                    minimumSessionDurationMillis = StatisticsActivityPolicy.MINIMUM_SESSION_DURATION_MILLIS,
-                    limit = limit + 1L,
-                    offset = offset,
+                    minimumSessionDurationMillis = minimumDuration,
+                    startLocalDate = startLocalDate,
+                    endLocalDate = endLocalDate,
+                    firstLocalDate = firstLocalDate,
+                    lastLocalDate = lastLocalDate,
                     mapper = mapper,
                 )
             }
         }
-        val pageRows = rows.take(limit.toInt())
-        val segmentsBySession = if (pageRows.isEmpty()) {
-            emptyMap()
-        } else {
-            handler.awaitList {
-                activityQueries.getActivityDetailSegments(
-                    sessionIds = pageRows.map(SessionRow::sessionId),
-                    startLocalDate = startLocalDate,
-                    endLocalDate = endLocalDate,
-                ) {
-                        sessionId,
-                        chapterId,
-                        chapterTitle,
-                        localDate,
-                        timeZoneId,
-                        startedAt,
-                        endedAt,
-                        duration,
-                    ->
-                    sessionId to HistoryActivitySegmentDetail(
-                        chapterId = chapterId,
-                        chapterTitle = chapterTitle,
-                        localDate = localDate,
-                        timeZoneId = timeZoneId,
-                        startedAtEpochMillis = startedAt,
-                        endedAtEpochMillis = endedAt,
-                        durationMillis = duration,
-                    )
-                }
-            }.groupBy({ it.first }, { it.second })
-        }
+        val sessionIds = sessions.map(SessionRow::sessionId)
+        val segmentsBySession = handler.awaitList {
+            activityQueries.getActivityDetailSegments(
+                sessionIds = sessionIds,
+                firstLocalDate = firstLocalDate,
+                lastLocalDate = lastLocalDate,
+            ) { sessionId, chapterId, chapterTitle, localDate, timeZoneId, startedAt, endedAt, duration ->
+                sessionId to HistoryActivitySegmentDetail(
+                    chapterId = chapterId,
+                    chapterTitle = chapterTitle,
+                    localDate = localDate,
+                    timeZoneId = timeZoneId,
+                    startedAtEpochMillis = startedAt,
+                    endedAtEpochMillis = endedAt,
+                    durationMillis = duration,
+                )
+            }
+        }.groupBy({ it.first }, { it.second })
+        val completionsBySession = handler.awaitList {
+            activityQueries.getActivityDetailCompletions(
+                sessionIds = sessionIds,
+                firstLocalDate = firstLocalDate,
+                lastLocalDate = lastLocalDate,
+            ) { sessionId, chapterId, localDate ->
+                sessionId to HistoryActivityCompletion(chapterId = checkNotNull(chapterId), localDate = localDate)
+            }
+        }.groupBy({ it.first.orEmpty() }, { it.second })
 
         return HistoryActivityPage(
-            sessions = pageRows.map { row ->
+            sessions = sessions.map { row ->
                 HistoryActivitySessionDetail(
                     sessionId = row.sessionId,
                     entryId = row.entryId,
                     entryType = row.entryType,
                     entryTitle = row.entryTitle,
                     coverData = row.coverData,
-                    localDate = row.localDate,
-                    startedAtEpochMillis = row.startedAtEpochMillis,
-                    endedAtEpochMillis = row.endedAtEpochMillis,
-                    durationMillis = row.durationMillis,
-                    completionCount = row.completionCount,
                     segments = segmentsBySession[row.sessionId].orEmpty(),
+                    completions = completionsBySession[row.sessionId].orEmpty(),
                 )
             },
-            hasMore = rows.size > pageRows.size,
+            localDates = pageDays,
+            hasMore = days.size > pageDays.size,
         )
     }
 
@@ -155,10 +176,5 @@ class HistoryActivityRepositoryImpl(
         val entryType: EntryType,
         val entryTitle: String,
         val coverData: EntryCover,
-        val localDate: String,
-        val startedAtEpochMillis: Long,
-        val endedAtEpochMillis: Long,
-        val durationMillis: Long,
-        val completionCount: Long,
     )
 }

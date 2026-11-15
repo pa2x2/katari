@@ -2,19 +2,21 @@ package eu.kanade.presentation.entry.activity
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLocale
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.presentation.kit.content.FactLines
+import app.katari.presentation.kit.content.Figure
+import app.katari.presentation.kit.content.LeadFigure
 import app.katari.presentation.kit.content.StatisticsMetrics
 import app.katari.presentation.kit.content.Text
-import app.katari.presentation.kit.layout.DashboardTiles
 import app.katari.presentation.kit.sheet.Sheet
 import app.katari.presentation.kit.sheet.SheetHeader
 import app.katari.presentation.kit.theme.ContentTone
@@ -22,6 +24,7 @@ import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
+import eu.kanade.presentation.more.stats.components.StatisticsShareBar
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
@@ -37,11 +40,11 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * Everything recorded for one title: time, sessions, progress and pace, when it was started and last read, and its
- * months of activity.
+ * Everything recorded for one title, led by its time with when it was started and finished, then its progress, its
+ * months of activity and the remaining facts as plain lines.
  *
  * @param consumedUnitLabel the type's "Chapters read" wording, or null to leave progress out.
- * @param paceMillis expected time of one unread chapter, shown under progress.
+ * @param paceMillis expected time of one unread chapter.
  * @param onOpenActivity lists the title's sessions; null when none were recorded in detail.
  */
 @Composable
@@ -88,90 +91,123 @@ private fun EntryActivityDetails(
     formatDate: (Long) -> String,
     modifier: Modifier = Modifier,
 ) {
-    val numbers = remember { NumberFormat.getIntegerInstance() }
-    val dash = "—"
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(all = KatariTheme.spacing.m),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
     ) {
-        DashboardTiles(
-            listOf(
+        LeadFigure(
+            value = formatDuration(summary.totalDurationMillis),
+            detail = summary.startedAtEpochMillis?.let { startedAt ->
                 {
-                    EntryActivityTile(
-                        value = formatDuration(summary.totalDurationMillis),
-                        label = stringResource(MR.strings.statistics_time_spent),
-                        detail = summary.untrackedDurationMillis.takeIf { it > 0L }
-                            ?.let { stringResource(MR.strings.entry_activity_untracked, formatDuration(it)) },
-                        modifier = it,
+                    Text(
+                        text = startedAndFinished(summary, progress, startedAt, formatDate),
+                        role = TextRole.Supporting,
+                        tone = ContentTone.Secondary,
                     )
-                },
-                {
-                    EntryActivityTile(
-                        value = numbers.format(summary.sessionCount),
-                        label = stringResource(MR.strings.statistics_sessions),
-                        detail = summary.sessionCount.takeIf { it > 0L }?.let { count ->
-                            stringResource(
-                                MR.strings.entry_activity_session_average,
-                                formatDuration(summary.sessionDurationMillis / count),
-                            )
-                        },
-                        modifier = it,
-                    )
-                },
-                {
-                    EntryActivityTile(
-                        value = consumedUnitLabel?.let {
-                            stringResource(
-                                MR.strings.entry_activity_progress,
-                                progress.totalCount - progress.unreadCount,
-                                progress.totalCount,
-                            )
-                        } ?: dash,
-                        label = consumedUnitLabel?.let { label -> stringResource(label) }.orEmpty(),
-                        detail = paceMillis?.let {
-                            stringResource(MR.strings.entry_activity_chapter_pace, formatDuration(it))
-                        },
-                        modifier = it,
-                    )
-                },
-                {
-                    val finishedAt = summary.lastCompletionAtEpochMillis
-                        ?.takeIf { progress.totalCount > 0 && progress.unreadCount == 0 }
-                    EntryActivityTile(
-                        value = summary.startedAtEpochMillis?.let(formatDate) ?: dash,
-                        label = stringResource(MR.strings.entry_activity_started),
-                        detail = finishedAt?.let { stringResource(MR.strings.entry_activity_finished, formatDate(it)) },
-                        modifier = it,
-                    )
-                },
-            ),
+                }
+            },
         )
-        summary.lastRead?.let { lastRead ->
-            Text(
-                text = stringResource(
-                    MR.strings.entry_activity_last_opened,
-                    relativeTimeSpanString(lastRead.atEpochMillis),
-                    lastRead.chapterName,
-                ),
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
-                modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
-            )
+        if (consumedUnitLabel != null && progress.totalCount > 0) {
+            ConsumedProgress(progress, consumedUnitLabel)
         }
         if (summary.monthlyDurations.isNotEmpty()) {
             MonthlyActivity(summary = summary, formatDuration = formatDuration)
+        }
+        val facts = activityFacts(summary, paceMillis, formatDuration)
+        if (facts.isNotEmpty()) {
+            FactLines(facts)
         }
         if (onOpenActivity != null) {
             Button(
                 label = stringResource(MR.strings.statistics_see_activity),
                 onClick = onOpenActivity,
-                modifier = Modifier.align(Alignment.End),
-                style = ButtonStyle.Text,
+                modifier = Modifier.fillMaxWidth(),
+                style = ButtonStyle.Tonal,
             )
         }
     }
+}
+
+@Composable
+private fun startedAndFinished(
+    summary: EntryActivitySummary,
+    progress: EntryChapterProgress,
+    startedAt: Long,
+    formatDate: (Long) -> String,
+): String {
+    val finishedAt = summary.lastCompletionAtEpochMillis
+        ?.takeIf { progress.totalCount > 0 && progress.unreadCount == 0 }
+    return if (finishedAt != null) {
+        stringResource(MR.strings.entry_activity_started_and_finished, formatDate(startedAt), formatDate(finishedAt))
+    } else {
+        stringResource(MR.strings.entry_activity_started, formatDate(startedAt))
+    }
+}
+
+@Composable
+private fun ConsumedProgress(progress: EntryChapterProgress, consumedUnitLabel: StringResource) {
+    val consumed = progress.totalCount - progress.unreadCount
+    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+        StatisticsShareBar(
+            fraction = consumed.toFloat() / progress.totalCount,
+            color = KatariTheme.chart.series,
+            height = StatisticsMetrics.shareBarThick,
+        )
+        FactLines(
+            listOf(
+                Figure(
+                    value = stringResource(MR.strings.entry_activity_progress, consumed, progress.totalCount),
+                    label = stringResource(consumedUnitLabel),
+                ),
+            ),
+        )
+    }
+}
+
+@Composable
+private fun activityFacts(
+    summary: EntryActivitySummary,
+    paceMillis: Long?,
+    formatDuration: (Long) -> String,
+): List<Figure> {
+    val numbers = remember { NumberFormat.getIntegerInstance() }
+    return listOfNotNull(
+        summary.lastRead?.let { lastRead ->
+            Figure(
+                value = stringResource(
+                    MR.strings.entry_activity_last_opened_detail,
+                    lastRead.chapterName,
+                    relativeTimeSpanString(lastRead.atEpochMillis),
+                ),
+                label = stringResource(MR.strings.entry_activity_last_opened),
+            )
+        },
+        summary.sessionCount.takeIf { it > 0L }?.let { count ->
+            Figure(
+                value = if (count == 1L) {
+                    numbers.format(count)
+                } else {
+                    stringResource(
+                        MR.strings.entry_activity_session_average,
+                        numbers.format(count),
+                        formatDuration(summary.sessionDurationMillis / count),
+                    )
+                },
+                label = stringResource(MR.strings.statistics_sessions),
+            )
+        },
+        paceMillis?.let {
+            Figure(
+                value = stringResource(MR.strings.entry_activity_chapter_pace, formatDuration(it)),
+                label = stringResource(MR.strings.entry_activity_pace),
+            )
+        },
+        summary.untrackedDurationMillis.takeIf { it > 0L }?.let {
+            Figure(value = formatDuration(it), label = stringResource(MR.strings.entry_activity_before_tracking))
+        },
+    )
 }
 
 @Composable
@@ -190,22 +226,13 @@ private fun MonthlyActivity(summary: EntryActivitySummary, formatDuration: (Long
         months.map { (month, _) -> month.atDay(1).format(formatter) }
     }
     val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("MMM yyyy", locale) }
-    Column(
-        modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        Text(
-            text = stringResource(MR.strings.statistics_last_12_months),
-            role = TextRole.Supporting,
-        )
-        StatisticsRhythmBars(
-            values = months.map { it.second },
-            labels = letters,
-            highlightIndex = months.lastIndex,
-            color = KatariTheme.chart.series,
-            description = months.filter { it.second > 0L }
-                .joinToString { (month, duration) -> "${month.format(monthFormatter)}: ${formatDuration(duration)}" },
-            barAreaHeight = StatisticsMetrics.rhythmCompactHeight,
-        )
-    }
+    StatisticsRhythmBars(
+        values = months.map { it.second },
+        labels = letters,
+        highlightIndex = months.lastIndex,
+        color = KatariTheme.chart.series,
+        description = months.filter { it.second > 0L }
+            .joinToString { (month, duration) -> "${month.format(monthFormatter)}: ${formatDuration(duration)}" },
+        barAreaHeight = StatisticsMetrics.rhythmCompactHeight,
+    )
 }

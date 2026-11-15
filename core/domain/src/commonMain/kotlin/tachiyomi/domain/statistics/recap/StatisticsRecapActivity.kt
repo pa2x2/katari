@@ -56,3 +56,9 @@ data class StatisticsRecapPeriodTotals(
     /** The entry with the most time; null when nothing was timed. */
     val topEntryId: Long?,
 )
+
+/** @param month `yyyy-MM`. */
+data class StatisticsRecapMonth(
+    val month: String,
+    val durationMillis: Long,
+)

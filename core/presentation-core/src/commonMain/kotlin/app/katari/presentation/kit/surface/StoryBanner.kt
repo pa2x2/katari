@@ -12,12 +12,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import app.katari.presentation.kit.list.rowGroupEdgeInset
 import app.katari.presentation.kit.pointer.clickCursor
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.StoryPalette
 import app.katari.presentation.kit.theme.StoryTheme
 
-/** A banner in a story's colours that opens the story, such as a year recap's entry on the statistics page. */
+/**
+ * A banner in a story's colours that opens the story, such as a year recap's entry on the statistics page or a year on
+ * Recaps. It keeps the side margin of row group cards, so it lines up with the cards around it in a list without side
+ * padding.
+ */
 @Composable
 fun StoryBanner(
     onClick: () -> Unit,
@@ -30,6 +35,7 @@ fun StoryBanner(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             modifier = modifier
+                .padding(horizontal = rowGroupEdgeInset())
                 .fillMaxWidth()
                 .clip(KatariTheme.shapes.large)
                 .background(Brush.horizontalGradient(listOf(palette.background, palette.backgroundEnd)))

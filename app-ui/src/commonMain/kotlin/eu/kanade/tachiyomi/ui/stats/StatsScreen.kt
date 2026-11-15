@@ -11,6 +11,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import app.katari.core.common.HomeScreenTabs
+import app.katari.core.platform.currentPlatformContext
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.AutoStories
 import app.katari.icons.materialsymbols.rounded.Share
@@ -63,6 +64,7 @@ class StatsScreen : Screen() {
 
         var customizing by rememberSaveable { mutableStateOf(false) }
         val allActivity = stringResource(MR.strings.statistics_all_activity)
+        val platformContext = currentPlatformContext()
 
         Scaffold(
 
@@ -95,7 +97,7 @@ class StatsScreen : Screen() {
                                                             label = if (window.startDate == null) {
                                                                 allActivity
                                                             } else {
-                                                                formatStatisticsWindow(window)
+                                                                platformContext.formatStatisticsWindow(window)
                                                             },
                                                         ),
                                                     ),
@@ -165,7 +167,7 @@ class StatsScreen : Screen() {
                             ) {
                                 allActivity
                             } else {
-                                formatStatisticsWindow(activity.window)
+                                platformContext.formatStatisticsWindow(activity.window)
                             },
                             totalDurationMillis = activity.totalDurationMillis,
                         ),

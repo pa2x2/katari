@@ -1,5 +1,6 @@
 package app.katari.presentation.kit.list
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import app.katari.presentation.kit.content.InlineIcon
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.layout.RowListScope
+import app.katari.presentation.kit.pointer.clickCursor
 import app.katari.presentation.kit.sheet.LocalSheetColumns
 import app.katari.presentation.kit.surface.HorizontalDivider
 import app.katari.presentation.kit.surface.Surface
@@ -160,6 +162,50 @@ fun RowGroupHeader(
             trailing = mark.titleSuffix,
             actions = actions,
         )
+    }
+}
+
+/**
+ * The header above a row group card that sums the group up, such as a day of reading activity: [title] with the
+ * group's [value] at its end, such as the day's total time, and [detail] under them, such as a chart of the day's hours
+ * beside its time span. With [onClick] it changes what the card under it shows, such as listing the day's sessions,
+ * which [onClickLabel] names.
+ */
+@Composable
+fun RowGroupSummaryHeader(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onClickLabel: String? = null,
+    onClick: (() -> Unit)? = null,
+    detail: (@Composable RowScope.() -> Unit)? = null,
+) {
+    val spacing = KatariTheme.spacing
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) {
+                    Modifier.clickCursor().clickable(onClickLabel = onClickLabel, onClick = onClick)
+                } else {
+                    Modifier
+                },
+            )
+            .padding(horizontal = rowGroupTextInset())
+            .padding(top = spacing.l, bottom = spacing.s),
+        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = title, modifier = Modifier.weight(1f), role = TextRole.SectionTitle, maxLines = 1)
+            Text(text = value, role = TextRole.SectionTitle, maxLines = 1)
+        }
+        if (detail != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(spacing.m),
+                verticalAlignment = Alignment.CenterVertically,
+                content = detail,
+            )
+        }
     }
 }
 

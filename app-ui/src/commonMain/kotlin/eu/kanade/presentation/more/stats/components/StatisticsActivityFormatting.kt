@@ -1,15 +1,19 @@
 package eu.kanade.presentation.more.stats.components
 
+import app.katari.core.platform.PlatformContext
 import eu.kanade.presentation.more.stats.data.StatsActivityWindow
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
+import eu.kanade.presentation.more.stats.data.StatsRange
+import java.time.LocalDate
 
-internal fun formatStatisticsWindow(window: StatsActivityWindow): String {
-    val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
-    val start = window.startDate
-    return when {
-        start == null || start == window.endDate -> window.endDate.format(formatter)
-        else -> "${start.format(formatter)} – ${window.endDate.format(formatter)}"
+/** A window such as "Nov 16 – Dec 15", with the year for a year's window or one that isn't this year. */
+internal fun PlatformContext.formatStatisticsWindow(window: StatsActivityWindow): String {
+    val start = window.startDate ?: window.endDate
+    val withYear = window.range == StatsRange.ONE_YEAR ||
+        start.year != LocalDate.now().year ||
+        window.endDate.year != LocalDate.now().year
+    return if (start == window.endDate) {
+        formatStatisticsDay(start, withYear)
+    } else {
+        formatStatisticsDays(start, window.endDate, withYear)
     }
 }

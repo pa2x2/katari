@@ -20,7 +20,6 @@ import app.katari.presentation.kit.content.StatisticsMetrics
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.content.entryCoverScale
 import app.katari.presentation.kit.list.CoverRow
-import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.presentation.entry.components.EntryCover
@@ -28,12 +27,11 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
-import tachiyomi.presentation.core.i18n.stringResource
-import kotlin.math.roundToInt
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 
 /**
- * One ranked title: cover, optional type label, completed children, time and its share of [shareOf].
+ * One ranked title: cover, name, a bar of its share of [shareOf] in its type's [color], and its time with what it
+ * finished under it. [rank] numbers the rows of a long list, such as See all; the dashboard's few rows leave it out.
  * Shared by the dashboard card, the See-all list and the Lifetime breakdown. A row [inRowGroup] is a cover row of a
  * row group card; otherwise it sits flush inside the padding of a statistics card.
  */
@@ -43,7 +41,6 @@ internal fun StatisticsTopTitleRow(
     title: String,
     cover: EntryCoverData,
     type: EntryType,
-    typeLabel: String?,
     completionCount: Long,
     durationMillis: Long,
     shareOf: Long,
@@ -53,12 +50,9 @@ internal fun StatisticsTopTitleRow(
     inRowGroup: Boolean = false,
 ) {
     val share = if (shareOf > 0L) durationMillis.toFloat() / shareOf else 0f
-    val details = listOfNotNull(
-        typeLabel,
-        completionCount.takeIf { it > 0L }?.let { count ->
-            pluralStringResource(type.entryTypePresentation().childCountPlural, count.toInt(), count.toInt())
-        },
-    ).joinToString(" · ")
+    val finished = completionCount.takeIf { it > 0L }?.let { count ->
+        pluralStringResource(type.entryTypePresentation().childCountPlural, count.toInt(), count.toInt())
+    }
     val rankText: @Composable () -> Unit = {
         rank?.let {
             Text(
@@ -69,12 +63,10 @@ internal fun StatisticsTopTitleRow(
         }
     }
     val trailing: @Composable () -> Unit = {
-        TopTitleShare(
-            durationMillis = durationMillis,
-            share = share,
-            shareOf = shareOf,
-            formatDuration = formatDuration,
-        )
+        Column(Modifier.widthIn(min = StatisticsMetrics.rankedTrailingWidth), horizontalAlignment = Alignment.End) {
+            Text(formatDuration(durationMillis), role = TextRole.Label, maxLines = 1)
+            finished?.let { Text(text = it, role = TextRole.Supporting, maxLines = 1) }
+        }
     }
     if (inRowGroup) {
         CoverRow(
@@ -85,7 +77,7 @@ internal fun StatisticsTopTitleRow(
             leading = if (rank != null) rankText else null,
             trailing = trailing,
         ) {
-            TopTitleLines(title = title, details = details, share = share, color = color)
+            TopTitleLines(title = title, share = share, color = color)
         }
         return
     }
@@ -104,41 +96,19 @@ internal fun StatisticsTopTitleRow(
             frame = CoverFrame.Thumbnail,
         )
         Column(Modifier.weight(1f)) {
-            TopTitleLines(title = title, details = details, share = share, color = color)
+            TopTitleLines(title = title, share = share, color = color)
         }
         trailing()
     }
 }
 
 @Composable
-private fun ColumnScope.TopTitleLines(title: String, details: String, share: Float, color: Color) {
+private fun ColumnScope.TopTitleLines(title: String, share: Float, color: Color) {
     Text(text = title, role = TextRole.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    if (details.isNotEmpty()) {
-        Text(text = details, role = TextRole.Supporting, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
     StatisticsShareBar(
         fraction = share,
         color = color,
         modifier = Modifier.padding(top = KatariTheme.spacing.s),
+        height = StatisticsMetrics.rankedShareBar,
     )
-}
-
-// A fixed width keeps every share bar on the same scale regardless of the duration text.
-@Composable
-private fun TopTitleShare(durationMillis: Long, share: Float, shareOf: Long, formatDuration: (Long) -> String) {
-    Column(Modifier.widthIn(min = StatisticsMetrics.rankedTrailingWidth), horizontalAlignment = Alignment.End) {
-        Text(formatDuration(durationMillis), role = TextRole.Label)
-        if (shareOf > 0L) {
-            val percent = (share * 100).roundToInt()
-            Text(
-                text = if (percent == 0 && durationMillis > 0L) {
-                    stringResource(MR.strings.statistics_share_below_percent, 1)
-                } else {
-                    stringResource(MR.strings.statistics_share_of_time, percent)
-                },
-                role = TextRole.Badge,
-                tone = ContentTone.Secondary,
-            )
-        }
-    }
 }

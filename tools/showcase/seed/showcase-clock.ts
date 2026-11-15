@@ -13,7 +13,7 @@ export const YEAR_RECAP_EDITION = `${new Date(SHOWCASE_NOW).getUTCFullYear()}-so
 
 /**
  * When the library last checked its sources for new chapters. Entries carry it in the seed; the app's own record of the
- * check is app state that backups leave out, so the pipeline writes it.
+ * update is left out of backups, so the pipeline writes it into the app's database.
  */
 export const LIBRARY_UPDATED_AT = SHOWCASE_NOW - 3 * 3_600_000;
 

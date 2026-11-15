@@ -14,6 +14,6 @@ interface StatisticsRecapRepository {
 
     fun subscribeHasActivity(profileId: Long, startLocalDate: String, endLocalDate: String): Flow<Boolean>
 
-    /** Months with timed activity as `yyyy-MM`, latest first. */
-    fun subscribeActiveMonths(profileId: Long): Flow<List<String>>
+    /** Months with timed activity and the time each holds, latest first. */
+    fun subscribeActiveMonths(profileId: Long): Flow<List<StatisticsRecapMonth>>
 }

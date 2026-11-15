@@ -16,6 +16,7 @@ import { SYNC_SERVER_PORT } from "../sync/sync-server.ts";
 import { timed } from "../timed.ts";
 import { encodeForWeb } from "../web-clip.ts";
 import { attachedSerials, Device } from "./adb.ts";
+import { editDatabase } from "./app-database.ts";
 import { pinShowcaseClock, useRealClock } from "./device-clock.ts";
 import { awaitIdle } from "./device-idle.ts";
 import { bootShowcaseEmulator, SHOWCASE_SERIAL, shutDown } from "./emulator.ts";
@@ -26,6 +27,8 @@ import { checkStatusBar, freezeStatusBar, restoreStatusBar } from "./status-bar.
 
 const APP_ID = "app.katari.benchmark";
 const APP_PREFERENCES = `${APP_ID}_preferences.xml`;
+const APP_DATABASE = "tachiyomi.db";
+const LIBRARY_UPDATE_DURATION_MS = 40_000;
 const RECAP_SHARE_IMAGE = `/data/data/${APP_ID}/cache/shared_image/statistics_recap.png`;
 const SEED_NAME = "showcase.tachibk";
 const SEED_ON_DEVICE = `/sdcard/Download/${SEED_NAME}`;
@@ -204,9 +207,17 @@ export class PhoneSession {
     writePreferences(device, APP_ID, APP_PREFERENCES, {
       // Translation setup reads in incognito, which shows a banner over every screen.
       __APP_STATE_incognito_mode: false,
-      ...Object.fromEntries(
-        profiles.map((_, index) => [`__APP_STATE_profile_${index + 1}:library_update_last_timestamp`, LIBRARY_UPDATED_AT]),
-      ),
+    });
+    editDatabase(device, APP_ID, APP_DATABASE, (database) => {
+      // Every profile's library was last updated in full by the automatic update, which found what the seed holds.
+      database
+        .prepare(
+          `INSERT OR REPLACE INTO library_update_runs(profile_id, started_at, finished_at, trigger, library_size)
+           SELECT _id, :startedAt, :finishedAt, 'automatic',
+               (SELECT count(*) FROM entries WHERE entries.profile_id = profiles._id AND favorite = 1)
+           FROM profiles`,
+        )
+        .run({ startedAt: LIBRARY_UPDATED_AT - LIBRARY_UPDATE_DURATION_MS, finishedAt: LIBRARY_UPDATED_AT });
     });
 
     pinShowcaseClock(device);

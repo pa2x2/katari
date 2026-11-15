@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import app.katari.core.platform.currentPlatformContext
 import app.katari.presentation.kit.button.Button
 import app.katari.presentation.kit.button.ButtonStyle
 import app.katari.presentation.kit.content.Text
@@ -51,7 +52,7 @@ internal fun StatisticsActivityFeedback(state: ActivityState, onRetry: () -> Uni
                 } else {
                     MR.strings.statistics_could_not_load_period
                 },
-                formatStatisticsWindow(target),
+                currentPlatformContext().formatStatisticsWindow(target),
             ),
             modifier = Modifier.weight(1f),
             role = TextRole.Supporting,

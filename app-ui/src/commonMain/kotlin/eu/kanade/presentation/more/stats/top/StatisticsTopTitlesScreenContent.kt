@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.stats.top
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,21 +12,22 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import app.katari.presentation.kit.button.Button
-import app.katari.presentation.kit.button.ButtonStyle
+import app.katari.icons.materialsymbols.MaterialSymbols
+import app.katari.icons.materialsymbols.rounded.Refresh
 import app.katari.presentation.kit.feedback.EmptyScreen
+import app.katari.presentation.kit.feedback.EmptyScreenAction
 import app.katari.presentation.kit.feedback.LoadingScreen
-import app.katari.presentation.kit.layout.FramedContent
 import app.katari.presentation.kit.layout.RowList
 import app.katari.presentation.kit.list.RowGroupItem
 import app.katari.presentation.kit.list.RowGroupPosition
 import app.katari.presentation.kit.progress.LoadingIndicator
+import app.katari.presentation.kit.surface.NoticeCard
+import app.katari.presentation.kit.surface.NoticeTone
 import app.katari.presentation.kit.theme.KatariTheme
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitleRow
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.data.StatsType
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -38,7 +38,6 @@ import tachiyomi.presentation.core.util.plus
 @Composable
 fun StatisticsTopTitlesScreenContent(
     state: StatisticsTopTitlesViewModel.State,
-    selectedType: EntryType?,
     types: List<StatsType>,
     totalDurationMillis: Long,
     paddingValues: PaddingValues,
@@ -47,7 +46,17 @@ fun StatisticsTopTitlesScreenContent(
 ) {
     if (state.titles.isEmpty()) {
         when {
-            state.failed -> LoadFailed(onLoadMore, Modifier.fillMaxSize().padding(paddingValues))
+            state.failed -> EmptyScreen(
+                stringRes = MR.strings.statistics_could_not_load_activity,
+                modifier = Modifier.padding(paddingValues),
+                actions = listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_retry,
+                        icon = MaterialSymbols.Rounded.Refresh,
+                        onClick = onLoadMore,
+                    ),
+                ),
+            )
             state.loading || !state.endReached -> LoadingScreen(Modifier.padding(paddingValues))
             else -> EmptyScreen(MR.strings.statistics_empty_period, Modifier.padding(paddingValues))
         }
@@ -75,7 +84,6 @@ fun StatisticsTopTitlesScreenContent(
                     title = entry.title,
                     cover = entry.cover,
                     type = entry.type,
-                    typeLabel = type?.takeIf { selectedType == null }?.let { stringResource(it.displayName) },
                     completionCount = entry.completionCount,
                     durationMillis = entry.durationMillis,
                     shareOf = totalDurationMillis,
@@ -87,24 +95,19 @@ fun StatisticsTopTitlesScreenContent(
             }
         }
         when {
-            state.failed -> item(key = "failed") { LoadFailed(onLoadMore, Modifier.fillMaxWidth()) }
+            state.failed -> item(key = "failed") {
+                NoticeCard(
+                    text = stringResource(MR.strings.statistics_could_not_load_activity),
+                    tone = NoticeTone.Warning,
+                    actionLabel = stringResource(MR.strings.action_retry),
+                    onAction = onLoadMore,
+                )
+            }
             state.loading -> item(key = "loading") {
                 Box(Modifier.fillMaxWidth().padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
                     LoadingIndicator(Modifier.size(KatariTheme.sizes.icon))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun LoadFailed(onRetry: () -> Unit, modifier: Modifier) {
-    FramedContent(modifier.padding(KatariTheme.spacing.l), contentAlignment = Alignment.Center) {
-        Button(
-            label = stringResource(MR.strings.statistics_could_not_load_activity) + " · " +
-                stringResource(MR.strings.action_retry),
-            onClick = onRetry,
-            style = ButtonStyle.Text,
-        )
     }
 }

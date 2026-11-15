@@ -6,7 +6,15 @@ data class LibraryUpdateRun(
     val finishedAt: Long?,
     val trigger: LibraryUpdateTrigger,
     val librarySize: Int,
-)
+) {
+    /** False for an update of entries the user picked, which says nothing of when the rest of the library was checked. */
+    val coversLibrary: Boolean
+        get() = trigger != LibraryUpdateTrigger.SELECTION
+
+    /** When the update ended, or when it started if the app quit before it ended. */
+    val endedAt: Long
+        get() = finishedAt ?: startedAt
+}
 
 enum class LibraryUpdateTrigger {
     AUTOMATIC,

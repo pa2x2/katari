@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import app.katari.entry.interactions.anime.introtimes.IntroTimesService
@@ -56,7 +58,9 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PictureFraming
 
-private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
+private const val OVERLAY_BARS_SLIDE_MILLIS = 190
+private val overlayBarsSlideAnimationSpec = tween<IntOffset>(OVERLAY_BARS_SLIDE_MILLIS)
+private val skipLiftAnimationSpec = tween<Dp>(OVERLAY_BARS_SLIDE_MILLIS)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
 private val overlayCenterFadeAnimationSpec = tween<Float>(110)
 
@@ -155,12 +159,13 @@ internal fun VideoPlayerOverlay(
     val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
     // A marker's first seconds, or its countdown, show the button by itself; after that it comes and goes with the
-    // controls.
+    // controls. It gives way while the bar previews a frame, which floats where the button sits.
     val skipVisible = skipOffer != null &&
         !locked &&
         !endScreenVisible &&
         !hideChromeForSeekFeedback &&
         !isScrubbing &&
+        timelineHoverMs == null &&
         (skipOffer.prominent || skipCountdown != null || chromeVisible)
 
     val posture = currentVideoPlayerPosture()
@@ -202,7 +207,7 @@ internal fun VideoPlayerOverlay(
                         onChildWebViewAction = onChildWebViewAction,
                     )
                 },
-                timeline = {
+                timeline = { onBarRiseChange ->
                     VideoPlayerTimeline(
                         positionMs = displayedPositionMs,
                         durationMs = playbackSnapshot.durationMs,
@@ -219,6 +224,7 @@ internal fun VideoPlayerOverlay(
                         onHover = onTimelineHover,
                         hoverPositionMs = timelineHoverMs,
                         hoverChapter = timelineHoverChapter,
+                        onBarRiseChange = onBarRiseChange,
                         footerContent = {
                             VideoPlayerTimelineToolbar(
                                 position = { slot ->
@@ -347,7 +353,8 @@ private fun BoxScope.VideoPlayerControls(
     onPointerOverControlsChange: ((Boolean) -> Unit)?,
     onBarReachChange: ((VideoPlayerBarReach) -> Unit)?,
     topBar: @Composable () -> Unit,
-    timeline: @Composable () -> Unit,
+    /** The timeline, given where to report how far its bar's top rises above its bottom edge. */
+    timeline: @Composable (onBarRiseChange: (Int) -> Unit) -> Unit,
     centre: @Composable () -> Unit,
     locked: @Composable () -> Unit,
 ) {
@@ -357,9 +364,31 @@ private fun BoxScope.VideoPlayerControls(
     var topBarHeight by remember { mutableIntStateOf(0) }
     var bottomBarHeight by remember { mutableIntStateOf(0) }
 
-    // How far the timeline rises above the window's bottom inset, which the skip button keeps while the timeline hides
+    // How far the timeline's bar rises above the window's bottom inset: the skip button sits on it while it shows
     var timelineLift by remember { mutableIntStateOf(0) }
     val bottomInset = videoPlayerSafeBottomInset()
+    // The large buttons at the ends of the toolbar draw their icons this far inside their bounds. The skip button's
+    // edge lines up with those icons rather than with the bounds, so it doesn't stand out past every control below it,
+    // and stays clear of the corner of the window: a phone's cutout already keeps it that far from the edge, which a
+    // desktop window's edge doesn't.
+    val sideInset = with(LocalDensity.current) { videoPlayerSafeSideInset().toDp() }
+    val skipEdgeClearance = KatariTheme.spacing.xxl * 2
+    val skipEnd = maxOf(
+        KatariTheme.spacing.l + (KatariTheme.sizes.touchTargetLarge - KatariTheme.sizes.icon) / 2,
+        skipEdgeClearance - sideInset,
+    )
+    // A pointer keeps the button there while the timeline hides, so it never moves under the pointer. By touch it
+    // follows the timeline down to the edge rather than hold a raised spot over the picture.
+    val holdsSkipLift = onPointerOverControlsChange != null || transportVisible
+    val skipLift by animateDpAsState(
+        targetValue = if (holdsSkipLift && timelineLift > 0) {
+            with(LocalDensity.current) { timelineLift.toDp() }
+        } else {
+            // Clear of the edge, and there until the timeline has shown once
+            KatariTheme.spacing.l
+        },
+        animationSpec = skipLiftAnimationSpec,
+    )
     LaunchedEffect(topBarHeight, bottomBarHeight) {
         if (topBarHeight > 0 && bottomBarHeight > 0) {
             onBarReachChange?.invoke(VideoPlayerBarReach(top = topBarHeight, bottom = bottomBarHeight))
@@ -415,18 +444,15 @@ private fun BoxScope.VideoPlayerControls(
                 ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
             ) {
                 VideoPlayerChromeContainer(
-                    modifier = Modifier.onSizeChanged {
-                        bottomBarHeight = it.height
-                        timelineLift = it.height - bottomInset
-                    },
+                    modifier = Modifier.onSizeChanged { bottomBarHeight = it.height },
                     contentAlignment = Alignment.Center,
                 ) {
-                    timeline()
+                    timeline { barRise -> timelineLift = barRise - bottomInset }
                 }
             }
         }
 
-        // Above the timeline's end, where it stays while the timeline hides, so it never moves under the pointer
+        // Above the timeline's end
         AnimatedVisibility(
             visible = skipVisible,
             modifier = Modifier.align(Alignment.BottomEnd).zIndex(2f),
@@ -441,15 +467,7 @@ private fun BoxScope.VideoPlayerControls(
                     onClick = onSkip,
                     modifier = Modifier
                         .videoPlayerSafeContentPadding(includeBottom = true)
-                        .padding(
-                            end = KatariTheme.spacing.l,
-                            // Clear of the edge until the timeline has shown once
-                            bottom = if (timelineLift > 0) {
-                                with(LocalDensity.current) { timelineLift.toDp() }
-                            } else {
-                                KatariTheme.spacing.l
-                            },
-                        ),
+                        .padding(end = skipEnd, bottom = skipLift),
                 )
             }
         }
