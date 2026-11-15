@@ -11,6 +11,7 @@ import app.katari.video.engine.mpv.client.MpvValue
 import app.katari.video.engine.mpv.proxy.RelayLog
 import app.katari.video.engine.mpv.proxy.StreamFailure
 import app.katari.video.engine.mpv.proxy.StreamProxy
+import app.katari.video.engine.mpv.proxy.UpstreamFailure
 import app.katari.video.engine.mpv.proxy.hls.HlsVariantPick
 import app.katari.video.engine.mpv.proxy.hls.HlsVariantSet
 import app.katari.video.engine.mpv.quality.MpvBandwidthMeter
@@ -547,6 +548,16 @@ internal class MpvPlayer(
         }
     }
 
+    /**
+     * The network failed media mpv waited for, which FFmpeg skips: mpv would play on past the gap, and an audio track
+     * played from a playlist of its own would fall out of step with the video. The player fails instead, keeping the
+     * position a retry resumes from.
+     */
+    private fun mediaLost(failure: UpstreamFailure) {
+        if (!prepared) return
+        fail(mpvMediaLostError(failure, errorLog.recent()))
+    }
+
     private fun onTracks(list: List<MpvTrack>) {
         mpvTracks = list
         tracks = videoTracks()
@@ -630,6 +641,7 @@ internal class MpvPlayer(
                     bufferedAheadMs = { bufferedMs - positionMs },
                     variantPick = { set -> trackRequest.variantPick(set.programId, mpvTracks) },
                     relayLog = RelayLog(appLog.player, connectionBreaks = !preview),
+                    onMediaLost = { failure -> onMain { mediaLost(failure) } },
                 )
             } catch (e: IOException) {
                 logcat(LogPriority.ERROR, e) { "The mpv stream proxy didn't start" }

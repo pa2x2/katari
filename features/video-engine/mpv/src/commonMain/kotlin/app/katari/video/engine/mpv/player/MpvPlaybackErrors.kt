@@ -53,6 +53,10 @@ internal fun mpvEndedEarlyError(
     return upstream?.toPlaybackError(details) ?: ErrorCode.IoUnspecified.error(details, null)
 }
 
+/** The network failed the [upstream] request for media mpv waited for, with mpv's last error lines in [log]. */
+internal fun mpvMediaLostError(upstream: UpstreamFailure, log: List<String>): VideoPlayerError =
+    upstream.toPlaybackError(log.joinToString("\n").ifBlank { null })
+
 /** The instance couldn't start, which ends the player's session for good. */
 internal fun mpvStartError(): VideoPlayerError = ErrorCode.FailedRuntimeCheck.error(
     "mpv couldn't start: its add-on didn't load or its stream proxy didn't open",
