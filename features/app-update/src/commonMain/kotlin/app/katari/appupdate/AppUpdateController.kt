@@ -18,6 +18,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * The app's one update flow: finds a newer GitHub release of the running app, then downloads, checks and installs it
@@ -35,9 +36,9 @@ class AppUpdateController(
 
     private val launchHandled = AtomicBoolean(false)
 
-    /** [AppUpdatePlatform.elapsedRealtime] of the last automatic check. */
+    /** [AppUpdatePlatform.elapsedRealtime] at which the next automatic check falls due. */
     @Volatile
-    private var lastAutomaticCheckAt = 0L
+    private var nextAutomaticCheckAt = 0L
     private var checkJob: Job? = null
     private var updateJob: Job? = null
 
@@ -52,22 +53,29 @@ class AppUpdateController(
     /** Runs once per process when the app is first ready for a prompt. */
     fun onLaunch() {
         if (!launchHandled.compareAndSet(false, true)) return
-        lastAutomaticCheckAt = platform.elapsedRealtime()
+        nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds
         scope.launch {
             platform.removeInstalledDownloads()
-            if (preferences.checkOnLaunch.get()) check(CheckMode.Automatic)
+            checkAutomatically()
         }
     }
 
     /**
      * Repeats the automatic check every [AUTOMATIC_CHECK_INTERVAL] until cancelled, because Katari can stay open for
-     * days and the launch check alone would rarely run. Callers keep it running only while the app is visible.
+     * days and the launch check alone would rarely run. Callers keep it running for as long as a found update can reach
+     * the user: on Android while the app is visible, on desktop for as long as the app runs.
      */
     suspend fun recheckPeriodically() {
         while (true) {
-            delay(lastAutomaticCheckAt + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds - platform.elapsedRealtime())
-            lastAutomaticCheckAt = platform.elapsedRealtime()
-            if (preferences.checkOnLaunch.get()) check(CheckMode.Automatic)
+            val untilDue = nextAutomaticCheckAt - platform.elapsedRealtime()
+            if (untilDue > 0) {
+                // In steps rather than all at once: delay's clock stops while the device sleeps, the platform's
+                // doesn't, so a check that fell due during sleep runs soon after waking instead of hours later
+                delay(minOf(untilDue, AUTOMATIC_CHECK_STEP.inWholeMilliseconds))
+                continue
+            }
+            nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_INTERVAL.inWholeMilliseconds
+            checkAutomatically()
         }
     }
 
@@ -158,9 +166,20 @@ class AppUpdateController(
         scope.launch { check(mode) }
     }
 
-    private suspend fun check(mode: CheckMode) {
+    private suspend fun checkAutomatically() {
+        if (!preferences.checkOnLaunch.get()) return
+        // Soon rather than a whole interval later: a check made before the network is up, as after a login start or
+        // waking from sleep, fails
+        if (!check(CheckMode.Automatic)) {
+            nextAutomaticCheckAt = platform.elapsedRealtime() + AUTOMATIC_CHECK_RETRY.inWholeMilliseconds
+        }
+    }
+
+    /** Returns false when the check failed; one that had no need to run, or that a newer check replaced, didn't. */
+    private suspend fun check(mode: CheckMode): Boolean {
         // Never swap the update out from under a download or install.
-        if (state.value.status.isBusy) return
+        if (state.value.status.isBusy) return true
+        var failed = false
         // A newer check, say after a channel switch, replaces a running one.
         checkJob?.cancel()
         val job = scope.launch {
@@ -191,6 +210,7 @@ class AppUpdateController(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                failed = true
                 logcat(LogPriority.WARN, e) { "App update check failed" }
                 val error = (e as? AppUpdateException)?.error ?: AppUpdateError.GithubUnexpected
                 mutableState.update {
@@ -205,6 +225,7 @@ class AppUpdateController(
         }
         checkJob = job
         job.join()
+        return !failed
     }
 
     private suspend fun install(update: AvailableUpdate) {
@@ -232,6 +253,8 @@ class AppUpdateController(
 }
 
 private val AUTOMATIC_CHECK_INTERVAL = 6.hours
+private val AUTOMATIC_CHECK_STEP = 15.minutes
+private val AUTOMATIC_CHECK_RETRY = 15.minutes
 
 /** A download or install is under way, or done and waiting for a restart, which a check must not replace. */
 private val AppUpdateStatus.isBusy: Boolean

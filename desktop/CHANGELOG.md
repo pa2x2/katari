@@ -1,5 +1,13 @@
 # Desktop Changelog
 
+## [1.0.2] - 2026-11-15
+
+### 🐛 Fixed
+
+- After the computer wakes from sleep or changes networks, the first requests to a source no longer hang until they time out.
+- Video no longer plays out of step with its audio track after a short network drop. The player asks again for what failed, and if it still can't get it in time, playback stops with an error and keeps your place.
+- Scrolling the feed switcher with a wheel or touchpad switches to the feed it turns to.
+
 ## [1.0.1] - 2026-11-15
 
 ### 🧩 Improved
@@ -385,7 +393,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.2...HEAD
+[1.0.2]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.2
 [1.0.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.1
 [1.0.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0
 [1.0.0-beta.13]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.13

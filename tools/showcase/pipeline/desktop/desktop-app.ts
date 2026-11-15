@@ -7,7 +7,8 @@
  * Every launch starts at the showcase moment, as every phone scene does, through libfaketime: the seed's history and
  * the times shown relative to now read the same as on the phone, and sync orders the two devices' changes the same
  * way whatever day the pipeline runs. A launch beside a running phone scene starts where the phone's clock is instead,
- * so the two agree, as devices' clocks do, and a change one makes after the other's comes after it.
+ * or past it where earlier scenes took sync's stamps (sync/clock-reach.ts), so a change it makes after the phone's
+ * comes after it.
  */
 import { spawn } from "node:child_process";
 import {

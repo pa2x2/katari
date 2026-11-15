@@ -62,8 +62,8 @@ export class DesktopSession {
   }
 
   /**
-   * Runs [scene] beside a phone scene, with the clock at [startsAt], where the phone's is. The scene waits for its
-   * release (SceneContext.awaitRelease), which comes once [ended] does.
+   * Runs [scene] beside a phone scene, with the clock at [startsAt]. The scene waits for its release
+   * (SceneContext.awaitRelease), which comes once [ended] does.
    */
   async runAlongside(scene: string, args: Record<string, string>, startsAt: number, ended: Promise<void>): Promise<void> {
     const release = join(this.workDir, "release");

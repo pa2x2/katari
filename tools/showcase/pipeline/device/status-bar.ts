@@ -11,11 +11,19 @@ const ROTATION_TIMEOUT_MS = 10_000;
 const LAYOUT_TIMEOUT_MS = 10_000;
 const LAYOUT_POLL_MS = 250;
 const LAYOUT_ATTEMPTS = 3;
-const WIFI_TIMEOUT_MS = 60_000;
-const WIFI_RETRY_MS = 1_000;
-const WIFI_COMMAND = "network -e wifi show -e level 4 -e fully true";
-// The status bar's description of its Wi-Fi icon at full signal, in the emulator's English.
-const WIFI_ICON = 'content-desc="Wifi signal full."';
+const ICONS_TIMEOUT_MS = 60_000;
+const ICONS_RETRY_MS = 1_000;
+
+/** A demo command that sets an icon, and the status bar's description of that icon in the emulator's English. */
+interface IconCommand {
+  command: string;
+  shows: string;
+}
+
+const ICON_COMMANDS: IconCommand[] = [
+  { command: "battery -e level 100 -e plugged false", shows: 'content-desc="Battery 100 percent."' },
+  { command: "network -e wifi show -e level 4 -e fully true", shows: 'content-desc="Wifi signal full."' },
+];
 
 export async function freezeStatusBar(device: Device): Promise<void> {
   await relayOutStatusBar(device);
@@ -25,13 +33,12 @@ export async function freezeStatusBar(device: Device): Promise<void> {
   const commands = [
     "enter",
     `clock -e hhmm ${hhmm}`,
-    "battery -e level 100 -e plugged false",
     // Demo mode labels mobile data 3G whatever data type it is given.
     "network -e mobile hide",
     "notifications -e visible false",
   ];
   for (const command of commands) sendDemoCommand(device, command);
-  await showWifi(device);
+  await showIcons(device);
 }
 
 function sendDemoCommand(device: Device, command: string): void {
@@ -40,17 +47,24 @@ function sendDemoCommand(device: Device, command: string): void {
 }
 
 /**
- * System UI's Wi-Fi icon starts listening for demo commands only after demo mode has started, and drops a command that
- * arrives before then, which a busy device makes likely. Without Wi-Fi, System UI shows its satellite icon in its
- * place, as CI's stills did now and then. So the command is sent until the status bar describes the Wi-Fi icon.
+ * A busy device makes System UI lose the icons' demo commands. Its Wi-Fi icon starts listening for them only after demo
+ * mode has started and drops one that arrives before then, leaving its satellite icon in Wi-Fi's place. Its battery
+ * ignores a command that comes before it counts demo mode as started, and stops taking in the real battery only once it
+ * does, so a real update still on its way brings back the emulator's charger. CI's stills showed both now and then. So
+ * each command is sent until the status bar describes the icon it sets.
  */
-async function showWifi(device: Device): Promise<void> {
-  const deadline = Date.now() + WIFI_TIMEOUT_MS;
+async function showIcons(device: Device): Promise<void> {
+  const deadline = Date.now() + ICONS_TIMEOUT_MS;
+  let missing = ICON_COMMANDS;
   while (true) {
-    sendDemoCommand(device, WIFI_COMMAND);
-    await sleep(WIFI_RETRY_MS);
-    if (windowTrees(device).includes(WIFI_ICON)) return;
-    if (Date.now() > deadline) throw new Error("The status bar never showed the demo Wi-Fi icon");
+    for (const icon of missing) sendDemoCommand(device, icon.command);
+    await sleep(ICONS_RETRY_MS);
+    const trees = windowTrees(device);
+    missing = missing.filter((icon) => !trees.includes(icon.shows));
+    if (missing.length === 0) return;
+    if (Date.now() > deadline) {
+      throw new Error(`The status bar never showed ${missing.map((icon) => icon.shows).join(" or ")}`);
+    }
   }
 }
 
