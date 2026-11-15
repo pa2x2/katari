@@ -15,7 +15,6 @@ import app.katari.video.engine.spi.loading.resolvedRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
-import okhttp3.Call
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -30,6 +29,7 @@ import java.io.InputStream
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
+import java.net.SocketTimeoutException
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
@@ -45,13 +45,14 @@ import java.util.concurrent.atomic.AtomicReference
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
  * [routeDashManifest]). The variants of the stream's HLS master playlist that can switch at any segment reach mpv as
- * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). The stream's latest
- * upstream failure is kept as [latestStreamFailure], which tells the engine why mpv stopped and whether the end it
- * reached is the stream's. It runs until [close].
+ * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). A request the network
+ * fails is made again while mpv waits ([UpstreamCalls]). The stream's latest upstream failure is kept as
+ * [latestStreamFailure], which tells the engine why mpv stopped and whether the end it reached is the stream's. It runs
+ * until [close].
  */
 internal class StreamProxy(
     private val localMedia: LocalMediaFiles,
-    private val client: OkHttpClient,
+    client: OkHttpClient,
     stream: VideoStream,
     private val headers: VideoRequestHeaders,
     private val bandwidthMeter: MpvBandwidthMeter,
@@ -60,6 +61,11 @@ internal class StreamProxy(
     /** What the player asks to play from a set of variants now; asked for every segment. */
     private val variantPick: (HlsVariantSet) -> HlsVariantPick,
     private val relayLog: RelayLog,
+    /**
+     * Called on a proxy thread when the stream's or an audio track's request that mpv waited for got no answer through
+     * the network in time. FFmpeg goes on without what it asked for, so playback would skip a stretch.
+     */
+    private val onMediaLost: (UpstreamFailure) -> Unit,
 ) : Closeable {
 
     private val subtitles = stream.subtitles
@@ -82,7 +88,7 @@ internal class StreamProxy(
         Thread(task, "mpv-stream-proxy").apply { isDaemon = true }
     }
     private val sockets = ConcurrentHashMap.newKeySet<Socket>()
-    private val calls = ConcurrentHashMap.newKeySet<Call>()
+    private val upstreamCalls = UpstreamCalls(client)
 
     @Volatile
     private var closed = false
@@ -120,7 +126,7 @@ internal class StreamProxy(
     override fun close() {
         closed = true
         runCatching { server.close() }
-        calls.forEach(Call::cancel)
+        upstreamCalls.close()
         sockets.forEach { runCatching { it.close() } }
         executor.shutdownNow()
     }
@@ -161,14 +167,15 @@ internal class StreamProxy(
         val input = BufferedInputStream(socket.getInputStream())
         while (!closed) {
             val request = ProxyRequest.read(input) ?: return
+            val mpvWaits = { mpvWaits(socket, input) }
             val keepAlive = when (val target = routes.parse(request.path, request.query)) {
                 null -> {
                     output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
                     false
                 }
-                is ProxyTarget.Remote -> serveRemote(request, target, output)
+                is ProxyTarget.Remote -> serveRemote(request, target, output, mpvWaits)
                 is ProxyTarget.Local -> serveLocal(request, target, output)
-                is ProxyTarget.VariantSet -> serveVariantSet(request, target, output)
+                is ProxyTarget.VariantSet -> serveVariantSet(request, target, output, mpvWaits)
             }
             output.flush()
             if (!keepAlive || !request.keepAlive) {
@@ -194,24 +201,44 @@ internal class StreamProxy(
         }
     }
 
+    /**
+     * Whether mpv still waits for the answer on [socket]. It sends nothing more while it waits, so a read that times out
+     * finds it waiting, and the end of the connection finds it gone: mpv closes it once it stops or loads another file.
+     */
+    private fun mpvWaits(socket: Socket, input: BufferedInputStream): Boolean = try {
+        socket.soTimeout = 1
+        input.mark(1)
+        val read = input.read()
+        if (read >= 0) input.reset()
+        read >= 0
+    } catch (_: SocketTimeoutException) {
+        true
+    } catch (_: IOException) {
+        false
+    } finally {
+        runCatching { socket.soTimeout = 0 }
+    }
+
     /** Returns whether the connection can take another request. */
-    private fun serveRemote(request: ProxyRequest, target: ProxyTarget.Remote, output: MpvConnectionOutput): Boolean {
-        val call = client.newCall(
-            upstreamRequest(target.url, target.headers, request.headers["range"], head = request.method == "HEAD"),
-        )
-        calls += call
-        try {
-            val response = try {
-                call.execute()
-            } catch (e: IOException) {
-                if (!closed) recordFailure(target.headers, UpstreamFailure.Network(target.url.toString(), e))
-                output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
-                return false
-            }
-            return response.use { relay(request, target, it, output) }
-        } finally {
-            calls -= call
-        }
+    private fun serveRemote(
+        request: ProxyRequest,
+        target: ProxyTarget.Remote,
+        output: MpvConnectionOutput,
+        mpvWaits: () -> Boolean,
+    ): Boolean = upstreamCalls.answerMpv(
+        upstreamRequest(target.url, target.headers, request.headers["range"], head = request.method == "HEAD"),
+        mpvWaits,
+        unanswered = { unanswered(target.headers, UpstreamFailure.Network(target.url.toString(), it), output) },
+    ) { response ->
+        response.use { relay(request, target, it, output) }
+    } ?: false
+
+    /** Answers mpv that the network failed its request for [headers]; returns false, as the connection is done. */
+    private fun unanswered(headers: HeaderSet, failure: UpstreamFailure, output: MpvConnectionOutput): Boolean {
+        recordFailure(headers, failure)
+        if (headers == HeaderSet.Stream || headers is HeaderSet.Audio) onMediaLost(failure)
+        output.writeText(BAD_GATEWAY, "Bad Gateway", "text/plain", "", keepAlive = false)
+        return false
     }
 
     private fun relay(
@@ -325,25 +352,22 @@ internal class StreamProxy(
     }
 
     /** A variant's media playlist, with the stream's headers; null when it doesn't load. */
-    private fun fetchPlaylist(url: HttpUrl): FetchedPlaylist? {
-        val call = client.newCall(upstreamRequest(url, HeaderSet.Stream, range = null))
-        calls += call
-        return try {
-            call.execute().use { response ->
-                if (!response.isSuccessful) return null
-                FetchedPlaylist(response.request.url, response.decoded(response.body.source()).readUtf8())
+    private fun fetchPlaylist(url: HttpUrl): FetchedPlaylist? = try {
+        upstreamCalls.execute(upstreamRequest(url, HeaderSet.Stream, range = null)) { response ->
+            response.use {
+                if (!it.isSuccessful) return@use null
+                FetchedPlaylist(it.request.url, it.decoded(it.body.source()).readUtf8())
             }
-        } catch (_: IOException) {
-            null
-        } finally {
-            calls -= call
         }
+    } catch (_: IOException) {
+        null
     }
 
     private fun serveVariantSet(
         request: ProxyRequest,
         target: ProxyTarget.VariantSet,
         output: MpvConnectionOutput,
+        mpvWaits: () -> Boolean,
     ): Boolean {
         val set = variantSets.getOrNull(target.set)
         val index = target.segment
@@ -378,17 +402,12 @@ internal class StreamProxy(
             val last = asked?.last?.let { minOf(part.last, part.first + it) } ?: part.last
             "bytes=$first-$last"
         }
-        val call = client.newCall(upstreamRequest(url, HeaderSet.Stream, range, head = request.method == "HEAD"))
-        calls += call
-        try {
-            val response = try {
-                call.execute()
-            } catch (e: IOException) {
-                if (!closed) recordFailure(HeaderSet.Stream, UpstreamFailure.Network(url.toString(), e))
-                output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
-                return false
-            }
-            return response.use {
+        return upstreamCalls.answerMpv(
+            upstreamRequest(url, HeaderSet.Stream, range, head = request.method == "HEAD"),
+            mpvWaits,
+            unanswered = { unanswered(HeaderSet.Stream, UpstreamFailure.Network(url.toString(), it), output) },
+        ) { response ->
+            response.use {
                 when {
                     !it.isSuccessful || (part != null && it.code != PARTIAL_CONTENT) -> {
                         recordFailure(HeaderSet.Stream, UpstreamFailure.Status(url.toString(), it.code))
@@ -424,9 +443,7 @@ internal class StreamProxy(
                     }
                 }
             }
-        } finally {
-            calls -= call
-        }
+        } ?: false
     }
 
     private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: MpvConnectionOutput): Boolean {

@@ -2,6 +2,7 @@ package app.katari.video.engine.mpv.player
 
 import app.katari.video.engine.mpv.client.MpvClient
 import app.katari.video.engine.mpv.client.MpvFormat
+import app.katari.video.engine.mpv.proxy.MPV_NETWORK_TIMEOUT_SECONDS
 
 /**
  * Sets up a new instance for the watched player, before it initialises, on top of the options its platform sets for
@@ -42,6 +43,8 @@ private val OPTIONS = listOf(
     // A stream reads ahead 50 s, as ExoPlayer does: a quality Auto chooses plays once what was buffered has, so a
     // deeper buffer would delay it by minutes. Each platform sizes the buffer, which caps what high bitrates hold.
     "cache-secs" to "50",
+    // The stream proxy answers within it, asking a host the network failed again meanwhile.
+    "network-timeout" to MPV_NETWORK_TIMEOUT_SECONDS.toString(),
 )
 
 private val OBSERVED_PROPERTIES = listOf(
