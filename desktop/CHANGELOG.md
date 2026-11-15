@@ -1,5 +1,26 @@
 # Desktop Changelog
 
+## [1.0.1] - 2026-11-15
+
+### 🧩 Improved
+
+- Statistics is easier to read. Each section leads with one large figure, and the Overview groups its cards by what they cover: today, the chosen period, the last 12 months and the library.
+- The period's total, its chart and its split by type share one card, which shows a bar's own figures when you select it.
+- Activity lists show each title once a day, under a header with the day's total. Select a title's count for its episodes or chapters, or a day for its sessions. A title's own list shows each chapter or episode once a day and marks the ones finished that day.
+- A title's Your activity sheet shows the time spent, your progress and the last 12 months, with See activity for each day.
+- Recaps lists the years first, then each finished month with the time spent in it.
+
+### 🔄 Changed
+
+- Progress and By media are now one Library card, and Activity patterns is now When you read.
+- With a daily goal set, today's time and the goal streak show at the top of the Overview instead of replacing the daily average.
+
+### 🐛 Fixed
+
+- Earlier, from history, adds up to the same total as its list of titles. A title with more recorded sessions than history no longer lowers the total or drops a type from it.
+- Updating a few picked entries no longer changes when Updates says the library was last updated, and no longer hides a newer update of the whole library from another device.
+- The player's skip button sits on the timeline instead of high above it, and steps aside while the timeline previews a frame.
+
 ## [1.0.0] - 2026-11-13
 
 ### ✨ Added
@@ -364,7 +385,8 @@
 - Cloudflare checks and extension logins open in a built-in web view.
 - The AppImage checks for new desktop releases and updates itself.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/desktop-v1.0.1...HEAD
+[1.0.1]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.1
 [1.0.0]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0
 [1.0.0-beta.13]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.13
 [1.0.0-beta.12]: https://github.com/pa2x2/katari/releases/tag/desktop-v1.0.0-beta.12
