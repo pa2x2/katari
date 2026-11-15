@@ -11,9 +11,6 @@ import app.katari.desktop.application.DesktopBuildInfo
 import app.katari.desktop.storage.DesktopDirectories
 import app.katari.desktop.webview.DesktopJcefHost
 import app.katari.desktop.webview.WindowWebViewDestination
-import app.katari.desktop.webview.setup.DesktopWebViewSetup
-import app.katari.desktop.webview.setup.NoticedChallengePage
-import app.katari.desktop.webview.setup.NoticedExtensionPages
 import app.katari.model.artifacts.runtime.store.modelArtifactStore
 import app.katari.profiles.core.ProfileStore
 import app.katari.webpages.host.DesktopHostPages
@@ -31,7 +28,6 @@ import app.katari.webview.jcef.runtime.JcefRuntime
 import app.katari.webview.jcef.surface.ChromiumBrowserView
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.advanced.WebViewData
@@ -40,7 +36,6 @@ import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.source.entry.webpage.WebPages
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserView
-import eu.kanade.tachiyomi.ui.webview.setup.WebViewSetup
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,9 +47,6 @@ import kotlinx.coroutines.SupervisorJob
  */
 @BindingContainer
 interface WebViewBindings {
-    @Binds
-    val DesktopWebViewSetup.webViewSetup: WebViewSetup
-
     companion object {
         @Provides
         @SingleIn(AppScope::class)
@@ -108,11 +100,8 @@ interface WebViewBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun challengePage(
-            runtime: JcefRuntime,
-            cookies: ChromiumCookieMirror,
-            setup: DesktopWebViewSetup,
-        ): ChallengePage = NoticedChallengePage(ChromiumChallengePage(runtime, cookies), setup::neededWithoutScreen)
+        fun challengePage(runtime: JcefRuntime, cookies: ChromiumCookieMirror): ChallengePage =
+            ChromiumChallengePage(runtime, cookies)
 
         // A page an extension doesn't give a user agent of its own sends the one the app's requests send
         @Provides
@@ -121,11 +110,7 @@ interface WebViewBindings {
             runtime: JcefRuntime,
             cookies: ChromiumCookieMirror,
             network: Lazy<NetworkHelper>,
-            setup: DesktopWebViewSetup,
-        ): ExtensionPages = NoticedExtensionPages(
-            ChromiumExtensionPages(runtime, cookies) { network.value.defaultUserAgentProvider() },
-            setup::neededWithoutScreen,
-        )
+        ): ExtensionPages = ChromiumExtensionPages(runtime, cookies) { network.value.defaultUserAgentProvider() }
 
         // A heavy page's renderer peaks near a gigabyte here, so fewer are kept than on a phone
         @Provides

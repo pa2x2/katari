@@ -26,8 +26,8 @@ import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 
 /**
- * A row of [InfoTile]s sharing the width and the tallest tile's height, such as an extension's version and language,
- * or what a download costs in a dialog. It lines up with the row group cards beside it, or with a dialog's text.
+ * A row of [InfoTile]s sharing the width and the tallest tile's height, such as an extension's version and language.
+ * It lines up with the row group cards beside it, or with a dialog's text.
  */
 @Composable
 fun InfoTileRow(
