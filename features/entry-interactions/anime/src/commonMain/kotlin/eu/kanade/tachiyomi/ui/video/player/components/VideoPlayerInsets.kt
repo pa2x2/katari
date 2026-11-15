@@ -34,6 +34,16 @@ internal fun videoPlayerSafeBottomInset(): Int = WindowInsets.safeDrawing.getBot
     LocalDensity.current,
 ).coerceAtLeast(0)
 
+/** The inset, in pixels, that [videoPlayerSafeContentPadding] keeps clear on each side. */
+@Composable
+internal fun videoPlayerSafeSideInset(): Int {
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+    val safeDrawing = WindowInsets.safeDrawing
+    return maxOf(safeDrawing.getLeft(density, layoutDirection), safeDrawing.getRight(density, layoutDirection))
+        .coerceAtLeast(0)
+}
+
 @Composable
 internal fun Modifier.videoPlayerSafeContentPadding(
     includeTop: Boolean = false,

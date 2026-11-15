@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import app.katari.entry.interactions.anime.introtimes.OnlineMarker
 import app.katari.entry.viewer.chrome.ui.pointer.mediaControl
 import app.katari.presentation.kit.control.MediaMarkedSpan
@@ -52,6 +53,8 @@ internal fun VideoPlayerTimeline(
     hoverPositionMs: Long? = null,
     hoverChapter: VideoPlayerChapter? = null,
     footerContent: (@Composable () -> Unit)? = null,
+    /** How far the top of the bar sits above the shade's bottom edge, in pixels, as it changes. */
+    onBarRiseChange: ((Int) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val effectiveDurationMs = durationMs.coerceAtLeast(0L)
@@ -69,9 +72,12 @@ internal fun VideoPlayerTimeline(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(top = spacing.s)
+                // The bar heads what is measured here, and the preview above it takes no room
+                .onSizeChanged { onBarRiseChange?.invoke(it.height) }
                 .videoPlayerSafeContentPadding(includeBottom = true)
                 .padding(horizontal = spacing.l)
-                .padding(top = spacing.s, bottom = spacing.m),
+                .padding(bottom = spacing.m),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val hoverMs = hoverPositionMs?.takeIf { !isScrubbing && effectiveDurationMs > 0L }
