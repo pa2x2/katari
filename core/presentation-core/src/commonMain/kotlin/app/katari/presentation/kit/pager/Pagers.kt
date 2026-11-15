@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -20,6 +21,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.pager.HorizontalPager as FoundationHorizontalPager
@@ -47,6 +49,7 @@ fun HorizontalPager(
     pageContent: @Composable PagerScope.(page: Int) -> Unit,
 ) {
     val turns = remember(state) { WheelTurns() }
+    val turnScope = rememberCoroutineScope()
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val currentOnUserTurn by rememberUpdatedState(onUserTurn)
     if (onUserTurn != null) ReportDraggedTurns(state, onUserTurn)
@@ -63,6 +66,7 @@ fun HorizontalPager(
         WheelTurnedPage(
             state = state,
             turns = turns,
+            turnScope = turnScope,
             orientation = Orientation.Horizontal,
             reverse = rtl,
             enabled = userScrollEnabled,
@@ -87,6 +91,7 @@ fun VerticalPager(
     pageContent: @Composable PagerScope.(page: Int) -> Unit,
 ) {
     val turns = remember(state) { WheelTurns() }
+    val turnScope = rememberCoroutineScope()
     FoundationVerticalPager(
         state = state,
         modifier = modifier,
@@ -97,6 +102,7 @@ fun VerticalPager(
         WheelTurnedPage(
             state = state,
             turns = turns,
+            turnScope = turnScope,
             orientation = Orientation.Vertical,
             reverse = false,
             enabled = userScrollEnabled,
@@ -111,6 +117,7 @@ fun VerticalPager(
 private fun PagerScope.WheelTurnedPage(
     state: PagerState,
     turns: WheelTurns,
+    turnScope: CoroutineScope,
     orientation: Orientation,
     reverse: Boolean,
     enabled: Boolean,
@@ -118,7 +125,11 @@ private fun PagerScope.WheelTurnedPage(
     content: @Composable PagerScope.() -> Unit,
 ) {
     Box(
-        modifier = if (enabled) Modifier.pageWheel(state, turns, orientation, reverse, onTurned) else Modifier,
+        modifier = if (enabled) {
+            Modifier.pageWheel(state, turns, turnScope, orientation, reverse, onTurned)
+        } else {
+            Modifier
+        },
         propagateMinConstraints = true,
     ) {
         content()
