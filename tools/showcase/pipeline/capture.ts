@@ -25,6 +25,7 @@ import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 import { CONTENT_SERVER } from "../content/content-server.ts";
 import { cacheDir } from "../content/download-cache.ts";
+import { SHOWCASE_NOW } from "../seed/showcase-clock.ts";
 import { writeCredits } from "./credits.ts";
 import { BrowserSession } from "./browser/browser-session.ts";
 import { DesktopSession } from "./desktop/desktop-session.ts";
@@ -38,6 +39,7 @@ import {
   TRANSLATION_SCENES,
   YEAR_RECAP_OPENED_SCENES,
 } from "./scenes.ts";
+import { ClockReach } from "./sync/clock-reach.ts";
 import { startSyncServer, SYNC_ACCOUNT, SYNC_SERVER } from "./sync/sync-server.ts";
 import { timed } from "./timed.ts";
 
@@ -203,20 +205,26 @@ async function capture(run: Run, keep: boolean): Promise<void> {
       ? { syncServer: SYNC_SERVER, syncUsername: SYNC_ACCOUNT.username, syncPassword: SYNC_ACCOUNT.password }
       : {};
     const desktopArgs = desktop.value ? { ...account, storage: desktop.value.storageFolder } : account;
+    const clocks = new ClockReach();
     for (const scene of scenes) {
       await timed(`capturing ${sceneId(scene)}`, () => {
         switch (scene.platform) {
           case "phone": {
             const alongside = scene.alongside;
-            if (alongside === undefined) return phone.value!.run(scene.name, account);
-            return phone.value!.runAlongside(scene.name, account, (ended) =>
-              timed(`capturing desktop:${alongside} alongside`, () =>
-                desktop.value!.runAlongside(alongside, desktopArgs, phone.value!.clockNow(), ended),
-              ),
+            if (alongside === undefined) return clocks.track(SHOWCASE_NOW, () => phone.value!.run(scene.name, account));
+            return clocks.track(SHOWCASE_NOW, () =>
+              phone.value!.runAlongside(scene.name, account, (ended) => {
+                // Where the phone's clock is, or past where an earlier scene took sync's stamps. That leads the phone
+                // by about one scene's length, well within how far ahead a change may be for the phone to take it in.
+                const startsAt = Math.max(phone.value!.clockNow(), clocks.latest);
+                return timed(`capturing desktop:${alongside} alongside`, () =>
+                  clocks.track(startsAt, () => desktop.value!.runAlongside(alongside, desktopArgs, startsAt, ended)),
+                );
+              }),
             );
           }
           case "desktop":
-            return desktop.value!.run(scene.name, desktopArgs);
+            return clocks.track(SHOWCASE_NOW, () => desktop.value!.run(scene.name, desktopArgs));
           case "browser":
             return browser.value!.run(scene.name);
         }
