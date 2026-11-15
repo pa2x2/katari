@@ -20,8 +20,7 @@ import javax.inject.Inject
 /**
  * Links the runtime the AppImage ships: every module of the runtime the app runs on during development, read from
  * [runtimeRelease], except [excludedModules], linked with `jlink` from the SDK of the same JetBrains Runtime build.
- * Chromium, the bulk of the SDK's `jcef` module, stays out ([ChromiumFiles]): the app downloads it when a web view is
- * first needed.
+ * The `jcef` module carries Chromium for the app's web view, less what the app never runs ([ChromiumFiles.LEFT_OUT]).
  *
  * Extensions are loaded while the app runs and may call any of the platform's APIs, and parts of the platform such as
  * the extra charsets or the locale data are found only at run time, so the runtime keeps everything but the JDK's
@@ -58,7 +57,6 @@ abstract class LinkAppImageRuntimeTask : DefaultTask() {
         // jlink refuses to write into a folder that exists
         runtime.deleteRecursively()
         val sdk = sdkHome.get().asFile
-        val chromium = ChromiumFiles.nativeEntries(sdk, execOperations) - ChromiumFiles.KEPT_IN_RUNTIME
         execOperations.exec {
             commandLine(
                 sdk.resolve("bin/jlink").absolutePath,
@@ -66,7 +64,7 @@ abstract class LinkAppImageRuntimeTask : DefaultTask() {
                 "--add-modules", modules.joinToString(","),
                 // A file by its name, and a folder by all it holds
                 "--exclude-files",
-                chromium.joinToString(",") {
+                ChromiumFiles.LEFT_OUT.joinToString(",") {
                     "glob:/${ChromiumFiles.MODULE}/lib/$it,glob:/${ChromiumFiles.MODULE}/lib/$it/**"
                 },
                 "--compress=zip-0",
@@ -85,8 +83,8 @@ abstract class LinkAppImageRuntimeTask : DefaultTask() {
     }
 
     /**
-     * jlink copies the programs a module keeps among its native files without their executable bit. Each file gets the
-     * bit its copy in the SDK has.
+     * jlink copies the programs a module keeps among its native files, such as JCEF's `cef_server` and `jcef_helper`,
+     * without their executable bit, and Chromium can't start without them. Each file gets the bit its copy in the SDK has.
      */
     private fun restoreExecutables(from: File, to: File) {
         to.walkTopDown().filter { it.isFile && !it.canExecute() }.forEach { file ->

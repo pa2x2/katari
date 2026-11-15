@@ -6,7 +6,7 @@ import java.io.File
 
 /**
  * Chromium as the JetBrains Runtime's SDK carries it: the native files of its `jcef` module. The desktop app's AppImage
- * ships none of them but [KEPT_IN_RUNTIME]; the rest, less [LEFT_OUT], is the archive the app downloads Chromium from.
+ * ships all of them but [LEFT_OUT]; the archive older builds download Chromium from is them less [KEPT_IN_RUNTIME].
  */
 internal object ChromiumFiles {
     const val MODULE = "jcef"
