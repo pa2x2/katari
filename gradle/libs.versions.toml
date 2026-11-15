@@ -7,7 +7,7 @@ androidsvg = "1.4"
 asm = "9.10.1"
 # The version okhttp-brotli brings, so the app keeps one Brotli decoder.
 brotli = "0.1.2"
-bouncycastle = "1.86"
+bouncycastle = "1.87"
 androidx-activity-compose = "1.13.0"
 androidx-annotation = "1.11.0"
 androidx-appCompat = "1.8.0"
