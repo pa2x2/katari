@@ -59,7 +59,11 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
 
     private fun begin(startup: Startup, previous: Startup?) {
         val clock = TimeSource.Monotonic.markNow()
-        startup.started.orTimeout(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS).whenComplete { _, error ->
+        // A failure like any other, which callers handle: a server that dies before it connects tells JCEF nothing
+        CompletableFuture.delayedExecutor(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS).execute {
+            startup.fail(JcefStartException("Chromium didn't start in $START_TIMEOUT"))
+        }
+        startup.started.whenComplete { _, error ->
             if (error == null) {
                 logcat(LogPriority.INFO) { "Chromium started in ${clock.elapsedNow().inWholeMilliseconds} ms" }
             } else {
