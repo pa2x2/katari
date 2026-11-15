@@ -23,7 +23,10 @@ interface AppUpdatePlatform {
     /** The file of a release that installs over this build, or null when the release has none for it. */
     fun selectAsset(assets: List<GithubAsset>): GithubAsset?
 
-    /** Milliseconds on a clock that only moves forward, for spacing the automatic checks. */
+    /**
+     * Milliseconds on a clock that only moves forward and keeps counting while the device sleeps, for spacing the
+     * automatic checks.
+     */
     fun elapsedRealtime(): Long
 
     /** Deletes downloads the running app has already been updated past; runs once a process. */
