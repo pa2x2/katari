@@ -207,8 +207,9 @@ internal fun View.setVideoPlayerTouchGestures(
                             playerHeight = height,
                         )
                         activeSideGestureState.type?.let { type ->
+                            val levels = target.sideGestureLevels(type)
                             val targetLevel = activeSideGestureState.initialLevel +
-                                (dragFraction * target.sideGestureMaxLevel(type)).toInt()
+                                (dragFraction * (levels.last - levels.first)).toInt()
                             target.applySideGestureLevel(type, targetLevel)
                         }
                         target.hideControls()

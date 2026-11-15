@@ -6,14 +6,14 @@ internal enum class VideoPlayerSideGestureType {
 }
 
 /**
- * A side gesture's level to show. Levels above [boostFromLevel], when set, are a boost past full volume, shown as
- * [boostPercent].
+ * A side gesture's level to show, among [levels]. Levels outside [normalLevels] are past the normal range: volume
+ * boosted past the device's full volume, shown as [boostPercent], or a picture extra dimmed past the screen's lowest.
  */
 internal data class VideoPlayerSideGestureFeedbackState(
     val type: VideoPlayerSideGestureType,
     val level: Int,
-    val maxLevel: Int = 100,
-    val boostFromLevel: Int? = null,
+    val levels: IntRange,
+    val normalLevels: IntRange,
     val boostPercent: Int? = null,
     val sequence: Long,
 )

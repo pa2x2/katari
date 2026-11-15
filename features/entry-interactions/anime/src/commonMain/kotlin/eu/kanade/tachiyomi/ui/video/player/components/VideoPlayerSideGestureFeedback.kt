@@ -33,6 +33,8 @@ import app.katari.presentation.kit.theme.TextRole
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import kotlinx.coroutines.delay
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat
 
 private const val SIDE_GESTURE_FEEDBACK_VISIBLE_DURATION_MS = 900L
@@ -99,11 +101,9 @@ private fun VideoPlayerSideGestureFeedbackCard(
     feedbackState: VideoPlayerSideGestureFeedbackState,
     modifier: Modifier = Modifier,
 ) {
-    val level = if (feedbackState.maxLevel > 0) {
-        feedbackState.level / feedbackState.maxLevel.toFloat()
-    } else {
-        0f
-    }
+    val levels = feedbackState.levels
+    val span = (levels.last - levels.first).toFloat()
+    fun fraction(level: Int) = if (span > 0f) (level - levels.first) / span else 0f
     val icon = when (feedbackState.type) {
         VideoPlayerSideGestureType.Brightness -> MaterialSymbols.Rounded.Brightness6
         VideoPlayerSideGestureType.Volume -> if (feedbackState.level == 0) {
@@ -112,9 +112,13 @@ private fun VideoPlayerSideGestureFeedbackCard(
             MaterialSymbols.AutoMirroredRounded.VolumeUp
         }
     }
-    val boostFrom = feedbackState.boostFromLevel?.let { it / feedbackState.maxLevel.toFloat() }
     val percentFormat = remember { NumberFormat.getPercentInstance() }
-    // The meter hugs the screen edge the gesture runs along, with its icon toward the middle of the video.
+    val label = when {
+        feedbackState.boostPercent != null -> percentFormat.format(feedbackState.boostPercent / 100f)
+        feedbackState.level < feedbackState.normalLevels.first -> stringResource(MR.strings.anime_extra_dim)
+        else -> null
+    }
+    // The meter hugs the screen edge the gesture runs along, with its icon and label toward the middle of the video.
     val meterFirst = feedbackState.type == VideoPlayerSideGestureType.Brightness
 
     Row(
@@ -123,13 +127,17 @@ private fun VideoPlayerSideGestureFeedbackCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!meterFirst) {
-            feedbackState.boostPercent?.let { percent ->
-                SideGestureLabel(text = percentFormat.format(percent / 100f))
-            }
+            label?.let { SideGestureLabel(text = it) }
             SideGestureIcon(icon = icon)
         }
-        MediaLevelIndicator(level = level, boostFrom = boostFrom)
-        if (meterFirst) SideGestureIcon(icon = icon)
+        MediaLevelIndicator(
+            level = fraction(feedbackState.level),
+            normal = fraction(feedbackState.normalLevels.first)..fraction(feedbackState.normalLevels.last),
+        )
+        if (meterFirst) {
+            SideGestureIcon(icon = icon)
+            label?.let { SideGestureLabel(text = it) }
+        }
     }
 }
 

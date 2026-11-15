@@ -48,7 +48,7 @@ internal fun VideoPlayerKeys(
 
 /**
  * The player's keys in its picture-in-picture window, which shows the picture alone, fitted: those that play, seek,
- * change episode, volume, speed and subtitles, and I, which [onLeave]s for the main window.
+ * change episode, volume, extra dim, speed and subtitles, and I, which [onLeave]s for the main window.
  */
 @Composable
 internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () -> Unit) {
@@ -76,6 +76,8 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
     }
     Key(VideoPlayerShortcuts.VolumeUp, enabled) { target.stepVolume(VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
     Key(VideoPlayerShortcuts.VolumeDown, enabled) { target.stepVolume(-VideoPlayerShortcuts.VOLUME_STEP_PERCENT) }
+    Key(VideoPlayerShortcuts.DimLess, enabled) { target.stepBrightness(VideoPlayerShortcuts.DIM_STEP_LEVELS) }
+    Key(VideoPlayerShortcuts.DimMore, enabled) { target.stepBrightness(-VideoPlayerShortcuts.DIM_STEP_LEVELS) }
     Key(VideoPlayerShortcuts.Mute, enabled) { target.toggleMute() }
     Key(VideoPlayerShortcuts.Slower, enabled) { target.stepSpeed(faster = false) }
     Key(VideoPlayerShortcuts.Faster, enabled) { target.stepSpeed(faster = true) }
@@ -90,8 +92,11 @@ private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, e
 private fun Key(shortcut: KeyboardShortcut, enabled: Boolean, action: () -> Unit) =
     KeyboardShortcutHandler(shortcut, enabled = enabled, onTrigger = action)
 
-private fun VideoPlayerInputTarget.stepVolume(by: Int) {
-    val type = VideoPlayerSideGestureType.Volume
+private fun VideoPlayerInputTarget.stepVolume(by: Int) = stepSideGesture(VideoPlayerSideGestureType.Volume, by)
+
+private fun VideoPlayerInputTarget.stepBrightness(by: Int) = stepSideGesture(VideoPlayerSideGestureType.Brightness, by)
+
+private fun VideoPlayerInputTarget.stepSideGesture(type: VideoPlayerSideGestureType, by: Int) {
     applySideGestureLevel(type, sideGestureLevel(type) + by)
 }
 

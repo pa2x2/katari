@@ -169,6 +169,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             volumeControl = null,
             fullScreen = null,
             brightness = brightness,
+            extraDimInSettings = false,
             orientation = ActivityOrientationRequests(this),
             locksControls = true,
             clipboard = dependencies.textClipboard,

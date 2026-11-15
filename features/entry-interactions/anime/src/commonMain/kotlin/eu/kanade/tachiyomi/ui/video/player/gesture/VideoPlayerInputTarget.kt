@@ -35,7 +35,8 @@ internal interface VideoPlayerInputTarget {
 
     fun sideGestureLevel(type: VideoPlayerSideGestureType): Int
 
-    fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int
+    /** The levels a side gesture moves through; a drag the player's whole height crosses all of them. */
+    fun sideGestureLevels(type: VideoPlayerSideGestureType): IntRange
 
     fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int)
 

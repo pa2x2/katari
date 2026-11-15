@@ -116,6 +116,7 @@ internal fun VideoPlayerSettingsLayer(
                 viewModel.updateSessionPlaybackSpeed(speed)
             },
             onSelectPicture = viewModel::setPictureFraming,
+            extraDim = host.brightness.takeIf { host.extraDimInSettings },
             onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
             onSelectSubtitle = { selection ->
                 viewModel.selectSubtitle(selection)

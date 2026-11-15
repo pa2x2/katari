@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import app.katari.video.engine.spi.player.VideoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerInputTarget
@@ -96,22 +95,30 @@ internal class VideoPlayerWatchInputTarget(
     }
 
     override fun sideGestureLevel(type: VideoPlayerSideGestureType): Int = when (type) {
-        VideoPlayerSideGestureType.Brightness -> host.brightness?.level ?: 0
+        VideoPlayerSideGestureType.Brightness -> host.brightness.level
         VideoPlayerSideGestureType.Volume -> host.volume.level
     }
 
-    override fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int = when (type) {
-        VideoPlayerSideGestureType.Brightness -> VideoPlayerBrightness.MAX_LEVEL
-        VideoPlayerSideGestureType.Volume -> host.volume.gestureMaxLevel
+    override fun sideGestureLevels(type: VideoPlayerSideGestureType): IntRange = when (type) {
+        VideoPlayerSideGestureType.Brightness -> host.brightness.levels
+        VideoPlayerSideGestureType.Volume -> 0..host.volume.gestureMaxLevel
     }
 
     override fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int) {
         when (type) {
-            VideoPlayerSideGestureType.Brightness -> host.brightness?.let { brightness ->
-                ui.triggerSideGestureFeedback(type, brightness.adjust(level), VideoPlayerBrightness.MAX_LEVEL)
-            }
+            VideoPlayerSideGestureType.Brightness -> showBrightness(host.brightness.adjust(level))
             VideoPlayerSideGestureType.Volume -> showVolume(host.volume.adjust(player, level))
         }
+    }
+
+    private fun showBrightness(level: Int) {
+        val levels = host.brightness.levels
+        ui.triggerSideGestureFeedback(
+            type = VideoPlayerSideGestureType.Brightness,
+            level = level,
+            levels = levels,
+            normalLevels = 0..levels.last,
+        )
     }
 
     private fun showVolume(level: Int) {
@@ -119,8 +126,8 @@ internal class VideoPlayerWatchInputTarget(
         ui.triggerSideGestureFeedback(
             type = VideoPlayerSideGestureType.Volume,
             level = level,
-            maxLevel = volume.gestureMaxLevel,
-            boostFromLevel = volume.maxLevel.takeIf { volume.boostLevels > 0 },
+            levels = 0..volume.gestureMaxLevel,
+            normalLevels = 0..volume.maxLevel,
             boostPercent = volume.boostPercent.takeIf { level > volume.maxLevel },
         )
     }

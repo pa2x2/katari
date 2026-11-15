@@ -11,7 +11,11 @@ class AnimePlayerDevicePreferences(
 ) {
     val rememberBrightness: Preference<Boolean> = preferenceStore.getBoolean(REMEMBER_BRIGHTNESS_KEY, true)
 
-    /** The brightness gesture level the player last closed at, 0 to 100; unset while the player follows the system. */
+    /**
+     * The brightness level the player last closed at, negative for extra dim: up to 100 where the player sets the
+     * screen's brightness, as on Android, up to 0 where it only dims the picture, as on desktop. Unset while the player
+     * follows the system's brightness and leaves the picture undimmed.
+     */
     val brightnessLevel: Preference<Int> = preferenceStore.getInt(
         Preference.appStateKey(BRIGHTNESS_LEVEL_KEY),
         UNSET_BRIGHTNESS_LEVEL,
@@ -24,7 +28,8 @@ class AnimePlayerDevicePreferences(
     val volumePercent: Preference<Int> = preferenceStore.getInt(Preference.appStateKey(VOLUME_PERCENT_KEY), 100)
 
     companion object {
-        const val UNSET_BRIGHTNESS_LEVEL = -1
+        // Below every level, extra dim's negative ones included
+        const val UNSET_BRIGHTNESS_LEVEL = Int.MIN_VALUE
         private const val REMEMBER_BRIGHTNESS_KEY = "anime_player_remember_brightness"
         private const val BRIGHTNESS_LEVEL_KEY = "anime_player_brightness_level"
         private const val VOLUME_PERCENT_KEY = "anime_player_volume_percent"

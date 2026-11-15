@@ -1923,6 +1923,8 @@
     <string name="anime_playback_picture_fit">Fit</string>
     <string name="anime_playback_picture_fill">Fill</string>
     <string name="anime_playback_picture_zoom">%s×</string>
+    <!-- Brightness below the screen's lowest, as volume boost is above full volume: a dark layer over the picture -->
+    <string name="anime_extra_dim">Extra dim</string>
     <string name="anime_playback_seek_backward">Back %d seconds</string>
     <string name="anime_playback_seek_forward">Forward %d seconds</string>
     <string name="anime_playback_lock_controls">Lock controls</string>
@@ -1957,6 +1959,8 @@
     <string name="anime_shortcut_play_pause">Play or pause</string>
     <string name="anime_shortcut_volume_up">Volume up</string>
     <string name="anime_shortcut_volume_down">Volume down</string>
+    <string name="anime_shortcut_dim_less">Dim less</string>
+    <string name="anime_shortcut_dim_more">Dim more</string>
     <string name="anime_shortcut_mute">Mute or unmute</string>
     <string name="anime_shortcut_slower">Slower</string>
     <string name="anime_shortcut_faster">Faster</string>

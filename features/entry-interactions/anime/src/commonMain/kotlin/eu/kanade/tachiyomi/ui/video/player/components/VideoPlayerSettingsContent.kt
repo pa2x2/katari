@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
+import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
@@ -61,6 +62,8 @@ internal fun VideoPlayerSettingsContent(
     onDismissRequest: () -> Unit,
     onSelectSpeed: (PlaybackSpeed) -> Unit,
     onSelectPicture: (PictureFraming) -> Unit,
+    /** The brightness whose extra dim a slider sets; null where the panel leaves it to a swipe, as on Android. */
+    extraDim: VideoPlayerBrightness?,
     onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
     onSelectAudioTrack: (String) -> Unit,
@@ -132,6 +135,7 @@ internal fun VideoPlayerSettingsContent(
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
         add(PICTURE_ITEM)
+        if (extraDim != null) add(EXTRA_DIM_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
         if (chapters.isNotEmpty()) addAll(videoPlayerChapterItemKeys(chapters))
@@ -239,6 +243,12 @@ internal fun VideoPlayerSettingsContent(
                 VideoPlayerPictureRow(framing = playback.pictureFraming, onSelect = onSelectPicture)
             }
 
+            if (extraDim != null) {
+                item(key = EXTRA_DIM_ITEM) {
+                    VideoPlayerExtraDimRow(brightness = extraDim)
+                }
+            }
+
             if (showAudioTracks) {
                 item(key = AUDIO_ITEM) {
                     AudioTrackRow(
@@ -299,6 +309,7 @@ internal fun VideoPlayerSettingsContent(
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val PICTURE_ITEM = "picture"
+private const val EXTRA_DIM_ITEM = "extraDim"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
 private const val MARKER_SKIP_ITEM = "marker_skip"

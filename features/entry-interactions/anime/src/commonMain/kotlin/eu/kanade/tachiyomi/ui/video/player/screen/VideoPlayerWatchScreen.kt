@@ -290,7 +290,7 @@ internal fun VideoPlayerWatchScreen(
         ui.ignoreNextGestureSeekTapUp = false
         ui.seekFeedbackState = null
         ui.sideGestureFeedbackState = null
-        brightness?.reapply()
+        brightness.reapply()
         volume.sync(currentPlayer)
         ui.scrubPositionMs = current.resumePositionMs.coerceAtLeast(0L)
         ui.playbackSnapshot = VideoPlayerPlaybackSnapshot(positionMs = ui.scrubPositionMs)
@@ -495,7 +495,7 @@ internal fun VideoPlayerWatchScreen(
         }
 
         VideoPlayerContentOverlay(
-            brightness = brightness?.overlayValue ?: 0,
+            dim = brightness.pictureDim,
             color = null,
             colorBlendMode = null,
             modifier = pictureArea,
@@ -520,6 +520,7 @@ internal fun VideoPlayerWatchScreen(
                             modifier = modifier,
                         )
                     },
+                    pictureDim = brightness.pictureDim,
                     endScreen = { modifier ->
                         nextEpisode.EndScreen(
                             visible = endScreenVisible,

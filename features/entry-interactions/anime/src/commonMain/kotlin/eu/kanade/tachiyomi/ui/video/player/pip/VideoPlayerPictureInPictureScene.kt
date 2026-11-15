@@ -9,8 +9,9 @@ import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 /**
  * What the watch screen hands a picture-in-picture window of the player's own: the episode's [player], whose picture
  * the window draws fitted, the [input] its buttons and keys act through, and what the screen draws over the picture
- * there: the [subtitles], sized for the window, and the [endScreen], small, while [endScreenVisible]. [title] names
- * the series and episode.
+ * there: the [subtitles], sized for the window, the extra dim's dark layer ([pictureDim], as
+ * [eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness.pictureDim]) and the [endScreen], small, while
+ * [endScreenVisible]. [title] names the series and episode.
  */
 internal class VideoPlayerPictureInPictureScene(
     val player: VideoPlayer,
@@ -19,5 +20,6 @@ internal class VideoPlayerPictureInPictureScene(
     val title: String,
     val endScreenVisible: Boolean,
     val subtitles: @Composable (Modifier) -> Unit,
+    val pictureDim: Float,
     val endScreen: @Composable (Modifier) -> Unit,
 )

@@ -4,8 +4,9 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.pointerInput
-import app.katari.presentation.kit.control.mediaVolumeLevelsSwiped
+import app.katari.presentation.kit.control.mediaLevelsSwiped
 import app.katari.presentation.kit.pointer.TouchpadSwipes
 import app.katari.presentation.kit.pointer.isFingerOrWheelScroll
 import app.katari.presentation.kit.pointer.touchpadScroll
@@ -18,9 +19,10 @@ import kotlin.math.pow
 
 /**
  * Scrolling over the picture. The wheel sets the volume, one percent a notch, with the side volume feedback
- * of Android's swipe; with Ctrl held the wheel zooms the picture about the [pointer], which shows. A touchpad's swipe
- * up or down is a drag, as a finger's on Android is, setting the volume as far as the fingers go. Scrolling sideways,
- * by a tilting wheel or a touchpad, does nothing.
+ * of Android's swipe; with Shift held it sets the extra dim instead, a level a notch, with the brightness feedback, and
+ * with Ctrl held it zooms the picture about the [pointer], which shows. A touchpad's swipe up or down is a drag, as a
+ * finger's on Android is, setting the volume, or with Shift held at its start the extra dim, as far as the fingers go.
+ * Scrolling sideways, by a tilting wheel or a touchpad, does nothing.
  */
 internal fun Modifier.videoPlayerWheel(
     target: VideoPlayerInputTarget,
@@ -28,21 +30,22 @@ internal fun Modifier.videoPlayerWheel(
     pointer: VideoPlayerPointer,
 ): Modifier = pointerInput(target, pointer) {
     coroutineScope {
-        var volumeSteps = 0f
+        var wheelSteps = 0f
+        var wheelType = VideoPlayerSideGestureType.Volume
         var zoomEnd: Job? = null
-        var swipeVolumeFrom = 0
+        var shiftHeld = false
+        var swipeType = VideoPlayerSideGestureType.Volume
+        var swipeFrom = 0
         val swipes = TouchpadSwipes(
             slop = viewConfiguration.touchSlop,
             onStart = { axis ->
                 if (axis == Orientation.Vertical) {
-                    swipeVolumeFrom = target.sideGestureLevel(VideoPlayerSideGestureType.Volume)
+                    swipeType = sideGestureFor(shiftHeld)
+                    swipeFrom = target.sideGestureLevel(swipeType)
                 }
                 axis == Orientation.Vertical
             },
-            onMove = { _, travel ->
-                val level = swipeVolumeFrom + mediaVolumeLevelsSwiped(travel)
-                target.applySideGestureLevel(VideoPlayerSideGestureType.Volume, level)
-            },
+            onMove = { _, travel -> target.applySideGestureLevel(swipeType, swipeFrom + mediaLevelsSwiped(travel)) },
         )
         awaitPointerEventScope {
             while (true) {
@@ -57,6 +60,9 @@ internal fun Modifier.videoPlayerWheel(
                 val delta = change.scrollDelta
                 change.consume()
                 val touchpad = event.touchpadScroll
+                shiftHeld = event.keyboardModifiers.isShiftPressed
+                // AWT turns a wheel's notches sideways while Shift is held, so with Shift either axis is the wheel's
+                val wheelDelta = if (shiftHeld && delta.y == 0f) delta.x else delta.y
                 when {
                     event.keyboardModifiers.isCtrlPressed -> {
                         if (!event.isFingerOrWheelScroll) continue
@@ -73,21 +79,27 @@ internal fun Modifier.videoPlayerWheel(
                         }
                     }
                     touchpad != null -> swipes.onStep(touchpad)
-                    delta.y != 0f -> {
+                    wheelDelta != 0f -> {
+                        val type = sideGestureFor(shiftHeld)
+                        if (type != wheelType) {
+                            wheelType = type
+                            wheelSteps = 0f
+                        }
                         // Up is negative, as the wheel scrolls toward the start
-                        volumeSteps -= delta.y
-                        val steps = volumeSteps.toInt()
+                        wheelSteps -= wheelDelta
+                        val steps = wheelSteps.toInt()
                         if (steps == 0) continue
-                        volumeSteps -= steps
-                        val type = VideoPlayerSideGestureType.Volume
-                        val level = target.sideGestureLevel(type) + steps
-                        target.applySideGestureLevel(type, level)
+                        wheelSteps -= steps
+                        target.applySideGestureLevel(type, target.sideGestureLevel(type) + steps)
                     }
                 }
             }
         }
     }
 }
+
+private fun sideGestureFor(shiftHeld: Boolean) =
+    if (shiftHeld) VideoPlayerSideGestureType.Brightness else VideoPlayerSideGestureType.Volume
 
 // How long after the last scroll the zoom it made is taken as done
 private const val SCROLL_END_MS = 500L

@@ -1,22 +1,21 @@
 package eu.kanade.tachiyomi.ui.video.player.brightness
 
 /**
- * The screen's brightness as the player's side gesture sets it, a level from 0 to [MAX_LEVEL]. Only Android has it:
- * a desktop screen's brightness isn't the player's to change, so desktop gives the player none.
+ * The picture's brightness as the side gesture, the wheel and the keys set it, a level in [levels]. Levels from 0 up
+ * are the screen's own brightness, where the player may set it (Android); levels below 0 are [ExtraDim]. Desktop, whose
+ * screen brightness isn't the player's to change, has extra dim alone.
  */
 internal interface VideoPlayerBrightness {
     val level: Int
 
-    /** What the content overlay draws over the video: a dim at level 0, nothing otherwise. */
-    val overlayValue: Int
+    val levels: IntRange
 
-    /** Sets the level a side gesture asks for and returns it clamped to the gesture range. */
+    /** The share of the picture's light the dark layer over it takes away, 0 for none. */
+    val pictureDim: Float
+
+    /** Sets the level a gesture, key or slider asks for and returns it clamped to [levels]. */
     fun adjust(level: Int): Int
 
     /** Re-reads the level and applies it again, as each new episode starts. */
     fun reapply()
-
-    companion object {
-        const val MAX_LEVEL = 100
-    }
 }
