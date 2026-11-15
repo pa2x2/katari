@@ -3,11 +3,15 @@ package app.katari.presentation.kit.control
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -16,23 +20,31 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import app.katari.icons.materialsymbols.MaterialSymbols
 import app.katari.icons.materialsymbols.rounded.Add
 import app.katari.icons.materialsymbols.rounded.Remove
 import app.katari.presentation.kit.content.Icon
 import app.katari.presentation.kit.content.Text
+import app.katari.presentation.kit.list.LocalRowDensity
+import app.katari.presentation.kit.list.verticalPadding
 import app.katari.presentation.kit.sheet.LocalTabbedSheetPagerScrollLock
 import app.katari.presentation.kit.shortcut.typingFocus
 import app.katari.presentation.kit.surface.Surface
@@ -41,6 +53,7 @@ import app.katari.presentation.kit.theme.ContentTone
 import app.katari.presentation.kit.theme.KatariTheme
 import app.katari.presentation.kit.theme.TextRole
 import app.katari.presentation.kit.theme.style
+import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.showSoftKeyboard
 
@@ -70,7 +83,8 @@ class StepperInput(
 
 /**
  * A value adjusted one meaningful step at a time, such as a text size. Tapping the value edits it as [input] types it;
- * while editing, the tabbed sheet it sits in stops paging so a swipe over the keyboard cannot switch tabs.
+ * while editing, the tabbed sheet it sits in stops paging so a swipe over the keyboard cannot switch tabs, and the row
+ * it sits in, buttons included, stays in view above the keyboard.
  */
 @Composable
 fun Stepper(
@@ -90,8 +104,17 @@ fun Stepper(
     require(valueRange.first >= 0) { "Stepper only supports non-negative values" }
     require(step > 0) { "Stepper step must be positive" }
 
+    val requester = remember { BringIntoViewRequester() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    // Rows pad above and below their content by the row density's padding, so the stepper and that padding are its row
+    val rowPadding = with(LocalDensity.current) { LocalRowDensity.current.verticalPadding.toPx() }
+    val keepRowInView: suspend () -> Unit = {
+        requester.bringIntoView(Rect(0f, -rowPadding, size.width.toFloat(), size.height + rowPadding))
+    }
     Row(
-        modifier = modifier,
+        modifier = modifier
+            .bringIntoViewRequester(requester)
+            .onSizeChanged { size = it },
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -109,6 +132,7 @@ fun Stepper(
             input = input,
             inputSuffix = inputSuffix,
             editContentDescription = editContentDescription,
+            keepRowInView = keepRowInView,
             onValueChange = onValueChange,
         )
         StepperButton(
@@ -129,6 +153,7 @@ private fun StepperValue(
     input: StepperInput,
     inputSuffix: String,
     editContentDescription: String,
+    keepRowInView: suspend () -> Unit,
     onValueChange: (Int) -> Unit,
 ) {
     var isEditing by remember { mutableStateOf(false) }
@@ -180,6 +205,13 @@ private fun StepperValue(
                         length > valueRange.last.toString().length || typed.any { !it.isDigit() }
                     }
                     if (rejected) revertAllChanges()
+                }
+                // The field is one line tall, and a scrolling sheet or panel keeps only the focused field clear of the
+                // keyboard as it opens, which would leave the rest of the row under it
+                val ime = WindowInsets.ime
+                val density = LocalDensity.current
+                LaunchedEffect(Unit) {
+                    snapshotFlow { ime.getBottom(density) }.collectLatest { keepRowInView() }
                 }
                 val parsedValue = input.parse(state.text.toString())
                 val isValid = parsedValue != null && parsedValue in valueRange
