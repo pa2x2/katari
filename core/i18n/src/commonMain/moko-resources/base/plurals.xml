@@ -473,8 +473,8 @@
         <item quantity="other">%d covers and fonts still to move</item>
     </plurals>
     <plurals name="sync_files_missing">
-        <item quantity="one">%d cover or font is missing on the server</item>
-        <item quantity="other">%d covers and fonts are missing on the server</item>
+        <item quantity="one">%d cover or font isn\'t on the server</item>
+        <item quantity="other">%d covers and fonts aren\'t on the server</item>
     </plurals>
     <plurals name="sync_choice_synced_except">
         <item quantity="one">Synced · %d setting stays on this device</item>
@@ -509,6 +509,14 @@
         <item quantity="one">%d synced change couldn’t be applied on this device. It’s set aside and tried again once Katari is updated; everything else syncs as usual.</item>
         <item quantity="other">%d synced changes couldn’t be applied on this device. They’re set aside and tried again once Katari is updated; everything else syncs as usual.</item>
     </plurals>
+    <plurals name="sync_held_ahead">
+        <item quantity="one">%d synced change is dated ahead of this device\'s clock, so a device\'s clock is off. It\'s applied once the clocks agree; setting the time automatically on every device fixes it.</item>
+        <item quantity="other">%d synced changes are dated ahead of this device\'s clock, so a device\'s clock is off. They\'re applied once the clocks agree; setting the time automatically on every device fixes it.</item>
+    </plurals>
+    <plurals name="sync_status_held_ahead">
+        <item quantity="one">%d synced change waits: a device\'s clock is off</item>
+        <item quantity="other">%d synced changes wait: a device\'s clock is off</item>
+    </plurals>
     <plurals name="sync_status_held_aside">
         <item quantity="one">%d synced change waits for a Katari update</item>
         <item quantity="other">%d synced changes wait for a Katari update</item>
@@ -516,6 +524,16 @@
     <plurals name="sync_download_request_and_more">
         <item quantity="one">%1$s and %2$d more</item>
         <item quantity="other">%1$s and %2$d more</item>
+    </plurals>
+    <!-- %1$s is the device's name, %2$d how many days a request waits for it -->
+    <plurals name="sync_download_requested_later">
+        <item quantity="one">%1$s gets the request if it syncs within %2$d day</item>
+        <item quantity="other">%1$s gets the request if it syncs within %2$d days</item>
+    </plurals>
+    <!-- %1$s says when the device last synced, such as "3 months ago", %2$d how many days a request waits for it -->
+    <plurals name="sync_download_device_away">
+        <item quantity="one">%1$s · a request lapses after %2$d day</item>
+        <item quantity="other">%1$s · a request lapses after %2$d days</item>
     </plurals>
     <plurals name="sync_questions_waiting">
         <item quantity="one">%d question needs your answer</item>

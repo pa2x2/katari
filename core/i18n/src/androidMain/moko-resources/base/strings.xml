@@ -31,6 +31,9 @@
     <string name="sync_status_changes_wifi">Changes wait for Wi-Fi</string>
     <string name="sync_status_first_download_wifi">First download waits for Wi-Fi</string>
     <string name="sync_unsent_waiting_for_wifi">waiting for Wi-Fi</string>
+    <string name="sync_disconnect_unsent_waiting">Connect to Wi-Fi, or turn on Use mobile data for changes, to send them first.</string>
+    <string name="sync_in_background">Sync in the background</string>
+    <string name="sync_in_background_summary">While the app is closed</string>
     <string name="sync_instant_title">Instant sync</string>
     <string name="sync_instant_connected">Connected</string>
     <string name="sync_instant_connecting">Connecting…</string>

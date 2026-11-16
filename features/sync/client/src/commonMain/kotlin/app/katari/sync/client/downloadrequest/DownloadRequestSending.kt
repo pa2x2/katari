@@ -3,7 +3,6 @@ package app.katari.sync.client.downloadrequest
 import app.katari.sync.client.identity.SyncedEntries
 import app.katari.sync.client.message.DeviceMessaging
 import app.katari.sync.protocol.device.DeviceId
-import app.katari.sync.protocol.message.MessageLimits
 import dev.zacsweers.metro.Inject
 
 /** A chapter of the entry [entryId] to ask another device to download. */
@@ -11,7 +10,7 @@ data class ChapterToRequest(val entryId: Long, val url: String, val name: String
 
 /**
  * Asks another device of the account to download chapters. A device can only be asked about an entry it can have,
- * one that syncs ([SyncedEntries]); the request waits for it on the server as long as messages may.
+ * one that syncs ([SyncedEntries]); the request waits for it for [DownloadRequestMessage.LIFETIME].
  */
 @Inject
 class DownloadRequestSending(
@@ -32,7 +31,7 @@ class DownloadRequestSending(
             val key = entries.keyOf(entryId) ?: return@forEach
             val requested = ofEntry.map { RequestedChapter(it.url, it.name) }
             DownloadRequestMessage.bodies(key, requested).forEach { body ->
-                messaging.send(to, body, lifetime = MessageLimits.MAX_LIFETIME)
+                messaging.send(to, body, lifetime = DownloadRequestMessage.LIFETIME)
             }
             sent += ofEntry.size
         }
