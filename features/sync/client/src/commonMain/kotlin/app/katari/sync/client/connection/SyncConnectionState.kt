@@ -34,6 +34,12 @@ data class SyncConnectionState(
     val unreachableSince: Long?,
     /** The last message from another device handled here; only messages numbered past it are new. */
     val messagesHandled: Long,
+    /**
+     * The registration this device left its account by while its server couldn't hear of it, which it tells once
+     * the server can be reached ([app.katari.sync.client.account.Disconnection.tellServer]); null when none waits.
+     */
+    val leftDevice: DeviceId?,
+    val leftServer: HttpUrl?,
 ) {
     /** Whether the device belongs to an account, signed in and registered, whether or not it syncs right now. */
     val isLinked: Boolean get() = enabled && device != null && server != null
@@ -55,6 +61,8 @@ data class SyncConnectionState(
             lastSyncedAt = row.last_synced_at,
             unreachableSince = row.unreachable_since,
             messagesHandled = row.messages_handled,
+            leftDevice = row.left_device_id?.let(::DeviceId),
+            leftServer = row.left_server_url?.toHttpUrlOrNull(),
         )
     }
 }

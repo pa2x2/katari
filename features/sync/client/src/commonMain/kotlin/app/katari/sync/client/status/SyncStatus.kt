@@ -26,6 +26,11 @@ data class SyncStatus(
     val heldKinds: List<String>,
     /** Records that failed to apply here, held aside until the app is updated while the rest sync (D067). */
     val heldAside: Long,
+    /**
+     * Records edited more than the clock bound ahead of this device's clock, held until it catches up: this device's
+     * clock or the editing device's is off.
+     */
+    val heldAhead: Long,
     /** Custom covers and fonts still to move; 0 everywhere while the device isn't linked. */
     val files: Files,
     /**
@@ -155,9 +160,18 @@ data class SyncStatus(
         get() = link is Link.Linked && link.stopped == null
 
     /**
-     * Whether a sync asked for now would run: syncing [isOn], no run is going, and the first-sync choices aren't
-     * waiting, which hold every run as a stop does.
+     * Whether a sync asked for now would move anything: syncing [isOn], no run is going, and nothing holds every run
+     * back, as the first-sync choices, a pause and waiting for Wi-Fi do.
      */
     val canSyncNow: Boolean
-        get() = isOn && activity !is Activity.Syncing && activity != Activity.WaitingForChoices
+        get() = isOn && activity !is Activity.Syncing && activity !in HELD_BACK
+
+    private companion object {
+        val HELD_BACK = setOf(
+            Activity.WaitingForChoices,
+            Activity.Paused,
+            Activity.WaitingForWifi,
+            Activity.ChangesWaitForWifi,
+        )
+    }
 }

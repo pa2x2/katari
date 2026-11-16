@@ -3,6 +3,7 @@ package app.katari.sync.ui.page
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import app.katari.platform.presentation.platformPresentation
 import app.katari.presentation.kit.content.Text
 import app.katari.presentation.kit.dialog.Dialog
 import app.katari.presentation.kit.dialog.DialogAction
@@ -15,8 +16,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Asks before this device leaves its account (D030). While changes made here wait to be sent, it says how many and
- * that the other devices won't get them, and offers Sync now to send them first. The count follows the status,
- * so the warning goes once they are sent; Disconnect still leaves at once.
+ * that the other devices won't get them, and offers Sync now to send them first, or, while they wait for syncing to
+ * resume or for Wi-Fi, says what sends them. The count follows the status, so the warning goes once they are sent;
+ * Disconnect still leaves at once.
  */
 @Composable
 internal fun DisconnectDialog(
@@ -28,8 +30,13 @@ internal fun DisconnectDialog(
     val link = status?.link as? SyncStatus.Link.Linked
     val server = link?.server?.host.orEmpty()
     val unsent = status?.unsent?.toInt() ?: 0
-    // Sync now does nothing while syncing is stopped, such as until this device signs in again
-    val canSend = unsent > 0 && link?.stopped == null
+    val held = when (status?.unsentBecause) {
+        SyncStatus.UnsentReason.PAUSED -> MR.strings.sync_disconnect_unsent_paused
+        SyncStatus.UnsentReason.WAITING_FOR_WIFI -> platformPresentation.syncDisconnectWaitingNote
+        else -> null
+    }
+    // Sync now does nothing while syncing is stopped, such as until this device signs in again, or held back
+    val canSend = unsent > 0 && link?.stopped == null && held == null
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.sync_disconnect_title),
@@ -38,13 +45,14 @@ internal fun DisconnectDialog(
         neutral = DialogAction(
             label = stringResource(MR.strings.sync_action_sync_now),
             onClick = onSyncNow,
-            enabled = status?.activity !is SyncStatus.Activity.Syncing,
+            enabled = status?.canSyncNow == true,
         ).takeIf { canSend },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m)) {
             if (unsent > 0) {
+                val warning = pluralStringResource(MR.plurals.sync_disconnect_unsent, unsent, unsent, server)
                 Text(
-                    pluralStringResource(MR.plurals.sync_disconnect_unsent, unsent, unsent, server),
+                    held?.let { "$warning ${stringResource(it)}" } ?: warning,
                     tone = ContentTone.Warning,
                 )
             }

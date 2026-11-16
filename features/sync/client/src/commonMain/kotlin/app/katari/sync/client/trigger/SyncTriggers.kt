@@ -4,6 +4,7 @@ import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import app.katari.core.platform.network.NetworkConnectivity
 import app.katari.profiles.core.ProfileStore
 import app.katari.sync.client.account.DeviceListFollowing
+import app.katari.sync.client.account.Disconnection
 import app.katari.sync.client.connection.SyncConnection
 import app.katari.sync.client.handoff.EntryHandOff
 import app.katari.sync.client.preference.SyncPreferences
@@ -54,7 +55,9 @@ import kotlin.time.Duration.Companion.minutes
  * - A run that left work, or couldn't read the device's token ([SyncOutcome.leavesWork]): the platform's retry work
  *   ([SyncBackgroundWork.retry]), which backs off while runs keep leaving it.
  *
- * None of it runs while the device isn't linked to an account (D001); while syncing is paused, runs end at once.
+ * None of it runs while the device isn't linked to an account (D001); while syncing is paused, runs end at once. The
+ * one call an unlinked device makes is to tell its server, each time the app comes to the front, of a registration it
+ * disconnected while the server couldn't be reached ([Disconnection.tellServer]).
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -70,6 +73,7 @@ class SyncTriggers(
     private val handOff: EntryHandOff,
     private val changeRule: ChangeTransferRule,
     private val deviceList: DeviceListFollowing,
+    private val disconnection: Disconnection,
     private val network: NetworkConnectivity,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -170,7 +174,10 @@ class SyncTriggers(
 
     fun appCameToFront() {
         scope.launch {
-            if (!connection.state().isLinked) return@launch
+            if (!connection.state().isLinked) {
+                runs.exclusive { disconnection.tellServer() }
+                return@launch
+            }
             runs.request(SyncRequest(entriesFirst = setOfNotNull(entryResumeContinues())))
         }
     }

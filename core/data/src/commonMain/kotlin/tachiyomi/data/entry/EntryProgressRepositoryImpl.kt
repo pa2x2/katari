@@ -81,6 +81,21 @@ class EntryProgressRepositoryImpl(
         }
     }
 
+    override suspend fun editAndSyncChild(edit: EntryProgressState): EntryProgressState {
+        return handler.await(inTransaction = true) {
+            val current = entry_progress_stateQueries.getByKey(
+                entryId = edit.entryId,
+                contentKey = edit.contentKey,
+                resourceKey = edit.resourceKey,
+                mapper = EntryProgressStateMapper::mapState,
+            ).awaitAsOneOrNull()
+            val edited = current?.withEdit(edit) ?: edit
+            upsertProgress(edited)
+            syncChildCompletion(edited)
+            edited
+        }
+    }
+
     override suspend fun rekey(
         entryId: Long,
         chapterId: Long?,

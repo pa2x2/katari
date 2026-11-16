@@ -22,6 +22,11 @@ data class ProgressPayload(
     @ProtoNumber(7) val movedFrom: String? = null,
 )
 
+/**
+ * Ordered by how far it is, so the further of two positions no device saw read while syncing wins their merge
+ * ([app.katari.sync.client.merge.latest]). Positions equally far are ordered by their text, which every device orders
+ * alike, so devices merging them in any order keep the same one.
+ */
 @Serializable
 data class ProgressLocator(
     @ProtoNumber(1) val kind: String,
@@ -32,4 +37,13 @@ data class ProgressLocator(
     /** A JSON object of reader-specific detail. */
     @ProtoNumber(6) val extensions: String = "{}",
     @ProtoNumber(7) val resourceRevision: String? = null,
-)
+) : Comparable<ProgressLocator> {
+    override fun compareTo(other: ProgressLocator): Int = compareValuesBy(
+        this,
+        other,
+        ProgressLocator::totalProgression,
+        ProgressLocator::progression,
+        ProgressLocator::position,
+        ProgressLocator::toString,
+    )
+}

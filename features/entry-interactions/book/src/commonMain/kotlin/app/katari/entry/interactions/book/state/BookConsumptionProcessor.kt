@@ -48,7 +48,7 @@ internal class BookConsumptionProcessor(
             "Failed to update BOOK consumption state"
         }
         progressStates.filter { it.chapterId in chapterIdsToUpdate }.forEach { current ->
-            entryProgressRepository.mergeAndSyncChild(
+            entryProgressRepository.editAndSyncChild(
                 current.copy(
                     locator = if (consumed) {
                         current.locator
@@ -56,7 +56,7 @@ internal class BookConsumptionProcessor(
                         EntryProgressLocator(kind = BOOK_PROGRESS_LOCATOR_KIND)
                     },
                     completed = consumed,
-                    locatorUpdatedAt = if (consumed) current.locatorUpdatedAt else timestamp,
+                    locatorUpdatedAt = if (consumed) 0L else timestamp,
                     completionUpdatedAt = timestamp,
                 ),
             )

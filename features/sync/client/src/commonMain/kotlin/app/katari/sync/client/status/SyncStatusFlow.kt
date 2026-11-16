@@ -63,7 +63,7 @@ class SyncStatusFlow(
         ) { link, running, outcome, network, progress ->
             Inputs(link.state, link.paused, running, outcome, network, progress)
         }
-        val waiting = combine(held.unreadableKinds(), held.failedCount(), ::Held)
+        val waiting = combine(held.unreadableKinds(), held.failedCount(), held.aheadCount(), ::Held)
         val filesAndLive = combine(files(), live.states, ::Pair)
         return combine(activity, pending.counts(), questions.open(), waiting, filesAndLive) {
                 inputs,
@@ -82,6 +82,7 @@ class SyncStatusFlow(
                 questions = if (state.isLinked) open else emptyList(),
                 heldKinds = if (state.isLinked) waiting.kinds else emptyList(),
                 heldAside = if (state.isLinked) waiting.failed else 0,
+                heldAhead = if (state.isLinked) waiting.ahead else 0,
                 files = if (state.isLinked) files else SyncStatus.Files.NONE,
                 live = liveState.takeUnless {
                     it == LiveUpdatesState.NOT_WORKING &&
@@ -117,7 +118,7 @@ class SyncStatusFlow(
         )
     }
 
-    private class Held(val kinds: List<String>, val failed: Long)
+    private class Held(val kinds: List<String>, val failed: Long, val ahead: Long)
 
     /**
      * How far a download and the run's step got, as the status shows them, changing only as what is shown does and at

@@ -15,6 +15,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 internal class MangaConsumptionProcessor(
     private val entryChapterRepository: EntryChapterRepository,
     private val entryProgressRepository: EntryProgressRepository,
+    private val now: () -> Long = System::currentTimeMillis,
 ) : EntryConsumptionProcessor, EntryBookmarkProcessor {
 
     override suspend fun setConsumed(
@@ -32,41 +33,36 @@ internal class MangaConsumptionProcessor(
         }
         if (chaptersToUpdate.isEmpty()) return emptyList()
 
+        val timestamp = now()
         chaptersToUpdate.forEach { chapter ->
-            val current = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
-            val updated = if (consumed) {
-                current?.copy(
-                    chapterId = chapter.id,
-                    completed = true,
-                ) ?: mangaProgressState(
+            val held = entryProgressRepository.get(chapter.entryId, "", chapter.progressResourceKey)
+                ?: mangaProgressState(
                     entryId = chapter.entryId,
                     chapterId = chapter.id,
                     resourceKey = chapter.progressResourceKey,
                     pageIndex = null,
                     pageCount = null,
-                    completed = true,
+                    completed = false,
                     locatorUpdatedAt = 0L,
                     completionUpdatedAt = 0L,
                 )
+            val edit = if (consumed) {
+                held.copy(
+                    chapterId = chapter.id,
+                    completed = true,
+                    locatorUpdatedAt = 0L,
+                    completionUpdatedAt = timestamp,
+                )
             } else {
-                (
-                    current ?: mangaProgressState(
-                        entryId = chapter.entryId,
-                        chapterId = chapter.id,
-                        resourceKey = chapter.progressResourceKey,
-                        pageIndex = null,
-                        pageCount = null,
-                        completed = false,
-                        locatorUpdatedAt = 0L,
-                        completionUpdatedAt = 0L,
-                    )
-                    ).copy(
+                held.copy(
                     chapterId = chapter.id,
                     locator = EntryProgressLocator(kind = MANGA_PROGRESS_LOCATOR_KIND),
                     completed = false,
+                    locatorUpdatedAt = timestamp,
+                    completionUpdatedAt = timestamp,
                 )
             }
-            entryProgressRepository.upsertAndSyncChild(updated)
+            entryProgressRepository.editAndSyncChild(edit)
         }
 
         return chaptersToUpdate

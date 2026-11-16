@@ -90,6 +90,11 @@ SELECT count(*)
 FROM sync_pending
 WHERE reason = 'failed';
 
+aheadCount:
+SELECT count(*)
+FROM sync_pending
+WHERE reason = 'ahead';
+
 unreadableKinds:
 SELECT DISTINCT kind
 FROM sync_pending

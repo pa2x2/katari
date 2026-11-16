@@ -26,7 +26,7 @@ class VideoPlaybackSessionTest {
 
         snapshot.progressState.completed shouldBe true
         snapshot.progressState.locatorUpdatedAt shouldBe 8_000L
-        snapshot.progressState.completionUpdatedAt shouldBe 7_000L
+        snapshot.progressState.completionUpdatedAt shouldBe 0L
         snapshot.completedNow shouldBe false
     }
 }

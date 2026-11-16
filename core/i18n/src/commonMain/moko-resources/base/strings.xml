@@ -3272,7 +3272,7 @@
     <string name="sync_what_syncs_title">Synced</string>
     <string name="sync_what_syncs">Library, categories, read state, progress, history, statistics, your settings, custom covers and fonts</string>
     <string name="sync_what_stays_title">Stays on this device</string>
-    <string name="sync_what_stays">Downloads, logins, screen and storage settings</string>
+    <string name="sync_what_stays">Downloads, tracker logins, cookies, screen and storage settings</string>
     <string name="sync_action_sign_in_with_address">Sign in with server address</string>
     <string name="sync_action_scan_code">Scan a code from a linked device</string>
     <string name="sync_action_enter_code">Enter a code from a linked device</string>
@@ -3311,6 +3311,8 @@
     <string name="sync_live">Live</string>
     <string name="sync_live_not_working">Live updates aren\'t working</string>
     <string name="sync_files_too_large">Covers or fonts too large for the server</string>
+    <string name="sync_files_missing_title">Covers or fonts not on the server</string>
+    <string name="sync_files_missing_text">The device that added them couldn\'t upload them, as when the server or a proxy in front of it refuses them for their size, or the server lost them. Katari asks for them again a day later.</string>
     <string name="sync_files_too_large_text">The server, or a proxy in front of it, refused them for their size. Their titles synced without them, and Katari offers them again a day later. Raising the server\'s or the proxy\'s upload limit lets them through.</string>
     <string name="sync_live_not_working_text">Changes from other devices come when you open the app and every few minutes. The server may need to let WebSockets through.</string>
     <string name="sync_invite_code">Invite code</string>
@@ -3371,8 +3373,6 @@
     <!-- %1$s is the name the device has from its system, such as the phone's model -->
     <string name="sync_rename_device_hint">Your other devices show this name. Leave it empty to use %1$s.</string>
     <string name="sync_options">Options</string>
-    <string name="sync_in_background">Sync in the background</string>
-    <string name="sync_in_background_summary">While the app is closed</string>
     <string name="sync_mode">Sync mode</string>
     <string name="sync_mode_instant">Instant</string>
     <string name="sync_device_connected">connected now</string>
@@ -3386,7 +3386,6 @@
     <string name="sync_download_elsewhere_amounts_on">On %s…</string>
     <string name="sync_download_elsewhere_what">%1$s · %2$s</string>
     <string name="sync_download_requested">Download requested on %s</string>
-    <string name="sync_download_requested_later">%s gets the request when it next syncs</string>
     <string name="sync_download_needs_newer_app">Needs a newer Katari</string>
     <string name="sync_download_missing_extension">Doesn\'t have the %s extension</string>
     <string name="sync_download_request_failed_title">Couldn\'t download %s</string>
@@ -3394,7 +3393,7 @@
     <string name="sync_download_request_missing_chapters">%1$s asked for %2$s, which %3$s no longer lists.</string>
     <string name="sync_download_request_unknown_device">Another device</string>
     <string name="sync_pause">Pause syncing</string>
-    <string name="sync_pause_summary">Changes wait on this device until you resume</string>
+    <string name="sync_pause_summary">Changes made here and on your other devices wait until you resume</string>
     <string name="sync_choices_title">What syncs</string>
     <string name="sync_choices_note">These choices are this device's. Your other devices keep their own.</string>
     <string name="sync_choices_everything">Everything</string>
@@ -3450,8 +3449,8 @@
     <string name="sync_choice_area_off_note">These settings stay on this device while their area isn't synced.</string>
     <string name="sync_choice_never_downloads">Downloads</string>
     <string name="sync_choice_never_downloads_summary">Chapters and episodes stay where they were downloaded</string>
-    <string name="sync_choice_never_logins">Logins, cookies and app lock</string>
-    <string name="sync_choice_never_logins_summary">They belong to this device and its sign-in</string>
+    <string name="sync_choice_never_logins">Tracker logins, cookies and app lock</string>
+    <string name="sync_choice_never_logins_summary">They belong to this device and its sign-in. Logins an extension keeps in its settings sync with Extension settings</string>
     <string name="sync_choice_never_device">Storage, network and screen</string>
     <string name="sync_choice_never_device_summary">Settings made for this device are marked so in Settings</string>
     <string name="sync_bound_system">Follows this device's system</string>
@@ -3475,7 +3474,7 @@
     <!-- %1$s is the profile's name -->
     <string name="sync_profile_remove_title">Remove %1$s from this device?</string>
     <!-- %1$s is the profile's name -->
-    <string name="sync_profile_remove_text">Its library, history and settings leave this device. %1$s stays in your account and on your other devices.</string>
+    <string name="sync_profile_remove_text">It is deleted from this device with its downloads and anything kept only here, such as settings that stay on this device. %1$s stays in your account and on your other devices, and syncing it here again brings back what syncs, but not those.</string>
     <!-- %1$s is the profile to switch to -->
     <string name="sync_profile_remove_open">Katari switches to %1$s first.</string>
     <!-- %1$s is a profile made on another device -->
@@ -3530,6 +3529,7 @@
     <string name="sync_disconnect_title">Disconnect this device?</string>
     <!-- %1$s is the server's address -->
     <string name="sync_disconnect_text">This device stops syncing with %1$s. Your library, history and settings stay here, and the app works on its own again. Your account and other devices are not affected; deleting the account or its data is done on the server\'s web page.</string>
+    <string name="sync_disconnect_unsent_paused">Resume syncing to send them first.</string>
     <string name="sync_action_disconnect">Disconnect</string>
     <string name="sync_server_address_text">If your server moved, such as to a new IP address or domain, enter where it is now. This device stays signed in when the same server answers there.</string>
     <string name="sync_server_other">Another sync server answers at this address, not the one this device syncs with. To sync with it, disconnect this device and sign in there.</string>
@@ -3545,7 +3545,7 @@
 
     <!-- Sync: first sync of a device with data -->
     <string name="sync_first_sync_title">Before the first sync</string>
-    <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged; nothing is deleted.</string>
+    <string name="sync_first_sync_intro">This device and your account both have data. Your libraries, read state, history and progress will be merged. This device\'s data counts as older than any change in the account: it fills in what the account lacks, and where they differ, the account\'s change wins, a removal included.</string>
     <string name="sync_first_sync_profiles">Profiles on this device</string>
     <string name="sync_first_sync_paired">Paired automatically</string>
     <!-- %1$s is the account profile's name -->
@@ -3604,7 +3604,7 @@
     <string name="sync_restore_reach">How far the restore reaches</string>
     <string name="sync_restore_here">Restore on this device</string>
     <!-- %1$s is the backup's date -->
-    <string name="sync_restore_here_text">Fills in what\'s missing or older. Changes made on your other devices after %1$s are kept.</string>
+    <string name="sync_restore_here_text">Fills in what\'s missing or older, and your other devices get it too. Changes made after %1$s are kept, on this device as on the others, so the restore doesn\'t bring back what was removed since.</string>
     <string name="sync_restore_rollback">Roll back the whole account</string>
     <!-- %1$s is the backup's date -->
     <string name="sync_restore_rollback_text">Every device returns to this backup. Changes made anywhere after %1$s are lost.</string>
