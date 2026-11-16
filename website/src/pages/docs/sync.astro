@@ -20,7 +20,7 @@ import { sitePath } from "../../site/links.ts";
       </thead>
       <tbody>
         <tr><td>Library, categories, read state and reading progress</td> <td>Downloads</td></tr>
-        <tr><td>History and statistics</td> <td>Logins to sites</td></tr>
+        <tr><td>History and statistics</td> <td>Tracker logins and cookies</td></tr>
         <tr><td>Profiles and merged entries</td> <td>Screen and storage settings</td></tr>
         <tr><td>Your settings, custom covers and fonts, extension repositories</td> <td>The device's own sync options</td></tr>
       </tbody>
@@ -44,8 +44,8 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <p>
       When another device changes settings here while Katari is open, a message names them and offers <strong>Keep mine</strong>, which puts
-      back this device's values and keeps those settings on this device. <Path>Settings › Sync › Changed on other devices</Path> lists such
-      changes from the last 14 days.
+      back this device's values and keeps those settings on this device. <Path>Settings › Sync › Changed on other devices</Path> lists each
+      such change for 14 days after it arrives.
     </p>
     <p>
       Each profile syncs as itself, so a family's profiles stay apart on every device. In a profile's menu under
@@ -89,7 +89,8 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <p>
       When this device and the account both have data, <strong>Before the first sync</strong> shows how they come together: libraries, read
-      state, history and progress are merged and nothing is deleted. Each of this device's profiles either pairs with one of the account's
+      state, history and progress are merged. This device's data counts as older than any change in the account, so it fills in what the
+      account lacks, and where the two differ, the account's change wins, a removal included. Each of this device's profiles either pairs with one of the account's
       or is added as new; where only the name matches, choose <strong>Same as</strong> that profile or <strong>Add as new</strong>. For each
       paired profile, choose whether the account's settings or this device's settings are kept. Settings tied to the device, such as screen,
       storage and network ones, are never replaced.
@@ -133,14 +134,18 @@ import { sitePath } from "../../site/links.ts";
   >
     <p>
       Everything works without a connection. What you change is saved on the device and syncs when it can reach the server again; until then
-      the Sync page says <strong>Offline · changes will sync when you're online</strong>. While Katari is closed, it syncs with
-      <strong>Sync in the background</strong> on, every 30 minutes unless <strong>Sync mode</strong> says otherwise. <strong>Pause syncing</strong>
-      keeps changes on the device until you turn it off.
+      the Sync page says <strong>Offline · changes will sync when you're online</strong>. <strong>Pause syncing</strong> holds back changes made
+      here and on your other devices until you turn it off.
     </p>
     <p>
-      <PlatformLabel platform="Android" lead />Set <strong>Sync mode</strong> to <strong>Instant</strong> to stay connected while Katari is
+      <PlatformLabel platform="Android" lead />While Katari is closed, it syncs with <strong>Sync in the background</strong> on, every 30
+      minutes unless <strong>Sync mode</strong> says otherwise. Set <strong>Sync mode</strong> to <strong>Instant</strong> to stay connected while Katari is
       closed, so changes from your other devices arrive at once. Android shows a notification while it does, which you can hide, and Katari
       asks to run without battery optimization.
+    </p>
+    <p>
+      <PlatformLabel platform="Linux" lead />Nothing syncs once Katari quits. <strong>Sync on a schedule</strong> also syncs every so often
+      while it runs, beside live updates.
     </p>
     <p>
       When another device got further in a title, opening it in the reader or player offers to go there, such as
@@ -159,8 +164,8 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <p>
       The other device downloads the chapters once the entry is in its library, and shows a notification for any it couldn't download, such
-      as when it doesn't have the source's extension. A device that is offline gets the request when it next syncs, within a week. A device
-      on an older Katari shows <strong>Needs a newer Katari</strong>.
+      as when it doesn't have the source's extension. A device that is offline gets the request if it syncs within 7 days, and the list warns
+      when a device hasn't synced for longer than that. A device on an older Katari shows <strong>Needs a newer Katari</strong>.
     </p>
   </Task>
 
@@ -192,8 +197,8 @@ import { sitePath } from "../../site/links.ts";
     </p>
     <ul>
       <li>
-        <strong>Restore on this device</strong> fills in what's missing or older. Changes made on your other devices after the backup was made
-        are kept.
+        <strong>Restore on this device</strong> fills in what's missing or older, and your other devices get it too. Changes made after the
+        backup was made, here or on your other devices, are kept, so the restore doesn't bring back what was removed since.
       </li>
       <li>
         <strong>Roll back the whole account</strong> returns every device to the backup. Libraries, progress, history and settings changed
@@ -230,6 +235,13 @@ import { sitePath } from "../../site/links.ts";
             <strong>Syncing paused</strong>, <strong>Changes wait for Wi-Fi</strong>, or <strong>Changes wait for an unmetered network</strong>
           </td>
           <td>Changes wait on the device. Turn off <strong>Pause syncing</strong>, or connect to Wi-Fi or another unmetered network.</td>
+        </tr>
+        <tr>
+          <td>Synced changes <strong>wait: a device's clock is off</strong></td>
+          <td>
+            Another device's changes are dated ahead of this device's clock. They apply once the clocks agree; set the time automatically on
+            every device.
+          </td>
         </tr>
         <tr>
           <td><strong>Live updates aren't working</strong></td>
@@ -286,8 +298,9 @@ import { sitePath } from "../../site/links.ts";
       </li>
       <li><strong>Rename</strong> this device to change the name your other devices show.</li>
       <li>
-        <strong>Disconnect this device</strong> stops it syncing. Its library, history and settings stay, and your account and other devices
-        carry on.
+        <strong>Disconnect this device</strong> stops it syncing at once, even offline. Its library, history and settings stay, and your
+        account and other devices carry on. The server removes it from their lists once it can be reached. If changes made here haven't been
+        sent yet, Disconnect warns that the other devices won't get them and says how to send them first.
       </li>
       <li>
         If the server moved to a new address, enter it under <strong>Server address</strong>; the device stays signed in when the same server
